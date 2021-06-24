@@ -52,8 +52,9 @@ lazy val microservice = Project(appName, file("."))
     libraryDependencies ++= Seq(
       compilerPlugin("com.github.ghik" % "silencer-plugin" % silencerVersion cross CrossVersion.full),
       "com.github.ghik" % "silencer-lib" % silencerVersion % Provided cross CrossVersion.full
-    )
+    ),
     // ***************
+    sources in (Compile, doc) := Seq.empty
   )
   .settings(publishingSettings: _*)
   .configs(IntegrationTest)
