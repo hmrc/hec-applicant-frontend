@@ -60,7 +60,8 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
     routes.ConfirmIndividualDetailsController.confirmIndividualDetails() -> (_ =>
       routes.LicenceDetailsController.licenceType()
     ),
-    routes.LicenceDetailsController.licenceType()                        -> (_ => routes.LicenceDetailsController.expiryDate())
+    routes.LicenceDetailsController.licenceType()                        -> (_ => routes.LicenceDetailsController.expiryDate()),
+    routes.LicenceDetailsController.expiryDate()                         -> (_ => routes.LicenceDetailsController.timeTrading())
   )
 
   // map which describes routes from an exit page to their previous page. The keys are the exit page and the values are
@@ -71,7 +72,9 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
       routes.ConfirmIndividualDetailsController
         .confirmIndividualDetailsExit()                 -> routes.ConfirmIndividualDetailsController.confirmIndividualDetails(),
       routes.LicenceDetailsController.licenceTypeExit() ->
-        routes.LicenceDetailsController.licenceType()
+        routes.LicenceDetailsController.licenceType(),
+      routes.LicenceDetailsController.expiryDateExit()  ->
+        routes.LicenceDetailsController.expiryDate()
     )
 
   override def firstPage(session: HECSession): Call =

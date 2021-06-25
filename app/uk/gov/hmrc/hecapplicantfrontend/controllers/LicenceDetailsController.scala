@@ -23,12 +23,12 @@ import play.api.i18n.I18nSupport
 import play.api.data.Forms.{mapping, of}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
-import uk.gov.hmrc.hecapplicantfrontend.controllers.LicenceDetailsController.{licenceTypeForm, licenceTypeOptions}
+import uk.gov.hmrc.hecapplicantfrontend.controllers.LicenceDetailsController.{licenceTypeForm, licenceTypeOptions, licenseExpiryDateForm}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
-import uk.gov.hmrc.hecapplicantfrontend.models.LicenceType
+import uk.gov.hmrc.hecapplicantfrontend.models.{LicenceExpiryDate, LicenceType}
 import uk.gov.hmrc.hecapplicantfrontend.models.LicenceType._
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
-import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging}
+import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging, TimeUtils}
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging.LoggerOps
 import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -42,7 +42,9 @@ class LicenceDetailsController @Inject() (
   journeyService: JourneyService,
   mcc: MessagesControllerComponents,
   licenceTypePage: html.LicenceType,
-  licenceTypeExitPage: html.LicenceTypeExit
+  licenceTypeExitPage: html.LicenceTypeExit,
+  licenseExpiryDatePage: html.LicenceExpiryDate,
+  licenceExpiryDateExitPage: html.LicenceExpiryDateExit
 )(implicit appConfig: AppConfig, ec: ExecutionContext)
     extends FrontendController(mcc)
     with I18nSupport
@@ -55,7 +57,6 @@ class LicenceDetailsController @Inject() (
       val emptyForm = licenceTypeForm(licenceTypeOptions)
       licenceType.fold(emptyForm)(emptyForm.fill)
     }
-
     Ok(licenceTypePage(form, back, licenceTypeOptions))
   }
 
@@ -75,7 +76,6 @@ class LicenceDetailsController @Inject() (
           },
           Redirect
         )
-
     }
 
     licenceTypeForm(licenceTypeOptions)
@@ -103,11 +103,54 @@ class LicenceDetailsController @Inject() (
   }
 
   val expiryDate: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
+    lazy val back  = journeyService.previous(routes.LicenceDetailsController.expiryDate())
+    val expiryDate = request.sessionData.userAnswers.fold(_.licenceExpiryDate, c => Some(c.licenceExpiryDate))
+    val form = {
+      val emptyForm = licenseExpiryDateForm()
+      expiryDate.fold(emptyForm)(emptyForm.fill)
+    }
+    Ok(licenseExpiryDatePage(form, back))
+  }
+
+  val expiryDateSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
+    lazy val back = journeyService.previous(routes.LicenceDetailsController.expiryDate())
+    licenseExpiryDateForm()
+      .bindFromRequest()
+      .fold(
+        formWithErrors => Ok(licenseExpiryDatePage(formWithErrors, back)),
+        { licenceExpiryDate =>
+          val updatedAnswers =
+            request.sessionData.userAnswers.unset(_.licenceExpiryDate).copy(licenceExpiryDate = Some(licenceExpiryDate))
+          val updatedSession = request.sessionData.copy(userAnswers = updatedAnswers)
+          journeyService
+            .updateAndNext(
+              routes.LicenceDetailsController.expiryDate(),
+              updatedSession
+            )
+            .fold(
+              { e =>
+                logger.warn("Could not update session and proceed", e)
+                InternalServerError
+              },
+              Redirect
+            )
+        }
+      )
+  }
+
+  val expiryDateExit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     Ok(
-      s"session is ${request.sessionData}\nBack is ${journeyService.previous(routes.LicenceDetailsController.expiryDate())}"
+      licenceExpiryDateExitPage(
+        journeyService.previous(routes.LicenceDetailsController.expiryDateExit())
+      )
     )
   }
 
+  val timeTrading: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
+    Ok(
+      s"session is ${request.sessionData}\nBack is ${journeyService.previous(routes.LicenceDetailsController.timeTrading())}"
+    )
+  }
 }
 
 object LicenceDetailsController {
@@ -125,5 +168,23 @@ object LicenceDetailsController {
         "licenceType" -> of(FormUtils.radioFormFormatter(options))
       )(identity)(Some(_))
     )
+
+  def licenseExpiryDateForm(): Form[LicenceExpiryDate] = {
+    val key = "licenceExpiryDate"
+    Form(
+      mapping(
+        "" -> of(
+          TimeUtils.dateFormatter(
+            None,
+            None,
+            s"$key-day",
+            s"$key-month",
+            s"$key-year",
+            key
+          )
+        )
+      )(LicenceExpiryDate(_))(d => Some(d.value))
+    )
+  }
 
 }

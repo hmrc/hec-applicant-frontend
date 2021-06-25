@@ -181,7 +181,6 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
                 )
 
                 val session = HECSession(individualRetrievedData, UserAnswers.empty)
-
                 inSequence {
                   mockAuthWithRetrievals(
                     ConfidenceLevel.L250,
@@ -239,7 +238,8 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
               completeIndividualRetrievedData.dateOfBirth,
               Some(citizenDetailsSautr)
             )
-            val session        =
+
+            val session =
               HECSession(completeIndividualRetrievedData.copy(sautr = Some(citizenDetailsSautr)), UserAnswers.empty)
 
             inSequence {
@@ -324,7 +324,6 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
           "no CTUTR can be found for a company" in {
             val companyData = completeCompanyRetrievedData.copy(ctutr = None)
             val session     = HECSession(companyData, UserAnswers.empty)
-
             inSequence {
               mockAuthWithRetrievals(
                 ConfidenceLevel.L50,
@@ -518,7 +517,6 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
             s"origin=$ivOrigin&confidenceLevel=250&" +
               s"completionURL=${urlEncode(s"$selfBaseUrl/tax-check-for-licence/start")}&" +
               s"failureURL=${urlEncode(s"$selfBaseUrl/tax-check-for-licence/failed-iv/callback")}"
-
           mockActions()
           checkIsRedirect(
             performAction(),
@@ -527,7 +525,6 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
         }
 
         "the user has CL50 and" when {
-
           "the affinity group is 'Individual'" in {
             testIsRedirectToIVUplift(() =>
               inSequence {

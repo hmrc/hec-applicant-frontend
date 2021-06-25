@@ -147,7 +147,6 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
           val session                                     = HECSession(companyRetrievedData, UserAnswers.empty)
           implicit val request: RequestWithSessionData[_] =
             requestWithSessionData(session)
-
           assertThrows[RuntimeException](
             journeyService.previous(
               routes.ConfirmIndividualDetailsController.confirmIndividualDetailsSubmit()

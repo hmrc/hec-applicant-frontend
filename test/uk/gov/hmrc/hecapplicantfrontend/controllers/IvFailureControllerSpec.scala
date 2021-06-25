@@ -36,7 +36,6 @@ import uk.gov.hmrc.hecapplicantfrontend.models.iv.IvErrorStatus._
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.IvService
 import uk.gov.hmrc.http.HeaderCarrier
-
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future

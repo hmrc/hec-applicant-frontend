@@ -49,7 +49,6 @@ class ConfirmIndividualDetailsControllerSpec
   "ConfirmIndividualDetailsController" when {
 
     "handling requests to the confirm individual details page" must {
-
       def performAction(): Future[Result] = controller.confirmIndividualDetails(FakeRequest())
 
       behave like (authAndSessionDataBehaviour(performAction))
@@ -216,7 +215,6 @@ class ConfirmIndividualDetailsControllerSpec
             messageFromMessageKey("confirmIndividualDetailsExit.title"),
             { doc =>
               doc.select("#back").attr("href") shouldBe mockPreviousCall.url
-
               val link = doc.select(s"p > a[href=${appConfig.signOutUri}]")
               link.isEmpty shouldBe false
 

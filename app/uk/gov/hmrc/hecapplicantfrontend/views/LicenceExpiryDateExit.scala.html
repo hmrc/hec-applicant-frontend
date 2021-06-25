@@ -1,0 +1,18 @@
+@import play.api.i18n.Messages
+@import play.api.mvc.{Call, Request}
+
+@import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
+
+@this(layout: Layout)
+
+@(back: Call)(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
+@key = @{"licenceExpiryDateExit"}
+@title = @{messages(s"$key.title")}
+
+@layout(pageTitle = Some(title), backUrl = Some(back.url)) {
+<h1 class="govuk-heading-xl">@title</h1>
+<p class="govuk-body">@{messages("licenceExpiryDateExit.p1")}</p>
+<p class="govuk-body">@{messages("licenceExpiryDateExit.p2")}</p>
+
+<p class="govuk-body"><a class="govuk-link" href="@{appConfig.taxCheckGuidanceUrl}">@{messages(s"$key.link")}</a></p>
+}
