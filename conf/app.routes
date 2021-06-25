@@ -2,5 +2,9 @@
 
 ->         /govuk-frontend          govuk.Routes
 ->         /hmrc-frontend           hmrcfrontend.Routes
-GET        /                        uk.gov.hmrc.hecapplicantfrontend.controllers.HelloWorldController.helloWorld
 GET        /assets/*file            controllers.Assets.versioned(path = "/public", file: controllers.Assets.Asset)
+
+GET        /start                   uk.gov.hmrc.hecapplicantfrontend.controllers.StartController.start
+GET        /iv-failure              uk.gov.hmrc.hecapplicantfrontend.controllers.IvFailureController.ivFailure(journeyId: java.util.UUID)
+
+GET        /dummy                   uk.gov.hmrc.hecapplicantfrontend.controllers.DummyController.dummy

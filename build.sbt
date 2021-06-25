@@ -22,7 +22,13 @@ lazy val wartremoverSettings =
       (Compile / routes).value ++
         (baseDirectory.value ** "*.sc").get ++
         Seq(sourceManaged.value / "main" / "sbt-buildinfo" / "BuildInfo.scala"),
-    (Test / compile / wartremoverErrors) --= Seq(Wart.Any, Wart.NonUnitStatements, Wart.Null, Wart.PublicInference)
+    (Test / compile / wartremoverErrors) --= Seq(
+      Wart.Any,
+      Wart.GlobalExecutionContext,
+      Wart.NonUnitStatements,
+      Wart.Null,
+      Wart.PublicInference
+    )
   )
 
 lazy val scoverageSettings =
@@ -41,6 +47,7 @@ lazy val microservice = Project(appName, file("."))
     SbtDistributablesPlugin,
     JUnitXmlReportPlugin
   )
+  .settings(addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.10.3"))
   .settings(
     majorVersion := 0,
     scalaVersion := "2.12.13",
@@ -49,6 +56,7 @@ lazy val microservice = Project(appName, file("."))
     // ***************
     // Use the silencer plugin to suppress warnings
     scalacOptions += "-P:silencer:pathFilters=routes",
+    scalacOptions in Test --= Seq("-Ywarn-value-discard"),
     libraryDependencies ++= Seq(
       compilerPlugin("com.github.ghik" % "silencer-plugin" % silencerVersion cross CrossVersion.full),
       "com.github.ghik" % "silencer-lib" % silencerVersion % Provided cross CrossVersion.full
