@@ -1,2 +1,48 @@
 service.name = hec-applicant-frontend
 service.text = This is your new service
+
+# Buttons
+button.sign-in=Sign in
+button.try-again=Try again
+
+# Failed IV
+iv.failedIv.title=We could not confirm your identity
+iv.failedIv.p1=You did not answer all the questions correctly.
+iv.failedIv.p2=Your answers must match the details we already have for you.
+
+# Failed Matching
+iv.failedMatching.title=We could not confirm your identity
+iv.failedMatching.p1=You’ll need to check you entered your details correctly, such as your:
+iv.failedMatching.li1=name
+iv.failedMatching.li2=National Insurance number
+
+# Insufficient Evidence
+iv.insufficientEvidence.title=We could not confirm your identity
+iv.insufficientEvidence.p1=You’ll need to call us and we’ll ask you for more details.
+iv.insufficientEvidence.p2=You’ll be able to get a tax check by phone, after we have confirmed your identity.
+iv.insufficientEvidence.link=Find out how to call HMRC
+
+# IV Locked Out
+iv.lockedOut.title=We could not confirm your identity
+iv.lockedOut.p1=You have tried to confirm your identity too many times.
+iv.lockedOut.p2=You’ll need to wait 24 hours and try again.
+iv.lockedOut.link=Go to GOV.UK
+
+# IV User Aborted
+iv.userAborted.title=We could not confirm your identity
+iv.userAborted.p1=To use this service, you’ll need to answer some security questions.
+iv.userAborted.p2=Your answers will need to match the details we already have for you.
+iv.userAborted.p3=This is to stop anyone else finding out your personal details.
+
+# IV Timed Out
+iv.timeout.title=For your security, we signed you out
+
+# IV Technical Issue
+iv.technicalIssue.title=Sorry, there is a problem with the service
+iv.technicalIssue.p1=You’ll need to try again later.
+
+# IV Precondition Failed
+iv.preconditionFailed.title=You cannot use this service
+iv.preconditionFailed.p1=We’ve checked the details in your Government Gateway account.
+iv.preconditionFailed.p2=You do not meet the criteria to use this service.
+iv.preconditionFailed.link=Find out who needs to do a tax check

@@ -1,0 +1,17 @@
+@import play.api.i18n.Messages
+@import play.api.mvc.Request
+@import uk.gov.hmrc.govukfrontend.views.html.components._
+
+@this(layout: Layout, govukButton: GovukButton)
+
+@()(implicit request: Request[_], messages: Messages)
+@title = @{messages("iv.technicalIssue.title")}
+
+@layout(pageTitle = Some(title)) {
+  <h1 class="govuk-heading-xl">@title</h1>
+  <p class="govuk-body">@{messages("iv.technicalIssue.p1")}</p>
+  @govukButton(Button(
+    content = Text("button.try-again"),
+    href = Some("#")
+  ))
+}

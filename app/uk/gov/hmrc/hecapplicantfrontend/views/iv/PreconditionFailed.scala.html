@@ -1,0 +1,14 @@
+@import play.api.i18n.Messages
+@import play.api.mvc.Request
+
+@this(layout: Layout)
+
+@()(implicit request: Request[_], messages: Messages)
+@title = @{messages("iv.preconditionFailed.title")}
+
+@layout(pageTitle = Some(title)) {
+  <h1 class="govuk-heading-xl">@title</h1>
+  <p class="govuk-body">@{messages("iv.preconditionFailed.p1")}</p>
+  <p class="govuk-body">@{messages("iv.preconditionFailed.p2")}</p>
+  <p class="govuk-body"><a href="#" class="govuk-link">@{messages("iv.preconditionFailed.link")}</a></p>
+}
