@@ -41,7 +41,6 @@ class AppConfig @Inject() (config: Configuration) {
     s"$basGateway?continue=$selfBaseUrl${routes.StartController.start().url}&origin=$origin"
   }
 
-  @SuppressWarnings(Array("org.wartremover.warts.Null"))
   lazy val redirectToIvUplift: Result = {
     val ivUrl: String = config.get[String]("iv.url")
 
