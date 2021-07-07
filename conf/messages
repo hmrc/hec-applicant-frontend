@@ -20,7 +20,7 @@ iv.failedMatching.li2=National Insurance number
 iv.insufficientEvidence.title=We could not confirm your identity
 iv.insufficientEvidence.p1=You’ll need to call us and we’ll ask you for more details.
 iv.insufficientEvidence.p2=You’ll be able to get a tax check by phone, after we have confirmed your identity.
-iv.insufficientEvidence.link=Find out how to call HMRC
+iv.insufficientEvidence.link=Find out how to contact HMRC
 
 # IV Locked Out
 iv.lockedOut.title=We could not confirm your identity
