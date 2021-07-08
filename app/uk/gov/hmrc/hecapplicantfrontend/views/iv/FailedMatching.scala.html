@@ -1,8 +1,10 @@
 @import play.api.i18n.Messages
 @import play.api.mvc.Request
 @import uk.gov.hmrc.govukfrontend.views.html.components._
+@import uk.gov.hmrc.hecapplicantfrontend.views.html.Layout
+@import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 
-@this(layout: uk.gov.hmrc.hecapplicantfrontend.views.html.Layout, govukButton: GovukButton)
+@this(layout: Layout, govukButton: GovukButton)
 
 @()(implicit request: Request[_], messages: Messages)
 @title = @{messages("iv.failedMatching.title")}
@@ -15,7 +17,7 @@
     <li>@{messages("iv.failedMatching.li2")}</li>
   </ul>
   @govukButton(Button(
-    content = Text("button.try-again"),
-    href = Some("#")
+    content = Text(messages("button.try-again")),
+    href = Some(routes.IvFailureController.retry().url)
   ))
 }

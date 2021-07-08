@@ -498,7 +498,7 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
           val queryString =
             s"origin=$ivOrigin&confidenceLevel=250&" +
               s"completionURL=${urlEncode(s"$selfBaseUrl/hec-applicant-frontend/start")}&" +
-              s"failureURL=${urlEncode(s"$selfBaseUrl/hec-applicant-frontend/iv-failure")}"
+              s"failureURL=${urlEncode(s"$selfBaseUrl/hec-applicant-frontend/failed-iv/callback")}"
 
           mockActions()
           checkIsRedirect(

@@ -81,7 +81,7 @@ class AuthWithRetrievalsAction @Inject() (
       .recover {
         case _: NoActiveSession        => Redirect(appConfig.signInUrl)
         case e: AuthorisationException =>
-          logger.warn("Could not authorise", e)
+          logger.warn(s"Could not authorise: ${e.getMessage}")
           InternalServerError
       }
   }

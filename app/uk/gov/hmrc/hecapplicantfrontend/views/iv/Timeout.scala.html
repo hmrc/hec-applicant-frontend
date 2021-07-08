@@ -1,8 +1,10 @@
 @import play.api.i18n.Messages
 @import play.api.mvc.Request
 @import uk.gov.hmrc.govukfrontend.views.html.components._
+@import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
+@import uk.gov.hmrc.hecapplicantfrontend.views.html.Layout
 
-@this(layout: uk.gov.hmrc.hecapplicantfrontend.views.html.Layout, govukButton: GovukButton)
+@this(layout: Layout, govukButton: GovukButton)
 
 @()(implicit request: Request[_], messages: Messages)
 @title = @{messages("iv.timeout.title")}
@@ -10,7 +12,7 @@
 @layout(pageTitle = Some(title)) {
   <h1 class="govuk-heading-xl">@title</h1>
   @govukButton(Button(
-    content = Text("button.sign-in"),
-    href = Some("#")
+    content = Text(messages("button.sign-in")),
+    href = Some(routes.IvFailureController.retry().url)
   ))
 }

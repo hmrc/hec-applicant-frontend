@@ -48,8 +48,7 @@ trait AuthAndSessionDataBehaviour { this: ControllerSpec with AuthSupport with S
     )
   )
 
-  def authAndSessionDataBehaviour(performAction: () => Future[Result]): Unit = {
-
+  def authBehaviour(performAction: () => Future[Result]): Unit = {
     "redirect to the login page when the user is not logged in" in {
       List[NoActiveSession](
         BearerTokenExpired(),
@@ -67,33 +66,35 @@ trait AuthAndSessionDataBehaviour { this: ControllerSpec with AuthSupport with S
 
     }
 
-    "return an InternalServerError" when {
+    "return an InternalServerError when an AuthorisationException is thrown" in {
+      List[AuthorisationException](
+        InsufficientEnrolments(),
+        UnsupportedAffinityGroup(),
+        UnsupportedCredentialRole(),
+        UnsupportedAuthProvider(),
+        IncorrectCredentialStrength(),
+        InternalError()
+      ).foreach { e =>
+        withClue(s"For error $e: ") {
+          mockAuth(EmptyPredicate, EmptyRetrieval)(Future.failed(e))
 
-      "an AuthorisationException is thrown" in {
-        List[AuthorisationException](
-          InsufficientEnrolments(),
-          UnsupportedAffinityGroup(),
-          UnsupportedCredentialRole(),
-          UnsupportedAuthProvider(),
-          IncorrectCredentialStrength(),
-          InternalError()
-        ).foreach { e =>
-          withClue(s"For error $e: ") {
-            mockAuth(EmptyPredicate, EmptyRetrieval)(Future.failed(e))
-
-            status(performAction()) shouldBe INTERNAL_SERVER_ERROR
-          }
+          status(performAction()) shouldBe INTERNAL_SERVER_ERROR
         }
       }
+    }
+  }
 
-      "there is an error getting session data" in {
-        inSequence {
-          mockAuthWithNoRetrievals()
-          mockGetSession(Left(Error("")))
-        }
+  def authAndSessionDataBehaviour(performAction: () => Future[Result]): Unit = {
 
-        status(performAction()) shouldBe INTERNAL_SERVER_ERROR
+    authBehaviour(performAction)
+
+    "return an InternalServerError when there is an error getting session data" in {
+      inSequence {
+        mockAuthWithNoRetrievals()
+        mockGetSession(Left(Error("")))
       }
+
+      status(performAction()) shouldBe INTERNAL_SERVER_ERROR
     }
 
     "redirect to the start endpoint when there is no session data" in {
