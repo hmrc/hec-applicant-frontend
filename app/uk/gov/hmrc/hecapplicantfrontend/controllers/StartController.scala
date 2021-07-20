@@ -26,8 +26,8 @@ import uk.gov.hmrc.auth.core.{AffinityGroup, ConfidenceLevel, Enrolments}
 import uk.gov.hmrc.auth.core.retrieve.Credentials
 import uk.gov.hmrc.hecapplicantfrontend.config.{AppConfig, EnrolmentConfig}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.AuthWithRetrievalsAction
-import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, Error, HECSession, RetrievedGGData, RetrievedUserData}
-import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedUserData.{CompanyRetrievedData, IndividualRetrievedData}
+import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, Error, HECSession, RetrievedApplicantData, RetrievedGGData}
+import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRetrievedData, IndividualRetrievedData}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CTUTR, GGCredId, NINO, SAUTR}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.CitizenDetailsService
@@ -94,7 +94,7 @@ class StartController @Inject() (
 
   private def buildRetrievedUserData(
     retrievedGGData: RetrievedGGData
-  )(implicit hc: HeaderCarrier): EitherT[Future, StartError, RetrievedUserData] = {
+  )(implicit hc: HeaderCarrier): EitherT[Future, StartError, RetrievedApplicantData] = {
     val RetrievedGGData(cl, affinityGroup, maybeNino, maybeSautr, maybeEmail, enrolments, creds) =
       retrievedGGData
 
@@ -141,7 +141,7 @@ class StartController @Inject() (
     ggCredId: GGCredId
   )(implicit
     hc: HeaderCarrier
-  ): EitherT[Future, StartError, RetrievedUserData] =
+  ): EitherT[Future, StartError, RetrievedApplicantData] =
     if (confidenceLevel < ConfidenceLevel.L250)
       EitherT.leftT(InsufficientConfidenceLevel)
     else {
@@ -160,7 +160,7 @@ class StartController @Inject() (
                 citizenDetails.name,
                 citizenDetails.dateOfBirth,
                 maybeEmail.map(EmailAddress(_))
-              ): RetrievedUserData
+              ): RetrievedApplicantData
             }
             .leftMap(BackendError(_): StartError)
       }
@@ -170,7 +170,7 @@ class StartController @Inject() (
     maybeEmail: Option[String],
     enrolments: Enrolments,
     ggCredId: GGCredId
-  ): RetrievedUserData = {
+  ): RetrievedApplicantData = {
     val ctutr = enrolments.enrolments
       .find(_.key === EnrolmentConfig.CTEnrolment.key)
       .flatMap(_.getIdentifier(EnrolmentConfig.CTEnrolment.ctutrIdentifier).map(id => CTUTR(id.value)))

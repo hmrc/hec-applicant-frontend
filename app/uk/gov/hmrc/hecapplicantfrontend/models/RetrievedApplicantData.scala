@@ -20,9 +20,9 @@ import julienrf.json.derived
 import play.api.libs.json.OFormat
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CTUTR, GGCredId, NINO, SAUTR}
 
-sealed trait RetrievedUserData extends Product with Serializable
+sealed trait RetrievedApplicantData extends Product with Serializable
 
-object RetrievedUserData {
+object RetrievedApplicantData {
 
   final case class IndividualRetrievedData(
     ggCredId: GGCredId,
@@ -31,15 +31,15 @@ object RetrievedUserData {
     name: Name,
     dateOfBirth: DateOfBirth,
     emailAddress: Option[EmailAddress]
-  ) extends RetrievedUserData
+  ) extends RetrievedApplicantData
 
   final case class CompanyRetrievedData(
     ggCredId: GGCredId,
     ctutr: Option[CTUTR],
     emailAddress: Option[EmailAddress]
-  ) extends RetrievedUserData
+  ) extends RetrievedApplicantData
 
   @SuppressWarnings(Array("org.wartremover.warts.PublicInference"))
-  implicit val format: OFormat[RetrievedUserData] = derived.oformat()
+  implicit val format: OFormat[RetrievedApplicantData] = derived.oformat()
 
 }

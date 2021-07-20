@@ -19,7 +19,7 @@ package uk.gov.hmrc.hecapplicantfrontend.models
 import play.api.libs.json.{Json, OFormat}
 
 final case class HECSession(
-  retrievedUserData: RetrievedUserData
+  retrievedUserData: RetrievedApplicantData
 )
 
 object HECSession {

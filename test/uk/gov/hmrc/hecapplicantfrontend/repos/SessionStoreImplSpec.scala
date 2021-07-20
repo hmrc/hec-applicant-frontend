@@ -25,7 +25,7 @@ import play.api.libs.json.{JsNumber, JsObject}
 import play.api.test.Helpers._
 import uk.gov.hmrc.cache.model.{Cache, Id}
 import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, HECSession}
-import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedUserData.CompanyRetrievedData
+import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.CompanyRetrievedData
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CTUTR, GGCredId}
 import uk.gov.hmrc.http.{HeaderCarrier, SessionId}
 import uk.gov.hmrc.mongo.DatabaseUpdate
