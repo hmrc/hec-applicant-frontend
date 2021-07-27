@@ -159,7 +159,7 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
             mockGetSession(HECSession(completeIndividualRetrievedData))
           }
 
-          checkIsRedirect(performAction(), routes.DummyController.dummy())
+          checkIsRedirect(performAction(), routes.ConfirmIndividualDetailsController.confirmIndividualDetails())
         }
 
         "no session data is found and" when {
@@ -192,7 +192,7 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
                   mockStoreSession(HECSession(individualRetrievedData))(Right(()))
                 }
 
-                checkIsRedirect(performAction(), routes.DummyController.dummy())
+                checkIsRedirect(performAction(), routes.ConfirmIndividualDetailsController.confirmIndividualDetails())
               }
             }
 
@@ -218,7 +218,7 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
               mockStoreSession(HECSession(completeIndividualRetrievedData))(Right(()))
             }
 
-            checkIsRedirect(performAction(), routes.DummyController.dummy())
+            checkIsRedirect(performAction(), routes.ConfirmIndividualDetailsController.confirmIndividualDetails())
 
           }
 
@@ -249,7 +249,7 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
               )
             }
 
-            checkIsRedirect(performAction(), routes.DummyController.dummy())
+            checkIsRedirect(performAction(), routes.ConfirmIndividualDetailsController.confirmIndividualDetails())
           }
 
           "all the necessary data is retrieved for an individual with affinity group " +
@@ -275,7 +275,7 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
                 mockStoreSession(HECSession(completeIndividualRetrievedData))(Right(()))
               }
 
-              checkIsRedirect(performAction(), routes.DummyController.dummy())
+              checkIsRedirect(performAction(), routes.ConfirmIndividualDetailsController.confirmIndividualDetails())
             }
 
           "all the necessary data is retrieved for a company" in {

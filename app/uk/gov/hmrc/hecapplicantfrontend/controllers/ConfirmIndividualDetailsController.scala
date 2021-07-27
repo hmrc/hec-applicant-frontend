@@ -16,35 +16,54 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.controllers
 
+import com.google.inject.{Inject, Singleton}
 import play.api.i18n.I18nSupport
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
+import uk.gov.hmrc.hecapplicantfrontend.models.HECSession
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRetrievedData, IndividualRetrievedData}
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
-class ConfirmIndividualDetailsController(
+import scala.concurrent.Future
+
+@Singleton
+class ConfirmIndividualDetailsController @Inject() (
   authAction: AuthAction,
   sessionDataAction: SessionDataAction,
   mcc: MessagesControllerComponents,
-  confirmIndividualDetailsPage: html.ConfirmIndividualDetails
+  confirmIndividualDetailsPage: html.ConfirmIndividualDetails,
+  confirmIndividualDetailsExitPage: html.ConfirmIndividualDetailsExit
 ) extends FrontendController(mcc)
     with I18nSupport
     with Logging {
 
-  val confirmIndividualDetails: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
-    request.sessionData.retrievedUserData match {
-      case i: IndividualRetrievedData => Ok(confirmIndividualDetailsPage(i))
-      case _: CompanyRetrievedData    => Redirect(routes.StartController.start())
+  val confirmIndividualDetails: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
+    withIndividualRetrievedData(request.sessionData) { i =>
+      Ok(confirmIndividualDetailsPage(i))
     }
   }
 
-  val confirmIndividualDetailsSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
-    request.sessionData.retrievedUserData match {
-      case _: IndividualRetrievedData => Ok("")
+  val confirmIndividualDetailsSubmit: Action[AnyContent] =
+    authAction.andThen(sessionDataAction).async { implicit request =>
+      withIndividualRetrievedData(request.sessionData) { _ =>
+        Ok("")
+      }
+    }
+
+  val confirmIndividualDetailsExit: Action[AnyContent] =
+    authAction.andThen(sessionDataAction).async { implicit request =>
+      withIndividualRetrievedData(request.sessionData) { _ =>
+        Ok(confirmIndividualDetailsExitPage())
+      }
+    }
+
+  private def withIndividualRetrievedData(
+    session: HECSession
+  )(f: IndividualRetrievedData => Future[Result]): Future[Result] =
+    session.retrievedUserData match {
+      case i: IndividualRetrievedData => f(i)
       case _: CompanyRetrievedData    => Redirect(routes.StartController.start())
     }
-  }
-
 }
