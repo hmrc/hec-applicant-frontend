@@ -16,23 +16,35 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.controllers
 
-import com.google.inject.{Inject, Singleton}
-import play.api.libs.json.Json
+import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
+import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRetrievedData, IndividualRetrievedData}
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
+import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
-@Singleton
-class DummyController @Inject() (
+class ConfirmIndividualDetailsController(
   authAction: AuthAction,
   sessionDataAction: SessionDataAction,
-  mcc: MessagesControllerComponents
+  mcc: MessagesControllerComponents,
+  confirmIndividualDetailsPage: html.ConfirmIndividualDetails
 ) extends FrontendController(mcc)
+    with I18nSupport
     with Logging {
 
-  val dummy: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
-    Ok(s"Session is ${Json.toJson(request.sessionData).toString()}")
+  val confirmIndividualDetails: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
+    request.sessionData.retrievedUserData match {
+      case i: IndividualRetrievedData => Ok(confirmIndividualDetailsPage(i))
+      case _: CompanyRetrievedData    => Redirect(routes.StartController.start())
+    }
+  }
+
+  val confirmIndividualDetailsSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
+    request.sessionData.retrievedUserData match {
+      case _: IndividualRetrievedData => Ok("")
+      case _: CompanyRetrievedData    => Redirect(routes.StartController.start())
+    }
   }
 
 }

@@ -80,7 +80,8 @@ class StartController @Inject() (
 
       },
       _.retrievedUserData match {
-        case _: IndividualRetrievedData => Redirect(routes.DummyController.dummy())
+        case _: IndividualRetrievedData =>
+          Redirect(routes.ConfirmIndividualDetailsController.confirmIndividualDetails())
         case c: CompanyRetrievedData    => Ok(s"Companies not handled yet - retrieved data $c")
       }
     )

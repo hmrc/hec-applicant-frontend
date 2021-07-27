@@ -6,8 +6,9 @@ GET        /assets/*file            controllers.Assets.versioned(path = "/public
 
 GET        /start                   uk.gov.hmrc.hecapplicantfrontend.controllers.StartController.start
 
+GET        /confirm-details         uk.gov.hmrc.hecapplicantfrontend.controllers.ConfirmIndividualDetailsController.confirmIndividualDetails
+POST       /confirm-details         uk.gov.hmrc.hecapplicantfrontend.controllers.ConfirmIndividualDetailsController.confirmIndividualDetailsSubmit
 
-GET        /dummy                   uk.gov.hmrc.hecapplicantfrontend.controllers.DummyController.dummy
 
 # IV
 GET  /failed-iv/callback                         uk.gov.hmrc.hecapplicantfrontend.controllers.IvFailureController.ivFailure(journeyId: java.util.UUID)
