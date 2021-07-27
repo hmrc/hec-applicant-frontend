@@ -6,8 +6,10 @@
 
 @this(layout: Layout, govukButton: GovukButton, govukSummaryList : GovukSummaryList)
 
+
 @(details: IndividualRetrievedData)(implicit request: Request[_], messages: Messages)
 @title = @{messages("confirmIndividualDetails.title")}
+@dob = @{details.dateOfBirth.value}
 
 @layout(pageTitle = Some(title)) {
     <h1 class="govuk-heading-xl">@title</h1>
@@ -16,25 +18,33 @@
         rows = Seq(
             SummaryListRow(
                 key = Key(
-                    content = Text("Name")
+                    content = Text(messages("confirmIndividualDetails.firstName"))
                 ),
                 value = Value(
-                    content = Text(details.name.toString)
+                    content = Text(details.name.firstName)
                 )
             ),
             SummaryListRow(
                 key = Key(
-                    content = Text("Date of birth")
+                    content = Text(messages("confirmIndividualDetails.lastName"))
                 ),
                 value = Value(
-                    content = Text(details.dateOfBirth.toString)
+                    content = Text(details.name.lastName)
+                )
+            ),
+            SummaryListRow(
+                key = Key(
+                    content = Text(messages("confirmIndividualDetails.dob"))
+                ),
+                value = Value(
+                    content = Text(s"""${dob.getDayOfMonth} ${messages(s"date.${dob.getMonthValue}")} ${dob.getYear}""")
                 )
             )
         )
     ))
 
     <p class="govuk-body">
-        <a href="#">@messages("confirmIndividualDetails.link")</a>
+        <a class="govuk-link" href="#">@messages("confirmIndividualDetails.link")</a>
     </p>
 
     @govukButton(Button(
