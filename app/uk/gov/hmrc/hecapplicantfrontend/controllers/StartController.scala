@@ -79,7 +79,10 @@ class StartController @Inject() (
           InternalServerError
 
       },
-      _ => Redirect(routes.DummyController.dummy())
+      _.retrievedUserData match {
+        case _: IndividualRetrievedData => Redirect(routes.DummyController.dummy())
+        case c: CompanyRetrievedData    => Ok(s"Companies not handled yet - retrieved data $c")
+      }
     )
   }
 

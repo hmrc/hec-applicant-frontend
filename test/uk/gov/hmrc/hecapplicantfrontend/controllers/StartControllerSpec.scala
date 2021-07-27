@@ -153,20 +153,13 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
 
       "proceed" when {
 
-        def test(mockActions: () => Unit) = {
-          mockActions()
+        "existing session data is found" in {
+          inSequence {
+            mockAuthWithRetrievals(ConfidenceLevel.L50, None, None, None, None, Enrolments(Set.empty), None)
+            mockGetSession(HECSession(completeIndividualRetrievedData))
+          }
 
           checkIsRedirect(performAction(), routes.DummyController.dummy())
-        }
-
-        "existing session data is found" in {
-          test(() =>
-            inSequence {
-              mockAuthWithRetrievals(ConfidenceLevel.L50, None, None, None, None, Enrolments(Set.empty), None)
-              mockGetSession(HECSession(completeIndividualRetrievedData))
-            }
-          )
-
         }
 
         "no session data is found and" when {
@@ -184,22 +177,22 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
                   individualRetrievedData.sautr
                 )
 
-                test(() =>
-                  inSequence {
-                    mockAuthWithRetrievals(
-                      ConfidenceLevel.L250,
-                      Some(AffinityGroup.Individual),
-                      Some(individualRetrievedData.nino),
-                      None,
-                      individualRetrievedData.emailAddress,
-                      Enrolments(Set.empty),
-                      Some(retrievedGGCredential(individualRetrievedData.ggCredId))
-                    )
-                    mockGetSession(Right(None))
-                    mockGetCitizenDetails(individualRetrievedData.nino)(Right(citizenDetails))
-                    mockStoreSession(HECSession(individualRetrievedData))(Right(()))
-                  }
-                )
+                inSequence {
+                  mockAuthWithRetrievals(
+                    ConfidenceLevel.L250,
+                    Some(AffinityGroup.Individual),
+                    Some(individualRetrievedData.nino),
+                    None,
+                    individualRetrievedData.emailAddress,
+                    Enrolments(Set.empty),
+                    Some(retrievedGGCredential(individualRetrievedData.ggCredId))
+                  )
+                  mockGetSession(Right(None))
+                  mockGetCitizenDetails(individualRetrievedData.nino)(Right(citizenDetails))
+                  mockStoreSession(HECSession(individualRetrievedData))(Right(()))
+                }
+
+                checkIsRedirect(performAction(), routes.DummyController.dummy())
               }
             }
 
@@ -210,22 +203,23 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
               None
             )
 
-            test(() =>
-              inSequence {
-                mockAuthWithRetrievals(
-                  ConfidenceLevel.L250,
-                  Some(AffinityGroup.Individual),
-                  Some(completeIndividualRetrievedData.nino),
-                  Some(sautr),
-                  completeIndividualRetrievedData.emailAddress,
-                  Enrolments(Set.empty),
-                  Some(retrievedGGCredential(completeIndividualRetrievedData.ggCredId))
-                )
-                mockGetSession(Right(None))
-                mockGetCitizenDetails(completeIndividualRetrievedData.nino)(Right(citizenDetails))
-                mockStoreSession(HECSession(completeIndividualRetrievedData))(Right(()))
-              }
-            )
+            inSequence {
+              mockAuthWithRetrievals(
+                ConfidenceLevel.L250,
+                Some(AffinityGroup.Individual),
+                Some(completeIndividualRetrievedData.nino),
+                Some(sautr),
+                completeIndividualRetrievedData.emailAddress,
+                Enrolments(Set.empty),
+                Some(retrievedGGCredential(completeIndividualRetrievedData.ggCredId))
+              )
+              mockGetSession(Right(None))
+              mockGetCitizenDetails(completeIndividualRetrievedData.nino)(Right(citizenDetails))
+              mockStoreSession(HECSession(completeIndividualRetrievedData))(Right(()))
+            }
+
+            checkIsRedirect(performAction(), routes.DummyController.dummy())
+
           }
 
           "an SAUTR is retrieved in the GG cred and in citizen details" in {
@@ -238,24 +232,24 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
               Some(citizenDetailsSautr)
             )
 
-            test(() =>
-              inSequence {
-                mockAuthWithRetrievals(
-                  ConfidenceLevel.L250,
-                  Some(AffinityGroup.Individual),
-                  Some(completeIndividualRetrievedData.nino),
-                  Some(ggSautr),
-                  completeIndividualRetrievedData.emailAddress,
-                  Enrolments(Set.empty),
-                  Some(retrievedGGCredential(completeIndividualRetrievedData.ggCredId))
-                )
-                mockGetSession(Right(None))
-                mockGetCitizenDetails(completeIndividualRetrievedData.nino)(Right(citizenDetails))
-                mockStoreSession(HECSession(completeIndividualRetrievedData.copy(sautr = Some(citizenDetailsSautr))))(
-                  Right(())
-                )
-              }
-            )
+            inSequence {
+              mockAuthWithRetrievals(
+                ConfidenceLevel.L250,
+                Some(AffinityGroup.Individual),
+                Some(completeIndividualRetrievedData.nino),
+                Some(ggSautr),
+                completeIndividualRetrievedData.emailAddress,
+                Enrolments(Set.empty),
+                Some(retrievedGGCredential(completeIndividualRetrievedData.ggCredId))
+              )
+              mockGetSession(Right(None))
+              mockGetCitizenDetails(completeIndividualRetrievedData.nino)(Right(citizenDetails))
+              mockStoreSession(HECSession(completeIndividualRetrievedData.copy(sautr = Some(citizenDetailsSautr))))(
+                Right(())
+              )
+            }
+
+            checkIsRedirect(performAction(), routes.DummyController.dummy())
           }
 
           "all the necessary data is retrieved for an individual with affinity group " +
@@ -266,22 +260,22 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
                 completeIndividualRetrievedData.sautr
               )
 
-              test(() =>
-                inSequence {
-                  mockAuthWithRetrievals(
-                    ConfidenceLevel.L250,
-                    Some(AffinityGroup.Organisation),
-                    Some(completeIndividualRetrievedData.nino),
-                    None,
-                    completeIndividualRetrievedData.emailAddress,
-                    Enrolments(Set(Enrolment(EnrolmentConfig.SAEnrolment.key))),
-                    Some(retrievedGGCredential(completeIndividualRetrievedData.ggCredId))
-                  )
-                  mockGetSession(Right(None))
-                  mockGetCitizenDetails(completeIndividualRetrievedData.nino)(Right(citizenDetails))
-                  mockStoreSession(HECSession(completeIndividualRetrievedData))(Right(()))
-                }
-              )
+              inSequence {
+                mockAuthWithRetrievals(
+                  ConfidenceLevel.L250,
+                  Some(AffinityGroup.Organisation),
+                  Some(completeIndividualRetrievedData.nino),
+                  None,
+                  completeIndividualRetrievedData.emailAddress,
+                  Enrolments(Set(Enrolment(EnrolmentConfig.SAEnrolment.key))),
+                  Some(retrievedGGCredential(completeIndividualRetrievedData.ggCredId))
+                )
+                mockGetSession(Right(None))
+                mockGetCitizenDetails(completeIndividualRetrievedData.nino)(Right(citizenDetails))
+                mockStoreSession(HECSession(completeIndividualRetrievedData))(Right(()))
+              }
+
+              checkIsRedirect(performAction(), routes.DummyController.dummy())
             }
 
           "all the necessary data is retrieved for a company" in {
@@ -289,40 +283,45 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
               completeCompanyRetrievedData,
               completeCompanyRetrievedData.copy(emailAddress = None)
             ).foreach { companyRetrievedData =>
-              test(() =>
-                inSequence {
-                  mockAuthWithRetrievals(
-                    ConfidenceLevel.L50,
-                    Some(AffinityGroup.Organisation),
-                    None,
-                    None,
-                    companyRetrievedData.emailAddress,
-                    Enrolments(Set(retrievedCtEnrolment(ctutr))),
-                    Some(retrievedGGCredential(companyRetrievedData.ggCredId))
-                  )
-                  mockGetSession(Right(None))
-                  mockStoreSession(HECSession(companyRetrievedData))(Right(()))
-                }
-              )
-            }
-          }
-
-          "no CTUTR can be found for a company" in {
-            test(() =>
               inSequence {
                 mockAuthWithRetrievals(
                   ConfidenceLevel.L50,
                   Some(AffinityGroup.Organisation),
                   None,
                   None,
-                  completeCompanyRetrievedData.emailAddress,
-                  Enrolments(Set.empty),
-                  Some(retrievedGGCredential(completeCompanyRetrievedData.ggCredId))
+                  companyRetrievedData.emailAddress,
+                  Enrolments(Set(retrievedCtEnrolment(ctutr))),
+                  Some(retrievedGGCredential(companyRetrievedData.ggCredId))
                 )
                 mockGetSession(Right(None))
-                mockStoreSession(HECSession(completeCompanyRetrievedData.copy(ctutr = None)))(Right(()))
+                mockStoreSession(HECSession(companyRetrievedData))(Right(()))
               }
-            )
+
+              val result = performAction()
+              status(result)          shouldBe OK
+              contentAsString(result) shouldBe s"Companies not handled yet - retrieved data $companyRetrievedData"
+            }
+          }
+
+          "no CTUTR can be found for a company" in {
+            val companyData = completeCompanyRetrievedData.copy(ctutr = None)
+            inSequence {
+              mockAuthWithRetrievals(
+                ConfidenceLevel.L50,
+                Some(AffinityGroup.Organisation),
+                None,
+                None,
+                completeCompanyRetrievedData.emailAddress,
+                Enrolments(Set.empty),
+                Some(retrievedGGCredential(completeCompanyRetrievedData.ggCredId))
+              )
+              mockGetSession(Right(None))
+              mockStoreSession(HECSession(companyData))(Right(()))
+            }
+
+            val result = performAction()
+            status(result)          shouldBe OK
+            contentAsString(result) shouldBe s"Companies not handled yet - retrieved data $companyData"
           }
 
         }
