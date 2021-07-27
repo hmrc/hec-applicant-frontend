@@ -4,6 +4,7 @@ service.text = This is your new service
 # Buttons
 button.sign-in=Sign in
 button.try-again=Try again
+button.confirm=Confirm
 
 # Failed IV
 iv.failedIv.title=We could not confirm your identity
@@ -46,3 +47,9 @@ iv.preconditionFailed.title=You cannot use this service
 iv.preconditionFailed.p1=We’ve checked the details in your Government Gateway account.
 iv.preconditionFailed.p2=You do not meet the criteria to use this service.
 iv.preconditionFailed.link=Find out who needs to do a tax check
+
+# Check Personal Details
+confirmIndividualDetails.title=Check your personal details
+confirmIndividualDetails.intro=We will use these details to do a tax check, confirm they are correct before continuing.
+confirmIndividualDetails.link=These are not my details
+
