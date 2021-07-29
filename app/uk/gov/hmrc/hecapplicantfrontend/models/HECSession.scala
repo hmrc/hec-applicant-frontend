@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models
 
+import cats.Eq
 import play.api.libs.json.{Json, OFormat}
 
 final case class HECSession(
@@ -23,6 +24,8 @@ final case class HECSession(
 )
 
 object HECSession {
+
+  implicit val eq: Eq[HECSession] = Eq.fromUniversalEquals
 
   implicit val format: OFormat[HECSession] = Json.format
 

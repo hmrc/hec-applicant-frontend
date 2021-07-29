@@ -10,6 +10,9 @@ GET        /confirm-details         uk.gov.hmrc.hecapplicantfrontend.controllers
 POST       /confirm-details         uk.gov.hmrc.hecapplicantfrontend.controllers.ConfirmIndividualDetailsController.confirmIndividualDetailsSubmit
 GET        /confirm-details-exit    uk.gov.hmrc.hecapplicantfrontend.controllers.ConfirmIndividualDetailsController.confirmIndividualDetailsExit
 
+GET        /licence-type            uk.gov.hmrc.hecapplicantfrontend.controllers.LicenceDetailsController.licenceType
+
+
 
 # IV
 GET  /failed-iv/callback                         uk.gov.hmrc.hecapplicantfrontend.controllers.IvFailureController.ivFailure(journeyId: java.util.UUID)

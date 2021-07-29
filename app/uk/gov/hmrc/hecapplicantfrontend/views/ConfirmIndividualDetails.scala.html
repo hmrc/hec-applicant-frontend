@@ -4,7 +4,7 @@
 @import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 @import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.IndividualRetrievedData
 
-@this(layout: Layout, govukButton: GovukButton, govukSummaryList : GovukSummaryList)
+@this(layout: Layout, govukButton: GovukButton, govukSummaryList : GovukSummaryList, formWithCSRF: FormWithCSRF)
 
 
 @(details: IndividualRetrievedData)(implicit request: Request[_], messages: Messages)
@@ -37,18 +37,17 @@
                     content = Text(messages("confirmIndividualDetails.dob"))
                 ),
                 value = Value(
-                    content = Text(s"""${dob.getDayOfMonth} ${messages(s"date.${dob.getMonthValue}")} ${dob.getYear}""")
+                    content = Text(s"${dob.getDayOfMonth} ${messages(s"date.${dob.getMonthValue}")} ${dob.getYear}")
                 )
             )
         )
     ))
 
     <p class="govuk-body">
-        <a class="govuk-link" href="#">@messages("confirmIndividualDetails.link")</a>
+        <a class="govuk-link" href="@{routes.ConfirmIndividualDetailsController.confirmIndividualDetailsExit().url}">@messages("confirmIndividualDetails.link")</a>
     </p>
 
-    @govukButton(Button(
-        content = Text(messages("button.confirm")),
-        href = Some(routes.IvFailureController.retry().url)
-    ))
+    @formWithCSRF(action = routes.ConfirmIndividualDetailsController.confirmIndividualDetailsSubmit()) {
+        @govukButton(Button(content = Text(messages("button.confirm"))))
+    }
 }

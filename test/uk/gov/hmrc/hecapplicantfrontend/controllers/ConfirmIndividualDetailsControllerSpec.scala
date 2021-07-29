@@ -21,10 +21,11 @@ import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.hecapplicantfrontend.models.{DateOfBirth, HECSession, Name}
+import uk.gov.hmrc.hecapplicantfrontend.models.{DateOfBirth, Error, HECSession, Name}
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRetrievedData, IndividualRetrievedData}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
+import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
 
 import java.time.LocalDate
 import scala.concurrent.Future
@@ -34,11 +35,13 @@ class ConfirmIndividualDetailsControllerSpec
     extends ControllerSpec
     with AuthSupport
     with SessionSupport
-    with AuthAndSessionDataBehaviour {
+    with AuthAndSessionDataBehaviour
+    with JourneyServiceSupport {
 
   override def overrideBindings = List(
     bind[AuthConnector].toInstance(mockAuthConnector),
-    bind[SessionStore].toInstance(mockSessionStore)
+    bind[SessionStore].toInstance(mockSessionStore),
+    bind[JourneyService].toInstance(mockJourneyService)
   )
 
   val controller = instanceOf[ConfirmIndividualDetailsController]
@@ -69,7 +72,7 @@ class ConfirmIndividualDetailsControllerSpec
 
         "the user is logged in and individual data can be found" in {
           val name        = Name("First", "Last")
-          val dateOfBirth = DateOfBirth(LocalDate.now())
+          val dateOfBirth = DateOfBirth(LocalDate.of(2000, 12, 3))
 
           val session = HECSession(IndividualRetrievedData(GGCredId(""), NINO(""), None, name, dateOfBirth, None))
 
@@ -78,7 +81,142 @@ class ConfirmIndividualDetailsControllerSpec
             mockGetSession(session)
           }
 
-          status(performAction()) shouldBe OK
+          checkPageIsDisplayed(
+            performAction(),
+            messageFromMessageKey("confirmIndividualDetails.title"),
+            { doc =>
+              val rowValues = doc.select(".govuk-summary-list__value")
+              rowValues.get(0).text shouldBe name.firstName
+              rowValues.get(1).text shouldBe name.lastName
+              rowValues.get(2).text shouldBe "3 December 2000"
+
+              val link = doc.select(".govuk-body > .govuk-link")
+              link.attr("href") shouldBe routes.ConfirmIndividualDetailsController.confirmIndividualDetailsExit().url
+
+            }
+          )
+
+        }
+
+      }
+
+    }
+
+    "handling submits on the confirm individual details page" must {
+
+      def performAction(): Future[Result] = controller.confirmIndividualDetailsSubmit(FakeRequest())
+
+      behave like (authAndSessionDataBehaviour(performAction))
+
+      "redirect to the start endpoint" when {
+
+        "company details are found in session" in {
+          val companyRetrievedData = CompanyRetrievedData(GGCredId(""), None, None)
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(HECSession(companyRetrievedData))
+          }
+
+          checkIsRedirect(performAction(), routes.StartController.start())
+        }
+
+      }
+
+      "return an InternalServerError" when {
+
+        "there is a problem getting the next page" in {
+          val session = HECSession(
+            IndividualRetrievedData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None)
+          )
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockJourneyServiceUpdateAndNext(
+              routes.ConfirmIndividualDetailsController.confirmIndividualDetails(),
+              session,
+              session
+            )(Left(Error("")))
+          }
+
+          status(performAction()) shouldBe INTERNAL_SERVER_ERROR
+        }
+
+      }
+
+      "proceed to the next page" when {
+
+        "the next page can be found" in {
+          val session = HECSession(
+            IndividualRetrievedData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None)
+          )
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockJourneyServiceUpdateAndNext(
+              routes.ConfirmIndividualDetailsController.confirmIndividualDetails(),
+              session,
+              session
+            )(Right(mockNextCall))
+          }
+
+          checkIsRedirect(performAction(), mockNextCall)
+        }
+
+      }
+
+    }
+
+    "handling requests to display the confirm individual details exit page" must {
+
+      def performAction(): Future[Result] = controller.confirmIndividualDetailsExit(FakeRequest())
+
+      behave like (authAndSessionDataBehaviour(performAction))
+
+      "redirect to the start endpoint" when {
+
+        "company details are found in session" in {
+          val companyRetrievedData = CompanyRetrievedData(GGCredId(""), None, None)
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(HECSession(companyRetrievedData))
+          }
+
+          checkIsRedirect(performAction(), routes.StartController.start())
+        }
+      }
+
+      "display the page" when {
+
+        "the user is logged in and individual data can be found" in {
+          val session = HECSession(
+            IndividualRetrievedData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None)
+          )
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockJourneyServiceGetPrevious(
+              routes.ConfirmIndividualDetailsController.confirmIndividualDetailsExit(),
+              session
+            )(mockPreviousCall)
+          }
+
+          checkPageIsDisplayed(
+            performAction(),
+            messageFromMessageKey("confirmIndividualDetailsExit.title"),
+            { doc =>
+              doc.select("#back").attr("href") shouldBe mockPreviousCall.url
+
+              val link = doc.select(s"p > a[href=${appConfig.signOutUrl}]")
+              link.isEmpty shouldBe false
+
+            }
+          )
+
         }
 
       }

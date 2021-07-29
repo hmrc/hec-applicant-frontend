@@ -31,7 +31,7 @@ import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 import uk.gov.hmrc.auth.core.{AffinityGroup, AuthConnector, AuthorisationException, BearerTokenExpired, ConfidenceLevel, Enrolment, EnrolmentIdentifier, Enrolments, IncorrectCredentialStrength, InsufficientEnrolments, InternalError, InvalidBearerToken, MissingBearerToken, NoActiveSession, SessionRecordNotFound, UnsupportedAffinityGroup, UnsupportedAuthProvider, UnsupportedCredentialRole}
 import uk.gov.hmrc.hecapplicantfrontend.config.EnrolmentConfig
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
-import uk.gov.hmrc.hecapplicantfrontend.services.CitizenDetailsService
+import uk.gov.hmrc.hecapplicantfrontend.services.{CitizenDetailsService, JourneyService}
 import uk.gov.hmrc.hecapplicantfrontend.models.{CitizenDetails, DateOfBirth, EmailAddress, Error, HECSession, Name}
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRetrievedData, IndividualRetrievedData}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CTUTR, GGCredId, NINO, SAUTR}
@@ -42,7 +42,7 @@ import java.time.LocalDate
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSupport {
+class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSupport with JourneyServiceSupport {
 
   import StartControllerSpec._
 
@@ -77,7 +77,8 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
     List[GuiceableModule](
       bind[AuthConnector].toInstance(mockAuthConnector),
       bind[SessionStore].toInstance(mockSessionStore),
-      bind[CitizenDetailsService].toInstance(mockCitizenDetailsService)
+      bind[CitizenDetailsService].toInstance(mockCitizenDetailsService),
+      bind[JourneyService].toInstance(mockJourneyService)
     )
 
   val retrievals =
@@ -154,12 +155,14 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
       "proceed" when {
 
         "existing session data is found" in {
+          val session = HECSession(completeIndividualRetrievedData)
           inSequence {
             mockAuthWithRetrievals(ConfidenceLevel.L50, None, None, None, None, Enrolments(Set.empty), None)
-            mockGetSession(HECSession(completeIndividualRetrievedData))
+            mockGetSession(session)
+            mockFirstPge(session)(mockNextCall)
           }
 
-          checkIsRedirect(performAction(), routes.ConfirmIndividualDetailsController.confirmIndividualDetails())
+          checkIsRedirect(performAction(), mockNextCall)
         }
 
         "no session data is found and" when {
@@ -177,6 +180,8 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
                   individualRetrievedData.sautr
                 )
 
+                val session = HECSession(individualRetrievedData)
+
                 inSequence {
                   mockAuthWithRetrievals(
                     ConfidenceLevel.L250,
@@ -189,10 +194,11 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
                   )
                   mockGetSession(Right(None))
                   mockGetCitizenDetails(individualRetrievedData.nino)(Right(citizenDetails))
-                  mockStoreSession(HECSession(individualRetrievedData))(Right(()))
+                  mockStoreSession(session)(Right(()))
+                  mockFirstPge(session)(mockNextCall)
                 }
 
-                checkIsRedirect(performAction(), routes.ConfirmIndividualDetailsController.confirmIndividualDetails())
+                checkIsRedirect(performAction(), mockNextCall)
               }
             }
 
@@ -202,6 +208,8 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
               completeIndividualRetrievedData.dateOfBirth,
               None
             )
+
+            val session = HECSession(completeIndividualRetrievedData)
 
             inSequence {
               mockAuthWithRetrievals(
@@ -215,11 +223,11 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
               )
               mockGetSession(Right(None))
               mockGetCitizenDetails(completeIndividualRetrievedData.nino)(Right(citizenDetails))
-              mockStoreSession(HECSession(completeIndividualRetrievedData))(Right(()))
+              mockStoreSession(session)(Right(()))
+              mockFirstPge(session)(mockNextCall)
             }
 
-            checkIsRedirect(performAction(), routes.ConfirmIndividualDetailsController.confirmIndividualDetails())
-
+            checkIsRedirect(performAction(), mockNextCall)
           }
 
           "an SAUTR is retrieved in the GG cred and in citizen details" in {
@@ -231,6 +239,7 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
               completeIndividualRetrievedData.dateOfBirth,
               Some(citizenDetailsSautr)
             )
+            val session        = HECSession(completeIndividualRetrievedData.copy(sautr = Some(citizenDetailsSautr)))
 
             inSequence {
               mockAuthWithRetrievals(
@@ -244,12 +253,11 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
               )
               mockGetSession(Right(None))
               mockGetCitizenDetails(completeIndividualRetrievedData.nino)(Right(citizenDetails))
-              mockStoreSession(HECSession(completeIndividualRetrievedData.copy(sautr = Some(citizenDetailsSautr))))(
-                Right(())
-              )
+              mockStoreSession(session)(Right(()))
+              mockFirstPge(session)(mockNextCall)
             }
 
-            checkIsRedirect(performAction(), routes.ConfirmIndividualDetailsController.confirmIndividualDetails())
+            checkIsRedirect(performAction(), mockNextCall)
           }
 
           "all the necessary data is retrieved for an individual with affinity group " +
@@ -259,6 +267,8 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
                 completeIndividualRetrievedData.dateOfBirth,
                 completeIndividualRetrievedData.sautr
               )
+
+              val session = HECSession(completeIndividualRetrievedData)
 
               inSequence {
                 mockAuthWithRetrievals(
@@ -272,10 +282,11 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
                 )
                 mockGetSession(Right(None))
                 mockGetCitizenDetails(completeIndividualRetrievedData.nino)(Right(citizenDetails))
-                mockStoreSession(HECSession(completeIndividualRetrievedData))(Right(()))
+                mockStoreSession(session)(Right(()))
+                mockFirstPge(session)(mockNextCall)
               }
 
-              checkIsRedirect(performAction(), routes.ConfirmIndividualDetailsController.confirmIndividualDetails())
+              checkIsRedirect(performAction(), mockNextCall)
             }
 
           "all the necessary data is retrieved for a company" in {
@@ -283,6 +294,7 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
               completeCompanyRetrievedData,
               completeCompanyRetrievedData.copy(emailAddress = None)
             ).foreach { companyRetrievedData =>
+              val session = HECSession(companyRetrievedData)
               inSequence {
                 mockAuthWithRetrievals(
                   ConfidenceLevel.L50,
@@ -294,17 +306,18 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
                   Some(retrievedGGCredential(companyRetrievedData.ggCredId))
                 )
                 mockGetSession(Right(None))
-                mockStoreSession(HECSession(companyRetrievedData))(Right(()))
+                mockStoreSession(session)(Right(()))
+                mockFirstPge(session)(mockNextCall)
               }
 
-              val result = performAction()
-              status(result)          shouldBe OK
-              contentAsString(result) shouldBe s"Companies not handled yet - retrieved data $companyRetrievedData"
+              checkIsRedirect(performAction(), mockNextCall)
             }
           }
 
           "no CTUTR can be found for a company" in {
             val companyData = completeCompanyRetrievedData.copy(ctutr = None)
+            val session     = HECSession(companyData)
+
             inSequence {
               mockAuthWithRetrievals(
                 ConfidenceLevel.L50,
@@ -316,12 +329,12 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
                 Some(retrievedGGCredential(completeCompanyRetrievedData.ggCredId))
               )
               mockGetSession(Right(None))
-              mockStoreSession(HECSession(companyData))(Right(()))
+              mockStoreSession(session)(Right(()))
+              mockFirstPge(session)(mockNextCall)
+
             }
 
-            val result = performAction()
-            status(result)          shouldBe OK
-            contentAsString(result) shouldBe s"Companies not handled yet - retrieved data $companyData"
+            checkIsRedirect(performAction(), mockNextCall)
           }
 
         }

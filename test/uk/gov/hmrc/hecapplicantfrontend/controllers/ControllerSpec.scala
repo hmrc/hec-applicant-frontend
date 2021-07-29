@@ -31,6 +31,7 @@ import play.api.{Application, Configuration, Environment, Logger, Play}
 import play.api.test.Helpers._
 import play.api.inject.guice.{GuiceApplicationBuilder, GuiceableModule}
 import play.api.mvc.{Call, Result}
+import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 
 import scala.concurrent.Future
 import scala.reflect.ClassTag
@@ -60,6 +61,8 @@ trait ControllerSpec extends AnyWordSpec with Matchers with BeforeAndAfterAll wi
       .build()
 
   lazy val fakeApplication: Application = buildFakeApplication()
+
+  lazy val appConfig: AppConfig = instanceOf[AppConfig]
 
   abstract override def beforeAll(): Unit = {
     Play.start(fakeApplication)

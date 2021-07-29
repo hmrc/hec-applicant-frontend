@@ -41,6 +41,8 @@ class AppConfig @Inject() (config: Configuration) {
     s"$basGateway?continue=$selfBaseUrl${routes.StartController.start().url}&origin=$origin"
   }
 
+  lazy val signOutUrl: String = config.get[String]("auth.sign-out.url")
+
   lazy val redirectToIvUplift: Result = {
     val ivUrl: String = config.get[String]("iv.url")
 
