@@ -23,7 +23,8 @@
   headBlock: Option[Html] = None,
   scriptsBlock: Option[Html] = None,
   backUrl: Option[String] = None,
-  hasErrors: Boolean = false
+  hasErrors: Boolean = false,
+  showSignOutLink: Boolean = true
 )(contentBlock: Html)(implicit request: Request[_], messages: Messages)
 
 @beforeContentBlock = {
@@ -52,7 +53,7 @@
 @govukLayout(
     pageTitle = Some(documentTitle),
     headBlock = Some(hmrcHead(headBlock = headBlock, nonce = CSPNonce.get)),
-    headerBlock = Some(hmrcStandardHeader()),
+    headerBlock = Some(hmrcStandardHeader(signOutUrl = if(showSignOutLink) Some(appConfig.signOutUri) else None)),
     scriptsBlock = Some(hmrcScripts(scriptsBlock = scriptsBlock, nonce = CSPNonce.get)),
     beforeContentBlock = Some(beforeContentBlock),
     footerBlock = Some(hmrcStandardFooter())
