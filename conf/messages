@@ -1,5 +1,11 @@
-service.name = hec-applicant-frontend
+gov.uk = GOV.UK
+service.name = Do a tax check when renewing or applying for a licence
 service.text = This is your new service
+service.phase = beta
+phaseBanner.text = This is a new service – your <a class="govuk-link" href="{0}">feedback</a> will help us to improve it.
+
+generic.errorPrefix = Error:
+
 
 # Buttons
 button.sign-in=Sign in
@@ -61,7 +67,7 @@ confirmIndividualDetailsExit.title=If these are not your details
 confirmIndividualDetailsExit.p1=You’ll need to check the user ID and password you used to sign in to Government Gateway.
 confirmIndividualDetailsExit.p2=You may need to <a href="{0}">sign out</a> and sign in using the correct Government Gateway user ID and password.
 
-#Months
+# Months
 date.1=January
 date.2=February
 date.3=March

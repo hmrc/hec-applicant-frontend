@@ -30,8 +30,13 @@ import java.util.UUID
 @Singleton
 class AppConfig @Inject() (config: Configuration) {
 
+  val contactFrontendUrl: String           = config.get[String]("microservice.services.contact-frontend.url")
+  val contactFormServiceIdentifier: String = config.get[String]("microservice.services.contact-frontend.service-id")
+
   val welshLanguageSupportEnabled: Boolean =
     config.getOptional[Boolean]("features.welsh-language-support").getOrElse(false)
+
+  val betaFeedbackUrl: String = s"$contactFrontendUrl/contact/beta-feedback?service=$contactFormServiceIdentifier"
 
   val selfBaseUrl: String = config.get[String]("self.url")
 
