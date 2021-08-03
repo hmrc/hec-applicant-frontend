@@ -30,10 +30,12 @@ import java.util.UUID
 @Singleton
 class AppConfig @Inject() (config: Configuration) {
 
+  val platformHost: Option[String] = config.getOptional[String]("platform.frontend.host")
+
   val welshLanguageSupportEnabled: Boolean =
     config.getOptional[Boolean]("features.welsh-language-support").getOrElse(false)
 
-  val selfBaseUrl: String = config.get[String]("self.url")
+  val selfBaseUrl: String = platformHost.getOrElse(config.get[String]("self.url"))
 
   lazy val signInUrl: String = {
     val basGateway: String = config.get[String]("auth.bas-gateway.url")
@@ -42,12 +44,12 @@ class AppConfig @Inject() (config: Configuration) {
   }
 
   lazy val redirectToIvUplift: Result = {
-    val ivUrl: String = config.get[String]("iv.url")
+    val ivUrl: String = platformHost.getOrElse(config.get[String]("iv.url"))
 
     val ivOrigin: String = config.get[String]("iv.origin")
 
     val (ivSuccessUrl: String, ivFailureUrl: String) = {
-      val useRelativeUrls                          = config.get[Boolean]("iv.use-relative-urls")
+      val useRelativeUrls                          = platformHost.isDefined
       val (successRelativeUrl, failureRelativeUrl) =
         routes.StartController.start().url ->
           routes.IvFailureController.ivFailure(UUID.randomUUID()).url.takeWhile(_ =!= '?')
