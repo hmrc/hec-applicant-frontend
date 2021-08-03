@@ -18,43 +18,44 @@ package uk.gov.hmrc.hecapplicantfrontend.config
 
 import cats.instances.char._
 import cats.syntax.eq._
+
 import javax.inject.{Inject, Singleton}
 import play.api.Configuration
 import play.api.mvc.Result
 import play.api.mvc.Results.Redirect
 import uk.gov.hmrc.auth.core.ConfidenceLevel
 import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import java.util.UUID
 
 @Singleton
-class AppConfig @Inject() (config: Configuration) {
+class AppConfig @Inject() (config: Configuration) extends ServicesConfig(config) {
 
-  val contactFrontendUrl: String           = config.get[String]("microservice.services.contact-frontend.url")
-  val contactFormServiceIdentifier: String = config.get[String]("contact-frontend.serviceId")
+  val contactFrontendUrl: String           = baseUrl("contact-frontend")
+  val contactFormServiceIdentifier: String = getString("contact-frontend.serviceId")
 
-  val welshLanguageSupportEnabled: Boolean =
-    config.getOptional[Boolean]("features.welsh-language-support").getOrElse(false)
+  val welshLanguageSupportEnabled: Boolean = getConfBool("features.welsh-language-support", false)
 
   val betaFeedbackUrl: String = s"$contactFrontendUrl/contact/beta-feedback?service=$contactFormServiceIdentifier"
 
-  val selfBaseUrl: String = config.get[String]("self.url")
+  val selfBaseUrl: String = getString("self.url")
 
   lazy val signInUrl: String = {
-    val basGateway: String = config.get[String]("auth.bas-gateway.url")
-    val origin: String     = config.get[String]("auth.gg.origin")
+    val basGateway: String = getString("auth.bas-gateway.url")
+    val origin: String     = getString("auth.gg.origin")
     s"$basGateway?continue=$selfBaseUrl${routes.StartController.start().url}&origin=$origin"
   }
 
-  lazy val signOutUri: String = config.get[String]("auth.sign-out.uri")
+  lazy val signOutUri: String = getString("auth.sign-out.uri")
 
   lazy val redirectToIvUplift: Result = {
-    val ivUrl: String = config.get[String]("iv.url")
+    val ivUrl: String = getString("iv.url")
 
-    val ivOrigin: String = config.get[String]("iv.origin")
+    val ivOrigin: String = getString("iv.origin")
 
     val (ivSuccessUrl: String, ivFailureUrl: String) = {
-      val useRelativeUrls                          = config.get[Boolean]("iv.use-relative-urls")
+      val useRelativeUrls                          = getBoolean("iv.use-relative-urls")
       val (successRelativeUrl, failureRelativeUrl) =
         routes.StartController.start().url ->
           routes.IvFailureController.ivFailure(UUID.randomUUID()).url.takeWhile(_ =!= '?')
