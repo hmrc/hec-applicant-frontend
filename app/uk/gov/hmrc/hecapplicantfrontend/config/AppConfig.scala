@@ -31,7 +31,7 @@ import java.util.UUID
 class AppConfig @Inject() (config: Configuration) {
 
   val contactFrontendUrl: String           = config.get[String]("microservice.services.contact-frontend.url")
-  val contactFormServiceIdentifier: String = config.get[String]("microservice.services.contact-frontend.service-id")
+  val contactFormServiceIdentifier: String = config.get[String]("contact-frontend.serviceId")
 
   val welshLanguageSupportEnabled: Boolean =
     config.getOptional[Boolean]("features.welsh-language-support").getOrElse(false)
