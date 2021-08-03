@@ -25,37 +25,42 @@ import play.api.mvc.Result
 import play.api.mvc.Results.Redirect
 import uk.gov.hmrc.auth.core.ConfidenceLevel
 import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+import uk.gov.hmrc.hmrcfrontend.config.ContactFrontendConfig
 
 import java.util.UUID
 
 @Singleton
-class AppConfig @Inject() (config: Configuration) extends ServicesConfig(config) {
+class AppConfig @Inject() (config: Configuration, contactFrontendConfig: ContactFrontendConfig) {
 
-  val contactFrontendUrl: String           = baseUrl("contact-frontend")
-  val contactFormServiceIdentifier: String = getString("contact-frontend.serviceId")
+  val platformHost: Option[String] = config.getOptional[String]("platform.frontend.host")
 
-  val welshLanguageSupportEnabled: Boolean = getConfBool("features.welsh-language-support", false)
+  val contactFrontendUrl: String           =
+    contactFrontendConfig.baseUrl.getOrElse(sys.error("Could not find config for contact frontend url"))
+  val contactFormServiceIdentifier: String =
+    contactFrontendConfig.serviceId.getOrElse(sys.error("Could not find config for contact frontend service id"))
 
   val betaFeedbackUrl: String = s"$contactFrontendUrl/contact/beta-feedback?service=$contactFormServiceIdentifier"
 
-  val selfBaseUrl: String = getString("self.url")
+  val welshLanguageSupportEnabled: Boolean =
+    config.getOptional[Boolean]("features.welsh-language-support").getOrElse(false)
+
+  val selfBaseUrl: String = platformHost.getOrElse(config.get[String]("self.url"))
 
   lazy val signInUrl: String = {
-    val basGateway: String = getString("auth.bas-gateway.url")
-    val origin: String     = getString("auth.gg.origin")
+    val basGateway: String = config.get[String]("auth.bas-gateway.url")
+    val origin: String     = config.get[String]("auth.gg.origin")
     s"$basGateway?continue=$selfBaseUrl${routes.StartController.start().url}&origin=$origin"
   }
 
-  lazy val signOutUri: String = getString("auth.sign-out.uri")
+  lazy val signOutUri: String = config.get[String]("auth.sign-out.uri")
 
   lazy val redirectToIvUplift: Result = {
-    val ivUrl: String = getString("iv.url")
+    val ivUrl: String = platformHost.getOrElse(config.get[String]("iv.url"))
 
-    val ivOrigin: String = getString("iv.origin")
+    val ivOrigin: String = config.get[String]("iv.origin")
 
     val (ivSuccessUrl: String, ivFailureUrl: String) = {
-      val useRelativeUrls                          = getBoolean("iv.use-relative-urls")
+      val useRelativeUrls                          = platformHost.isDefined
       val (successRelativeUrl, failureRelativeUrl) =
         routes.StartController.start().url ->
           routes.IvFailureController.ivFailure(UUID.randomUUID()).url.takeWhile(_ =!= '?')
