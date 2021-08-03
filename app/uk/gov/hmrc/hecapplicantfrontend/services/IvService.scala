@@ -57,7 +57,7 @@ class IvServiceImpl @Inject() (connector: IvConnector)(implicit
       .subflatMap[Error, IvErrorStatus] { response =>
         if (response.status === OK)
           response
-            .parseJSON[IvStatusResponse]()
+            .parseJSON[IvStatusResponse]
             .bimap(
               Error(_),
               r => IvErrorStatus.fromString(r.result)

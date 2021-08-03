@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.util
 
-import play.api.libs.json.{JsDefined, JsLookupResult, Reads}
+import play.api.libs.json.Reads
 import uk.gov.hmrc.http.HttpResponse
 
 import scala.util.{Failure, Success, Try}
@@ -25,29 +25,22 @@ object HttpResponseOps {
 
   implicit class HttpResponseOps(private val response: HttpResponse) extends AnyVal {
 
-    def parseJSON[A](
-      path: Option[String] = None
-    )(implicit reads: Reads[A]): Either[String, A] =
-      Try(
-        path.fold[JsLookupResult](JsDefined(response.json))(response.json \ _)
-      ) match {
-        case Success(jsLookupResult) ⇒
-          // use Option here to filter out null values
-          jsLookupResult.toOption
-            .flatMap(Option(_))
+    def parseJSON[A](implicit reads: Reads[A]): Either[String, A] =
+      // use Option here to filter out null values
+      Try(response.json) match {
+        case Success(jsValue) ⇒
+          jsValue
+            .validate[A]
             .fold[Either[String, A]](
-              Left("No JSON found in body of http response")
-            )(
-              _.validate[A].fold[Either[String, A]](
-                _ ⇒
-                  // there was JSON in the response but we couldn't read it
-                  Left("Could not parse http response JSON"),
-                Right(_)
-              )
+              _ ⇒
+                // there was JSON in the response but we couldn't read it
+                Left("Could not parse http response JSON"),
+              Right(_)
             )
-        case Failure(error) ⇒
+
+        case Failure(_) ⇒
           // response.json failed in this case - there was no JSON in the response
-          Left(s"Could not read http response as JSON: ${error.getMessage}")
+          Left(s"Could not read http response as JSON")
       }
 
   }

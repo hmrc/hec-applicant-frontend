@@ -58,7 +58,7 @@ class CitizenDetailsServiceImpl @Inject() (
         Left(Error(s"Response to get citizen details came back with status ${httpResponse.status}"))
       else
         httpResponse
-          .parseJSON[CidPerson]()
+          .parseJSON[CidPerson]
           .leftMap(Error(_))
           .flatMap(toCitizenDetails)
 
