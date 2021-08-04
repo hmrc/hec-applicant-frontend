@@ -84,4 +84,6 @@ class AppConfig @Inject() (config: Configuration, contactFrontendConfig: Contact
     )
   }
 
+  val taxCheckGuidanceUrl: String = config.get[String]("external-url.tax-check-guidance")
+
 }

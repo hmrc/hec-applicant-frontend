@@ -1,14 +1,21 @@
 @import play.api.i18n.Messages
 @import play.api.mvc.{Call, Request}
 @import play.twirl.api.Html
+@import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
+@import uk.gov.hmrc.hecapplicantfrontend.models
+@import uk.gov.hmrc.hecapplicantfrontend.models.views.LicenceTypeOption
 
 @this(layout: Layout)
 
-@(back: Call)(implicit request: Request[_], messages: Messages)
-@title = @{messages("licenceTypeExit.title")}
+@(back: Call, options: List[models.LicenceType])(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
+@key = @{"licenceTypeExit"}
+@title = @{messages(s"$key.title")}
 
 @layout(pageTitle = Some(title), backUrl = Some(back.url)) {
     <h1 class="govuk-heading-xl">@title</h1>
     <p class="govuk-body">@{messages("licenceTypeExit.p1")}</p>
-    <p class="govuk-body">@{Html(messages("licenceTypeExit.p2"))}</p>
+    <ul class="govuk-list govuk-list--bullet">
+        @{options.map(option => Html(s"""<li>${messages(s"$key.${LicenceTypeOption.licenceTypeOption(option).messageKey}")}</li>"""))}
+    </ul>
+    <p class="govuk-body"><a class="govuk-link" href="@{appConfig.taxCheckGuidanceUrl}">@{messages(s"$key.link")}</a></p>
 }

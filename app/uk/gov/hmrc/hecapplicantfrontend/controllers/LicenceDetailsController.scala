@@ -17,12 +17,12 @@
 package uk.gov.hmrc.hecapplicantfrontend.controllers
 
 import cats.instances.future._
-
 import com.google.inject.{Inject, Singleton}
 import play.api.data.Form
 import play.api.i18n.I18nSupport
 import play.api.data.Forms.{mapping, of}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 import uk.gov.hmrc.hecapplicantfrontend.controllers.LicenceDetailsController.{licenceTypeForm, licenceTypeOptions}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
 import uk.gov.hmrc.hecapplicantfrontend.models.LicenceType
@@ -43,7 +43,7 @@ class LicenceDetailsController @Inject() (
   mcc: MessagesControllerComponents,
   licenceTypePage: html.LicenceType,
   licenceTypeExitPage: html.LicenceTypeExit
-)(implicit ec: ExecutionContext)
+)(implicit appConfig: AppConfig, ec: ExecutionContext)
     extends FrontendController(mcc)
     with I18nSupport
     with Logging {
@@ -88,7 +88,10 @@ class LicenceDetailsController @Inject() (
 
   val licenceTypeExit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     Ok(
-      licenceTypeExitPage(journeyService.previous(routes.LicenceDetailsController.licenceTypeExit()))
+      licenceTypeExitPage(
+        journeyService.previous(routes.LicenceDetailsController.licenceTypeExit()),
+        licenceTypeOptions
+      )
     )
   }
 

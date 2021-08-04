@@ -94,5 +94,13 @@ licenceType.link = Find out what to do if you cannot see your licence type
 licenceType.error.required = Select the type of licence you are renewing or applying for
 licenceType.error.invalid = Select the type of licence you are renewing or applying for
 
+# Licence type exit
+licenceTypeExit.title = You do not need to do a tax check
+licenceTypeExit.p1 = This is because you only need to do a tax check if you are renewing or applying for one of these licence types:
+licenceTypeExit.driverOfTaxis = driver of taxis and private hires, includes hackney carriage and dual licences
+licenceTypeExit.operatorOfPrivateHireVehicles = operator of private hire vehicles
+licenceTypeExit.scrapMetalCollector = scrap metal mobile collector
+licenceTypeExit.scrapMetalDealer = scrap metal dealer site
+licenceTypeExit.link = Find out about tax checks
 
 
