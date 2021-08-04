@@ -4,19 +4,40 @@
 @import uk.gov.hmrc.govukfrontend.views.html.components._
 @import uk.gov.hmrc.hecapplicantfrontend.models
 @import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
+@import uk.gov.hmrc.hecapplicantfrontend.views.licenceTypeOption
 
-@this(layout: Layout, govukButton: GovukButton, formWithCSRF: FormWithCSRF)
+@this(layout: Layout, govukRadios: GovukRadios, govukButton: GovukButton, formWithCSRF: FormWithCSRF)
 
 @(form: Form[models.LicenceType], back: Call, options: List[models.LicenceType])(implicit request: Request[_], messages: Messages)
-@title = @{messages("licenceType.title")}
+@key = @{"licenceType"}
+@title = @{messages(s"$key.title")}
+@optionViewModels = @{options.map(B => licenceTypeOption(B))}
+@radioOptions = @{optionViewModels.zipWithIndex.map{ case (option, index) => RadioItem(
+  content = Text(messages(s"$key.${option.messageKey}")),
+  value = Some(index.toString),
+  hint = option.hintKey.fold(_ => Hint(content = Text(messages(s"$key.$_"))))(None)
+)}.toSeq}
 
 @layout(pageTitle = Some(title), backUrl = Some(back.url)) {
-    <h1 class="govuk-heading-xl">@title</h1>
-
-  <p>form is @form</p>
-  <p>Options with indices are @{options.zipWithIndex}</p>
 
     @formWithCSRF(action = routes.LicenceDetailsController.licenceTypeSubmit()) {
-        @govukButton(Button(content = Text(messages("button.continue"))))
+
+      @govukRadios(Radios(
+        fieldset = Some(Fieldset(
+          legend = Some(Legend(
+            content = Text(title),
+            classes = "govuk-fieldset__legend--xl",
+            isPageHeading = true
+          ))
+        )),
+        hint = Some(Hint(
+          content = Text(messages(s"$key.hint"))
+        )),
+        idPrefix = Some(key),
+        name = key,
+        items = radioOptions
+      ))
+
+      @govukButton(Button(content = Text(messages("button.continue"))))
     }
 }
