@@ -20,7 +20,8 @@ import cats.Eq
 import play.api.libs.json.{Json, OFormat}
 
 final case class HECSession(
-  retrievedUserData: RetrievedApplicantData
+  retrievedUserData: RetrievedApplicantData,
+  userAnswers: UserAnswers
 )
 
 object HECSession {

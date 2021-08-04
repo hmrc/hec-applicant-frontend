@@ -1,18 +1,19 @@
 @import play.api.i18n.Messages
-@import play.api.mvc.Call
-@import play.api.mvc.Request
+@import play.api.data.Form
+@import play.api.mvc.{Call, Request}
 @import uk.gov.hmrc.govukfrontend.views.html.components._
 @import uk.gov.hmrc.hecapplicantfrontend.models
 @import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 
 @this(layout: Layout, govukButton: GovukButton, formWithCSRF: FormWithCSRF)
 
-@(back: Call, options: List[models.LicenceType])(implicit request: Request[_], messages: Messages)
+@(form: Form[models.LicenceType], back: Call, options: List[models.LicenceType])(implicit request: Request[_], messages: Messages)
 @title = @{messages("licenceType.title")}
 
 @layout(pageTitle = Some(title), backUrl = Some(back.url)) {
     <h1 class="govuk-heading-xl">@title</h1>
 
+  <p>form is @form</p>
   <p>Options with indices are @{options.zipWithIndex}</p>
 
     @formWithCSRF(action = routes.LicenceDetailsController.licenceTypeSubmit()) {

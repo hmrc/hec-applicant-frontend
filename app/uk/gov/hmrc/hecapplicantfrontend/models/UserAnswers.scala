@@ -16,24 +16,28 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models
 
-import cats.Eq
 import julienrf.json.derived
 import play.api.libs.json.OFormat
 
-sealed trait LicenceType extends Product with Serializable
+sealed trait UserAnswers extends Product with Serializable
 
-object LicenceType {
+object UserAnswers {
 
-  case object DriverOfTaxisAndPrivateHires extends LicenceType
+  final case class IncompleteUserAnswers(licenceType: Option[LicenceType]) extends UserAnswers
 
-  case object OperatorOfPrivateHireVehicles extends LicenceType
+  final case class CompleteUserAnswers(licenceType: LicenceType) extends UserAnswers
 
-  case object ScrapMetalMobileCollector extends LicenceType
+  implicit class UserAnswersOps(private val u: UserAnswers) extends AnyVal {
 
-  case object ScrapMetalDealerSite extends LicenceType
+    def fold[A](ifIncomplete: IncompleteUserAnswers => A, ifComplete: CompleteUserAnswers => A): A = u match {
+      case i: IncompleteUserAnswers => ifIncomplete(i)
+      case c: CompleteUserAnswers   => ifComplete(c)
+    }
 
-  implicit val eq: Eq[LicenceType] = Eq.fromUniversalEquals
+  }
 
-  implicit val format: OFormat[LicenceType] = derived.oformat()
+  val empty: IncompleteUserAnswers = IncompleteUserAnswers(None)
+
+  implicit val format: OFormat[UserAnswers] = derived.oformat()
 
 }
