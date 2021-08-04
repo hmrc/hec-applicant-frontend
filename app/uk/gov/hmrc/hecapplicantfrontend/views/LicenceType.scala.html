@@ -38,6 +38,10 @@
         items = radioOptions
       ))
 
+      <p class="govuk-body">
+        <a class="govuk-link" href="#">@messages(s"$key.link")</a>
+      </p>
+
       @govukButton(Button(content = Text(messages("button.continue"))))
     }
 }
