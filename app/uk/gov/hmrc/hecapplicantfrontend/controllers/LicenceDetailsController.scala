@@ -88,7 +88,7 @@ class LicenceDetailsController @Inject() (
 
   val licenceTypeExit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     Ok(
-      licenceTypeExitPage(journeyService.previous(routes.LicenceDetailsController.licenceType()))
+      licenceTypeExitPage(journeyService.previous(routes.LicenceDetailsController.licenceTypeExit()))
     )
   }
 
