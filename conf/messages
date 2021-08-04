@@ -5,7 +5,7 @@ service.phase = beta
 phaseBanner.text = This is a new service – your <a class="govuk-link" href="{0}">feedback</a> will help us to improve it.
 
 generic.errorPrefix = Error:
-
+generic.errorSummary = There is a problem
 
 # Buttons
 button.sign-in=Sign in
@@ -91,6 +91,8 @@ licenceType.operatorOfPrivateHireVehicles = Operator of private hire vehicles
 licenceType.scrapMetalCollector = Scrap metal mobile collector
 licenceType.scrapMetalDealer = Scrap metal dealer site
 licenceType.link = Find out what to do if you cannot see your licence type
+licenceType.error.required = Select the type of licence you are renewing or applying for
+licenceType.error.invalid = Select the type of licence you are renewing or applying for
 
 
 

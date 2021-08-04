@@ -6,7 +6,7 @@
 @import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 @import uk.gov.hmrc.hecapplicantfrontend.models.views.LicenceTypeOption
 
-@this(layout: Layout, govukRadios: GovukRadios, govukButton: GovukButton, formWithCSRF: FormWithCSRF)
+@this(layout: Layout, govukErrorSummary: GovukErrorSummary, govukRadios: GovukRadios, govukButton: GovukButton, formWithCSRF: FormWithCSRF)
 
 @(form: Form[models.LicenceType], back: Call, options: List[models.LicenceType])(implicit request: Request[_], messages: Messages)
 @key = @{"licenceType"}
@@ -19,29 +19,37 @@
 )}.toSeq}
 
 @layout(pageTitle = Some(title), hasErrors = form.hasErrors, backUrl = Some(back.url)) {
+  @if(form.errors.nonEmpty) {
+    @govukErrorSummary(ErrorSummary(errorList = form.errors.map(e => ErrorLink(
+      href = Some(s"#${e.key}"),
+      content = Text(s"${messages(s"${e.key}.${e.message}")}")
+    )), title = Text(messages("generic.errorSummary"))))
+  }
+  @formWithCSRF(action = routes.LicenceDetailsController.licenceTypeSubmit()) {
 
-    @formWithCSRF(action = routes.LicenceDetailsController.licenceTypeSubmit()) {
-
-      @govukRadios(Radios(
-        fieldset = Some(Fieldset(
-          legend = Some(Legend(
-            content = Text(title),
-            classes = "govuk-fieldset__legend--xl",
-            isPageHeading = true
-          ))
-        )),
-        hint = Some(Hint(
-          content = Text(messages(s"$key.hint"))
-        )),
-        idPrefix = Some(key),
-        name = key,
-        items = radioOptions
+    @govukRadios(Radios(
+      fieldset = Some(Fieldset(
+        legend = Some(Legend(
+          content = Text(title),
+          classes = "govuk-fieldset__legend--xl",
+          isPageHeading = true
+        ))
+      )),
+      hint = Some(Hint(
+        content = Text(messages(s"$key.hint"))
+      )),
+      idPrefix = Some(key),
+      name = key,
+      items = radioOptions,
+      errorMessage = form.error(key).map(e => ErrorMessage(
+        content = Text(messages(s"$key.${e.message}"))
       ))
+    ))
 
-      <p class="govuk-body">
-        <a class="govuk-link" href="#">@messages(s"$key.link")</a>
-      </p>
+    <p class="govuk-body">
+      <a class="govuk-link" href="@{routes.LicenceDetailsController.licenceTypeExit()}">@messages(s"$key.link")</a>
+    </p>
 
-      @govukButton(Button(content = Text(messages("button.continue"))))
-    }
+    @govukButton(Button(content = Text(messages("button.continue"))))
+  }
 }
