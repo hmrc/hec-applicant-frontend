@@ -509,8 +509,8 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
         def testIsRedirectToIVUplift(mockActions: () => Unit): Unit = {
           val queryString =
             s"origin=$ivOrigin&confidenceLevel=250&" +
-              s"completionURL=${urlEncode(s"$selfBaseUrl/hec-applicant-frontend/start")}&" +
-              s"failureURL=${urlEncode(s"$selfBaseUrl/hec-applicant-frontend/failed-iv/callback")}"
+              s"completionURL=${urlEncode(s"$selfBaseUrl/do-tax-check-for-licence/start")}&" +
+              s"failureURL=${urlEncode(s"$selfBaseUrl/do-tax-check-for-licence/failed-iv/callback")}"
 
           mockActions()
           checkIsRedirect(
@@ -573,7 +573,7 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
             val result = performAction()
             checkIsRedirect(
               result,
-              s"$basGatewayUrl?continue=$selfBaseUrl/hec-applicant-frontend/start&origin=$ggOrigin"
+              s"$basGatewayUrl?continue=$selfBaseUrl/do-tax-check-for-licence/start&origin=$ggOrigin"
             )
           }
         }
