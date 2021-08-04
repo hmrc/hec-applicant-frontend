@@ -97,7 +97,7 @@ class LicenceDetailsController @Inject() (
 
   val expiryDate: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     Ok(
-      s"session is ${request.sessionData}\nBack is ${journeyService.previous(routes.LicenceDetailsController.licenceType())}"
+      s"session is ${request.sessionData}\nBack is ${journeyService.previous(routes.LicenceDetailsController.expiryDate())}"
     )
   }
 

@@ -60,7 +60,7 @@ trait AuthAndSessionDataBehaviour { this: ControllerSpec with AuthSupport with S
           mockAuth(EmptyPredicate, EmptyRetrieval)(Future.failed(e))
 
           val result = performAction()
-          checkIsRedirect(result, s"$basGatewayUrl?continue=$selfUrl/do-tax-check-for-licence/start&origin=$ggOrigin")
+          checkIsRedirect(result, s"$basGatewayUrl?continue=$selfUrl/tax-check-for-licence/start&origin=$ggOrigin")
         }
       }
 
