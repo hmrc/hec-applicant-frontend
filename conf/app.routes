@@ -8,7 +8,7 @@ GET        /start                   uk.gov.hmrc.hecapplicantfrontend.controllers
 
 GET        /confirm-details         uk.gov.hmrc.hecapplicantfrontend.controllers.ConfirmIndividualDetailsController.confirmIndividualDetails
 POST       /confirm-details         uk.gov.hmrc.hecapplicantfrontend.controllers.ConfirmIndividualDetailsController.confirmIndividualDetailsSubmit
-GET        /confirm-details-exit    uk.gov.hmrc.hecapplicantfrontend.controllers.ConfirmIndividualDetailsController.confirmIndividualDetailsExit
+GET        /not-right-details       uk.gov.hmrc.hecapplicantfrontend.controllers.ConfirmIndividualDetailsController.confirmIndividualDetailsExit
 
 GET        /licence-type            uk.gov.hmrc.hecapplicantfrontend.controllers.LicenceDetailsController.licenceType
 
