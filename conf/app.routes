@@ -13,7 +13,7 @@ GET        /not-right-details       uk.gov.hmrc.hecapplicantfrontend.controllers
 GET        /licence-type            uk.gov.hmrc.hecapplicantfrontend.controllers.LicenceDetailsController.licenceType
 POST       /licence-type            uk.gov.hmrc.hecapplicantfrontend.controllers.LicenceDetailsController.licenceTypeSubmit
 
-GET        /licence-type-exit       uk.gov.hmrc.hecapplicantfrontend.controllers.LicenceDetailsController.licenceTypeExit
+GET        /wrong-licence-type      uk.gov.hmrc.hecapplicantfrontend.controllers.LicenceDetailsController.licenceTypeExit
 
 
 GET        /when-licence-expire     uk.gov.hmrc.hecapplicantfrontend.controllers.LicenceDetailsController.expiryDate
