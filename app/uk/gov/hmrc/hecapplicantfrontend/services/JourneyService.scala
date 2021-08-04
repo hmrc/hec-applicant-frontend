@@ -56,13 +56,16 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
     routes.StartController.start()                                       -> firstPage,
     routes.ConfirmIndividualDetailsController.confirmIndividualDetails() -> (_ =>
       routes.LicenceDetailsController.licenceType()
-    )
+    ),
+    routes.LicenceDetailsController.licenceType()                        -> (_ => routes.LicenceDetailsController.expiryDate())
   )
 
   lazy val exitPageToPreviousPage: Map[Call, Call] =
     Map(
       routes.ConfirmIndividualDetailsController
-        .confirmIndividualDetailsExit() -> routes.ConfirmIndividualDetailsController.confirmIndividualDetails()
+        .confirmIndividualDetailsExit()                 -> routes.ConfirmIndividualDetailsController.confirmIndividualDetails(),
+      routes.LicenceDetailsController.licenceTypeExit() ->
+        routes.LicenceDetailsController.licenceType()
     )
 
   override def firstPage(session: HECSession): Call =

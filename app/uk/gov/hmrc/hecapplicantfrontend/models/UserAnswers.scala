@@ -17,15 +17,25 @@
 package uk.gov.hmrc.hecapplicantfrontend.models
 
 import julienrf.json.derived
+import monocle.macros.Lenses
+import monocle.Lens
 import play.api.libs.json.OFormat
 
 sealed trait UserAnswers extends Product with Serializable
 
 object UserAnswers {
 
+  @Lenses
   final case class IncompleteUserAnswers(licenceType: Option[LicenceType]) extends UserAnswers
 
   final case class CompleteUserAnswers(licenceType: LicenceType) extends UserAnswers
+
+  object IncompleteUserAnswers {
+
+    def fromCompleteAnswers(c: CompleteUserAnswers): IncompleteUserAnswers =
+      IncompleteUserAnswers(Some(c.licenceType))
+
+  }
 
   implicit class UserAnswersOps(private val u: UserAnswers) extends AnyVal {
 
@@ -33,6 +43,16 @@ object UserAnswers {
       case i: IncompleteUserAnswers => ifIncomplete(i)
       case c: CompleteUserAnswers   => ifComplete(c)
     }
+
+    def unset[A](
+      fieldLens: IncompleteUserAnswers.type => Lens[
+        IncompleteUserAnswers,
+        Option[A]
+      ]
+    ): IncompleteUserAnswers =
+      fieldLens(IncompleteUserAnswers).set(None)(
+        fold(identity, IncompleteUserAnswers.fromCompleteAnswers)
+      )
 
   }
 

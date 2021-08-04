@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.controllers
 
+import cats.instances.future._
+
 import com.google.inject.{Inject, Singleton}
 import play.api.data.Form
 import play.api.i18n.I18nSupport
@@ -27,8 +29,11 @@ import uk.gov.hmrc.hecapplicantfrontend.models.LicenceType
 import uk.gov.hmrc.hecapplicantfrontend.models.LicenceType._
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
 import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging}
+import uk.gov.hmrc.hecapplicantfrontend.util.Logging.LoggerOps
 import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
+
+import scala.concurrent.ExecutionContext
 
 @Singleton
 class LicenceDetailsController @Inject() (
@@ -36,8 +41,10 @@ class LicenceDetailsController @Inject() (
   sessionDataAction: SessionDataAction,
   journeyService: JourneyService,
   mcc: MessagesControllerComponents,
-  licenceTypePage: html.LicenceType
-) extends FrontendController(mcc)
+  licenceTypePage: html.LicenceType,
+  licenceTypeExitPage: html.LicenceTypeExit
+)(implicit ec: ExecutionContext)
+    extends FrontendController(mcc)
     with I18nSupport
     with Logging {
 
@@ -45,8 +52,8 @@ class LicenceDetailsController @Inject() (
     val back        = journeyService.previous(routes.LicenceDetailsController.licenceType())
     val licenceType = request.sessionData.userAnswers.fold(_.licenceType, c => Some(c.licenceType))
     val form = {
-      val f = licenceTypeForm(licenceTypeOptions)
-      licenceType.fold(f)(f.fill)
+      val emptyForm = licenceTypeForm(licenceTypeOptions)
+      licenceType.fold(emptyForm)(emptyForm.fill)
     }
 
     Ok(licenceTypePage(form, back, licenceTypeOptions))
@@ -58,8 +65,31 @@ class LicenceDetailsController @Inject() (
       .bindFromRequest()
       .fold(
         formWithErrors => Ok(licenceTypePage(formWithErrors, back, licenceTypeOptions)),
-        licenceType => Ok(s"Got licence type $licenceType")
+        { licenceType =>
+          val updatedAnswers =
+            request.sessionData.userAnswers.unset(_.licenceType).copy(licenceType = Some(licenceType))
+          val updatedSession = request.sessionData.copy(userAnswers = updatedAnswers)
+          journeyService
+            .updateAndNext(
+              routes.LicenceDetailsController.licenceType(),
+              updatedSession
+            )
+            .fold(
+              { e =>
+                logger.warn("Could not update session and proceed", e)
+                InternalServerError
+              },
+              Redirect
+            )
+
+        }
       )
+  }
+
+  val licenceTypeExit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
+    Ok(
+      licenceTypeExitPage(journeyService.previous(routes.LicenceDetailsController.licenceType()))
+    )
   }
 
   val expiryDate: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>

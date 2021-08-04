@@ -48,6 +48,7 @@ lazy val microservice = Project(appName, file("."))
     JUnitXmlReportPlugin
   )
   .settings(addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.10.3"))
+  .settings(addCompilerPlugin("org.scalamacros" %% "paradise" % "2.1.1" cross CrossVersion.full))
   .settings(
     majorVersion := 0,
     scalaVersion := "2.12.13",

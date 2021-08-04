@@ -1,0 +1,14 @@
+@import play.api.i18n.Messages
+@import play.api.mvc.{Call, Request}
+@import play.twirl.api.Html
+
+@this(layout: Layout)
+
+@(back: Call)(implicit request: Request[_], messages: Messages)
+@title = @{messages("licenceTypeExit.title")}
+
+@layout(pageTitle = Some(title), backUrl = Some(back.url)) {
+    <h1 class="govuk-heading-xl">@title</h1>
+    <p class="govuk-body">@{messages("licenceTypeExit.p1")}</p>
+    <p class="govuk-body">@{Html(messages("licenceTypeExit.p2"))}</p>
+}
