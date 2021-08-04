@@ -16,7 +16,7 @@ POST       /licence-type            uk.gov.hmrc.hecapplicantfrontend.controllers
 GET        /licence-type-exit       uk.gov.hmrc.hecapplicantfrontend.controllers.LicenceDetailsController.licenceTypeExit
 
 
-GET        /expiry-date             uk.gov.hmrc.hecapplicantfrontend.controllers.LicenceDetailsController.expiryDate
+GET        /when-licence-expire     uk.gov.hmrc.hecapplicantfrontend.controllers.LicenceDetailsController.expiryDate
 
 
 
