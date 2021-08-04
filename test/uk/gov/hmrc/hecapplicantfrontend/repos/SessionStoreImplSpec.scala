@@ -24,7 +24,7 @@ import play.api.Configuration
 import play.api.libs.json.{JsNumber, JsObject}
 import play.api.test.Helpers._
 import uk.gov.hmrc.cache.model.{Cache, Id}
-import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, HECSession}
+import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, HECSession, UserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.CompanyRetrievedData
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CTUTR, GGCredId}
 import uk.gov.hmrc.http.{HeaderCarrier, SessionId}
@@ -57,7 +57,10 @@ class SessionStoreImplSpec extends AnyWordSpec with Matchers with MongoSupport w
   "SessionStoreImpl" must {
 
     val sessionData =
-      HECSession(CompanyRetrievedData(GGCredId("id"), Some(CTUTR("utr")), Some(EmailAddress("email"))))
+      HECSession(
+        CompanyRetrievedData(GGCredId("id"), Some(CTUTR("utr")), Some(EmailAddress("email"))),
+        UserAnswers.empty
+      )
 
     "be able to insert SessionData into mongo and read it back" in new TestEnvironment {
 

@@ -21,7 +21,7 @@ import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.hecapplicantfrontend.models.{DateOfBirth, Error, HECSession, Name}
+import uk.gov.hmrc.hecapplicantfrontend.models.{DateOfBirth, Error, HECSession, Name, UserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRetrievedData, IndividualRetrievedData}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
@@ -61,7 +61,7 @@ class ConfirmIndividualDetailsControllerSpec
 
           inSequence {
             mockAuthWithNoRetrievals()
-            mockGetSession(HECSession(companyRetrievedData))
+            mockGetSession(HECSession(companyRetrievedData, UserAnswers.empty))
           }
 
           checkIsRedirect(performAction(), routes.StartController.start())
@@ -74,7 +74,10 @@ class ConfirmIndividualDetailsControllerSpec
           val name        = Name("First", "Last")
           val dateOfBirth = DateOfBirth(LocalDate.of(2000, 12, 3))
 
-          val session = HECSession(IndividualRetrievedData(GGCredId(""), NINO(""), None, name, dateOfBirth, None))
+          val session = HECSession(
+            IndividualRetrievedData(GGCredId(""), NINO(""), None, name, dateOfBirth, None),
+            UserAnswers.empty
+          )
 
           inSequence {
             mockAuthWithNoRetrievals()
@@ -115,7 +118,7 @@ class ConfirmIndividualDetailsControllerSpec
 
           inSequence {
             mockAuthWithNoRetrievals()
-            mockGetSession(HECSession(companyRetrievedData))
+            mockGetSession(HECSession(companyRetrievedData, UserAnswers.empty))
           }
 
           checkIsRedirect(performAction(), routes.StartController.start())
@@ -127,7 +130,8 @@ class ConfirmIndividualDetailsControllerSpec
 
         "there is a problem getting the next page" in {
           val session = HECSession(
-            IndividualRetrievedData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None)
+            IndividualRetrievedData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None),
+            UserAnswers.empty
           )
 
           inSequence {
@@ -149,7 +153,8 @@ class ConfirmIndividualDetailsControllerSpec
 
         "the next page can be found" in {
           val session = HECSession(
-            IndividualRetrievedData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None)
+            IndividualRetrievedData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None),
+            UserAnswers.empty
           )
 
           inSequence {
@@ -182,7 +187,7 @@ class ConfirmIndividualDetailsControllerSpec
 
           inSequence {
             mockAuthWithNoRetrievals()
-            mockGetSession(HECSession(companyRetrievedData))
+            mockGetSession(HECSession(companyRetrievedData, UserAnswers.empty))
           }
 
           checkIsRedirect(performAction(), routes.StartController.start())
@@ -193,7 +198,8 @@ class ConfirmIndividualDetailsControllerSpec
 
         "the user is logged in and individual data can be found" in {
           val session = HECSession(
-            IndividualRetrievedData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None)
+            IndividualRetrievedData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None),
+            UserAnswers.empty
           )
 
           inSequence {
