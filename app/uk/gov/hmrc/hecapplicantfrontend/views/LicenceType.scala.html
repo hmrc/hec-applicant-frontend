@@ -4,21 +4,21 @@
 @import uk.gov.hmrc.govukfrontend.views.html.components._
 @import uk.gov.hmrc.hecapplicantfrontend.models
 @import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
-@import uk.gov.hmrc.hecapplicantfrontend.views.licenceTypeOption
+@import uk.gov.hmrc.hecapplicantfrontend.models.views.LicenceTypeOption
 
 @this(layout: Layout, govukRadios: GovukRadios, govukButton: GovukButton, formWithCSRF: FormWithCSRF)
 
 @(form: Form[models.LicenceType], back: Call, options: List[models.LicenceType])(implicit request: Request[_], messages: Messages)
 @key = @{"licenceType"}
 @title = @{messages(s"$key.title")}
-@optionViewModels = @{options.map(B => licenceTypeOption(B))}
+@optionViewModels = @{options.map(B => LicenceTypeOption.licenceTypeOption(B))}
 @radioOptions = @{optionViewModels.zipWithIndex.map{ case (option, index) => RadioItem(
   content = Text(messages(s"$key.${option.messageKey}")),
   value = Some(index.toString),
-  hint = option.hintKey.fold(_ => Hint(content = Text(messages(s"$key.$_"))))(None)
+  hint = option.hintKey.map{ h: String => Hint(content = Text(messages(s"$key.$h"))) }
 )}.toSeq}
 
-@layout(pageTitle = Some(title), backUrl = Some(back.url)) {
+@layout(pageTitle = Some(title), hasErrors = form.hasErrors, backUrl = Some(back.url)) {
 
     @formWithCSRF(action = routes.LicenceDetailsController.licenceTypeSubmit()) {
 
