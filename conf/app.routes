@@ -11,6 +11,9 @@ POST       /confirm-details         uk.gov.hmrc.hecapplicantfrontend.controllers
 GET        /confirm-details-exit    uk.gov.hmrc.hecapplicantfrontend.controllers.ConfirmIndividualDetailsController.confirmIndividualDetailsExit
 
 GET        /licence-type            uk.gov.hmrc.hecapplicantfrontend.controllers.LicenceDetailsController.licenceType
+POST       /licence-type            uk.gov.hmrc.hecapplicantfrontend.controllers.LicenceDetailsController.licenceTypeSubmit
+
+GET        /expiry-date             uk.gov.hmrc.hecapplicantfrontend.controllers.LicenceDetailsController.expiryDate
 
 
 

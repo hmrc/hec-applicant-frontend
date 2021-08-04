@@ -22,6 +22,7 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
+import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
 @Singleton
@@ -29,15 +30,30 @@ class LicenceDetailsController @Inject() (
   authAction: AuthAction,
   sessionDataAction: SessionDataAction,
   journeyService: JourneyService,
-  mcc: MessagesControllerComponents
+  mcc: MessagesControllerComponents,
+  licenceTypePage: html.LicenceType
 ) extends FrontendController(mcc)
     with I18nSupport
     with Logging {
 
   val licenceType: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
+    val back = journeyService.previous(routes.LicenceDetailsController.licenceType())
+
+    Ok(licenceTypePage(back))
+  }
+
+  val licenceTypeSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
+    Ok(
+      s"session is ${request.sessionData}\nBack is ${journeyService.previous(routes.LicenceDetailsController.licenceType())}"
+    )
+  }
+
+  val expiryDate: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     Ok(
       s"session is ${request.sessionData}\nBack is ${journeyService.previous(routes.LicenceDetailsController.licenceType())}"
     )
   }
 
 }
+
+object LicenceDetailsController {}
