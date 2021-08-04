@@ -19,7 +19,10 @@ package uk.gov.hmrc.hecapplicantfrontend.controllers
 import com.google.inject.{Inject, Singleton}
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import uk.gov.hmrc.hecapplicantfrontend.controllers.LicenceDetailsController.licenceTypeOptions
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
+import uk.gov.hmrc.hecapplicantfrontend.models.LicenceType
+import uk.gov.hmrc.hecapplicantfrontend.models.LicenceType._
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.hecapplicantfrontend.views.html
@@ -39,7 +42,7 @@ class LicenceDetailsController @Inject() (
   val licenceType: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     val back = journeyService.previous(routes.LicenceDetailsController.licenceType())
 
-    Ok(licenceTypePage(back))
+    Ok(licenceTypePage(back, licenceTypeOptions))
   }
 
   val licenceTypeSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
@@ -56,4 +59,13 @@ class LicenceDetailsController @Inject() (
 
 }
 
-object LicenceDetailsController {}
+object LicenceDetailsController {
+
+  val licenceTypeOptions: List[LicenceType] = List(
+    DriverOfTaxisAndPrivateHires,
+    OperatorOfPrivateHireVehicles,
+    ScrapMetalMobileCollector,
+    ScrapMetalDealerSite
+  )
+
+}
