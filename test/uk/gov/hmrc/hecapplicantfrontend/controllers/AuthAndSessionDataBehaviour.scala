@@ -56,7 +56,7 @@ trait AuthAndSessionDataBehaviour { this: ControllerSpec with AuthSupport with S
         InvalidBearerToken(),
         SessionRecordNotFound()
       ).foreach { e =>
-        withClue(s"For AuhtorisationException $e: ") {
+        withClue(s"For AuthorisationException $e: ") {
           mockAuth(EmptyPredicate, EmptyRetrieval)(Future.failed(e))
 
           val result = performAction()
