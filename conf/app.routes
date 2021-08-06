@@ -2,5 +2,21 @@
 
 ->         /govuk-frontend          govuk.Routes
 ->         /hmrc-frontend           hmrcfrontend.Routes
-GET        /                        uk.gov.hmrc.hecapplicantfrontend.controllers.HelloWorldController.helloWorld
 GET        /assets/*file            controllers.Assets.versioned(path = "/public", file: controllers.Assets.Asset)
+
+GET        /start                   uk.gov.hmrc.hecapplicantfrontend.controllers.StartController.start
+
+
+GET        /dummy                   uk.gov.hmrc.hecapplicantfrontend.controllers.DummyController.dummy
+
+# IV
+GET  /failed-iv/callback                         uk.gov.hmrc.hecapplicantfrontend.controllers.IvFailureController.ivFailure(journeyId: java.util.UUID)
+GET  /failed-iv/retry                            uk.gov.hmrc.hecapplicantfrontend.controllers.IvFailureController.retry
+GET  /failed-iv/failed-matching                  uk.gov.hmrc.hecapplicantfrontend.controllers.IvFailureController.failedMatching()
+GET  /failed-iv                                  uk.gov.hmrc.hecapplicantfrontend.controllers.IvFailureController.failedIV()
+GET  /failed-iv/insufficient-evidence            uk.gov.hmrc.hecapplicantfrontend.controllers.IvFailureController.insufficientEvidence()
+GET  /failed-iv/locked-out                       uk.gov.hmrc.hecapplicantfrontend.controllers.IvFailureController.lockedOut()
+GET  /failed-iv/user-aborted                     uk.gov.hmrc.hecapplicantfrontend.controllers.IvFailureController.userAborted()
+GET  /failed-iv/time-out                         uk.gov.hmrc.hecapplicantfrontend.controllers.IvFailureController.timedOut()
+GET  /failed-iv/technical-issue                  uk.gov.hmrc.hecapplicantfrontend.controllers.IvFailureController.technicalIssue()
+GET  /failed-iv/precondition-failed              uk.gov.hmrc.hecapplicantfrontend.controllers.IvFailureController.preconditionFailed()

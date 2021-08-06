@@ -1,0 +1,15 @@
+@import play.api.i18n.Messages
+@import play.api.mvc.Request
+@import uk.gov.hmrc.hecapplicantfrontend.views.html.Layout
+
+@this(layout: Layout)
+
+@()(implicit request: Request[_], messages: Messages)
+@title = @{messages("iv.insufficientEvidence.title")}
+
+@layout(pageTitle = Some(title)) {
+  <h1 class="govuk-heading-xl">@title</h1>
+  <p class="govuk-body">@{messages("iv.insufficientEvidence.p1")}</p>
+  <p class="govuk-body">@{messages("iv.insufficientEvidence.p2")}</p>
+  <p class="govuk-body"><a href="#" class="govuk-link">@{messages("iv.insufficientEvidence.link")}</a></p>
+}

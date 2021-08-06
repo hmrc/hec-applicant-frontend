@@ -16,13 +16,61 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.config
 
+import cats.instances.char._
+import cats.syntax.eq._
 import javax.inject.{Inject, Singleton}
 import play.api.Configuration
+import play.api.mvc.Result
+import play.api.mvc.Results.Redirect
+import uk.gov.hmrc.auth.core.ConfidenceLevel
+import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
+
+import java.util.UUID
 
 @Singleton
 class AppConfig @Inject() (config: Configuration) {
 
+  val platformHost: Option[String] = config.getOptional[String]("platform.frontend.host")
+
   val welshLanguageSupportEnabled: Boolean =
     config.getOptional[Boolean]("features.welsh-language-support").getOrElse(false)
+
+  val selfBaseUrl: String = platformHost.getOrElse(config.get[String]("self.url"))
+
+  lazy val signInUrl: String = {
+    val basGateway: String = config.get[String]("auth.bas-gateway.url")
+    val origin: String     = config.get[String]("auth.gg.origin")
+    s"$basGateway?continue=$selfBaseUrl${routes.StartController.start().url}&origin=$origin"
+  }
+
+  lazy val redirectToIvUplift: Result = {
+    val ivUrl: String = platformHost.getOrElse(config.get[String]("iv.url"))
+
+    val ivOrigin: String = config.get[String]("iv.origin")
+
+    val (ivSuccessUrl: String, ivFailureUrl: String) = {
+      val useRelativeUrls                          = platformHost.isDefined
+      val (successRelativeUrl, failureRelativeUrl) =
+        routes.StartController.start().url ->
+          routes.IvFailureController.ivFailure(UUID.randomUUID()).url.takeWhile(_ =!= '?')
+
+      if (useRelativeUrls)
+        successRelativeUrl                 -> failureRelativeUrl
+      else
+        s"$selfBaseUrl$successRelativeUrl" -> s"$selfBaseUrl$failureRelativeUrl"
+    }
+
+    val redirectToIvUrl: String = s"$ivUrl/mdtp/uplift"
+
+    Redirect(
+      redirectToIvUrl,
+      Map(
+        "origin"          -> Seq(ivOrigin),
+        "confidenceLevel" -> Seq(ConfidenceLevel.L250.level.toString),
+        "completionURL"   -> Seq(ivSuccessUrl),
+        "failureURL"      -> Seq(ivFailureUrl)
+      )
+    )
+  }
 
 }

@@ -14,20 +14,26 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hecapplicantfrontend.controllers
+package uk.gov.hmrc.hecapplicantfrontend.models
 
-import uk.gov.hmrc.hecapplicantfrontend.views.html.HelloWorldPage
-import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
-import javax.inject.{Inject, Singleton}
-import scala.concurrent.Future
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
+import play.api.libs.json.{JsString, JsSuccess, Json}
 
-@Singleton
-class HelloWorldController @Inject() (mcc: MessagesControllerComponents, helloWorldPage: HelloWorldPage)
-    extends FrontendController(mcc) {
+import java.time.LocalDate
 
-  val helloWorld: Action[AnyContent] = Action.async { implicit request =>
-    Future.successful(Ok(helloWorldPage()))
+class DateOfBirthSpec extends AnyWordSpec with Matchers {
+
+  "DateOfBirth" must {
+
+    "have a format instance" in {
+      val dob = DateOfBirth(LocalDate.of(2012, 5, 31))
+
+      val json = Json.toJson(dob)
+      json                             shouldBe JsString("20120531")
+      Json.fromJson[DateOfBirth](json) shouldBe JsSuccess(dob)
+    }
+
   }
 
 }

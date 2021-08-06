@@ -1,0 +1,23 @@
+@import play.api.i18n.Messages
+@import play.api.mvc.Request
+@import uk.gov.hmrc.govukfrontend.views.html.components._
+@import uk.gov.hmrc.hecapplicantfrontend.views.html.Layout
+@import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
+
+@this(layout: Layout, govukButton: GovukButton)
+
+@()(implicit request: Request[_], messages: Messages)
+@title = @{messages("iv.failedMatching.title")}
+
+@layout(pageTitle = Some(title)) {
+  <h1 class="govuk-heading-xl">@title</h1>
+  <p class="govuk-body">@{messages("iv.failedMatching.p1")}</p>
+  <ul class="govuk-list govuk-list--bullet">
+    <li>@{messages("iv.failedMatching.li1")}</li>
+    <li>@{messages("iv.failedMatching.li2")}</li>
+  </ul>
+  @govukButton(Button(
+    content = Text(messages("button.try-again")),
+    href = Some(routes.IvFailureController.retry().url)
+  ))
+}
