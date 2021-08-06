@@ -17,22 +17,27 @@
 package uk.gov.hmrc.hecapplicantfrontend.controllers
 
 import com.google.inject.{Inject, Singleton}
-import play.api.libs.json.Json
+import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
+import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
 @Singleton
-class DummyController @Inject() (
+class LicenceDetailsController @Inject() (
   authAction: AuthAction,
   sessionDataAction: SessionDataAction,
+  journeyService: JourneyService,
   mcc: MessagesControllerComponents
 ) extends FrontendController(mcc)
+    with I18nSupport
     with Logging {
 
-  val dummy: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
-    Ok(s"Session is ${Json.toJson(request.sessionData).toString()}")
+  val licenceType: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
+    Ok(
+      s"session is ${request.sessionData}\nBack is ${journeyService.previous(routes.LicenceDetailsController.licenceType())}"
+    )
   }
 
 }

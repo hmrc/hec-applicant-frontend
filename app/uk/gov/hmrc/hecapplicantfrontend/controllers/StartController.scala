@@ -30,7 +30,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, Error, HECSession,
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRetrievedData, IndividualRetrievedData}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CTUTR, GGCredId, NINO, SAUTR}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
-import uk.gov.hmrc.hecapplicantfrontend.services.CitizenDetailsService
+import uk.gov.hmrc.hecapplicantfrontend.services.{CitizenDetailsService, JourneyService}
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging.LoggerOps
 import uk.gov.hmrc.http.HeaderCarrier
@@ -42,6 +42,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class StartController @Inject() (
   appConfig: AppConfig,
   citizenDetailsService: CitizenDetailsService,
+  journeyService: JourneyService,
   sessionStore: SessionStore,
   authWithRetrievalsAction: AuthWithRetrievalsAction,
   mcc: MessagesControllerComponents
@@ -79,10 +80,7 @@ class StartController @Inject() (
           InternalServerError
 
       },
-      _.retrievedUserData match {
-        case _: IndividualRetrievedData => Redirect(routes.DummyController.dummy())
-        case c: CompanyRetrievedData    => Ok(s"Companies not handled yet - retrieved data $c")
-      }
+      session => Redirect(journeyService.firstPage(session))
     )
   }
 
@@ -204,7 +202,7 @@ class StartController @Inject() (
 
 object StartController {
 
-  sealed trait StartError
+  sealed trait StartError extends Product with Serializable
 
   final case class DataError(msg: String) extends StartError
 

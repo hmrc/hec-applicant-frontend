@@ -1,9 +1,16 @@
-service.name = hec-applicant-frontend
+gov.uk = GOV.UK
+service.name = Do a tax check when renewing or applying for a licence
 service.text = This is your new service
+service.phase = beta
+phaseBanner.text = This is a new service – your <a class="govuk-link" href="{0}">feedback</a> will help us to improve it.
+
+generic.errorPrefix = Error:
+
 
 # Buttons
 button.sign-in=Sign in
 button.try-again=Try again
+button.confirm=Confirm
 
 # Failed IV
 iv.failedIv.title=We could not confirm your identity
@@ -46,3 +53,30 @@ iv.preconditionFailed.title=You cannot use this service
 iv.preconditionFailed.p1=We’ve checked the details in your Government Gateway account.
 iv.preconditionFailed.p2=You do not meet the criteria to use this service.
 iv.preconditionFailed.link=Find out who needs to do a tax check
+
+# Check Personal Details
+confirmIndividualDetails.title=Check your personal details
+confirmIndividualDetails.intro=We will use these details to do a tax check, confirm they are correct before continuing.
+confirmIndividualDetails.firstName=First name
+confirmIndividualDetails.lastName=Last name
+confirmIndividualDetails.dob=Date of birth
+confirmIndividualDetails.link=These are not my details
+
+# Check Personal Details Exit
+confirmIndividualDetailsExit.title=If these are not your details
+confirmIndividualDetailsExit.p1=You’ll need to check the user ID and password you used to sign in to Government Gateway.
+confirmIndividualDetailsExit.p2=You may need to <a href="{0}" class="govuk-link">sign out</a> and sign in using the correct Government Gateway user ID and password.
+
+# Months
+date.1=January
+date.2=February
+date.3=March
+date.4=April
+date.5=May
+date.6=June
+date.7=July
+date.8=August
+date.9=September
+date.10=October
+date.11=November
+date.12=December

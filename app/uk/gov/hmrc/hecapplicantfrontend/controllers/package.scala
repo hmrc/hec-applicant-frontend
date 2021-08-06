@@ -14,19 +14,14 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hecapplicantfrontend.models
+package uk.gov.hmrc.hecapplicantfrontend
 
-import cats.Eq
-import play.api.libs.json.{Json, OFormat}
+import play.api.mvc.Result
 
-final case class HECSession(
-  retrievedUserData: RetrievedApplicantData
-)
+import scala.concurrent.Future
 
-object HECSession {
+package object controllers {
 
-  implicit val eq: Eq[HECSession] = Eq.fromUniversalEquals
-
-  implicit val format: OFormat[HECSession] = Json.format
+  implicit def toFuture(r: Result): Future[Result] = Future.successful(r)
 
 }

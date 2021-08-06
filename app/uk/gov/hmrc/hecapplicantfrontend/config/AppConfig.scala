@@ -18,19 +18,29 @@ package uk.gov.hmrc.hecapplicantfrontend.config
 
 import cats.instances.char._
 import cats.syntax.eq._
+
 import javax.inject.{Inject, Singleton}
 import play.api.Configuration
 import play.api.mvc.Result
 import play.api.mvc.Results.Redirect
 import uk.gov.hmrc.auth.core.ConfidenceLevel
 import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
+import uk.gov.hmrc.hmrcfrontend.config.ContactFrontendConfig
 
 import java.util.UUID
 
 @Singleton
-class AppConfig @Inject() (config: Configuration) {
+class AppConfig @Inject() (config: Configuration, contactFrontendConfig: ContactFrontendConfig) {
 
   val platformHost: Option[String] = config.getOptional[String]("platform.frontend.host")
+
+  val contactFrontendUrl: String =
+    contactFrontendConfig.baseUrl.getOrElse(sys.error("Could not find config for contact frontend url"))
+
+  val contactFormServiceIdentifier: String =
+    contactFrontendConfig.serviceId.getOrElse(sys.error("Could not find config for contact frontend service id"))
+
+  val betaFeedbackUrl: String = s"$contactFrontendUrl/contact/beta-feedback?service=$contactFormServiceIdentifier"
 
   val welshLanguageSupportEnabled: Boolean =
     config.getOptional[Boolean]("features.welsh-language-support").getOrElse(false)
@@ -42,6 +52,8 @@ class AppConfig @Inject() (config: Configuration) {
     val origin: String     = config.get[String]("auth.gg.origin")
     s"$basGateway?continue=$selfBaseUrl${routes.StartController.start().url}&origin=$origin"
   }
+
+  lazy val signOutUri: String = config.get[String]("auth.sign-out.uri")
 
   lazy val redirectToIvUplift: Result = {
     val ivUrl: String = platformHost.getOrElse(config.get[String]("iv.url"))
