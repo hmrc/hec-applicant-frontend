@@ -52,6 +52,9 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
 
   implicit val callEq: Eq[Call] = Eq.instance(_.url === _.url)
 
+  // map representing routes from one page to another when users submit answers. The keys are the current page and the
+  // values are the destination pages which come after the current page. The destination can sometimes depend
+  // on state (e.g. the type of user or the answers users have submitted), hence the value type `HECSession => Call`
   lazy val paths: Map[Call, HECSession => Call] = Map(
     routes.StartController.start()                                       -> firstPage,
     routes.ConfirmIndividualDetailsController.confirmIndividualDetails() -> (_ =>
@@ -60,6 +63,9 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
     routes.LicenceDetailsController.licenceType()                        -> (_ => routes.LicenceDetailsController.expiryDate())
   )
 
+  // map which describes routes from an exit page to their previous page. The keys are the exit page and the values are
+  // the pages previous to them. These routes are ones which should not be described in `path` as they are typically not
+  // triggered by a submit, but rather by clicking a link on the source page for instance.
   lazy val exitPageToPreviousPage: Map[Call, Call] =
     Map(
       routes.ConfirmIndividualDetailsController
