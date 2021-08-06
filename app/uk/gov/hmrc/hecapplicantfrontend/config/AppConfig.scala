@@ -34,8 +34,9 @@ class AppConfig @Inject() (config: Configuration, contactFrontendConfig: Contact
 
   val platformHost: Option[String] = config.getOptional[String]("platform.frontend.host")
 
-  val contactFrontendUrl: String           =
+  val contactFrontendUrl: String =
     contactFrontendConfig.baseUrl.getOrElse(sys.error("Could not find config for contact frontend url"))
+
   val contactFormServiceIdentifier: String =
     contactFrontendConfig.serviceId.getOrElse(sys.error("Could not find config for contact frontend service id"))
 
