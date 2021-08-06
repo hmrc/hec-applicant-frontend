@@ -26,7 +26,6 @@ object HttpResponseOps {
   implicit class HttpResponseOps(private val response: HttpResponse) extends AnyVal {
 
     def parseJSON[A](implicit reads: Reads[A]): Either[String, A] =
-      // use Option here to filter out null values
       Try(response.json) match {
         case Success(jsValue) ⇒
           jsValue
