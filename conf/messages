@@ -5,12 +5,13 @@ service.phase = beta
 phaseBanner.text = This is a new service – your <a class="govuk-link" href="{0}">feedback</a> will help us to improve it.
 
 generic.errorPrefix = Error:
-
+generic.errorSummary = There is a problem
 
 # Buttons
 button.sign-in=Sign in
 button.try-again=Try again
 button.confirm=Confirm
+button.continue=Continue
 
 # Failed IV
 iv.failedIv.title=We could not confirm your identity
@@ -80,3 +81,26 @@ date.9=September
 date.10=October
 date.11=November
 date.12=December
+
+# Licence type
+licenceType.title = What type of licence are you renewing or applying for?
+licenceType.hint = This is the licence type you’re doing a tax check for.
+licenceType.driverOfTaxis = Driver of taxis and private hires
+licenceType.driverOfTaxis.hint = Includes hackney carriage and dual licences.
+licenceType.operatorOfPrivateHireVehicles = Operator of private hire vehicles
+licenceType.scrapMetalCollector = Scrap metal mobile collector
+licenceType.scrapMetalDealer = Scrap metal dealer site
+licenceType.link = Find out what to do if you cannot see your licence type
+licenceType.error.required = Select the type of licence you are renewing or applying for
+licenceType.error.invalid = Select the type of licence you are renewing or applying for
+
+# Licence type exit
+licenceTypeExit.title = You do not need to do a tax check
+licenceTypeExit.p1 = This is because you only need to do a tax check if you are renewing or applying for one of these licence types:
+licenceTypeExit.driverOfTaxis = driver of taxis and private hires, includes hackney carriage and dual licences
+licenceTypeExit.operatorOfPrivateHireVehicles = operator of private hire vehicles
+licenceTypeExit.scrapMetalCollector = scrap metal mobile collector
+licenceTypeExit.scrapMetalDealer = scrap metal dealer site
+licenceTypeExit.link = Find out about tax checks
+
+

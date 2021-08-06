@@ -113,6 +113,25 @@ trait ControllerSpec extends AnyWordSpec with Matchers with BeforeAndAfterAll wi
     contentChecks(doc)
   }
 
+  def checkFormErrorIsDisplayed(
+    result: Future[Result],
+    expectedTitle: String,
+    formError: String,
+    expectedStatus: Int = OK
+  ): Unit =
+    checkPageIsDisplayed(
+      result,
+      expectedTitle,
+      { doc =>
+        val errorSummary = doc.select(".govuk-error-summary")
+        errorSummary.select("a").text() shouldBe formError
+
+        val inputErrorMessage = doc.select(".govuk-error-message")
+        inputErrorMessage.text() shouldBe s"Error: $formError"
+      },
+      expectedStatus
+    )
+
 }
 
 @Singleton

@@ -32,7 +32,7 @@ import uk.gov.hmrc.auth.core.{AffinityGroup, AuthConnector, AuthorisationExcepti
 import uk.gov.hmrc.hecapplicantfrontend.config.EnrolmentConfig
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.{CitizenDetailsService, JourneyService}
-import uk.gov.hmrc.hecapplicantfrontend.models.{CitizenDetails, DateOfBirth, EmailAddress, Error, HECSession, Name}
+import uk.gov.hmrc.hecapplicantfrontend.models.{CitizenDetails, DateOfBirth, EmailAddress, Error, HECSession, Name, UserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRetrievedData, IndividualRetrievedData}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CTUTR, GGCredId, NINO, SAUTR}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -155,7 +155,7 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
       "proceed" when {
 
         "existing session data is found" in {
-          val session = HECSession(completeIndividualRetrievedData)
+          val session = HECSession(completeIndividualRetrievedData, UserAnswers.empty)
           inSequence {
             mockAuthWithRetrievals(ConfidenceLevel.L50, None, None, None, None, Enrolments(Set.empty), None)
             mockGetSession(session)
@@ -180,7 +180,7 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
                   individualRetrievedData.sautr
                 )
 
-                val session = HECSession(individualRetrievedData)
+                val session = HECSession(individualRetrievedData, UserAnswers.empty)
 
                 inSequence {
                   mockAuthWithRetrievals(
@@ -209,7 +209,7 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
               None
             )
 
-            val session = HECSession(completeIndividualRetrievedData)
+            val session = HECSession(completeIndividualRetrievedData, UserAnswers.empty)
 
             inSequence {
               mockAuthWithRetrievals(
@@ -239,7 +239,8 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
               completeIndividualRetrievedData.dateOfBirth,
               Some(citizenDetailsSautr)
             )
-            val session        = HECSession(completeIndividualRetrievedData.copy(sautr = Some(citizenDetailsSautr)))
+            val session        =
+              HECSession(completeIndividualRetrievedData.copy(sautr = Some(citizenDetailsSautr)), UserAnswers.empty)
 
             inSequence {
               mockAuthWithRetrievals(
@@ -268,7 +269,7 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
                 completeIndividualRetrievedData.sautr
               )
 
-              val session = HECSession(completeIndividualRetrievedData)
+              val session = HECSession(completeIndividualRetrievedData, UserAnswers.empty)
 
               inSequence {
                 mockAuthWithRetrievals(
@@ -294,7 +295,7 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
               completeCompanyRetrievedData,
               completeCompanyRetrievedData.copy(emailAddress = None)
             ).foreach { companyRetrievedData =>
-              val session = HECSession(companyRetrievedData)
+              val session = HECSession(companyRetrievedData, UserAnswers.empty)
               inSequence {
                 mockAuthWithRetrievals(
                   ConfidenceLevel.L50,
@@ -316,7 +317,7 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
 
           "no CTUTR can be found for a company" in {
             val companyData = completeCompanyRetrievedData.copy(ctutr = None)
-            val session     = HECSession(companyData)
+            val session     = HECSession(companyData, UserAnswers.empty)
 
             inSequence {
               mockAuthWithRetrievals(
@@ -497,7 +498,7 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
                 Some(retrievedGGCredential(completeCompanyRetrievedData.ggCredId))
               )
               mockGetSession(Right(None))
-              mockStoreSession(HECSession(completeCompanyRetrievedData))(Left(Error("")))
+              mockStoreSession(HECSession(completeCompanyRetrievedData, UserAnswers.empty))(Left(Error("")))
             }
           )
         }

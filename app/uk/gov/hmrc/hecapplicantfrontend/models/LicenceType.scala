@@ -17,17 +17,23 @@
 package uk.gov.hmrc.hecapplicantfrontend.models
 
 import cats.Eq
-import play.api.libs.json.{Json, OFormat}
+import julienrf.json.derived
+import play.api.libs.json.OFormat
 
-final case class HECSession(
-  retrievedUserData: RetrievedApplicantData,
-  userAnswers: UserAnswers
-)
+sealed trait LicenceType extends Product with Serializable
 
-object HECSession {
+object LicenceType {
 
-  implicit val eq: Eq[HECSession] = Eq.fromUniversalEquals
+  case object DriverOfTaxisAndPrivateHires extends LicenceType
 
-  implicit val format: OFormat[HECSession] = Json.format
+  case object OperatorOfPrivateHireVehicles extends LicenceType
+
+  case object ScrapMetalMobileCollector extends LicenceType
+
+  case object ScrapMetalDealerSite extends LicenceType
+
+  implicit val eq: Eq[LicenceType] = Eq.fromUniversalEquals
+
+  implicit val format: OFormat[LicenceType] = derived.oformat()
 
 }

@@ -26,7 +26,7 @@ import uk.gov.hmrc.auth.core.{AffinityGroup, ConfidenceLevel, Enrolments}
 import uk.gov.hmrc.auth.core.retrieve.Credentials
 import uk.gov.hmrc.hecapplicantfrontend.config.{AppConfig, EnrolmentConfig}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.AuthWithRetrievalsAction
-import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, Error, HECSession, RetrievedApplicantData, RetrievedGGData}
+import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, Error, HECSession, RetrievedApplicantData, RetrievedGGData, UserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRetrievedData, IndividualRetrievedData}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CTUTR, GGCredId, NINO, SAUTR}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
@@ -89,7 +89,7 @@ class StartController @Inject() (
   )(implicit hc: HeaderCarrier): EitherT[Future, StartError, HECSession] =
     for {
       retrievedUserData <- buildRetrievedUserData(retrievedGGData)
-      session            = HECSession(retrievedUserData)
+      session            = HECSession(retrievedUserData, UserAnswers.empty)
       _                 <- sessionStore.store(session).leftMap(BackendError(_): StartError)
     } yield session
 
