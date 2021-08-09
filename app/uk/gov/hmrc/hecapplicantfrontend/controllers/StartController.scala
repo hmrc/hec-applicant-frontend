@@ -111,7 +111,7 @@ class StartController @Inject() (
           )
 
         case Some(AffinityGroup.Organisation) =>
-          enrolments.enrolments.toList match {
+          enrolments.enrolments.toList.filter(_.key =!= EnrolmentConfig.NINOEnrolment.key) match {
             case enrolment :: Nil if enrolment.key === EnrolmentConfig.SAEnrolment.key =>
               handleIndividual(
                 cl,

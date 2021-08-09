@@ -32,4 +32,10 @@ object EnrolmentConfig {
 
   }
 
+  object NINOEnrolment {
+
+    val key = "HMRC-NI"
+
+  }
+
 }

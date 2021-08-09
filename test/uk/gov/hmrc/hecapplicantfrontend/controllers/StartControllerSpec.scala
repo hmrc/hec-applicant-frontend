@@ -262,7 +262,8 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
           }
 
           "all the necessary data is retrieved for an individual with affinity group " +
-            "'Organisation' where the only enrolment is an IR-SA one and the user has CL250" in {
+            "'Organisation' where the only enrolment other than the NINO enrolment is an IR-SA one " +
+            "and the user has CL250" in {
               val citizenDetails = CitizenDetails(
                 completeIndividualRetrievedData.name,
                 completeIndividualRetrievedData.dateOfBirth,
@@ -278,7 +279,12 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
                   Some(completeIndividualRetrievedData.nino),
                   None,
                   completeIndividualRetrievedData.emailAddress,
-                  Enrolments(Set(Enrolment(EnrolmentConfig.SAEnrolment.key))),
+                  Enrolments(
+                    Set(
+                      Enrolment(EnrolmentConfig.SAEnrolment.key),
+                      Enrolment(EnrolmentConfig.NINOEnrolment.key)
+                    )
+                  ),
                   Some(retrievedGGCredential(completeIndividualRetrievedData.ggCredId))
                 )
                 mockGetSession(Right(None))
