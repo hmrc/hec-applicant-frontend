@@ -118,7 +118,8 @@ licenceExpiryDate-year.error.invalid=Expiry date must be a real date
 licenceExpiryDate-month.error.monthAndYearRequired=Expiry date must include a month and a year
 licenceExpiryDate-day.error.dayAndYearRequired=Expiry date must include a day and a year
 licenceExpiryDate-day.error.dayAndMonthRequired=Expiry date must include a day and a month
-licenceExpiryDate.error.tooFarInFuture=Expiry date must be today or in the past
+licenceExpiryDate.error.tooFarInFuture=Expiry date is too far in future
+licenceExpiryDate.error.tooFarInPast=Expiry date is too far in past
 licenceExpiryDate.error.before1900=Expiry date must be on or after 01 01 1900, contact HMRC if the date is before this
 
 # Licence expiry date exit

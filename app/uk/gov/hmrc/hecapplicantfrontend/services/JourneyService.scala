@@ -28,6 +28,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.{Error, HECSession}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRetrievedData, IndividualRetrievedData}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
+import uk.gov.hmrc.hecapplicantfrontend.util.TimeUtils
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.annotation.tailrec
@@ -61,7 +62,14 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
       routes.LicenceDetailsController.licenceType()
     ),
     routes.LicenceDetailsController.licenceType()                        -> (_ => routes.LicenceDetailsController.expiryDate()),
-    routes.LicenceDetailsController.expiryDate()                         -> (_ => routes.LicenceDetailsController.timeTrading())
+    routes.LicenceDetailsController.expiryDate()                         -> { hSession =>
+      hSession.userAnswers.fold(_.licenceExpiryDate, c => Some(c.licenceExpiryDate)) match {
+        case Some(expiryDate) if TimeUtils.today().minusMonths(12).isBefore(expiryDate.value) =>
+          routes.LicenceDetailsController.timeTrading()
+        case Some(_)                                                                          => routes.LicenceDetailsController.expiryDateExit()
+        case None                                                                             => routes.LicenceDetailsController.expiryDate()
+      }
+    }
   )
 
   // map which describes routes from an exit page to their previous page. The keys are the exit page and the values are

@@ -175,8 +175,8 @@ object LicenceDetailsController {
       mapping(
         "" -> of(
           TimeUtils.dateFormatter(
-            None,
-            None,
+            Some(TimeUtils.today().plusYears(6L)),
+            Some(TimeUtils.today().minusYears(2L)),
             s"$key-day",
             s"$key-month",
             s"$key-year",
