@@ -11,7 +11,7 @@
 @key = @{"licenceTypeExit"}
 @title = @{messages(s"$key.title")}
 
-@layout(pageTitle = Some(title), backUrl = Some(back.url)) {
+@layout(pageTitle = Some(title), backLocation = Some(back)) {
     <h1 class="govuk-heading-xl">@title</h1>
     <p class="govuk-body">@{messages("licenceTypeExit.p1")}</p>
     <ul class="govuk-list govuk-list--bullet">
