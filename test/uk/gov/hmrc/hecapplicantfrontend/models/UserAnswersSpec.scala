@@ -19,6 +19,7 @@ package uk.gov.hmrc.hecapplicantfrontend.models
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.{CompleteUserAnswers, IncompleteUserAnswers}
+import uk.gov.hmrc.hecapplicantfrontend.util.TimeUtils
 
 class UserAnswersSpec extends AnyWordSpec with Matchers {
 
@@ -39,7 +40,10 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
       }
 
       "works with complete answers" in {
-        val completeAnswers = CompleteUserAnswers(LicenceType.DriverOfTaxisAndPrivateHires)
+        val completeAnswers = CompleteUserAnswers(
+          LicenceType.DriverOfTaxisAndPrivateHires,
+          LicenceExpiryDate(TimeUtils.today().minusDays(10L))
+        )
         completeAnswers.fold(
           _ => fail(),
           _ shouldBe completeAnswers
@@ -49,7 +53,10 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
     }
 
     "have a method which converts complete answers to incomplete" in {
-      val completeAnswers       = CompleteUserAnswers(LicenceType.DriverOfTaxisAndPrivateHires)
+      val completeAnswers       = CompleteUserAnswers(
+        LicenceType.DriverOfTaxisAndPrivateHires,
+        LicenceExpiryDate(TimeUtils.today().minusDays(10L))
+      )
       val incompleteUserAnswers = IncompleteUserAnswers.fromCompleteAnswers(completeAnswers)
 
       incompleteUserAnswers.licenceType shouldBe Some(LicenceType.DriverOfTaxisAndPrivateHires)
@@ -59,8 +66,11 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
 
       "unsets the licence type field" in {
         IncompleteUserAnswers(Some(LicenceType.DriverOfTaxisAndPrivateHires))
-          .unset(_.licenceType)                                                            shouldBe UserAnswers.empty
-        CompleteUserAnswers(LicenceType.DriverOfTaxisAndPrivateHires).unset(_.licenceType) shouldBe UserAnswers.empty
+          .unset(_.licenceType) shouldBe UserAnswers.empty
+        CompleteUserAnswers(
+          LicenceType.DriverOfTaxisAndPrivateHires,
+          LicenceExpiryDate(TimeUtils.today().minusDays(10L))
+        ).unset(_.licenceType)  shouldBe UserAnswers.empty
       }
 
     }

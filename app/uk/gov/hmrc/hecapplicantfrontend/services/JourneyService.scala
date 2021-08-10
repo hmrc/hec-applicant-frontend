@@ -67,7 +67,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
         case Some(expiryDate) if TimeUtils.today().minusMonths(12).isBefore(expiryDate.value) =>
           routes.LicenceDetailsController.timeTrading()
         case Some(_)                                                                          => routes.LicenceDetailsController.expiryDateExit()
-        case None                                                                             => routes.LicenceDetailsController.expiryDate()
+        case None                                                                             => routes.LicenceDetailsController.expiryDateExit()
       }
     }
   )
@@ -82,6 +82,8 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
       routes.LicenceDetailsController.licenceTypeExit() ->
         routes.LicenceDetailsController.licenceType(),
       routes.LicenceDetailsController.expiryDateExit()  ->
+        routes.LicenceDetailsController.expiryDate(),
+      routes.LicenceDetailsController.timeTrading()     ->
         routes.LicenceDetailsController.expiryDate()
     )
 
@@ -118,13 +120,14 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
         case _                   => None
       }
 
-    if (current === routes.StartController.start())
+    if (current === routes.StartController.start()) {
       current
-    else
+    } else {
       exitPageToPreviousPage
         .get(current)
         .orElse(loop(routes.StartController.start()))
         .getOrElse(sys.error(s"Could not find previous for $current"))
+    }
   }
 
 }
