@@ -20,6 +20,7 @@ import cats.instances.future._
 import com.google.inject.{Inject, Singleton}
 import play.api.data.Form
 import play.api.i18n.I18nSupport
+import play.api.i18n.Messages
 import play.api.data.Forms.{mapping, of}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
@@ -169,18 +170,24 @@ object LicenceDetailsController {
       )(identity)(Some(_))
     )
 
-  def licenseExpiryDateForm(): Form[LicenceExpiryDate] = {
-    val key = "licenceExpiryDate"
+  def licenseExpiryDateForm()(implicit message: Messages): Form[LicenceExpiryDate] = {
+    val key                             = "licenceExpiryDate"
+    val tooFarInFutureDate              = TimeUtils.today().plusYears(6L)
+    val tooFarInPastDate                = TimeUtils.today().minusYears(2L)
+    val tooFarInFutureArgs: Seq[String] = Seq(TimeUtils.govDisplayFormat(tooFarInFutureDate))
+    val tooFarInPastArgs                = Seq(TimeUtils.govDisplayFormat(tooFarInPastDate))
     Form(
       mapping(
         "" -> of(
           TimeUtils.dateFormatter(
-            Some(TimeUtils.today().plusYears(6L)),
-            Some(TimeUtils.today().minusYears(2L)),
+            Some(tooFarInFutureDate),
+            Some(tooFarInPastDate),
             s"$key-day",
             s"$key-month",
             s"$key-year",
-            key
+            key,
+            tooFarInFutureArgs = tooFarInFutureArgs,
+            tooFarInPastArgs = tooFarInPastArgs
           )
         )
       )(LicenceExpiryDate(_))(d => Some(d.value))

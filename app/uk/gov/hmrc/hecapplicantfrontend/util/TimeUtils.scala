@@ -45,7 +45,9 @@ object TimeUtils {
     monthKey: String,
     yearKey: String,
     dateKey: String,
-    extraValidation: List[LocalDate => Either[FormError, Unit]] = List.empty
+    extraValidation: List[LocalDate => Either[FormError, Unit]] = List.empty,
+    tooFarInFutureArgs: Seq[String] = Seq.empty,
+    tooFarInPastArgs: Seq[String] = Seq.empty
   ): Formatter[LocalDate] =
     new Formatter[LocalDate] {
       def dateFieldStringValues(
@@ -96,9 +98,9 @@ object TimeUtils {
                    .leftMap(_ => FormError(dateKey, "error.invalid"))
                    .flatMap(date =>
                      if (maximumDateInclusive.exists(_.isBefore(date)))
-                       Left(FormError(dateKey, "error.tooFarInFuture"))
+                       Left(FormError(dateKey, "error.tooFarInFuture", tooFarInFutureArgs))
                      else if (minimumDateInclusive.exists(_.isAfter(date)))
-                       Left(FormError(dateKey, "error.tooFarInPast"))
+                       Left(FormError(dateKey, "error.tooFarInPast", tooFarInPastArgs))
                      else if (date.isBefore(minimumDate))
                        Left(FormError(dateKey, "error.before1900"))
                      else
