@@ -13,7 +13,7 @@
 @title = @{messages(s"$key.title")}
 @inputErrorClass = @{if(form.hasErrors) " govuk-input--error" else ""}
 
-@layout(pageTitle = Some(title), hasErrors = form.hasErrors, backUrl = Some(back.url)) {
+@layout(pageTitle = Some(title), hasErrors = form.hasErrors, backLocation = Some(back)) {
 
     @if(form.errors.nonEmpty) {
         @govukErrorSummary(ErrorSummary(errorList = form.errors.map(e => ErrorLink(

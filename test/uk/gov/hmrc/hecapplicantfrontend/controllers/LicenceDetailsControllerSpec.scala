@@ -197,9 +197,9 @@ class LicenceDetailsControllerSpec
         "return an internal server error" when {
 
           "the call to update and next fails" in {
-            val answers = UserAnswers.empty
+            val answers        = UserAnswers.empty
             val updatedAnswers = UserAnswers.empty.copy(licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires))
-            val session = HECSession(individuaRetrievedlData, answers)
+            val session        = HECSession(individuaRetrievedlData, answers)
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 
             inSequence {
@@ -213,58 +213,55 @@ class LicenceDetailsControllerSpec
             status(performAction("licenceType" -> "0")) shouldBe INTERNAL_SERVER_ERROR
           }
 
-          "the user has previously completed answering questions" in {
-            val answers = CompleteUserAnswers(
-              LicenceType.DriverOfTaxisAndPrivateHires,
-              LicenceExpiryDate(TimeUtils.today().minusDays(10L))
-            )
-            val updatedAnswers = IncompleteUserAnswers(Some(LicenceType.ScrapMetalMobileCollector))
-            val session = HECSession(individuaRetrievedlData, answers)
-            val updatedSession = session.copy(userAnswers = updatedAnswers)
+        }
 
-            "redirect to the next page" when {
+        "redirect to the next page" when {
 
-              "valid data is submitted and" when {
+          "valid data is submitted and" when {
 
-                "the user has not previously completed answering questions" in {
-                  val answers = UserAnswers.empty
-                  val updatedAnswers = UserAnswers.empty.copy(licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles))
-                  val session = HECSession(individuaRetrievedlData, answers)
-                  val updatedSession = session.copy(userAnswers = updatedAnswers)
+            "the user has not previously completed answering questions" in {
+              val answers        = UserAnswers.empty
+              val updatedAnswers = UserAnswers.empty.copy(licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles))
+              val session        = HECSession(individuaRetrievedlData, answers)
+              val updatedSession = session.copy(userAnswers = updatedAnswers)
 
-                  inSequence {
-                    mockAuthWithNoRetrievals()
-                    mockGetSession(session)
-                    mockJourneyServiceUpdateAndNext(routes.LicenceDetailsController.licenceType(), session, updatedSession)(
-                      Right(mockNextCall)
-                    )
-                  }
-
-                  checkIsRedirect(performAction("licenceType" -> "1"), mockNextCall)
-                }
-
-                "the user has previously completed answering questions" in {
-                  val answers = CompleteUserAnswers(LicenceType.DriverOfTaxisAndPrivateHires)
-                  val updatedAnswers = IncompleteUserAnswers(Some(LicenceType.ScrapMetalMobileCollector))
-                  val session = HECSession(individuaRetrievedlData, answers)
-                  val updatedSession = session.copy(userAnswers = updatedAnswers)
-
-                  inSequence {
-                    mockAuthWithNoRetrievals()
-                    mockGetSession(session)
-                    mockJourneyServiceUpdateAndNext(routes.LicenceDetailsController.licenceType(), session, updatedSession)(
-                      Right(mockNextCall)
-                    )
-                  }
-
-                  checkIsRedirect(performAction("licenceType" -> "2"), mockNextCall)
-                }
+              inSequence {
+                mockAuthWithNoRetrievals()
+                mockGetSession(session)
+                mockJourneyServiceUpdateAndNext(routes.LicenceDetailsController.licenceType(), session, updatedSession)(
+                  Right(mockNextCall)
+                )
               }
 
+              checkIsRedirect(performAction("licenceType" -> "1"), mockNextCall)
             }
 
+            "the user has previously completed answering questions" in {
+              val answers        = CompleteUserAnswers(
+                LicenceType.DriverOfTaxisAndPrivateHires,
+                LicenceExpiryDate(TimeUtils.today().minusDays(10L))
+              )
+              val updatedAnswers = IncompleteUserAnswers(
+                Some(LicenceType.ScrapMetalMobileCollector),
+                Some(LicenceExpiryDate(TimeUtils.today().minusDays(10L)))
+              )
+              val session        = HECSession(individuaRetrievedlData, answers)
+              val updatedSession = session.copy(userAnswers = updatedAnswers)
+
+              inSequence {
+                mockAuthWithNoRetrievals()
+                mockGetSession(session)
+                mockJourneyServiceUpdateAndNext(routes.LicenceDetailsController.licenceType(), session, updatedSession)(
+                  Right(mockNextCall)
+                )
+              }
+
+              checkIsRedirect(performAction("licenceType" -> "2"), mockNextCall)
+            }
           }
+
         }
+
       }
 
       "handling requests to the licence type exit page" must {
@@ -293,5 +290,4 @@ class LicenceDetailsControllerSpec
     }
   }
 
-
-
+}

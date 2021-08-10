@@ -9,7 +9,7 @@
 @key = @{"licenceExpiryDateExit"}
 @title = @{messages(s"$key.title")}
 
-@layout(pageTitle = Some(title), backUrl = Some(back.url)) {
+@layout(pageTitle = Some(title), backLocation = Some(back)) {
 <h1 class="govuk-heading-xl">@title</h1>
 <p class="govuk-body">@{messages("licenceExpiryDateExit.p1")}</p>
 <p class="govuk-body">@{messages("licenceExpiryDateExit.p2")}</p>
