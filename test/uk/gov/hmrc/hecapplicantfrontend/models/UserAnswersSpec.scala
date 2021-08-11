@@ -73,6 +73,15 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
         ).unset(_.licenceType).unset(_.licenceExpiryDate) shouldBe UserAnswers.empty
       }
 
+      "unsets the licence Expiry Date field" in {
+        IncompleteUserAnswers(None, Some(LicenceExpiryDate(TimeUtils.today().plusDays(10L))))
+          .unset(_.licenceExpiryDate)                     shouldBe UserAnswers.empty
+        CompleteUserAnswers(
+          LicenceType.DriverOfTaxisAndPrivateHires,
+          LicenceExpiryDate(TimeUtils.today().minusDays(10L))
+        ).unset(_.licenceType).unset(_.licenceExpiryDate) shouldBe UserAnswers.empty
+      }
+
     }
 
   }
