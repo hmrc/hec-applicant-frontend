@@ -21,17 +21,17 @@ import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.hecapplicantfrontend.models.{DateOfBirth, Error, HECSession, LicenceExpiryDate, LicenceType, Name, UserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRetrievedData, IndividualRetrievedData}
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.{CompleteUserAnswers, IncompleteUserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO}
+import uk.gov.hmrc.hecapplicantfrontend.models._
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
 import uk.gov.hmrc.hecapplicantfrontend.util.TimeUtils
 
 import java.time.LocalDate
-import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 class LicenceDetailsControllerSpec
     extends ControllerSpec
@@ -258,6 +258,63 @@ class LicenceDetailsControllerSpec
 
               checkIsRedirect(performAction("licenceType" -> "2"), mockNextCall)
             }
+          }
+
+        }
+
+      }
+
+      "handling submits on the licence Expiry page" must {
+        def performAction(data: (String, String)*): Future[Result] =
+          controller.expiryDateSubmit(FakeRequest().withFormUrlEncodedBody(data: _*))
+
+        behave like authAndSessionDataBehaviour(() => performAction())
+
+        "show a form error" when {
+          val session = HECSession(individuaRetrievedlData, UserAnswers.empty)
+          "nothing is submitted" in {
+            inSequence {
+              mockAuthWithNoRetrievals()
+              mockGetSession(session)
+              mockJourneyServiceGetPrevious(routes.LicenceDetailsController.expiryDate(), session)(mockPreviousCall)
+            }
+
+            checkFormErrorIsDisplayed(
+              performAction(),
+              messageFromMessageKey("licenceExpiryDate.title"),
+              messageFromMessageKey("licenceExpiryDate.error.required")
+            )
+          }
+
+          "the date entered is invalid" in {
+
+            val answers = UserAnswers.empty
+            val session = HECSession(individuaRetrievedlData, answers)
+
+            DateErrorScenarios
+              .dateErrorScenarios("licenceExpiryDate", "")
+              .foreach { scenario =>
+                withClue(s"For date error scenario $scenario: ") {
+                  val data = List(
+                    "licenceExpiryDate-day"   -> scenario.dayInput,
+                    "licenceExpiryDate-month" -> scenario.monthInput,
+                    "licenceExpiryDate-year"  -> scenario.yearInput
+                  ).collect { case (key, Some(value)) => key -> value }
+                  inSequence {
+                    mockAuthWithNoRetrievals()
+                    mockGetSession(session)
+                    mockJourneyServiceGetPrevious(routes.LicenceDetailsController.expiryDate(), session)(
+                      mockPreviousCall
+                    )
+                  }
+
+                  checkFormErrorIsDisplayed(
+                    performAction(data: _*),
+                    messageFromMessageKey("licenceExpiryDate.title"),
+                    messageFromMessageKey(scenario.expectedErrorMessageKey)
+                  )
+                }
+              }
           }
 
         }
