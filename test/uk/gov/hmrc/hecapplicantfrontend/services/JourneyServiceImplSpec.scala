@@ -159,6 +159,29 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
           await(result.value) shouldBe Right(routes.LicenceDetailsController.timeTrading())
         }
 
+        "the expiry page and the expiry date is exactly one year ago" in {
+          val session        = HECSession(individualRetrievedData, UserAnswers.empty)
+          val updatedSession =
+            HECSession(
+              individualRetrievedData,
+              UserAnswers.empty.copy(
+                licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires),
+                licenceExpiryDate = Some(LicenceExpiryDate(TimeUtils.today().minusYears(1L)))
+              )
+            )
+
+          implicit val request: RequestWithSessionData[_] =
+            requestWithSessionData(session)
+
+          mockStoreSession(updatedSession)(Right(()))
+
+          val result = journeyService.updateAndNext(
+            routes.LicenceDetailsController.expiryDate(),
+            updatedSession
+          )
+          await(result.value) shouldBe Right(routes.LicenceDetailsController.timeTrading())
+        }
+
         "the expiry page and the expiry date is beyond the past one year" in {
           val session        = HECSession(individualRetrievedData, UserAnswers.empty)
           val updatedSession =
@@ -166,7 +189,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
               individualRetrievedData,
               UserAnswers.empty.copy(
                 licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires),
-                licenceExpiryDate = Some(LicenceExpiryDate(TimeUtils.today().minusMonths(13L)))
+                licenceExpiryDate = Some(LicenceExpiryDate(TimeUtils.today().minusYears(1L).minusDays(1L)))
               )
             )
 
@@ -311,10 +334,13 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
           result shouldBe routes.LicenceDetailsController.expiryDate()
         }
 
-        "the licence time trading page" in {
+        "the licence time trading page when the session contains an licence expiry date which is not more than 1 year ago" in {
           val session                                     = HECSession(
             individualRetrievedData,
-            UserAnswers.empty.copy(licenceType = Some(LicenceType.ScrapMetalDealerSite))
+            UserAnswers.empty.copy(
+              licenceType = Some(LicenceType.ScrapMetalDealerSite),
+              licenceExpiryDate = Some(LicenceExpiryDate(TimeUtils.today()))
+            )
           )
           implicit val request: RequestWithSessionData[_] =
             requestWithSessionData(session)

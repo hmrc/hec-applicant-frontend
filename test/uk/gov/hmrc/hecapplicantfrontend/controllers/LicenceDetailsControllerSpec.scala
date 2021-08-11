@@ -85,6 +85,10 @@ class LicenceDetailsControllerSpec
               doc.select(".govuk-body > .govuk-link").attr("href") shouldBe routes.LicenceDetailsController
                 .licenceTypeExit()
                 .url
+
+              val form = doc.select("form")
+              form
+                .attr("action") shouldBe routes.LicenceDetailsController.licenceTypeSubmit().url
             }
           )
 
@@ -114,6 +118,10 @@ class LicenceDetailsControllerSpec
 
               val selectedOptions = doc.select(".govuk-radios__input[checked]")
               selectedOptions.attr("value") shouldBe "0"
+
+              val form = doc.select("form")
+              form
+                .attr("action") shouldBe routes.LicenceDetailsController.licenceTypeSubmit().url
             }
           )
         }
@@ -266,6 +274,30 @@ class LicenceDetailsControllerSpec
 
     }
 
+    "handling requests to the licence type exit page" must {
+
+      def performAction(): Future[Result] = controller.licenceTypeExit(FakeRequest())
+
+      behave like authAndSessionDataBehaviour(performAction)
+
+      "display the page" in {
+        val session = HECSession(individuaRetrievedlData, UserAnswers.empty)
+        inSequence {
+          mockAuthWithNoRetrievals()
+          mockGetSession(session)
+          mockJourneyServiceGetPrevious(routes.LicenceDetailsController.licenceTypeExit(), session)(mockPreviousCall)
+        }
+
+        checkPageIsDisplayed(
+          performAction(),
+          messageFromMessageKey("licenceTypeExit.title"),
+          doc => doc.select("#back").attr("href") shouldBe mockPreviousCall.url
+        )
+
+      }
+
+    }
+
     "handling requests to licence expiry page" must {
 
       def performAction(): Future[Result] =
@@ -275,9 +307,71 @@ class LicenceDetailsControllerSpec
 
       "display the page" when {
 
-        "a previous answer to the question is not found in session" in {}
+        "a previous answer to the question is not found in session" in {
+          val session = HECSession(individuaRetrievedlData, UserAnswers.empty)
 
-        "a previous answer to the question is found in session" in {}
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockJourneyServiceGetPrevious(routes.LicenceDetailsController.expiryDate(), session)(mockPreviousCall)
+          }
+
+          checkPageIsDisplayed(
+            performAction(),
+            messageFromMessageKey("licenceExpiryDate.title"),
+            { doc =>
+              doc.select("#back").attr("href") shouldBe mockPreviousCall.url
+
+              doc.select("#licenceExpiryDate-day").attr("value")   shouldBe ""
+              doc.select("#licenceExpiryDate-month").attr("value") shouldBe ""
+              doc.select("#licenceExpiryDate-year").attr("value")  shouldBe ""
+
+              doc.select(".govuk-body > .govuk-link").attr("href") shouldBe routes.LicenceDetailsController
+                .expiryDateExit()
+                .url
+
+              val form = doc.select("form")
+              form
+                .attr("action") shouldBe routes.LicenceDetailsController.expiryDateSubmit().url
+            }
+          )
+
+        }
+
+        "a previous answer to the question is found in session" in {
+          val date    = TimeUtils.today()
+          val session =
+            HECSession(
+              individuaRetrievedlData,
+              UserAnswers.empty.copy(licenceExpiryDate = Some(LicenceExpiryDate(date)))
+            )
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockJourneyServiceGetPrevious(routes.LicenceDetailsController.expiryDate(), session)(mockPreviousCall)
+          }
+
+          checkPageIsDisplayed(
+            performAction(),
+            messageFromMessageKey("licenceExpiryDate.title"),
+            { doc =>
+              doc.select("#back").attr("href") shouldBe mockPreviousCall.url
+
+              doc.select("#licenceExpiryDate-day").attr("value")   shouldBe date.getDayOfMonth.toString
+              doc.select("#licenceExpiryDate-month").attr("value") shouldBe date.getMonthValue.toString
+              doc.select("#licenceExpiryDate-year").attr("value")  shouldBe date.getYear.toString
+
+              doc.select(".govuk-body > .govuk-link").attr("href") shouldBe routes.LicenceDetailsController
+                .expiryDateExit()
+                .url
+
+              val form = doc.select("form")
+              form
+                .attr("action") shouldBe routes.LicenceDetailsController.expiryDateSubmit().url
+            }
+          )
+        }
 
       }
 
@@ -288,9 +382,16 @@ class LicenceDetailsControllerSpec
       def performAction(data: (String, String)*): Future[Result] =
         controller.expiryDateSubmit(FakeRequest().withFormUrlEncodedBody(data: _*))
 
+      def formData(date: LocalDate): List[(String, String)] = List(
+        "licenceExpiryDate-day"   -> date.getDayOfMonth.toString,
+        "licenceExpiryDate-month" -> date.getMonthValue.toString,
+        "licenceExpiryDate-year"  -> date.getYear.toString
+      )
+
       behave like authAndSessionDataBehaviour(() => performAction())
 
       "show a form error" when {
+
         val session = HECSession(individuaRetrievedlData, UserAnswers.empty)
 
         "nothing is submitted" in {
@@ -308,12 +409,8 @@ class LicenceDetailsControllerSpec
         }
 
         "the date entered is invalid" in {
-
-          val answers = UserAnswers.empty
-          val session = HECSession(individuaRetrievedlData, answers)
-
           DateErrorScenarios
-            .dateErrorScenarios("licenceExpiryDate", "")
+            .dateErrorScenarios("licenceExpiryDate")
             .foreach { scenario =>
               withClue(s"For date error scenario $scenario: ") {
                 val data = List(
@@ -338,29 +435,93 @@ class LicenceDetailsControllerSpec
             }
         }
 
-        "date entered is more than 6 years in the future" in {}
+        "date entered is more than 6 years in the future" in {
+          val cutoffDate = TimeUtils.today().plusYears(6L)
+          val date       = cutoffDate.plusDays(1L)
 
-        "date entered is more than 2 years in the past" in {}
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockJourneyServiceGetPrevious(routes.LicenceDetailsController.expiryDate(), session)(mockPreviousCall)
+          }
+
+          checkFormErrorIsDisplayed(
+            performAction(formData(date): _*),
+            messageFromMessageKey("licenceExpiryDate.title"),
+            messageFromMessageKey("licenceExpiryDate.error.tooFarInFuture", TimeUtils.govDisplayFormat(cutoffDate))
+          )
+        }
+
+        "date entered is more than 2 years in the past" in {
+          val cutoffDate = TimeUtils.today().minusYears(2L)
+          val date       = cutoffDate.minusDays(1L)
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockJourneyServiceGetPrevious(routes.LicenceDetailsController.expiryDate(), session)(mockPreviousCall)
+          }
+
+          checkFormErrorIsDisplayed(
+            performAction(formData(date): _*),
+            messageFromMessageKey("licenceExpiryDate.title"),
+            messageFromMessageKey("licenceExpiryDate.error.tooFarInPast", TimeUtils.govDisplayFormat(cutoffDate))
+          )
+        }
 
       }
 
       "return an InternalServerError" when {
 
-        "there is an error updating and getting the next endpoint" in {}
+        "there is an error updating and getting the next endpoint" in {
+          val date    = TimeUtils.today().plusYears(6L)
+          val answers = UserAnswers.empty
+          val session = HECSession(individuaRetrievedlData, answers)
+
+          val updatedAnswers = answers.copy(licenceExpiryDate = Some(LicenceExpiryDate(date)))
+          val updatedSession = session.copy(userAnswers = updatedAnswers)
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockJourneyServiceUpdateAndNext(routes.LicenceDetailsController.expiryDate(), session, updatedSession)(
+              Left(Error(""))
+            )
+          }
+
+          status(performAction(formData(date): _*)) shouldBe INTERNAL_SERVER_ERROR
+        }
 
       }
 
       "redirect to the next page" when {
 
-        "a valid expiry date is submitted" in {}
+        "a valid expiry date is submitted" in {
+          val date    = TimeUtils.today().minusYears(2L)
+          val answers = UserAnswers.empty
+          val session = HECSession(individuaRetrievedlData, answers)
+
+          val updatedAnswers = answers.copy(licenceExpiryDate = Some(LicenceExpiryDate(date)))
+          val updatedSession = session.copy(userAnswers = updatedAnswers)
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockJourneyServiceUpdateAndNext(routes.LicenceDetailsController.expiryDate(), session, updatedSession)(
+              Right(mockNextCall)
+            )
+          }
+
+          checkIsRedirect(performAction(formData(date): _*), mockNextCall)
+        }
 
       }
 
     }
 
-    "handling requests to the licence type exit page" must {
+    "handling requests to the licence expiry date exit page" must {
 
-      def performAction(): Future[Result] = controller.licenceTypeExit(FakeRequest())
+      def performAction(): Future[Result] = controller.expiryDateExit(FakeRequest())
 
       behave like authAndSessionDataBehaviour(performAction)
 
@@ -369,18 +530,19 @@ class LicenceDetailsControllerSpec
         inSequence {
           mockAuthWithNoRetrievals()
           mockGetSession(session)
-          mockJourneyServiceGetPrevious(routes.LicenceDetailsController.licenceTypeExit(), session)(mockPreviousCall)
+          mockJourneyServiceGetPrevious(routes.LicenceDetailsController.expiryDateExit(), session)(mockPreviousCall)
         }
 
         checkPageIsDisplayed(
           performAction(),
-          messageFromMessageKey("licenceTypeExit.title"),
+          messageFromMessageKey("licenceExpiryDateExit.title"),
           doc => doc.select("#back").attr("href") shouldBe mockPreviousCall.url
         )
 
       }
 
     }
+
   }
 
 }

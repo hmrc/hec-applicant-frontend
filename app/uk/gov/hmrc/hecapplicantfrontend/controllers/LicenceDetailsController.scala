@@ -114,28 +114,32 @@ class LicenceDetailsController @Inject() (
   }
 
   val expiryDateSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
-    lazy val back = journeyService.previous(routes.LicenceDetailsController.expiryDate())
+    def handleValidExpiryDate(licenceExpiryDate: LicenceExpiryDate): Future[Result] = {
+      val updatedAnswers =
+        request.sessionData.userAnswers.unset(_.licenceExpiryDate).copy(licenceExpiryDate = Some(licenceExpiryDate))
+      val updatedSession = request.sessionData.copy(userAnswers = updatedAnswers)
+      journeyService
+        .updateAndNext(
+          routes.LicenceDetailsController.expiryDate(),
+          updatedSession
+        )
+        .fold(
+          { e =>
+            logger.warn("Could not update session and proceed", e)
+            InternalServerError
+          },
+          Redirect
+        )
+    }
+
     licenseExpiryDateForm()
       .bindFromRequest()
       .fold(
-        formWithErrors => Ok(licenseExpiryDatePage(formWithErrors, back)),
-        { licenceExpiryDate =>
-          val updatedAnswers =
-            request.sessionData.userAnswers.unset(_.licenceExpiryDate).copy(licenceExpiryDate = Some(licenceExpiryDate))
-          val updatedSession = request.sessionData.copy(userAnswers = updatedAnswers)
-          journeyService
-            .updateAndNext(
-              routes.LicenceDetailsController.expiryDate(),
-              updatedSession
-            )
-            .fold(
-              { e =>
-                logger.warn("Could not update session and proceed", e)
-                InternalServerError
-              },
-              Redirect
-            )
-        }
+        formWithErrors =>
+          Ok(
+            licenseExpiryDatePage(formWithErrors, journeyService.previous(routes.LicenceDetailsController.expiryDate()))
+          ),
+        handleValidExpiryDate
       )
   }
 

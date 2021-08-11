@@ -29,6 +29,7 @@ import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRetrievedData, IndividualRetrievedData}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.util.TimeUtils
+import uk.gov.hmrc.hecapplicantfrontend.util.TimeUtils.LocalDateOps
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.annotation.tailrec
@@ -62,12 +63,12 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
       routes.LicenceDetailsController.licenceType()
     ),
     routes.LicenceDetailsController.licenceType()                        -> (_ => routes.LicenceDetailsController.expiryDate()),
-    routes.LicenceDetailsController.expiryDate()                         -> { hSession =>
-      hSession.userAnswers.fold(_.licenceExpiryDate, c => Some(c.licenceExpiryDate)) match {
-        case Some(expiryDate) if TimeUtils.today().minusMonths(12).isBefore(expiryDate.value) =>
+    routes.LicenceDetailsController.expiryDate()                         -> { session =>
+      session.userAnswers.fold(_.licenceExpiryDate, c => Some(c.licenceExpiryDate)) match {
+        case Some(expiryDate) if expiryDate.value.isAfterOrOn(TimeUtils.today().minusYears(1L)) =>
           routes.LicenceDetailsController.timeTrading()
-        case Some(_)                                                                          => routes.LicenceDetailsController.expiryDateExit()
-        case None                                                                             => routes.LicenceDetailsController.expiryDateExit()
+        case _                                                                                  =>
+          routes.LicenceDetailsController.expiryDateExit()
       }
     }
   )
@@ -82,8 +83,6 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
       routes.LicenceDetailsController.licenceTypeExit() ->
         routes.LicenceDetailsController.licenceType(),
       routes.LicenceDetailsController.expiryDateExit()  ->
-        routes.LicenceDetailsController.expiryDate(),
-      routes.LicenceDetailsController.timeTrading()     ->
         routes.LicenceDetailsController.expiryDate()
     )
 

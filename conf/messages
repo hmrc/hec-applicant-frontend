@@ -117,7 +117,6 @@ licenceExpiryDate.error.dayAndYearRequired= Expiry date must include a day and a
 licenceExpiryDate.error.dayAndMonthRequired = Expiry date must include a day and a month
 licenceExpiryDate.error.tooFarInFuture = Expiry date must be before {0}
 licenceExpiryDate.error.tooFarInPast = Expiry date must be after {0}
-licenceExpiryDate.error.before1900 = Expiry date must be on or after 01 01 1900, contact HMRC if the date is before this
 
 # Licence expiry date exit
 licenceExpiryDateExit.title = You do not need to do a tax check

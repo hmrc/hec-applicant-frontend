@@ -95,6 +95,10 @@ class ConfirmIndividualDetailsControllerSpec
               val link = doc.select(".govuk-body > .govuk-link")
               link.attr("href") shouldBe routes.ConfirmIndividualDetailsController.confirmIndividualDetailsExit().url
 
+              val form = doc.select("form")
+              form
+                .attr("action") shouldBe routes.ConfirmIndividualDetailsController.confirmIndividualDetailsSubmit().url
+
             }
           )
 

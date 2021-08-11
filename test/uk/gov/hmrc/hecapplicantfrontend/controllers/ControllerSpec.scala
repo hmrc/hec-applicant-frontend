@@ -75,6 +75,8 @@ trait ControllerSpec extends AnyWordSpec with Matchers with BeforeAndAfterAll wi
   }
   implicit lazy val messagesApi = instanceOf[MessagesApi]
 
+  implicit lazy val messages = MessagesImpl(lang, messagesApi)
+
   def instanceOf[A : ClassTag]: A = fakeApplication.injector.instanceOf[A]
 
   def checkIsRedirect(result: Future[Result], expectedRedirectLocation: String): Unit = {
