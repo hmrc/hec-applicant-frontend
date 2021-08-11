@@ -46,11 +46,9 @@
         content = Text(messages(s"$key.${e.message}"))
       ))
     ))
-
     <p class="govuk-body">
       <a class="govuk-link" href="@{routes.LicenceDetailsController.licenceTypeExit()}">@messages(s"$key.link")</a>
     </p>
-
     @govukButton(Button(content = Text(messages("button.continue"))))
   }
 }

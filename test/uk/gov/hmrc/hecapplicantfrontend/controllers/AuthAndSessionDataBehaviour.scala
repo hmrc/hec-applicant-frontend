@@ -87,7 +87,6 @@ trait AuthAndSessionDataBehaviour { this: ControllerSpec with AuthSupport with S
   def authAndSessionDataBehaviour(performAction: () => Future[Result]): Unit = {
 
     authBehaviour(performAction)
-
     "return an InternalServerError when there is an error getting session data" in {
       inSequence {
         mockAuthWithNoRetrievals()

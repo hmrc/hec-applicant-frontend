@@ -33,8 +33,7 @@ import java.util.UUID
 class AppConfig @Inject() (config: Configuration, contactFrontendConfig: ContactFrontendConfig) {
 
   val platformHost: Option[String] = config.getOptional[String]("platform.frontend.host")
-
-  val contactFrontendUrl: String =
+  val contactFrontendUrl: String   =
     contactFrontendConfig.baseUrl.getOrElse(sys.error("Could not find config for contact frontend url"))
 
   val contactFormServiceIdentifier: String =

@@ -103,4 +103,28 @@ licenceTypeExit.scrapMetalCollector = scrap metal mobile collector
 licenceTypeExit.scrapMetalDealer = scrap metal dealer site
 licenceTypeExit.link = Find out about tax checks
 
+#Licence Expiry date
+licenceExpiryDate.title = When does the licence you’re doing a tax check for expire?
+licenceExpiryDate.hint = This is the licence that is about to expire, or has expired. The expiry date may be printed on your licence. For example, 24 10 2022.
+licenceExpiryDate.link = Find out what to do if you do not have a licence
+licenceExpiryDate.error.invalid = Expiry date must be a real date
+licenceExpiryDate.error.required = Enter the expiry date of the licence you are doing a tax check for
+licenceExpiryDate.error.dayRequired = Expiry date must include a day
+licenceExpiryDate.error.monthRequired = Expiry date must include a month
+licenceExpiryDate.error.yearRequired = Expiry date must include a year
+licenceExpiryDate.error.monthAndYearRequired = Expiry date must include a month and a year
+licenceExpiryDate.error.dayAndYearRequired= Expiry date must include a day and a year
+licenceExpiryDate.error.dayAndMonthRequired = Expiry date must include a day and a month
+licenceExpiryDate.error.tooFarInFuture = Expiry date must be before {0}
+licenceExpiryDate.error.tooFarInPast = Expiry date must be after {0}
+
+# Licence expiry date exit
+licenceExpiryDateExit.title = You do not need to do a tax check
+licenceExpiryDateExit.p1 = This might be because you are applying for a licence for the first time. Or your licence expired more than 12 months ago.
+licenceExpiryDateExit.p2 = You might need to check with the licensing authority to confirm whether you need to do a tax check now.
+licenceExpiryDateExit.link = Find out about tax checks
+
+
+
+
 

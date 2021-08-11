@@ -16,17 +16,26 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models
 
-import cats.Eq
-import play.api.libs.json.{Json, OFormat}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
+import play.api.libs.json.{JsString, JsSuccess, Json}
 
-final case class HECSession(
-  retrievedUserData: RetrievedApplicantData,
-  userAnswers: UserAnswers
-)
+import java.time.LocalDate
 
-object HECSession {
+class LicenceExpiryDateSpec extends AnyWordSpec with Matchers {
 
-  implicit val eq: Eq[HECSession]          = Eq.fromUniversalEquals
-  implicit val format: OFormat[HECSession] = Json.format
+  "LicenceExpiryDate" must {
+
+    "have a format instance" in {
+      val date              = LocalDate.of(1, 2, 3)
+      val licenceExpiryDate = LicenceExpiryDate(date)
+      val expectedJsValue   = JsString("00010203")
+
+      Json.toJson(licenceExpiryDate)                    shouldBe expectedJsValue
+      Json.fromJson[LicenceExpiryDate](expectedJsValue) shouldBe JsSuccess(licenceExpiryDate)
+
+    }
+
+  }
 
 }

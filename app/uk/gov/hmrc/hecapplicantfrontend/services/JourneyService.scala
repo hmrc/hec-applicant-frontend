@@ -28,6 +28,8 @@ import uk.gov.hmrc.hecapplicantfrontend.models.{Error, HECSession}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRetrievedData, IndividualRetrievedData}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
+import uk.gov.hmrc.hecapplicantfrontend.util.TimeUtils
+import uk.gov.hmrc.hecapplicantfrontend.util.TimeUtils.LocalDateOps
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.annotation.tailrec
@@ -60,7 +62,15 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
     routes.ConfirmIndividualDetailsController.confirmIndividualDetails() -> (_ =>
       routes.LicenceDetailsController.licenceType()
     ),
-    routes.LicenceDetailsController.licenceType()                        -> (_ => routes.LicenceDetailsController.expiryDate())
+    routes.LicenceDetailsController.licenceType()                        -> (_ => routes.LicenceDetailsController.expiryDate()),
+    routes.LicenceDetailsController.expiryDate()                         -> { session =>
+      session.userAnswers.fold(_.licenceExpiryDate, c => Some(c.licenceExpiryDate)) match {
+        case Some(expiryDate) if expiryDate.value.isAfterOrOn(TimeUtils.today().minusYears(1L)) =>
+          routes.LicenceDetailsController.timeTrading()
+        case _                                                                                  =>
+          routes.LicenceDetailsController.expiryDateExit()
+      }
+    }
   )
 
   // map which describes routes from an exit page to their previous page. The keys are the exit page and the values are
@@ -71,7 +81,9 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
       routes.ConfirmIndividualDetailsController
         .confirmIndividualDetailsExit()                 -> routes.ConfirmIndividualDetailsController.confirmIndividualDetails(),
       routes.LicenceDetailsController.licenceTypeExit() ->
-        routes.LicenceDetailsController.licenceType()
+        routes.LicenceDetailsController.licenceType(),
+      routes.LicenceDetailsController.expiryDateExit()  ->
+        routes.LicenceDetailsController.expiryDate()
     )
 
   override def firstPage(session: HECSession): Call =
@@ -107,13 +119,14 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
         case _                   => None
       }
 
-    if (current === routes.StartController.start())
+    if (current === routes.StartController.start()) {
       current
-    else
+    } else {
       exitPageToPreviousPage
         .get(current)
         .orElse(loop(routes.StartController.start()))
         .getOrElse(sys.error(s"Could not find previous for $current"))
+    }
   }
 
 }
