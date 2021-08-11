@@ -139,66 +139,91 @@ class LicenceDetailsControllerSpec
 
       }
 
-      "handling submits on the licence type page" must {
+    }
 
-        def performAction(data: (String, String)*): Future[Result] =
-          controller.licenceTypeSubmit(FakeRequest().withFormUrlEncodedBody(data: _*))
+    "handling submits on the licence type page" must {
 
-        behave like authAndSessionDataBehaviour(() => performAction())
+      def performAction(data: (String, String)*): Future[Result] =
+        controller.licenceTypeSubmit(FakeRequest().withFormUrlEncodedBody(data: _*))
 
-        "show a form error" when {
+      behave like authAndSessionDataBehaviour(() => performAction())
 
-          val session = HECSession(individuaRetrievedlData, UserAnswers.empty)
+      "show a form error" when {
 
-          "nothing is submitted" in {
-            inSequence {
-              mockAuthWithNoRetrievals()
-              mockGetSession(session)
-              mockJourneyServiceGetPrevious(routes.LicenceDetailsController.licenceType(), session)(mockPreviousCall)
-            }
+        val session = HECSession(individuaRetrievedlData, UserAnswers.empty)
 
-            checkFormErrorIsDisplayed(
-              performAction(),
-              messageFromMessageKey("licenceType.title"),
-              messageFromMessageKey("licenceType.error.required")
-            )
+        "nothing is submitted" in {
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockJourneyServiceGetPrevious(routes.LicenceDetailsController.licenceType(), session)(mockPreviousCall)
           }
 
-          "an index is submitted which is too large" in {
-            inSequence {
-              mockAuthWithNoRetrievals()
-              mockGetSession(session)
-              mockJourneyServiceGetPrevious(routes.LicenceDetailsController.licenceType(), session)(mockPreviousCall)
-            }
-
-            checkFormErrorIsDisplayed(
-              performAction("licenceType" -> Int.MaxValue.toString),
-              messageFromMessageKey("licenceType.title"),
-              messageFromMessageKey("licenceType.error.invalid")
-            )
-          }
-
-          "a value is submitted which is not a number" in {
-            inSequence {
-              mockAuthWithNoRetrievals()
-              mockGetSession(session)
-              mockJourneyServiceGetPrevious(routes.LicenceDetailsController.licenceType(), session)(mockPreviousCall)
-            }
-
-            checkFormErrorIsDisplayed(
-              performAction("licenceType" -> "xyz"),
-              messageFromMessageKey("licenceType.title"),
-              messageFromMessageKey("licenceType.error.invalid")
-            )
-          }
-
+          checkFormErrorIsDisplayed(
+            performAction(),
+            messageFromMessageKey("licenceType.title"),
+            messageFromMessageKey("licenceType.error.required")
+          )
         }
 
-        "return an internal server error" when {
+        "an index is submitted which is too large" in {
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockJourneyServiceGetPrevious(routes.LicenceDetailsController.licenceType(), session)(mockPreviousCall)
+          }
 
-          "the call to update and next fails" in {
+          checkFormErrorIsDisplayed(
+            performAction("licenceType" -> Int.MaxValue.toString),
+            messageFromMessageKey("licenceType.title"),
+            messageFromMessageKey("licenceType.error.invalid")
+          )
+        }
+
+        "a value is submitted which is not a number" in {
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockJourneyServiceGetPrevious(routes.LicenceDetailsController.licenceType(), session)(mockPreviousCall)
+          }
+
+          checkFormErrorIsDisplayed(
+            performAction("licenceType" -> "xyz"),
+            messageFromMessageKey("licenceType.title"),
+            messageFromMessageKey("licenceType.error.invalid")
+          )
+        }
+
+      }
+
+      "return an internal server error" when {
+
+        "the call to update and next fails" in {
+          val answers        = UserAnswers.empty
+          val updatedAnswers = UserAnswers.empty.copy(licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires))
+          val session        = HECSession(individuaRetrievedlData, answers)
+          val updatedSession = session.copy(userAnswers = updatedAnswers)
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockJourneyServiceUpdateAndNext(routes.LicenceDetailsController.licenceType(), session, updatedSession)(
+              Left(Error(new Exception))
+            )
+          }
+
+          status(performAction("licenceType" -> "0")) shouldBe INTERNAL_SERVER_ERROR
+        }
+
+      }
+
+      "redirect to the next page" when {
+
+        "valid data is submitted and" when {
+
+          "the user has not previously completed answering questions" in {
             val answers        = UserAnswers.empty
-            val updatedAnswers = UserAnswers.empty.copy(licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires))
+            val updatedAnswers = UserAnswers.empty.copy(licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles))
             val session        = HECSession(individuaRetrievedlData, answers)
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 
@@ -206,144 +231,155 @@ class LicenceDetailsControllerSpec
               mockAuthWithNoRetrievals()
               mockGetSession(session)
               mockJourneyServiceUpdateAndNext(routes.LicenceDetailsController.licenceType(), session, updatedSession)(
-                Left(Error(new Exception))
+                Right(mockNextCall)
               )
             }
 
-            status(performAction("licenceType" -> "0")) shouldBe INTERNAL_SERVER_ERROR
+            checkIsRedirect(performAction("licenceType" -> "1"), mockNextCall)
           }
 
-        }
+          "the user has previously completed answering questions" in {
+            val answers        = CompleteUserAnswers(
+              LicenceType.DriverOfTaxisAndPrivateHires,
+              LicenceExpiryDate(TimeUtils.today().minusDays(10L))
+            )
+            val updatedAnswers = IncompleteUserAnswers(
+              Some(LicenceType.ScrapMetalMobileCollector),
+              Some(LicenceExpiryDate(TimeUtils.today().minusDays(10L)))
+            )
+            val session        = HECSession(individuaRetrievedlData, answers)
+            val updatedSession = session.copy(userAnswers = updatedAnswers)
 
-        "redirect to the next page" when {
-
-          "valid data is submitted and" when {
-
-            "the user has not previously completed answering questions" in {
-              val answers        = UserAnswers.empty
-              val updatedAnswers = UserAnswers.empty.copy(licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles))
-              val session        = HECSession(individuaRetrievedlData, answers)
-              val updatedSession = session.copy(userAnswers = updatedAnswers)
-
-              inSequence {
-                mockAuthWithNoRetrievals()
-                mockGetSession(session)
-                mockJourneyServiceUpdateAndNext(routes.LicenceDetailsController.licenceType(), session, updatedSession)(
-                  Right(mockNextCall)
-                )
-              }
-
-              checkIsRedirect(performAction("licenceType" -> "1"), mockNextCall)
-            }
-
-            "the user has previously completed answering questions" in {
-              val answers        = CompleteUserAnswers(
-                LicenceType.DriverOfTaxisAndPrivateHires,
-                LicenceExpiryDate(TimeUtils.today().minusDays(10L))
-              )
-              val updatedAnswers = IncompleteUserAnswers(
-                Some(LicenceType.ScrapMetalMobileCollector),
-                Some(LicenceExpiryDate(TimeUtils.today().minusDays(10L)))
-              )
-              val session        = HECSession(individuaRetrievedlData, answers)
-              val updatedSession = session.copy(userAnswers = updatedAnswers)
-
-              inSequence {
-                mockAuthWithNoRetrievals()
-                mockGetSession(session)
-                mockJourneyServiceUpdateAndNext(routes.LicenceDetailsController.licenceType(), session, updatedSession)(
-                  Right(mockNextCall)
-                )
-              }
-
-              checkIsRedirect(performAction("licenceType" -> "2"), mockNextCall)
-            }
-          }
-
-        }
-
-      }
-
-      "handling submits on the licence Expiry page" must {
-        def performAction(data: (String, String)*): Future[Result] =
-          controller.expiryDateSubmit(FakeRequest().withFormUrlEncodedBody(data: _*))
-
-        behave like authAndSessionDataBehaviour(() => performAction())
-
-        "show a form error" when {
-          val session = HECSession(individuaRetrievedlData, UserAnswers.empty)
-          "nothing is submitted" in {
             inSequence {
               mockAuthWithNoRetrievals()
               mockGetSession(session)
-              mockJourneyServiceGetPrevious(routes.LicenceDetailsController.expiryDate(), session)(mockPreviousCall)
+              mockJourneyServiceUpdateAndNext(routes.LicenceDetailsController.licenceType(), session, updatedSession)(
+                Right(mockNextCall)
+              )
             }
 
-            checkFormErrorIsDisplayed(
-              performAction(),
-              messageFromMessageKey("licenceExpiryDate.title"),
-              messageFromMessageKey("licenceExpiryDate.error.required")
-            )
+            checkIsRedirect(performAction("licenceType" -> "2"), mockNextCall)
           }
-
-          "the date entered is invalid" in {
-
-            val answers = UserAnswers.empty
-            val session = HECSession(individuaRetrievedlData, answers)
-
-            DateErrorScenarios
-              .dateErrorScenarios("licenceExpiryDate", "")
-              .foreach { scenario =>
-                withClue(s"For date error scenario $scenario: ") {
-                  val data = List(
-                    "licenceExpiryDate-day"   -> scenario.dayInput,
-                    "licenceExpiryDate-month" -> scenario.monthInput,
-                    "licenceExpiryDate-year"  -> scenario.yearInput
-                  ).collect { case (key, Some(value)) => key -> value }
-                  inSequence {
-                    mockAuthWithNoRetrievals()
-                    mockGetSession(session)
-                    mockJourneyServiceGetPrevious(routes.LicenceDetailsController.expiryDate(), session)(
-                      mockPreviousCall
-                    )
-                  }
-
-                  checkFormErrorIsDisplayed(
-                    performAction(data: _*),
-                    messageFromMessageKey("licenceExpiryDate.title"),
-                    messageFromMessageKey(scenario.expectedErrorMessageKey)
-                  )
-                }
-              }
-          }
-
         }
 
       }
 
-      "handling requests to the licence type exit page" must {
+    }
 
-        def performAction(): Future[Result] = controller.licenceTypeExit(FakeRequest())
+    "handling requests to licence expiry page" must {
 
-        behave like authAndSessionDataBehaviour(performAction)
+      def performAction(): Future[Result] =
+        controller.expiryDate(FakeRequest())
 
-        "display the page" in {
-          val session = HECSession(individuaRetrievedlData, UserAnswers.empty)
+      behave like authAndSessionDataBehaviour(() => performAction())
+
+      "display the page" when {
+
+        "a previous answer to the question is not found in session" in {}
+
+        "a previous answer to the question is found in session" in {}
+
+      }
+
+    }
+
+    "handling submits on the licence Expiry page" must {
+
+      def performAction(data: (String, String)*): Future[Result] =
+        controller.expiryDateSubmit(FakeRequest().withFormUrlEncodedBody(data: _*))
+
+      behave like authAndSessionDataBehaviour(() => performAction())
+
+      "show a form error" when {
+        val session = HECSession(individuaRetrievedlData, UserAnswers.empty)
+
+        "nothing is submitted" in {
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockJourneyServiceGetPrevious(routes.LicenceDetailsController.licenceTypeExit(), session)(mockPreviousCall)
+            mockJourneyServiceGetPrevious(routes.LicenceDetailsController.expiryDate(), session)(mockPreviousCall)
           }
 
-          checkPageIsDisplayed(
+          checkFormErrorIsDisplayed(
             performAction(),
-            messageFromMessageKey("licenceTypeExit.title"),
-            doc => doc.select("#back").attr("href") shouldBe mockPreviousCall.url
+            messageFromMessageKey("licenceExpiryDate.title"),
+            messageFromMessageKey("licenceExpiryDate.error.required")
           )
-
         }
 
+        "the date entered is invalid" in {
+
+          val answers = UserAnswers.empty
+          val session = HECSession(individuaRetrievedlData, answers)
+
+          DateErrorScenarios
+            .dateErrorScenarios("licenceExpiryDate", "")
+            .foreach { scenario =>
+              withClue(s"For date error scenario $scenario: ") {
+                val data = List(
+                  "licenceExpiryDate-day"   -> scenario.dayInput,
+                  "licenceExpiryDate-month" -> scenario.monthInput,
+                  "licenceExpiryDate-year"  -> scenario.yearInput
+                ).collect { case (key, Some(value)) => key -> value }
+                inSequence {
+                  mockAuthWithNoRetrievals()
+                  mockGetSession(session)
+                  mockJourneyServiceGetPrevious(routes.LicenceDetailsController.expiryDate(), session)(
+                    mockPreviousCall
+                  )
+                }
+
+                checkFormErrorIsDisplayed(
+                  performAction(data: _*),
+                  messageFromMessageKey("licenceExpiryDate.title"),
+                  messageFromMessageKey(scenario.expectedErrorMessageKey)
+                )
+              }
+            }
+        }
+
+        "date entered is more than 6 years in the future" in {}
+
+        "date entered is more than 2 years in the past" in {}
+
       }
+
+      "return an InternalServerError" when {
+
+        "there is an error updating and getting the next endpoint" in {}
+
+      }
+
+      "redirect to the next page" when {
+
+        "a valid expiry date is submitted" in {}
+
+      }
+
+    }
+
+    "handling requests to the licence type exit page" must {
+
+      def performAction(): Future[Result] = controller.licenceTypeExit(FakeRequest())
+
+      behave like authAndSessionDataBehaviour(performAction)
+
+      "display the page" in {
+        val session = HECSession(individuaRetrievedlData, UserAnswers.empty)
+        inSequence {
+          mockAuthWithNoRetrievals()
+          mockGetSession(session)
+          mockJourneyServiceGetPrevious(routes.LicenceDetailsController.licenceTypeExit(), session)(mockPreviousCall)
+        }
+
+        checkPageIsDisplayed(
+          performAction(),
+          messageFromMessageKey("licenceTypeExit.title"),
+          doc => doc.select("#back").attr("href") shouldBe mockPreviousCall.url
+        )
+
+      }
+
     }
   }
 

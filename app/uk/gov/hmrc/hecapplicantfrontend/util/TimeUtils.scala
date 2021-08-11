@@ -60,28 +60,27 @@ object TimeUtils {
               ) :: Nil =>
             Right((dayString, monthString, yearString))
           case None :: Some(_) :: Some(_) :: Nil =>
-            Left(FormError(dayKey, "error.required"))
+            Left(FormError(dateKey, "error.dayRequired"))
           case Some(_) :: None :: Some(_) :: Nil =>
-            Left(FormError(monthKey, "error.required"))
+            Left(FormError(dateKey, "error.monthRequired"))
           case Some(_) :: Some(_) :: None :: Nil =>
-            Left(FormError(yearKey, "error.required"))
+            Left(FormError(dateKey, "error.yearRequired"))
           case Some(_) :: None :: None :: Nil    =>
-            Left(FormError(monthKey, "error.monthAndYearRequired"))
+            Left(FormError(dateKey, "error.monthAndYearRequired"))
           case None :: Some(_) :: None :: Nil    =>
-            Left(FormError(dayKey, "error.dayAndYearRequired"))
+            Left(FormError(dateKey, "error.dayAndYearRequired"))
           case None :: None :: Some(_) :: Nil    =>
-            Left(FormError(dayKey, "error.dayAndMonthRequired"))
+            Left(FormError(dateKey, "error.dayAndMonthRequired"))
           case _                                 => Left(FormError(dateKey, "error.required"))
         }
 
       def toValidInt(
-        key: String,
         stringValue: String,
         maxValue: Option[Int]
       ): Either[FormError, Int] =
         Either.fromOption(
           Try(BigDecimal(stringValue).toIntExact).toOption.filter(i => i > 0 && maxValue.forall(i <= _)),
-          FormError(key, "error.invalid")
+          FormError(dateKey, "error.invalid")
         )
 
       override def bind(
@@ -90,9 +89,9 @@ object TimeUtils {
       ): Either[Seq[FormError], LocalDate] = {
         val result = for {
           dateFieldStrings <- dateFieldStringValues(data)
-          day ← toValidInt(dayKey, dateFieldStrings._1, Some(31))
-          month ← toValidInt(monthKey, dateFieldStrings._2, Some(12))
-          year ← toValidInt(yearKey, dateFieldStrings._3, None)
+          day ← toValidInt(dateFieldStrings._1, Some(31))
+          month ← toValidInt(dateFieldStrings._2, Some(12))
+          year ← toValidInt(dateFieldStrings._3, None)
           date ← Either
                    .fromTry(Try(LocalDate.of(year, month, day)))
                    .leftMap(_ => FormError(dateKey, "error.invalid"))

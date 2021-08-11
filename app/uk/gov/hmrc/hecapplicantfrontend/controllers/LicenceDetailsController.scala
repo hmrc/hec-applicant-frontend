@@ -104,7 +104,7 @@ class LicenceDetailsController @Inject() (
   }
 
   val expiryDate: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
-    lazy val back  = journeyService.previous(routes.LicenceDetailsController.expiryDate())
+    val back       = journeyService.previous(routes.LicenceDetailsController.expiryDate())
     val expiryDate = request.sessionData.userAnswers.fold(_.licenceExpiryDate, c => Some(c.licenceExpiryDate))
     val form = {
       val emptyForm = licenseExpiryDateForm()
