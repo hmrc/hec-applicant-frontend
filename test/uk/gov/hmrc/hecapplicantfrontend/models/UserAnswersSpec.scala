@@ -26,7 +26,7 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
   "UserAnswers" must {
 
     "have an empty val" in {
-      UserAnswers.empty shouldBe IncompleteUserAnswers(None, None, None)
+      UserAnswers.empty shouldBe IncompleteUserAnswers(None, None, None, None)
     }
 
     "have a fold method" which {
@@ -43,7 +43,8 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
         val completeAnswers = CompleteUserAnswers(
           LicenceType.DriverOfTaxisAndPrivateHires,
           LicenceExpiryDate(TimeUtils.today().minusDays(10L)),
-          LicenceTimeTrading.TwoToFourYears
+          LicenceTimeTrading.TwoToFourYears,
+          LicenceValidityPeriod.UpToFiveYears
         )
         completeAnswers.fold(
           _ => fail(),
@@ -54,14 +55,19 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
     }
 
     "have a method which converts complete answers to incomplete" in {
-      val completeAnswers       = CompleteUserAnswers(
+      val completeAnswers = CompleteUserAnswers(
         LicenceType.DriverOfTaxisAndPrivateHires,
-        LicenceExpiryDate(TimeUtils.today().minusDays(10L)),
-        LicenceTimeTrading.TwoToFourYears
+        LicenceExpiryDate(TimeUtils.today()),
+        LicenceTimeTrading.TwoToFourYears,
+        LicenceValidityPeriod.UpToTwoYears
       )
-      val incompleteUserAnswers = IncompleteUserAnswers.fromCompleteAnswers(completeAnswers)
+      IncompleteUserAnswers.fromCompleteAnswers(completeAnswers) shouldBe IncompleteUserAnswers(
+        Some(LicenceType.DriverOfTaxisAndPrivateHires),
+        Some(LicenceExpiryDate(TimeUtils.today())),
+        Some(LicenceTimeTrading.TwoToFourYears),
+        Some(LicenceValidityPeriod.UpToTwoYears)
+      )
 
-      incompleteUserAnswers.licenceType shouldBe Some(LicenceType.DriverOfTaxisAndPrivateHires)
     }
 
     "have an unset method" which {
@@ -70,14 +76,16 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
         IncompleteUserAnswers(
           Some(LicenceType.DriverOfTaxisAndPrivateHires),
           Some(LicenceExpiryDate(TimeUtils.today())),
-          Some(LicenceTimeTrading.ZeroToTwoYears)
+          Some(LicenceTimeTrading.ZeroToTwoYears),
+          Some(LicenceValidityPeriod.UpToThreeYears)
         )
 
       val completeAnswers =
         CompleteUserAnswers(
           LicenceType.DriverOfTaxisAndPrivateHires,
           LicenceExpiryDate(TimeUtils.today()),
-          LicenceTimeTrading.ZeroToTwoYears
+          LicenceTimeTrading.ZeroToTwoYears,
+          LicenceValidityPeriod.UpToThreeYears
         )
 
       "unsets the licence type field" in {
@@ -93,6 +101,11 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
       "unsets the licence time trading field" in {
         incompleteAnswers.unset(_.licenceTimeTrading) shouldBe incompleteAnswers.copy(licenceTimeTrading = None)
         completeAnswers.unset(_.licenceTimeTrading)   shouldBe incompleteAnswers.copy(licenceTimeTrading = None)
+      }
+
+      "unsets the licence validty period field" in {
+        incompleteAnswers.unset(_.licenceValidityPeriod) shouldBe incompleteAnswers.copy(licenceValidityPeriod = None)
+        completeAnswers.unset(_.licenceValidityPeriod)   shouldBe incompleteAnswers.copy(licenceValidityPeriod = None)
       }
 
     }

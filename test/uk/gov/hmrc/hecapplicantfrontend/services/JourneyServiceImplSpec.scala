@@ -222,7 +222,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             routes.LicenceDetailsController.licenceTimeTrading(),
             updatedSession
           )
-          await(result.value) shouldBe Right(routes.LicenceDetailsController.licenceRecentLength())
+          await(result.value) shouldBe Right(routes.LicenceDetailsController.recentLicenceLength())
         }
 
       }

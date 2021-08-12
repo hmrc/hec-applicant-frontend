@@ -101,7 +101,8 @@ class LicenceDetailsControllerSpec
               CompleteUserAnswers(
                 LicenceType.DriverOfTaxisAndPrivateHires,
                 LicenceExpiryDate(TimeUtils.today().minusDays(10L)),
-                LicenceTimeTrading.ZeroToTwoYears
+                LicenceTimeTrading.ZeroToTwoYears,
+                LicenceValidityPeriod.UpToTwoYears
               )
             )
 
@@ -251,7 +252,8 @@ class LicenceDetailsControllerSpec
             val answers        = CompleteUserAnswers(
               LicenceType.DriverOfTaxisAndPrivateHires,
               LicenceExpiryDate(TimeUtils.today().minusDays(10L)),
-              LicenceTimeTrading.ZeroToTwoYears
+              LicenceTimeTrading.ZeroToTwoYears,
+              LicenceValidityPeriod.UpToOneYear
             )
             val updatedAnswers = IncompleteUserAnswers
               .fromCompleteAnswers(answers)
@@ -587,7 +589,8 @@ class LicenceDetailsControllerSpec
               CompleteUserAnswers(
                 LicenceType.DriverOfTaxisAndPrivateHires,
                 LicenceExpiryDate(TimeUtils.today().minusDays(10L)),
-                LicenceTimeTrading.TwoToFourYears
+                LicenceTimeTrading.TwoToFourYears,
+                LicenceValidityPeriod.UpToThreeYears
               )
             )
 
@@ -734,12 +737,14 @@ class LicenceDetailsControllerSpec
             val answers        = CompleteUserAnswers(
               LicenceType.DriverOfTaxisAndPrivateHires,
               LicenceExpiryDate(TimeUtils.today().minusDays(10L)),
-              LicenceTimeTrading.ZeroToTwoYears
+              LicenceTimeTrading.ZeroToTwoYears,
+              LicenceValidityPeriod.UpToFiveYears
             )
             val updatedAnswers = IncompleteUserAnswers(
               Some(LicenceType.DriverOfTaxisAndPrivateHires),
               Some(LicenceExpiryDate(TimeUtils.today().minusDays(10L))),
-              Some(LicenceTimeTrading.EightYearsOrMore)
+              Some(LicenceTimeTrading.EightYearsOrMore),
+              Some(LicenceValidityPeriod.UpToFiveYears)
             )
             val session        = HECSession(individuaRetrievedlData, answers)
             val updatedSession = session.copy(userAnswers = updatedAnswers)
@@ -758,6 +763,117 @@ class LicenceDetailsControllerSpec
 
             checkIsRedirect(performAction("licenceTimeTrading" -> "3"), mockNextCall)
           }
+        }
+
+      }
+
+    }
+
+    "handling requests to the licence validity period page" must {
+
+      def performAction(): Future[Result] = controller.recentLicenceLength(FakeRequest())
+
+      behave like authAndSessionDataBehaviour(performAction)
+
+      "return an InternalServerError" when {
+
+        "a licence type cannot be found in session" in {
+          val session = HECSession(individuaRetrievedlData, UserAnswers.empty)
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+          }
+
+          status(performAction()) shouldBe INTERNAL_SERVER_ERROR
+        }
+
+      }
+
+      "display the page" when {
+
+        "the user has selected a licence type of 'operator of private hire vehicles'" in {
+          val session = HECSession(
+            individuaRetrievedlData,
+            UserAnswers.empty.copy(
+              licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles)
+            )
+          )
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockJourneyServiceGetPrevious(routes.LicenceDetailsController.recentLicenceLength(), session)(
+              mockPreviousCall
+            )
+          }
+
+          checkPageIsDisplayed(
+            performAction(),
+            messageFromMessageKey("licenceValidityPeriod.title"),
+            { doc =>
+              doc.select("#back").attr("href") shouldBe mockPreviousCall.url
+
+              val options = doc.select(".govuk-radios__item")
+              options.size() shouldBe 5
+
+              val selectedOptions = doc.select(".govuk-radios__input[checked]")
+              selectedOptions.isEmpty shouldBe true
+
+              val form = doc.select("form")
+              form
+                .attr("action") shouldBe routes.LicenceDetailsController.recentLicenceLengthSubmit().url
+            }
+          )
+
+        }
+
+        "the user has selected a licence type which isn't 'Operator of Private Hire Vehicles'" in {
+          List(
+            LicenceType.DriverOfTaxisAndPrivateHires,
+            LicenceType.ScrapMetalMobileCollector,
+            LicenceType.ScrapMetalDealerSite
+          ).foreach { licenceType =>
+            withClue(s"For licence type $licenceType: ") {
+              val session =
+                HECSession(
+                  individuaRetrievedlData,
+                  CompleteUserAnswers(
+                    licenceType,
+                    LicenceExpiryDate(TimeUtils.today().minusDays(10L)),
+                    LicenceTimeTrading.TwoToFourYears,
+                    LicenceValidityPeriod.UpToThreeYears
+                  )
+                )
+
+              inSequence {
+                mockAuthWithNoRetrievals()
+                mockGetSession(session)
+                mockJourneyServiceGetPrevious(routes.LicenceDetailsController.recentLicenceLength(), session)(
+                  mockPreviousCall
+                )
+              }
+
+              checkPageIsDisplayed(
+                performAction(),
+                messageFromMessageKey("licenceValidityPeriod.title"),
+                { doc =>
+                  doc.select("#back").attr("href") shouldBe mockPreviousCall.url
+
+                  val options = doc.select(".govuk-radios__item")
+                  options.size() shouldBe 3
+
+                  val selectedOptions = doc.select(".govuk-radios__input[checked]")
+                  selectedOptions.attr("value") shouldBe "2"
+
+                  val form = doc.select("form")
+                  form
+                    .attr("action") shouldBe routes.LicenceDetailsController.recentLicenceLengthSubmit().url
+                }
+              )
+            }
+          }
+
         }
 
       }
