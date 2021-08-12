@@ -124,6 +124,13 @@ licenceExpiryDateExit.p1 = This might be because you are applying for a licence 
 licenceExpiryDateExit.p2 = You might need to check with the licensing authority to confirm whether you need to do a tax check now.
 licenceExpiryDateExit.link = Find out about tax checks
 
+# Licence time trading
+licenceTimeTrading.title=How many years ago did you first get a licence for this activity?
+licenceTimeTrading.hint=This is the licence type you are doing a tax check for. You may need to give an estimate for this question.
+licenceTimeTrading.zeroToTwoYears=0 to 2 years
+licenceTimeTrading.twoToFourYears=
+licenceTimeTrading.=fourToEightYears=
+licenceTimeTrading.moreThanEightYears=
 
 
 
