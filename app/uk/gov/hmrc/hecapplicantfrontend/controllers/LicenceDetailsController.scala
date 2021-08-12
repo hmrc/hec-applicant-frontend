@@ -153,8 +153,8 @@ class LicenceDetailsController @Inject() (
     )
   }
 
-  val timeTrading: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
-    val back        = journeyService.previous(routes.LicenceDetailsController.timeTrading())
+  val licenceTimeTrading: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
+    val back        = journeyService.previous(routes.LicenceDetailsController.licenceTimeTrading())
     val timeTrading = request.sessionData.userAnswers.fold(_.licenceTimeTrading, c => Some(c.licenceTimeTrading))
     val form = {
       val emptyForm = licenceTimeTradingForm(licenceTimeTradingOptions)
@@ -163,13 +163,13 @@ class LicenceDetailsController @Inject() (
     Ok(licenceTimeTradingPage(form, back, licenceTimeTradingOptions))
   }
 
-  val timeTradingSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
+  val licenceTimeTradingSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     def handleValidLicenceTimeTrading(licenceTimeTrading: LicenceTimeTrading): Future[Result] = {
       val updatedAnswers =
         request.sessionData.userAnswers.unset(_.licenceTimeTrading).copy(licenceTimeTrading = Some(licenceTimeTrading))
       journeyService
         .updateAndNext(
-          routes.LicenceDetailsController.timeTrading(),
+          routes.LicenceDetailsController.licenceTimeTrading(),
           request.sessionData.copy(userAnswers = updatedAnswers)
         )
         .fold(
@@ -188,12 +188,18 @@ class LicenceDetailsController @Inject() (
           Ok(
             licenceTimeTradingPage(
               formWithErrors,
-              journeyService.previous(routes.LicenceDetailsController.timeTrading()),
+              journeyService.previous(routes.LicenceDetailsController.licenceTimeTrading()),
               licenceTimeTradingOptions
             )
           ),
         handleValidLicenceTimeTrading
       )
+  }
+
+  val licenceRecentLength: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
+    Ok(
+      s"session is ${request.sessionData}\nBack is ${journeyService.previous(routes.LicenceDetailsController.licenceRecentLength())}"
+    )
   }
 }
 
