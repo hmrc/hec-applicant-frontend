@@ -28,11 +28,15 @@ object UserAnswers {
   @Lenses
   final case class IncompleteUserAnswers(
     licenceType: Option[LicenceType] = None,
-    licenceExpiryDate: Option[LicenceExpiryDate] = None
+    licenceExpiryDate: Option[LicenceExpiryDate] = None,
+    licenceTimeTrading: Option[LicenceTimeTrading] = None
   ) extends UserAnswers
 
-  final case class CompleteUserAnswers(licenceType: LicenceType, licenceExpiryDate: LicenceExpiryDate)
-      extends UserAnswers
+  final case class CompleteUserAnswers(
+    licenceType: LicenceType,
+    licenceExpiryDate: LicenceExpiryDate,
+    licenceTimeTrading: LicenceTimeTrading
+  ) extends UserAnswers
 
   object IncompleteUserAnswers {
 
