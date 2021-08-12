@@ -219,7 +219,45 @@ class LicenceDetailsController @Inject() (
   }
 
   val recentLicenceLengthSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
-    Ok(s"session is ${request.session}")
+    def handleValidLicenceTimePeriod(licenceValidityPeriod: LicenceValidityPeriod): Future[Result] = {
+      val updatedAnswers =
+        request.sessionData.userAnswers
+          .unset(_.licenceValidityPeriod)
+          .copy(licenceValidityPeriod = Some(licenceValidityPeriod))
+      journeyService
+        .updateAndNext(
+          routes.LicenceDetailsController.recentLicenceLength(),
+          request.sessionData.copy(userAnswers = updatedAnswers)
+        )
+        .fold(
+          { e =>
+            logger.warn("Could not update session and proceed", e)
+            InternalServerError
+          },
+          Redirect
+        )
+    }
+    val licenceTypeOpt = request.sessionData.userAnswers.fold(_.licenceType, c => Some(c.licenceType))
+    licenceTypeOpt match {
+      case Some(licenceType) =>
+        val options: List[LicenceValidityPeriod] = licenceValidityPeriodOptions(licenceType)
+        licenceValidityPeriodForm(options)
+          .bindFromRequest()
+          .fold(
+            formWithErrors =>
+              Ok(
+                licenceValidityPeriodPage(
+                  formWithErrors,
+                  journeyService.previous(routes.LicenceDetailsController.recentLicenceLength()),
+                  options
+                )
+              ),
+            handleValidLicenceTimePeriod
+          )
+      case None              =>
+        logger.error("Couldn't find licence Type")
+        InternalServerError
+    }
   }
 
 }
