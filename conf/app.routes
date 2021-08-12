@@ -24,7 +24,7 @@ GET        /not-a-renewal           uk.gov.hmrc.hecapplicantfrontend.controllers
 GET        /time-trading            uk.gov.hmrc.hecapplicantfrontend.controllers.LicenceDetailsController.licenceTimeTrading
 POST       /time-trading            uk.gov.hmrc.hecapplicantfrontend.controllers.LicenceDetailsController.licenceTimeTradingSubmit
 
-GET        /length-recent-licence   uk.gov.hmrc.hecapplicantfrontend.controllers.LicenceDetailsController.licenceRecentLength
+GET        /length-recent-licence   uk.gov.hmrc.hecapplicantfrontend.controllers.LicenceDetailsController.recentLicenceLength
 
 
 
