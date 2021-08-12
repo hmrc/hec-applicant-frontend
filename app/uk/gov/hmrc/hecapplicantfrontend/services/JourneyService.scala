@@ -24,7 +24,7 @@ import cats.syntax.eq._
 import com.google.inject.{ImplementedBy, Inject, Singleton}
 import play.api.mvc.Call
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.RequestWithSessionData
-import uk.gov.hmrc.hecapplicantfrontend.models.{Error, HECSession}
+import uk.gov.hmrc.hecapplicantfrontend.models.{Error, HECSession, LicenceType}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRetrievedData, IndividualRetrievedData}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
@@ -71,7 +71,8 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
           routes.LicenceDetailsController.expiryDateExit()
       }
     },
-    routes.LicenceDetailsController.licenceTimeTrading                   -> (_ => routes.LicenceDetailsController.recentLicenceLength())
+    routes.LicenceDetailsController.licenceTimeTrading                   -> (_ => routes.LicenceDetailsController.recentLicenceLength()),
+    routes.LicenceDetailsController.recentLicenceLength()                -> licenceValidityPeriodRoute
   )
 
   // map which describes routes from an exit page to their previous page. The keys are the exit page and the values are
@@ -129,5 +130,11 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
         .getOrElse(sys.error(s"Could not find previous for $current"))
     }
   }
+
+  private def licenceValidityPeriodRoute(session: HECSession): Call =
+    session.userAnswers.fold(_.licenceType, c => Some(c.licenceType)) match {
+      case Some(LicenceType.DriverOfTaxisAndPrivateHires) => routes.TaxSituationController.taxSituation()
+      case _                                              => routes.EntityTypeController.entityType()
+    }
 
 }

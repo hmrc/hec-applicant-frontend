@@ -28,6 +28,10 @@ GET        /length-recent-licence   uk.gov.hmrc.hecapplicantfrontend.controllers
 POST       /length-recent-licence   uk.gov.hmrc.hecapplicantfrontend.controllers.LicenceDetailsController.recentLicenceLengthSubmit
 
 
+GET        /who-tax-check-for       uk.gov.hmrc.hecapplicantfrontend.controllers.EntityTypeController.entityType
+
+GET        /taxSituation            uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.taxSituation
+
 
 # IV
 GET  /failed-iv/callback                         uk.gov.hmrc.hecapplicantfrontend.controllers.IvFailureController.ivFailure(journeyId: java.util.UUID)
