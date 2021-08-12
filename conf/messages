@@ -131,8 +131,8 @@ licenceTimeTrading.zeroToTwoYears = 0 to 2 years
 licenceTimeTrading.twoToFourYears = 2 to 4 years
 licenceTimeTrading.fourToEightYears = 4 to 8 years
 licenceTimeTrading.eightYearsOrMore = 8 years or more
-licenceTimeTrading.error.required = Select how many years ago did you first get a licence for this activity.
-licenceTimeTrading.error.invalid = Select how many years ago did you first get a licence for this activity.
+licenceTimeTrading.error.required = Select the number of years ago you first got a licence for this activity
+licenceTimeTrading.error.invalid = Select the number of years ago you first got a licence for this activity
 
 
 
