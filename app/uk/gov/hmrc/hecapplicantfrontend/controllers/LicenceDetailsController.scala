@@ -24,9 +24,10 @@ import play.api.i18n.Messages
 import play.api.data.Forms.{mapping, of}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
-import uk.gov.hmrc.hecapplicantfrontend.controllers.LicenceDetailsController.{licenceTypeForm, licenceTypeOptions, licenseExpiryDateForm}
+import uk.gov.hmrc.hecapplicantfrontend.controllers.LicenceDetailsController.{licenceTimeTradingForm, licenceTimeTradingOptions, licenceTypeForm, licenceTypeOptions, licenseExpiryDateForm}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
-import uk.gov.hmrc.hecapplicantfrontend.models.{LicenceExpiryDate, LicenceType}
+import uk.gov.hmrc.hecapplicantfrontend.models.LicenceTimeTrading.{EightYearsOrMore, FourToEightYears, TwoToFourYears, ZeroToTwoYears}
+import uk.gov.hmrc.hecapplicantfrontend.models.{LicenceExpiryDate, LicenceTimeTrading, LicenceType}
 import uk.gov.hmrc.hecapplicantfrontend.models.LicenceType._
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
 import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging, TimeUtils}
@@ -45,7 +46,8 @@ class LicenceDetailsController @Inject() (
   licenceTypePage: html.LicenceType,
   licenceTypeExitPage: html.LicenceTypeExit,
   licenseExpiryDatePage: html.LicenceExpiryDate,
-  licenceExpiryDateExitPage: html.LicenceExpiryDateExit
+  licenceExpiryDateExitPage: html.LicenceExpiryDateExit,
+  licenceTimeTradingPage: html.LicenceTimeTrading
 )(implicit appConfig: AppConfig, ec: ExecutionContext)
     extends FrontendController(mcc)
     with I18nSupport
@@ -151,9 +153,52 @@ class LicenceDetailsController @Inject() (
     )
   }
 
-  val timeTrading: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
+  val licenceTimeTrading: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
+    val back        = journeyService.previous(routes.LicenceDetailsController.licenceTimeTrading())
+    val timeTrading = request.sessionData.userAnswers.fold(_.licenceTimeTrading, c => Some(c.licenceTimeTrading))
+    val form = {
+      val emptyForm = licenceTimeTradingForm(licenceTimeTradingOptions)
+      timeTrading.fold(emptyForm)(emptyForm.fill)
+    }
+    Ok(licenceTimeTradingPage(form, back, licenceTimeTradingOptions))
+  }
+
+  val licenceTimeTradingSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
+    def handleValidLicenceTimeTrading(licenceTimeTrading: LicenceTimeTrading): Future[Result] = {
+      val updatedAnswers =
+        request.sessionData.userAnswers.unset(_.licenceTimeTrading).copy(licenceTimeTrading = Some(licenceTimeTrading))
+      journeyService
+        .updateAndNext(
+          routes.LicenceDetailsController.licenceTimeTrading(),
+          request.sessionData.copy(userAnswers = updatedAnswers)
+        )
+        .fold(
+          { e =>
+            logger.warn("Could not update session and proceed", e)
+            InternalServerError
+          },
+          Redirect
+        )
+    }
+
+    licenceTimeTradingForm(licenceTimeTradingOptions)
+      .bindFromRequest()
+      .fold(
+        formWithErrors =>
+          Ok(
+            licenceTimeTradingPage(
+              formWithErrors,
+              journeyService.previous(routes.LicenceDetailsController.licenceTimeTrading()),
+              licenceTimeTradingOptions
+            )
+          ),
+        handleValidLicenceTimeTrading
+      )
+  }
+
+  val licenceRecentLength: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     Ok(
-      s"session is ${request.sessionData}\nBack is ${journeyService.previous(routes.LicenceDetailsController.timeTrading())}"
+      s"session is ${request.sessionData}\nBack is ${journeyService.previous(routes.LicenceDetailsController.licenceRecentLength())}"
     )
   }
 }
@@ -167,10 +212,24 @@ object LicenceDetailsController {
     ScrapMetalDealerSite
   )
 
+  val licenceTimeTradingOptions: List[LicenceTimeTrading] = List(
+    ZeroToTwoYears,
+    TwoToFourYears,
+    FourToEightYears,
+    EightYearsOrMore
+  )
+
   def licenceTypeForm(options: List[LicenceType]): Form[LicenceType] =
     Form(
       mapping(
         "licenceType" -> of(FormUtils.radioFormFormatter(options))
+      )(identity)(Some(_))
+    )
+
+  def licenceTimeTradingForm(options: List[LicenceTimeTrading]): Form[LicenceTimeTrading] =
+    Form(
+      mapping(
+        "licenceTimeTrading" -> of(FormUtils.radioFormFormatter(options))
       )(identity)(Some(_))
     )
 

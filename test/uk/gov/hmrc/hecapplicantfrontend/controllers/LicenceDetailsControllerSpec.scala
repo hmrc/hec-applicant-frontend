@@ -100,7 +100,8 @@ class LicenceDetailsControllerSpec
               individuaRetrievedlData,
               CompleteUserAnswers(
                 LicenceType.DriverOfTaxisAndPrivateHires,
-                LicenceExpiryDate(TimeUtils.today().minusDays(10L))
+                LicenceExpiryDate(TimeUtils.today().minusDays(10L)),
+                LicenceTimeTrading.ZeroToTwoYears
               )
             )
 
@@ -249,12 +250,12 @@ class LicenceDetailsControllerSpec
           "the user has previously completed answering questions" in {
             val answers        = CompleteUserAnswers(
               LicenceType.DriverOfTaxisAndPrivateHires,
-              LicenceExpiryDate(TimeUtils.today().minusDays(10L))
+              LicenceExpiryDate(TimeUtils.today().minusDays(10L)),
+              LicenceTimeTrading.ZeroToTwoYears
             )
-            val updatedAnswers = IncompleteUserAnswers(
-              Some(LicenceType.ScrapMetalMobileCollector),
-              Some(LicenceExpiryDate(TimeUtils.today().minusDays(10L)))
-            )
+            val updatedAnswers = IncompleteUserAnswers
+              .fromCompleteAnswers(answers)
+              .copy(licenceType = Some(LicenceType.ScrapMetalMobileCollector))
             val session        = HECSession(individuaRetrievedlData, answers)
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 
@@ -538,6 +539,226 @@ class LicenceDetailsControllerSpec
           messageFromMessageKey("licenceExpiryDateExit.title"),
           doc => doc.select("#back").attr("href") shouldBe mockPreviousCall.url
         )
+
+      }
+
+    }
+
+    "handling requests to the licence time trading  page" must {
+
+      def performAction(): Future[Result] = controller.licenceTimeTrading(FakeRequest())
+
+      behave like authAndSessionDataBehaviour(performAction)
+
+      "display the page" when {
+
+        "the user has not previously answered the question" in {
+          val session = HECSession(individuaRetrievedlData, UserAnswers.empty)
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockJourneyServiceGetPrevious(routes.LicenceDetailsController.licenceTimeTrading(), session)(
+              mockPreviousCall
+            )
+          }
+
+          checkPageIsDisplayed(
+            performAction(),
+            messageFromMessageKey("licenceTimeTrading.title"),
+            { doc =>
+              doc.select("#back").attr("href") shouldBe mockPreviousCall.url
+
+              val selectedOptions = doc.select(".govuk-radios__input[checked]")
+              selectedOptions.isEmpty shouldBe true
+
+              val form = doc.select("form")
+              form
+                .attr("action") shouldBe routes.LicenceDetailsController.licenceTimeTradingSubmit().url
+            }
+          )
+
+        }
+
+        "the user has previously answered the question" in {
+          val session =
+            HECSession(
+              individuaRetrievedlData,
+              CompleteUserAnswers(
+                LicenceType.DriverOfTaxisAndPrivateHires,
+                LicenceExpiryDate(TimeUtils.today().minusDays(10L)),
+                LicenceTimeTrading.TwoToFourYears
+              )
+            )
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockJourneyServiceGetPrevious(routes.LicenceDetailsController.licenceTimeTrading(), session)(
+              mockPreviousCall
+            )
+          }
+
+          checkPageIsDisplayed(
+            performAction(),
+            messageFromMessageKey("licenceTimeTrading.title"),
+            { doc =>
+              doc.select("#back").attr("href") shouldBe mockPreviousCall.url
+
+              val selectedOptions = doc.select(".govuk-radios__input[checked]")
+              selectedOptions.attr("value") shouldBe "1"
+
+              val form = doc.select("form")
+              form
+                .attr("action") shouldBe routes.LicenceDetailsController.licenceTimeTradingSubmit().url
+            }
+          )
+        }
+
+      }
+
+    }
+
+    "handling submits on the licence time trading page" must {
+
+      def performAction(data: (String, String)*): Future[Result] =
+        controller.licenceTimeTradingSubmit(FakeRequest().withFormUrlEncodedBody(data: _*))
+
+      behave like authAndSessionDataBehaviour(() => performAction())
+
+      "show a form error" when {
+
+        val session = HECSession(individuaRetrievedlData, UserAnswers.empty)
+
+        "nothing is submitted" in {
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockJourneyServiceGetPrevious(routes.LicenceDetailsController.licenceTimeTrading(), session)(
+              mockPreviousCall
+            )
+          }
+
+          checkFormErrorIsDisplayed(
+            performAction(),
+            messageFromMessageKey("licenceTimeTrading.title"),
+            messageFromMessageKey("licenceTimeTrading.error.required")
+          )
+        }
+
+        "an index is submitted which is too large" in {
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockJourneyServiceGetPrevious(routes.LicenceDetailsController.licenceTimeTrading(), session)(
+              mockPreviousCall
+            )
+          }
+
+          checkFormErrorIsDisplayed(
+            performAction("licenceTimeTrading" -> Int.MaxValue.toString),
+            messageFromMessageKey("licenceTimeTrading.title"),
+            messageFromMessageKey("licenceTimeTrading.error.invalid")
+          )
+        }
+
+        "a value is submitted which is not a number" in {
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockJourneyServiceGetPrevious(routes.LicenceDetailsController.licenceTimeTrading(), session)(
+              mockPreviousCall
+            )
+          }
+
+          checkFormErrorIsDisplayed(
+            performAction("licenceTimeTrading" -> "xyz"),
+            messageFromMessageKey("licenceTimeTrading.title"),
+            messageFromMessageKey("licenceTimeTrading.error.invalid")
+          )
+        }
+
+      }
+
+      "return an internal server error" when {
+
+        "the call to update and next fails" in {
+          val answers        = UserAnswers.empty
+          val updatedAnswers = UserAnswers.empty.copy(licenceTimeTrading = Some(LicenceTimeTrading.ZeroToTwoYears))
+          val session        = HECSession(individuaRetrievedlData, answers)
+          val updatedSession = session.copy(userAnswers = updatedAnswers)
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockJourneyServiceUpdateAndNext(
+              routes.LicenceDetailsController.licenceTimeTrading(),
+              session,
+              updatedSession
+            )(
+              Left(Error(new Exception))
+            )
+          }
+
+          status(performAction("licenceTimeTrading" -> "0")) shouldBe INTERNAL_SERVER_ERROR
+        }
+
+      }
+
+      "redirect to the next page" when {
+
+        "valid data is submitted and" when {
+
+          "the user has not previously completed answering questions" in {
+            val answers        = UserAnswers.empty
+            val updatedAnswers = UserAnswers.empty.copy(licenceTimeTrading = Some(LicenceTimeTrading.FourToEightYears))
+            val session        = HECSession(individuaRetrievedlData, answers)
+            val updatedSession = session.copy(userAnswers = updatedAnswers)
+
+            inSequence {
+              mockAuthWithNoRetrievals()
+              mockGetSession(session)
+              mockJourneyServiceUpdateAndNext(
+                routes.LicenceDetailsController.licenceTimeTrading(),
+                session,
+                updatedSession
+              )(
+                Right(mockNextCall)
+              )
+            }
+
+            checkIsRedirect(performAction("licenceTimeTrading" -> "2"), mockNextCall)
+          }
+
+          "the user has previously completed answering questions" in {
+            val answers        = CompleteUserAnswers(
+              LicenceType.DriverOfTaxisAndPrivateHires,
+              LicenceExpiryDate(TimeUtils.today().minusDays(10L)),
+              LicenceTimeTrading.ZeroToTwoYears
+            )
+            val updatedAnswers = IncompleteUserAnswers(
+              Some(LicenceType.DriverOfTaxisAndPrivateHires),
+              Some(LicenceExpiryDate(TimeUtils.today().minusDays(10L))),
+              Some(LicenceTimeTrading.EightYearsOrMore)
+            )
+            val session        = HECSession(individuaRetrievedlData, answers)
+            val updatedSession = session.copy(userAnswers = updatedAnswers)
+
+            inSequence {
+              mockAuthWithNoRetrievals()
+              mockGetSession(session)
+              mockJourneyServiceUpdateAndNext(
+                routes.LicenceDetailsController.licenceTimeTrading(),
+                session,
+                updatedSession
+              )(
+                Right(mockNextCall)
+              )
+            }
+
+            checkIsRedirect(performAction("licenceTimeTrading" -> "3"), mockNextCall)
+          }
+        }
 
       }
 

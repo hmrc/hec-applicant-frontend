@@ -21,7 +21,10 @@ POST       /when-licence-expire     uk.gov.hmrc.hecapplicantfrontend.controllers
 
 GET        /not-a-renewal           uk.gov.hmrc.hecapplicantfrontend.controllers.LicenceDetailsController.expiryDateExit
 
-GET        /time-trading            uk.gov.hmrc.hecapplicantfrontend.controllers.LicenceDetailsController.timeTrading
+GET        /time-trading            uk.gov.hmrc.hecapplicantfrontend.controllers.LicenceDetailsController.licenceTimeTrading
+POST       /time-trading            uk.gov.hmrc.hecapplicantfrontend.controllers.LicenceDetailsController.licenceTimeTradingSubmit
+
+GET        /length-recent-licence   uk.gov.hmrc.hecapplicantfrontend.controllers.LicenceDetailsController.licenceRecentLength
 
 
 

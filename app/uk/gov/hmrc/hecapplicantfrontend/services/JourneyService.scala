@@ -66,11 +66,12 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
     routes.LicenceDetailsController.expiryDate()                         -> { session =>
       session.userAnswers.fold(_.licenceExpiryDate, c => Some(c.licenceExpiryDate)) match {
         case Some(expiryDate) if expiryDate.value.isAfterOrOn(TimeUtils.today().minusYears(1L)) =>
-          routes.LicenceDetailsController.timeTrading()
+          routes.LicenceDetailsController.licenceTimeTrading()
         case _                                                                                  =>
           routes.LicenceDetailsController.expiryDateExit()
       }
-    }
+    },
+    routes.LicenceDetailsController.licenceTimeTrading                   -> (_ => routes.LicenceDetailsController.licenceRecentLength())
   )
 
   // map which describes routes from an exit page to their previous page. The keys are the exit page and the values are

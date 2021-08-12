@@ -25,7 +25,7 @@ import uk.gov.hmrc.hecapplicantfrontend.controllers.{SessionSupport, routes}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthenticatedRequest, RequestWithSessionData}
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRetrievedData, IndividualRetrievedData}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO, SAUTR}
-import uk.gov.hmrc.hecapplicantfrontend.models.{DateOfBirth, Error, HECSession, LicenceExpiryDate, LicenceType, Name, UserAnswers}
+import uk.gov.hmrc.hecapplicantfrontend.models.{DateOfBirth, Error, HECSession, LicenceExpiryDate, LicenceTimeTrading, LicenceType, Name, UserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.util.TimeUtils
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -156,7 +156,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             routes.LicenceDetailsController.expiryDate(),
             updatedSession
           )
-          await(result.value) shouldBe Right(routes.LicenceDetailsController.timeTrading())
+          await(result.value) shouldBe Right(routes.LicenceDetailsController.licenceTimeTrading())
         }
 
         "the expiry page and the expiry date is exactly one year ago" in {
@@ -179,7 +179,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             routes.LicenceDetailsController.expiryDate(),
             updatedSession
           )
-          await(result.value) shouldBe Right(routes.LicenceDetailsController.timeTrading())
+          await(result.value) shouldBe Right(routes.LicenceDetailsController.licenceTimeTrading())
         }
 
         "the expiry page and the expiry date is beyond the past one year" in {
@@ -203,6 +203,26 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             updatedSession
           )
           await(result.value) shouldBe Right(routes.LicenceDetailsController.expiryDateExit())
+        }
+
+        "the licence time trading page" in {
+          val session        = HECSession(individualRetrievedData, UserAnswers.empty)
+          val updatedSession =
+            HECSession(
+              individualRetrievedData,
+              UserAnswers.empty.copy(licenceTimeTrading = Some(LicenceTimeTrading.TwoToFourYears))
+            )
+
+          implicit val request: RequestWithSessionData[_] =
+            requestWithSessionData(session)
+
+          mockStoreSession(updatedSession)(Right(()))
+
+          val result = journeyService.updateAndNext(
+            routes.LicenceDetailsController.licenceTimeTrading(),
+            updatedSession
+          )
+          await(result.value) shouldBe Right(routes.LicenceDetailsController.licenceRecentLength())
         }
 
       }
@@ -346,7 +366,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             requestWithSessionData(session)
 
           val result = journeyService.previous(
-            routes.LicenceDetailsController.timeTrading()
+            routes.LicenceDetailsController.licenceTimeTrading()
           )
 
           result shouldBe routes.LicenceDetailsController.expiryDate()

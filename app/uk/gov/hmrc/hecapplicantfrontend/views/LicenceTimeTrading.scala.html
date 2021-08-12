@@ -1,0 +1,54 @@
+@import play.api.i18n.Messages
+@import play.api.data.Form
+@import play.api.mvc.{Call, Request}
+@import uk.gov.hmrc.govukfrontend.views.html.components._
+@import uk.gov.hmrc.hecapplicantfrontend.models
+@import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
+@import uk.gov.hmrc.hecapplicantfrontend.models.views.LicenceTimeTradingOption
+
+@this(layout: Layout, govukErrorSummary: GovukErrorSummary, govukRadios: GovukRadios, govukButton: GovukButton, formWithCSRF: FormWithCSRF)
+
+@(form: Form[models.LicenceTimeTrading], back: Call, options: List[models.LicenceTimeTrading])(implicit request: Request[_], messages: Messages)
+@key = @{"licenceTimeTrading"}
+@title = @{messages(s"$key.title")}
+@optionViewModels = @{options.map(LicenceTimeTradingOption.licenceTimeTradingOption)}
+@radioOptions = @{optionViewModels.zipWithIndex.map{ case (option, index) =>
+  RadioItem(
+    content = Text(messages(s"$key.${option.messageKey}")),
+    value = Some(index.toString),
+    checked = form.data.values.toList.contains(index.toString)
+  )
+}}
+
+@layout(pageTitle = Some(title), hasErrors = form.hasErrors, backLocation = Some(back)) {
+  @if(form.errors.nonEmpty) {
+    @govukErrorSummary(ErrorSummary(errorList = form.errors.map(e =>
+      ErrorLink(
+        href = Some(s"#${e.key}"),
+        content = Text(s"${messages(s"${e.key}.${e.message}")}")
+      )
+    ),
+      title = Text(messages("generic.errorSummary"))))
+  }
+
+  @formWithCSRF(action = routes.LicenceDetailsController.licenceTimeTradingSubmit()) {
+    @govukRadios(
+      Radios(
+        fieldset = Some(Fieldset(
+          legend = Some(Legend(
+            content = Text(title),
+            classes = "govuk-fieldset__legend--xl",
+            isPageHeading = true
+          ))
+        )),
+        hint = Some(Hint(content = Text(messages(s"$key.hint")))),
+        idPrefix = Some(key),
+        name = key,
+        items = radioOptions,
+        errorMessage = form.error(key).map(e => ErrorMessage(content = Text(messages(s"$key.${e.message}"))))
+      )
+    )
+
+    @govukButton(Button(content = Text(messages("button.continue"))))
+  }
+}
