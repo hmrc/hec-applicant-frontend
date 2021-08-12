@@ -100,7 +100,8 @@ class LicenceDetailsControllerSpec
               individuaRetrievedlData,
               CompleteUserAnswers(
                 LicenceType.DriverOfTaxisAndPrivateHires,
-                LicenceExpiryDate(TimeUtils.today().minusDays(10L))
+                LicenceExpiryDate(TimeUtils.today().minusDays(10L)),
+                LicenceTimeTrading.ZeroToTwoYears
               )
             )
 
@@ -249,7 +250,8 @@ class LicenceDetailsControllerSpec
           "the user has previously completed answering questions" in {
             val answers        = CompleteUserAnswers(
               LicenceType.DriverOfTaxisAndPrivateHires,
-              LicenceExpiryDate(TimeUtils.today().minusDays(10L))
+              LicenceExpiryDate(TimeUtils.today().minusDays(10L)),
+              LicenceTimeTrading.ZeroToTwoYears
             )
             val updatedAnswers = IncompleteUserAnswers(
               Some(LicenceType.ScrapMetalMobileCollector),

@@ -42,7 +42,8 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
       "works with complete answers" in {
         val completeAnswers = CompleteUserAnswers(
           LicenceType.DriverOfTaxisAndPrivateHires,
-          LicenceExpiryDate(TimeUtils.today().minusDays(10L))
+          LicenceExpiryDate(TimeUtils.today().minusDays(10L)),
+          LicenceTimeTrading.TwoToFourYears
         )
         completeAnswers.fold(
           _ => fail(),
@@ -55,7 +56,8 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
     "have a method which converts complete answers to incomplete" in {
       val completeAnswers       = CompleteUserAnswers(
         LicenceType.DriverOfTaxisAndPrivateHires,
-        LicenceExpiryDate(TimeUtils.today().minusDays(10L))
+        LicenceExpiryDate(TimeUtils.today().minusDays(10L)),
+        LicenceTimeTrading.TwoToFourYears
       )
       val incompleteUserAnswers = IncompleteUserAnswers.fromCompleteAnswers(completeAnswers)
 
@@ -69,7 +71,8 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
           .unset(_.licenceType)                           shouldBe UserAnswers.empty
         CompleteUserAnswers(
           LicenceType.DriverOfTaxisAndPrivateHires,
-          LicenceExpiryDate(TimeUtils.today().minusDays(10L))
+          LicenceExpiryDate(TimeUtils.today().minusDays(10L)),
+          LicenceTimeTrading.TwoToFourYears
         ).unset(_.licenceType).unset(_.licenceExpiryDate) shouldBe UserAnswers.empty
       }
 
@@ -78,7 +81,8 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
           .unset(_.licenceExpiryDate)                     shouldBe UserAnswers.empty
         CompleteUserAnswers(
           LicenceType.DriverOfTaxisAndPrivateHires,
-          LicenceExpiryDate(TimeUtils.today().minusDays(10L))
+          LicenceExpiryDate(TimeUtils.today().minusDays(10L)),
+          LicenceTimeTrading.TwoToFourYears
         ).unset(_.licenceType).unset(_.licenceExpiryDate) shouldBe UserAnswers.empty
       }
 
