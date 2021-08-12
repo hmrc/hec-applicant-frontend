@@ -25,6 +25,7 @@ GET        /time-trading            uk.gov.hmrc.hecapplicantfrontend.controllers
 POST       /time-trading            uk.gov.hmrc.hecapplicantfrontend.controllers.LicenceDetailsController.licenceTimeTradingSubmit
 
 GET        /length-recent-licence   uk.gov.hmrc.hecapplicantfrontend.controllers.LicenceDetailsController.recentLicenceLength
+POST       /length-recent-licence   uk.gov.hmrc.hecapplicantfrontend.controllers.LicenceDetailsController.recentLicenceLengthSubmit
 
 
 

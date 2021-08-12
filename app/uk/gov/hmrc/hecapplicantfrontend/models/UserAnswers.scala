@@ -43,7 +43,12 @@ object UserAnswers {
   object IncompleteUserAnswers {
 
     def fromCompleteAnswers(c: CompleteUserAnswers): IncompleteUserAnswers =
-      IncompleteUserAnswers(Some(c.licenceType), Some(c.licenceExpiryDate), Some(c.licenceTimeTrading), Some(c.licenceValidityPeriod))
+      IncompleteUserAnswers(
+        Some(c.licenceType),
+        Some(c.licenceExpiryDate),
+        Some(c.licenceTimeTrading),
+        Some(c.licenceValidityPeriod)
+      )
 
   }
 

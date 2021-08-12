@@ -201,22 +201,25 @@ class LicenceDetailsController @Inject() (
   val recentLicenceLength: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     val licenceTypeOpt = request.sessionData.userAnswers.fold(_.licenceType, c => Some(c.licenceType))
     licenceTypeOpt match {
-      case Some(licenceType) => {
-        val back        = journeyService.previous(routes.LicenceDetailsController.recentLicenceLength())
-        val licenceLength = request.sessionData.userAnswers.fold(_.licenceValidityPeriod, c => Some(c.licenceValidityPeriod))
-        val options = licenceValidityPeriodOptions(licenceType)
+      case Some(licenceType) =>
+        val back          = journeyService.previous(routes.LicenceDetailsController.recentLicenceLength())
+        val licenceLength =
+          request.sessionData.userAnswers.fold(_.licenceValidityPeriod, c => Some(c.licenceValidityPeriod))
+        val options       = licenceValidityPeriodOptions(licenceType)
         val form = {
           val emptyForm = licenceValidityPeriodForm(options)
           licenceLength.fold(emptyForm)(emptyForm.fill)
         }
         Ok(licenceValidityPeriodPage(form, back, options))
-      }
-      case None => {
-        logger.error(s"Couldn't find licence Type")
+      case None              =>
+        logger.error("Couldn't find licence Type")
         InternalServerError
-      }
     }
 
+  }
+
+  val recentLicenceLengthSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
+    Ok(s"session is ${request.session}")
   }
 
 }
@@ -239,13 +242,11 @@ object LicenceDetailsController {
 
   private val validityPeriodList = List(UpToOneYear, UpToTwoYears, UpToThreeYears, UpToFourYears, UpToFiveYears)
 
-  def licenceValidityPeriodOptions(licenceType: LicenceType): List[LicenceValidityPeriod] = {
+  def licenceValidityPeriodOptions(licenceType: LicenceType): List[LicenceValidityPeriod] =
     licenceType match {
       case OperatorOfPrivateHireVehicles => validityPeriodList
-      case _ => validityPeriodList.take(3)
+      case _                             => validityPeriodList.take(3)
     }
-
-  }
 
   def licenceTypeForm(options: List[LicenceType]): Form[LicenceType] =
     Form(
