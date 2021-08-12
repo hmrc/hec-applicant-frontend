@@ -12,11 +12,13 @@
 @key = @{"licenceTimeTrading"}
 @title = @{messages(s"$key.title")}
 @optionViewModels = @{options.map(LicenceTimeTradingOption.licenceTimeTradingOption)}
-@radioOptions = @{optionViewModels.zipWithIndex.map{ case (option, index) => RadioItem(
-content = Text(messages(s"$key.${option.messageKey}")),
-value = Some(index.toString),
-checked = form.data.values.toList.contains(index.toString)
-)}}
+@radioOptions = @{optionViewModels.zipWithIndex.map{ case (option, index) =>
+  RadioItem(
+    content = Text(messages(s"$key.${option.messageKey}")),
+    value = Some(index.toString),
+    checked = form.data.values.toList.contains(index.toString)
+  )
+}}
 
 @layout(pageTitle = Some(title), hasErrors = form.hasErrors, backLocation = Some(back)) {
   @if(form.errors.nonEmpty) {
