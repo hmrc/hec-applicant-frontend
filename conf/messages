@@ -126,8 +126,7 @@ licenceExpiryDateExit.link = Find out about tax checks
 
 # Licence time trading
 licenceTimeTrading.title = How many years ago did you first get a licence for this activity?
-licenceTimeTrading.hint = This is the licence type you are doing a tax check for. You may need to give an estimate for
-this question.
+licenceTimeTrading.hint = This is the licence type you are doing a tax check for. You may need to give an estimate for this question.
 licenceTimeTrading.zeroToTwoYears = 0 to 2 years
 licenceTimeTrading.twoToFourYears = 2 to 4 years
 licenceTimeTrading.fourToEightYears = 4 to 8 years

@@ -26,13 +26,13 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
   "UserAnswers" must {
 
     "have an empty val" in {
-      UserAnswers.empty shouldBe IncompleteUserAnswers(None)
+      UserAnswers.empty shouldBe IncompleteUserAnswers(None, None, None)
     }
 
     "have a fold method" which {
 
       "works with incomplete answers" in {
-        val incompleteAnswers = IncompleteUserAnswers(Some(LicenceType.ScrapMetalDealerSite))
+        val incompleteAnswers = UserAnswers.empty
         incompleteAnswers.fold(
           _ shouldBe incompleteAnswers,
           _ => fail()
@@ -66,24 +66,33 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
 
     "have an unset method" which {
 
-      "unsets the licence type field" in {
-        IncompleteUserAnswers(Some(LicenceType.DriverOfTaxisAndPrivateHires))
-          .unset(_.licenceType)                           shouldBe UserAnswers.empty
+      val incompleteAnswers =
+        IncompleteUserAnswers(
+          Some(LicenceType.DriverOfTaxisAndPrivateHires),
+          Some(LicenceExpiryDate(TimeUtils.today())),
+          Some(LicenceTimeTrading.ZeroToTwoYears)
+        )
+
+      val completeAnswers =
         CompleteUserAnswers(
           LicenceType.DriverOfTaxisAndPrivateHires,
-          LicenceExpiryDate(TimeUtils.today().minusDays(10L)),
-          LicenceTimeTrading.TwoToFourYears
-        ).unset(_.licenceType).unset(_.licenceExpiryDate) shouldBe UserAnswers.empty
+          LicenceExpiryDate(TimeUtils.today()),
+          LicenceTimeTrading.ZeroToTwoYears
+        )
+
+      "unsets the licence type field" in {
+        incompleteAnswers.unset(_.licenceType) shouldBe incompleteAnswers.copy(licenceType = None)
+        completeAnswers.unset(_.licenceType)   shouldBe incompleteAnswers.copy(licenceType = None)
       }
 
       "unsets the licence Expiry Date field" in {
-        IncompleteUserAnswers(None, Some(LicenceExpiryDate(TimeUtils.today().plusDays(10L))))
-          .unset(_.licenceExpiryDate)                     shouldBe UserAnswers.empty
-        CompleteUserAnswers(
-          LicenceType.DriverOfTaxisAndPrivateHires,
-          LicenceExpiryDate(TimeUtils.today().minusDays(10L)),
-          LicenceTimeTrading.TwoToFourYears
-        ).unset(_.licenceType).unset(_.licenceExpiryDate) shouldBe UserAnswers.empty
+        incompleteAnswers.unset(_.licenceExpiryDate) shouldBe incompleteAnswers.copy(licenceExpiryDate = None)
+        completeAnswers.unset(_.licenceExpiryDate)   shouldBe incompleteAnswers.copy(licenceExpiryDate = None)
+      }
+
+      "unsets the licence time trading field" in {
+        incompleteAnswers.unset(_.licenceTimeTrading) shouldBe incompleteAnswers.copy(licenceTimeTrading = None)
+        completeAnswers.unset(_.licenceTimeTrading)   shouldBe incompleteAnswers.copy(licenceTimeTrading = None)
       }
 
     }
