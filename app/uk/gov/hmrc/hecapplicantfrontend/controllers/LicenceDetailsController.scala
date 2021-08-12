@@ -162,6 +162,39 @@ class LicenceDetailsController @Inject() (
     }
     Ok(licenceTimeTradingPage(form, back, licenceTimeTradingOptions))
   }
+
+  val timeTradingSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
+    def handleValidLicenceTimeTrading(licenceTimeTrading: LicenceTimeTrading): Future[Result] = {
+      val updatedAnswers =
+        request.sessionData.userAnswers.unset(_.licenceTimeTrading).copy(licenceTimeTrading = Some(licenceTimeTrading))
+      journeyService
+        .updateAndNext(
+          routes.LicenceDetailsController.timeTrading(),
+          request.sessionData.copy(userAnswers = updatedAnswers)
+        )
+        .fold(
+          { e =>
+            logger.warn("Could not update session and proceed", e)
+            InternalServerError
+          },
+          Redirect
+        )
+    }
+
+    licenceTimeTradingForm(licenceTimeTradingOptions)
+      .bindFromRequest()
+      .fold(
+        formWithErrors =>
+          Ok(
+            licenceTimeTradingPage(
+              formWithErrors,
+              journeyService.previous(routes.LicenceDetailsController.timeTrading()),
+              licenceTimeTradingOptions
+            )
+          ),
+        handleValidLicenceTimeTrading
+      )
+  }
 }
 
 object LicenceDetailsController {
