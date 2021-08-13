@@ -21,6 +21,8 @@ import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
+import uk.gov.hmrc.hecapplicantfrontend.models.LicenceType.DriverOfTaxisAndPrivateHires
+import uk.gov.hmrc.hecapplicantfrontend.models.LicenceValidityPeriod.UpToOneYear
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRetrievedData, IndividualRetrievedData}
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.{CompleteUserAnswers, IncompleteUserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO}
@@ -101,7 +103,8 @@ class LicenceDetailsControllerSpec
               CompleteUserAnswers(
                 LicenceType.DriverOfTaxisAndPrivateHires,
                 LicenceExpiryDate(TimeUtils.today().minusDays(10L)),
-                LicenceTimeTrading.ZeroToTwoYears
+                LicenceTimeTrading.ZeroToTwoYears,
+                LicenceValidityPeriod.UpToTwoYears
               )
             )
 
@@ -251,7 +254,8 @@ class LicenceDetailsControllerSpec
             val answers        = CompleteUserAnswers(
               LicenceType.DriverOfTaxisAndPrivateHires,
               LicenceExpiryDate(TimeUtils.today().minusDays(10L)),
-              LicenceTimeTrading.ZeroToTwoYears
+              LicenceTimeTrading.ZeroToTwoYears,
+              LicenceValidityPeriod.UpToOneYear
             )
             val updatedAnswers = IncompleteUserAnswers
               .fromCompleteAnswers(answers)
@@ -587,7 +591,8 @@ class LicenceDetailsControllerSpec
               CompleteUserAnswers(
                 LicenceType.DriverOfTaxisAndPrivateHires,
                 LicenceExpiryDate(TimeUtils.today().minusDays(10L)),
-                LicenceTimeTrading.TwoToFourYears
+                LicenceTimeTrading.TwoToFourYears,
+                LicenceValidityPeriod.UpToThreeYears
               )
             )
 
@@ -734,12 +739,14 @@ class LicenceDetailsControllerSpec
             val answers        = CompleteUserAnswers(
               LicenceType.DriverOfTaxisAndPrivateHires,
               LicenceExpiryDate(TimeUtils.today().minusDays(10L)),
-              LicenceTimeTrading.ZeroToTwoYears
+              LicenceTimeTrading.ZeroToTwoYears,
+              LicenceValidityPeriod.UpToFiveYears
             )
             val updatedAnswers = IncompleteUserAnswers(
               Some(LicenceType.DriverOfTaxisAndPrivateHires),
               Some(LicenceExpiryDate(TimeUtils.today().minusDays(10L))),
-              Some(LicenceTimeTrading.EightYearsOrMore)
+              Some(LicenceTimeTrading.EightYearsOrMore),
+              Some(LicenceValidityPeriod.UpToFiveYears)
             )
             val session        = HECSession(individuaRetrievedlData, answers)
             val updatedSession = session.copy(userAnswers = updatedAnswers)
@@ -757,6 +764,280 @@ class LicenceDetailsControllerSpec
             }
 
             checkIsRedirect(performAction("licenceTimeTrading" -> "3"), mockNextCall)
+          }
+        }
+
+      }
+
+    }
+
+    "handling requests to the licence validity period page" must {
+
+      def performAction(): Future[Result] = controller.recentLicenceLength(FakeRequest())
+
+      behave like authAndSessionDataBehaviour(performAction)
+
+      "return an InternalServerError" when {
+
+        "a licence type cannot be found in session" in {
+          val session = HECSession(individuaRetrievedlData, UserAnswers.empty)
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+          }
+
+          status(performAction()) shouldBe INTERNAL_SERVER_ERROR
+        }
+
+      }
+
+      "display the page" when {
+
+        "the user has selected a licence type of 'operator of private hire vehicles'" in {
+          val session = HECSession(
+            individuaRetrievedlData,
+            UserAnswers.empty.copy(
+              licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles)
+            )
+          )
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockJourneyServiceGetPrevious(routes.LicenceDetailsController.recentLicenceLength(), session)(
+              mockPreviousCall
+            )
+          }
+
+          checkPageIsDisplayed(
+            performAction(),
+            messageFromMessageKey("licenceValidityPeriod.title"),
+            { doc =>
+              doc.select("#back").attr("href") shouldBe mockPreviousCall.url
+
+              val options = doc.select(".govuk-radios__item")
+              options.size() shouldBe 5
+
+              val selectedOptions = doc.select(".govuk-radios__input[checked]")
+              selectedOptions.isEmpty shouldBe true
+
+              val form = doc.select("form")
+              form
+                .attr("action") shouldBe routes.LicenceDetailsController.recentLicenceLengthSubmit().url
+            }
+          )
+
+        }
+
+        "the user has selected a licence type which isn't 'Operator of Private Hire Vehicles'" in {
+          List(
+            LicenceType.DriverOfTaxisAndPrivateHires,
+            LicenceType.ScrapMetalMobileCollector,
+            LicenceType.ScrapMetalDealerSite
+          ).foreach { licenceType =>
+            withClue(s"For licence type $licenceType: ") {
+              val session =
+                HECSession(
+                  individuaRetrievedlData,
+                  CompleteUserAnswers(
+                    licenceType,
+                    LicenceExpiryDate(TimeUtils.today().minusDays(10L)),
+                    LicenceTimeTrading.TwoToFourYears,
+                    LicenceValidityPeriod.UpToThreeYears
+                  )
+                )
+
+              inSequence {
+                mockAuthWithNoRetrievals()
+                mockGetSession(session)
+                mockJourneyServiceGetPrevious(routes.LicenceDetailsController.recentLicenceLength(), session)(
+                  mockPreviousCall
+                )
+              }
+
+              checkPageIsDisplayed(
+                performAction(),
+                messageFromMessageKey("licenceValidityPeriod.title"),
+                { doc =>
+                  doc.select("#back").attr("href") shouldBe mockPreviousCall.url
+
+                  val options = doc.select(".govuk-radios__item")
+                  options.size() shouldBe 3
+
+                  val selectedOptions = doc.select(".govuk-radios__input[checked]")
+                  selectedOptions.attr("value") shouldBe "2"
+
+                  val form = doc.select("form")
+                  form
+                    .attr("action") shouldBe routes.LicenceDetailsController.recentLicenceLengthSubmit().url
+                }
+              )
+            }
+          }
+
+        }
+
+      }
+
+    }
+
+    "handling submits on the licence time validity period page" must {
+
+      def performAction(data: (String, String)*): Future[Result] =
+        controller.recentLicenceLengthSubmit(FakeRequest().withFormUrlEncodedBody(data: _*))
+
+      behave like authAndSessionDataBehaviour(() => performAction())
+
+      "return an InternalServerError" when {
+
+        "a licence type cannot be found in session" in {
+          val session = HECSession(individuaRetrievedlData, UserAnswers.empty)
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+          }
+
+          status(performAction()) shouldBe INTERNAL_SERVER_ERROR
+        }
+
+        "the call to update and next fails" in {
+          val answers        = UserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
+          val updatedAnswers = UserAnswers.empty
+            .copy(licenceType = Some(DriverOfTaxisAndPrivateHires), licenceValidityPeriod = Some(UpToOneYear))
+          val session        = HECSession(individuaRetrievedlData, answers)
+          val updatedSession = session.copy(userAnswers = updatedAnswers)
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockJourneyServiceUpdateAndNext(
+              routes.LicenceDetailsController.recentLicenceLength(),
+              session,
+              updatedSession
+            )(
+              Left(Error(new Exception))
+            )
+          }
+
+          status(performAction("licenceValidityPeriod" -> "0")) shouldBe INTERNAL_SERVER_ERROR
+        }
+
+      }
+
+      "show a form error" when {
+
+        val answers        = UserAnswers.empty
+        val updatedAnswers = UserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
+        val session        = HECSession(individuaRetrievedlData, answers)
+        val updatedSession = session.copy(userAnswers = updatedAnswers)
+
+        "nothing is submitted" in {
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(updatedSession)
+            mockJourneyServiceGetPrevious(routes.LicenceDetailsController.recentLicenceLength(), updatedSession)(
+              mockPreviousCall
+            )
+          }
+
+          checkFormErrorIsDisplayed(
+            performAction(),
+            messageFromMessageKey("licenceValidityPeriod.title"),
+            messageFromMessageKey("licenceValidityPeriod.error.required")
+          )
+        }
+
+        "an index is submitted which is too large" in {
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(updatedSession)
+            mockJourneyServiceGetPrevious(routes.LicenceDetailsController.recentLicenceLength(), updatedSession)(
+              mockPreviousCall
+            )
+          }
+
+          checkFormErrorIsDisplayed(
+            performAction("licenceValidityPeriod" -> Int.MaxValue.toString),
+            messageFromMessageKey("licenceValidityPeriod.title"),
+            messageFromMessageKey("licenceValidityPeriod.error.invalid")
+          )
+        }
+
+        "a value is submitted which is not a number" in {
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(updatedSession)
+            mockJourneyServiceGetPrevious(routes.LicenceDetailsController.recentLicenceLength(), updatedSession)(
+              mockPreviousCall
+            )
+          }
+
+          checkFormErrorIsDisplayed(
+            performAction("licenceValidityPeriod" -> "xyz"),
+            messageFromMessageKey("licenceValidityPeriod.title"),
+            messageFromMessageKey("licenceValidityPeriod.error.invalid")
+          )
+        }
+
+      }
+
+      "redirect to the next page" when {
+
+        "valid data is submitted and" when {
+
+          "the user has not previously completed answering questions" when {
+            val answers        = UserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
+            val updatedAnswers = answers.copy(licenceValidityPeriod = Some(UpToOneYear))
+            val session        = HECSession(individuaRetrievedlData, answers)
+            val updatedSession = session.copy(userAnswers = updatedAnswers)
+
+            inSequence {
+              mockAuthWithNoRetrievals()
+              mockGetSession(session)
+              mockJourneyServiceUpdateAndNext(
+                routes.LicenceDetailsController.recentLicenceLength(),
+                session,
+                updatedSession
+              )(
+                Right(mockNextCall)
+              )
+            }
+
+            checkIsRedirect(performAction("licenceValidityPeriod" -> "0"), mockNextCall)
+
+          }
+
+          "the user has previously completed answering questions" in {
+            val answers        = CompleteUserAnswers(
+              LicenceType.OperatorOfPrivateHireVehicles,
+              LicenceExpiryDate(TimeUtils.today().minusDays(10L)),
+              LicenceTimeTrading.ZeroToTwoYears,
+              LicenceValidityPeriod.UpToThreeYears
+            )
+            val updatedAnswers = IncompleteUserAnswers(
+              Some(LicenceType.OperatorOfPrivateHireVehicles),
+              Some(LicenceExpiryDate(TimeUtils.today().minusDays(10L))),
+              Some(LicenceTimeTrading.ZeroToTwoYears),
+              Some(LicenceValidityPeriod.UpToFiveYears)
+            )
+            val session        = HECSession(individuaRetrievedlData, answers)
+            val updatedSession = session.copy(userAnswers = updatedAnswers)
+
+            inSequence {
+              mockAuthWithNoRetrievals()
+              mockGetSession(session)
+              mockJourneyServiceUpdateAndNext(
+                routes.LicenceDetailsController.recentLicenceLength(),
+                session,
+                updatedSession
+              )(
+                Right(mockNextCall)
+              )
+            }
+
+            checkIsRedirect(performAction("licenceValidityPeriod" -> "4"), mockNextCall)
           }
         }
 

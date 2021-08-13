@@ -25,7 +25,7 @@ import uk.gov.hmrc.hecapplicantfrontend.controllers.{SessionSupport, routes}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthenticatedRequest, RequestWithSessionData}
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRetrievedData, IndividualRetrievedData}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO, SAUTR}
-import uk.gov.hmrc.hecapplicantfrontend.models.{DateOfBirth, Error, HECSession, LicenceExpiryDate, LicenceTimeTrading, LicenceType, Name, UserAnswers}
+import uk.gov.hmrc.hecapplicantfrontend.models.{DateOfBirth, Error, HECSession, LicenceExpiryDate, LicenceTimeTrading, LicenceType, LicenceValidityPeriod, Name, UserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.util.TimeUtils
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -222,7 +222,61 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             routes.LicenceDetailsController.licenceTimeTrading(),
             updatedSession
           )
-          await(result.value) shouldBe Right(routes.LicenceDetailsController.licenceRecentLength())
+          await(result.value) shouldBe Right(routes.LicenceDetailsController.recentLicenceLength())
+        }
+
+        "the licence validity period page and" when {
+
+          "the licence type in the session is 'driver of taxis'" in {
+            val answers        = UserAnswers.empty.copy(licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires))
+            val session        = HECSession(individualRetrievedData, answers)
+            val updatedSession =
+              HECSession(
+                individualRetrievedData,
+                answers.copy(licenceValidityPeriod = Some(LicenceValidityPeriod.UpToTwoYears))
+              )
+
+            implicit val request: RequestWithSessionData[_] =
+              requestWithSessionData(session)
+
+            mockStoreSession(updatedSession)(Right(()))
+
+            val result = journeyService.updateAndNext(
+              routes.LicenceDetailsController.recentLicenceLength(),
+              updatedSession
+            )
+            await(result.value) shouldBe Right(routes.TaxSituationController.taxSituation())
+          }
+
+          "the licence type in the session is not 'driver of taxis'" in {
+            List(
+              LicenceType.OperatorOfPrivateHireVehicles,
+              LicenceType.ScrapMetalDealerSite,
+              LicenceType.ScrapMetalMobileCollector
+            ).foreach { licenceType =>
+              withClue(s"For licence type $licenceType: ") {
+                val answers        = UserAnswers.empty.copy(licenceType = Some(licenceType))
+                val session        = HECSession(individualRetrievedData, answers)
+                val updatedSession =
+                  HECSession(
+                    individualRetrievedData,
+                    answers.copy(licenceValidityPeriod = Some(LicenceValidityPeriod.UpToOneYear))
+                  )
+
+                implicit val request: RequestWithSessionData[_] =
+                  requestWithSessionData(session)
+
+                mockStoreSession(updatedSession)(Right(()))
+
+                val result = journeyService.updateAndNext(
+                  routes.LicenceDetailsController.recentLicenceLength(),
+                  updatedSession
+                )
+                await(result.value) shouldBe Right(routes.EntityTypeController.entityType())
+              }
+            }
+          }
+
         }
 
       }
@@ -370,6 +424,58 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
           )
 
           result shouldBe routes.LicenceDetailsController.expiryDate()
+        }
+
+        "the entity type page" when {
+
+          "the licence type selected is not 'driver of taxis'" in {
+            List(
+              LicenceType.OperatorOfPrivateHireVehicles,
+              LicenceType.ScrapMetalDealerSite,
+              LicenceType.ScrapMetalMobileCollector
+            ).foreach { licenceType =>
+              withClue(s"For licence type $licenceType: ") {
+                val session                                     = HECSession(
+                  individualRetrievedData,
+                  UserAnswers.empty.copy(
+                    licenceType = Some(licenceType),
+                    licenceExpiryDate = Some(LicenceExpiryDate(TimeUtils.today()))
+                  )
+                )
+                implicit val request: RequestWithSessionData[_] =
+                  requestWithSessionData(session)
+
+                val result = journeyService.previous(
+                  routes.EntityTypeController.entityType()
+                )
+
+                result shouldBe routes.LicenceDetailsController.recentLicenceLength()
+              }
+            }
+          }
+
+        }
+
+        "the tax situation page" when {
+
+          "the licence type selected is 'driver of taxis'" in {
+
+            val session                                     = HECSession(
+              individualRetrievedData,
+              UserAnswers.empty.copy(
+                licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires),
+                licenceExpiryDate = Some(LicenceExpiryDate(TimeUtils.today()))
+              )
+            )
+            implicit val request: RequestWithSessionData[_] =
+              requestWithSessionData(session)
+
+            val result = journeyService.previous(
+              routes.TaxSituationController.taxSituation()
+            )
+
+            result shouldBe routes.LicenceDetailsController.recentLicenceLength()
+          }
         }
 
       }
