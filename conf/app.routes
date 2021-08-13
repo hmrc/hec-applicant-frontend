@@ -30,7 +30,7 @@ POST       /length-recent-licence   uk.gov.hmrc.hecapplicantfrontend.controllers
 
 GET        /who-tax-check-for       uk.gov.hmrc.hecapplicantfrontend.controllers.EntityTypeController.entityType
 
-GET        /taxSituation            uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.taxSituation
+GET        /tax-situation            uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.taxSituation
 
 
 # IV
