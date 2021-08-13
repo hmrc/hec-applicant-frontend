@@ -63,14 +63,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
       routes.LicenceDetailsController.licenceType()
     ),
     routes.LicenceDetailsController.licenceType()                        -> (_ => routes.LicenceDetailsController.expiryDate()),
-    routes.LicenceDetailsController.expiryDate()                         -> { session =>
-      session.userAnswers.fold(_.licenceExpiryDate, c => Some(c.licenceExpiryDate)) match {
-        case Some(expiryDate) if expiryDate.value.isAfterOrOn(TimeUtils.today().minusYears(1L)) =>
-          routes.LicenceDetailsController.licenceTimeTrading()
-        case _                                                                                  =>
-          routes.LicenceDetailsController.expiryDateExit()
-      }
-    },
+    routes.LicenceDetailsController.expiryDate()                         -> licenceExpiryRoute,
     routes.LicenceDetailsController.licenceTimeTrading                   -> (_ => routes.LicenceDetailsController.recentLicenceLength()),
     routes.LicenceDetailsController.recentLicenceLength()                -> licenceValidityPeriodRoute
   )
@@ -135,6 +128,14 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
     session.userAnswers.fold(_.licenceType, c => Some(c.licenceType)) match {
       case Some(LicenceType.DriverOfTaxisAndPrivateHires) => routes.TaxSituationController.taxSituation()
       case _                                              => routes.EntityTypeController.entityType()
+    }
+
+  private def licenceExpiryRoute(session: HECSession): Call =
+    session.userAnswers.fold(_.licenceExpiryDate, c => Some(c.licenceExpiryDate)) match {
+      case Some(expiryDate) if expiryDate.value.isAfterOrOn(TimeUtils.today().minusYears(1L)) =>
+        routes.LicenceDetailsController.licenceTimeTrading()
+      case _                                                                                  =>
+        routes.LicenceDetailsController.expiryDateExit()
     }
 
 }
