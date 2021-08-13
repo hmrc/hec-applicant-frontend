@@ -58,7 +58,7 @@ class LicenceDetailsControllerSpec
 
   "LicenceDetailsController" when {
 
-    "handling requests to the licence type page" ignore {
+    "handling requests to the licence type page" must {
 
       def performAction(): Future[Result] = controller.licenceType(FakeRequest())
 
@@ -153,7 +153,7 @@ class LicenceDetailsControllerSpec
 
     }
 
-    "handling submits on the licence type page" ignore {
+    "handling submits on the licence type page" must {
 
       def performAction(data: (String, String)*): Future[Result] =
         controller.licenceTypeSubmit(FakeRequest().withFormUrlEncodedBody(data: _*))
@@ -279,7 +279,7 @@ class LicenceDetailsControllerSpec
 
     }
 
-    "handling requests to the licence type exit page" ignore {
+    "handling requests to the licence type exit page" must {
 
       def performAction(): Future[Result] = controller.licenceTypeExit(FakeRequest())
 
@@ -303,7 +303,7 @@ class LicenceDetailsControllerSpec
 
     }
 
-    "handling requests to licence expiry page" ignore {
+    "handling requests to licence expiry page" must {
 
       def performAction(): Future[Result] =
         controller.expiryDate(FakeRequest())
@@ -382,7 +382,7 @@ class LicenceDetailsControllerSpec
 
     }
 
-    "handling submits on the licence Expiry page" ignore {
+    "handling submits on the licence Expiry page" must {
 
       def performAction(data: (String, String)*): Future[Result] =
         controller.expiryDateSubmit(FakeRequest().withFormUrlEncodedBody(data: _*))
@@ -524,7 +524,7 @@ class LicenceDetailsControllerSpec
 
     }
 
-    "handling requests to the licence expiry date exit page" ignore {
+    "handling requests to the licence expiry date exit page" must {
 
       def performAction(): Future[Result] = controller.expiryDateExit(FakeRequest())
 
@@ -548,7 +548,7 @@ class LicenceDetailsControllerSpec
 
     }
 
-    "handling requests to the licence time trading  page" ignore {
+    "handling requests to the licence time trading  page" must {
 
       def performAction(): Future[Result] = controller.licenceTimeTrading(FakeRequest())
 
@@ -624,7 +624,7 @@ class LicenceDetailsControllerSpec
 
     }
 
-    "handling submits on the licence time trading page" ignore {
+    "handling submits on the licence time trading page" must {
 
       def performAction(data: (String, String)*): Future[Result] =
         controller.licenceTimeTradingSubmit(FakeRequest().withFormUrlEncodedBody(data: _*))
@@ -771,7 +771,7 @@ class LicenceDetailsControllerSpec
 
     }
 
-    "handling requests to the licence validity period page" ignore {
+    "handling requests to the licence validity period page" must {
 
       def performAction(): Future[Result] = controller.recentLicenceLength(FakeRequest())
 
