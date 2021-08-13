@@ -136,7 +136,7 @@ licenceTimeTrading.error.invalid = Select the number of years ago you first got 
 
 # Licence validity period
 licenceValidityPeriod.title=How long was your most recent licence valid for?
-licenceValidityPeriod.hint=This is the licence you're doing a tax check for.
+licenceValidityPeriod.hint=This is the licence you’re doing a tax check for.
 licenceValidityPeriod.upToOneYear=Up to 1 year
 licenceValidityPeriod.upToTwoYears=Up to 2 years
 licenceValidityPeriod.upToThreeYears=Up to 3 years
