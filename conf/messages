@@ -144,3 +144,27 @@ licenceValidityPeriod.upToFourYears=Up to 4 years
 licenceValidityPeriod.upToFiveYears=Up to 5 years
 licenceValidityPeriod.error.required=Select the number of years your most recent licence was valid for
 licenceValidityPeriod.error.invalid=Select the number of years your most recent licence was valid for
+
+
+# Entity Type
+entityType.title=Who are you doing a tax check for?
+entityType.individual=Yourself
+entityType.company=A company
+entityType.individual.hint=Includes if you are self-employed or a partner in a partnership.
+entityType.company.hint=Includes if the company is a partner in a partnership.
+entityType.link=If you are not doing a tax check for yourself or a company
+entityType.error.required=Select whether you are doing a tax check for yourself or a company
+entityType.error.invalid=Select whether you are doing a tax check for yourself or a company
+
+# Wrong GG Account
+wrongGGAccount.title=You need to sign in with the correct account
+wrongGGAccount.p1=This is because you are signed in as {0} and you have chosen to do a tax check for {1}
+wrongGGAccount.h2=What you should do next
+wrongGGAccount.link=Sign in with the correct Government Gateway account
+wrongGGAccount.individual=an individual
+wrongGGAccount.company=a company
+
+# Wrong entity type
+wrongEntityType.title=You do not need to do a tax check
+wrongEntityType.p1=This is because you can only doa check check for yourself or a company.
+wrongEntityType.link=Find out who needs to do a tax check

@@ -24,7 +24,7 @@ import cats.syntax.eq._
 import com.google.inject.{ImplementedBy, Inject, Singleton}
 import play.api.mvc.Call
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.RequestWithSessionData
-import uk.gov.hmrc.hecapplicantfrontend.models.{Error, HECSession, LicenceType}
+import uk.gov.hmrc.hecapplicantfrontend.models.{EntityType, Error, HECSession, LicenceType}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRetrievedData, IndividualRetrievedData}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
@@ -65,7 +65,8 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
     routes.LicenceDetailsController.licenceType()                        -> (_ => routes.LicenceDetailsController.expiryDate()),
     routes.LicenceDetailsController.expiryDate()                         -> licenceExpiryRoute,
     routes.LicenceDetailsController.licenceTimeTrading                   -> (_ => routes.LicenceDetailsController.recentLicenceLength()),
-    routes.LicenceDetailsController.recentLicenceLength()                -> licenceValidityPeriodRoute
+    routes.LicenceDetailsController.recentLicenceLength()                -> licenceValidityPeriodRoute,
+    routes.EntityTypeController.entityType()                             -> entityTypeRoute
   )
 
   // map which describes routes from an exit page to their previous page. The keys are the exit page and the values are
@@ -78,7 +79,9 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
       routes.LicenceDetailsController.licenceTypeExit() ->
         routes.LicenceDetailsController.licenceType(),
       routes.LicenceDetailsController.expiryDateExit()  ->
-        routes.LicenceDetailsController.expiryDate()
+        routes.LicenceDetailsController.expiryDate(),
+      routes.EntityTypeController.wrongEntityType()     ->
+        routes.EntityTypeController.entityType()
     )
 
   override def firstPage(session: HECSession): Call =
@@ -137,5 +140,13 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
       case _                                                                                  =>
         routes.LicenceDetailsController.expiryDateExit()
     }
+
+  private def entityTypeRoute(session: HECSession): Call = {
+    val selectedEntityType = session.userAnswers.fold(_.entityType, c => Some(c.entityType))
+    val ggEntityType       = EntityType.fromRetrievedApplicantAnswers(session.retrievedUserData)
+
+    if (selectedEntityType.contains(ggEntityType)) routes.TaxSituationController.taxSituation()
+    else routes.EntityTypeController.wrongGGAccount()
+  }
 
 }

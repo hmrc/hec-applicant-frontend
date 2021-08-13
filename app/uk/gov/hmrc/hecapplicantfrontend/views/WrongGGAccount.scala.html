@@ -1,0 +1,31 @@
+@import play.api.i18n.Messages
+@import play.api.mvc.{Call, Request}
+@import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
+@import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
+@import uk.gov.hmrc.hecapplicantfrontend.models
+
+@this(layout: Layout)
+
+@(back: Call, selectedEntityType: models.EntityType)(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
+@key = @{"wrongGGAccount"}
+@title = @{messages(s"$key.title")}
+@p1 = @{
+    selectedEntityType match {
+        case models.EntityType.Individual =>
+            messages(s"$key.p1", messages(s"$key.individual"), messages(s"$key.company"))
+        case models.EntityType.Company    =>
+            messages(s"$key.p1", messages(s"$key.company"), messages(s"$key.individual"))
+    }
+}
+
+@layout(pageTitle = Some(title), backLocation = Some(back)) {
+    <h1 class="govuk-heading-xl">@title</h1>
+    <p class="govuk-body">@p1</p>
+
+    <h2>@{messages(s"$key.h2")}</h2>
+    <p class="govuk-body">
+        <a class="govuk-link" href="@{s"${appConfig.signOutUri}?continue=${appConfig.selfBaseUrl}${routes.StartController.start().url}"}">
+        @{messages(s"$key.link")}
+        </a>
+    </p>
+}
