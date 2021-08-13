@@ -924,66 +924,6 @@ class LicenceDetailsControllerSpec
           status(performAction("licenceValidityPeriod" -> "0")) shouldBe INTERNAL_SERVER_ERROR
         }
 
-        "redirect to the next page" when {
-
-          "valid data is submitted and" when {
-
-            "the user has not previously completed answering questions" when {
-              val answers        = UserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
-              val updatedAnswers = answers.copy(licenceValidityPeriod = Some(UpToOneYear))
-              val session        = HECSession(individuaRetrievedlData, answers)
-              val updatedSession = session.copy(userAnswers = updatedAnswers)
-
-              inSequence {
-                mockAuthWithNoRetrievals()
-                mockGetSession(session)
-                mockJourneyServiceUpdateAndNext(
-                  routes.LicenceDetailsController.recentLicenceLength(),
-                  session,
-                  updatedSession
-                )(
-                  Right(mockNextCall)
-                )
-              }
-
-              checkIsRedirect(performAction("licenceValidityPeriod" -> "0"), mockNextCall)
-
-            }
-
-            "the user has previously completed answering questions" in {
-              val answers        = CompleteUserAnswers(
-                LicenceType.DriverOfTaxisAndPrivateHires,
-                LicenceExpiryDate(TimeUtils.today().minusDays(10L)),
-                LicenceTimeTrading.ZeroToTwoYears,
-                LicenceValidityPeriod.UpToThreeYears
-              )
-              val updatedAnswers = IncompleteUserAnswers(
-                Some(LicenceType.DriverOfTaxisAndPrivateHires),
-                Some(LicenceExpiryDate(TimeUtils.today().minusDays(10L))),
-                Some(LicenceTimeTrading.ZeroToTwoYears),
-                Some(LicenceValidityPeriod.UpToFiveYears)
-              )
-              val session        = HECSession(individuaRetrievedlData, answers)
-              val updatedSession = session.copy(userAnswers = updatedAnswers)
-
-              inSequence {
-                mockAuthWithNoRetrievals()
-                mockGetSession(session)
-                mockJourneyServiceUpdateAndNext(
-                  routes.LicenceDetailsController.recentLicenceLength(),
-                  session,
-                  updatedSession
-                )(
-                  Right(mockNextCall)
-                )
-              }
-
-              checkIsRedirect(performAction("licenceValidityPeriod" -> "5"), mockNextCall)
-            }
-          }
-
-        }
-
       }
 
       "show a form error" when {
@@ -1039,6 +979,66 @@ class LicenceDetailsControllerSpec
             messageFromMessageKey("licenceValidityPeriod.title"),
             messageFromMessageKey("licenceValidityPeriod.error.invalid")
           )
+        }
+
+      }
+
+      "redirect to the next page" when {
+
+        "valid data is submitted and" when {
+
+          "the user has not previously completed answering questions" when {
+            val answers        = UserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
+            val updatedAnswers = answers.copy(licenceValidityPeriod = Some(UpToOneYear))
+            val session        = HECSession(individuaRetrievedlData, answers)
+            val updatedSession = session.copy(userAnswers = updatedAnswers)
+
+            inSequence {
+              mockAuthWithNoRetrievals()
+              mockGetSession(session)
+              mockJourneyServiceUpdateAndNext(
+                routes.LicenceDetailsController.recentLicenceLength(),
+                session,
+                updatedSession
+              )(
+                Right(mockNextCall)
+              )
+            }
+
+            checkIsRedirect(performAction("licenceValidityPeriod" -> "0"), mockNextCall)
+
+          }
+
+          "the user has previously completed answering questions" in {
+            val answers        = CompleteUserAnswers(
+              LicenceType.OperatorOfPrivateHireVehicles,
+              LicenceExpiryDate(TimeUtils.today().minusDays(10L)),
+              LicenceTimeTrading.ZeroToTwoYears,
+              LicenceValidityPeriod.UpToThreeYears
+            )
+            val updatedAnswers = IncompleteUserAnswers(
+              Some(LicenceType.OperatorOfPrivateHireVehicles),
+              Some(LicenceExpiryDate(TimeUtils.today().minusDays(10L))),
+              Some(LicenceTimeTrading.ZeroToTwoYears),
+              Some(LicenceValidityPeriod.UpToFiveYears)
+            )
+            val session        = HECSession(individuaRetrievedlData, answers)
+            val updatedSession = session.copy(userAnswers = updatedAnswers)
+
+            inSequence {
+              mockAuthWithNoRetrievals()
+              mockGetSession(session)
+              mockJourneyServiceUpdateAndNext(
+                routes.LicenceDetailsController.recentLicenceLength(),
+                session,
+                updatedSession
+              )(
+                Right(mockNextCall)
+              )
+            }
+
+            checkIsRedirect(performAction("licenceValidityPeriod" -> "4"), mockNextCall)
+          }
         }
 
       }
