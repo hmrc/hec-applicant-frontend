@@ -22,11 +22,10 @@ import play.api.data.Form
 import play.api.data.Forms.{mapping, of}
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
-import uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.{getCurrentTaxDisplayYear, taxSituationForm, taxSituationList, taxSituationOptions}
+import uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.{getCurrentTaxDisplayYear, taxSituationForm, taxSituationList}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
-import uk.gov.hmrc.hecapplicantfrontend.models.LicenceType.DriverOfTaxisAndPrivateHires
 import uk.gov.hmrc.hecapplicantfrontend.models.TaxSituation._
-import uk.gov.hmrc.hecapplicantfrontend.models.{LicenceType, TaxDisplayYear, TaxSituation}
+import uk.gov.hmrc.hecapplicantfrontend.models.{TaxDisplayYear, TaxSituation}
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging.LoggerOps
 import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging, TimeUtils}
@@ -50,7 +49,7 @@ class TaxSituationController @Inject() (
   val taxSituation: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
     val licenceTypeOpt = request.sessionData.userAnswers.fold(_.licenceType, c => Some(c.licenceType))
     licenceTypeOpt match {
-      case Some(licenceType) =>
+      case Some(_) =>
         val back         = journeyService.previous(routes.TaxSituationController.taxSituation())
         val reportIncome =
           request.sessionData.userAnswers.fold(_.taxSituation, c => Some(c.taxSituation))
@@ -60,7 +59,7 @@ class TaxSituationController @Inject() (
           reportIncome.fold(emptyForm)(emptyForm.fill)
         }
         Ok(taxSituationPage(form, back, options, getCurrentTaxDisplayYear))
-      case None              =>
+      case None    =>
         logger.error("Couldn't find licence Type")
         InternalServerError
     }
@@ -88,8 +87,8 @@ class TaxSituationController @Inject() (
 
     val licenceTypeOpt = request.sessionData.userAnswers.fold(_.licenceType, c => Some(c.licenceType))
     licenceTypeOpt match {
-      case Some(licenceType) =>
-        val options = taxSituationOptions(licenceType)
+      case Some(_) =>
+        val options = taxSituationList
         taxSituationForm(options)
           .bindFromRequest()
           .fold(
@@ -104,16 +103,10 @@ class TaxSituationController @Inject() (
               ),
             handleReportedIncome
           )
-      case None              =>
+      case None    =>
         logger.error("Couldn't find licence Type")
         InternalServerError
     }
-  }
-
-  val taxConfirmDetails: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
-    Ok(
-      s"session is ${request.session}\nback is ${journeyService.previous(routes.TaxSituationController.taxConfirmDetails())}"
-    )
   }
 
 }

@@ -155,4 +155,4 @@ taxSituation.NotChargeable.hint = For example, you may have been self-employed a
 taxSituation.link = Find out who needs to register for Self Assessment (open in new window)
 taxSituation.error.required = Select how you reported income earned using your licence
 taxSituation.error.invalid = Select how did you report income earned using your licence
-taxSituation.hint = This is for the tax year {0} to {2}.
+taxSituation.hint = This is for the tax year {0} to {1}.
