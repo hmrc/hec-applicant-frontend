@@ -22,7 +22,7 @@ import play.api.data.Form
 import play.api.data.Forms.{mapping, of}
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
-import uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.{getCurrentTaxDisplayYear, taxSituationForm, taxSituationOptions}
+import uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.{getCurrentTaxDisplayYear, taxSituationForm, taxSituationList, taxSituationOptions}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
 import uk.gov.hmrc.hecapplicantfrontend.models.LicenceType.DriverOfTaxisAndPrivateHires
 import uk.gov.hmrc.hecapplicantfrontend.models.TaxSituation._
@@ -54,7 +54,7 @@ class TaxSituationController @Inject() (
         val back         = journeyService.previous(routes.TaxSituationController.taxSituation())
         val reportIncome =
           request.sessionData.userAnswers.fold(_.taxSituation, c => Some(c.taxSituation))
-        val options      = taxSituationOptions(licenceType)
+        val options      = taxSituationList
         val form = {
           val emptyForm = taxSituationForm(options)
           reportIncome.fold(emptyForm)(emptyForm.fill)
@@ -110,21 +110,21 @@ class TaxSituationController @Inject() (
     }
   }
 
+  val taxConfirmDetails: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
+    Ok(
+      s"session is ${request.session}\nback is ${journeyService.previous(routes.TaxSituationController.taxConfirmDetails())}"
+    )
+  }
+
 }
 
 object TaxSituationController {
-  val reportIncomeList: List[TaxSituation] = List(
+  val taxSituationList: List[TaxSituation] = List(
     PAYE,
     SA,
     SAPAYE,
     NotChargeable
   )
-
-  def taxSituationOptions(licenceType: LicenceType): List[TaxSituation] =
-    licenceType match {
-      case DriverOfTaxisAndPrivateHires => reportIncomeList
-      case _                            => List(reportIncomeList(0), reportIncomeList(2))
-    }
 
   def taxSituationForm(options: List[TaxSituation]): Form[TaxSituation] =
     Form(

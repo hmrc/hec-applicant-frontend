@@ -30,8 +30,10 @@ POST       /length-recent-licence   uk.gov.hmrc.hecapplicantfrontend.controllers
 
 GET        /who-tax-check-for       uk.gov.hmrc.hecapplicantfrontend.controllers.EntityTypeController.entityType
 
-GET        /tax-situation            uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.taxSituation
-POST       /tax-situation            uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.taxSituationSubmit
+GET        /tax-situation           uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.taxSituation
+POST       /tax-situation           uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.taxSituationSubmit
+
+GET        /confirm-details         uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.taxConfirmDetails
 
 
 # IV

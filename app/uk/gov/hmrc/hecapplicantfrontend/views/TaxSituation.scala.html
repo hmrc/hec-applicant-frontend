@@ -42,7 +42,7 @@ Request[_], messages: Messages)
                         isPageHeading = true
                     ))
                 )),
-                hint = Some(Hint(content = Text(messages(s"$key.hint")))),
+                hint = Some(Hint(content = Text(messages(s"tax year is ${taxDisplayYear.year}")))),
                 idPrefix = Some(key),
                 name = key,
                 items = radioOptions,

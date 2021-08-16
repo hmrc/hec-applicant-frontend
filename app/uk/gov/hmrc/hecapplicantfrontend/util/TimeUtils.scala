@@ -130,8 +130,8 @@ object TimeUtils {
     val currentYear             = d.getYear
     val currentYearTaxStartDate = LocalDate.of(currentYear, 4, 6)
     val sixMonthEarlierDate     = d.minusMonths(6L)
-    if (sixMonthEarlierDate.isBefore(currentYearTaxStartDate)) TaxDisplayYear(currentYear - 1)
-    else TaxDisplayYear(currentYear)
+    if (sixMonthEarlierDate.isBefore(currentYearTaxStartDate)) TaxDisplayYear(currentYear - 2)
+    else TaxDisplayYear(currentYear - 1)
   }
 
 }
