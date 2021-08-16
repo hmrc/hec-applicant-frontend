@@ -6,8 +6,10 @@
 @import uk.gov.hmrc.hecapplicantfrontend.models.views.LicenceTypeOption
 @import uk.gov.hmrc.hecapplicantfrontend.models.views.LicenceTimeTradingOption
 @import uk.gov.hmrc.hecapplicantfrontend.models.views.LicenceValidityPeriodOption
+@import uk.gov.hmrc.hecapplicantfrontend.util.TimeUtils
 
 @this(layout: Layout, govukSummaryList : GovukSummaryList, govukButton: GovukButton, formWithCSRF: FormWithCSRF)
+
 
 @(back: Call, completeAnswers: CompleteUserAnswers)(implicit request: Request[_], messages: Messages)
 @key = @{"checkYourAnswers"}
@@ -24,7 +26,7 @@
                 ),
                 value = Value(
                     content = Text(messages(
-                        LicenceTypeOption.licenceTypeOption(completeAnswers.licenceType).messageKey
+                        s"licenceType.${LicenceTypeOption.licenceTypeOption(completeAnswers.licenceType).messageKey}"
                     ))
                 ),
                 actions = Some(Actions(
@@ -42,7 +44,7 @@
                     content = Text(messages("licenceExpiryDate.title"))
                 ),
                 value = Value(
-                    content = Text("5 January 1978")
+                    content = Text(TimeUtils.govDisplayFormat(completeAnswers.licenceExpiryDate.value))
                 ),
                 actions = Some(Actions(
                     items = Seq(
@@ -60,7 +62,7 @@
                 ),
                 value = Value(
                     content = Text(messages(
-                        LicenceTimeTradingOption.licenceTimeTradingOption(completeAnswers.licenceTimeTrading).messageKey
+                        s"licenceTimeTrading.${LicenceTimeTradingOption.licenceTimeTradingOption(completeAnswers.licenceTimeTrading).messageKey}"
                     ))
                 ),
                 actions = Some(Actions(
@@ -79,7 +81,7 @@
                 ),
                 value = Value(
                     content = Text(messages(
-                        LicenceValidityPeriodOption.licenceValidityPeriodOption(completeAnswers.licenceValidityPeriod).messageKey
+                        s"licenceValidityPeriod.${LicenceValidityPeriodOption.licenceValidityPeriodOption(completeAnswers.licenceValidityPeriod).messageKey}"
                     ))
                 ),
                 actions = Some(Actions(
