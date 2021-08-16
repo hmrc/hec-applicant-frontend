@@ -23,16 +23,16 @@ import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
 @Singleton
-class CheckAndConfirmDetailsController @Inject() (
+class CheckAndConfirmAnswersController @Inject() (
   authAction: AuthAction,
   sessionDataAction: SessionDataAction,
   journeyService: JourneyService,
   mcc: MessagesControllerComponents
 ) extends FrontendController(mcc) {
 
-  val checkAndConfirmApplicantDetails: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
+  val checkAndConfirmAnswers: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
     Ok(
-      s"session is ${request.session}\nback is ${journeyService.previous(routes.CheckAndConfirmDetailsController.checkAndConfirmApplicantDetails())}"
+      s"session is ${request.session}\nback is ${journeyService.previous(routes.CheckAndConfirmAnswersController.checkAndConfirmAnswers())}"
     )
   }
 

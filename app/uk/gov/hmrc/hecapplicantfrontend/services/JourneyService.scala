@@ -67,7 +67,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
     routes.LicenceDetailsController.licenceTimeTrading                   -> (_ => routes.LicenceDetailsController.recentLicenceLength()),
     routes.LicenceDetailsController.recentLicenceLength()                -> licenceValidityPeriodRoute,
     routes.TaxSituationController.taxSituation()                         -> (_ =>
-      routes.CheckAndConfirmDetailsController.checkAndConfirmApplicantDetails()
+      routes.CheckAndConfirmAnswersController.checkAndConfirmAnswers()
     )
   )
 

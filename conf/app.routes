@@ -33,7 +33,7 @@ GET        /who-tax-check-for       uk.gov.hmrc.hecapplicantfrontend.controllers
 GET        /tax-situation           uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.taxSituation
 POST       /tax-situation           uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.taxSituationSubmit
 
-GET        /confirm-details         uk.gov.hmrc.hecapplicantfrontend.controllers.CheckAndConfirmDetailsController.checkAndConfirmApplicantDetails
+GET        /check-your-answers      uk.gov.hmrc.hecapplicantfrontend.controllers.CheckAndConfirmAnswersController.checkAndConfirmAnswers
 
 
 # IV

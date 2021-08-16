@@ -32,6 +32,7 @@ import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging, TimeUtils}
 import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
+import java.time.LocalDate
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
@@ -46,6 +47,8 @@ class TaxSituationController @Inject() (
     with I18nSupport
     with Logging {
 
+  val currentdate: LocalDate = TimeUtils.today()
+
   val taxSituation: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
     val licenceTypeOpt = request.sessionData.userAnswers.fold(_.licenceType, c => Some(c.licenceType))
     licenceTypeOpt match {
@@ -58,7 +61,7 @@ class TaxSituationController @Inject() (
           val emptyForm = taxSituationForm(options)
           reportIncome.fold(emptyForm)(emptyForm.fill)
         }
-        Ok(taxSituationPage(form, back, options, getCurrentTaxDisplayYear))
+        Ok(taxSituationPage(form, back, options, getCurrentTaxDisplayYear(currentdate)))
       case None    =>
         logger.error("Couldn't find licence Type")
         InternalServerError
@@ -98,7 +101,7 @@ class TaxSituationController @Inject() (
                   formWithErrors,
                   journeyService.previous(routes.TaxSituationController.taxSituation()),
                   options,
-                  getCurrentTaxDisplayYear
+                  getCurrentTaxDisplayYear(currentdate)
                 )
               ),
             handleReportedIncome
@@ -126,5 +129,6 @@ object TaxSituationController {
       )(identity)(Some(_))
     )
 
-  private def getCurrentTaxDisplayYear: TaxDisplayYear = TimeUtils.getTaxYearDisplayDate(TimeUtils.today())
+  private def getCurrentTaxDisplayYear(currentDate: LocalDate): TaxDisplayYear =
+    TimeUtils.getTaxYearDisplayDate(currentDate)
 }
