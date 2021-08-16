@@ -31,7 +31,7 @@ object UserAnswers {
     licenceExpiryDate: Option[LicenceExpiryDate],
     licenceTimeTrading: Option[LicenceTimeTrading],
     licenceValidityPeriod: Option[LicenceValidityPeriod],
-    reportIncomeEarned: Option[ReportIncomeEarned]
+    taxSituation: Option[TaxSituation]
   ) extends UserAnswers
 
   final case class CompleteUserAnswers(
@@ -39,7 +39,7 @@ object UserAnswers {
     licenceExpiryDate: LicenceExpiryDate,
     licenceTimeTrading: LicenceTimeTrading,
     licenceValidityPeriod: LicenceValidityPeriod,
-    reportIncomeEarned: ReportIncomeEarned
+    taxSituation: TaxSituation
   ) extends UserAnswers
 
   object IncompleteUserAnswers {
@@ -50,7 +50,7 @@ object UserAnswers {
         Some(c.licenceExpiryDate),
         Some(c.licenceTimeTrading),
         Some(c.licenceValidityPeriod),
-        Some(c.reportIncomeEarned)
+        Some(c.taxSituation)
       )
 
   }

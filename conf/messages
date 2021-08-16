@@ -146,14 +146,12 @@ licenceValidityPeriod.error.required=Select the number of years your most recent
 licenceValidityPeriod.error.invalid=Select the number of years your most recent licence was valid for
 
 # Report income earned
-reportIncomeEarned.title = How did you pay tax on any work carried out using your licence??
-reportIncomeEarned.hint = This is for the tax year 2019 to 2020.
-reportIncomeEarned.PA = As an employee
-reportIncomeEarned.SA = Registered for Self Assessment
-reportIncomeEarned.SAPAYE = Registered for Self Assessment and an employee
-reportIncomeEarned.NotChargeable = Did not have to pay tax (not chargeable)
-reportIncomeEarned.NotChargeable.hint = For example, you may have been self-employed and earned less than your tax-free
-allowance.
-reportIncomeEarned.link = Find out who needs to register for Self Assessment (open in new window)
-reportIncomeEarned.error.required = Select how did you report income earned using your licence?
-reportIncomeEarned.error.invalid = Select how did you report income earned using your licence?
+taxSituation.title = How did you pay tax on any work carried out using your licence?
+taxSituation.PA = As an employee
+taxSituation.SA = Registered for Self Assessment
+taxSituation.SAPAYE = Registered for Self Assessment and an employee
+taxSituation.NotChargeable = I did not have to pay tax (not chargeable)
+taxSituation.NotChargeable.hint = For example, you may have been self-employed and earned less than your tax-freeallowance.
+taxSituation.link = Find out who needs to register for Self Assessment (open in new window)
+taxSituation.error.required = Select how you reported income earned using your licence
+taxSituation.error.invalid = Select how did you report income earned using your licence?

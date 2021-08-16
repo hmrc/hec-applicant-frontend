@@ -16,18 +16,18 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models.views
 
-import uk.gov.hmrc.hecapplicantfrontend.models.ReportIncomeEarned
-import uk.gov.hmrc.hecapplicantfrontend.models.ReportIncomeEarned._
+import uk.gov.hmrc.hecapplicantfrontend.models.TaxSituation
+import uk.gov.hmrc.hecapplicantfrontend.models.TaxSituation._
 
-final case class ReportIncomeOption(messageKey: String, hintKey: Option[String])
-object ReportIncomeOption {
+final case class TaxSituationOption(messageKey: String, hintKey: Option[String])
+object TaxSituationOption {
 
-  def reportIncomeOptions(reportIncomeEarned: ReportIncomeEarned): ReportIncomeOption =
-    reportIncomeEarned match {
-      case PAYE          => ReportIncomeOption("PA", None)
-      case SA            => ReportIncomeOption("SA", None)
-      case SAPAYE        => ReportIncomeOption("SAPAYE", None)
-      case NotChargeable => ReportIncomeOption("NotChargeable", Some("NotChargeable.hint"))
+  def taxSituationOption(taxSituation: TaxSituation): TaxSituationOption =
+    taxSituation match {
+      case PAYE          => TaxSituationOption("PA", None)
+      case SA            => TaxSituationOption("SA", None)
+      case SAPAYE        => TaxSituationOption("SAPAYE", None)
+      case NotChargeable => TaxSituationOption("NotChargeable", Some("NotChargeable.hint"))
     }
 
 }

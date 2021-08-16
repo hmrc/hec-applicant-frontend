@@ -16,23 +16,14 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models
 
-import cats.Eq
-import julienrf.json.derived
-import play.api.libs.json.OFormat
+import play.api.libs.json.Format
+import play.api.libs.functional.syntax.toInvariantFunctorOps
 
-sealed trait ReportIncomeEarned extends Product with Serializable
+final case class TaxDisplayYear(year: Int) extends AnyVal
 
-object ReportIncomeEarned {
+object TaxDisplayYear {
 
-  case object PAYE extends ReportIncomeEarned
+  implicit val format: Format[TaxDisplayYear] =
+    implicitly[Format[Int]].inmap(TaxDisplayYear(_), _.year)
 
-  case object SA extends ReportIncomeEarned
-
-  case object SAPAYE extends ReportIncomeEarned
-
-  case object NotChargeable extends ReportIncomeEarned
-
-  implicit val eq: Eq[ReportIncomeEarned] = Eq.fromUniversalEquals
-
-  implicit val format: OFormat[ReportIncomeEarned] = derived.oformat()
 }

@@ -22,14 +22,14 @@ import play.api.data.Form
 import play.api.data.Forms.{mapping, of}
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
-import uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.{reportEarnedIncomeOptions, reportIncomeForm}
+import uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.{getCurrentTaxDisplayYear, taxSituationForm, taxSituationOptions}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
 import uk.gov.hmrc.hecapplicantfrontend.models.LicenceType.DriverOfTaxisAndPrivateHires
-import uk.gov.hmrc.hecapplicantfrontend.models.ReportIncomeEarned._
-import uk.gov.hmrc.hecapplicantfrontend.models.{LicenceType, ReportIncomeEarned}
+import uk.gov.hmrc.hecapplicantfrontend.models.TaxSituation._
+import uk.gov.hmrc.hecapplicantfrontend.models.{LicenceType, TaxDisplayYear, TaxSituation}
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging.LoggerOps
-import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging}
+import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging, TimeUtils}
 import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
@@ -41,7 +41,7 @@ class TaxSituationController @Inject() (
   sessionDataAction: SessionDataAction,
   journeyService: JourneyService,
   mcc: MessagesControllerComponents,
-  reportIncomeEarnedPage: html.ReportIncomeEarned
+  taxSituationPage: html.TaxSituation
 )(implicit ec: ExecutionContext)
     extends FrontendController(mcc)
     with I18nSupport
@@ -53,13 +53,13 @@ class TaxSituationController @Inject() (
       case Some(licenceType) =>
         val back         = journeyService.previous(routes.TaxSituationController.taxSituation())
         val reportIncome =
-          request.sessionData.userAnswers.fold(_.reportIncomeEarned, c => Some(c.reportIncomeEarned))
-        val options      = reportEarnedIncomeOptions(licenceType)
+          request.sessionData.userAnswers.fold(_.taxSituation, c => Some(c.taxSituation))
+        val options      = taxSituationOptions(licenceType)
         val form = {
-          val emptyForm = reportIncomeForm(options)
+          val emptyForm = taxSituationForm(options)
           reportIncome.fold(emptyForm)(emptyForm.fill)
         }
-        Ok(reportIncomeEarnedPage(form, back, options))
+        Ok(taxSituationPage(form, back, options, getCurrentTaxDisplayYear))
       case None              =>
         logger.error("Couldn't find licence Type")
         InternalServerError
@@ -67,11 +67,11 @@ class TaxSituationController @Inject() (
   }
 
   val taxSituationSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
-    def handleReportedIncome(reportIncomeEarned: ReportIncomeEarned): Future[Result] = {
+    def handleReportedIncome(taxSituation: TaxSituation): Future[Result] = {
       val updatedAnswers =
         request.sessionData.userAnswers
-          .unset(_.reportIncomeEarned)
-          .copy(reportIncomeEarned = Some(reportIncomeEarned))
+          .unset(_.taxSituation)
+          .copy(taxSituation = Some(taxSituation))
       journeyService
         .updateAndNext(
           routes.TaxSituationController.taxSituation(),
@@ -89,16 +89,17 @@ class TaxSituationController @Inject() (
     val licenceTypeOpt = request.sessionData.userAnswers.fold(_.licenceType, c => Some(c.licenceType))
     licenceTypeOpt match {
       case Some(licenceType) =>
-        val options = reportEarnedIncomeOptions(licenceType)
-        reportIncomeForm(options)
+        val options = taxSituationOptions(licenceType)
+        taxSituationForm(options)
           .bindFromRequest()
           .fold(
             formWithErrors =>
               Ok(
-                reportIncomeEarnedPage(
+                taxSituationPage(
                   formWithErrors,
                   journeyService.previous(routes.TaxSituationController.taxSituation()),
-                  options
+                  options,
+                  getCurrentTaxDisplayYear
                 )
               ),
             handleReportedIncome
@@ -112,23 +113,25 @@ class TaxSituationController @Inject() (
 }
 
 object TaxSituationController {
-  val reportIncomeList: List[ReportIncomeEarned] = List(
+  val reportIncomeList: List[TaxSituation] = List(
     PAYE,
     SA,
     SAPAYE,
     NotChargeable
   )
 
-  def reportEarnedIncomeOptions(licenceType: LicenceType): List[ReportIncomeEarned] =
+  def taxSituationOptions(licenceType: LicenceType): List[TaxSituation] =
     licenceType match {
       case DriverOfTaxisAndPrivateHires => reportIncomeList
       case _                            => List(reportIncomeList(0), reportIncomeList(2))
     }
 
-  def reportIncomeForm(options: List[ReportIncomeEarned]): Form[ReportIncomeEarned] =
+  def taxSituationForm(options: List[TaxSituation]): Form[TaxSituation] =
     Form(
       mapping(
-        "reportIncomeEarned" -> of(FormUtils.radioFormFormatter(options))
+        "taxSituation" -> of(FormUtils.radioFormFormatter(options))
       )(identity)(Some(_))
     )
+
+  private def getCurrentTaxDisplayYear: TaxDisplayYear = TimeUtils.getTaxYearDisplayDate(TimeUtils.today())
 }

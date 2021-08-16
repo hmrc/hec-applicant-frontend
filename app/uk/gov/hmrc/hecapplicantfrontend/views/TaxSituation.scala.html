@@ -4,14 +4,15 @@
 @import uk.gov.hmrc.govukfrontend.views.html.components._
 @import uk.gov.hmrc.hecapplicantfrontend.models
 @import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
-@import uk.gov.hmrc.hecapplicantfrontend.models.views.ReportIncomeOption
+@import uk.gov.hmrc.hecapplicantfrontend.models.views.TaxSituationOption
 
 @this(layout: Layout, govukErrorSummary: GovukErrorSummary, govukRadios: GovukRadios, govukButton: GovukButton, formWithCSRF: FormWithCSRF)
 
-@(form: Form[models.ReportIncomeEarned], back: Call, options: List[models.ReportIncomeEarned])(implicit request: Request[_], messages: Messages)
-@key = @{"reportIncomeEarned"}
+@(form: Form[models.TaxSituation], back: Call, options: List[models.TaxSituation], taxDisplayYear:models.TaxDisplayYear)(implicit request:
+Request[_], messages: Messages)
+@key = @{"taxSituation"}
 @title = @{messages(s"$key.title")}
-@optionViewModels = @{options.map(ReportIncomeOption.reportIncomeOptions)}
+@optionViewModels = @{options.map(TaxSituationOption.taxSituationOption)}
 @radioOptions = @{optionViewModels.zipWithIndex.map{ case (option, index) =>
     RadioItem(
         content = Text(messages(s"$key.${option.messageKey}")),
@@ -31,7 +32,7 @@
             title = Text(messages("generic.errorSummary"))))
     }
 
-    @formWithCSRF(action = routes.LicenceDetailsController.taxSituationSubmit()) {
+    @formWithCSRF(action = routes.TaxSituationController.taxSituationSubmit()) {
         @govukRadios(
             Radios(
                 fieldset = Some(Fieldset(
