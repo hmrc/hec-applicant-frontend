@@ -166,5 +166,5 @@ wrongGGAccount.company=a company
 
 # Wrong entity type
 wrongEntityType.title=You do not need to do a tax check
-wrongEntityType.p1=This is because you can only doa check check for yourself or a company.
+wrongEntityType.p1=This is because you can only do a check check for yourself or a company.
 wrongEntityType.link=Find out who needs to do a tax check

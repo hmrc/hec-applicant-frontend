@@ -22,7 +22,7 @@
     <h1 class="govuk-heading-xl">@title</h1>
     <p class="govuk-body">@p1</p>
 
-    <h2>@{messages(s"$key.h2")}</h2>
+    <h2 class="govuk-heading-l">@{messages(s"$key.h2")}</h2>
     <p class="govuk-body">
         <a class="govuk-link" href="@{s"${appConfig.signOutUri}?continue=${appConfig.selfBaseUrl}${routes.StartController.start().url}"}">
         @{messages(s"$key.link")}
