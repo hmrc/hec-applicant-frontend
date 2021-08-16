@@ -27,6 +27,7 @@ import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.RequestWithSessionDa
 import uk.gov.hmrc.hecapplicantfrontend.models.{Error, HECSession, LicenceType}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRetrievedData, IndividualRetrievedData}
+import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.{CompleteUserAnswers, IncompleteUserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.util.TimeUtils
 import uk.gov.hmrc.hecapplicantfrontend.util.TimeUtils.LocalDateOps
@@ -90,16 +91,23 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
   override def updateAndNext(current: Call, updatedSession: HECSession)(implicit
     r: RequestWithSessionData[_],
     hc: HeaderCarrier
-  ): EitherT[Future, Error, Call] =
-    paths.get(current).map(_(updatedSession)) match {
+  ): EitherT[Future, Error, Call] = {
+    val upliftedSession = upliftToCompleteAnswersIfComplete(updatedSession)
+    val nextOpt         = upliftedSession.userAnswers.fold(
+      _ => paths.get(current).map(_(upliftedSession)),
+      _ => Some(routes.CheckYourAnswersController.checkYourAnswers())
+    )
+
+    nextOpt match {
       case None       =>
         EitherT.leftT(Error(s"Could not find next for $current"))
       case Some(next) =>
-        if (r.sessionData === updatedSession)
+        if (r.sessionData === upliftedSession)
           EitherT.pure(next)
         else
-          sessionStore.store(updatedSession).map(_ => next)
+          sessionStore.store(upliftedSession).map(_ => next)
     }
+  }
 
   override def previous(current: Call)(implicit
     r: RequestWithSessionData[_]
@@ -114,14 +122,31 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
         case _                   => None
       }
 
-    if (current === routes.StartController.start()) {
+    lazy val hasCompletedAnswers = r.sessionData.userAnswers.fold(_ => false, _ => true)
+
+    if (current === routes.StartController.start())
       current
-    } else {
+    else if (current =!= routes.CheckYourAnswersController.checkYourAnswers() && hasCompletedAnswers)
+      routes.CheckYourAnswersController.checkYourAnswers()
+    else
       exitPageToPreviousPage
         .get(current)
         .orElse(loop(routes.StartController.start()))
         .getOrElse(sys.error(s"Could not find previous for $current"))
-    }
+  }
+
+  private def upliftToCompleteAnswersIfComplete(session: HECSession): HECSession = session.userAnswers match {
+    case IncompleteUserAnswers(
+          Some(licenceType),
+          Some(licenceExpiryDate),
+          Some(licenceTimeTrading),
+          Some(licenceValidityPeriod)
+        ) =>
+      val completeAnswers =
+        CompleteUserAnswers(licenceType, licenceExpiryDate, licenceTimeTrading, licenceValidityPeriod)
+      session.copy(userAnswers = completeAnswers)
+
+    case _ => session
   }
 
   private def licenceValidityPeriodRoute(session: HECSession): Call =

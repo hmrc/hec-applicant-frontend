@@ -24,6 +24,7 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.hecapplicantfrontend.controllers.{SessionSupport, routes}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthenticatedRequest, RequestWithSessionData}
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRetrievedData, IndividualRetrievedData}
+import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.{CompleteUserAnswers, IncompleteUserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO, SAUTR}
 import uk.gov.hmrc.hecapplicantfrontend.models.{DateOfBirth, Error, HECSession, LicenceExpiryDate, LicenceTimeTrading, LicenceType, LicenceValidityPeriod, Name, UserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.util.TimeUtils
@@ -281,6 +282,39 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
 
       }
 
+      "convert incomplete answers to complete answers" when {
+
+        "all questions have been answered" in {
+          val completeAnswers = CompleteUserAnswers(
+            LicenceType.DriverOfTaxisAndPrivateHires,
+            LicenceExpiryDate(TimeUtils.today()),
+            LicenceTimeTrading.ZeroToTwoYears,
+            LicenceValidityPeriod.UpToOneYear
+          )
+
+          val incompleteAnswers = IncompleteUserAnswers(
+            Some(completeAnswers.licenceType),
+            Some(completeAnswers.licenceExpiryDate),
+            Some(completeAnswers.licenceTimeTrading),
+            Some(completeAnswers.licenceValidityPeriod)
+          )
+
+          val session                                     = HECSession(individualRetrievedData, incompleteAnswers)
+          implicit val request: RequestWithSessionData[_] =
+            requestWithSessionData(session)
+
+          mockStoreSession(session.copy(userAnswers = completeAnswers))(Right(()))
+
+          val result = journeyService.updateAndNext(
+            routes.LicenceDetailsController.licenceTimeTrading(),
+            session
+          )
+          await(result.value) shouldBe Right(routes.CheckYourAnswersController.checkYourAnswers())
+
+        }
+
+      }
+
     }
 
     "handling calls to 'previous'" must {
@@ -476,6 +510,29 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
 
             result shouldBe routes.LicenceDetailsController.recentLicenceLength()
           }
+        }
+
+      }
+
+      "return the check your answers page" when {
+
+        "the answers in the session are complete and the current page is not the check your answers page" in {
+          val completeAnswers                             = CompleteUserAnswers(
+            LicenceType.DriverOfTaxisAndPrivateHires,
+            LicenceExpiryDate(TimeUtils.today()),
+            LicenceTimeTrading.ZeroToTwoYears,
+            LicenceValidityPeriod.UpToOneYear
+          )
+          implicit val request: RequestWithSessionData[_] =
+            requestWithSessionData(
+              HECSession(individualRetrievedData, completeAnswers)
+            )
+
+          val result = journeyService.previous(
+            routes.LicenceDetailsController.licenceType()
+          )
+
+          result shouldBe routes.CheckYourAnswersController.checkYourAnswers()
         }
 
       }

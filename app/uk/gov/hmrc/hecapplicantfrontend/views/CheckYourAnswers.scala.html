@@ -1,0 +1,17 @@
+@import play.api.i18n.Messages
+@import play.api.mvc.{Call, Request}
+@import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
+@import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.CompleteUserAnswers
+
+@this(layout: Layout)
+
+@(back: Call, completeAnswers: CompleteUserAnswers)(implicit request: Request[_], messages: Messages)
+@key = @{"checkYourAnswers"}
+@title = @{messages(s"$key.title")}
+
+@layout(pageTitle = Some(title), backLocation = Some(back)) {
+    <h1 class="govuk-heading-xl">@title</h1>
+    <p class="govuk-body">Answers are @completeAnswers</p>
+    <p class="govuk-body">Submit to @routes.CheckYourAnswersController.checkYourAnswersSubmit()</p>
+
+}
