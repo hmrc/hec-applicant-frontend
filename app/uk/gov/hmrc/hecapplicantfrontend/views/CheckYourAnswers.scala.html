@@ -2,8 +2,13 @@
 @import play.api.mvc.{Call, Request}
 @import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 @import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.CompleteUserAnswers
+@import uk.gov.hmrc.govukfrontend.views.html.components._
+@import uk.gov.hmrc.hecapplicantfrontend.models.views.LicenceTypeOption
+@import uk.gov.hmrc.hecapplicantfrontend.models.views.LicenceTimeTradingOption
+@import uk.gov.hmrc.hecapplicantfrontend.models.views.LicenceValidityPeriodOption
 
-@this(layout: Layout)
+@this(layout: Layout, govukSummaryList : GovukSummaryList, govukButton: GovukButton, formWithCSRF: FormWithCSRF))
+
 
 @(back: Call, completeAnswers: CompleteUserAnswers)(implicit request: Request[_], messages: Messages)
 @key = @{"checkYourAnswers"}
@@ -11,7 +16,88 @@
 
 @layout(pageTitle = Some(title), backLocation = Some(back)) {
     <h1 class="govuk-heading-xl">@title</h1>
-    <p class="govuk-body">Answers are @completeAnswers</p>
-    <p class="govuk-body">Submit to @routes.CheckYourAnswersController.checkYourAnswersSubmit()</p>
-
+    <p class="govuk-body">@messages(s"$key.p1")</p>
+    @govukSummaryList(SummaryList(
+        rows = Seq(
+            SummaryListRow(
+                key = Key(
+                    content = Text(messages("licenceType.title"))
+                ),
+                value = Value(
+                    content = Text(messages(
+                        LicenceTypeOption.licenceTypeOption(completeAnswers.licenceType).messageKey
+                    ))
+                ),
+                actions = Some(Actions(
+                    items = Seq(
+                        ActionItem(
+                            href = routes.LicenceDetailsController.licenceType().url,
+                            content = Text(messages(s"$key.change")),
+                            visuallyHiddenText = Some(messages(s"$key.licenceType.screenReaderText"))
+                        )
+                    )
+                ))
+            ),
+            SummaryListRow(
+                key = Key(
+                    content = Text(messages("licenceExpiryDate.title"))
+                ),
+                value = Value(
+                    content = Text("5 January 1978")
+                ),
+                actions = Some(Actions(
+                    items = Seq(
+                        ActionItem(
+                            href = routes.LicenceDetailsController.expiryDate().url,
+                            content = Text(messages(s"$key.change")),
+                            visuallyHiddenText = Some(messages(s"$key.licenceExpiryDate.screenReaderText"))
+                        )
+                    )
+                ))
+            ),
+            SummaryListRow(
+                key = Key(
+                    content = Text(messages("licenceTimeTrading.title"))
+                ),
+                value = Value(
+                    content = Text(messages(
+                        LicenceTimeTradingOption.licenceTimeTradingOption(completeAnswers.licenceTimeTrading).messageKey
+                    ))
+                ),
+                actions = Some(Actions(
+                    items = Seq(
+                        ActionItem(
+                            href = routes.LicenceDetailsController.licenceTimeTrading().url,
+                            content = Text(messages(s"$key.change")),
+                            visuallyHiddenText = Some(messages(s"$key.licenceTimeTrading.screenReaderText"))
+                        )
+                    )
+                ))
+            ),
+            SummaryListRow(
+                key = Key(
+                    content = Text(messages("licenceValidityPeriod.title"))
+                ),
+                value = Value(
+                    content = Text(messages(
+                        LicenceValidityPeriodOption.licenceValidityPeriodOption(completeAnswers.licenceValidityPeriod).messageKey
+                    ))
+                ),
+                actions = Some(Actions(
+                    items = Seq(
+                        ActionItem(
+                            href = routes.LicenceDetailsController.recentLicenceLength().url,
+                            content = Text(messages(s"$key.change")),
+                            visuallyHiddenText = Some(messages(s"$key.licenceValidityPeriod.screenReaderText"))
+                        )
+                    )
+                ))
+            )
+        )
+    ))
+    <h2 class="govuk-heading-l">@{messages(s"$key.declaration.heading")}</h2>
+    <p class="govuk-body">@{messages(s"$key.declaration.p1")}</p>
+    @formWithCSRF(action = routes.CheckYourAnswersController.checkYourAnswersSubmit()) {
+        @govukButton(Button(content = Text(messages("button.confirm"))))
+    }
 }
