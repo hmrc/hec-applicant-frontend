@@ -17,6 +17,7 @@ Request[_], messages: Messages)
     RadioItem(
         content = Text(messages(s"$key.${option.messageKey}")),
         value = Some(index.toString),
+        hint = option.hintKey.map{ h: String => Hint(content = Text(messages(s"$key.$h"))) },
         checked = form.data.values.toList.contains(index.toString)
     )
 }}
@@ -56,6 +57,6 @@ Request[_], messages: Messages)
     <a class="govuk-link" href="https://www.gov.uk/self-assessment-tax-returns/who-must-send-a-tax-return">@messages(s"$key.link")</a>
     </p>
 
-        @govukButton(Button(content = Text(messages("button.continue"))))
+    @govukButton(Button(content = Text(messages("button.continue"))))
     }
 }
