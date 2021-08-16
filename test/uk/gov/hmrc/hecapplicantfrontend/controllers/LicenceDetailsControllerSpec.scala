@@ -104,7 +104,8 @@ class LicenceDetailsControllerSpec
                 LicenceType.DriverOfTaxisAndPrivateHires,
                 LicenceExpiryDate(TimeUtils.today().minusDays(10L)),
                 LicenceTimeTrading.ZeroToTwoYears,
-                LicenceValidityPeriod.UpToTwoYears
+                LicenceValidityPeriod.UpToTwoYears,
+                EntityType.Individual
               )
             )
 
@@ -255,7 +256,8 @@ class LicenceDetailsControllerSpec
               LicenceType.DriverOfTaxisAndPrivateHires,
               LicenceExpiryDate(TimeUtils.today().minusDays(10L)),
               LicenceTimeTrading.ZeroToTwoYears,
-              LicenceValidityPeriod.UpToOneYear
+              LicenceValidityPeriod.UpToOneYear,
+              EntityType.Individual
             )
             val updatedAnswers = IncompleteUserAnswers
               .fromCompleteAnswers(answers)
@@ -592,7 +594,8 @@ class LicenceDetailsControllerSpec
                 LicenceType.DriverOfTaxisAndPrivateHires,
                 LicenceExpiryDate(TimeUtils.today().minusDays(10L)),
                 LicenceTimeTrading.TwoToFourYears,
-                LicenceValidityPeriod.UpToThreeYears
+                LicenceValidityPeriod.UpToThreeYears,
+                EntityType.Company
               )
             )
 
@@ -740,13 +743,15 @@ class LicenceDetailsControllerSpec
               LicenceType.DriverOfTaxisAndPrivateHires,
               LicenceExpiryDate(TimeUtils.today().minusDays(10L)),
               LicenceTimeTrading.ZeroToTwoYears,
-              LicenceValidityPeriod.UpToFiveYears
+              LicenceValidityPeriod.UpToFiveYears,
+              EntityType.Company
             )
             val updatedAnswers = IncompleteUserAnswers(
               Some(LicenceType.DriverOfTaxisAndPrivateHires),
               Some(LicenceExpiryDate(TimeUtils.today().minusDays(10L))),
               Some(LicenceTimeTrading.EightYearsOrMore),
-              Some(LicenceValidityPeriod.UpToFiveYears)
+              Some(LicenceValidityPeriod.UpToFiveYears),
+              Some(EntityType.Company)
             )
             val session        = HECSession(individuaRetrievedlData, answers)
             val updatedSession = session.copy(userAnswers = updatedAnswers)
@@ -844,7 +849,8 @@ class LicenceDetailsControllerSpec
                     licenceType,
                     LicenceExpiryDate(TimeUtils.today().minusDays(10L)),
                     LicenceTimeTrading.TwoToFourYears,
-                    LicenceValidityPeriod.UpToThreeYears
+                    LicenceValidityPeriod.UpToThreeYears,
+                    EntityType.Individual
                   )
                 )
 
@@ -1014,13 +1020,15 @@ class LicenceDetailsControllerSpec
               LicenceType.OperatorOfPrivateHireVehicles,
               LicenceExpiryDate(TimeUtils.today().minusDays(10L)),
               LicenceTimeTrading.ZeroToTwoYears,
-              LicenceValidityPeriod.UpToThreeYears
+              LicenceValidityPeriod.UpToThreeYears,
+              EntityType.Individual
             )
             val updatedAnswers = IncompleteUserAnswers(
               Some(LicenceType.OperatorOfPrivateHireVehicles),
               Some(LicenceExpiryDate(TimeUtils.today().minusDays(10L))),
               Some(LicenceTimeTrading.ZeroToTwoYears),
-              Some(LicenceValidityPeriod.UpToFiveYears)
+              Some(LicenceValidityPeriod.UpToFiveYears),
+              Some(EntityType.Individual)
             )
             val session        = HECSession(individuaRetrievedlData, answers)
             val updatedSession = session.copy(userAnswers = updatedAnswers)

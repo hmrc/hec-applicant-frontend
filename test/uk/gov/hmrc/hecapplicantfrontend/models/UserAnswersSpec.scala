@@ -26,7 +26,7 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
   "UserAnswers" must {
 
     "have an empty val" in {
-      UserAnswers.empty shouldBe IncompleteUserAnswers(None, None, None, None)
+      UserAnswers.empty shouldBe IncompleteUserAnswers(None, None, None, None, None)
     }
 
     "have a fold method" which {
@@ -44,7 +44,8 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
           LicenceType.DriverOfTaxisAndPrivateHires,
           LicenceExpiryDate(TimeUtils.today().minusDays(10L)),
           LicenceTimeTrading.TwoToFourYears,
-          LicenceValidityPeriod.UpToFiveYears
+          LicenceValidityPeriod.UpToFiveYears,
+          EntityType.Individual
         )
         completeAnswers.fold(
           _ => fail(),
@@ -59,13 +60,15 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
         LicenceType.DriverOfTaxisAndPrivateHires,
         LicenceExpiryDate(TimeUtils.today()),
         LicenceTimeTrading.TwoToFourYears,
-        LicenceValidityPeriod.UpToTwoYears
+        LicenceValidityPeriod.UpToTwoYears,
+        EntityType.Individual
       )
       IncompleteUserAnswers.fromCompleteAnswers(completeAnswers) shouldBe IncompleteUserAnswers(
         Some(LicenceType.DriverOfTaxisAndPrivateHires),
         Some(LicenceExpiryDate(TimeUtils.today())),
         Some(LicenceTimeTrading.TwoToFourYears),
-        Some(LicenceValidityPeriod.UpToTwoYears)
+        Some(LicenceValidityPeriod.UpToTwoYears),
+        Some(EntityType.Individual)
       )
 
     }
@@ -77,7 +80,8 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
           Some(LicenceType.DriverOfTaxisAndPrivateHires),
           Some(LicenceExpiryDate(TimeUtils.today())),
           Some(LicenceTimeTrading.ZeroToTwoYears),
-          Some(LicenceValidityPeriod.UpToThreeYears)
+          Some(LicenceValidityPeriod.UpToThreeYears),
+          Some(EntityType.Company)
         )
 
       val completeAnswers =
@@ -85,7 +89,8 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
           LicenceType.DriverOfTaxisAndPrivateHires,
           LicenceExpiryDate(TimeUtils.today()),
           LicenceTimeTrading.ZeroToTwoYears,
-          LicenceValidityPeriod.UpToThreeYears
+          LicenceValidityPeriod.UpToThreeYears,
+          EntityType.Company
         )
 
       "unsets the licence type field" in {
@@ -103,9 +108,14 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
         completeAnswers.unset(_.licenceTimeTrading)   shouldBe incompleteAnswers.copy(licenceTimeTrading = None)
       }
 
-      "unsets the licence validty period field" in {
+      "unsets the licence validity period field" in {
         incompleteAnswers.unset(_.licenceValidityPeriod) shouldBe incompleteAnswers.copy(licenceValidityPeriod = None)
         completeAnswers.unset(_.licenceValidityPeriod)   shouldBe incompleteAnswers.copy(licenceValidityPeriod = None)
+      }
+
+      "unsets the entity type field" in {
+        incompleteAnswers.unset(_.entityType) shouldBe incompleteAnswers.copy(entityType = None)
+        completeAnswers.unset(_.entityType)   shouldBe incompleteAnswers.copy(entityType = None)
       }
 
     }

@@ -19,13 +19,14 @@ package uk.gov.hmrc.hecapplicantfrontend.services
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import play.api.mvc.Call
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.hecapplicantfrontend.controllers.{SessionSupport, routes}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthenticatedRequest, RequestWithSessionData}
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRetrievedData, IndividualRetrievedData}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO, SAUTR}
-import uk.gov.hmrc.hecapplicantfrontend.models.{DateOfBirth, Error, HECSession, LicenceExpiryDate, LicenceTimeTrading, LicenceType, LicenceValidityPeriod, Name, UserAnswers}
+import uk.gov.hmrc.hecapplicantfrontend.models.{DateOfBirth, EntityType, Error, HECSession, LicenceExpiryDate, LicenceTimeTrading, LicenceType, LicenceValidityPeriod, Name, RetrievedApplicantData, UserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.util.TimeUtils
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -279,6 +280,51 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
 
         }
 
+        "the entity type page and" when {
+
+          def test(
+            retrievedData: RetrievedApplicantData,
+            selectedEntityType: EntityType,
+            expectedNext: Call
+          ): Unit = {
+            val answers        = UserAnswers.empty
+            val session        = HECSession(retrievedData, answers)
+            val updatedSession =
+              HECSession(
+                retrievedData,
+                answers.copy(entityType = Some(selectedEntityType))
+              )
+
+            implicit val request: RequestWithSessionData[_] =
+              requestWithSessionData(session)
+
+            mockStoreSession(updatedSession)(Right(()))
+
+            val result = journeyService.updateAndNext(
+              routes.EntityTypeController.entityType(),
+              updatedSession
+            )
+            await(result.value) shouldBe Right(expectedNext)
+          }
+
+          "the user is a individual but has selected company" in {
+            test(individualRetrievedData, EntityType.Company, routes.EntityTypeController.wrongGGAccount())
+          }
+
+          "the user is a company but has selected individual" in {
+            test(companyRetrievedData, EntityType.Individual, routes.EntityTypeController.wrongGGAccount())
+          }
+
+          "the user is a individual but has selected individual" in {
+            test(individualRetrievedData, EntityType.Individual, routes.TaxSituationController.taxSituation())
+          }
+
+          "the user is a company but has selected company" in {
+            test(companyRetrievedData, EntityType.Company, routes.TaxSituationController.taxSituation())
+          }
+
+        }
+
       }
 
     }
@@ -456,6 +502,43 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
 
         }
 
+        "the wrong GG account page" in {
+          val session                                     = HECSession(
+            individualRetrievedData,
+            UserAnswers.empty.copy(
+              licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles),
+              licenceExpiryDate = Some(LicenceExpiryDate(TimeUtils.today())),
+              entityType = Some(EntityType.Company)
+            )
+          )
+          implicit val request: RequestWithSessionData[_] =
+            requestWithSessionData(session)
+
+          val result = journeyService.previous(
+            routes.EntityTypeController.wrongGGAccount()
+          )
+
+          result shouldBe routes.EntityTypeController.entityType()
+        }
+
+        "the wrong entity type page" in {
+          val session                                     = HECSession(
+            individualRetrievedData,
+            UserAnswers.empty.copy(
+              licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles),
+              licenceExpiryDate = Some(LicenceExpiryDate(TimeUtils.today()))
+            )
+          )
+          implicit val request: RequestWithSessionData[_] =
+            requestWithSessionData(session)
+
+          val result = journeyService.previous(
+            routes.EntityTypeController.wrongEntityType()
+          )
+
+          result shouldBe routes.EntityTypeController.entityType()
+        }
+
         "the tax situation page" when {
 
           "the licence type selected is 'driver of taxis'" in {
@@ -476,6 +559,26 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
 
             result shouldBe routes.LicenceDetailsController.recentLicenceLength()
           }
+
+          "the licence type is not 'driver of taxis' and the entity type is correct" in {
+            val session                                     = HECSession(
+              individualRetrievedData,
+              UserAnswers.empty.copy(
+                licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles),
+                licenceExpiryDate = Some(LicenceExpiryDate(TimeUtils.today())),
+                entityType = Some(EntityType.Individual)
+              )
+            )
+            implicit val request: RequestWithSessionData[_] =
+              requestWithSessionData(session)
+
+            val result = journeyService.previous(
+              routes.TaxSituationController.taxSituation()
+            )
+
+            result shouldBe routes.EntityTypeController.entityType()
+          }
+
         }
 
       }
