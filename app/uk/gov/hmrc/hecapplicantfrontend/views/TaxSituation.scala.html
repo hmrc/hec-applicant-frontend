@@ -20,6 +20,8 @@ Request[_], messages: Messages)
         checked = form.data.values.toList.contains(index.toString)
     )
 }}
+@startYear = @{taxDisplayYear.year.toString}
+@endYear = @{s"${taxDisplayYear.year + 1}"}
 
 @layout(pageTitle = Some(title), hasErrors = form.hasErrors, backLocation = Some(back)) {
     @if(form.errors.nonEmpty) {
@@ -42,7 +44,7 @@ Request[_], messages: Messages)
                         isPageHeading = true
                     ))
                 )),
-                hint = Some(Hint(content = Text(messages(s"tax year is ${taxDisplayYear.year}")))),
+                hint = Some(Hint(content = Text(messages(s"$key.hint", startYear, endYear)))),
                 idPrefix = Some(key),
                 name = key,
                 items = radioOptions,
