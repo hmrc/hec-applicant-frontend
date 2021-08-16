@@ -30,14 +30,16 @@ object UserAnswers {
     licenceType: Option[LicenceType],
     licenceExpiryDate: Option[LicenceExpiryDate],
     licenceTimeTrading: Option[LicenceTimeTrading],
-    licenceValidityPeriod: Option[LicenceValidityPeriod]
+    licenceValidityPeriod: Option[LicenceValidityPeriod],
+    reportIncomeEarned: Option[ReportIncomeEarned]
   ) extends UserAnswers
 
   final case class CompleteUserAnswers(
     licenceType: LicenceType,
     licenceExpiryDate: LicenceExpiryDate,
     licenceTimeTrading: LicenceTimeTrading,
-    licenceValidityPeriod: LicenceValidityPeriod
+    licenceValidityPeriod: LicenceValidityPeriod,
+    reportIncomeEarned: ReportIncomeEarned
   ) extends UserAnswers
 
   object IncompleteUserAnswers {
@@ -47,7 +49,8 @@ object UserAnswers {
         Some(c.licenceType),
         Some(c.licenceExpiryDate),
         Some(c.licenceTimeTrading),
-        Some(c.licenceValidityPeriod)
+        Some(c.licenceValidityPeriod),
+        Some(c.reportIncomeEarned)
       )
 
   }
@@ -71,7 +74,7 @@ object UserAnswers {
 
   }
 
-  val empty: IncompleteUserAnswers = IncompleteUserAnswers(None, None, None, None)
+  val empty: IncompleteUserAnswers = IncompleteUserAnswers(None, None, None, None, None)
 
   implicit val format: OFormat[UserAnswers] = derived.oformat()
 
