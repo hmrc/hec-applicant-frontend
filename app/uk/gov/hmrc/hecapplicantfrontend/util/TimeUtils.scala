@@ -20,7 +20,6 @@ import cats.syntax.either._
 import play.api.data.FormError
 import play.api.data.format.Formatter
 import play.api.i18n.Messages
-import uk.gov.hmrc.hecapplicantfrontend.models.TaxDisplayYear
 
 import java.time.{Clock, LocalDate}
 import scala.util.Try
@@ -125,16 +124,5 @@ object TimeUtils {
       d.isEqual(other) || d.isAfter(other)
 
   }
-
-  def getTaxYearDisplayDate(d: LocalDate): TaxDisplayYear = {
-    val currentYear             = d.getYear
-    val currentYearTaxStartDate = LocalDate.of(currentYear, 4, 6)
-    val sixMonthEarlierDate     = d.minusMonths(6L)
-    if (sixMonthEarlierDate.isBefore(currentYearTaxStartDate)) TaxDisplayYear(currentYear - 2)
-    else TaxDisplayYear(currentYear - 1)
-  }
-
-  def getCurrentTaxDisplayYear(currentDate: LocalDate): TaxDisplayYear =
-    TimeUtils.getTaxYearDisplayDate(currentDate)
 
 }

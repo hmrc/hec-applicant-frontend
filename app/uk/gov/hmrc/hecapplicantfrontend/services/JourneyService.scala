@@ -66,9 +66,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
     routes.LicenceDetailsController.expiryDate()                         -> licenceExpiryRoute,
     routes.LicenceDetailsController.licenceTimeTrading                   -> (_ => routes.LicenceDetailsController.recentLicenceLength()),
     routes.LicenceDetailsController.recentLicenceLength()                -> licenceValidityPeriodRoute,
-    routes.TaxSituationController.taxSituation()                         -> (_ =>
-      routes.CheckAndConfirmAnswersController.checkAndConfirmAnswers()
-    )
+    routes.TaxSituationController.taxSituation()                         -> (_ => routes.CheckYourAnswersController.checkYourAnswers())
   )
 
   // map which describes routes from an exit page to their previous page. The keys are the exit page and the values are

@@ -41,11 +41,17 @@ class TaxSituationControllerSpec
     with AuthAndSessionDataBehaviour
     with JourneyServiceSupport {
 
+  val mockTimeProvider = mock[TimeProvider]
+
   override def overrideBindings = List(
     bind[AuthConnector].toInstance(mockAuthConnector),
     bind[SessionStore].toInstance(mockSessionStore),
-    bind[JourneyService].toInstance(mockJourneyService)
+    bind[JourneyService].toInstance(mockJourneyService),
+    bind[TimeProvider].toInstance(mockTimeProvider)
   )
+
+  def mockTimeProviderToday(d: LocalDate)          = (mockTimeProvider.currentDate _).expects().returning(d)
+  def taxYearMessage(startYear: Int, endYear: Int) = s"This is for the tax year $startYear to $endYear."
 
   val controller = instanceOf[TaxSituationController]
 
@@ -96,6 +102,7 @@ class TaxSituationControllerSpec
               mockJourneyServiceGetPrevious(routes.TaxSituationController.taxSituation(), session)(
                 mockPreviousCall
               )
+              mockTimeProviderToday(TimeUtils.today())
             }
 
             checkPageIsDisplayed(
@@ -116,6 +123,7 @@ class TaxSituationControllerSpec
               }
             )
           }
+
         }
 
         "the user has previously answered the question" in {
@@ -137,6 +145,7 @@ class TaxSituationControllerSpec
             mockJourneyServiceGetPrevious(routes.TaxSituationController.taxSituation(), session)(
               mockPreviousCall
             )
+            mockTimeProviderToday(TimeUtils.today())
           }
 
           checkPageIsDisplayed(
@@ -154,6 +163,249 @@ class TaxSituationControllerSpec
             }
           )
         }
+
+        "with tax year as 2019 to 2020" when {
+
+          "today's date is start of the year" in {
+            val session = HECSession(
+              individuaRetrievedlData,
+              UserAnswers.empty.copy(
+                licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)
+              )
+            )
+
+            inSequence {
+              mockAuthWithNoRetrievals()
+              mockGetSession(session)
+              mockJourneyServiceGetPrevious(routes.TaxSituationController.taxSituation(), session)(
+                mockPreviousCall
+              )
+              mockTimeProviderToday(LocalDate.of(2021, 1, 1))
+            }
+
+            checkPageIsDisplayed(
+              performAction(),
+              messageFromMessageKey("taxSituation.title"),
+              { doc =>
+                doc.select("#back").attr("href") shouldBe mockPreviousCall.url
+
+                doc.select("#taxSituation-hint").text shouldBe taxYearMessage(2019, 2020)
+
+                val options = doc.select(".govuk-radios__item")
+                options.size() shouldBe 4
+
+                val selectedOptions = doc.select(".govuk-radios__input[checked]")
+                selectedOptions.isEmpty shouldBe true
+
+                val form = doc.select("form")
+                form
+                  .attr("action") shouldBe routes.TaxSituationController.taxSituationSubmit().url
+              }
+            )
+
+          }
+
+          "today's date is more than six months from 6 april 2020" in {
+            val session = HECSession(
+              individuaRetrievedlData,
+              UserAnswers.empty.copy(
+                licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)
+              )
+            )
+
+            inSequence {
+              mockAuthWithNoRetrievals()
+              mockGetSession(session)
+              mockJourneyServiceGetPrevious(routes.TaxSituationController.taxSituation(), session)(
+                mockPreviousCall
+              )
+              mockTimeProviderToday(LocalDate.of(2020, 10, 24))
+            }
+
+            checkPageIsDisplayed(
+              performAction(),
+              messageFromMessageKey("taxSituation.title"),
+              { doc =>
+                doc.select("#back").attr("href") shouldBe mockPreviousCall.url
+
+                doc.select("#taxSituation-hint").text shouldBe taxYearMessage(2019, 2020)
+
+                val options = doc.select(".govuk-radios__item")
+                options.size() shouldBe 4
+
+                val selectedOptions = doc.select(".govuk-radios__input[checked]")
+                selectedOptions.isEmpty shouldBe true
+
+                val form = doc.select("form")
+                form
+                  .attr("action") shouldBe routes.TaxSituationController.taxSituationSubmit().url
+              }
+            )
+
+          }
+
+          "today's date is exactly six months from 6 april 2020" in {
+            val session = HECSession(
+              individuaRetrievedlData,
+              UserAnswers.empty.copy(
+                licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)
+              )
+            )
+
+            inSequence {
+              mockAuthWithNoRetrievals()
+              mockGetSession(session)
+              mockJourneyServiceGetPrevious(routes.TaxSituationController.taxSituation(), session)(
+                mockPreviousCall
+              )
+              mockTimeProviderToday(LocalDate.of(2020, 10, 6))
+            }
+
+            checkPageIsDisplayed(
+              performAction(),
+              messageFromMessageKey("taxSituation.title"),
+              { doc =>
+                doc.select("#back").attr("href") shouldBe mockPreviousCall.url
+
+                doc.select("#taxSituation-hint").text shouldBe taxYearMessage(2019, 2020)
+
+                val options = doc.select(".govuk-radios__item")
+                options.size() shouldBe 4
+
+                val selectedOptions = doc.select(".govuk-radios__input[checked]")
+                selectedOptions.isEmpty shouldBe true
+
+                val form = doc.select("form")
+                form
+                  .attr("action") shouldBe routes.TaxSituationController.taxSituationSubmit().url
+              }
+            )
+
+          }
+
+        }
+
+        "with tax year as 2020 to 2021" when {
+
+          "today's date is start of the year 2022" in {
+            val session = HECSession(
+              individuaRetrievedlData,
+              UserAnswers.empty.copy(
+                licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)
+              )
+            )
+
+            inSequence {
+              mockAuthWithNoRetrievals()
+              mockGetSession(session)
+              mockJourneyServiceGetPrevious(routes.TaxSituationController.taxSituation(), session)(
+                mockPreviousCall
+              )
+              mockTimeProviderToday(LocalDate.of(2022, 1, 1))
+            }
+
+            checkPageIsDisplayed(
+              performAction(),
+              messageFromMessageKey("taxSituation.title"),
+              { doc =>
+                doc.select("#back").attr("href") shouldBe mockPreviousCall.url
+
+                doc.select("#taxSituation-hint").text shouldBe taxYearMessage(2020, 2021)
+
+                val options = doc.select(".govuk-radios__item")
+                options.size() shouldBe 4
+
+                val selectedOptions = doc.select(".govuk-radios__input[checked]")
+                selectedOptions.isEmpty shouldBe true
+
+                val form = doc.select("form")
+                form
+                  .attr("action") shouldBe routes.TaxSituationController.taxSituationSubmit().url
+              }
+            )
+
+          }
+
+          "today's date is more than six months from 6 april 2021" in {
+            val session = HECSession(
+              individuaRetrievedlData,
+              UserAnswers.empty.copy(
+                licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)
+              )
+            )
+
+            inSequence {
+              mockAuthWithNoRetrievals()
+              mockGetSession(session)
+              mockJourneyServiceGetPrevious(routes.TaxSituationController.taxSituation(), session)(
+                mockPreviousCall
+              )
+              mockTimeProviderToday(LocalDate.of(2021, 10, 24))
+            }
+
+            checkPageIsDisplayed(
+              performAction(),
+              messageFromMessageKey("taxSituation.title"),
+              { doc =>
+                doc.select("#back").attr("href") shouldBe mockPreviousCall.url
+
+                doc.select("#taxSituation-hint").text shouldBe taxYearMessage(2020, 2021)
+
+                val options = doc.select(".govuk-radios__item")
+                options.size() shouldBe 4
+
+                val selectedOptions = doc.select(".govuk-radios__input[checked]")
+                selectedOptions.isEmpty shouldBe true
+
+                val form = doc.select("form")
+                form
+                  .attr("action") shouldBe routes.TaxSituationController.taxSituationSubmit().url
+              }
+            )
+
+          }
+
+          "today's date is exactly six months from 6 april 2021" in {
+            val session = HECSession(
+              individuaRetrievedlData,
+              UserAnswers.empty.copy(
+                licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)
+              )
+            )
+
+            inSequence {
+              mockAuthWithNoRetrievals()
+              mockGetSession(session)
+              mockJourneyServiceGetPrevious(routes.TaxSituationController.taxSituation(), session)(
+                mockPreviousCall
+              )
+              mockTimeProviderToday(LocalDate.of(2021, 10, 6))
+            }
+
+            checkPageIsDisplayed(
+              performAction(),
+              messageFromMessageKey("taxSituation.title"),
+              { doc =>
+                doc.select("#back").attr("href") shouldBe mockPreviousCall.url
+
+                doc.select("#taxSituation-hint").text shouldBe taxYearMessage(2020, 2021)
+
+                val options = doc.select(".govuk-radios__item")
+                options.size() shouldBe 4
+
+                val selectedOptions = doc.select(".govuk-radios__input[checked]")
+                selectedOptions.isEmpty shouldBe true
+
+                val form = doc.select("form")
+                form
+                  .attr("action") shouldBe routes.TaxSituationController.taxSituationSubmit().url
+              }
+            )
+
+          }
+
+        }
+
       }
 
     }

@@ -22,13 +22,12 @@ import play.api.data.Form
 import play.api.data.Forms.{mapping, of}
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
-import uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.{taxSituationForm, taxSituationList}
+import uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.{getTaxYear, taxSituationForm, taxSituationList}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
+import uk.gov.hmrc.hecapplicantfrontend.models.{TaxSituation, TaxYear, TimeProvider}
 import uk.gov.hmrc.hecapplicantfrontend.models.TaxSituation._
-import uk.gov.hmrc.hecapplicantfrontend.models.TaxSituation
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging.LoggerOps
-import uk.gov.hmrc.hecapplicantfrontend.util.TimeUtils.getCurrentTaxDisplayYear
 import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging, TimeUtils}
 import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -42,13 +41,12 @@ class TaxSituationController @Inject() (
   sessionDataAction: SessionDataAction,
   journeyService: JourneyService,
   mcc: MessagesControllerComponents,
+  timeProvider: TimeProvider,
   taxSituationPage: html.TaxSituation
 )(implicit ec: ExecutionContext)
     extends FrontendController(mcc)
     with I18nSupport
     with Logging {
-
-  val currentdate: LocalDate = TimeUtils.today()
 
   val taxSituation: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
     val licenceTypeOpt = request.sessionData.userAnswers.fold(_.licenceType, c => Some(c.licenceType))
@@ -62,7 +60,8 @@ class TaxSituationController @Inject() (
           val emptyForm = taxSituationForm(options)
           reportIncome.fold(emptyForm)(emptyForm.fill)
         }
-        Ok(taxSituationPage(form, back, options, getCurrentTaxDisplayYear(currentdate)))
+
+        Ok(taxSituationPage(form, back, options, getTaxYear(timeProvider.currentDate)))
       case None    =>
         logger.error("Couldn't find licence Type")
         InternalServerError
@@ -102,7 +101,7 @@ class TaxSituationController @Inject() (
                   formWithErrors,
                   journeyService.previous(routes.TaxSituationController.taxSituation()),
                   options,
-                  getCurrentTaxDisplayYear(currentdate)
+                  getTaxYear(TimeUtils.today())
                 )
               ),
             handleReportedIncome
@@ -129,5 +128,13 @@ object TaxSituationController {
         "taxSituation" -> of(FormUtils.radioFormFormatter(options))
       )(identity)(Some(_))
     )
+
+  def getTaxYear(currentDate: LocalDate): TaxYear = {
+    val currentYear             = currentDate.getYear
+    val currentYearTaxStartDate = LocalDate.of(currentYear, 4, 6)
+    val sixMonthEarlierDate     = currentDate.minusMonths(6L)
+    if (sixMonthEarlierDate.isBefore(currentYearTaxStartDate)) TaxYear(currentYear - 2)
+    else TaxYear(currentYear - 1)
+  }
 
 }

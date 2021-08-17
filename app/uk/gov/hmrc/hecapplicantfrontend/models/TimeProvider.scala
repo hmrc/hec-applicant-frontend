@@ -16,14 +16,20 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models
 
-import play.api.libs.json.Format
-import play.api.libs.functional.syntax.toInvariantFunctorOps
+import com.google.inject.{ImplementedBy, Inject}
+import uk.gov.hmrc.hecapplicantfrontend.util.TimeUtils
 
-final case class TaxDisplayYear(year: Int) extends AnyVal
+import java.time.LocalDate
+import javax.inject.Singleton
 
-object TaxDisplayYear {
+@ImplementedBy(classOf[TimeProviderImpl])
+trait TimeProvider {
 
-  implicit val format: Format[TaxDisplayYear] =
-    implicitly[Format[Int]].inmap(TaxDisplayYear(_), _.year)
+  def currentDate: LocalDate
 
+}
+@Singleton
+class TimeProviderImpl extends TimeProvider {
+  @Inject()
+  override def currentDate: LocalDate = TimeUtils.today()
 }
