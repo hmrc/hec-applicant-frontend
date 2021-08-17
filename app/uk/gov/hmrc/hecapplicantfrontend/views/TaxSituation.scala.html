@@ -8,7 +8,7 @@
 
 @this(layout: Layout, govukErrorSummary: GovukErrorSummary, govukRadios: GovukRadios, govukButton: GovukButton, formWithCSRF: FormWithCSRF)
 
-@(form: Form[models.TaxSituation], back: Call, options: List[models.TaxSituation], taxDisplayYear:models.TaxDisplayYear)(implicit request:
+@(form: Form[models.TaxSituation], back: Call, options: List[models.TaxSituation], taxDisplayYear:models.TaxYear)(implicit request:
 Request[_], messages: Messages)
 @key = @{"taxSituation"}
 @title = @{messages(s"$key.title")}
