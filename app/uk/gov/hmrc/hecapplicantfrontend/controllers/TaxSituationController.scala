@@ -22,12 +22,13 @@ import play.api.data.Form
 import play.api.data.Forms.{mapping, of}
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
-import uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.{getCurrentTaxDisplayYear, taxSituationForm, taxSituationList}
+import uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.{taxSituationForm, taxSituationList}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
 import uk.gov.hmrc.hecapplicantfrontend.models.TaxSituation._
-import uk.gov.hmrc.hecapplicantfrontend.models.{TaxDisplayYear, TaxSituation}
+import uk.gov.hmrc.hecapplicantfrontend.models.TaxSituation
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging.LoggerOps
+import uk.gov.hmrc.hecapplicantfrontend.util.TimeUtils.getCurrentTaxDisplayYear
 import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging, TimeUtils}
 import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -129,6 +130,4 @@ object TaxSituationController {
       )(identity)(Some(_))
     )
 
-  private def getCurrentTaxDisplayYear(currentDate: LocalDate): TaxDisplayYear =
-    TimeUtils.getTaxYearDisplayDate(currentDate)
 }

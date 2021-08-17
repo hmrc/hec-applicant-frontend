@@ -134,4 +134,7 @@ object TimeUtils {
     else TaxDisplayYear(currentYear - 1)
   }
 
+  def getCurrentTaxDisplayYear(currentDate: LocalDate): TaxDisplayYear =
+    TimeUtils.getTaxYearDisplayDate(currentDate)
+
 }
