@@ -16,22 +16,32 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.controllers
 
+import cats.instances.future._
 import com.google.inject.{Inject, Singleton}
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
+import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.CompleteUserAnswers
+import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
+import uk.gov.hmrc.hecapplicantfrontend.services.TaxCheckService
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
+import uk.gov.hmrc.hecapplicantfrontend.util.Logging.LoggerOps
 import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
+
+import scala.concurrent.ExecutionContext
 
 @Singleton
 class CheckYourAnswersController @Inject() (
   authAction: AuthAction,
   sessionDataAction: SessionDataAction,
+  taxCheckService: TaxCheckService,
+  sessionStore: SessionStore,
   mcc: MessagesControllerComponents,
   checkYourAnswersPage: html.CheckYourAnswers
-) extends FrontendController(mcc)
+)(implicit ec: ExecutionContext)
+    extends FrontendController(mcc)
     with I18nSupport
     with Logging {
 
@@ -47,10 +57,25 @@ class CheckYourAnswersController @Inject() (
 
   }
 
-  val checkYourAnswersSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
+  val checkYourAnswersSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     request.sessionData.userAnswers match {
       case c: CompleteUserAnswers =>
-        Ok(s"Submitted $c")
+        val result = for {
+          taxCheck      <- taxCheckService.saveTaxCheck(request.sessionData.retrievedUserData, c)
+          updatedSession = request.sessionData.copy(
+                             userAnswers = UserAnswers.empty,
+                             completedTaxCheck = Some(taxCheck)
+                           )
+          _             <- sessionStore.store(updatedSession)
+        } yield ()
+
+        result.fold(
+          { e =>
+            logger.warn("Could not save tax check", e)
+            InternalServerError
+          },
+          _ => Redirect(routes.TaxCheckCompleteController.taxCheckComplete())
+        )
 
       case _ =>
         logger.warn("Could not find complete answers")

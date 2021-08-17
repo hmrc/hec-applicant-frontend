@@ -16,18 +16,14 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models
 
-import cats.Eq
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.functional.syntax.toInvariantFunctorOps
+import play.api.libs.json.Format
 
-final case class HECSession(
-  retrievedUserData: RetrievedApplicantData,
-  userAnswers: UserAnswers,
-  completedTaxCheck: Option[HECTaxCheck]
-)
+final case class HECTaxCheckCode(value: String) extends AnyVal
 
-object HECSession {
+object HECTaxCheckCode {
 
-  implicit val eq: Eq[HECSession]          = Eq.fromUniversalEquals
-  implicit val format: OFormat[HECSession] = Json.format
+  implicit val format: Format[HECTaxCheckCode] =
+    implicitly[Format[String]].inmap(HECTaxCheckCode(_), _.value)
 
 }

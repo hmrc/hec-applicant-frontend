@@ -16,18 +16,27 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models
 
-import cats.Eq
-import play.api.libs.json.{Json, OFormat}
+import julienrf.json.derived
+import play.api.libs.json.OFormat
+import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CTUTR, GGCredId, NINO, SAUTR}
 
-final case class HECSession(
-  retrievedUserData: RetrievedApplicantData,
-  userAnswers: UserAnswers,
-  completedTaxCheck: Option[HECTaxCheck]
-)
+sealed trait ApplicantDetails extends Product with Serializable
 
-object HECSession {
+object ApplicantDetails {
 
-  implicit val eq: Eq[HECSession]          = Eq.fromUniversalEquals
-  implicit val format: OFormat[HECSession] = Json.format
+  final case class IndividualApplicantDetails(
+    ggCredId: GGCredId,
+    nino: NINO,
+    sautr: Option[SAUTR],
+    name: Name,
+    dateOfBirth: DateOfBirth
+  ) extends ApplicantDetails
+
+  final case class CompanyApplicantDetails(
+    ggCredId: GGCredId,
+    ctutr: CTUTR
+  ) extends ApplicantDetails
+
+  implicit val format: OFormat[ApplicantDetails] = derived.oformat()
 
 }

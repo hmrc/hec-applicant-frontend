@@ -89,7 +89,7 @@ class StartController @Inject() (
   )(implicit hc: HeaderCarrier): EitherT[Future, StartError, HECSession] =
     for {
       retrievedUserData <- buildRetrievedUserData(retrievedGGData)
-      session            = HECSession(retrievedUserData, UserAnswers.empty)
+      session            = HECSession(retrievedUserData, UserAnswers.empty, None)
       _                 <- sessionStore.store(session).leftMap(BackendError(_): StartError)
     } yield session
 
