@@ -104,7 +104,8 @@ class LicenceDetailsControllerSpec
                 LicenceType.DriverOfTaxisAndPrivateHires,
                 LicenceExpiryDate(TimeUtils.today().minusDays(10L)),
                 LicenceTimeTrading.ZeroToTwoYears,
-                LicenceValidityPeriod.UpToTwoYears
+                LicenceValidityPeriod.UpToTwoYears,
+                TaxSituation.SA
               )
             )
 
@@ -255,7 +256,8 @@ class LicenceDetailsControllerSpec
               LicenceType.DriverOfTaxisAndPrivateHires,
               LicenceExpiryDate(TimeUtils.today().minusDays(10L)),
               LicenceTimeTrading.ZeroToTwoYears,
-              LicenceValidityPeriod.UpToOneYear
+              LicenceValidityPeriod.UpToOneYear,
+              TaxSituation.SA
             )
             val updatedAnswers = IncompleteUserAnswers
               .fromCompleteAnswers(answers)
@@ -592,7 +594,8 @@ class LicenceDetailsControllerSpec
                 LicenceType.DriverOfTaxisAndPrivateHires,
                 LicenceExpiryDate(TimeUtils.today().minusDays(10L)),
                 LicenceTimeTrading.TwoToFourYears,
-                LicenceValidityPeriod.UpToThreeYears
+                LicenceValidityPeriod.UpToThreeYears,
+                TaxSituation.SA
               )
             )
 
@@ -740,13 +743,15 @@ class LicenceDetailsControllerSpec
               LicenceType.DriverOfTaxisAndPrivateHires,
               LicenceExpiryDate(TimeUtils.today().minusDays(10L)),
               LicenceTimeTrading.ZeroToTwoYears,
-              LicenceValidityPeriod.UpToFiveYears
+              LicenceValidityPeriod.UpToFiveYears,
+              TaxSituation.SA
             )
             val updatedAnswers = IncompleteUserAnswers(
               Some(LicenceType.DriverOfTaxisAndPrivateHires),
               Some(LicenceExpiryDate(TimeUtils.today().minusDays(10L))),
               Some(LicenceTimeTrading.EightYearsOrMore),
-              Some(LicenceValidityPeriod.UpToFiveYears)
+              Some(LicenceValidityPeriod.UpToFiveYears),
+              Some(TaxSituation.SA)
             )
             val session        = HECSession(individuaRetrievedlData, answers)
             val updatedSession = session.copy(userAnswers = updatedAnswers)
@@ -844,7 +849,8 @@ class LicenceDetailsControllerSpec
                     licenceType,
                     LicenceExpiryDate(TimeUtils.today().minusDays(10L)),
                     LicenceTimeTrading.TwoToFourYears,
-                    LicenceValidityPeriod.UpToThreeYears
+                    LicenceValidityPeriod.UpToThreeYears,
+                    TaxSituation.SA
                   )
                 )
 
@@ -987,7 +993,7 @@ class LicenceDetailsControllerSpec
 
         "valid data is submitted and" when {
 
-          "the user has not previously completed answering questions" when {
+          "the user has not previously completed answering questions" in {
             val answers        = UserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
             val updatedAnswers = answers.copy(licenceValidityPeriod = Some(UpToOneYear))
             val session        = HECSession(individuaRetrievedlData, answers)
@@ -1014,13 +1020,15 @@ class LicenceDetailsControllerSpec
               LicenceType.OperatorOfPrivateHireVehicles,
               LicenceExpiryDate(TimeUtils.today().minusDays(10L)),
               LicenceTimeTrading.ZeroToTwoYears,
-              LicenceValidityPeriod.UpToThreeYears
+              LicenceValidityPeriod.UpToThreeYears,
+              TaxSituation.SA
             )
             val updatedAnswers = IncompleteUserAnswers(
               Some(LicenceType.OperatorOfPrivateHireVehicles),
               Some(LicenceExpiryDate(TimeUtils.today().minusDays(10L))),
               Some(LicenceTimeTrading.ZeroToTwoYears),
-              Some(LicenceValidityPeriod.UpToFiveYears)
+              Some(LicenceValidityPeriod.UpToFiveYears),
+              Some(TaxSituation.SA)
             )
             val session        = HECSession(individuaRetrievedlData, answers)
             val updatedSession = session.copy(userAnswers = updatedAnswers)
