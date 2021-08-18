@@ -107,7 +107,7 @@ class LicenceDetailsControllerSpec
                 LicenceTimeTrading.ZeroToTwoYears,
                 LicenceValidityPeriod.UpToTwoYears,
                 TaxSituation.SA,
-                EntityType.Individual
+                Some(EntityType.Individual)
               ),
               None
             )
@@ -261,7 +261,7 @@ class LicenceDetailsControllerSpec
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToOneYear,
               TaxSituation.SA,
-              EntityType.Individual
+              Some(EntityType.Individual)
             )
             val updatedAnswers = IncompleteUserAnswers
               .fromCompleteAnswers(answers)
@@ -601,7 +601,7 @@ class LicenceDetailsControllerSpec
                 LicenceTimeTrading.TwoToFourYears,
                 LicenceValidityPeriod.UpToThreeYears,
                 TaxSituation.SA,
-                EntityType.Company
+                Some(EntityType.Company)
               ),
               None
             )
@@ -752,7 +752,7 @@ class LicenceDetailsControllerSpec
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToFiveYears,
               TaxSituation.SA,
-              EntityType.Company
+              Some(EntityType.Company)
             )
             val updatedAnswers = IncompleteUserAnswers(
               Some(LicenceType.DriverOfTaxisAndPrivateHires),
@@ -861,7 +861,7 @@ class LicenceDetailsControllerSpec
                     LicenceTimeTrading.TwoToFourYears,
                     LicenceValidityPeriod.UpToThreeYears,
                     TaxSituation.SA,
-                    EntityType.Individual
+                    Some(EntityType.Individual)
                   ),
                   None
                 )
@@ -1034,7 +1034,7 @@ class LicenceDetailsControllerSpec
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToThreeYears,
               TaxSituation.SA,
-              EntityType.Individual
+              Some(EntityType.Individual)
             )
             val updatedAnswers = IncompleteUserAnswers(
               Some(LicenceType.OperatorOfPrivateHireVehicles),

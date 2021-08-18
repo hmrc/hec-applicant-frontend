@@ -373,7 +373,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             LicenceTimeTrading.ZeroToTwoYears,
             LicenceValidityPeriod.UpToOneYear,
             TaxSituation.PAYE,
-            EntityType.Individual
+            None
           )
 
           val incompleteAnswers = IncompleteUserAnswers(
@@ -412,7 +412,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 LicenceTimeTrading.ZeroToTwoYears,
                 LicenceValidityPeriod.UpToOneYear,
                 TaxSituation.PAYE,
-                EntityType.Company
+                Some(EntityType.Company)
               )
 
               val incompleteAnswers = IncompleteUserAnswers(
@@ -736,7 +736,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             LicenceTimeTrading.ZeroToTwoYears,
             LicenceValidityPeriod.UpToOneYear,
             TaxSituation.PAYE,
-            EntityType.Individual
+            Some(EntityType.Individual)
           )
           implicit val request: RequestWithSessionData[_] =
             requestWithSessionData(

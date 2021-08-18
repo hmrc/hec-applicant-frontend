@@ -140,7 +140,7 @@ class TaxSituationControllerSpec
                 LicenceTimeTrading.TwoToFourYears,
                 LicenceValidityPeriod.UpToThreeYears,
                 TaxSituation.PAYE,
-                EntityType.Individual
+                None
               ),
               None
             )
@@ -560,7 +560,7 @@ class TaxSituationControllerSpec
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToThreeYears,
               TaxSituation.PAYE,
-              EntityType.Individual
+              Some(EntityType.Individual)
             )
             val updatedAnswers = IncompleteUserAnswers(
               Some(LicenceType.DriverOfTaxisAndPrivateHires),

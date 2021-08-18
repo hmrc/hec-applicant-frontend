@@ -1,9 +1,26 @@
+/*
+ * Copyright 2021 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package uk.gov.hmrc.hecapplicantfrontend.controllers
 
 import play.api.inject.bind
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
+import uk.gov.hmrc.hecapplicantfrontend.controllers.CheckYourAnswersControllerSpec.CheckYourAnswersRow
 import uk.gov.hmrc.hecapplicantfrontend.models.{DateOfBirth, EntityType, HECSession, Name, TaxSituation, UserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRetrievedData, IndividualRetrievedData}
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.CompleteUserAnswers
@@ -13,6 +30,7 @@ import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
 import uk.gov.hmrc.hecapplicantfrontend.util.TimeUtils
 
+import collection.JavaConverters._
 import java.time.LocalDate
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -65,7 +83,57 @@ class CheckYourAnswersControllerSpec
           LicenceTimeTrading.ZeroToTwoYears,
           LicenceValidityPeriod.UpToTwoYears,
           TaxSituation.PAYE,
-          EntityType.Individual
+          Some(EntityType.Individual)
+        )
+
+        val session = HECSession(individualRetrievedData, answers, None)
+
+        val expectedRows =
+          List(
+            CheckYourAnswersRow(
+              messageFromMessageKey("licenceType.title"),
+              messageFromMessageKey("licenceType.scrapMetalCollector"),
+              routes.LicenceDetailsController.licenceType().url
+            ),
+            CheckYourAnswersRow(
+              messageFromMessageKey("licenceExpiryDate.title"),
+              TimeUtils.govDisplayFormat(answers.licenceExpiryDate.value),
+              routes.LicenceDetailsController.expiryDate().url
+            ),
+            CheckYourAnswersRow(
+              messageFromMessageKey("licenceTimeTrading.title"),
+              messageFromMessageKey("licenceTimeTrading.zeroToTwoYears"),
+              routes.LicenceDetailsController.licenceTimeTrading().url
+            ),
+            CheckYourAnswersRow(
+              messageFromMessageKey("licenceValidityPeriod.title"),
+              messageFromMessageKey("licenceValidityPeriod.upToTwoYears"),
+              routes.LicenceDetailsController.recentLicenceLength().url
+            )
+          )
+
+        inSequence {
+          mockAuthWithNoRetrievals()
+          mockGetSession(session)
+          mockJourneyServiceGetPrevious(routes.CheckYourAnswersController.checkYourAnswers(), session)(mockPreviousCall)
+        }
+
+        checkPageIsDisplayed(
+          performAction(),
+          messageFromMessageKey("checkYourAnswers.title"),
+          { doc =>
+            doc.select("#back").attr("href") shouldBe mockPreviousCall.url
+
+            val rows =
+              doc.select(".govuk-summary-list__row").iterator().asScala.toList.map { element =>
+                val question  = element.select(".govuk-summary-list__key").text()
+                val answer    = element.select(".govuk-summary-list__value").text()
+                val changeUrl = element.select(".govuk-link").attr("href")
+                CheckYourAnswersRow(question, answer, changeUrl)
+              }
+
+            rows shouldBe expectedRows
+          }
         )
 
       }
@@ -73,5 +141,11 @@ class CheckYourAnswersControllerSpec
     }
 
   }
+
+}
+
+object CheckYourAnswersControllerSpec {
+
+  final case class CheckYourAnswersRow(question: String, answer: String, changeUrl: String)
 
 }

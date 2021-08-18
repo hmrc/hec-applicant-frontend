@@ -101,7 +101,7 @@ class EntityTypeControllerSpec
                 LicenceTimeTrading.ZeroToTwoYears,
                 LicenceValidityPeriod.UpToTwoYears,
                 TaxSituation.PAYE,
-                EntityType.Individual
+                Some(EntityType.Individual)
               ),
               None
             )
@@ -236,7 +236,7 @@ class EntityTypeControllerSpec
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToOneYear,
               TaxSituation.PAYE,
-              EntityType.Individual
+              None
             )
             val updatedAnswers = IncompleteUserAnswers
               .fromCompleteAnswers(answers)

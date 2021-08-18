@@ -47,7 +47,7 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
           LicenceTimeTrading.TwoToFourYears,
           LicenceValidityPeriod.UpToFiveYears,
           TaxSituation.PAYE,
-          EntityType.Individual
+          Some(EntityType.Individual)
         )
         completeAnswers.fold(
           _ => fail(),
@@ -64,7 +64,7 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
         LicenceTimeTrading.TwoToFourYears,
         LicenceValidityPeriod.UpToTwoYears,
         TaxSituation.PAYE,
-        EntityType.Individual
+        Some(EntityType.Individual)
       )
       IncompleteUserAnswers.fromCompleteAnswers(completeAnswers) shouldBe IncompleteUserAnswers(
         Some(LicenceType.DriverOfTaxisAndPrivateHires),
@@ -96,7 +96,7 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
           LicenceTimeTrading.ZeroToTwoYears,
           LicenceValidityPeriod.UpToThreeYears,
           TaxSituation.PAYE,
-          EntityType.Company
+          Some(EntityType.Company)
         )
 
       "unsets the licence type field" in {
