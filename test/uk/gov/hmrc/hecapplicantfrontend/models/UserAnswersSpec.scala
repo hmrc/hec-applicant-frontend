@@ -26,7 +26,7 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
   "UserAnswers" must {
 
     "have an empty val" in {
-      UserAnswers.empty shouldBe IncompleteUserAnswers(None, None, None, None, None)
+      UserAnswers.empty shouldBe IncompleteUserAnswers(None, None, None, None, None, None)
     }
 
     "have a fold method" which {
@@ -45,7 +45,8 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
           LicenceExpiryDate(TimeUtils.today().minusDays(10L)),
           LicenceTimeTrading.TwoToFourYears,
           LicenceValidityPeriod.UpToFiveYears,
-          TaxSituation.PAYE
+          TaxSituation.PAYE,
+          EntityType.Individual
         )
         completeAnswers.fold(
           _ => fail(),
@@ -61,14 +62,16 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
         LicenceExpiryDate(TimeUtils.today()),
         LicenceTimeTrading.TwoToFourYears,
         LicenceValidityPeriod.UpToTwoYears,
-        TaxSituation.PAYE
+        TaxSituation.PAYE,
+        EntityType.Individual
       )
       IncompleteUserAnswers.fromCompleteAnswers(completeAnswers) shouldBe IncompleteUserAnswers(
         Some(LicenceType.DriverOfTaxisAndPrivateHires),
         Some(LicenceExpiryDate(TimeUtils.today())),
         Some(LicenceTimeTrading.TwoToFourYears),
         Some(LicenceValidityPeriod.UpToTwoYears),
-        Some(TaxSituation.PAYE)
+        Some(TaxSituation.PAYE),
+        Some(EntityType.Individual)
       )
 
     }
@@ -81,7 +84,8 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
           Some(LicenceExpiryDate(TimeUtils.today())),
           Some(LicenceTimeTrading.ZeroToTwoYears),
           Some(LicenceValidityPeriod.UpToThreeYears),
-          Some(TaxSituation.PAYE)
+          Some(TaxSituation.PAYE),
+          Some(EntityType.Company)
         )
 
       val completeAnswers =
@@ -90,7 +94,8 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
           LicenceExpiryDate(TimeUtils.today()),
           LicenceTimeTrading.ZeroToTwoYears,
           LicenceValidityPeriod.UpToThreeYears,
-          TaxSituation.PAYE
+          TaxSituation.PAYE,
+          EntityType.Company
         )
 
       "unsets the licence type field" in {
@@ -108,9 +113,14 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
         completeAnswers.unset(_.licenceTimeTrading)   shouldBe incompleteAnswers.copy(licenceTimeTrading = None)
       }
 
-      "unsets the licence validty period field" in {
+      "unsets the licence validity period field" in {
         incompleteAnswers.unset(_.licenceValidityPeriod) shouldBe incompleteAnswers.copy(licenceValidityPeriod = None)
         completeAnswers.unset(_.licenceValidityPeriod)   shouldBe incompleteAnswers.copy(licenceValidityPeriod = None)
+      }
+
+      "unsets the entity type field" in {
+        incompleteAnswers.unset(_.entityType) shouldBe incompleteAnswers.copy(entityType = None)
+        completeAnswers.unset(_.entityType)   shouldBe incompleteAnswers.copy(entityType = None)
       }
 
     }

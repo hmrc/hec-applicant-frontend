@@ -156,3 +156,26 @@ taxSituation.link = Find out who needs to register for Self Assessment (open in 
 taxSituation.error.required = Select how you reported income earned using your licence
 taxSituation.error.invalid = Select how did you report income earned using your licence
 taxSituation.hint = This is for the tax year {0} to {1}.
+
+# Entity Type
+entityType.title=Who are you doing a tax check for?
+entityType.individual=Yourself
+entityType.company=A company
+entityType.individual.hint=Includes if you are self-employed or a partner in a partnership.
+entityType.company.hint=Includes if the company is a partner in a partnership.
+entityType.link=If you are not doing a tax check for yourself or a company
+entityType.error.required=Select who you are doing a tax check for
+entityType.error.invalid=Select who you are doing a tax check for
+
+# Wrong GG Account
+wrongGGAccount.title=You need to sign in with the correct account
+wrongGGAccount.p1=This is because you are signed in as {0} and you have chosen to do a tax check for {1}
+wrongGGAccount.h2=What you should do next
+wrongGGAccount.link=Sign in with the correct Government Gateway account
+wrongGGAccount.individual=an individual
+wrongGGAccount.company=a company
+
+# Wrong entity type
+wrongEntityType.title=You do not need to do a tax check
+wrongEntityType.p1=This is because you can only do a check check for yourself or a company.
+wrongEntityType.link=Find out who needs to do a tax check
