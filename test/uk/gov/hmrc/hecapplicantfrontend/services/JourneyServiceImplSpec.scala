@@ -26,7 +26,7 @@ import uk.gov.hmrc.hecapplicantfrontend.controllers.{SessionSupport, routes}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthenticatedRequest, RequestWithSessionData}
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRetrievedData, IndividualRetrievedData}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO, SAUTR}
-import uk.gov.hmrc.hecapplicantfrontend.models.{DateOfBirth, EntityType, Error, HECSession, LicenceExpiryDate, LicenceTimeTrading, LicenceType, LicenceValidityPeriod, Name, RetrievedApplicantData, UserAnswers}
+import uk.gov.hmrc.hecapplicantfrontend.models._
 import uk.gov.hmrc.hecapplicantfrontend.util.TimeUtils
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -321,6 +321,31 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
 
           "the user is a company but has selected company" in {
             test(companyRetrievedData, EntityType.Company, routes.TaxSituationController.taxSituation())
+          }
+
+        }
+
+        "the tax situation page and" when {
+
+          "the licence type in the session is 'driver of taxis'" in {
+            val answers        = UserAnswers.empty.copy(licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires))
+            val session        = HECSession(individualRetrievedData, answers)
+            val updatedSession =
+              HECSession(
+                individualRetrievedData,
+                answers.copy(taxSituation = Some(TaxSituation.PAYE))
+              )
+
+            implicit val request: RequestWithSessionData[_] =
+              requestWithSessionData(session)
+
+            mockStoreSession(updatedSession)(Right(()))
+
+            val result = journeyService.updateAndNext(
+              routes.TaxSituationController.taxSituation(),
+              updatedSession
+            )
+            await(result.value) shouldBe Right(routes.CheckYourAnswersController.checkYourAnswers())
           }
 
         }
