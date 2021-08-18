@@ -94,7 +94,7 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
           LicenceExpiryDate(TimeUtils.today()),
           LicenceTimeTrading.ZeroToTwoYears,
           LicenceValidityPeriod.UpToThreeYears,
-          TaxSituation.PAYE,,
+          TaxSituation.PAYE,
           EntityType.Company
         )
 

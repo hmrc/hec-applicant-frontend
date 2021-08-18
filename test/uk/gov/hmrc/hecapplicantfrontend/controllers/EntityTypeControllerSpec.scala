@@ -23,7 +23,7 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRetrievedData, IndividualRetrievedData}
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.{CompleteUserAnswers, IncompleteUserAnswers}
-import uk.gov.hmrc.hecapplicantfrontend.models.{DateOfBirth, EntityType, Error, HECSession, LicenceExpiryDate, LicenceTimeTrading, LicenceType, LicenceValidityPeriod, Name, UserAnswers}
+import uk.gov.hmrc.hecapplicantfrontend.models.{DateOfBirth, EntityType, Error, HECSession, LicenceExpiryDate, LicenceTimeTrading, LicenceType, LicenceValidityPeriod, Name, TaxSituation, UserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
@@ -99,6 +99,7 @@ class EntityTypeControllerSpec
                 LicenceExpiryDate(TimeUtils.today()),
                 LicenceTimeTrading.ZeroToTwoYears,
                 LicenceValidityPeriod.UpToTwoYears,
+                TaxSituation.PAYE,
                 EntityType.Individual
               )
             )
@@ -232,6 +233,7 @@ class EntityTypeControllerSpec
               LicenceExpiryDate(TimeUtils.today().minusDays(10L)),
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToOneYear,
+              TaxSituation.PAYE,
               EntityType.Individual
             )
             val updatedAnswers = IncompleteUserAnswers

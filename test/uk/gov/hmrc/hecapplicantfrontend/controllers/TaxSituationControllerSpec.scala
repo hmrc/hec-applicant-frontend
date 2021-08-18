@@ -137,7 +137,8 @@ class TaxSituationControllerSpec
                 LicenceExpiryDate(TimeUtils.today().minusDays(10L)),
                 LicenceTimeTrading.TwoToFourYears,
                 LicenceValidityPeriod.UpToThreeYears,
-                TaxSituation.PAYE
+                TaxSituation.PAYE,
+                EntityType.Individual
               )
             )
 
@@ -549,14 +550,16 @@ class TaxSituationControllerSpec
               LicenceExpiryDate(TimeUtils.today().minusDays(10L)),
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToThreeYears,
-              TaxSituation.PAYE
+              TaxSituation.PAYE,
+              EntityType.Individual
             )
             val updatedAnswers = IncompleteUserAnswers(
               Some(LicenceType.DriverOfTaxisAndPrivateHires),
               Some(LicenceExpiryDate(TimeUtils.today().minusDays(10L))),
               Some(LicenceTimeTrading.ZeroToTwoYears),
               Some(LicenceValidityPeriod.UpToThreeYears),
-              Some(TaxSituation.PAYE)
+              Some(TaxSituation.PAYE),
+              Some(EntityType.Individual)
             )
             val session        = HECSession(individuaRetrievedlData, answers)
             val updatedSession = session.copy(userAnswers = updatedAnswers)
