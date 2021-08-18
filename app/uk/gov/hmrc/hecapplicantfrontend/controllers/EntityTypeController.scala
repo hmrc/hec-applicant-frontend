@@ -51,7 +51,7 @@ class EntityTypeController @Inject() (
 
   val entityType: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
     val back       = journeyService.previous(routes.EntityTypeController.entityType())
-    val entityType = request.sessionData.userAnswers.fold(_.entityType, c => Some(c.entityType))
+    val entityType = request.sessionData.userAnswers.fold(_.entityType, _.entityType)
     val form = {
       val emptyForm = entityTypeForm(entityTypeOptions)
       entityType.fold(emptyForm)(emptyForm.fill)
@@ -94,7 +94,7 @@ class EntityTypeController @Inject() (
   }
 
   val wrongGGAccount: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
-    request.sessionData.userAnswers.fold(_.entityType, c => Some(c.entityType)) match {
+    request.sessionData.userAnswers.fold(_.entityType, _.entityType) match {
       case Some(entityType) =>
         val back = journeyService.previous(routes.EntityTypeController.wrongGGAccount())
         Ok(wrongGGAccountPage(back, entityType))

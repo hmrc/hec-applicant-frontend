@@ -161,7 +161,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
           licenceTimeTrading,
           licenceValidityPeriod,
           taxSituation,
-          entityType
+          Some(entityType)
         )
       session.copy(userAnswers = completeAnswers)
 
@@ -180,7 +180,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
           licenceTimeTrading,
           licenceValidityPeriod,
           taxSituation,
-          EntityType.fromRetrievedApplicantAnswers(session.retrievedUserData)
+          None
         )
       session.copy(userAnswers = completeAnswers)
 
@@ -202,7 +202,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
     }
 
   private def entityTypeRoute(session: HECSession): Call = {
-    val selectedEntityType = session.userAnswers.fold(_.entityType, c => Some(c.entityType))
+    val selectedEntityType = session.userAnswers.fold(_.entityType, _.entityType)
     val ggEntityType       = EntityType.fromRetrievedApplicantAnswers(session.retrievedUserData)
 
     if (selectedEntityType.contains(ggEntityType)) routes.TaxSituationController.taxSituation()

@@ -42,7 +42,7 @@ object UserAnswers {
     licenceTimeTrading: LicenceTimeTrading,
     licenceValidityPeriod: LicenceValidityPeriod,
     taxSituation: TaxSituation,
-    entityType: EntityType
+    entityType: Option[EntityType]
   ) extends UserAnswers
 
   object IncompleteUserAnswers {
@@ -54,7 +54,7 @@ object UserAnswers {
         Some(c.licenceTimeTrading),
         Some(c.licenceValidityPeriod),
         Some(c.taxSituation),
-        Some(c.entityType)
+        c.entityType
       )
 
   }

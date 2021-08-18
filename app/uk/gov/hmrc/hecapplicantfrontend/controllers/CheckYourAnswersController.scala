@@ -24,7 +24,7 @@ import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, Session
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.CompleteUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
-import uk.gov.hmrc.hecapplicantfrontend.services.TaxCheckService
+import uk.gov.hmrc.hecapplicantfrontend.services.{JourneyService, TaxCheckService}
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging.LoggerOps
 import uk.gov.hmrc.hecapplicantfrontend.views.html
@@ -38,6 +38,7 @@ class CheckYourAnswersController @Inject() (
   sessionDataAction: SessionDataAction,
   taxCheckService: TaxCheckService,
   sessionStore: SessionStore,
+  journeyService: JourneyService,
   mcc: MessagesControllerComponents,
   checkYourAnswersPage: html.CheckYourAnswers
 )(implicit ec: ExecutionContext)
@@ -48,7 +49,8 @@ class CheckYourAnswersController @Inject() (
   val checkYourAnswers: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
     request.sessionData.userAnswers match {
       case c: CompleteUserAnswers =>
-        Ok(checkYourAnswersPage(routes.CheckYourAnswersController.checkYourAnswers(), c))
+        val back = journeyService.previous(routes.CheckYourAnswersController.checkYourAnswers())
+        Ok(checkYourAnswersPage(back, c))
 
       case _ =>
         logger.warn("Could not find complete answers")
