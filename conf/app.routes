@@ -29,8 +29,15 @@ POST       /length-recent-licence   uk.gov.hmrc.hecapplicantfrontend.controllers
 
 
 GET        /who-tax-check-for       uk.gov.hmrc.hecapplicantfrontend.controllers.EntityTypeController.entityType
+POST       /who-tax-check-for       uk.gov.hmrc.hecapplicantfrontend.controllers.EntityTypeController.entityTypeSubmit
 
-GET        /tax-situation            uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.taxSituation
+GET        /wrong-account           uk.gov.hmrc.hecapplicantfrontend.controllers.EntityTypeController.wrongGGAccount
+GET        /tax-check-not-needed    uk.gov.hmrc.hecapplicantfrontend.controllers.EntityTypeController.wrongEntityType
+
+GET        /tax-situation           uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.taxSituation
+POST       /tax-situation           uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.taxSituationSubmit
+
+GET        /check-your-answers      uk.gov.hmrc.hecapplicantfrontend.controllers.CheckYourAnswersController.checkYourAnswers
 
 GET        /check-your-answers       uk.gov.hmrc.hecapplicantfrontend.controllers.CheckYourAnswersController.checkYourAnswers
 POST       /check-your-answers       uk.gov.hmrc.hecapplicantfrontend.controllers.CheckYourAnswersController.checkYourAnswersSubmit

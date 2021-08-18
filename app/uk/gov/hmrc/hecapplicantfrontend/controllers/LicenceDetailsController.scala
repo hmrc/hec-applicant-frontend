@@ -26,10 +26,10 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 import uk.gov.hmrc.hecapplicantfrontend.controllers.LicenceDetailsController._
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
-import uk.gov.hmrc.hecapplicantfrontend.models.LicenceTimeTrading.{EightYearsOrMore, FourToEightYears, TwoToFourYears, ZeroToTwoYears}
-import uk.gov.hmrc.hecapplicantfrontend.models.{LicenceExpiryDate, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.hecapplicantfrontend.models.LicenceType._
-import uk.gov.hmrc.hecapplicantfrontend.models.LicenceValidityPeriod.{UpToFiveYears, UpToFourYears, UpToOneYear, UpToThreeYears, UpToTwoYears}
+import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceTimeTrading._
+import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType._
+import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceValidityPeriod._
+import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceExpiryDate, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
 import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging, TimeUtils}
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging.LoggerOps

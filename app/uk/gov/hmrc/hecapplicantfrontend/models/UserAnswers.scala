@@ -20,6 +20,7 @@ import julienrf.json.derived
 import monocle.Lens
 import monocle.macros.Lenses
 import play.api.libs.json.OFormat
+import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceExpiryDate, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 
 sealed trait UserAnswers extends Product with Serializable
 
@@ -30,14 +31,18 @@ object UserAnswers {
     licenceType: Option[LicenceType],
     licenceExpiryDate: Option[LicenceExpiryDate],
     licenceTimeTrading: Option[LicenceTimeTrading],
-    licenceValidityPeriod: Option[LicenceValidityPeriod]
+    licenceValidityPeriod: Option[LicenceValidityPeriod],
+    taxSituation: Option[TaxSituation],
+    entityType: Option[EntityType]
   ) extends UserAnswers
 
   final case class CompleteUserAnswers(
     licenceType: LicenceType,
     licenceExpiryDate: LicenceExpiryDate,
     licenceTimeTrading: LicenceTimeTrading,
-    licenceValidityPeriod: LicenceValidityPeriod
+    licenceValidityPeriod: LicenceValidityPeriod,
+    taxSituation: TaxSituation,
+    entityType: EntityType
   ) extends UserAnswers
 
   object IncompleteUserAnswers {
@@ -47,7 +52,9 @@ object UserAnswers {
         Some(c.licenceType),
         Some(c.licenceExpiryDate),
         Some(c.licenceTimeTrading),
-        Some(c.licenceValidityPeriod)
+        Some(c.licenceValidityPeriod),
+        Some(c.taxSituation),
+        Some(c.entityType)
       )
 
   }
@@ -71,7 +78,7 @@ object UserAnswers {
 
   }
 
-  val empty: IncompleteUserAnswers = IncompleteUserAnswers(None, None, None, None)
+  val empty: IncompleteUserAnswers = IncompleteUserAnswers(None, None, None, None, None, None)
 
   implicit val format: OFormat[UserAnswers] = derived.oformat()
 

@@ -17,25 +17,23 @@
 package uk.gov.hmrc.hecapplicantfrontend.models
 
 import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CTUTR, GGCredId}
+import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CTUTR, NINO, SAUTR}
 
-sealed trait ApplicantDetails extends Product with Serializable
+sealed trait TaxDetails extends Product with Serializable
 
-object ApplicantDetails {
+object TaxDetails {
 
-  final case class IndividualApplicantDetails(
-    ggCredId: GGCredId,
-    name: Name,
-    dateOfBirth: DateOfBirth
-  ) extends ApplicantDetails
+  final case class IndividualTaxDetails(
+    nino: NINO,
+    sautr: Option[SAUTR]
+  ) extends TaxDetails
 
-  final case class CompanyApplicantDetails(
-    ggCredId: GGCredId,
+  final case class CompanyTaxDetails(
     ctutr: CTUTR
-  ) extends ApplicantDetails
+  ) extends TaxDetails
 
-  implicit val individualApplicantDetailsFormat: OFormat[IndividualApplicantDetails] = Json.format
+  implicit val individualTaxDetailsFormat: OFormat[IndividualTaxDetails] = Json.format
 
-  implicit val companyApplicantDetailsFormat: OFormat[CompanyApplicantDetails] = Json.format
+  implicit val companyTaxDetailsFormat: OFormat[CompanyTaxDetails] = Json.format
 
 }

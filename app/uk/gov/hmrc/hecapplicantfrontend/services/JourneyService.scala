@@ -24,10 +24,11 @@ import cats.syntax.eq._
 import com.google.inject.{ImplementedBy, Inject, Singleton}
 import play.api.mvc.Call
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.RequestWithSessionData
-import uk.gov.hmrc.hecapplicantfrontend.models.{Error, HECSession, LicenceType}
+import uk.gov.hmrc.hecapplicantfrontend.models.{EntityType, Error, HECSession}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRetrievedData, IndividualRetrievedData}
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.{CompleteUserAnswers, IncompleteUserAnswers}
+import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.util.TimeUtils
 import uk.gov.hmrc.hecapplicantfrontend.util.TimeUtils.LocalDateOps
@@ -66,7 +67,9 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
     routes.LicenceDetailsController.licenceType()                        -> (_ => routes.LicenceDetailsController.expiryDate()),
     routes.LicenceDetailsController.expiryDate()                         -> licenceExpiryRoute,
     routes.LicenceDetailsController.licenceTimeTrading                   -> (_ => routes.LicenceDetailsController.recentLicenceLength()),
-    routes.LicenceDetailsController.recentLicenceLength()                -> licenceValidityPeriodRoute
+    routes.LicenceDetailsController.recentLicenceLength()                -> licenceValidityPeriodRoute,
+    routes.EntityTypeController.entityType()                             -> entityTypeRoute,
+    routes.TaxSituationController.taxSituation()                         -> (_ => routes.CheckYourAnswersController.checkYourAnswers())
   )
 
   // map which describes routes from an exit page to their previous page. The keys are the exit page and the values are
@@ -79,7 +82,9 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
       routes.LicenceDetailsController.licenceTypeExit() ->
         routes.LicenceDetailsController.licenceType(),
       routes.LicenceDetailsController.expiryDateExit()  ->
-        routes.LicenceDetailsController.expiryDate()
+        routes.LicenceDetailsController.expiryDate(),
+      routes.EntityTypeController.wrongEntityType()     ->
+        routes.EntityTypeController.entityType()
     )
 
   override def firstPage(session: HECSession): Call =
@@ -135,25 +140,58 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
         .getOrElse(sys.error(s"Could not find previous for $current"))
   }
 
+  private def licenceTypeForIndividualAndCompany(licenceType: LicenceType): Boolean = licenceType match {
+    case LicenceType.DriverOfTaxisAndPrivateHires => false
+    case _                                        => true
+  }
+
   private def upliftToCompleteAnswersIfComplete(session: HECSession): HECSession = session.userAnswers match {
     case IncompleteUserAnswers(
           Some(licenceType),
           Some(licenceExpiryDate),
           Some(licenceTimeTrading),
-          Some(licenceValidityPeriod)
-        ) =>
+          Some(licenceValidityPeriod),
+          Some(taxSituation),
+          Some(entityType)
+        ) if licenceTypeForIndividualAndCompany(licenceType) =>
       val completeAnswers =
-        CompleteUserAnswers(licenceType, licenceExpiryDate, licenceTimeTrading, licenceValidityPeriod)
+        CompleteUserAnswers(
+          licenceType,
+          licenceExpiryDate,
+          licenceTimeTrading,
+          licenceValidityPeriod,
+          taxSituation,
+          entityType
+        )
+      session.copy(userAnswers = completeAnswers)
+
+    case IncompleteUserAnswers(
+          Some(licenceType),
+          Some(licenceExpiryDate),
+          Some(licenceTimeTrading),
+          Some(licenceValidityPeriod),
+          Some(taxSituation),
+          _
+        ) if !licenceTypeForIndividualAndCompany(licenceType) =>
+      val completeAnswers =
+        CompleteUserAnswers(
+          licenceType,
+          licenceExpiryDate,
+          licenceTimeTrading,
+          licenceValidityPeriod,
+          taxSituation,
+          EntityType.fromRetrievedApplicantAnswers(session.retrievedUserData)
+        )
       session.copy(userAnswers = completeAnswers)
 
     case _ => session
   }
 
-  private def licenceValidityPeriodRoute(session: HECSession): Call =
-    session.userAnswers.fold(_.licenceType, c => Some(c.licenceType)) match {
-      case Some(LicenceType.DriverOfTaxisAndPrivateHires) => routes.TaxSituationController.taxSituation()
-      case _                                              => routes.EntityTypeController.entityType()
-    }
+  private def licenceValidityPeriodRoute(session: HECSession): Call = {
+    val licenceType = session.userAnswers.fold(_.licenceType, c => Some(c.licenceType))
+    if (licenceType.exists(licenceTypeForIndividualAndCompany)) routes.EntityTypeController.entityType()
+    else routes.TaxSituationController.taxSituation()
+  }
 
   private def licenceExpiryRoute(session: HECSession): Call =
     session.userAnswers.fold(_.licenceExpiryDate, c => Some(c.licenceExpiryDate)) match {
@@ -162,5 +200,13 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
       case _                                                                                  =>
         routes.LicenceDetailsController.expiryDateExit()
     }
+
+  private def entityTypeRoute(session: HECSession): Call = {
+    val selectedEntityType = session.userAnswers.fold(_.entityType, c => Some(c.entityType))
+    val ggEntityType       = EntityType.fromRetrievedApplicantAnswers(session.retrievedUserData)
+
+    if (selectedEntityType.contains(ggEntityType)) routes.TaxSituationController.taxSituation()
+    else routes.EntityTypeController.wrongGGAccount()
+  }
 
 }

@@ -14,26 +14,16 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hecapplicantfrontend.models
+package uk.gov.hmrc.hecapplicantfrontend.models.views
 
-import cats.Eq
-import julienrf.json.derived
-import play.api.libs.json.OFormat
+import uk.gov.hmrc.hecapplicantfrontend.models.EntityType
 
-sealed trait LicenceType extends Product with Serializable
+final case class EntityTypeOption(messageKey: String, hintKey: String)
 
-object LicenceType {
+object EntityTypeOption {
 
-  case object DriverOfTaxisAndPrivateHires extends LicenceType
-
-  case object OperatorOfPrivateHireVehicles extends LicenceType
-
-  case object ScrapMetalMobileCollector extends LicenceType
-
-  case object ScrapMetalDealerSite extends LicenceType
-
-  implicit val eq: Eq[LicenceType] = Eq.fromUniversalEquals
-
-  implicit val format: OFormat[LicenceType] = derived.oformat()
-
+  def entityTypeOption(entityType: EntityType): EntityTypeOption = entityType match {
+    case EntityType.Individual => EntityTypeOption("individual", "individual.hint")
+    case EntityType.Company    => EntityTypeOption("company", "company.hint")
+  }
 }

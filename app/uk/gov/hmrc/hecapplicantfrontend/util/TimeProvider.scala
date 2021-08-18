@@ -14,22 +14,21 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hecapplicantfrontend.models
+package uk.gov.hmrc.hecapplicantfrontend.util
 
-import play.api.libs.functional.syntax.toInvariantFunctorOps
-import play.api.libs.json.Format
+import com.google.inject.{ImplementedBy, Inject}
 
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
+import javax.inject.Singleton
 
-final case class LicenceExpiryDate(value: LocalDate) extends AnyVal
+@ImplementedBy(classOf[TimeProviderImpl])
+trait TimeProvider {
 
-object LicenceExpiryDate {
+  def currentDate: LocalDate
 
-  private val dateFormatter = DateTimeFormatter.BASIC_ISO_DATE
-
-  implicit val format: Format[LicenceExpiryDate] =
-    implicitly[Format[String]]
-      .inmap(s => LicenceExpiryDate(LocalDate.parse(s, dateFormatter)), d => dateFormatter.format(d.value))
-
+}
+@Singleton
+class TimeProviderImpl extends TimeProvider {
+  @Inject()
+  override def currentDate: LocalDate = TimeUtils.today()
 }

@@ -22,9 +22,12 @@ import cats.syntax.either._
 import com.google.inject.{ImplementedBy, Inject, Singleton}
 import uk.gov.hmrc.hecapplicantfrontend.connectors.HECConnector
 import uk.gov.hmrc.hecapplicantfrontend.models.ApplicantDetails.IndividualApplicantDetails
+import uk.gov.hmrc.hecapplicantfrontend.models.HECTaxCheckData.IndividualHECTaxCheckData
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRetrievedData, IndividualRetrievedData}
-import uk.gov.hmrc.hecapplicantfrontend.models.{Error, HECTaxCheck, HECTaxCheckData, LicenceDetails, RetrievedApplicantData}
+import uk.gov.hmrc.hecapplicantfrontend.models.TaxDetails.IndividualTaxDetails
+import uk.gov.hmrc.hecapplicantfrontend.models.{Error, HECTaxCheck, HECTaxCheckData, RetrievedApplicantData}
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.CompleteUserAnswers
+import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceDetails
 import uk.gov.hmrc.hecapplicantfrontend.util.HttpResponseOps._
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -58,20 +61,6 @@ class TaxCheckServiceImpl @Inject() (hecConnector: HECConnector)(implicit ec: Ex
     retrievedApplicantData: RetrievedApplicantData,
     answers: CompleteUserAnswers
   ): HECTaxCheckData = {
-    val applicantDetails = retrievedApplicantData match {
-      case individual: IndividualRetrievedData =>
-        IndividualApplicantDetails(
-          individual.ggCredId,
-          individual.nino,
-          individual.sautr,
-          individual.name,
-          individual.dateOfBirth
-        )
-
-      case _: CompanyRetrievedData =>
-        sys.error("Not handled yet")
-    }
-
     val licenceDetails = LicenceDetails(
       answers.licenceType,
       answers.licenceExpiryDate,
@@ -79,7 +68,24 @@ class TaxCheckServiceImpl @Inject() (hecConnector: HECConnector)(implicit ec: Ex
       answers.licenceValidityPeriod
     )
 
-    HECTaxCheckData(applicantDetails, licenceDetails)
+    retrievedApplicantData match {
+      case individual: IndividualRetrievedData =>
+        val applicantDetails = IndividualApplicantDetails(
+          individual.ggCredId,
+          individual.name,
+          individual.dateOfBirth
+        )
+
+        val taxDetails = IndividualTaxDetails(
+          individual.nino,
+          individual.sautr
+        )
+        IndividualHECTaxCheckData(applicantDetails, licenceDetails, taxDetails)
+
+      case _: CompanyRetrievedData =>
+        sys.error("Not handled yet")
+    }
+
   }
 
 }

@@ -16,15 +16,28 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models
 
-import play.api.libs.json.{Json, OFormat}
+import julienrf.json.derived
+import play.api.libs.json.OFormat
+import uk.gov.hmrc.hecapplicantfrontend.models.ApplicantDetails.{CompanyApplicantDetails, IndividualApplicantDetails}
+import uk.gov.hmrc.hecapplicantfrontend.models.TaxDetails.{CompanyTaxDetails, IndividualTaxDetails}
+import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceDetails
 
-final case class HECTaxCheckData(
-  applicantDetails: ApplicantDetails,
-  licenceDetails: LicenceDetails
-)
+sealed trait HECTaxCheckData extends Product with Serializable
 
 object HECTaxCheckData {
 
-  implicit val format: OFormat[HECTaxCheckData] = Json.format
+  final case class IndividualHECTaxCheckData(
+    applicantDetails: IndividualApplicantDetails,
+    licenceDetails: LicenceDetails,
+    taxDetails: IndividualTaxDetails
+  ) extends HECTaxCheckData
+
+  final case class CompanyHECTaxCheckData(
+    applicantDetails: CompanyApplicantDetails,
+    licenceDetails: LicenceDetails,
+    taxDetails: CompanyTaxDetails
+  ) extends HECTaxCheckData
+
+  implicit val format: OFormat[HECTaxCheckData] = derived.oformat()
 
 }

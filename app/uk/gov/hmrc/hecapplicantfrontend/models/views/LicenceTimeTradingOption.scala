@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models.views
 
-import uk.gov.hmrc.hecapplicantfrontend.models.LicenceTimeTrading
+import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceTimeTrading
 
 final case class LicenceTimeTradingOption(messageKey: String)
 

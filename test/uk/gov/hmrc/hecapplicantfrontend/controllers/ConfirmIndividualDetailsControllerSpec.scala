@@ -60,7 +60,7 @@ class ConfirmIndividualDetailsControllerSpec
 
           inSequence {
             mockAuthWithNoRetrievals()
-            mockGetSession(HECSession(companyRetrievedData, UserAnswers.empty))
+            mockGetSession(HECSession(companyRetrievedData, UserAnswers.empty, None))
           }
 
           checkIsRedirect(performAction(), routes.StartController.start())
@@ -75,7 +75,8 @@ class ConfirmIndividualDetailsControllerSpec
 
           val session = HECSession(
             IndividualRetrievedData(GGCredId(""), NINO(""), None, name, dateOfBirth, None),
-            UserAnswers.empty
+            UserAnswers.empty,
+            None
           )
 
           inSequence {
@@ -121,7 +122,7 @@ class ConfirmIndividualDetailsControllerSpec
 
           inSequence {
             mockAuthWithNoRetrievals()
-            mockGetSession(HECSession(companyRetrievedData, UserAnswers.empty))
+            mockGetSession(HECSession(companyRetrievedData, UserAnswers.empty, None))
           }
 
           checkIsRedirect(performAction(), routes.StartController.start())
@@ -134,7 +135,8 @@ class ConfirmIndividualDetailsControllerSpec
         "there is a problem getting the next page" in {
           val session = HECSession(
             IndividualRetrievedData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None),
-            UserAnswers.empty
+            UserAnswers.empty,
+            None
           )
 
           inSequence {
@@ -157,7 +159,8 @@ class ConfirmIndividualDetailsControllerSpec
         "the next page can be found" in {
           val session = HECSession(
             IndividualRetrievedData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None),
-            UserAnswers.empty
+            UserAnswers.empty,
+            None
           )
 
           inSequence {
@@ -190,7 +193,7 @@ class ConfirmIndividualDetailsControllerSpec
 
           inSequence {
             mockAuthWithNoRetrievals()
-            mockGetSession(HECSession(companyRetrievedData, UserAnswers.empty))
+            mockGetSession(HECSession(companyRetrievedData, UserAnswers.empty, None))
           }
 
           checkIsRedirect(performAction(), routes.StartController.start())
@@ -202,7 +205,8 @@ class ConfirmIndividualDetailsControllerSpec
         "the user is logged in and individual data can be found" in {
           val session = HECSession(
             IndividualRetrievedData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None),
-            UserAnswers.empty
+            UserAnswers.empty,
+            None
           )
 
           inSequence {

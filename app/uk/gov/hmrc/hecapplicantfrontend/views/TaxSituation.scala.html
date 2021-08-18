@@ -2,23 +2,27 @@
 @import play.api.data.Form
 @import play.api.mvc.{Call, Request}
 @import uk.gov.hmrc.govukfrontend.views.html.components._
-@import uk.gov.hmrc.hecapplicantfrontend.models.licence
+@import uk.gov.hmrc.hecapplicantfrontend.models
 @import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
-@import uk.gov.hmrc.hecapplicantfrontend.models.views.LicenceValidityPeriodOption
+@import uk.gov.hmrc.hecapplicantfrontend.models.views.TaxSituationOption
 
 @this(layout: Layout, govukErrorSummary: GovukErrorSummary, govukRadios: GovukRadios, govukButton: GovukButton, formWithCSRF: FormWithCSRF)
 
-@(form: Form[licence.LicenceValidityPeriod], back: Call, options: List[licence.LicenceValidityPeriod])(implicit request: Request[_], messages: Messages)
-@key = @{"licenceValidityPeriod"}
+@(form: Form[models.TaxSituation], back: Call, options: List[models.TaxSituation], taxDisplayYear:models.TaxYear)(implicit request:
+Request[_], messages: Messages)
+@key = @{"taxSituation"}
 @title = @{messages(s"$key.title")}
-@optionViewModels = @{options.map(LicenceValidityPeriodOption.licenceValidityPeriodOption)}
+@optionViewModels = @{options.map(TaxSituationOption.taxSituationOption)}
 @radioOptions = @{optionViewModels.zipWithIndex.map{ case (option, index) =>
     RadioItem(
         content = Text(messages(s"$key.${option.messageKey}")),
         value = Some(index.toString),
+        hint = option.hintKey.map{ h: String => Hint(content = Text(messages(s"$key.$h"))) },
         checked = form.data.values.toList.contains(index.toString)
     )
 }}
+@startYear = @{taxDisplayYear.year.toString}
+@endYear = @{s"${taxDisplayYear.year + 1}"}
 
 @layout(pageTitle = Some(title), hasErrors = form.hasErrors, backLocation = Some(back)) {
     @if(form.errors.nonEmpty) {
@@ -31,7 +35,7 @@
             title = Text(messages("generic.errorSummary"))))
     }
 
-    @formWithCSRF(action = routes.LicenceDetailsController.recentLicenceLengthSubmit()) {
+    @formWithCSRF(action = routes.TaxSituationController.taxSituationSubmit()) {
         @govukRadios(
             Radios(
                 fieldset = Some(Fieldset(
@@ -41,7 +45,7 @@
                         isPageHeading = true
                     ))
                 )),
-                hint = Some(Hint(content = Text(messages(s"$key.hint")))),
+                hint = Some(Hint(content = Text(messages(s"$key.hint", startYear, endYear)))),
                 idPrefix = Some(key),
                 name = key,
                 items = radioOptions,
@@ -49,6 +53,10 @@
             )
         )
 
-        @govukButton(Button(content = Text(messages("button.continue"))))
+    <p class="govuk-body">
+    <a class="govuk-link" href="https://www.gov.uk/self-assessment-tax-returns/who-must-send-a-tax-return">@messages(s"$key.link")</a>
+    </p>
+
+    @govukButton(Button(content = Text(messages("button.continue"))))
     }
 }

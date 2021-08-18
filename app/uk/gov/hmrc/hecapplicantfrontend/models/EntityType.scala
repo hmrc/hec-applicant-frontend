@@ -16,17 +16,25 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models
 
-import play.api.libs.json.{Json, OFormat}
+import cats.Eq
+import julienrf.json.derived
+import play.api.libs.json.OFormat
 
-final case class LicenceDetails(
-  licenceType: LicenceType,
-  licenceExpiryDate: LicenceExpiryDate,
-  licenceTimeTrading: LicenceTimeTrading,
-  licenceValidityPeriod: LicenceValidityPeriod
-)
+sealed trait EntityType extends Product with Serializable
 
-object LicenceDetails {
+object EntityType {
 
-  implicit val format: OFormat[LicenceDetails] = Json.format
+  case object Individual extends EntityType
+
+  case object Company extends EntityType
+
+  def fromRetrievedApplicantAnswers(r: RetrievedApplicantData): EntityType = r match {
+    case _: RetrievedApplicantData.IndividualRetrievedData => Individual
+    case _: RetrievedApplicantData.CompanyRetrievedData    => Company
+  }
+
+  implicit val eq: Eq[EntityType] = Eq.fromUniversalEquals
+
+  implicit val format: OFormat[EntityType] = derived.oformat()
 
 }
