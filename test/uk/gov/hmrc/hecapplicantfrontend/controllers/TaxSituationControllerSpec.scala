@@ -50,8 +50,10 @@ class TaxSituationControllerSpec
     bind[TimeProvider].toInstance(mockTimeProvider)
   )
 
-  def mockTimeProviderToday(d: LocalDate)          = (mockTimeProvider.currentDate _).expects().returning(d)
-  def taxYearMessage(startYear: Int, endYear: Int) = s"This is for the tax year $startYear to $endYear."
+  def mockTimeProviderToday(d: LocalDate) = (mockTimeProvider.currentDate _).expects().returning(d)
+
+  def taxYearMessage(startYear: Int, endYear: Int) =
+    messageFromMessageKey("taxSituation.hint", startYear.toString, endYear.toString)
 
   val controller = instanceOf[TaxSituationController]
 

@@ -16,14 +16,4 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models
 
-import play.api.libs.json.Format
-import play.api.libs.functional.syntax.toInvariantFunctorOps
-
 final case class TaxYear(year: Int) extends AnyVal
-
-object TaxYear {
-
-  implicit val format: Format[TaxYear] =
-    implicitly[Format[Int]].inmap(TaxYear(_), _.year)
-
-}
