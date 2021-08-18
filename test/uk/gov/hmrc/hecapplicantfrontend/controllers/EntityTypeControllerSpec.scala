@@ -56,7 +56,7 @@ class EntityTypeControllerSpec
 
   "EntityTypeController" when {
 
-    "handling requests to the licence type page" must {
+    "handling requests to the entity type page" must {
 
       def performAction(): Future[Result] = controller.entityType(FakeRequest())
 
@@ -130,7 +130,7 @@ class EntityTypeControllerSpec
 
     }
 
-    "handling submits to the licence type page" must {
+    "handling submits to the entity type page" must {
 
       def performAction(data: (String, String)*): Future[Result] =
         controller.entityTypeSubmit(FakeRequest().withFormUrlEncodedBody(data: _*))

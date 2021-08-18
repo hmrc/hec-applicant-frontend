@@ -164,8 +164,8 @@ entityType.company=A company
 entityType.individual.hint=Includes if you are self-employed or a partner in a partnership.
 entityType.company.hint=Includes if the company is a partner in a partnership.
 entityType.link=If you are not doing a tax check for yourself or a company
-entityType.error.required=Select who you are doing a tax check fo
-entityType.error.invalid=Select who you are doing a tax check fo
+entityType.error.required=Select who you are doing a tax check for
+entityType.error.invalid=Select who you are doing a tax check for
 
 # Wrong GG Account
 wrongGGAccount.title=You need to sign in with the correct account
