@@ -6,10 +6,11 @@
 @import uk.gov.hmrc.hecapplicantfrontend.models.views.LicenceTypeOption
 @import uk.gov.hmrc.hecapplicantfrontend.models.views.LicenceTimeTradingOption
 @import uk.gov.hmrc.hecapplicantfrontend.models.views.LicenceValidityPeriodOption
+@import uk.gov.hmrc.hecapplicantfrontend.models.views.EntityTypeOption
+@import uk.gov.hmrc.hecapplicantfrontend.models.views.TaxSituationOption
 @import uk.gov.hmrc.hecapplicantfrontend.util.TimeUtils
 
 @this(layout: Layout, govukSummaryList : GovukSummaryList, govukButton: GovukButton, formWithCSRF: FormWithCSRF)
-
 
 @(back: Call, completeAnswers: CompleteUserAnswers)(implicit request: Request[_], messages: Messages)
 @key = @{"checkYourAnswers"}
@@ -19,7 +20,7 @@
     <h1 class="govuk-heading-xl">@title</h1>
     <p class="govuk-body">@messages(s"$key.p1")</p>
     @govukSummaryList(SummaryList(
-        rows = Seq(
+        rows = List(
             SummaryListRow(
                 key = Key(
                     content = Text(messages("licenceType.title"))
@@ -94,7 +95,50 @@
                     )
                 ))
             )
-        )
+
+        ) ++
+
+        completeAnswers.entityType.map { entityType =>
+            SummaryListRow(
+                key = Key(
+                    content = Text(messages("entityType.title"))
+                ),
+                value = Value(
+                    content = Text(messages(
+                        s"entityType.${EntityTypeOption.entityTypeOption(entityType).messageKey}"
+                    ))
+                ),
+                actions = Some(Actions(
+                    items = Seq(
+                        ActionItem(
+                            href = routes.EntityTypeController.entityType().url,
+                            content = Text(messages(s"$key.change")),
+                            visuallyHiddenText = Some(messages(s"$key.entityType.screenReaderText"))
+                        )
+                    )
+                ))
+            )
+        }.toList ++
+
+        Some(SummaryListRow(
+            key = Key(
+                content = Text(messages("taxSituation.title"))
+            ),
+            value = Value(
+                content = Text(messages(
+                    s"taxSituation.${TaxSituationOption.taxSituationOption(completeAnswers.taxSituation).messageKey}"
+                ))
+            ),
+            actions = Some(Actions(
+                items = Seq(
+                    ActionItem(
+                        href = routes.TaxSituationController.taxSituation().url,
+                        content = Text(messages(s"$key.change")),
+                        visuallyHiddenText = Some(messages(s"$key.taxSituation.screenReaderText"))
+                    )
+                )
+            ))
+        )).toList
     ))
     <h2 class="govuk-heading-l">@{messages(s"$key.declaration.heading")}</h2>
     <p class="govuk-body">@{messages(s"$key.declaration.p1")}</p>
