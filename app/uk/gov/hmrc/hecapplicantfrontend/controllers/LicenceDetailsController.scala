@@ -26,6 +26,7 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 import uk.gov.hmrc.hecapplicantfrontend.controllers.LicenceDetailsController._
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
+import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceTimeTrading._
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType._
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceValidityPeriod._
@@ -68,7 +69,8 @@ class LicenceDetailsController @Inject() (
   val licenceTypeSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     def handleValidLicenceType(licenceType: LicenceType): Future[Result] = {
       val updatedAnswers =
-        request.sessionData.userAnswers.unset(_.licenceType).copy(licenceType = Some(licenceType))
+        UserAnswers.empty.copy(licenceType = Some(licenceType))
+
       journeyService
         .updateAndNext(
           routes.LicenceDetailsController.licenceType(),

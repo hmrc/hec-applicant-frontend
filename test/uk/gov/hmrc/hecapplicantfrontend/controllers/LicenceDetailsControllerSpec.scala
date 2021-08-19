@@ -238,7 +238,10 @@ class LicenceDetailsControllerSpec
         "valid data is submitted and" when {
 
           "the user has not previously completed answering questions" in {
-            val answers        = UserAnswers.empty
+            val answers        = UserAnswers.empty.copy(
+              licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires),
+              licenceExpiryDate = Some(LicenceExpiryDate(LocalDate.now()))
+            )
             val updatedAnswers = UserAnswers.empty.copy(licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles))
             val session        = HECSession(individuaRetrievedlData, answers, None)
             val updatedSession = session.copy(userAnswers = updatedAnswers)
@@ -263,9 +266,7 @@ class LicenceDetailsControllerSpec
               TaxSituation.SA,
               Some(EntityType.Individual)
             )
-            val updatedAnswers = IncompleteUserAnswers
-              .fromCompleteAnswers(answers)
-              .copy(licenceType = Some(LicenceType.ScrapMetalMobileCollector))
+            val updatedAnswers = UserAnswers.empty.copy(licenceType = Some(LicenceType.ScrapMetalMobileCollector))
             val session        = HECSession(individuaRetrievedlData, answers, None)
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 
