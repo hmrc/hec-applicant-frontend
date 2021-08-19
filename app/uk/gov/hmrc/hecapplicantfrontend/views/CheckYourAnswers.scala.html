@@ -15,120 +15,71 @@
 @(back: Call, completeAnswers: CompleteUserAnswers)(implicit request: Request[_], messages: Messages)
 @key = @{"checkYourAnswers"}
 @title = @{messages(s"$key.title")}
-@licenceTypeRow = @{SummaryListRow(
-    key = Key(
-        content = Text(messages("licenceType.title"))
-    ),
-    value = Value(
-        content = Text(messages(
-            s"licenceType.${LicenceTypeOption.licenceTypeOption(completeAnswers.licenceType).messageKey}"
-        ))
-    ),
-    actions = Some(Actions(
-        items = Seq(
-            ActionItem(
-                href = routes.LicenceDetailsController.licenceType().url,
-                content = Text(messages(s"$key.change")),
-                visuallyHiddenText = Some(messages(s"$key.licenceType.screenReaderText"))
-            )
-        )
-    ))
-)}
-@licenceExpiryDateRow = @{SummaryListRow(
-    key = Key(
-        content = Text(messages("licenceExpiryDate.title"))
-    ),
-    value = Value(
-        content = Text(TimeUtils.govDisplayFormat(completeAnswers.licenceExpiryDate.value))
-    ),
-    actions = Some(Actions(
-        items = Seq(
-            ActionItem(
-                href = routes.LicenceDetailsController.expiryDate().url,
-                content = Text(messages(s"$key.change")),
-                visuallyHiddenText = Some(messages(s"$key.licenceExpiryDate.screenReaderText"))
-            )
-        )
-    ))
-)}
-@licenceTimeTradingRow = @{SummaryListRow(
-    key = Key(
-        content = Text(messages("licenceTimeTrading.title"))
-    ),
-    value = Value(
-        content = Text(messages(
-            s"licenceTimeTrading.${LicenceTimeTradingOption.licenceTimeTradingOption(completeAnswers.licenceTimeTrading).messageKey}"
-        ))
-    ),
-    actions = Some(Actions(
-        items = Seq(
-            ActionItem(
-                href = routes.LicenceDetailsController.licenceTimeTrading().url,
-                content = Text(messages(s"$key.change")),
-                visuallyHiddenText = Some(messages(s"$key.licenceTimeTrading.screenReaderText"))
-            )
-        )
-    ))
-)}
-@licenceValidityPeriodRow = @{SummaryListRow(
-    key = Key(
-        content = Text(messages("licenceValidityPeriod.title"))
-    ),
-    value = Value(
-        content = Text(messages(
-            s"licenceValidityPeriod.${LicenceValidityPeriodOption.licenceValidityPeriodOption(completeAnswers.licenceValidityPeriod).messageKey}"
-        ))
-    ),
-    actions = Some(Actions(
-        items = Seq(
-            ActionItem(
-                href = routes.LicenceDetailsController.recentLicenceLength().url,
-                content = Text(messages(s"$key.change")),
-                visuallyHiddenText = Some(messages(s"$key.licenceValidityPeriod.screenReaderText"))
-            )
-        )
-    ))
-)}
-@entityTypeRow = @{completeAnswers.entityType.map { entityType =>
+@summaryListRow(question: String, answer: String, changeLocation: Call, changeScreenReaderText: String) = @{
     SummaryListRow(
-        key = Key(
-            content = Text(messages("entityType.title"))
-        ),
-        value = Value(
-            content = Text(messages(
-                s"entityType.${EntityTypeOption.entityTypeOption(entityType).messageKey}"
-            ))
-        ),
+        key = Key(content = Text(question)),
+        value = Value(content = Text(answer)),
         actions = Some(Actions(
             items = Seq(
                 ActionItem(
-                    href = routes.EntityTypeController.entityType().url,
+                    href = changeLocation.url,
                     content = Text(messages(s"$key.change")),
-                    visuallyHiddenText = Some(messages(s"$key.entityType.screenReaderText"))
+                    visuallyHiddenText = Some(changeScreenReaderText)
                 )
             )
         ))
     )
-}}
-@taxSituationRow = @{SummaryListRow(
-    key = Key(
-        content = Text(messages("taxSituation.title"))
-    ),
-    value = Value(
-        content = Text(messages(
-            s"taxSituation.${TaxSituationOption.taxSituationOption(completeAnswers.taxSituation).messageKey}"
-        ))
-    ),
-    actions = Some(Actions(
-        items = Seq(
-            ActionItem(
-                href = routes.TaxSituationController.taxSituation().url,
-                content = Text(messages(s"$key.change")),
-                visuallyHiddenText = Some(messages(s"$key.taxSituation.screenReaderText"))
-            )
+ }
+@licenceTypeRow = @{
+    summaryListRow(
+        messages("licenceType.title"),
+        messages(s"licenceType.${LicenceTypeOption.licenceTypeOption(completeAnswers.licenceType).messageKey}"),
+        routes.LicenceDetailsController.licenceType(),
+        messages(s"$key.licenceType.screenReaderText")
+    )
+}
+@licenceExpiryDateRow = @{
+    summaryListRow(
+        messages("licenceExpiryDate.title"),
+        TimeUtils.govDisplayFormat(completeAnswers.licenceExpiryDate.value),
+        routes.LicenceDetailsController.expiryDate(),
+        messages(s"$key.licenceExpiryDate.screenReaderText")
+    )
+}
+@licenceTimeTradingRow = @{
+    summaryListRow(
+        messages("licenceTimeTrading.title"),
+        messages(s"licenceTimeTrading.${LicenceTimeTradingOption.licenceTimeTradingOption(completeAnswers.licenceTimeTrading).messageKey}"),
+        routes.LicenceDetailsController.licenceTimeTrading(),
+        messages(s"$key.licenceTimeTrading.screenReaderText")
+    )
+}
+@licenceValidityPeriodRow = @{
+    summaryListRow(
+        messages("licenceValidityPeriod.title"),
+        messages(s"licenceValidityPeriod.${LicenceValidityPeriodOption.licenceValidityPeriodOption(completeAnswers.licenceValidityPeriod).messageKey}"),
+        routes.LicenceDetailsController.recentLicenceLength(),
+        messages(s"$key.licenceValidityPeriod.screenReaderText")
+    )
+}
+@entityTypeRow = @{
+    completeAnswers.entityType.map { entityType =>
+        summaryListRow(
+            messages("entityType.title"),
+            messages(s"entityType.${EntityTypeOption.entityTypeOption(entityType).messageKey}"),
+            routes.EntityTypeController.entityType(),
+            messages(s"$key.entityType.screenReaderText")
         )
-    ))
-)}
+    }
+}
+@taxSituationRow = @{
+    summaryListRow(
+        messages("taxSituation.title"),
+        messages(s"taxSituation.${TaxSituationOption.taxSituationOption(completeAnswers.taxSituation).messageKey}"),
+        routes.TaxSituationController.taxSituation(),
+        messages(s"$key.taxSituation.screenReaderText")
+    )
+}
 
 @rows = @{List(
     Some(licenceTypeRow),
