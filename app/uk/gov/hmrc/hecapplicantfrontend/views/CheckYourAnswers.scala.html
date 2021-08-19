@@ -15,131 +15,134 @@
 @(back: Call, completeAnswers: CompleteUserAnswers)(implicit request: Request[_], messages: Messages)
 @key = @{"checkYourAnswers"}
 @title = @{messages(s"$key.title")}
+@licenceTypeRow = @{SummaryListRow(
+    key = Key(
+        content = Text(messages("licenceType.title"))
+    ),
+    value = Value(
+        content = Text(messages(
+            s"licenceType.${LicenceTypeOption.licenceTypeOption(completeAnswers.licenceType).messageKey}"
+        ))
+    ),
+    actions = Some(Actions(
+        items = Seq(
+            ActionItem(
+                href = routes.LicenceDetailsController.licenceType().url,
+                content = Text(messages(s"$key.change")),
+                visuallyHiddenText = Some(messages(s"$key.licenceType.screenReaderText"))
+            )
+        )
+    ))
+)}
+@licenceExpiryDateRow = @{SummaryListRow(
+    key = Key(
+        content = Text(messages("licenceExpiryDate.title"))
+    ),
+    value = Value(
+        content = Text(TimeUtils.govDisplayFormat(completeAnswers.licenceExpiryDate.value))
+    ),
+    actions = Some(Actions(
+        items = Seq(
+            ActionItem(
+                href = routes.LicenceDetailsController.expiryDate().url,
+                content = Text(messages(s"$key.change")),
+                visuallyHiddenText = Some(messages(s"$key.licenceExpiryDate.screenReaderText"))
+            )
+        )
+    ))
+)}
+@licenceTimeTradingRow = @{SummaryListRow(
+    key = Key(
+        content = Text(messages("licenceTimeTrading.title"))
+    ),
+    value = Value(
+        content = Text(messages(
+            s"licenceTimeTrading.${LicenceTimeTradingOption.licenceTimeTradingOption(completeAnswers.licenceTimeTrading).messageKey}"
+        ))
+    ),
+    actions = Some(Actions(
+        items = Seq(
+            ActionItem(
+                href = routes.LicenceDetailsController.licenceTimeTrading().url,
+                content = Text(messages(s"$key.change")),
+                visuallyHiddenText = Some(messages(s"$key.licenceTimeTrading.screenReaderText"))
+            )
+        )
+    ))
+)}
+@licenceValidityPeriodRow = @{SummaryListRow(
+    key = Key(
+        content = Text(messages("licenceValidityPeriod.title"))
+    ),
+    value = Value(
+        content = Text(messages(
+            s"licenceValidityPeriod.${LicenceValidityPeriodOption.licenceValidityPeriodOption(completeAnswers.licenceValidityPeriod).messageKey}"
+        ))
+    ),
+    actions = Some(Actions(
+        items = Seq(
+            ActionItem(
+                href = routes.LicenceDetailsController.recentLicenceLength().url,
+                content = Text(messages(s"$key.change")),
+                visuallyHiddenText = Some(messages(s"$key.licenceValidityPeriod.screenReaderText"))
+            )
+        )
+    ))
+)}
+@entityTypeRow = @{completeAnswers.entityType.map { entityType =>
+    SummaryListRow(
+        key = Key(
+            content = Text(messages("entityType.title"))
+        ),
+        value = Value(
+            content = Text(messages(
+                s"entityType.${EntityTypeOption.entityTypeOption(entityType).messageKey}"
+            ))
+        ),
+        actions = Some(Actions(
+            items = Seq(
+                ActionItem(
+                    href = routes.EntityTypeController.entityType().url,
+                    content = Text(messages(s"$key.change")),
+                    visuallyHiddenText = Some(messages(s"$key.entityType.screenReaderText"))
+                )
+            )
+        ))
+    )
+}}
+@taxSituationRow = @{SummaryListRow(
+    key = Key(
+        content = Text(messages("taxSituation.title"))
+    ),
+    value = Value(
+        content = Text(messages(
+            s"taxSituation.${TaxSituationOption.taxSituationOption(completeAnswers.taxSituation).messageKey}"
+        ))
+    ),
+    actions = Some(Actions(
+        items = Seq(
+            ActionItem(
+                href = routes.TaxSituationController.taxSituation().url,
+                content = Text(messages(s"$key.change")),
+                visuallyHiddenText = Some(messages(s"$key.taxSituation.screenReaderText"))
+            )
+        )
+    ))
+)}
+
+@rows = @{List(
+    Some(licenceTypeRow),
+    Some(licenceExpiryDateRow),
+    Some(licenceTimeTradingRow),
+    Some(licenceValidityPeriodRow),
+    entityTypeRow,
+    Some(taxSituationRow)
+).collect{ case Some(r) => r }}
 
 @layout(pageTitle = Some(title), backLocation = Some(back)) {
     <h1 class="govuk-heading-xl">@title</h1>
     <p class="govuk-body">@messages(s"$key.p1")</p>
-    @govukSummaryList(SummaryList(
-        rows = List(
-            SummaryListRow(
-                key = Key(
-                    content = Text(messages("licenceType.title"))
-                ),
-                value = Value(
-                    content = Text(messages(
-                        s"licenceType.${LicenceTypeOption.licenceTypeOption(completeAnswers.licenceType).messageKey}"
-                    ))
-                ),
-                actions = Some(Actions(
-                    items = Seq(
-                        ActionItem(
-                            href = routes.LicenceDetailsController.licenceType().url,
-                            content = Text(messages(s"$key.change")),
-                            visuallyHiddenText = Some(messages(s"$key.licenceType.screenReaderText"))
-                        )
-                    )
-                ))
-            ),
-            SummaryListRow(
-                key = Key(
-                    content = Text(messages("licenceExpiryDate.title"))
-                ),
-                value = Value(
-                    content = Text(TimeUtils.govDisplayFormat(completeAnswers.licenceExpiryDate.value))
-                ),
-                actions = Some(Actions(
-                    items = Seq(
-                        ActionItem(
-                            href = routes.LicenceDetailsController.expiryDate().url,
-                            content = Text(messages(s"$key.change")),
-                            visuallyHiddenText = Some(messages(s"$key.licenceExpiryDate.screenReaderText"))
-                        )
-                    )
-                ))
-            ),
-            SummaryListRow(
-                key = Key(
-                    content = Text(messages("licenceTimeTrading.title"))
-                ),
-                value = Value(
-                    content = Text(messages(
-                        s"licenceTimeTrading.${LicenceTimeTradingOption.licenceTimeTradingOption(completeAnswers.licenceTimeTrading).messageKey}"
-                    ))
-                ),
-                actions = Some(Actions(
-                    items = Seq(
-                        ActionItem(
-                            href = routes.LicenceDetailsController.licenceTimeTrading().url,
-                            content = Text(messages(s"$key.change")),
-                            visuallyHiddenText = Some(messages(s"$key.licenceTimeTrading.screenReaderText"))
-                        )
-                    )
-                ))
-            ),
-            SummaryListRow(
-                key = Key(
-                    content = Text(messages("licenceValidityPeriod.title"))
-                ),
-                value = Value(
-                    content = Text(messages(
-                        s"licenceValidityPeriod.${LicenceValidityPeriodOption.licenceValidityPeriodOption(completeAnswers.licenceValidityPeriod).messageKey}"
-                    ))
-                ),
-                actions = Some(Actions(
-                    items = Seq(
-                        ActionItem(
-                            href = routes.LicenceDetailsController.recentLicenceLength().url,
-                            content = Text(messages(s"$key.change")),
-                            visuallyHiddenText = Some(messages(s"$key.licenceValidityPeriod.screenReaderText"))
-                        )
-                    )
-                ))
-            )
-
-        ) ++
-
-        completeAnswers.entityType.map { entityType =>
-            SummaryListRow(
-                key = Key(
-                    content = Text(messages("entityType.title"))
-                ),
-                value = Value(
-                    content = Text(messages(
-                        s"entityType.${EntityTypeOption.entityTypeOption(entityType).messageKey}"
-                    ))
-                ),
-                actions = Some(Actions(
-                    items = Seq(
-                        ActionItem(
-                            href = routes.EntityTypeController.entityType().url,
-                            content = Text(messages(s"$key.change")),
-                            visuallyHiddenText = Some(messages(s"$key.entityType.screenReaderText"))
-                        )
-                    )
-                ))
-            )
-        }.toList ++
-
-        Some(SummaryListRow(
-            key = Key(
-                content = Text(messages("taxSituation.title"))
-            ),
-            value = Value(
-                content = Text(messages(
-                    s"taxSituation.${TaxSituationOption.taxSituationOption(completeAnswers.taxSituation).messageKey}"
-                ))
-            ),
-            actions = Some(Actions(
-                items = Seq(
-                    ActionItem(
-                        href = routes.TaxSituationController.taxSituation().url,
-                        content = Text(messages(s"$key.change")),
-                        visuallyHiddenText = Some(messages(s"$key.taxSituation.screenReaderText"))
-                    )
-                )
-            ))
-        )).toList
-    ))
+    @govukSummaryList(SummaryList(rows = rows))
     <h2 class="govuk-heading-l">@{messages(s"$key.declaration.heading")}</h2>
     <p class="govuk-body">@{messages(s"$key.declaration.p1")}</p>
     @formWithCSRF(action = routes.CheckYourAnswersController.checkYourAnswersSubmit()) {
