@@ -130,8 +130,14 @@
     ))
 )}
 
-@licenceDetailRows = @{List(licenceTypeRow, licenceExpiryDateRow, licenceTimeTradingRow, licenceValidityPeriodRow)}
-@rows = @{List(licenceDetailRows ++ entityTypeRow.toList ++ Some(taxSituationRow).toList).flatten}
+@rows = @{List(
+    Some(licenceTypeRow),
+    Some(licenceExpiryDateRow),
+    Some(licenceTimeTradingRow),
+    Some(licenceValidityPeriodRow),
+    entityTypeRow,
+    Some(taxSituationRow)
+).flatten}
 
 @layout(pageTitle = Some(title), backLocation = Some(back)) {
     <h1 class="govuk-heading-xl">@title</h1>
