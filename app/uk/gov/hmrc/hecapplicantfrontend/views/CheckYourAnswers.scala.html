@@ -137,7 +137,7 @@
     Some(licenceValidityPeriodRow),
     entityTypeRow,
     Some(taxSituationRow)
-).flatten}
+).collect{ case Some(r) => r }}
 
 @layout(pageTitle = Some(title), backLocation = Some(back)) {
     <h1 class="govuk-heading-xl">@title</h1>
