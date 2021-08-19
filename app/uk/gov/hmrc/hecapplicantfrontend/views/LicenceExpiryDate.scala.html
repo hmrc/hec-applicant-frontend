@@ -2,13 +2,12 @@
 @import play.api.data.Form
 @import play.api.mvc.{Call, Request}
 @import uk.gov.hmrc.govukfrontend.views.html.components._
-@import uk.gov.hmrc.hecapplicantfrontend.models
+@import uk.gov.hmrc.hecapplicantfrontend.models.licence
 @import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
-
 
 @this(layout: Layout, govukErrorSummary: GovukErrorSummary, govukDateInput: GovukDateInput, govukButton: GovukButton, formWithCSRF: FormWithCSRF)
 
-@(form: Form[models.LicenceExpiryDate], back: Call)(implicit request: Request[_], messages: Messages)
+@(form: Form[licence.LicenceExpiryDate], back: Call)(implicit request: Request[_], messages: Messages)
 @key = @{"licenceExpiryDate"}
 @title = @{messages(s"$key.title")}
 @inputErrorClass = @{if(form.hasErrors) " govuk-input--error" else ""}

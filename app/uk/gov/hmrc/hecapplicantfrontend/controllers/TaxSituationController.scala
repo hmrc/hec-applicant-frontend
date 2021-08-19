@@ -24,11 +24,11 @@ import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.{getTaxYear, taxSituationForm, taxSituationList}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
-import uk.gov.hmrc.hecapplicantfrontend.models.{TaxSituation, TaxYear, TimeProvider}
+import uk.gov.hmrc.hecapplicantfrontend.models.{TaxSituation, TaxYear}
 import uk.gov.hmrc.hecapplicantfrontend.models.TaxSituation._
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging.LoggerOps
-import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging, TimeUtils}
+import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging, TimeProvider, TimeUtils}
 import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 

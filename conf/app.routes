@@ -39,6 +39,10 @@ POST       /tax-situation           uk.gov.hmrc.hecapplicantfrontend.controllers
 
 GET        /check-your-answers      uk.gov.hmrc.hecapplicantfrontend.controllers.CheckYourAnswersController.checkYourAnswers
 
+GET        /check-your-answers       uk.gov.hmrc.hecapplicantfrontend.controllers.CheckYourAnswersController.checkYourAnswers
+POST       /check-your-answers       uk.gov.hmrc.hecapplicantfrontend.controllers.CheckYourAnswersController.checkYourAnswersSubmit
+
+GET        /tax-check-complete       uk.gov.hmrc.hecapplicantfrontend.controllers.TaxCheckCompleteController.taxCheckComplete
 
 # IV
 GET  /failed-iv/callback                         uk.gov.hmrc.hecapplicantfrontend.controllers.IvFailureController.ivFailure(journeyId: java.util.UUID)

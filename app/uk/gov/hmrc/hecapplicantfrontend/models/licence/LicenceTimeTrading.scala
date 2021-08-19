@@ -14,26 +14,24 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hecapplicantfrontend.models
+package uk.gov.hmrc.hecapplicantfrontend.models.licence
 
 import cats.Eq
 import julienrf.json.derived
 import play.api.libs.json.OFormat
 
-sealed trait LicenceType extends Product with Serializable
+sealed trait LicenceTimeTrading extends Product with Serializable
 
-object LicenceType {
+object LicenceTimeTrading {
+  case object ZeroToTwoYears extends LicenceTimeTrading
 
-  case object DriverOfTaxisAndPrivateHires extends LicenceType
+  case object TwoToFourYears extends LicenceTimeTrading
 
-  case object OperatorOfPrivateHireVehicles extends LicenceType
+  case object FourToEightYears extends LicenceTimeTrading
 
-  case object ScrapMetalMobileCollector extends LicenceType
+  case object EightYearsOrMore extends LicenceTimeTrading
 
-  case object ScrapMetalDealerSite extends LicenceType
+  implicit val eq: Eq[LicenceTimeTrading] = Eq.fromUniversalEquals
 
-  implicit val eq: Eq[LicenceType] = Eq.fromUniversalEquals
-
-  implicit val format: OFormat[LicenceType] = derived.oformat()
-
+  implicit val format: OFormat[LicenceTimeTrading] = derived.oformat()
 }

@@ -19,6 +19,7 @@ package uk.gov.hmrc.hecapplicantfrontend.models
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.{CompleteUserAnswers, IncompleteUserAnswers}
+import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceExpiryDate, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hecapplicantfrontend.util.TimeUtils
 
 class UserAnswersSpec extends AnyWordSpec with Matchers {
@@ -46,7 +47,7 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
           LicenceTimeTrading.TwoToFourYears,
           LicenceValidityPeriod.UpToFiveYears,
           TaxSituation.PAYE,
-          EntityType.Individual
+          Some(EntityType.Individual)
         )
         completeAnswers.fold(
           _ => fail(),
@@ -63,7 +64,7 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
         LicenceTimeTrading.TwoToFourYears,
         LicenceValidityPeriod.UpToTwoYears,
         TaxSituation.PAYE,
-        EntityType.Individual
+        Some(EntityType.Individual)
       )
       IncompleteUserAnswers.fromCompleteAnswers(completeAnswers) shouldBe IncompleteUserAnswers(
         Some(LicenceType.DriverOfTaxisAndPrivateHires),
@@ -95,7 +96,7 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
           LicenceTimeTrading.ZeroToTwoYears,
           LicenceValidityPeriod.UpToThreeYears,
           TaxSituation.PAYE,
-          EntityType.Company
+          Some(EntityType.Company)
         )
 
       "unsets the licence type field" in {

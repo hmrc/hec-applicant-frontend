@@ -21,14 +21,15 @@ import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.hecapplicantfrontend.models.LicenceType.DriverOfTaxisAndPrivateHires
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRetrievedData, IndividualRetrievedData}
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.{CompleteUserAnswers, IncompleteUserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models._
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO}
+import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType.DriverOfTaxisAndPrivateHires
+import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceExpiryDate, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
-import uk.gov.hmrc.hecapplicantfrontend.util.TimeUtils
+import uk.gov.hmrc.hecapplicantfrontend.util.{TimeProvider, TimeUtils}
 
 import java.time.LocalDate
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -74,7 +75,7 @@ class TaxSituationControllerSpec
       "return an InternalServerError" when {
 
         "a licence type cannot be found in session" in {
-          val session = HECSession(individuaRetrievedlData, UserAnswers.empty)
+          val session = HECSession(individuaRetrievedlData, UserAnswers.empty, None)
 
           inSequence {
             mockAuthWithNoRetrievals()
@@ -95,7 +96,8 @@ class TaxSituationControllerSpec
               individuaRetrievedlData,
               UserAnswers.empty.copy(
                 licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)
-              )
+              ),
+              None
             )
 
             inSequence {
@@ -138,8 +140,9 @@ class TaxSituationControllerSpec
                 LicenceTimeTrading.TwoToFourYears,
                 LicenceValidityPeriod.UpToThreeYears,
                 TaxSituation.PAYE,
-                EntityType.Individual
-              )
+                None
+              ),
+              None
             )
 
           inSequence {
@@ -174,7 +177,8 @@ class TaxSituationControllerSpec
               individuaRetrievedlData,
               UserAnswers.empty.copy(
                 licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)
-              )
+              ),
+              None
             )
 
             inSequence {
@@ -213,7 +217,8 @@ class TaxSituationControllerSpec
               individuaRetrievedlData,
               UserAnswers.empty.copy(
                 licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)
-              )
+              ),
+              None
             )
 
             inSequence {
@@ -252,7 +257,8 @@ class TaxSituationControllerSpec
               individuaRetrievedlData,
               UserAnswers.empty.copy(
                 licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)
-              )
+              ),
+              None
             )
 
             inSequence {
@@ -295,7 +301,8 @@ class TaxSituationControllerSpec
               individuaRetrievedlData,
               UserAnswers.empty.copy(
                 licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)
-              )
+              ),
+              None
             )
 
             inSequence {
@@ -334,7 +341,8 @@ class TaxSituationControllerSpec
               individuaRetrievedlData,
               UserAnswers.empty.copy(
                 licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)
-              )
+              ),
+              None
             )
 
             inSequence {
@@ -373,7 +381,8 @@ class TaxSituationControllerSpec
               individuaRetrievedlData,
               UserAnswers.empty.copy(
                 licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)
-              )
+              ),
+              None
             )
 
             inSequence {
@@ -423,7 +432,7 @@ class TaxSituationControllerSpec
 
         val answers        = UserAnswers.empty
         val updatedAnswers = UserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
-        val session        = HECSession(individuaRetrievedlData, answers)
+        val session        = HECSession(individuaRetrievedlData, answers, None)
         val updatedSession = session.copy(userAnswers = updatedAnswers)
 
         "nothing is submitted" in {
@@ -479,7 +488,7 @@ class TaxSituationControllerSpec
       "return an InternalServerError" when {
 
         "a licence type cannot be found in session" in {
-          val session = HECSession(individuaRetrievedlData, UserAnswers.empty)
+          val session = HECSession(individuaRetrievedlData, UserAnswers.empty, None)
 
           inSequence {
             mockAuthWithNoRetrievals()
@@ -497,7 +506,7 @@ class TaxSituationControllerSpec
               licenceValidityPeriod = None,
               taxSituation = Some(TaxSituation.PAYE)
             )
-          val session        = HECSession(individuaRetrievedlData, answers)
+          val session        = HECSession(individuaRetrievedlData, answers, None)
           val updatedSession = session.copy(userAnswers = updatedAnswers)
 
           inSequence {
@@ -525,7 +534,7 @@ class TaxSituationControllerSpec
             val answers        = UserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
             val updatedAnswers =
               answers.copy(taxSituation = Some(TaxSituation.PAYE))
-            val session        = HECSession(individuaRetrievedlData, answers)
+            val session        = HECSession(individuaRetrievedlData, answers, None)
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 
             inSequence {
@@ -551,7 +560,7 @@ class TaxSituationControllerSpec
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToThreeYears,
               TaxSituation.PAYE,
-              EntityType.Individual
+              Some(EntityType.Individual)
             )
             val updatedAnswers = IncompleteUserAnswers(
               Some(LicenceType.DriverOfTaxisAndPrivateHires),
@@ -561,7 +570,7 @@ class TaxSituationControllerSpec
               Some(TaxSituation.PAYE),
               Some(EntityType.Individual)
             )
-            val session        = HECSession(individuaRetrievedlData, answers)
+            val session        = HECSession(individuaRetrievedlData, answers, None)
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 
             inSequence {

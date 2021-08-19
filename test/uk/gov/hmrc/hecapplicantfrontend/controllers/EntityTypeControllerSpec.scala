@@ -23,8 +23,9 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRetrievedData, IndividualRetrievedData}
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.{CompleteUserAnswers, IncompleteUserAnswers}
-import uk.gov.hmrc.hecapplicantfrontend.models.{DateOfBirth, EntityType, Error, HECSession, LicenceExpiryDate, LicenceTimeTrading, LicenceType, LicenceValidityPeriod, Name, TaxSituation, UserAnswers}
+import uk.gov.hmrc.hecapplicantfrontend.models.{DateOfBirth, EntityType, Error, HECSession, Name, TaxSituation, UserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO}
+import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceExpiryDate, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
 import uk.gov.hmrc.hecapplicantfrontend.util.TimeUtils
@@ -65,7 +66,7 @@ class EntityTypeControllerSpec
       "display the page" when {
 
         "the user has not previously answered the question" in {
-          val session = HECSession(individuaRetrievedlData, UserAnswers.empty)
+          val session = HECSession(individuaRetrievedlData, UserAnswers.empty, None)
 
           inSequence {
             mockAuthWithNoRetrievals()
@@ -100,8 +101,9 @@ class EntityTypeControllerSpec
                 LicenceTimeTrading.ZeroToTwoYears,
                 LicenceValidityPeriod.UpToTwoYears,
                 TaxSituation.PAYE,
-                EntityType.Individual
-              )
+                Some(EntityType.Individual)
+              ),
+              None
             )
 
           inSequence {
@@ -139,7 +141,7 @@ class EntityTypeControllerSpec
 
       "show a form error" when {
 
-        val session = HECSession(companyRetrievedData, UserAnswers.empty)
+        val session = HECSession(companyRetrievedData, UserAnswers.empty, None)
 
         "nothing is submitted" in {
           inSequence {
@@ -190,7 +192,7 @@ class EntityTypeControllerSpec
         "the call to update and next fails" in {
           val answers        = UserAnswers.empty
           val updatedAnswers = UserAnswers.empty.copy(entityType = Some(EntityType.Individual))
-          val session        = HECSession(individuaRetrievedlData, answers)
+          val session        = HECSession(individuaRetrievedlData, answers, None)
           val updatedSession = session.copy(userAnswers = updatedAnswers)
 
           inSequence {
@@ -213,7 +215,7 @@ class EntityTypeControllerSpec
           "the user has not previously completed answering questions" in {
             val answers        = UserAnswers.empty
             val updatedAnswers = UserAnswers.empty.copy(entityType = Some(EntityType.Company))
-            val session        = HECSession(individuaRetrievedlData, answers)
+            val session        = HECSession(individuaRetrievedlData, answers, None)
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 
             inSequence {
@@ -234,12 +236,12 @@ class EntityTypeControllerSpec
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToOneYear,
               TaxSituation.PAYE,
-              EntityType.Individual
+              None
             )
             val updatedAnswers = IncompleteUserAnswers
               .fromCompleteAnswers(answers)
               .copy(entityType = Some(EntityType.Company))
-            val session        = HECSession(individuaRetrievedlData, answers)
+            val session        = HECSession(individuaRetrievedlData, answers, None)
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 
             inSequence {
@@ -267,7 +269,7 @@ class EntityTypeControllerSpec
       "return an InternalServerError" when {
 
         "no selected entity type can be found in session" in {
-          val session = HECSession(individuaRetrievedlData, UserAnswers.empty)
+          val session = HECSession(individuaRetrievedlData, UserAnswers.empty, None)
 
           inSequence {
             mockAuthWithNoRetrievals()
@@ -285,7 +287,8 @@ class EntityTypeControllerSpec
         "a selected entity type can be found in session" in {
           val session = HECSession(
             individuaRetrievedlData,
-            UserAnswers.empty.copy(entityType = Some(EntityType.Company))
+            UserAnswers.empty.copy(entityType = Some(EntityType.Company)),
+            None
           )
 
           inSequence {
@@ -316,7 +319,8 @@ class EntityTypeControllerSpec
 
         val session = HECSession(
           individuaRetrievedlData,
-          UserAnswers.empty
+          UserAnswers.empty,
+          None
         )
 
         inSequence {

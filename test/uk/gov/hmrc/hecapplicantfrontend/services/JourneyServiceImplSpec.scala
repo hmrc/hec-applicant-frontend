@@ -25,8 +25,10 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.hecapplicantfrontend.controllers.{SessionSupport, routes}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthenticatedRequest, RequestWithSessionData}
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRetrievedData, IndividualRetrievedData}
+import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.{CompleteUserAnswers, IncompleteUserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO, SAUTR}
 import uk.gov.hmrc.hecapplicantfrontend.models._
+import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceExpiryDate, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hecapplicantfrontend.util.TimeUtils
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -55,13 +57,13 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
       "return the correct call" when afterWord("the user is") {
 
         "an individual" in {
-          val session = HECSession(individualRetrievedData, UserAnswers.empty)
+          val session = HECSession(individualRetrievedData, UserAnswers.empty, None)
           journeyService.firstPage(session) shouldBe routes.ConfirmIndividualDetailsController
             .confirmIndividualDetails()
         }
 
         "a company" in {
-          val session = HECSession(companyRetrievedData, UserAnswers.empty)
+          val session = HECSession(companyRetrievedData, UserAnswers.empty, None)
           journeyService.firstPage(session) shouldBe routes.LicenceDetailsController.licenceType()
         }
 
@@ -74,7 +76,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
       "return an error" when {
 
         "the next page cannot be determined" in {
-          val session                                     = HECSession(individualRetrievedData, UserAnswers.empty)
+          val session                                     = HECSession(individualRetrievedData, UserAnswers.empty, None)
           implicit val request: RequestWithSessionData[_] =
             requestWithSessionData(session)
 
@@ -87,8 +89,9 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
         }
 
         "there is an error updating the session" in {
-          val currentSession                              = HECSession(individualRetrievedData, UserAnswers.empty)
-          val updatedSession                              = HECSession(individualRetrievedData.copy(sautr = Some(SAUTR(""))), UserAnswers.empty)
+          val currentSession                              = HECSession(individualRetrievedData, UserAnswers.empty, None)
+          val updatedSession                              =
+            HECSession(individualRetrievedData.copy(sautr = Some(SAUTR(""))), UserAnswers.empty, None)
           implicit val request: RequestWithSessionData[_] =
             requestWithSessionData(currentSession)
 
@@ -106,7 +109,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
       "return the correct next page" when afterWord("the current page is") {
 
         "the tax check code page" in {
-          val session                                     = HECSession(individualRetrievedData, UserAnswers.empty)
+          val session                                     = HECSession(individualRetrievedData, UserAnswers.empty, None)
           implicit val request: RequestWithSessionData[_] =
             requestWithSessionData(session)
 
@@ -118,11 +121,12 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
         }
 
         "the licence type page" in {
-          val session        = HECSession(individualRetrievedData, UserAnswers.empty)
+          val session        = HECSession(individualRetrievedData, UserAnswers.empty, None)
           val updatedSession =
             HECSession(
               individualRetrievedData,
-              UserAnswers.empty.copy(licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires))
+              UserAnswers.empty.copy(licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)),
+              None
             )
 
           implicit val request: RequestWithSessionData[_] =
@@ -138,14 +142,15 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
         }
 
         "the expiry page and the expiry date is within the past one year" in {
-          val session        = HECSession(individualRetrievedData, UserAnswers.empty)
+          val session        = HECSession(individualRetrievedData, UserAnswers.empty, None)
           val updatedSession =
             HECSession(
               individualRetrievedData,
               UserAnswers.empty.copy(
                 licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires),
                 licenceExpiryDate = Some(LicenceExpiryDate(TimeUtils.today().minusDays(10L)))
-              )
+              ),
+              None
             )
 
           implicit val request: RequestWithSessionData[_] =
@@ -161,14 +166,15 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
         }
 
         "the expiry page and the expiry date is exactly one year ago" in {
-          val session        = HECSession(individualRetrievedData, UserAnswers.empty)
+          val session        = HECSession(individualRetrievedData, UserAnswers.empty, None)
           val updatedSession =
             HECSession(
               individualRetrievedData,
               UserAnswers.empty.copy(
                 licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires),
                 licenceExpiryDate = Some(LicenceExpiryDate(TimeUtils.today().minusYears(1L)))
-              )
+              ),
+              None
             )
 
           implicit val request: RequestWithSessionData[_] =
@@ -184,14 +190,15 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
         }
 
         "the expiry page and the expiry date is beyond the past one year" in {
-          val session        = HECSession(individualRetrievedData, UserAnswers.empty)
+          val session        = HECSession(individualRetrievedData, UserAnswers.empty, None)
           val updatedSession =
             HECSession(
               individualRetrievedData,
               UserAnswers.empty.copy(
                 licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires),
                 licenceExpiryDate = Some(LicenceExpiryDate(TimeUtils.today().minusYears(1L).minusDays(1L)))
-              )
+              ),
+              None
             )
 
           implicit val request: RequestWithSessionData[_] =
@@ -207,11 +214,12 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
         }
 
         "the licence time trading page" in {
-          val session        = HECSession(individualRetrievedData, UserAnswers.empty)
+          val session        = HECSession(individualRetrievedData, UserAnswers.empty, None)
           val updatedSession =
             HECSession(
               individualRetrievedData,
-              UserAnswers.empty.copy(licenceTimeTrading = Some(LicenceTimeTrading.TwoToFourYears))
+              UserAnswers.empty.copy(licenceTimeTrading = Some(LicenceTimeTrading.TwoToFourYears)),
+              None
             )
 
           implicit val request: RequestWithSessionData[_] =
@@ -230,11 +238,12 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
 
           "the licence type in the session is 'driver of taxis'" in {
             val answers        = UserAnswers.empty.copy(licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires))
-            val session        = HECSession(individualRetrievedData, answers)
+            val session        = HECSession(individualRetrievedData, answers, None)
             val updatedSession =
               HECSession(
                 individualRetrievedData,
-                answers.copy(licenceValidityPeriod = Some(LicenceValidityPeriod.UpToTwoYears))
+                answers.copy(licenceValidityPeriod = Some(LicenceValidityPeriod.UpToTwoYears)),
+                None
               )
 
             implicit val request: RequestWithSessionData[_] =
@@ -257,11 +266,12 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             ).foreach { licenceType =>
               withClue(s"For licence type $licenceType: ") {
                 val answers        = UserAnswers.empty.copy(licenceType = Some(licenceType))
-                val session        = HECSession(individualRetrievedData, answers)
+                val session        = HECSession(individualRetrievedData, answers, None)
                 val updatedSession =
                   HECSession(
                     individualRetrievedData,
-                    answers.copy(licenceValidityPeriod = Some(LicenceValidityPeriod.UpToOneYear))
+                    answers.copy(licenceValidityPeriod = Some(LicenceValidityPeriod.UpToOneYear)),
+                    None
                   )
 
                 implicit val request: RequestWithSessionData[_] =
@@ -288,11 +298,12 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             expectedNext: Call
           ): Unit = {
             val answers        = UserAnswers.empty
-            val session        = HECSession(retrievedData, answers)
+            val session        = HECSession(retrievedData, answers, None)
             val updatedSession =
               HECSession(
                 retrievedData,
-                answers.copy(entityType = Some(selectedEntityType))
+                answers.copy(entityType = Some(selectedEntityType)),
+                None
               )
 
             implicit val request: RequestWithSessionData[_] =
@@ -329,11 +340,12 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
 
           "the licence type in the session is 'driver of taxis'" in {
             val answers        = UserAnswers.empty.copy(licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires))
-            val session        = HECSession(individualRetrievedData, answers)
+            val session        = HECSession(individualRetrievedData, answers, None)
             val updatedSession =
               HECSession(
                 individualRetrievedData,
-                answers.copy(taxSituation = Some(TaxSituation.PAYE))
+                answers.copy(taxSituation = Some(TaxSituation.PAYE)),
+                None
               )
 
             implicit val request: RequestWithSessionData[_] =
@@ -350,6 +362,98 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
 
         }
 
+        "the check your answers page" in {
+          val session                                     = HECSession(individualRetrievedData, UserAnswers.empty, None)
+          implicit val request: RequestWithSessionData[_] =
+            requestWithSessionData(session)
+
+          val result = journeyService.updateAndNext(
+            routes.CheckYourAnswersController.checkYourAnswers(),
+            session
+          )
+          await(result.value) shouldBe Right(routes.TaxCheckCompleteController.taxCheckComplete())
+        }
+
+      }
+
+      "convert incomplete answers to complete answers when all all questions have been answered and" when {
+
+        "the user has not selected a licence type which both individuals and companies can have" in {
+          val completeAnswers = CompleteUserAnswers(
+            LicenceType.DriverOfTaxisAndPrivateHires,
+            LicenceExpiryDate(TimeUtils.today()),
+            LicenceTimeTrading.ZeroToTwoYears,
+            LicenceValidityPeriod.UpToOneYear,
+            TaxSituation.PAYE,
+            None
+          )
+
+          val incompleteAnswers = IncompleteUserAnswers(
+            Some(completeAnswers.licenceType),
+            Some(completeAnswers.licenceExpiryDate),
+            Some(completeAnswers.licenceTimeTrading),
+            Some(completeAnswers.licenceValidityPeriod),
+            Some(completeAnswers.taxSituation),
+            None
+          )
+
+          val session                                     = HECSession(individualRetrievedData, incompleteAnswers, None)
+          implicit val request: RequestWithSessionData[_] =
+            requestWithSessionData(session)
+
+          mockStoreSession(session.copy(userAnswers = completeAnswers))(Right(()))
+
+          val result = journeyService.updateAndNext(
+            routes.LicenceDetailsController.licenceTimeTrading(),
+            session
+          )
+          await(result.value) shouldBe Right(routes.CheckYourAnswersController.checkYourAnswers())
+
+        }
+
+        "the user has selected a licence type which both individuals and companies can have" in {
+          List(
+            LicenceType.ScrapMetalDealerSite,
+            LicenceType.ScrapMetalMobileCollector,
+            LicenceType.OperatorOfPrivateHireVehicles
+          ).foreach { licenceType =>
+            withClue(s"For licence type $licenceType: ") {
+              val completeAnswers = CompleteUserAnswers(
+                licenceType,
+                LicenceExpiryDate(TimeUtils.today()),
+                LicenceTimeTrading.ZeroToTwoYears,
+                LicenceValidityPeriod.UpToOneYear,
+                TaxSituation.PAYE,
+                Some(EntityType.Company)
+              )
+
+              val incompleteAnswers = IncompleteUserAnswers(
+                Some(completeAnswers.licenceType),
+                Some(completeAnswers.licenceExpiryDate),
+                Some(completeAnswers.licenceTimeTrading),
+                Some(completeAnswers.licenceValidityPeriod),
+                Some(completeAnswers.taxSituation),
+                Some(EntityType.Company)
+              )
+
+              val session                                     = HECSession(companyRetrievedData, incompleteAnswers, None)
+              implicit val request: RequestWithSessionData[_] =
+                requestWithSessionData(session)
+
+              mockStoreSession(session.copy(userAnswers = completeAnswers))(Right(()))
+
+              val result = journeyService.updateAndNext(
+                routes.LicenceDetailsController.licenceTimeTrading(),
+                session
+              )
+              await(result.value) shouldBe Right(routes.CheckYourAnswersController.checkYourAnswers())
+
+            }
+
+          }
+
+        }
+
       }
 
     }
@@ -359,7 +463,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
       "return an error" when {
 
         "no previous location can be found" in {
-          val session                                     = HECSession(companyRetrievedData, UserAnswers.empty)
+          val session                                     = HECSession(companyRetrievedData, UserAnswers.empty, None)
           implicit val request: RequestWithSessionData[_] =
             requestWithSessionData(session)
           assertThrows[RuntimeException](
@@ -374,7 +478,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
       "return the correct previous page" when afterWord("the current page is") {
 
         "the start endpoint" in {
-          val session                                     = HECSession(companyRetrievedData, UserAnswers.empty)
+          val session                                     = HECSession(companyRetrievedData, UserAnswers.empty, None)
           implicit val request: RequestWithSessionData[_] =
             requestWithSessionData(session)
 
@@ -386,7 +490,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
         }
 
         "the confirm individual details page" in {
-          val session                                     = HECSession(individualRetrievedData, UserAnswers.empty)
+          val session                                     = HECSession(individualRetrievedData, UserAnswers.empty, None)
           implicit val request: RequestWithSessionData[_] =
             requestWithSessionData(session)
 
@@ -398,7 +502,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
         }
 
         "the confirm individual details exit page" in {
-          val session                                     = HECSession(individualRetrievedData, UserAnswers.empty)
+          val session                                     = HECSession(individualRetrievedData, UserAnswers.empty, None)
           implicit val request: RequestWithSessionData[_] =
             requestWithSessionData(session)
 
@@ -412,7 +516,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
         "the licence type page" when afterWord("the user is") {
 
           "an individual" in {
-            val session                                     = HECSession(individualRetrievedData, UserAnswers.empty)
+            val session                                     = HECSession(individualRetrievedData, UserAnswers.empty, None)
             implicit val request: RequestWithSessionData[_] =
               requestWithSessionData(session)
 
@@ -424,7 +528,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
           }
 
           "a company" in {
-            val session                                     = HECSession(companyRetrievedData, UserAnswers.empty)
+            val session                                     = HECSession(companyRetrievedData, UserAnswers.empty, None)
             implicit val request: RequestWithSessionData[_] =
               requestWithSessionData(session)
 
@@ -438,7 +542,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
         }
 
         "the licence type exit page" in {
-          val session                                     = HECSession(individualRetrievedData, UserAnswers.empty)
+          val session                                     = HECSession(individualRetrievedData, UserAnswers.empty, None)
           implicit val request: RequestWithSessionData[_] =
             requestWithSessionData(session)
 
@@ -452,7 +556,8 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
         "the licence expiry date page" in {
           val session                                     = HECSession(
             individualRetrievedData,
-            UserAnswers.empty.copy(licenceType = Some(LicenceType.ScrapMetalDealerSite))
+            UserAnswers.empty.copy(licenceType = Some(LicenceType.ScrapMetalDealerSite)),
+            None
           )
           implicit val request: RequestWithSessionData[_] =
             requestWithSessionData(session)
@@ -467,7 +572,8 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
         "the licence expiry date exit page" in {
           val session                                     = HECSession(
             individualRetrievedData,
-            UserAnswers.empty.copy(licenceType = Some(LicenceType.ScrapMetalDealerSite))
+            UserAnswers.empty.copy(licenceType = Some(LicenceType.ScrapMetalDealerSite)),
+            None
           )
           implicit val request: RequestWithSessionData[_] =
             requestWithSessionData(session)
@@ -485,7 +591,8 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             UserAnswers.empty.copy(
               licenceType = Some(LicenceType.ScrapMetalDealerSite),
               licenceExpiryDate = Some(LicenceExpiryDate(TimeUtils.today()))
-            )
+            ),
+            None
           )
           implicit val request: RequestWithSessionData[_] =
             requestWithSessionData(session)
@@ -511,7 +618,8 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                   UserAnswers.empty.copy(
                     licenceType = Some(licenceType),
                     licenceExpiryDate = Some(LicenceExpiryDate(TimeUtils.today()))
-                  )
+                  ),
+                  None
                 )
                 implicit val request: RequestWithSessionData[_] =
                   requestWithSessionData(session)
@@ -534,7 +642,8 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
               licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles),
               licenceExpiryDate = Some(LicenceExpiryDate(TimeUtils.today())),
               entityType = Some(EntityType.Company)
-            )
+            ),
+            None
           )
           implicit val request: RequestWithSessionData[_] =
             requestWithSessionData(session)
@@ -552,7 +661,8 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             UserAnswers.empty.copy(
               licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles),
               licenceExpiryDate = Some(LicenceExpiryDate(TimeUtils.today()))
-            )
+            ),
+            None
           )
           implicit val request: RequestWithSessionData[_] =
             requestWithSessionData(session)
@@ -573,7 +683,8 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
               UserAnswers.empty.copy(
                 licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires),
                 licenceExpiryDate = Some(LicenceExpiryDate(TimeUtils.today()))
-              )
+              ),
+              None
             )
             implicit val request: RequestWithSessionData[_] =
               requestWithSessionData(session)
@@ -592,7 +703,8 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles),
                 licenceExpiryDate = Some(LicenceExpiryDate(TimeUtils.today())),
                 entityType = Some(EntityType.Individual)
-              )
+              ),
+              None
             )
             implicit val request: RequestWithSessionData[_] =
               requestWithSessionData(session)
@@ -604,6 +716,50 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             result shouldBe routes.EntityTypeController.entityType()
           }
 
+        }
+
+        "the check your answers page" in {
+          val session                                     = HECSession(
+            individualRetrievedData,
+            UserAnswers.empty.copy(
+              licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires),
+              licenceExpiryDate = Some(LicenceExpiryDate(TimeUtils.today()))
+            ),
+            None
+          )
+          implicit val request: RequestWithSessionData[_] =
+            requestWithSessionData(session)
+
+          val result = journeyService.previous(
+            routes.CheckYourAnswersController.checkYourAnswers()
+          )
+
+          result shouldBe routes.TaxSituationController.taxSituation()
+        }
+
+      }
+
+      "return the check your answers page" when {
+
+        "the answers in the session are complete and the current page is not the check your answers page" in {
+          val completeAnswers                             = CompleteUserAnswers(
+            LicenceType.DriverOfTaxisAndPrivateHires,
+            LicenceExpiryDate(TimeUtils.today()),
+            LicenceTimeTrading.ZeroToTwoYears,
+            LicenceValidityPeriod.UpToOneYear,
+            TaxSituation.PAYE,
+            Some(EntityType.Individual)
+          )
+          implicit val request: RequestWithSessionData[_] =
+            requestWithSessionData(
+              HECSession(individualRetrievedData, completeAnswers, None)
+            )
+
+          val result = journeyService.previous(
+            routes.LicenceDetailsController.licenceType()
+          )
+
+          result shouldBe routes.CheckYourAnswersController.checkYourAnswers()
         }
 
       }

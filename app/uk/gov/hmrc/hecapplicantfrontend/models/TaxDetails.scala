@@ -16,22 +16,25 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models
 
-import cats.Eq
-import julienrf.json.derived
-import play.api.libs.json.OFormat
+import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CTUTR, NINO, SAUTR}
 
-sealed trait LicenceTimeTrading extends Product with Serializable
+sealed trait TaxDetails extends Product with Serializable
 
-object LicenceTimeTrading {
-  case object ZeroToTwoYears extends LicenceTimeTrading
+object TaxDetails {
 
-  case object TwoToFourYears extends LicenceTimeTrading
+  final case class IndividualTaxDetails(
+    nino: NINO,
+    sautr: Option[SAUTR],
+    taxSituation: TaxSituation
+  ) extends TaxDetails
 
-  case object FourToEightYears extends LicenceTimeTrading
+  final case class CompanyTaxDetails(
+    ctutr: CTUTR
+  ) extends TaxDetails
 
-  case object EightYearsOrMore extends LicenceTimeTrading
+  implicit val individualTaxDetailsFormat: OFormat[IndividualTaxDetails] = Json.format
 
-  implicit val eq: Eq[LicenceTimeTrading] = Eq.fromUniversalEquals
+  implicit val companyTaxDetailsFormat: OFormat[CompanyTaxDetails] = Json.format
 
-  implicit val format: OFormat[LicenceTimeTrading] = derived.oformat()
 }

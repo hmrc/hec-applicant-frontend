@@ -14,22 +14,19 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hecapplicantfrontend.models
+package uk.gov.hmrc.hecapplicantfrontend.models.licence
 
-import play.api.libs.functional.syntax.toInvariantFunctorOps
-import play.api.libs.json.Format
+import play.api.libs.json.{Json, OFormat}
 
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
+final case class LicenceDetails(
+  licenceType: LicenceType,
+  licenceExpiryDate: LicenceExpiryDate,
+  licenceTimeTrading: LicenceTimeTrading,
+  licenceValidityPeriod: LicenceValidityPeriod
+)
 
-final case class LicenceExpiryDate(value: LocalDate) extends AnyVal
+object LicenceDetails {
 
-object LicenceExpiryDate {
-
-  private val dateFormatter = DateTimeFormatter.BASIC_ISO_DATE
-
-  implicit val format: Format[LicenceExpiryDate] =
-    implicitly[Format[String]]
-      .inmap(s => LicenceExpiryDate(LocalDate.parse(s, dateFormatter)), d => dateFormatter.format(d.value))
+  implicit val format: OFormat[LicenceDetails] = Json.format
 
 }

@@ -16,24 +16,71 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.controllers
 
+import cats.instances.future._
 import com.google.inject.{Inject, Singleton}
+import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
-import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
+import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers
+import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.CompleteUserAnswers
+import uk.gov.hmrc.hecapplicantfrontend.services.{JourneyService, TaxCheckService}
+import uk.gov.hmrc.hecapplicantfrontend.util.Logging
+import uk.gov.hmrc.hecapplicantfrontend.util.Logging.LoggerOps
+import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
+
+import scala.concurrent.ExecutionContext
 
 @Singleton
 class CheckYourAnswersController @Inject() (
   authAction: AuthAction,
   sessionDataAction: SessionDataAction,
+  taxCheckService: TaxCheckService,
   journeyService: JourneyService,
-  mcc: MessagesControllerComponents
-) extends FrontendController(mcc) {
+  mcc: MessagesControllerComponents,
+  checkYourAnswersPage: html.CheckYourAnswers
+)(implicit ec: ExecutionContext)
+    extends FrontendController(mcc)
+    with I18nSupport
+    with Logging {
 
   val checkYourAnswers: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
-    Ok(
-      s"session is ${request.session}\nback is ${journeyService.previous(routes.CheckYourAnswersController.checkYourAnswers())}"
-    )
+    request.sessionData.userAnswers match {
+      case c: CompleteUserAnswers =>
+        val back = journeyService.previous(routes.CheckYourAnswersController.checkYourAnswers())
+        Ok(checkYourAnswersPage(back, c))
+
+      case _ =>
+        logger.warn("Could not find complete answers")
+        InternalServerError
+    }
+
+  }
+
+  val checkYourAnswersSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
+    request.sessionData.userAnswers match {
+      case c: CompleteUserAnswers =>
+        val result = for {
+          taxCheck      <- taxCheckService.saveTaxCheck(request.sessionData.retrievedUserData, c)
+          updatedSession = request.sessionData.copy(
+                             userAnswers = UserAnswers.empty,
+                             completedTaxCheck = Some(taxCheck)
+                           )
+          next          <- journeyService.updateAndNext(routes.CheckYourAnswersController.checkYourAnswers(), updatedSession)
+        } yield next
+
+        result.fold(
+          { e =>
+            logger.warn("Could not save tax check", e)
+            InternalServerError
+          },
+          Redirect
+        )
+
+      case _ =>
+        logger.warn("Could not find complete answers")
+        InternalServerError
+    }
   }
 
 }

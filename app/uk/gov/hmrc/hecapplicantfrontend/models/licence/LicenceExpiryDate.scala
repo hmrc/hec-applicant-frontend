@@ -14,20 +14,22 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hecapplicantfrontend.models
+package uk.gov.hmrc.hecapplicantfrontend.models.licence
 
-import cats.Eq
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.functional.syntax.toInvariantFunctorOps
+import play.api.libs.json.Format
 
-final case class HECSession(
-  retrievedUserData: RetrievedApplicantData,
-  userAnswers: UserAnswers,
-  completedTaxCheck: Option[HECTaxCheck]
-)
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
-object HECSession {
+final case class LicenceExpiryDate(value: LocalDate) extends AnyVal
 
-  implicit val eq: Eq[HECSession]          = Eq.fromUniversalEquals
-  implicit val format: OFormat[HECSession] = Json.format
+object LicenceExpiryDate {
+
+  private val dateFormatter = DateTimeFormatter.BASIC_ISO_DATE
+
+  implicit val format: Format[LicenceExpiryDate] =
+    implicitly[Format[String]]
+      .inmap(s => LicenceExpiryDate(LocalDate.parse(s, dateFormatter)), d => dateFormatter.format(d.value))
 
 }

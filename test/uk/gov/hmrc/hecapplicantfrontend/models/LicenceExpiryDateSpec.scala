@@ -19,6 +19,7 @@ package uk.gov.hmrc.hecapplicantfrontend.models
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.{JsString, JsSuccess, Json}
+import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceExpiryDate
 
 import java.time.LocalDate
 

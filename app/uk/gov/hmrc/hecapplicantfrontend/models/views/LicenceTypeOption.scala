@@ -15,7 +15,8 @@
  */
 
 package uk.gov.hmrc.hecapplicantfrontend.models.views
-import uk.gov.hmrc.hecapplicantfrontend.models.LicenceType
+
+import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
 
 final case class LicenceTypeOption(messageKey: String, hintKey: Option[String])
 

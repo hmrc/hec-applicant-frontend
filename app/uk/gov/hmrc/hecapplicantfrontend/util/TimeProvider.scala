@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hecapplicantfrontend.models
+package uk.gov.hmrc.hecapplicantfrontend.util
 
 import com.google.inject.{ImplementedBy, Inject}
-import uk.gov.hmrc.hecapplicantfrontend.util.TimeUtils
 
 import java.time.LocalDate
 import javax.inject.Singleton

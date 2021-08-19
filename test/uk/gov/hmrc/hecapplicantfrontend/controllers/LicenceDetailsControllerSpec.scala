@@ -21,12 +21,13 @@ import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.hecapplicantfrontend.models.LicenceType.DriverOfTaxisAndPrivateHires
-import uk.gov.hmrc.hecapplicantfrontend.models.LicenceValidityPeriod.UpToOneYear
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRetrievedData, IndividualRetrievedData}
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.{CompleteUserAnswers, IncompleteUserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO}
 import uk.gov.hmrc.hecapplicantfrontend.models._
+import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType.DriverOfTaxisAndPrivateHires
+import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceValidityPeriod.UpToOneYear
+import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceExpiryDate, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
 import uk.gov.hmrc.hecapplicantfrontend.util.TimeUtils
@@ -67,7 +68,7 @@ class LicenceDetailsControllerSpec
       "display the page" when {
 
         "the user has not previously answered the question" in {
-          val session = HECSession(individuaRetrievedlData, UserAnswers.empty)
+          val session = HECSession(individuaRetrievedlData, UserAnswers.empty, None)
 
           inSequence {
             mockAuthWithNoRetrievals()
@@ -106,8 +107,9 @@ class LicenceDetailsControllerSpec
                 LicenceTimeTrading.ZeroToTwoYears,
                 LicenceValidityPeriod.UpToTwoYears,
                 TaxSituation.SA,
-                EntityType.Individual
-              )
+                Some(EntityType.Individual)
+              ),
+              None
             )
 
           inSequence {
@@ -133,7 +135,7 @@ class LicenceDetailsControllerSpec
         }
 
         "the back location is the start endpoint" in {
-          val session = HECSession(companyRetrievedData, UserAnswers.empty)
+          val session = HECSession(companyRetrievedData, UserAnswers.empty, None)
 
           inSequence {
             mockAuthWithNoRetrievals()
@@ -164,7 +166,7 @@ class LicenceDetailsControllerSpec
 
       "show a form error" when {
 
-        val session = HECSession(individuaRetrievedlData, UserAnswers.empty)
+        val session = HECSession(individuaRetrievedlData, UserAnswers.empty, None)
 
         "nothing is submitted" in {
           inSequence {
@@ -215,7 +217,7 @@ class LicenceDetailsControllerSpec
         "the call to update and next fails" in {
           val answers        = UserAnswers.empty
           val updatedAnswers = UserAnswers.empty.copy(licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires))
-          val session        = HECSession(individuaRetrievedlData, answers)
+          val session        = HECSession(individuaRetrievedlData, answers, None)
           val updatedSession = session.copy(userAnswers = updatedAnswers)
 
           inSequence {
@@ -236,9 +238,12 @@ class LicenceDetailsControllerSpec
         "valid data is submitted and" when {
 
           "the user has not previously completed answering questions" in {
-            val answers        = UserAnswers.empty
+            val answers        = UserAnswers.empty.copy(
+              licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires),
+              licenceExpiryDate = Some(LicenceExpiryDate(LocalDate.now()))
+            )
             val updatedAnswers = UserAnswers.empty.copy(licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles))
-            val session        = HECSession(individuaRetrievedlData, answers)
+            val session        = HECSession(individuaRetrievedlData, answers, None)
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 
             inSequence {
@@ -259,12 +264,10 @@ class LicenceDetailsControllerSpec
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToOneYear,
               TaxSituation.SA,
-              EntityType.Individual
+              Some(EntityType.Individual)
             )
-            val updatedAnswers = IncompleteUserAnswers
-              .fromCompleteAnswers(answers)
-              .copy(licenceType = Some(LicenceType.ScrapMetalMobileCollector))
-            val session        = HECSession(individuaRetrievedlData, answers)
+            val updatedAnswers = UserAnswers.empty.copy(licenceType = Some(LicenceType.ScrapMetalMobileCollector))
+            val session        = HECSession(individuaRetrievedlData, answers, None)
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 
             inSequence {
@@ -290,7 +293,7 @@ class LicenceDetailsControllerSpec
       behave like authAndSessionDataBehaviour(performAction)
 
       "display the page" in {
-        val session = HECSession(individuaRetrievedlData, UserAnswers.empty)
+        val session = HECSession(individuaRetrievedlData, UserAnswers.empty, None)
         inSequence {
           mockAuthWithNoRetrievals()
           mockGetSession(session)
@@ -317,7 +320,7 @@ class LicenceDetailsControllerSpec
       "display the page" when {
 
         "a previous answer to the question is not found in session" in {
-          val session = HECSession(individuaRetrievedlData, UserAnswers.empty)
+          val session = HECSession(individuaRetrievedlData, UserAnswers.empty, None)
 
           inSequence {
             mockAuthWithNoRetrievals()
@@ -352,7 +355,8 @@ class LicenceDetailsControllerSpec
           val session =
             HECSession(
               individuaRetrievedlData,
-              UserAnswers.empty.copy(licenceExpiryDate = Some(LicenceExpiryDate(date)))
+              UserAnswers.empty.copy(licenceExpiryDate = Some(LicenceExpiryDate(date))),
+              None
             )
 
           inSequence {
@@ -401,7 +405,7 @@ class LicenceDetailsControllerSpec
 
       "show a form error" when {
 
-        val session = HECSession(individuaRetrievedlData, UserAnswers.empty)
+        val session = HECSession(individuaRetrievedlData, UserAnswers.empty, None)
 
         "nothing is submitted" in {
           inSequence {
@@ -485,7 +489,7 @@ class LicenceDetailsControllerSpec
         "there is an error updating and getting the next endpoint" in {
           val date    = TimeUtils.today().plusYears(6L)
           val answers = UserAnswers.empty
-          val session = HECSession(individuaRetrievedlData, answers)
+          val session = HECSession(individuaRetrievedlData, answers, None)
 
           val updatedAnswers = answers.copy(licenceExpiryDate = Some(LicenceExpiryDate(date)))
           val updatedSession = session.copy(userAnswers = updatedAnswers)
@@ -508,7 +512,7 @@ class LicenceDetailsControllerSpec
         "a valid expiry date is submitted" in {
           val date    = TimeUtils.today().minusYears(2L)
           val answers = UserAnswers.empty
-          val session = HECSession(individuaRetrievedlData, answers)
+          val session = HECSession(individuaRetrievedlData, answers, None)
 
           val updatedAnswers = answers.copy(licenceExpiryDate = Some(LicenceExpiryDate(date)))
           val updatedSession = session.copy(userAnswers = updatedAnswers)
@@ -535,7 +539,7 @@ class LicenceDetailsControllerSpec
       behave like authAndSessionDataBehaviour(performAction)
 
       "display the page" in {
-        val session = HECSession(individuaRetrievedlData, UserAnswers.empty)
+        val session = HECSession(individuaRetrievedlData, UserAnswers.empty, None)
         inSequence {
           mockAuthWithNoRetrievals()
           mockGetSession(session)
@@ -561,7 +565,7 @@ class LicenceDetailsControllerSpec
       "display the page" when {
 
         "the user has not previously answered the question" in {
-          val session = HECSession(individuaRetrievedlData, UserAnswers.empty)
+          val session = HECSession(individuaRetrievedlData, UserAnswers.empty, None)
 
           inSequence {
             mockAuthWithNoRetrievals()
@@ -598,8 +602,9 @@ class LicenceDetailsControllerSpec
                 LicenceTimeTrading.TwoToFourYears,
                 LicenceValidityPeriod.UpToThreeYears,
                 TaxSituation.SA,
-                EntityType.Company
-              )
+                Some(EntityType.Company)
+              ),
+              None
             )
 
           inSequence {
@@ -639,7 +644,7 @@ class LicenceDetailsControllerSpec
 
       "show a form error" when {
 
-        val session = HECSession(individuaRetrievedlData, UserAnswers.empty)
+        val session = HECSession(individuaRetrievedlData, UserAnswers.empty, None)
 
         "nothing is submitted" in {
           inSequence {
@@ -696,7 +701,7 @@ class LicenceDetailsControllerSpec
         "the call to update and next fails" in {
           val answers        = UserAnswers.empty
           val updatedAnswers = UserAnswers.empty.copy(licenceTimeTrading = Some(LicenceTimeTrading.ZeroToTwoYears))
-          val session        = HECSession(individuaRetrievedlData, answers)
+          val session        = HECSession(individuaRetrievedlData, answers, None)
           val updatedSession = session.copy(userAnswers = updatedAnswers)
 
           inSequence {
@@ -723,7 +728,7 @@ class LicenceDetailsControllerSpec
           "the user has not previously completed answering questions" in {
             val answers        = UserAnswers.empty
             val updatedAnswers = UserAnswers.empty.copy(licenceTimeTrading = Some(LicenceTimeTrading.FourToEightYears))
-            val session        = HECSession(individuaRetrievedlData, answers)
+            val session        = HECSession(individuaRetrievedlData, answers, None)
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 
             inSequence {
@@ -748,7 +753,7 @@ class LicenceDetailsControllerSpec
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToFiveYears,
               TaxSituation.SA,
-              EntityType.Company
+              Some(EntityType.Company)
             )
             val updatedAnswers = IncompleteUserAnswers(
               Some(LicenceType.DriverOfTaxisAndPrivateHires),
@@ -758,7 +763,7 @@ class LicenceDetailsControllerSpec
               Some(TaxSituation.SA),
               Some(EntityType.Company)
             )
-            val session        = HECSession(individuaRetrievedlData, answers)
+            val session        = HECSession(individuaRetrievedlData, answers, None)
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 
             inSequence {
@@ -790,7 +795,7 @@ class LicenceDetailsControllerSpec
       "return an InternalServerError" when {
 
         "a licence type cannot be found in session" in {
-          val session = HECSession(individuaRetrievedlData, UserAnswers.empty)
+          val session = HECSession(individuaRetrievedlData, UserAnswers.empty, None)
 
           inSequence {
             mockAuthWithNoRetrievals()
@@ -809,7 +814,8 @@ class LicenceDetailsControllerSpec
             individuaRetrievedlData,
             UserAnswers.empty.copy(
               licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles)
-            )
+            ),
+            None
           )
 
           inSequence {
@@ -856,8 +862,9 @@ class LicenceDetailsControllerSpec
                     LicenceTimeTrading.TwoToFourYears,
                     LicenceValidityPeriod.UpToThreeYears,
                     TaxSituation.SA,
-                    EntityType.Individual
-                  )
+                    Some(EntityType.Individual)
+                  ),
+                  None
                 )
 
               inSequence {
@@ -904,7 +911,7 @@ class LicenceDetailsControllerSpec
       "return an InternalServerError" when {
 
         "a licence type cannot be found in session" in {
-          val session = HECSession(individuaRetrievedlData, UserAnswers.empty)
+          val session = HECSession(individuaRetrievedlData, UserAnswers.empty, None)
 
           inSequence {
             mockAuthWithNoRetrievals()
@@ -918,7 +925,7 @@ class LicenceDetailsControllerSpec
           val answers        = UserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
           val updatedAnswers = UserAnswers.empty
             .copy(licenceType = Some(DriverOfTaxisAndPrivateHires), licenceValidityPeriod = Some(UpToOneYear))
-          val session        = HECSession(individuaRetrievedlData, answers)
+          val session        = HECSession(individuaRetrievedlData, answers, None)
           val updatedSession = session.copy(userAnswers = updatedAnswers)
 
           inSequence {
@@ -942,7 +949,7 @@ class LicenceDetailsControllerSpec
 
         val answers        = UserAnswers.empty
         val updatedAnswers = UserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
-        val session        = HECSession(individuaRetrievedlData, answers)
+        val session        = HECSession(individuaRetrievedlData, answers, None)
         val updatedSession = session.copy(userAnswers = updatedAnswers)
 
         "nothing is submitted" in {
@@ -1002,7 +1009,7 @@ class LicenceDetailsControllerSpec
           "the user has not previously completed answering questions" in {
             val answers        = UserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
             val updatedAnswers = answers.copy(licenceValidityPeriod = Some(UpToOneYear))
-            val session        = HECSession(individuaRetrievedlData, answers)
+            val session        = HECSession(individuaRetrievedlData, answers, None)
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 
             inSequence {
@@ -1028,7 +1035,7 @@ class LicenceDetailsControllerSpec
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToThreeYears,
               TaxSituation.SA,
-              EntityType.Individual
+              Some(EntityType.Individual)
             )
             val updatedAnswers = IncompleteUserAnswers(
               Some(LicenceType.OperatorOfPrivateHireVehicles),
@@ -1038,7 +1045,7 @@ class LicenceDetailsControllerSpec
               Some(TaxSituation.SA),
               Some(EntityType.Individual)
             )
-            val session        = HECSession(individuaRetrievedlData, answers)
+            val session        = HECSession(individuaRetrievedlData, answers, None)
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 
             inSequence {
