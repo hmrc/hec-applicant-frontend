@@ -39,12 +39,14 @@ class HECConnectorImpl @Inject() (http: HttpClient, servicesConfig: ServicesConf
 
   private val baseUrl: String = servicesConfig.baseUrl("hec")
 
+  private val saveTaxCheckUrl: String = s"$baseUrl/hec/tax-check"
+
   override def saveTaxCheck(
     taxCheckData: HECTaxCheckData
   )(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse] =
     EitherT[Future, Error, HttpResponse](
       http
-        .POST[HECTaxCheckData, HttpResponse](s"$baseUrl/hec/tax-check", taxCheckData)
+        .POST[HECTaxCheckData, HttpResponse](saveTaxCheckUrl, taxCheckData)
         .map(Right(_))
         .recover { case e => Left(Error(e)) }
     )

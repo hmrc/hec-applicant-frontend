@@ -16,19 +16,22 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.controllers
 
+import cats.data.EitherT
+import cats.instances.future._
 import play.api.inject.bind
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.hecapplicantfrontend.controllers.CheckYourAnswersControllerSpec.CheckYourAnswersRow
-import uk.gov.hmrc.hecapplicantfrontend.models.{DateOfBirth, EntityType, HECSession, Name, TaxSituation, UserAnswers}
+import uk.gov.hmrc.hecapplicantfrontend.models._
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRetrievedData, IndividualRetrievedData}
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.CompleteUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceExpiryDate, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
-import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
+import uk.gov.hmrc.hecapplicantfrontend.services.{JourneyService, TaxCheckService}
 import uk.gov.hmrc.hecapplicantfrontend.util.TimeUtils
+import uk.gov.hmrc.http.HeaderCarrier
 
 import collection.JavaConverters._
 import java.time.LocalDate
@@ -41,17 +44,29 @@ class CheckYourAnswersControllerSpec
     with SessionSupport
     with AuthAndSessionDataBehaviour {
 
+  val mockTaxCheckService = mock[TaxCheckService]
+
   override def overrideBindings = List(
     bind[AuthConnector].toInstance(mockAuthConnector),
     bind[SessionStore].toInstance(mockSessionStore),
-    bind[JourneyService].toInstance(mockJourneyService)
+    bind[JourneyService].toInstance(mockJourneyService),
+    bind[TaxCheckService].toInstance(mockTaxCheckService)
   )
 
   val controller = instanceOf[CheckYourAnswersController]
 
   val individualRetrievedData =
     IndividualRetrievedData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None)
-  val companyRetrievedData    = CompanyRetrievedData(GGCredId(""), None, None)
+
+  val companyRetrievedData = CompanyRetrievedData(GGCredId(""), None, None)
+
+  def mockSaveTaxCheck(applicantData: RetrievedApplicantData, completeAnswers: CompleteUserAnswers)(
+    result: Either[Error, HECTaxCheck]
+  ) =
+    (mockTaxCheckService
+      .saveTaxCheck(_: RetrievedApplicantData, _: CompleteUserAnswers)(_: HeaderCarrier))
+      .expects(applicantData, completeAnswers, *)
+      .returning(EitherT.fromEither(result))
 
   "CheckYourAnswersController" when {
 
@@ -109,6 +124,16 @@ class CheckYourAnswersControllerSpec
               messageFromMessageKey("licenceValidityPeriod.title"),
               messageFromMessageKey("licenceValidityPeriod.upToTwoYears"),
               routes.LicenceDetailsController.recentLicenceLength().url
+            ),
+            CheckYourAnswersRow(
+              messageFromMessageKey("entityType.title"),
+              messageFromMessageKey("entityType.individual"),
+              routes.EntityTypeController.entityType().url
+            ),
+            CheckYourAnswersRow(
+              messageFromMessageKey("taxSituation.title"),
+              messageFromMessageKey("taxSituation.PA"),
+              routes.TaxSituationController.taxSituation().url
             )
           )
 
@@ -135,6 +160,89 @@ class CheckYourAnswersControllerSpec
             rows shouldBe expectedRows
           }
         )
+
+      }
+
+    }
+
+    "handling submits on the check your answers page" must {
+
+      def performAction() = controller.checkYourAnswersSubmit(FakeRequest())
+
+      behave like authAndSessionDataBehaviour(performAction)
+
+      val completeAnswers = CompleteUserAnswers(
+        LicenceType.OperatorOfPrivateHireVehicles,
+        LicenceExpiryDate(TimeUtils.today()),
+        LicenceTimeTrading.TwoToFourYears,
+        LicenceValidityPeriod.UpToOneYear,
+        TaxSituation.SA,
+        Some(EntityType.Individual)
+      )
+
+      val session = HECSession(individualRetrievedData, completeAnswers, None)
+
+      val hecTaxCheck = HECTaxCheck(HECTaxCheckCode(""), LocalDate.now())
+
+      val updatedSession = HECSession(individualRetrievedData, UserAnswers.empty, Some(hecTaxCheck))
+
+      "return an InternalServerError" when {
+
+        "there are no complete answers in session" in {
+          val session = HECSession(individualRetrievedData, UserAnswers.empty, None)
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+          }
+
+          status(performAction()) shouldBe INTERNAL_SERVER_ERROR
+        }
+
+        "there is an error saving the tax check" in {
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockSaveTaxCheck(session.retrievedUserData, completeAnswers)(Left(Error(new Exception("Oh no!"))))
+          }
+
+          status(performAction()) shouldBe INTERNAL_SERVER_ERROR
+
+        }
+
+        "there is an error updating the session" in {
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockSaveTaxCheck(session.retrievedUserData, completeAnswers)(Right(hecTaxCheck))
+            mockJourneyServiceUpdateAndNext(
+              routes.CheckYourAnswersController.checkYourAnswers(),
+              session,
+              updatedSession
+            )(Left(Error("")))
+          }
+
+          status(performAction()) shouldBe INTERNAL_SERVER_ERROR
+        }
+
+      }
+
+      "redirect to the next page" when {
+
+        "the tax check has successfully been saved" in {
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockSaveTaxCheck(session.retrievedUserData, completeAnswers)(Right(hecTaxCheck))
+            mockJourneyServiceUpdateAndNext(
+              routes.CheckYourAnswersController.checkYourAnswers(),
+              session,
+              updatedSession
+            )(Right(mockNextCall))
+          }
+
+          checkIsRedirect(performAction(), mockNextCall)
+        }
 
       }
 

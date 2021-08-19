@@ -18,7 +18,8 @@ package uk.gov.hmrc.hecapplicantfrontend.connectors
 
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should._
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads}
+import play.api.libs.json.Writes
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, HttpResponse}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -56,5 +57,22 @@ trait HttpSupport { this: MockFactory with Matchers ⇒
           true
       })
       .returning(response.fold(Future.failed[A](new Exception("Test exception message")))(Future.successful))
+
+  def mockPost[A](url: String, headers: Seq[(String, String)], body: A)(
+    result: Option[HttpResponse]
+  ): Unit =
+    (mockHttp
+      .POST(_: String, _: A, _: Seq[(String, String)])(
+        _: Writes[A],
+        _: HttpReads[HttpResponse],
+        _: HeaderCarrier,
+        _: ExecutionContext
+      ))
+      .expects(url, body, headers.toSeq, *, *, *, *)
+      .returning(
+        result.fold[Future[HttpResponse]](
+          Future.failed(new Exception("Test exception message"))
+        )(Future.successful)
+      )
 
 }

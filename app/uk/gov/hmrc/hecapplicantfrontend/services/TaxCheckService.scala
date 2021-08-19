@@ -18,7 +18,10 @@ package uk.gov.hmrc.hecapplicantfrontend.services
 
 import cats.data.EitherT
 import cats.instances.future._
+import cats.instances.int._
 import cats.syntax.either._
+import cats.syntax.eq._
+import play.mvc.Http.Status.CREATED
 import com.google.inject.{ImplementedBy, Inject, Singleton}
 import uk.gov.hmrc.hecapplicantfrontend.connectors.HECConnector
 import uk.gov.hmrc.hecapplicantfrontend.models.ApplicantDetails.IndividualApplicantDetails
@@ -54,7 +57,12 @@ class TaxCheckServiceImpl @Inject() (hecConnector: HECConnector)(implicit ec: Ex
     val taxCheckData = toHECTaxCheckData(retrievedApplicantData, answers)
     hecConnector
       .saveTaxCheck(taxCheckData)
-      .subflatMap(_.parseJSON[HECTaxCheck].leftMap(Error(_)))
+      .subflatMap { response =>
+        if (response.status =!= CREATED)
+          Left(Error(s"Call to save check came back with status ${response.status}"))
+        else
+          response.parseJSON[HECTaxCheck].leftMap(Error(_))
+      }
   }
 
   private def toHECTaxCheckData(

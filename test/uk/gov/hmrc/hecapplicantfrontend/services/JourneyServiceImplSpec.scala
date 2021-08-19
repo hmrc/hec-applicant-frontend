@@ -362,6 +362,18 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
 
         }
 
+        "the check your answers page" in {
+          val session                                     = HECSession(individualRetrievedData, UserAnswers.empty, None)
+          implicit val request: RequestWithSessionData[_] =
+            requestWithSessionData(session)
+
+          val result = journeyService.updateAndNext(
+            routes.CheckYourAnswersController.checkYourAnswers(),
+            session
+          )
+          await(result.value) shouldBe Right(routes.TaxCheckCompleteController.taxCheckComplete())
+        }
+
       }
 
       "convert incomplete answers to complete answers when all all questions have been answered and" when {

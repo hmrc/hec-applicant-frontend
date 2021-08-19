@@ -22,7 +22,7 @@ import java.time.LocalDate
 
 final case class HECTaxCheck(
   taxCheckCode: HECTaxCheckCode,
-  expiryDate: LocalDate
+  expiresAfter: LocalDate
 )
 
 object HECTaxCheck {

@@ -191,4 +191,4 @@ checkYourAnswers.licenceExpiryDate.screenReaderText = the licence expiry date
 checkYourAnswers.licenceTimeTrading.screenReaderText = how many years ago you first got a licence for this activity
 checkYourAnswers.licenceValidityPeriod.screenReaderText = how long your most recent licence was valid for
 checkYourAnswers.entityType.screenReaderText = who the tax check is for
-checkYourAnswer.taxSituation.screenReaderText = how you pay tax on any work carried out using your licence
+checkYourAnswers.taxSituation.screenReaderText = how you pay tax on any work carried out using your licence

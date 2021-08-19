@@ -23,7 +23,6 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.CompleteUserAnswers
-import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.{JourneyService, TaxCheckService}
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging.LoggerOps
@@ -37,7 +36,6 @@ class CheckYourAnswersController @Inject() (
   authAction: AuthAction,
   sessionDataAction: SessionDataAction,
   taxCheckService: TaxCheckService,
-  sessionStore: SessionStore,
   journeyService: JourneyService,
   mcc: MessagesControllerComponents,
   checkYourAnswersPage: html.CheckYourAnswers
@@ -68,15 +66,15 @@ class CheckYourAnswersController @Inject() (
                              userAnswers = UserAnswers.empty,
                              completedTaxCheck = Some(taxCheck)
                            )
-          _             <- sessionStore.store(updatedSession)
-        } yield ()
+          next          <- journeyService.updateAndNext(routes.CheckYourAnswersController.checkYourAnswers(), updatedSession)
+        } yield next
 
         result.fold(
           { e =>
             logger.warn("Could not save tax check", e)
             InternalServerError
           },
-          _ => Redirect(routes.TaxCheckCompleteController.taxCheckComplete())
+          Redirect
         )
 
       case _ =>
