@@ -23,7 +23,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
 import uk.gov.hmrc.hecapplicantfrontend.models.ApplicantDetails.IndividualApplicantDetails
 import uk.gov.hmrc.hecapplicantfrontend.models.HECTaxCheckData.IndividualHECTaxCheckData
-import uk.gov.hmrc.hecapplicantfrontend.models.{DateOfBirth, HECTaxCheckData, Name}
+import uk.gov.hmrc.hecapplicantfrontend.models.{DateOfBirth, HECTaxCheckData, Name, TaxSituation}
 import uk.gov.hmrc.hecapplicantfrontend.models.TaxDetails.IndividualTaxDetails
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO, SAUTR}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceDetails, LicenceExpiryDate, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
@@ -70,7 +70,8 @@ class HECConnectorImplSpec extends AnyWordSpec with Matchers with MockFactory wi
           ),
           IndividualTaxDetails(
             NINO(""),
-            Some(SAUTR(""))
+            Some(SAUTR("")),
+            TaxSituation.SA
           )
         )
 
