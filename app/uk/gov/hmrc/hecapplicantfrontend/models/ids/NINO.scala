@@ -19,6 +19,9 @@ package uk.gov.hmrc.hecapplicantfrontend.models.ids
 import play.api.libs.functional.syntax.toInvariantFunctorOps
 import play.api.libs.json.Format
 
+/**
+  * National Insurance number
+  */
 final case class NINO(value: String) extends AnyVal {
 
   def noSuffix: String = value.dropRight(1)

@@ -20,7 +20,9 @@ import julienrf.json.derived
 import play.api.libs.json.OFormat
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CTUTR, GGCredId, NINO, SAUTR}
 
-sealed trait RetrievedApplicantData extends Product with Serializable
+sealed trait RetrievedApplicantData extends Product with Serializable {
+  val ggCredId: GGCredId
+}
 
 object RetrievedApplicantData {
 

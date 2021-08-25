@@ -20,6 +20,7 @@ import com.google.inject.{Inject, Singleton}
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
+import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.hecapplicantfrontend.views.html
 
@@ -30,12 +31,18 @@ class TaxCheckCompleteController @Inject() (
   mcc: MessagesControllerComponents,
   taxCheckCompletePage: html.TaxCheckComplete
 ) extends FrontendController(mcc)
-    with I18nSupport {
+    with I18nSupport
+    with Logging {
 
+  /**
+    * Fetches tax check data (code & expiry date) for authenticated user
+    */
   val taxCheckComplete: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
     request.sessionData.completedTaxCheck match {
       case Some(taxCheck) => Ok(taxCheckCompletePage(taxCheck))
-      case None           => InternalServerError
+      case None           =>
+        logger.warn(s"Tax code not found for ${request.sessionData.retrievedUserData.ggCredId}")
+        InternalServerError
     }
   }
 }

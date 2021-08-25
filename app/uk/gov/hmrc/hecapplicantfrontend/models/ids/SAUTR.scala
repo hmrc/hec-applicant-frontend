@@ -19,6 +19,9 @@ package uk.gov.hmrc.hecapplicantfrontend.models.ids
 import play.api.libs.functional.syntax.toInvariantFunctorOps
 import play.api.libs.json.Format
 
+/**
+  * Self Assessment (Individual) Unique Taxpayer Reference number
+  */
 final case class SAUTR(value: String) extends AnyVal
 
 object SAUTR {

@@ -19,6 +19,9 @@ package uk.gov.hmrc.hecapplicantfrontend.models.ids
 import play.api.libs.functional.syntax.toInvariantFunctorOps
 import play.api.libs.json.Format
 
+/**
+  * Validated Government Gateway ID
+  */
 final case class GGCredId(value: String) extends AnyVal
 
 object GGCredId {
