@@ -17,19 +17,25 @@
 package uk.gov.hmrc.hecapplicantfrontend.controllers
 
 import com.google.inject.{Inject, Singleton}
+import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
+import uk.gov.hmrc.hecapplicantfrontend.views.html
 
 @Singleton
 class TaxCheckCompleteController @Inject() (
   authAction: AuthAction,
   sessionDataAction: SessionDataAction,
-  mcc: MessagesControllerComponents
-) extends FrontendController(mcc) {
+  mcc: MessagesControllerComponents,
+  taxCheckCompletePage: html.TaxCheckComplete
+) extends FrontendController(mcc)
+    with I18nSupport {
 
   val taxCheckComplete: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
-    Ok(s"session is ${request.sessionData}")
+    request.sessionData.completedTaxCheck match {
+      case Some(taxCheck) => Ok(taxCheckCompletePage(taxCheck))
+      case None           => InternalServerError
+    }
   }
-
 }
