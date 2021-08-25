@@ -456,6 +456,31 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
 
       }
 
+      "not convert incomplete answers to complete answers when all questions have been answered and" when {
+
+        "the licence expiry date is not valid" in {
+          val incompleteAnswers = IncompleteUserAnswers(
+            Some(LicenceType.DriverOfTaxisAndPrivateHires),
+            Some(LicenceExpiryDate(TimeUtils.today().minusMonths(13L))),
+            Some(LicenceTimeTrading.ZeroToTwoYears),
+            Some(LicenceValidityPeriod.UpToOneYear),
+            Some(TaxSituation.PAYE),
+            None
+          )
+
+          val session                                     = HECSession(individualRetrievedData, incompleteAnswers, None)
+          implicit val request: RequestWithSessionData[_] =
+            requestWithSessionData(session)
+
+          val result = journeyService.updateAndNext(
+            routes.LicenceDetailsController.expiryDate(),
+            session
+          )
+          await(result.value) shouldBe Right(routes.LicenceDetailsController.expiryDateExit())
+        }
+
+      }
+
     }
 
     "handling calls to 'previous'" must {

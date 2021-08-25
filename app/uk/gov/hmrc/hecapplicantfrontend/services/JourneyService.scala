@@ -28,7 +28,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.{EntityType, Error, HECSession}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRetrievedData, IndividualRetrievedData}
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.{CompleteUserAnswers, IncompleteUserAnswers}
-import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
+import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceExpiryDate, LicenceType}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.util.TimeUtils
 import uk.gov.hmrc.hecapplicantfrontend.util.TimeUtils.LocalDateOps
@@ -154,7 +154,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
           Some(licenceValidityPeriod),
           Some(taxSituation),
           Some(entityType)
-        ) if licenceTypeForIndividualAndCompany(licenceType) =>
+        ) if licenceTypeForIndividualAndCompany(licenceType) && licenceExpiryDateValid(licenceExpiryDate) =>
       val completeAnswers =
         CompleteUserAnswers(
           licenceType,
@@ -173,7 +173,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
           Some(licenceValidityPeriod),
           Some(taxSituation),
           _
-        ) if !licenceTypeForIndividualAndCompany(licenceType) =>
+        ) if !licenceTypeForIndividualAndCompany(licenceType) && licenceExpiryDateValid(licenceExpiryDate) =>
       val completeAnswers =
         CompleteUserAnswers(
           licenceType,
@@ -194,11 +194,14 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
     else routes.TaxSituationController.taxSituation()
   }
 
+  private def licenceExpiryDateValid(expiryDate: LicenceExpiryDate): Boolean =
+    expiryDate.value.isAfterOrOn(TimeUtils.today().minusYears(1L))
+
   private def licenceExpiryRoute(session: HECSession): Call =
     session.userAnswers.fold(_.licenceExpiryDate, c => Some(c.licenceExpiryDate)) match {
-      case Some(expiryDate) if expiryDate.value.isAfterOrOn(TimeUtils.today().minusYears(1L)) =>
+      case Some(expiryDate) if licenceExpiryDateValid(expiryDate) =>
         routes.LicenceDetailsController.licenceTimeTrading()
-      case _                                                                                  =>
+      case _                                                      =>
         routes.LicenceDetailsController.expiryDateExit()
     }
 
