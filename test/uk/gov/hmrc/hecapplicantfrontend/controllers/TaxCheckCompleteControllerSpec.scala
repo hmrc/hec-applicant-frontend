@@ -29,7 +29,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
-import uk.gov.hmrc.hecapplicantfrontend.util.{TimeProvider, TimeUtils}
+import uk.gov.hmrc.hecapplicantfrontend.util.TimeProvider
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -84,12 +84,14 @@ class TaxCheckCompleteControllerSpec
       "display the page" when {
 
         "tax check code has been generated for the user " in {
-          val session = HECSession(
+          val taxCheckCode = "LXB7G6DX7"
+          val expiryDate   = LocalDate.of(2020, 1, 8)
+          val session      = HECSession(
             individualRetrievedData,
             UserAnswers.empty.copy(
               licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)
             ),
-            Some(HECTaxCheck(HECTaxCheckCode("some code"), TimeUtils.today()))
+            Some(HECTaxCheck(HECTaxCheckCode(taxCheckCode), expiryDate))
           )
 
           inSequence {
@@ -99,7 +101,12 @@ class TaxCheckCompleteControllerSpec
 
           checkPageIsDisplayed(
             performAction(),
-            messageFromMessageKey("taxCheckComplete.title")
+            messageFromMessageKey("taxCheckComplete.title"),
+            doc => {
+              doc.select(".govuk-panel__body").text should include regex "LXB 7G6 DX7"
+
+              doc.select(".govuk-body").text should include regex "8 January 2020"
+            }
           )
         }
 
