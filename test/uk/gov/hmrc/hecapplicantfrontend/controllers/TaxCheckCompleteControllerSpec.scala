@@ -101,10 +101,6 @@ class TaxCheckCompleteControllerSpec
 
               doc
                 .select(".govuk-body")
-                .text shouldBe "Your tax check code is valid for 120 days. The last day it is valid is: 8 January 2020."
-
-              doc
-                .select(".govuk-body")
                 .html should include regex messageFromMessageKey("taxCheckComplete.p2", "8 January 2020")
             }
           )
