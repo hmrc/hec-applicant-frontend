@@ -1,0 +1,32 @@
+@import play.api.i18n.Messages
+@import uk.gov.hmrc.hecapplicantfrontend.models.HECTaxCheck
+@import play.api.mvc.Request
+@import play.twirl.api.Html
+@import uk.gov.hmrc.govukfrontend.views.html.components._
+@import uk.gov.hmrc.hecapplicantfrontend.util.TimeUtils
+@import views.html.helper.CSPNonce
+
+@this(layout: Layout, govukPanel : GovukPanel)
+
+@(hecTaxCheck: HECTaxCheck)(implicit request: Request[_], messages: Messages)
+@key = @{"taxCheckComplete"}
+@title = @{messages(s"$key.title")}
+@scripts = { <script src="@{controllers.routes.Assets.versioned("javascripts/application.js")}" @{CSPNonce.attr}></script> }
+
+@layout(pageTitle = Some(title), scriptsBlock = Some(scripts)) {
+    @govukPanel(Panel(
+        title = Text(title),
+        content = HtmlContent(s"""${messages(s"$key.subtitle")}<br><strong>${hecTaxCheck.taxCheckCode.value.grouped(3).mkString(" ")}</strong>""")
+    ))
+
+    <p class="govuk-body">@messages(s"$key.p1")</p>
+    <p class="govuk-body">@Html(messages(s"$key.p2", TimeUtils.govDisplayFormat(hecTaxCheck.expiresAfter)))</p>
+
+    <h2 class="govuk-heading-m">@messages(s"$key.whatNext")</h2>
+
+    <ul class="govuk-list govuk-list--number">
+        <li>@Html(messages(s"$key.list1"))</li>
+        <li>@messages(s"$key.list2")</li>
+    </ul>
+
+}
