@@ -16,14 +16,21 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models
 
-import play.api.libs.functional.syntax.toInvariantFunctorOps
-import play.api.libs.json.Format
+import julienrf.json.derived
+import play.api.libs.json.OFormat
 
-final case class TaxYear(year: Int) extends AnyVal
+sealed trait CTStatus
 
-object TaxYear {
+object CTStatus {
 
-  implicit val format: Format[TaxYear] =
-    implicitly[Format[Int]].inmap(TaxYear(_), _.year)
+  case object ReturnFound extends CTStatus
+
+  case object NoticeToFileIssued extends CTStatus
+
+  case object NoAccountingPeriodFound extends CTStatus
+
+  case object NoReturnFound extends CTStatus
+
+  implicit val format: OFormat[CTStatus] = derived.oformat()
 
 }

@@ -16,14 +16,17 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models
 
-import play.api.libs.functional.syntax.toInvariantFunctorOps
-import play.api.libs.json.Format
+import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.hecapplicantfrontend.models.ids.SAUTR
 
-final case class TaxYear(year: Int) extends AnyVal
+final case class SAStatusResponse(
+  sautr: SAUTR,
+  taxYear: TaxYear,
+  status: SAStatus
+)
 
-object TaxYear {
+object SAStatusResponse {
 
-  implicit val format: Format[TaxYear] =
-    implicitly[Format[Int]].inmap(TaxYear(_), _.year)
+  implicit val format: OFormat[SAStatusResponse] = Json.format
 
 }

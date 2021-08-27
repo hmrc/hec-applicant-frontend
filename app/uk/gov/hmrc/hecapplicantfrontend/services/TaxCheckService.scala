@@ -23,17 +23,20 @@ import cats.syntax.either._
 import cats.syntax.eq._
 import play.mvc.Http.Status.CREATED
 import com.google.inject.{ImplementedBy, Inject, Singleton}
+import play.api.http.Status.OK
 import uk.gov.hmrc.hecapplicantfrontend.connectors.HECConnector
 import uk.gov.hmrc.hecapplicantfrontend.models.ApplicantDetails.IndividualApplicantDetails
 import uk.gov.hmrc.hecapplicantfrontend.models.HECTaxCheckData.IndividualHECTaxCheckData
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRetrievedData, IndividualRetrievedData}
 import uk.gov.hmrc.hecapplicantfrontend.models.TaxDetails.IndividualTaxDetails
-import uk.gov.hmrc.hecapplicantfrontend.models.{Error, HECTaxCheck, HECTaxCheckData, RetrievedApplicantData}
+import uk.gov.hmrc.hecapplicantfrontend.models.{CTStatusResponse, Error, HECTaxCheck, HECTaxCheckData, RetrievedApplicantData, SAStatusResponse, TaxYear}
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.CompleteUserAnswers
+import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CTUTR, SAUTR}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceDetails
 import uk.gov.hmrc.hecapplicantfrontend.util.HttpResponseOps._
 import uk.gov.hmrc.http.HeaderCarrier
 
+import java.time.LocalDate
 import scala.concurrent.{ExecutionContext, Future}
 
 @ImplementedBy(classOf[TaxCheckServiceImpl])
@@ -43,6 +46,12 @@ trait TaxCheckService {
     retrievedApplicantData: RetrievedApplicantData,
     answers: CompleteUserAnswers
   )(implicit hc: HeaderCarrier): EitherT[Future, Error, HECTaxCheck]
+
+  def getSAStatus(sautr: SAUTR, taxYear: TaxYear)(implicit hc: HeaderCarrier): EitherT[Future, Error, SAStatusResponse]
+
+  def getCTStatus(ctutr: CTUTR, from: LocalDate, to: LocalDate)(implicit
+    hc: HeaderCarrier
+  ): EitherT[Future, Error, CTStatusResponse]
 
 }
 
@@ -64,6 +73,30 @@ class TaxCheckServiceImpl @Inject() (hecConnector: HECConnector)(implicit ec: Ex
           response.parseJSON[HECTaxCheck].leftMap(Error(_))
       }
   }
+
+  def getSAStatus(sautr: SAUTR, taxYear: TaxYear)(implicit
+    hc: HeaderCarrier
+  ): EitherT[Future, Error, SAStatusResponse] =
+    hecConnector
+      .getSAStatus(sautr, taxYear)
+      .subflatMap { response =>
+        if (response.status =!= OK)
+          Left(Error(s"Call to get SA status came back with status ${response.status}. Body is ${response.body}"))
+        else
+          response.parseJSON[SAStatusResponse].leftMap(Error(_))
+      }
+
+  def getCTStatus(ctutr: CTUTR, from: LocalDate, to: LocalDate)(implicit
+    hc: HeaderCarrier
+  ): EitherT[Future, Error, CTStatusResponse] =
+    hecConnector
+      .getCTStatus(ctutr, from, to)
+      .subflatMap { response =>
+        if (response.status =!= OK)
+          Left(Error(s"Call to get CT status came back with status ${response.status}. Body is ${response.body}"))
+        else
+          response.parseJSON[CTStatusResponse].leftMap(Error(_))
+      }
 
   private def toHECTaxCheckData(
     retrievedApplicantData: RetrievedApplicantData,
