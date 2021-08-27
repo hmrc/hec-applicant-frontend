@@ -41,7 +41,7 @@ class TaxCheckCompleteController @Inject() (
     request.sessionData.completedTaxCheck match {
       case Some(taxCheck) => Ok(taxCheckCompletePage(taxCheck))
       case None           =>
-        logger.warn(s"Tax code not found for ${request.sessionData.retrievedUserData.ggCredId}")
+        logger.warn("Tax code not found")
         InternalServerError
     }
   }

@@ -28,7 +28,6 @@ import uk.gov.hmrc.hecapplicantfrontend.models._
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
-import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
 import uk.gov.hmrc.hecapplicantfrontend.util.TimeProvider
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -45,9 +44,7 @@ class TaxCheckCompleteControllerSpec
 
   override def overrideBindings = List(
     bind[AuthConnector].toInstance(mockAuthConnector),
-    bind[SessionStore].toInstance(mockSessionStore),
-    bind[JourneyService].toInstance(mockJourneyService),
-    bind[TimeProvider].toInstance(mockTimeProvider)
+    bind[SessionStore].toInstance(mockSessionStore)
   )
 
   val controller = instanceOf[TaxCheckCompleteController]
@@ -105,7 +102,13 @@ class TaxCheckCompleteControllerSpec
             doc => {
               doc.select(".govuk-panel__body").text should include regex "LXB 7G6 DX7"
 
-              doc.select(".govuk-body").text should include regex "8 January 2020"
+              doc
+                .select(".govuk-body")
+                .text shouldBe "Your tax check code is valid for 120 days. The last day it is valid is: 8 January 2020."
+
+              doc
+                .select(".govuk-body")
+                .html should include regex messageFromMessageKey("taxCheckComplete.p2", "8 January 2020")
             }
           )
         }

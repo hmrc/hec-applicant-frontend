@@ -20,7 +20,7 @@ import play.api.libs.functional.syntax.toInvariantFunctorOps
 import play.api.libs.json.Format
 
 /**
-  * Company Unique Taxpayer Reference number
+  * Corporation Tax Unique Taxpayer Reference number
   */
 final case class CTUTR(value: String) extends AnyVal
 
