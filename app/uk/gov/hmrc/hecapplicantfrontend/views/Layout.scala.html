@@ -30,6 +30,15 @@
   showSignOutLink: Boolean = true
 )(contentBlock: Html)(implicit request: Request[_], messages: Messages)
 
+
+@head = {
+    @headBlock.getOrElse(Html(""))
+    <style @{CSPNonce.attr} media="all">
+            .js-visible { display: none; }
+            .js-enabled .js-visible { display: inline; }
+    </style>
+}
+
 @beforeContentBlock = {
     @govukPhaseBanner(PhaseBanner(
         tag = Some(Tag(
@@ -55,7 +64,7 @@
 
 @govukLayout(
     pageTitle = Some(documentTitle),
-    headBlock = Some(hmrcHead(headBlock = headBlock, nonce = CSPNonce.get)),
+    headBlock = Some(hmrcHead(headBlock = Some(head), nonce = CSPNonce.get)),
     headerBlock = Some(hmrcStandardHeader(signOutUrl = if(showSignOutLink) Some(appConfig.signOutUri) else None)),
     scriptsBlock = Some(hmrcScripts(scriptsBlock = scriptsBlock, nonce = CSPNonce.get)),
     beforeContentBlock = Some(beforeContentBlock),
