@@ -28,7 +28,6 @@ import uk.gov.hmrc.hecapplicantfrontend.models._
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
-import uk.gov.hmrc.hecapplicantfrontend.util.TimeProvider
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -39,8 +38,6 @@ class TaxCheckCompleteControllerSpec
     with SessionSupport
     with AuthAndSessionDataBehaviour
     with JourneyServiceSupport {
-
-  val mockTimeProvider = mock[TimeProvider]
 
   override def overrideBindings = List(
     bind[AuthConnector].toInstance(mockAuthConnector),
