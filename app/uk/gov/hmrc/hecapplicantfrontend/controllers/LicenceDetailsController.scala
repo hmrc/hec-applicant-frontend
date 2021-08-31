@@ -69,7 +69,10 @@ class LicenceDetailsController @Inject() (
   val licenceTypeSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     def handleValidLicenceType(licenceType: LicenceType): Future[Result] = {
       val updatedAnswers =
-        UserAnswers.empty.copy(licenceType = Some(licenceType))
+        if (request.sessionData.userAnswers.fold(_.licenceType, c => Some(c.licenceType)).contains(licenceType))
+          request.sessionData.userAnswers
+        else
+          UserAnswers.empty.copy(licenceType = Some(licenceType))
 
       journeyService
         .updateAndNext(

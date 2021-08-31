@@ -280,6 +280,29 @@ class LicenceDetailsControllerSpec
 
             checkIsRedirect(performAction("licenceType" -> "2"), mockNextCall)
           }
+
+          "the user has not changed the licence type they have already submitted previously" in {
+            val answers = CompleteUserAnswers(
+              LicenceType.DriverOfTaxisAndPrivateHires,
+              LicenceExpiryDate(TimeUtils.today().minusDays(10L)),
+              LicenceTimeTrading.ZeroToTwoYears,
+              LicenceValidityPeriod.UpToOneYear,
+              TaxSituation.SA,
+              Some(EntityType.Individual)
+            )
+            val session = HECSession(individuaRetrievedlData, answers, None)
+
+            inSequence {
+              mockAuthWithNoRetrievals()
+              mockGetSession(session)
+              mockJourneyServiceUpdateAndNext(routes.LicenceDetailsController.licenceType(), session, session)(
+                Right(mockNextCall)
+              )
+            }
+
+            checkIsRedirect(performAction("licenceType" -> "0"), mockNextCall)
+          }
+
         }
 
       }
