@@ -53,8 +53,8 @@ class HECConnectorImpl @Inject() (http: HttpClient, servicesConfig: ServicesConf
   private def saStatusUrl(sautr: SAUTR, taxYear: TaxYear): String =
     s"$baseUrl/hec/sa-status/${sautr.value}/${taxYear.year}"
 
-  private def ctStatusUrl(ctutr: CTUTR, from: LocalDate, to: LocalDate): String =
-    s"$baseUrl/hec/ct-status/${ctutr.value}/${toUrlString(from)}/${toUrlString(to)}"
+  private def ctStatusUrl(ctutr: CTUTR, startDate: LocalDate, endDate: LocalDate): String =
+    s"$baseUrl/hec/ct-status/${ctutr.value}/${toUrlString(startDate)}/${toUrlString(endDate)}"
 
   private def toUrlString(d: LocalDate): String =
     d.format(DateTimeFormatter.ISO_LOCAL_DATE)
