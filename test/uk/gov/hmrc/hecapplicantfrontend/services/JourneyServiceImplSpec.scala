@@ -479,6 +479,27 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
           await(result.value) shouldBe Right(routes.LicenceDetailsController.expiryDateExit())
         }
 
+        "the selected entity type is not consistent with the entity type retrieved from the GG creds" in {
+          val incompleteAnswers = IncompleteUserAnswers(
+            Some(LicenceType.OperatorOfPrivateHireVehicles),
+            Some(LicenceExpiryDate(TimeUtils.today().minusMonths(13L))),
+            Some(LicenceTimeTrading.ZeroToTwoYears),
+            Some(LicenceValidityPeriod.UpToOneYear),
+            Some(TaxSituation.PAYE),
+            Some(EntityType.Company)
+          )
+
+          val session                                     = HECSession(individualRetrievedData, incompleteAnswers, None)
+          implicit val request: RequestWithSessionData[_] =
+            requestWithSessionData(session)
+
+          val result = journeyService.updateAndNext(
+            routes.EntityTypeController.entityType(),
+            session
+          )
+          await(result.value) shouldBe Right(routes.EntityTypeController.wrongGGAccount())
+        }
+
       }
 
     }
