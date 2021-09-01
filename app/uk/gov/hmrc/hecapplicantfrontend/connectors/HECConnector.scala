@@ -35,7 +35,7 @@ trait HECConnector {
 
   def getSAStatus(sautr: SAUTR, taxYear: TaxYear)(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse]
 
-  def getCTStatus(ctutr: CTUTR, from: LocalDate, to: LocalDate)(implicit
+  def getCTStatus(ctutr: CTUTR, startDate: LocalDate, endDate: LocalDate)(implicit
     hc: HeaderCarrier
   ): EitherT[Future, Error, HttpResponse]
 
@@ -77,12 +77,12 @@ class HECConnectorImpl @Inject() (http: HttpClient, servicesConfig: ServicesConf
         .recover { case e => Left(Error(e)) }
     )
 
-  def getCTStatus(ctutr: CTUTR, from: LocalDate, to: LocalDate)(implicit
+  def getCTStatus(ctutr: CTUTR, startDate: LocalDate, endDate: LocalDate)(implicit
     hc: HeaderCarrier
   ): EitherT[Future, Error, HttpResponse] =
     EitherT[Future, Error, HttpResponse](
       http
-        .GET[HttpResponse](ctStatusUrl(ctutr, from, to))
+        .GET[HttpResponse](ctStatusUrl(ctutr, startDate, endDate))
         .map(Right(_))
         .recover { case e => Left(Error(e)) }
     )

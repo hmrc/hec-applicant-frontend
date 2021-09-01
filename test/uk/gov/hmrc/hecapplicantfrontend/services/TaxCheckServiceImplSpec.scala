@@ -56,10 +56,10 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
       .expects(sautr, taxYear, *)
       .returning(EitherT.fromEither(result))
 
-  def mockGetCTStatus(ctutr: CTUTR, from: LocalDate, to: LocalDate)(result: Either[Error, HttpResponse]) =
+  def mockGetCTStatus(ctutr: CTUTR, startDate: LocalDate, endDate: LocalDate)(result: Either[Error, HttpResponse]) =
     (mockHECConnector
       .getCTStatus(_: CTUTR, _: LocalDate, _: LocalDate)(_: HeaderCarrier))
-      .expects(ctutr, from, to, *)
+      .expects(ctutr, startDate, endDate, *)
       .returning(EitherT.fromEither(result))
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
@@ -218,13 +218,13 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
 
       val ctutr = CTUTR("1234567890")
 
-      val from = LocalDate.now()
-      val to   = from.plusDays(1L)
+      val startDate = LocalDate.now()
+      val endDate   = startDate.plusDays(1L)
 
       val ctStatusResponse = CTStatusResponse(
         ctutr,
-        from,
-        to,
+        startDate,
+        endDate,
         CTStatus.ReturnFound,
         List(AccountingPeriod("01", LocalDate.now.plusDays(2L), LocalDate.now().plusDays(3L)))
       )
@@ -234,30 +234,30 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
       "return an error" when {
 
         "the http call fails" in {
-          mockGetCTStatus(ctutr, from, to)(Left(Error("")))
+          mockGetCTStatus(ctutr, startDate, endDate)(Left(Error("")))
 
-          val result = service.getCTStatus(ctutr, from, to)
+          val result = service.getCTStatus(ctutr, startDate, endDate)
           await(result.value) shouldBe a[Left[_, _]]
         }
 
         "the http response comes back with a non-OK (200) response" in {
-          mockGetCTStatus(ctutr, from, to)(Right(HttpResponse(ACCEPTED, ctStatusResponseJson, emptyHeaders)))
+          mockGetCTStatus(ctutr, startDate, endDate)(Right(HttpResponse(ACCEPTED, ctStatusResponseJson, emptyHeaders)))
 
-          val result = service.getCTStatus(ctutr, from, to)
+          val result = service.getCTStatus(ctutr, startDate, endDate)
           await(result.value) shouldBe a[Left[_, _]]
         }
 
         "there is no json in the response" in {
-          mockGetCTStatus(ctutr, from, to)(Right(HttpResponse(OK, "", emptyHeaders)))
+          mockGetCTStatus(ctutr, startDate, endDate)(Right(HttpResponse(OK, "", emptyHeaders)))
 
-          val result = service.getCTStatus(ctutr, from, to)
+          val result = service.getCTStatus(ctutr, startDate, endDate)
           await(result.value) shouldBe a[Left[_, _]]
         }
 
         "the json in the body cannot be parsed" in {
-          mockGetCTStatus(ctutr, from, to)(Right(HttpResponse(ACCEPTED, Json.parse("{ }"), emptyHeaders)))
+          mockGetCTStatus(ctutr, startDate, endDate)(Right(HttpResponse(ACCEPTED, Json.parse("{ }"), emptyHeaders)))
 
-          val result = service.getCTStatus(ctutr, from, to)
+          val result = service.getCTStatus(ctutr, startDate, endDate)
           await(result.value) shouldBe a[Left[_, _]]
         }
 
@@ -266,9 +266,9 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
       "return successfully" when {
 
         "the http call succeeds and the body of the repsonse can be parsed" in {
-          mockGetCTStatus(ctutr, from, to)(Right(HttpResponse(OK, ctStatusResponseJson, emptyHeaders)))
+          mockGetCTStatus(ctutr, startDate, endDate)(Right(HttpResponse(OK, ctStatusResponseJson, emptyHeaders)))
 
-          val result = service.getCTStatus(ctutr, from, to)
+          val result = service.getCTStatus(ctutr, startDate, endDate)
           await(result.value) shouldBe Right(ctStatusResponse)
         }
 

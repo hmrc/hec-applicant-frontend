@@ -107,15 +107,15 @@ class HECConnectorImplSpec extends AnyWordSpec with Matchers with MockFactory wi
 
       val ctutr = CTUTR("1234567890")
 
-      val from = LocalDate.of(2020, 12, 31)
+      val startDate = LocalDate.of(2020, 12, 31)
 
-      val to = LocalDate.of(2021, 6, 20)
+      val endDate = LocalDate.of(2021, 6, 20)
 
       val expectedUrl = s"$protocol://$host:$port/hec/ct-status/1234567890/2020-12-31/2021-06-20"
 
       behave like connectorBehaviour(
         mockGet(expectedUrl)(_),
-        () => connector.getCTStatus(ctutr, from, to)
+        () => connector.getCTStatus(ctutr, startDate, endDate)
       )
 
     }

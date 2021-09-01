@@ -49,7 +49,7 @@ trait TaxCheckService {
 
   def getSAStatus(sautr: SAUTR, taxYear: TaxYear)(implicit hc: HeaderCarrier): EitherT[Future, Error, SAStatusResponse]
 
-  def getCTStatus(ctutr: CTUTR, from: LocalDate, to: LocalDate)(implicit
+  def getCTStatus(ctutr: CTUTR, startDate: LocalDate, endDate: LocalDate)(implicit
     hc: HeaderCarrier
   ): EitherT[Future, Error, CTStatusResponse]
 
@@ -86,11 +86,11 @@ class TaxCheckServiceImpl @Inject() (hecConnector: HECConnector)(implicit ec: Ex
           response.parseJSON[SAStatusResponse].leftMap(Error(_))
       }
 
-  def getCTStatus(ctutr: CTUTR, from: LocalDate, to: LocalDate)(implicit
+  def getCTStatus(ctutr: CTUTR, startDate: LocalDate, endDate: LocalDate)(implicit
     hc: HeaderCarrier
   ): EitherT[Future, Error, CTStatusResponse] =
     hecConnector
-      .getCTStatus(ctutr, from, to)
+      .getCTStatus(ctutr, startDate, endDate)
       .subflatMap { response =>
         if (response.status =!= OK)
           Left(Error(s"Call to get CT status came back with status ${response.status}. Body is ${response.body}"))
