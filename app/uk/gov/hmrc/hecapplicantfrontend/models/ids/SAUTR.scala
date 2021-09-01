@@ -18,6 +18,8 @@ package uk.gov.hmrc.hecapplicantfrontend.models.ids
 
 import play.api.libs.functional.syntax.toInvariantFunctorOps
 import play.api.libs.json.Format
+import uk.gov.hmrc.referencechecker.SelfAssessmentReferenceChecker
+import uk.gov.hmrc.hecapplicantfrontend.util.StringUtils._
 
 /**
   * Self Assessment (Individual) Unique Taxpayer Reference number
@@ -28,5 +30,10 @@ object SAUTR {
 
   implicit val format: Format[SAUTR] =
     implicitly[Format[String]].inmap(SAUTR(_), _.value)
+
+  def fromString(s: String): Option[SAUTR] = {
+    val withoutSpaces = s.removeWhitespace
+    if (SelfAssessmentReferenceChecker.isValid(withoutSpaces)) Some(SAUTR(withoutSpaces)) else None
+  }
 
 }

@@ -129,11 +129,11 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
 
       val ggCredId = GGCredId("credId")
 
-      val sautr = SAUTR("sautr")
+      val sautr = SAUTR("1234567895")
 
       val emailAddress = EmailAddress("email")
 
-      val ctutr = CTUTR("ctutr")
+      val ctutr = CTUTR("1234567895")
 
       val completeIndividualRetrievedData = IndividualRetrievedData(
         ggCredId,
@@ -508,6 +508,47 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
               )
               mockGetSession(Right(None))
               mockStoreSession(HECSession(completeCompanyRetrievedData, UserAnswers.empty, None))(Left(Error("")))
+            }
+          )
+        }
+
+        "there is no SA UTR from citizen details and there is an invalid SA UTR retrieved from GG" in {
+          val citizenDetails = CitizenDetails(
+            completeIndividualRetrievedData.name,
+            completeIndividualRetrievedData.dateOfBirth,
+            None
+          )
+
+          testIsError(() =>
+            inSequence {
+              mockAuthWithRetrievals(
+                ConfidenceLevel.L250,
+                Some(AffinityGroup.Individual),
+                Some(completeIndividualRetrievedData.nino),
+                Some(SAUTR("invalid")),
+                completeIndividualRetrievedData.emailAddress,
+                Enrolments(Set.empty),
+                Some(retrievedGGCredential(completeIndividualRetrievedData.ggCredId))
+              )
+              mockGetSession(Right(None))
+              mockGetCitizenDetails(completeIndividualRetrievedData.nino)(Right(citizenDetails))
+            }
+          )
+        }
+
+        "there is an invalid CT UTR in the enrolments" in {
+          testIsError(() =>
+            inSequence {
+              mockAuthWithRetrievals(
+                ConfidenceLevel.L50,
+                Some(AffinityGroup.Organisation),
+                None,
+                None,
+                completeCompanyRetrievedData.emailAddress,
+                Enrolments(Set(retrievedCtEnrolment(CTUTR("invalid")))),
+                Some(retrievedGGCredential(completeCompanyRetrievedData.ggCredId))
+              )
+              mockGetSession(Right(None))
             }
           )
         }

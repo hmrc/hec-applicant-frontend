@@ -16,9 +16,13 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.controllers
 
-import cats.data.EitherT
+import cats.data.{EitherT, Validated}
+import cats.data.Validated.Valid
+import cats.syntax.option._
 import cats.syntax.eq._
+import cats.syntax.traverse._
 import cats.instances.future._
+import cats.instances.option._
 import cats.instances.string._
 import com.google.inject.{Inject, Singleton}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
@@ -122,7 +126,7 @@ class StartController @Inject() (
               )
 
             case _ =>
-              EitherT.pure(handleOrganisation(maybeEmail, enrolments, ggCredId))
+              EitherT.fromEither(handleOrganisation(maybeEmail, enrolments, ggCredId))
           }
 
         case Some(AffinityGroup.Agent) =>
@@ -153,17 +157,31 @@ class StartController @Inject() (
         case Some(nino) =>
           citizenDetailsService
             .getCitizenDetails(NINO(nino))
-            .map { citizenDetails =>
-              IndividualRetrievedData(
-                GGCredId(ggCredId.value),
-                NINO(nino),
-                citizenDetails.sautr.orElse(maybeSautr.map(SAUTR(_))),
-                citizenDetails.name,
-                citizenDetails.dateOfBirth,
-                maybeEmail.map(EmailAddress(_))
-              ): RetrievedApplicantData
-            }
             .leftMap(BackendError(_): StartError)
+            .subflatMap { citizenDetails =>
+              val sautrValidation = citizenDetails.sautr match {
+                case Some(s) => Valid(Some(s))
+                case None    =>
+                  maybeSautr
+                    .map(SAUTR.fromString(_).toValid("Got invalid SAUTR from GG"))
+                    .sequence[Validated[String, *], SAUTR]
+              }
+
+              sautrValidation
+                .bimap[StartError, RetrievedApplicantData](
+                  DataError(_),
+                  sautr =>
+                    IndividualRetrievedData(
+                      GGCredId(ggCredId.value),
+                      NINO(nino),
+                      sautr,
+                      citizenDetails.name,
+                      citizenDetails.dateOfBirth,
+                      maybeEmail.map(EmailAddress(_))
+                    )
+                )
+                .toEither
+            }
       }
     }
 
@@ -171,16 +189,26 @@ class StartController @Inject() (
     maybeEmail: Option[String],
     enrolments: Enrolments,
     ggCredId: GGCredId
-  ): RetrievedApplicantData = {
-    val ctutr = enrolments.enrolments
+  ): Either[StartError, RetrievedApplicantData] = {
+    val ctutrValidation = enrolments.enrolments
       .find(_.key === EnrolmentConfig.CTEnrolment.key)
-      .flatMap(_.getIdentifier(EnrolmentConfig.CTEnrolment.ctutrIdentifier).map(id => CTUTR(id.value)))
+      .flatMap(
+        _.getIdentifier(EnrolmentConfig.CTEnrolment.ctutrIdentifier).map(id =>
+          CTUTR.fromString(id.value).toValid("Got invalid CTUTR from enrolments")
+        )
+      )
+      .sequence[Validated[String, *], CTUTR]
 
-    CompanyRetrievedData(
-      GGCredId(ggCredId.value),
-      ctutr,
-      maybeEmail.map(EmailAddress(_))
-    )
+    ctutrValidation
+      .bimap[StartError, RetrievedApplicantData](
+        DataError(_),
+        CompanyRetrievedData(
+          GGCredId(ggCredId.value),
+          _,
+          maybeEmail.map(EmailAddress(_))
+        )
+      )
+      .toEither
   }
 
   private def withGGCredentials[A](

@@ -32,6 +32,16 @@ class SAUTRSpec extends AnyWordSpec with Matchers {
       Json.fromJson[SAUTR](json) shouldBe JsSuccess(sautr)
     }
 
+    "have a method which validates an SA UTR from a string" in {
+      SAUTR.fromString("")                 shouldBe None
+      SAUTR.fromString("---")              shouldBe None
+      SAUTR.fromString("12345")            shouldBe None
+      SAUTR.fromString("1234567890")       shouldBe None
+      SAUTR.fromString("a23456789b")       shouldBe None
+      SAUTR.fromString("1234567895")       shouldBe Some(SAUTR("1234567895"))
+      SAUTR.fromString(" 123456 789  5  ") shouldBe Some(SAUTR("1234567895"))
+    }
+
   }
 
 }

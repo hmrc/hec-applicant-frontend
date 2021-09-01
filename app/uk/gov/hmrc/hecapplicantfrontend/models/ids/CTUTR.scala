@@ -18,6 +18,8 @@ package uk.gov.hmrc.hecapplicantfrontend.models.ids
 
 import play.api.libs.functional.syntax.toInvariantFunctorOps
 import play.api.libs.json.Format
+import uk.gov.hmrc.hecapplicantfrontend.util.StringUtils.StringOps
+import uk.gov.hmrc.referencechecker.CorporationTaxReferenceChecker
 
 /**
   * Corporation Tax Unique Taxpayer Reference number
@@ -28,5 +30,10 @@ object CTUTR {
 
   implicit val format: Format[CTUTR] =
     implicitly[Format[String]].inmap(CTUTR(_), _.value)
+
+  def fromString(s: String): Option[CTUTR] = {
+    val withoutSpaces = s.removeWhitespace
+    if (CorporationTaxReferenceChecker.isValid(withoutSpaces)) Some(CTUTR(withoutSpaces)) else None
+  }
 
 }

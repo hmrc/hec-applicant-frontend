@@ -16,14 +16,33 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models
 
-import play.api.libs.functional.syntax.toInvariantFunctorOps
-import play.api.libs.json.Format
+import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.hecapplicantfrontend.models.ids.CTUTR
 
-final case class TaxYear(year: Int) extends AnyVal
+import java.time.LocalDate
 
-object TaxYear {
+final case class CTStatusResponse(
+  ctutr: CTUTR,
+  startDate: LocalDate,
+  endDate: LocalDate,
+  status: CTStatus,
+  accountingPeriods: List[AccountingPeriod]
+)
 
-  implicit val format: Format[TaxYear] =
-    implicitly[Format[Int]].inmap(TaxYear(_), _.year)
+final case class AccountingPeriod(
+  accountingPeriod: String,
+  accountingPeriodStartDate: LocalDate,
+  accountingPeriodEndDate: LocalDate
+)
+
+object AccountingPeriod {
+
+  implicit val format: OFormat[AccountingPeriod] = Json.format
+
+}
+
+object CTStatusResponse {
+
+  implicit val format: OFormat[CTStatusResponse] = Json.format
 
 }

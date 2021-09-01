@@ -23,9 +23,9 @@ import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
 import uk.gov.hmrc.hecapplicantfrontend.models.ApplicantDetails.IndividualApplicantDetails
 import uk.gov.hmrc.hecapplicantfrontend.models.HECTaxCheckData.IndividualHECTaxCheckData
-import uk.gov.hmrc.hecapplicantfrontend.models.{DateOfBirth, HECTaxCheckData, Name, TaxSituation}
+import uk.gov.hmrc.hecapplicantfrontend.models.{DateOfBirth, HECTaxCheckData, Name, TaxSituation, TaxYear}
 import uk.gov.hmrc.hecapplicantfrontend.models.TaxDetails.IndividualTaxDetails
-import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO, SAUTR}
+import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CTUTR, GGCredId, NINO, SAUTR}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceDetails, LicenceExpiryDate, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -80,6 +80,42 @@ class HECConnectorImplSpec extends AnyWordSpec with Matchers with MockFactory wi
       behave like connectorBehaviour(
         mockPost(expectedUrl, Seq.empty, individualTaxCheckData)(_),
         () => connector.saveTaxCheck(individualTaxCheckData)
+      )
+
+    }
+
+    "handling requests to get SA statuses" must {
+
+      implicit val hc: HeaderCarrier = HeaderCarrier()
+
+      val sautr = SAUTR("1234567890")
+
+      val taxYear = TaxYear(2020)
+
+      val expectedUrl = s"$protocol://$host:$port/hec/sa-status/1234567890/2020"
+
+      behave like connectorBehaviour(
+        mockGet(expectedUrl)(_),
+        () => connector.getSAStatus(sautr, taxYear)
+      )
+
+    }
+
+    "handling requests to get CT statuses" must {
+
+      implicit val hc: HeaderCarrier = HeaderCarrier()
+
+      val ctutr = CTUTR("1234567890")
+
+      val startDate = LocalDate.of(2020, 12, 31)
+
+      val endDate = LocalDate.of(2021, 6, 20)
+
+      val expectedUrl = s"$protocol://$host:$port/hec/ct-status/1234567890/2020-12-31/2021-06-20"
+
+      behave like connectorBehaviour(
+        mockGet(expectedUrl)(_),
+        () => connector.getCTStatus(ctutr, startDate, endDate)
       )
 
     }

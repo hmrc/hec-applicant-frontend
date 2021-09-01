@@ -14,16 +14,14 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hecapplicantfrontend.models
+package uk.gov.hmrc.hecapplicantfrontend.util
 
-import play.api.libs.functional.syntax.toInvariantFunctorOps
-import play.api.libs.json.Format
+object StringUtils {
 
-final case class TaxYear(year: Int) extends AnyVal
+  implicit class StringOps(private val s: String) extends AnyVal {
 
-object TaxYear {
+    def removeWhitespace: String = s.replaceAll("\\s", "")
 
-  implicit val format: Format[TaxYear] =
-    implicitly[Format[Int]].inmap(TaxYear(_), _.year)
+  }
 
 }

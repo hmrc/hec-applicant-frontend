@@ -32,6 +32,16 @@ class CTUTRSpec extends AnyWordSpec with Matchers {
       Json.fromJson[CTUTR](json) shouldBe JsSuccess(ctutr)
     }
 
+    "have a method which validates an CT UTR from a string" in {
+      CTUTR.fromString("")                 shouldBe None
+      CTUTR.fromString("---")              shouldBe None
+      CTUTR.fromString("12345")            shouldBe None
+      CTUTR.fromString("1234567890")       shouldBe None
+      CTUTR.fromString("a23456789b")       shouldBe None
+      CTUTR.fromString("1234567895")       shouldBe Some(CTUTR("1234567895"))
+      CTUTR.fromString(" 123456 789  5  ") shouldBe Some(CTUTR("1234567895"))
+    }
+
   }
 
 }

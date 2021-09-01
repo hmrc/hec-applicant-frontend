@@ -170,6 +170,32 @@ class CitizenDetailsServiceImplSpec extends AnyWordSpec with Matchers with MockF
           )
         }
 
+        "an SAUTR is found which is invalid" in {
+          testIsError(
+            mockGetCitizenDetails(_)(
+              Right(
+                HttpResponse(
+                  200,
+                  Json.parse(
+                    s"""{
+                       |  "ids" : { "sautr" : "invalid" }, 
+                       |  "dateOfBirth" : "01122013",
+                       |   "name" : { 
+                       |     "current" : {
+                       |        "firstName" : "First",
+                       |        "lastName" : "Last"
+                       |      } 
+                       |    } 
+                       |}
+                       |""".stripMargin
+                  ),
+                  responseHeaders
+                )
+              )
+            )
+          )
+        }
+
       }
 
       "return the details found" when {
@@ -178,14 +204,14 @@ class CitizenDetailsServiceImplSpec extends AnyWordSpec with Matchers with MockF
           val nino           = NINO("nino")
           val name           = Name("First", "Last")
           val dob            = DateOfBirth(LocalDate.of(2013, 12, 1))
-          val sautr          = SAUTR("12345")
+          val sautr          = SAUTR("1234567895")
           val citizenDetails = CitizenDetails(name, dob, Some(sautr))
 
           val json = Json.parse(
             s"""
                |{
                |  "ids" : {
-               |    "sautr" : "12345"
+               |    "sautr" : "1234567895"
                |  }, 
                |  "dateOfBirth" : "01122013",
                |   "name" : { 

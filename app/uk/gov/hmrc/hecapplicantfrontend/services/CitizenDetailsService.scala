@@ -22,6 +22,7 @@ import cats.instances.future._
 import cats.instances.int._
 import cats.syntax.apply._
 import cats.syntax.either._
+import cats.syntax.option._
 import cats.syntax.eq._
 import play.api.http.Status.OK
 import play.api.libs.json.{Json, Reads}
@@ -83,10 +84,17 @@ class CitizenDetailsServiceImpl @Inject() (
             )
       }
 
-    (nameValidation, dateOfBirthValidation)
-      .mapN((name, dob) => CitizenDetails(name, dob, cidPerson.ids.sautr.map(SAUTR(_))))
+    val sautrValidation: ValidatedNel[String, Option[SAUTR]] =
+      cidPerson.ids.sautr match {
+        case None    => Valid(None)
+        case Some(s) => SAUTR.fromString(s).toValidNel("Got invalid SAUTR").map(Some(_))
+      }
+
+    (nameValidation, dateOfBirthValidation, sautrValidation)
+      .mapN((name, dob, sautr) => CitizenDetails(name, dob, sautr))
       .toEither
       .leftMap(errors => Error(s"Invalid details found: [${errors.toList.mkString(";")}]"))
+
   }
 
   private val dateOfBirthFormatter = DateTimeFormatter.ofPattern("ddMMyyyy")
