@@ -23,8 +23,8 @@ import java.time.LocalDate
 
 final case class CTStatusResponse(
   ctutr: CTUTR,
-  from: LocalDate,
-  to: LocalDate,
+  startDate: LocalDate,
+  endDate: LocalDate,
   status: CTStatus,
   accountingPeriods: List[AccountingPeriod]
 )
