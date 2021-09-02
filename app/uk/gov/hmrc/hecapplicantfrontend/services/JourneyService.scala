@@ -98,7 +98,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
     r: RequestWithSessionData[_],
     hc: HeaderCarrier
   ): EitherT[Future, Error, Call] = {
-    val upliftedSession = upliftToCompleteAnswersIfComplete(updatedSession)
+    val upliftedSession = upliftToCompleteAnswersIfComplete(updatedSession, current)
     val nextOpt         = upliftedSession.userAnswers.fold(
       _ => paths.get(current).map(_(upliftedSession)),
       _ => Some(routes.CheckYourAnswersController.checkYourAnswers())
@@ -146,7 +146,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
     case _                                        => true
   }
 
-  private def upliftToCompleteAnswersIfComplete(session: HECSession): HECSession = {
+  private def upliftToCompleteAnswersIfComplete(session: HECSession, current: Call): HECSession = {
     val exitPageIsNext: Boolean = {
       @tailrec
       def loop(previous: Call): Call =
@@ -156,7 +156,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
         }
 
       // if the paths don't reach the last page then some exit page has been reached
-      loop(routes.StartController.start()) =!= routes.TaxCheckCompleteController.taxCheckComplete()
+      loop(current) =!= routes.TaxCheckCompleteController.taxCheckComplete()
     }
 
     session.userAnswers match {
