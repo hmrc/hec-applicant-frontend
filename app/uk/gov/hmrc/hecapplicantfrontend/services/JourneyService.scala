@@ -98,7 +98,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
     r: RequestWithSessionData[_],
     hc: HeaderCarrier
   ): EitherT[Future, Error, Call] = {
-    val upliftedSession = upliftToCompleteAnswersIfComplete(updatedSession)
+    val upliftedSession = upliftToCompleteAnswersIfComplete(updatedSession, current)
     val nextOpt         = upliftedSession.userAnswers.fold(
       _ => paths.get(current).map(_(upliftedSession)),
       _ => Some(routes.CheckYourAnswersController.checkYourAnswers())
@@ -146,46 +146,63 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
     case _                                        => true
   }
 
-  private def upliftToCompleteAnswersIfComplete(session: HECSession): HECSession = session.userAnswers match {
-    case IncompleteUserAnswers(
-          Some(licenceType),
-          Some(licenceExpiryDate),
-          Some(licenceTimeTrading),
-          Some(licenceValidityPeriod),
-          Some(taxSituation),
-          Some(entityType)
-        ) if licenceTypeForIndividualAndCompany(licenceType) && licenceExpiryDateValid(licenceExpiryDate) =>
-      val completeAnswers =
-        CompleteUserAnswers(
-          licenceType,
-          licenceExpiryDate,
-          licenceTimeTrading,
-          licenceValidityPeriod,
-          taxSituation,
-          Some(entityType)
-        )
-      session.copy(userAnswers = completeAnswers)
+  private def upliftToCompleteAnswersIfComplete(session: HECSession, current: Call): HECSession = {
+    val exitPageIsNext: Boolean = {
+      @tailrec
+      def loop(previous: Call): Call =
+        paths.get(previous) match {
+          case Some(next) => loop(next(session))
+          case None       => previous
+        }
 
-    case IncompleteUserAnswers(
-          Some(licenceType),
-          Some(licenceExpiryDate),
-          Some(licenceTimeTrading),
-          Some(licenceValidityPeriod),
-          Some(taxSituation),
-          _
-        ) if !licenceTypeForIndividualAndCompany(licenceType) && licenceExpiryDateValid(licenceExpiryDate) =>
-      val completeAnswers =
-        CompleteUserAnswers(
-          licenceType,
-          licenceExpiryDate,
-          licenceTimeTrading,
-          licenceValidityPeriod,
-          taxSituation,
-          None
-        )
-      session.copy(userAnswers = completeAnswers)
+      // if the paths don't reach the last page then some exit page has been reached
+      loop(current) =!= routes.TaxCheckCompleteController.taxCheckComplete()
+    }
 
-    case _ => session
+    session.userAnswers match {
+      case _ if exitPageIsNext =>
+        session
+
+      case IncompleteUserAnswers(
+            Some(licenceType),
+            Some(licenceExpiryDate),
+            Some(licenceTimeTrading),
+            Some(licenceValidityPeriod),
+            Some(taxSituation),
+            Some(entityType)
+          ) if licenceTypeForIndividualAndCompany(licenceType) =>
+        val completeAnswers =
+          CompleteUserAnswers(
+            licenceType,
+            licenceExpiryDate,
+            licenceTimeTrading,
+            licenceValidityPeriod,
+            taxSituation,
+            Some(entityType)
+          )
+        session.copy(userAnswers = completeAnswers)
+
+      case IncompleteUserAnswers(
+            Some(licenceType),
+            Some(licenceExpiryDate),
+            Some(licenceTimeTrading),
+            Some(licenceValidityPeriod),
+            Some(taxSituation),
+            _
+          ) if !licenceTypeForIndividualAndCompany(licenceType) =>
+        val completeAnswers =
+          CompleteUserAnswers(
+            licenceType,
+            licenceExpiryDate,
+            licenceTimeTrading,
+            licenceValidityPeriod,
+            taxSituation,
+            None
+          )
+        session.copy(userAnswers = completeAnswers)
+
+      case _ => session
+    }
   }
 
   private def licenceValidityPeriodRoute(session: HECSession): Call = {
