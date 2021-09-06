@@ -30,7 +30,8 @@ object RetrievedApplicantData {
     sautr: Option[SAUTR],
     name: Name,
     dateOfBirth: DateOfBirth,
-    emailAddress: Option[EmailAddress]
+    emailAddress: Option[EmailAddress],
+    saStatus: Option[SAStatusResponse]
   ) extends RetrievedApplicantData
 
   final case class CompanyRetrievedData(

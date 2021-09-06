@@ -52,7 +52,7 @@ class LicenceDetailsControllerSpec
   val controller = instanceOf[LicenceDetailsController]
 
   val individuaRetrievedlData =
-    IndividualRetrievedData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None)
+    IndividualRetrievedData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None, None)
 
   val companyRetrievedData =
     CompanyRetrievedData(GGCredId(""), None, None)

@@ -61,7 +61,7 @@ class TaxSituationControllerSpec
   val controller = instanceOf[TaxSituationController]
 
   val individuaRetrievedlData =
-    IndividualRetrievedData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None)
+    IndividualRetrievedData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None, None)
 
   val companyRetrievedData =
     CompanyRetrievedData(GGCredId(""), None, None)

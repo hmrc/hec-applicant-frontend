@@ -78,7 +78,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         Some(sautr),
         Name("first", "last"),
         DateOfBirth(LocalDate.now()),
-        Some(email)
+        Some(email),
+        None
       )
 
       val completeAnswers = CompleteUserAnswers(

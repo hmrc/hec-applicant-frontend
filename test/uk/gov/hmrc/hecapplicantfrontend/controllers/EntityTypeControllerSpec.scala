@@ -50,7 +50,7 @@ class EntityTypeControllerSpec
   val controller = instanceOf[EntityTypeController]
 
   val individuaRetrievedlData =
-    IndividualRetrievedData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None)
+    IndividualRetrievedData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None, None)
 
   val companyRetrievedData =
     CompanyRetrievedData(GGCredId(""), None, None)

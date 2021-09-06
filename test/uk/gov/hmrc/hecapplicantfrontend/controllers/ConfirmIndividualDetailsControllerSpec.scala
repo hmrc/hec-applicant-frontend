@@ -74,7 +74,7 @@ class ConfirmIndividualDetailsControllerSpec
           val dateOfBirth = DateOfBirth(LocalDate.of(2000, 12, 3))
 
           val session = HECSession(
-            IndividualRetrievedData(GGCredId(""), NINO(""), None, name, dateOfBirth, None),
+            IndividualRetrievedData(GGCredId(""), NINO(""), None, name, dateOfBirth, None, None),
             UserAnswers.empty,
             None
           )
@@ -134,7 +134,15 @@ class ConfirmIndividualDetailsControllerSpec
 
         "there is a problem getting the next page" in {
           val session = HECSession(
-            IndividualRetrievedData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None),
+            IndividualRetrievedData(
+              GGCredId(""),
+              NINO(""),
+              None,
+              Name("", ""),
+              DateOfBirth(LocalDate.now()),
+              None,
+              None
+            ),
             UserAnswers.empty,
             None
           )
@@ -158,7 +166,15 @@ class ConfirmIndividualDetailsControllerSpec
 
         "the next page can be found" in {
           val session = HECSession(
-            IndividualRetrievedData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None),
+            IndividualRetrievedData(
+              GGCredId(""),
+              NINO(""),
+              None,
+              Name("", ""),
+              DateOfBirth(LocalDate.now()),
+              None,
+              None
+            ),
             UserAnswers.empty,
             None
           )
@@ -204,7 +220,15 @@ class ConfirmIndividualDetailsControllerSpec
 
         "the user is logged in and individual data can be found" in {
           val session = HECSession(
-            IndividualRetrievedData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None),
+            IndividualRetrievedData(
+              GGCredId(""),
+              NINO(""),
+              None,
+              Name("", ""),
+              DateOfBirth(LocalDate.now()),
+              None,
+              None
+            ),
             UserAnswers.empty,
             None
           )

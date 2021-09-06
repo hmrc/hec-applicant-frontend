@@ -45,7 +45,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
   val individualRetrievedData =
-    IndividualRetrievedData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None)
+    IndividualRetrievedData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None, None)
 
   val companyRetrievedData =
     CompanyRetrievedData(GGCredId(""), None, None)
