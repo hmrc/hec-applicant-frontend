@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.controllers
 
+import java.time.LocalDate
+
 import cats.instances.future._
 import com.google.inject.{Inject, Singleton}
 import play.api.data.Form
@@ -24,16 +26,14 @@ import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.{getTaxYear, taxSituationForm, taxSituationOptions}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
-import uk.gov.hmrc.hecapplicantfrontend.models.{TaxSituation, TaxYear}
 import uk.gov.hmrc.hecapplicantfrontend.models.TaxSituation._
-import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
+import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
+import uk.gov.hmrc.hecapplicantfrontend.models.{RetrievedApplicantData, TaxSituation, TaxYear}
+import uk.gov.hmrc.hecapplicantfrontend.services.{JourneyService, TaxCheckService}
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging.LoggerOps
 import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging, TimeProvider, TimeUtils}
 import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import java.time.LocalDate
-
-import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -42,6 +42,7 @@ class TaxSituationController @Inject() (
   authAction: AuthAction,
   sessionDataAction: SessionDataAction,
   journeyService: JourneyService,
+  taxCheckService: TaxCheckService,
   mcc: MessagesControllerComponents,
   timeProvider: TimeProvider,
   taxSituationPage: html.TaxSituation
@@ -70,23 +71,52 @@ class TaxSituationController @Inject() (
   }
 
   val taxSituationSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
-    def handleReportedIncome(taxSituation: TaxSituation): Future[Result] = {
-      val updatedAnswers =
-        request.sessionData.userAnswers
-          .unset(_.taxSituation)
-          .copy(taxSituation = Some(taxSituation))
-      journeyService
-        .updateAndNext(
-          routes.TaxSituationController.taxSituation(),
-          request.sessionData.copy(userAnswers = updatedAnswers)
-        )
-        .fold(
-          { e =>
-            logger.warn("Could not update session and proceed", e)
-            InternalServerError
-          },
-          Redirect
-        )
+    val taxYear = getTaxYear(TimeUtils.today())
+
+    def handleValidTaxSituation(taxSituation: TaxSituation): Future[Result] = {
+      val sautrOpt = request.sessionData.retrievedUserData match {
+        case i: RetrievedApplicantData.IndividualRetrievedData => i.sautr
+        case _                                                 => None
+      }
+
+      // TODO rename
+      def handleReportedIncome(applicantData: RetrievedApplicantData): Future[Result] = {
+        val updatedAnswers =
+          request.sessionData.userAnswers
+            .unset(_.taxSituation)
+            .copy(taxSituation = Some(taxSituation))
+        journeyService
+          .updateAndNext(
+            routes.TaxSituationController.taxSituation(),
+            request.sessionData.copy(userAnswers = updatedAnswers, retrievedUserData = applicantData)
+          )
+          .fold(
+            { e =>
+              logger.warn("Could not update session and proceed", e)
+              InternalServerError
+            },
+            Redirect
+          )
+      }
+
+      sautrOpt match {
+        case Some(utr) =>
+          if (Seq(TaxSituation.SA, TaxSituation.SAPAYE).contains(taxSituation)) {
+            (taxCheckService.getSAStatus(utr, taxYear) map { status =>
+              request.sessionData.retrievedUserData match {
+                case i: RetrievedApplicantData.IndividualRetrievedData => i.copy(saStatus = Some(status))
+                case c: RetrievedApplicantData.CompanyRetrievedData    => c
+              }
+            }) foldF ({ e =>
+              logger.warn("Failed to fetch SA status", e)
+              Future.successful(InternalServerError)
+            },
+            handleReportedIncome)
+          } else {
+            handleReportedIncome(request.sessionData.retrievedUserData)
+          }
+        case None      => Future.successful(Redirect(routes.TaxSituationController.sautrNotFoundExit()))
+      }
     }
 
     val licenceTypeOpt = request.sessionData.userAnswers.fold(_.licenceType, c => Some(c.licenceType))
@@ -102,15 +132,36 @@ class TaxSituationController @Inject() (
                   formWithErrors,
                   journeyService.previous(routes.TaxSituationController.taxSituation()),
                   options,
-                  getTaxYear(TimeUtils.today())
+                  taxYear
                 )
               ),
-            handleReportedIncome
+            handleValidTaxSituation
           )
       case None              =>
         logger.error("Couldn't find licence Type")
         InternalServerError
     }
+  }
+
+  // TODO move to separate controller better name once clarified
+  val confirmYourIncome: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
+    Ok(
+      s"Session is ${request.sessionData} back Url ::${journeyService.previous(routes.TaxSituationController.confirmYourIncome())}"
+    )
+  }
+
+  // Placeholder for exit page when no tax return is found (HEC-987)
+  val noReturnFoundExit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
+    Ok(
+      s"Session is ${request.sessionData} back Url ::${journeyService.previous(routes.TaxSituationController.noReturnFoundExit())}"
+    )
+  }
+
+  // Placeholder for exit page when SAUTR not found (HEC-986)
+  val sautrNotFoundExit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
+    Ok(
+      s"Session is ${request.sessionData} back Url ::${journeyService.previous(routes.TechnicalExceptionController.technicalException())}"
+    )
   }
 
 }
