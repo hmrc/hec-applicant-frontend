@@ -51,7 +51,7 @@ class HECConnectorImpl @Inject() (http: HttpClient, servicesConfig: ServicesConf
   private val saveTaxCheckUrl: String = s"$baseUrl/hec/tax-check"
 
   private def saStatusUrl(sautr: SAUTR, taxYear: TaxYear): String =
-    s"$baseUrl/hec/sa-status/${sautr.value}/${taxYear.year}"
+    s"$baseUrl/hec/sa-status/${sautr.value}/${taxYear.startYear}"
 
   private def ctStatusUrl(ctutr: CTUTR, startDate: LocalDate, endDate: LocalDate): String =
     s"$baseUrl/hec/ct-status/${ctutr.value}/${toUrlString(startDate)}/${toUrlString(endDate)}"
