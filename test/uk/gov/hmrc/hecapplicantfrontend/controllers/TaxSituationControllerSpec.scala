@@ -30,8 +30,10 @@ import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceExpiryDate, Licen
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
 import uk.gov.hmrc.hecapplicantfrontend.util.{TimeProvider, TimeUtils}
-
 import java.time.LocalDate
+
+import org.jsoup.nodes.Document
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -69,6 +71,31 @@ class TaxSituationControllerSpec
     "handling request to tax situation page " must {
 
       def performAction(): Future[Result] = controller.taxSituation(FakeRequest())
+
+      def testRadioButtonOptions(doc: Document, expectedRadioOptionsTexts: List[String]) = {
+        val radioOptions = doc.select(".govuk-radios__item")
+        radioOptions.size shouldBe expectedRadioOptionsTexts.size
+        expectedRadioOptionsTexts.zipWithIndex.map({ case (text, i) =>
+          radioOptions.get(i).text() shouldBe text
+        })
+      }
+
+      val allRadioTexts     = List(
+        messageFromMessageKey("taxSituation.PA"),
+        messageFromMessageKey("taxSituation.SA"),
+        messageFromMessageKey("taxSituation.SAPAYE"),
+        s"${messageFromMessageKey("taxSituation.NotChargeable")} ${messageFromMessageKey("taxSituation.NotChargeable.hint")}"
+      )
+      val nonPAYERadioTexts = List(
+        messageFromMessageKey("taxSituation.SA"),
+        s"${messageFromMessageKey("taxSituation.NotChargeable")} ${messageFromMessageKey("taxSituation.NotChargeable.hint")}"
+      )
+
+      def testAllTaxSituationsRadioOptions(doc: Document) =
+        testRadioButtonOptions(doc, allRadioTexts)
+
+      def testNonPAYETaxSituationsRadioOptions(doc: Document) =
+        testRadioButtonOptions(doc, nonPAYERadioTexts)
 
       behave like authAndSessionDataBehaviour(performAction)
 
@@ -198,8 +225,7 @@ class TaxSituationControllerSpec
 
                 doc.select("#taxSituation-hint").text shouldBe taxYearMessage(2019, 2020)
 
-                val options = doc.select(".govuk-radios__item")
-                options.size() shouldBe 4
+                testAllTaxSituationsRadioOptions(doc)
 
                 val selectedOptions = doc.select(".govuk-radios__input[checked]")
                 selectedOptions.isEmpty shouldBe true
@@ -238,8 +264,7 @@ class TaxSituationControllerSpec
 
                 doc.select("#taxSituation-hint").text shouldBe taxYearMessage(2019, 2020)
 
-                val options = doc.select(".govuk-radios__item")
-                options.size() shouldBe 4
+                testAllTaxSituationsRadioOptions(doc)
 
                 val selectedOptions = doc.select(".govuk-radios__input[checked]")
                 selectedOptions.isEmpty shouldBe true
@@ -278,8 +303,7 @@ class TaxSituationControllerSpec
 
                 doc.select("#taxSituation-hint").text shouldBe taxYearMessage(2019, 2020)
 
-                val options = doc.select(".govuk-radios__item")
-                options.size() shouldBe 4
+                testAllTaxSituationsRadioOptions(doc)
 
                 val selectedOptions = doc.select(".govuk-radios__input[checked]")
                 selectedOptions.isEmpty shouldBe true
@@ -322,8 +346,7 @@ class TaxSituationControllerSpec
 
                 doc.select("#taxSituation-hint").text shouldBe taxYearMessage(2020, 2021)
 
-                val options = doc.select(".govuk-radios__item")
-                options.size() shouldBe 4
+                testAllTaxSituationsRadioOptions(doc)
 
                 val selectedOptions = doc.select(".govuk-radios__input[checked]")
                 selectedOptions.isEmpty shouldBe true
@@ -362,8 +385,7 @@ class TaxSituationControllerSpec
 
                 doc.select("#taxSituation-hint").text shouldBe taxYearMessage(2020, 2021)
 
-                val options = doc.select(".govuk-radios__item")
-                options.size() shouldBe 4
+                testAllTaxSituationsRadioOptions(doc)
 
                 val selectedOptions = doc.select(".govuk-radios__input[checked]")
                 selectedOptions.isEmpty shouldBe true
@@ -402,8 +424,7 @@ class TaxSituationControllerSpec
 
                 doc.select("#taxSituation-hint").text shouldBe taxYearMessage(2020, 2021)
 
-                val options = doc.select(".govuk-radios__item")
-                options.size() shouldBe 4
+                testAllTaxSituationsRadioOptions(doc)
 
                 val selectedOptions = doc.select(".govuk-radios__input[checked]")
                 selectedOptions.isEmpty shouldBe true
@@ -418,6 +439,89 @@ class TaxSituationControllerSpec
 
         }
 
+      }
+
+      "display only relevant options" when {
+
+        "licence type = DriverOfTaxisAndPrivateHires" in {
+          val session = HECSession(
+            individuaRetrievedlData,
+            UserAnswers.empty.copy(
+              licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)
+            ),
+            None
+          )
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockJourneyServiceGetPrevious(routes.TaxSituationController.taxSituation(), session)(
+              mockPreviousCall
+            )
+            mockTimeProviderToday(TimeUtils.today())
+          }
+
+          checkPageIsDisplayed(
+            performAction(),
+            messageFromMessageKey("taxSituation.title"),
+            { doc =>
+              doc.select("#back").attr("href") shouldBe mockPreviousCall.url
+
+              testAllTaxSituationsRadioOptions(doc)
+
+              val selectedOptions = doc.select(".govuk-radios__input[checked]")
+              selectedOptions.isEmpty shouldBe true
+
+              val form = doc.select("form")
+              form
+                .attr("action") shouldBe routes.TaxSituationController.taxSituationSubmit().url
+            }
+          )
+        }
+
+        "licence type is not DriverOfTaxisAndPrivateHires" in {
+          List(
+            LicenceType.ScrapMetalDealerSite,
+            LicenceType.ScrapMetalMobileCollector,
+            LicenceType.OperatorOfPrivateHireVehicles
+          ).foreach { licenceType =>
+            withClue(s"For licence type $licenceType: ") {
+              val session = HECSession(
+                individuaRetrievedlData,
+                UserAnswers.empty.copy(
+                  licenceType = Some(licenceType)
+                ),
+                None
+              )
+
+              inSequence {
+                mockAuthWithNoRetrievals()
+                mockGetSession(session)
+                mockJourneyServiceGetPrevious(routes.TaxSituationController.taxSituation(), session)(
+                  mockPreviousCall
+                )
+                mockTimeProviderToday(TimeUtils.today())
+              }
+
+              checkPageIsDisplayed(
+                performAction(),
+                messageFromMessageKey("taxSituation.title"),
+                { doc =>
+                  doc.select("#back").attr("href") shouldBe mockPreviousCall.url
+
+                  testNonPAYETaxSituationsRadioOptions(doc)
+
+                  val selectedOptions = doc.select(".govuk-radios__input[checked]")
+                  selectedOptions.isEmpty shouldBe true
+
+                  val form = doc.select("form")
+                  form
+                    .attr("action") shouldBe routes.TaxSituationController.taxSituationSubmit().url
+                }
+              )
+            }
+          }
+        }
       }
 
     }
