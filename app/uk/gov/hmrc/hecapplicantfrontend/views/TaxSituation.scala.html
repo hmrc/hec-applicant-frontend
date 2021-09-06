@@ -21,8 +21,8 @@ Request[_], messages: Messages)
         checked = form.data.values.toList.contains(index.toString)
     )
 }}
-@startYear = @{taxDisplayYear.year.toString}
-@endYear = @{s"${taxDisplayYear.year + 1}"}
+@startYear = @{taxDisplayYear.startYear.toString}
+@endYear = @{s"${taxDisplayYear.startYear + 1}"}
 
 @layout(pageTitle = Some(title), hasErrors = form.hasErrors, backLocation = Some(back)) {
     @if(form.errors.nonEmpty) {
