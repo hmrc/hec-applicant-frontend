@@ -74,13 +74,8 @@ class TaxSituationController @Inject() (
     val taxYear = getTaxYear(TimeUtils.today())
 
     def handleValidTaxSituation(taxSituation: TaxSituation): Future[Result] = {
-      val sautrOpt = request.sessionData.retrievedUserData match {
-        case i: RetrievedApplicantData.IndividualRetrievedData => i.sautr
-        case _                                                 => None
-      }
 
-      // TODO rename
-      def handleReportedIncome(applicantData: RetrievedApplicantData): Future[Result] = {
+      def updateAndRedirect(applicantData: RetrievedApplicantData): Future[Result] = {
         val updatedAnswers =
           request.sessionData.userAnswers
             .unset(_.taxSituation)
@@ -99,6 +94,11 @@ class TaxSituationController @Inject() (
           )
       }
 
+      val sautrOpt = request.sessionData.retrievedUserData match {
+        case i: RetrievedApplicantData.IndividualRetrievedData => i.sautr
+        case _                                                 => None
+      }
+
       sautrOpt match {
         case Some(utr) =>
           if (Seq(TaxSituation.SA, TaxSituation.SAPAYE).contains(taxSituation)) {
@@ -111,9 +111,9 @@ class TaxSituationController @Inject() (
               logger.warn("Failed to fetch SA status", e)
               Future.successful(InternalServerError)
             },
-            handleReportedIncome)
+            updateAndRedirect)
           } else {
-            handleReportedIncome(request.sessionData.retrievedUserData)
+            updateAndRedirect(request.sessionData.retrievedUserData)
           }
         case None      => Future.successful(Redirect(routes.TaxSituationController.sautrNotFoundExit()))
       }
@@ -143,7 +143,7 @@ class TaxSituationController @Inject() (
     }
   }
 
-  // TODO move to separate controller better name once clarified
+  // Placeholder for confirm your income (HEC-985)
   val confirmYourIncome: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     Ok(
       s"Session is ${request.sessionData} back Url ::${journeyService.previous(routes.TaxSituationController.confirmYourIncome())}"
