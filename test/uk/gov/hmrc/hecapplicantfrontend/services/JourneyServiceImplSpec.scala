@@ -45,7 +45,15 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
   val individualRetrievedData =
-    IndividualRetrievedData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None, None)
+    IndividualRetrievedData(
+      GGCredId(""),
+      NINO(""),
+      None,
+      Name("", ""),
+      DateOfBirth(LocalDate.now()),
+      None,
+      Some(SAStatusResponse(SAUTR(""), TaxYear(2020), SAStatus.NoticeToFileIssued))
+    )
 
   val companyRetrievedData =
     CompanyRetrievedData(GGCredId(""), None, None)
@@ -338,15 +346,47 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
 
         "the tax situation page and" when {
 
-          "the licence type in the session is 'driver of taxis'" in {
-            val answers        = UserAnswers.empty.copy(licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires))
-            val session        = HECSession(individualRetrievedData, answers, None)
-            val updatedSession =
-              HECSession(
-                individualRetrievedData,
-                answers.copy(taxSituation = Some(TaxSituation.PAYE)),
-                None
-              )
+          val individualWoStatus =
+            IndividualRetrievedData(
+              GGCredId(""),
+              NINO(""),
+              None,
+              Name("", ""),
+              DateOfBirth(LocalDate.now()),
+              None,
+              None
+            )
+
+          def individualWithStatus(status: SAStatus = SAStatus.NoticeToFileIssued) = individualWoStatus.copy(
+            saStatus = Some(SAStatusResponse(SAUTR(""), TaxYear(2020), status))
+          )
+
+          val answers = UserAnswers.empty.copy(licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires))
+
+          def answersWithTaxSituation(taxSituation: TaxSituation) = UserAnswers.empty.copy(
+            licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires),
+            taxSituation = Some(taxSituation)
+          )
+
+          "tax situation is missing" in {
+            val session        = HECSession(individualWoStatus, answers, None)
+            val updatedSession = HECSession(individualWithStatus(), answers, None)
+
+            implicit val request: RequestWithSessionData[_] =
+              requestWithSessionData(session)
+
+            mockStoreSession(updatedSession)(Right(()))
+
+            val result = journeyService.updateAndNext(
+              routes.TaxSituationController.taxSituation(),
+              updatedSession
+            )
+            await(result.value) shouldBe Right(routes.TechnicalExceptionController.technicalException())
+          }
+
+          def testPAYENotChargeable(taxSituation: TaxSituation) = {
+            val session        = HECSession(individualWithStatus(), answers, None)
+            val updatedSession = HECSession(individualWithStatus(), answersWithTaxSituation(taxSituation), None)
 
             implicit val request: RequestWithSessionData[_] =
               requestWithSessionData(session)
@@ -360,6 +400,104 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             await(result.value) shouldBe Right(routes.CheckYourAnswersController.checkYourAnswers())
           }
 
+          "tax situation is PAYE" in {
+            testPAYENotChargeable(TaxSituation.PAYE)
+          }
+
+          "tax situation is Not Chargeable" in {
+            testPAYENotChargeable(TaxSituation.NotChargeable)
+          }
+
+          def testsForSelfAssessment(taxSituation: TaxSituation) = {
+            "applicant type is company" in {
+              val session        = HECSession(companyRetrievedData, answers, None)
+              val updatedSession =
+                HECSession(companyRetrievedData, answersWithTaxSituation(taxSituation), None)
+
+              implicit val request: RequestWithSessionData[_] =
+                requestWithSessionData(session)
+
+              mockStoreSession(updatedSession)(Right(()))
+
+              val result = journeyService.updateAndNext(
+                routes.TaxSituationController.taxSituation(),
+                updatedSession
+              )
+              await(result.value) shouldBe Right(routes.CheckYourAnswersController.checkYourAnswers())
+            }
+
+            "applicant type is individual" when {
+              "SA status is missing" in {
+                val session        = HECSession(individualWoStatus, answers, None)
+                val updatedSession = HECSession(individualWoStatus, answersWithTaxSituation(taxSituation), None)
+
+                implicit val request: RequestWithSessionData[_] =
+                  requestWithSessionData(session)
+
+                mockStoreSession(updatedSession)(Right(()))
+                val result = journeyService.updateAndNext(
+                  routes.TaxSituationController.taxSituation(),
+                  updatedSession
+                )
+                await(result.value) shouldBe Right(routes.TechnicalExceptionController.technicalException())
+              }
+
+              "SA status = ReturnFound" in {
+                val individualReturnFound = individualWithStatus(SAStatus.ReturnFound)
+                val session               = HECSession(individualReturnFound, answers, None)
+                val updatedSession        = HECSession(individualReturnFound, answersWithTaxSituation(taxSituation), None)
+
+                implicit val request: RequestWithSessionData[_] =
+                  requestWithSessionData(session)
+
+                mockStoreSession(updatedSession)(Right(()))
+                val result = journeyService.updateAndNext(
+                  routes.TaxSituationController.taxSituation(),
+                  updatedSession
+                )
+                await(result.value) shouldBe Right(routes.TaxSituationController.confirmYourIncome())
+              }
+
+              "SA status = NoReturnFound" in {
+                val individualNoReturnFound = individualWithStatus(SAStatus.NoReturnFound)
+                val session                 = HECSession(individualNoReturnFound, answers, None)
+                val updatedSession          = HECSession(individualNoReturnFound, answersWithTaxSituation(taxSituation), None)
+
+                implicit val request: RequestWithSessionData[_] =
+                  requestWithSessionData(session)
+
+                mockStoreSession(updatedSession)(Right(()))
+                val result = journeyService.updateAndNext(
+                  routes.TaxSituationController.taxSituation(),
+                  updatedSession
+                )
+                await(result.value) shouldBe Right(routes.TaxSituationController.noReturnFoundExit())
+              }
+
+              "SA status = NoticeToFileIssued" in {
+                val individualNoticeIssued = individualWithStatus(SAStatus.NoticeToFileIssued)
+                val session                = HECSession(individualNoticeIssued, answers, None)
+                val updatedSession         = HECSession(individualNoticeIssued, answersWithTaxSituation(taxSituation), None)
+
+                implicit val request: RequestWithSessionData[_] =
+                  requestWithSessionData(session)
+
+                mockStoreSession(updatedSession)(Right(()))
+                val result = journeyService.updateAndNext(
+                  routes.TaxSituationController.taxSituation(),
+                  updatedSession
+                )
+                await(result.value) shouldBe Right(routes.CheckYourAnswersController.checkYourAnswers())
+              }
+            }
+          }
+
+          "tax situation is SA" when {
+            testsForSelfAssessment(TaxSituation.SA)
+          }
+          "tax situation is SAPAYE" when {
+            testsForSelfAssessment(TaxSituation.SAPAYE)
+          }
         }
 
         "the check your answers page" in {
@@ -764,25 +902,196 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
 
         }
 
-        "the check your answers page" in {
-          val session                                     = HECSession(
-            individualRetrievedData,
+        "the check your answers page" when {
+
+          def testPrevPageIsTaxSituation(session: HECSession) = {
+            implicit val request: RequestWithSessionData[_] =
+              requestWithSessionData(session)
+
+            val result = journeyService.previous(
+              routes.CheckYourAnswersController.checkYourAnswers()
+            )
+
+            result shouldBe routes.TaxSituationController.taxSituation()
+          }
+
+          "tax situation = SA & SA status = NoticeToFileIssued" in {
+            val session = HECSession(
+              individualRetrievedData,
+              UserAnswers.empty.copy(
+                licenceExpiryDate = Some(LicenceExpiryDate(TimeUtils.today())),
+                taxSituation = Some(TaxSituation.SA)
+              ),
+              None
+            )
+
+            testPrevPageIsTaxSituation(session)
+          }
+
+          "tax situation = SAPAYE & SA status = NoticeToFileIssued" in {
+            val session = HECSession(
+              individualRetrievedData,
+              UserAnswers.empty.copy(
+                licenceExpiryDate = Some(LicenceExpiryDate(TimeUtils.today())),
+                taxSituation = Some(TaxSituation.SAPAYE)
+              ),
+              None
+            )
+
+            testPrevPageIsTaxSituation(session)
+          }
+
+          "tax situation = SAPAYE for company" in {
+            val session = HECSession(
+              companyRetrievedData,
+              UserAnswers.empty.copy(
+                licenceExpiryDate = Some(LicenceExpiryDate(TimeUtils.today())),
+                taxSituation = Some(TaxSituation.SA)
+              ),
+              None
+            )
+
+            testPrevPageIsTaxSituation(session)
+          }
+
+          "tax situation = PAYE" in {
+            val session = HECSession(
+              individualRetrievedData.copy(saStatus = None),
+              UserAnswers.empty.copy(
+                licenceExpiryDate = Some(LicenceExpiryDate(TimeUtils.today())),
+                taxSituation = Some(TaxSituation.PAYE)
+              ),
+              None
+            )
+
+            testPrevPageIsTaxSituation(session)
+          }
+
+          "tax situation = Not Chargeable" in {
+            val session = HECSession(
+              individualRetrievedData.copy(saStatus = None),
+              UserAnswers.empty.copy(
+                licenceExpiryDate = Some(LicenceExpiryDate(TimeUtils.today())),
+                taxSituation = Some(TaxSituation.NotChargeable)
+              ),
+              None
+            )
+
+            testPrevPageIsTaxSituation(session)
+          }
+        }
+
+        def buildIndividualSession(taxSituation: TaxSituation, saStatus: SAStatus): HECSession = {
+          val individualData = IndividualRetrievedData(
+            GGCredId(""),
+            NINO(""),
+            None,
+            Name("", ""),
+            DateOfBirth(LocalDate.now()),
+            None,
+            Some(SAStatusResponse(SAUTR(""), TaxYear(2020), saStatus))
+          )
+          HECSession(
+            individualData,
             UserAnswers.empty.copy(
-              licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires),
-              licenceExpiryDate = Some(LicenceExpiryDate(TimeUtils.today()))
+              licenceExpiryDate = Some(LicenceExpiryDate(TimeUtils.today())),
+              taxSituation = Some(taxSituation)
             ),
             None
           )
-          implicit val request: RequestWithSessionData[_] =
-            requestWithSessionData(session)
-
-          val result = journeyService.previous(
-            routes.CheckYourAnswersController.checkYourAnswers()
-          )
-
-          result shouldBe routes.TaxSituationController.taxSituation()
         }
 
+        "confirm your income page" when {
+
+          def test(taxSituation: TaxSituation) = {
+            val session = buildIndividualSession(taxSituation, SAStatus.ReturnFound)
+
+            implicit val request: RequestWithSessionData[_] =
+              requestWithSessionData(session)
+
+            val result = journeyService.previous(
+              routes.TaxSituationController.confirmYourIncome()
+            )
+
+            result shouldBe routes.TaxSituationController.taxSituation()
+          }
+
+          "tax situation = SA & SA status = ReturnFound" in {
+            test(TaxSituation.SA)
+          }
+
+          "tax situation = SAPAYE & SA status = ReturnFound" in {
+            test(TaxSituation.SAPAYE)
+          }
+
+          def testThrows(taxSituation: TaxSituation) = {
+            val session = buildIndividualSession(taxSituation, SAStatus.ReturnFound)
+
+            implicit val request: RequestWithSessionData[_] =
+              requestWithSessionData(session)
+
+            assertThrows[RuntimeException] {
+              journeyService.previous(
+                routes.TaxSituationController.confirmYourIncome()
+              )
+            }
+          }
+
+          "tax situation = PAYE" in {
+            testThrows(TaxSituation.PAYE)
+          }
+
+          "tax situation = Not Chargeable" in {
+            testThrows(TaxSituation.NotChargeable)
+          }
+        }
+
+        "no return found page" when {
+
+          def test(taxSituation: TaxSituation) = {
+            val session = buildIndividualSession(taxSituation, SAStatus.NoReturnFound)
+
+            implicit val request: RequestWithSessionData[_] =
+              requestWithSessionData(session)
+
+            val result = journeyService.previous(
+              routes.TaxSituationController.noReturnFoundExit()
+            )
+
+            result shouldBe routes.TaxSituationController.taxSituation()
+          }
+
+          "tax situation = SA & SA status = NoReturnFound" in {
+            test(TaxSituation.SA)
+          }
+
+          "tax situation = SAPAYE & SA status = NoReturnFound" in {
+            test(TaxSituation.SAPAYE)
+          }
+
+          def testThrows(taxSituation: TaxSituation) = {
+            val session = buildIndividualSession(taxSituation, SAStatus.NoReturnFound)
+
+            implicit val request: RequestWithSessionData[_] =
+              requestWithSessionData(session)
+
+            assertThrows[RuntimeException] {
+              journeyService.previous(
+                routes.TaxSituationController.noReturnFoundExit()
+              )
+            }
+          }
+
+          "tax situation = PAYE" in {
+            testThrows(TaxSituation.PAYE)
+          }
+
+          "tax situation = Not Chargeable" in {
+            testThrows(TaxSituation.NotChargeable)
+          }
+        }
+
+        // "technical exception page"
       }
 
       "return the check your answers page" when {

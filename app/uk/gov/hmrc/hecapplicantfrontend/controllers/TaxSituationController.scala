@@ -138,7 +138,7 @@ class TaxSituationController @Inject() (
             handleValidTaxSituation
           )
       case None              =>
-        logger.error("Couldn't find licence Type")
+        logger.error("Couldn't find licence type")
         InternalServerError
     }
   }
