@@ -82,4 +82,10 @@ object UserAnswers {
 
   implicit val format: OFormat[UserAnswers] = derived.oformat()
 
+  def taxSituation(userAnswers: UserAnswers): Option[TaxSituation] =
+    userAnswers match {
+      case i: IncompleteUserAnswers => i.taxSituation
+      case c: CompleteUserAnswers   => Some(c.taxSituation)
+    }
+
 }

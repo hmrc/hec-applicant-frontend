@@ -52,7 +52,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
       Name("", ""),
       DateOfBirth(LocalDate.now()),
       None,
-      Some(SAStatusResponse(SAUTR(""), TaxYear(2020), SAStatus.NoticeToFileIssued))
+      None
     )
 
   val companyRetrievedData =
@@ -350,7 +350,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             IndividualRetrievedData(
               GGCredId(""),
               NINO(""),
-              None,
+              Some(SAUTR("utr")),
               Name("", ""),
               DateOfBirth(LocalDate.now()),
               None,
@@ -368,9 +368,15 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             taxSituation = Some(taxSituation)
           )
 
-          "tax situation is missing" in {
-            val session        = HECSession(individualWoStatus, answers, None)
-            val updatedSession = HECSession(individualWithStatus(), answers, None)
+          "applicant is individual and SAUTR is missing" in {
+            val individualWithoutSautr  = individualRetrievedData
+            val answersWithTaxSituation = answers.copy(taxSituation = Some(TaxSituation.SA))
+            val session                 = HECSession(individualWithoutSautr, answersWithTaxSituation, None)
+
+            val updatedIndividualData = individualWithoutSautr.copy(
+              saStatus = Some(SAStatusResponse(SAUTR(""), TaxYear(2020), SAStatus.NoticeToFileIssued))
+            )
+            val updatedSession        = HECSession(updatedIndividualData, answersWithTaxSituation, None)
 
             implicit val request: RequestWithSessionData[_] =
               requestWithSessionData(session)
@@ -381,7 +387,39 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
               routes.TaxSituationController.taxSituation(),
               updatedSession
             )
-            await(result.value) shouldBe Right(routes.TechnicalExceptionController.technicalException())
+            await(result.value) shouldBe Right(routes.TaxSituationController.sautrNotFoundExit())
+          }
+
+          "applicant type is company" in {
+            val session        = HECSession(companyRetrievedData, answers, None)
+            val updatedSession =
+              HECSession(companyRetrievedData, answersWithTaxSituation(TaxSituation.SA), None)
+
+            implicit val request: RequestWithSessionData[_] =
+              requestWithSessionData(session)
+
+            mockStoreSession(updatedSession)(Right(()))
+
+            val result = journeyService.updateAndNext(
+              routes.TaxSituationController.taxSituation(),
+              updatedSession
+            )
+            await(result.value) shouldBe Right(routes.CheckYourAnswersController.checkYourAnswers())
+          }
+
+          "tax situation is missing" in {
+            val session        = HECSession(individualWithStatus(SAStatus.NoticeToFileIssued), answers, None)
+            val updatedSession = HECSession(individualWithStatus(SAStatus.ReturnFound), answers, None)
+
+            implicit val request: RequestWithSessionData[_] =
+              requestWithSessionData(session)
+
+            assertThrows[RuntimeException](
+              journeyService.updateAndNext(
+                routes.TaxSituationController.taxSituation(),
+                updatedSession
+              )
+            )
           }
 
           def testPAYENotChargeable(taxSituation: TaxSituation) = {
@@ -409,86 +447,52 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
           }
 
           def testsForSelfAssessment(taxSituation: TaxSituation) = {
-            "applicant type is company" in {
-              val session        = HECSession(companyRetrievedData, answers, None)
-              val updatedSession =
-                HECSession(companyRetrievedData, answersWithTaxSituation(taxSituation), None)
+            "SA status = ReturnFound" in {
+              val individualReturnFound = individualWithStatus(SAStatus.ReturnFound)
+              val session               = HECSession(individualReturnFound, answers, None)
+              val updatedSession        = HECSession(individualReturnFound, answersWithTaxSituation(taxSituation), None)
 
               implicit val request: RequestWithSessionData[_] =
                 requestWithSessionData(session)
 
               mockStoreSession(updatedSession)(Right(()))
+              val result = journeyService.updateAndNext(
+                routes.TaxSituationController.taxSituation(),
+                updatedSession
+              )
+              await(result.value) shouldBe Right(routes.TaxSituationController.confirmYourIncome())
+            }
 
+            "SA status = NoReturnFound" in {
+              val individualNoReturnFound = individualWithStatus(SAStatus.NoReturnFound)
+              val session                 = HECSession(individualNoReturnFound, answers, None)
+              val updatedSession          = HECSession(individualNoReturnFound, answersWithTaxSituation(taxSituation), None)
+
+              implicit val request: RequestWithSessionData[_] =
+                requestWithSessionData(session)
+
+              mockStoreSession(updatedSession)(Right(()))
+              val result = journeyService.updateAndNext(
+                routes.TaxSituationController.taxSituation(),
+                updatedSession
+              )
+              await(result.value) shouldBe Right(routes.TaxSituationController.noReturnFoundExit())
+            }
+
+            "SA status = NoticeToFileIssued" in {
+              val individualNoticeIssued = individualWithStatus(SAStatus.NoticeToFileIssued)
+              val session                = HECSession(individualNoticeIssued, answers, None)
+              val updatedSession         = HECSession(individualNoticeIssued, answersWithTaxSituation(taxSituation), None)
+
+              implicit val request: RequestWithSessionData[_] =
+                requestWithSessionData(session)
+
+              mockStoreSession(updatedSession)(Right(()))
               val result = journeyService.updateAndNext(
                 routes.TaxSituationController.taxSituation(),
                 updatedSession
               )
               await(result.value) shouldBe Right(routes.CheckYourAnswersController.checkYourAnswers())
-            }
-
-            "applicant type is individual" when {
-              "SA status is missing" in {
-                val session        = HECSession(individualWoStatus, answers, None)
-                val updatedSession = HECSession(individualWoStatus, answersWithTaxSituation(taxSituation), None)
-
-                implicit val request: RequestWithSessionData[_] =
-                  requestWithSessionData(session)
-
-                mockStoreSession(updatedSession)(Right(()))
-                val result = journeyService.updateAndNext(
-                  routes.TaxSituationController.taxSituation(),
-                  updatedSession
-                )
-                await(result.value) shouldBe Right(routes.TechnicalExceptionController.technicalException())
-              }
-
-              "SA status = ReturnFound" in {
-                val individualReturnFound = individualWithStatus(SAStatus.ReturnFound)
-                val session               = HECSession(individualReturnFound, answers, None)
-                val updatedSession        = HECSession(individualReturnFound, answersWithTaxSituation(taxSituation), None)
-
-                implicit val request: RequestWithSessionData[_] =
-                  requestWithSessionData(session)
-
-                mockStoreSession(updatedSession)(Right(()))
-                val result = journeyService.updateAndNext(
-                  routes.TaxSituationController.taxSituation(),
-                  updatedSession
-                )
-                await(result.value) shouldBe Right(routes.TaxSituationController.confirmYourIncome())
-              }
-
-              "SA status = NoReturnFound" in {
-                val individualNoReturnFound = individualWithStatus(SAStatus.NoReturnFound)
-                val session                 = HECSession(individualNoReturnFound, answers, None)
-                val updatedSession          = HECSession(individualNoReturnFound, answersWithTaxSituation(taxSituation), None)
-
-                implicit val request: RequestWithSessionData[_] =
-                  requestWithSessionData(session)
-
-                mockStoreSession(updatedSession)(Right(()))
-                val result = journeyService.updateAndNext(
-                  routes.TaxSituationController.taxSituation(),
-                  updatedSession
-                )
-                await(result.value) shouldBe Right(routes.TaxSituationController.noReturnFoundExit())
-              }
-
-              "SA status = NoticeToFileIssued" in {
-                val individualNoticeIssued = individualWithStatus(SAStatus.NoticeToFileIssued)
-                val session                = HECSession(individualNoticeIssued, answers, None)
-                val updatedSession         = HECSession(individualNoticeIssued, answersWithTaxSituation(taxSituation), None)
-
-                implicit val request: RequestWithSessionData[_] =
-                  requestWithSessionData(session)
-
-                mockStoreSession(updatedSession)(Right(()))
-                val result = journeyService.updateAndNext(
-                  routes.TaxSituationController.taxSituation(),
-                  updatedSession
-                )
-                await(result.value) shouldBe Right(routes.CheckYourAnswersController.checkYourAnswers())
-              }
             }
           }
 
@@ -514,7 +518,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
 
       }
 
-      "convert incomplete answers to complete answers when all all questions have been answered and" when {
+      "convert incomplete answers to complete answers when all questions have been answered and" when {
 
         "the user has not selected a licence type which both individuals and companies can have" in {
           val completeAnswers = CompleteUserAnswers(
@@ -535,9 +539,14 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             None
           )
 
-          val session                                     = HECSession(individualRetrievedData, incompleteAnswers, None)
-          implicit val request: RequestWithSessionData[_] =
-            requestWithSessionData(session)
+          val individualData = individualRetrievedData.copy(
+            sautr = Some(SAUTR("utr")),
+            saStatus = Some(SAStatusResponse(SAUTR("utr"), TaxYear(2020), SAStatus.NoticeToFileIssued))
+          )
+
+          val session = HECSession(individualData, incompleteAnswers, None)
+
+          implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
 
           mockStoreSession(session.copy(userAnswers = completeAnswers))(Right(()))
 
@@ -915,9 +924,14 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             result shouldBe routes.TaxSituationController.taxSituation()
           }
 
+          val individualDataWithStatus = individualRetrievedData.copy(
+            sautr = Some(SAUTR("utr")),
+            saStatus = Some(SAStatusResponse(SAUTR(""), TaxYear(2020), SAStatus.NoticeToFileIssued))
+          )
+
           "tax situation = SA & SA status = NoticeToFileIssued" in {
             val session = HECSession(
-              individualRetrievedData,
+              individualDataWithStatus,
               UserAnswers.empty.copy(
                 licenceExpiryDate = Some(LicenceExpiryDate(TimeUtils.today())),
                 taxSituation = Some(TaxSituation.SA)
@@ -930,7 +944,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
 
           "tax situation = SAPAYE & SA status = NoticeToFileIssued" in {
             val session = HECSession(
-              individualRetrievedData,
+              individualDataWithStatus,
               UserAnswers.empty.copy(
                 licenceExpiryDate = Some(LicenceExpiryDate(TimeUtils.today())),
                 taxSituation = Some(TaxSituation.SAPAYE)
@@ -956,7 +970,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
 
           "tax situation = PAYE" in {
             val session = HECSession(
-              individualRetrievedData.copy(saStatus = None),
+              individualDataWithStatus,
               UserAnswers.empty.copy(
                 licenceExpiryDate = Some(LicenceExpiryDate(TimeUtils.today())),
                 taxSituation = Some(TaxSituation.PAYE)
@@ -969,7 +983,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
 
           "tax situation = Not Chargeable" in {
             val session = HECSession(
-              individualRetrievedData.copy(saStatus = None),
+              individualDataWithStatus,
               UserAnswers.empty.copy(
                 licenceExpiryDate = Some(LicenceExpiryDate(TimeUtils.today())),
                 taxSituation = Some(TaxSituation.NotChargeable)
@@ -985,7 +999,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
           val individualData = IndividualRetrievedData(
             GGCredId(""),
             NINO(""),
-            None,
+            Some(SAUTR("utr")),
             Name("", ""),
             DateOfBirth(LocalDate.now()),
             None,

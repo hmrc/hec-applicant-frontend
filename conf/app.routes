@@ -46,8 +46,6 @@ POST       /check-your-answers       uk.gov.hmrc.hecapplicantfrontend.controller
 
 GET        /tax-check-complete       uk.gov.hmrc.hecapplicantfrontend.controllers.TaxCheckCompleteController.taxCheckComplete
 
-GET        /technical-exception      uk.gov.hmrc.hecapplicantfrontend.controllers.TechnicalExceptionController.technicalException
-
 # IV
 GET  /failed-iv/callback                         uk.gov.hmrc.hecapplicantfrontend.controllers.IvFailureController.ivFailure(journeyId: java.util.UUID)
 GET  /failed-iv/retry                            uk.gov.hmrc.hecapplicantfrontend.controllers.IvFailureController.retry

@@ -614,6 +614,17 @@ class TaxSituationControllerSpec
           status(performAction()) shouldBe INTERNAL_SERVER_ERROR
         }
 
+        "retrieved user data in session is for a company" in {
+          val session = HECSession(companyRetrievedData, UserAnswers.empty, None)
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+          }
+
+          status(performAction()) shouldBe INTERNAL_SERVER_ERROR
+        }
+
         "the call to update and next fails" in {
           val answers = UserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
           val session = HECSession(individualRetrievedData.copy(sautr = Some(SAUTR("utr"))), answers, None)
@@ -641,32 +652,6 @@ class TaxSituationControllerSpec
           status(performAction("taxSituation" -> "0")) shouldBe INTERNAL_SERVER_ERROR
         }
 
-      }
-
-      "redirect to SAUTR not found page" when {
-        "applicant type is individual without SAUTR" in {
-          val answers = UserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
-          val session = HECSession(individualRetrievedData, answers, None)
-
-          inSequence {
-            mockAuthWithNoRetrievals()
-            mockGetSession(session)
-          }
-
-          checkIsRedirect(performAction("taxSituation" -> "0"), routes.TaxSituationController.sautrNotFoundExit())
-        }
-
-        "applicant type is company" in {
-          val answers = UserAnswers.empty.copy(licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles))
-          val session = HECSession(companyRetrievedData, answers, None)
-
-          inSequence {
-            mockAuthWithNoRetrievals()
-            mockGetSession(session)
-          }
-
-          checkIsRedirect(performAction("taxSituation" -> "0"), routes.TaxSituationController.sautrNotFoundExit())
-        }
       }
 
       val optionIndexMap = Map(

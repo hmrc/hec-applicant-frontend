@@ -24,7 +24,7 @@ import cats.syntax.eq._
 import com.google.inject.{ImplementedBy, Inject, Singleton}
 import play.api.mvc.Call
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.RequestWithSessionData
-import uk.gov.hmrc.hecapplicantfrontend.models.{EntityType, Error, HECSession, SAStatus, TaxSituation}
+import uk.gov.hmrc.hecapplicantfrontend.models.{EntityType, Error, HECSession, SAStatus, TaxSituation, UserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRetrievedData, IndividualRetrievedData}
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.{CompleteUserAnswers, IncompleteUserAnswers}
@@ -231,22 +231,20 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
   }
 
   private def taxSituationRoute(session: HECSession): Call =
-    (session.userAnswers match {
-      case i: IncompleteUserAnswers => i.taxSituation
-      case c: CompleteUserAnswers   => Some(c.taxSituation)
-    }) map ({
-      case TaxSituation.PAYE | TaxSituation.NotChargeable => routes.CheckYourAnswersController.checkYourAnswers()
-      case TaxSituation.SA | TaxSituation.SAPAYE          =>
-        session.retrievedUserData match {
-          case IndividualRetrievedData(_, _, _, _, _, _, Some(saStatus)) =>
+    session.retrievedUserData match {
+      case IndividualRetrievedData(_, _, Some(_), _, _, _, Some(saStatus)) =>
+        UserAnswers.taxSituation(session.userAnswers) map {
+          case TaxSituation.PAYE | TaxSituation.NotChargeable => routes.CheckYourAnswersController.checkYourAnswers()
+          case TaxSituation.SA | TaxSituation.SAPAYE          =>
             saStatus.status match {
               case SAStatus.ReturnFound        => routes.TaxSituationController.confirmYourIncome()
               case SAStatus.NoticeToFileIssued => routes.CheckYourAnswersController.checkYourAnswers()
               case SAStatus.NoReturnFound      => routes.TaxSituationController.noReturnFoundExit()
             }
-          case _: CompanyRetrievedData                                   => routes.CheckYourAnswersController.checkYourAnswers()
-          case _                                                         => routes.TechnicalExceptionController.technicalException()
-        }
-    }) getOrElse routes.TechnicalExceptionController.technicalException()
+        } getOrElse sys.error("Could not find tax situation in session")
+
+      case i: IndividualRetrievedData if i.sautr.isEmpty => routes.TaxSituationController.sautrNotFoundExit()
+      case _: CompanyRetrievedData                       => routes.CheckYourAnswersController.checkYourAnswers()
+    }
 
 }

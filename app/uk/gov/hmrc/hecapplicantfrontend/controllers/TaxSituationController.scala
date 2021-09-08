@@ -18,7 +18,10 @@ package uk.gov.hmrc.hecapplicantfrontend.controllers
 
 import java.time.LocalDate
 
-import cats.instances.future._
+import cats.data.EitherT
+import uk.gov.hmrc.hecapplicantfrontend.models
+import uk.gov.hmrc.hecapplicantfrontend.models.SAStatusResponse
+import cats.implicits._
 import com.google.inject.{Inject, Singleton}
 import play.api.data.Form
 import play.api.data.Forms.{mapping, of}
@@ -26,14 +29,16 @@ import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.{getTaxYear, taxSituationForm, taxSituationOptions}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
+import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.IndividualRetrievedData
 import uk.gov.hmrc.hecapplicantfrontend.models.TaxSituation._
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
-import uk.gov.hmrc.hecapplicantfrontend.models.{RetrievedApplicantData, TaxSituation, TaxYear}
+import uk.gov.hmrc.hecapplicantfrontend.models.{TaxSituation, TaxYear}
 import uk.gov.hmrc.hecapplicantfrontend.services.{JourneyService, TaxCheckService}
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging.LoggerOps
 import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging, TimeProvider, TimeUtils}
 import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
+import uk.gov.hmrc.hecapplicantfrontend.models.Error
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -70,54 +75,51 @@ class TaxSituationController @Inject() (
     }
   }
 
+  private val saTaxSituations = Seq(TaxSituation.SA, TaxSituation.SAPAYE)
+
   val taxSituationSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     val taxYear = getTaxYear(TimeUtils.today())
 
-    def handleValidTaxSituation(taxSituation: TaxSituation): Future[Result] = {
+    def fetchSAStatus(
+      individualRetrievedData: IndividualRetrievedData,
+      taxSituation: TaxSituation
+    ): EitherT[Future, models.Error, Option[SAStatusResponse]] =
+      if (saTaxSituations.contains(taxSituation)) {
+        individualRetrievedData.sautr
+          .map(taxCheckService.getSAStatus(_, taxYear))
+          .sequence[EitherT[Future, Error, *], SAStatusResponse]
+      } else {
+        EitherT.pure[Future, models.Error](None)
+      }
 
-      def updateAndRedirect(applicantData: RetrievedApplicantData): Future[Result] = {
-        val updatedAnswers =
-          request.sessionData.userAnswers
-            .unset(_.taxSituation)
-            .copy(taxSituation = Some(taxSituation))
-        journeyService
-          .updateAndNext(
-            routes.TaxSituationController.taxSituation(),
-            request.sessionData.copy(userAnswers = updatedAnswers, retrievedUserData = applicantData)
-          )
-          .fold(
+    def handleValidTaxSituation(taxSituation: TaxSituation): Future[Result] =
+      request.sessionData.retrievedUserData match {
+        case individualRetrievedData: IndividualRetrievedData =>
+          val result = for {
+            maybeSaStatus <- fetchSAStatus(individualRetrievedData, taxSituation)
+
+            updatedRetrievedData = individualRetrievedData.copy(saStatus = maybeSaStatus)
+            updatedAnswers       =
+              request.sessionData.userAnswers.unset(_.taxSituation).copy(taxSituation = Some(taxSituation))
+            updatedRequest       = request.sessionData.copy(
+                                     userAnswers = updatedAnswers,
+                                     retrievedUserData = updatedRetrievedData
+                                   )
+
+            next <- journeyService.updateAndNext(routes.TaxSituationController.taxSituation(), updatedRequest)
+          } yield next
+
+          result.fold(
             { e =>
-              logger.warn("Could not update session and proceed", e)
+              logger.warn("Fetch SA status failed or could not update session and proceed", e)
               InternalServerError
             },
             Redirect
           )
+        case _                                                =>
+          logger.error("Companies should not see this page")
+          Future.successful(InternalServerError)
       }
-
-      val sautrOpt = request.sessionData.retrievedUserData match {
-        case i: RetrievedApplicantData.IndividualRetrievedData => i.sautr
-        case _                                                 => None
-      }
-
-      sautrOpt match {
-        case Some(utr) =>
-          if (Seq(TaxSituation.SA, TaxSituation.SAPAYE).contains(taxSituation)) {
-            (taxCheckService.getSAStatus(utr, taxYear) map { status =>
-              request.sessionData.retrievedUserData match {
-                case i: RetrievedApplicantData.IndividualRetrievedData => i.copy(saStatus = Some(status))
-                case c: RetrievedApplicantData.CompanyRetrievedData    => c
-              }
-            }) foldF ({ e =>
-              logger.warn("Failed to fetch SA status", e)
-              Future.successful(InternalServerError)
-            },
-            updateAndRedirect)
-          } else {
-            updateAndRedirect(request.sessionData.retrievedUserData)
-          }
-        case None      => Future.successful(Redirect(routes.TaxSituationController.sautrNotFoundExit()))
-      }
-    }
 
     val licenceTypeOpt = request.sessionData.userAnswers.fold(_.licenceType, c => Some(c.licenceType))
     licenceTypeOpt match {
@@ -160,7 +162,7 @@ class TaxSituationController @Inject() (
   // Placeholder for exit page when SAUTR not found (HEC-986)
   val sautrNotFoundExit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     Ok(
-      s"Session is ${request.sessionData} back Url ::${journeyService.previous(routes.TechnicalExceptionController.technicalException())}"
+      s"Session is ${request.sessionData} back Url ::${journeyService.previous(routes.TaxSituationController.sautrNotFoundExit())}"
     )
   }
 
