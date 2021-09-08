@@ -146,12 +146,12 @@ licenceValidityPeriod.error.required=Select the number of years your most recent
 licenceValidityPeriod.error.invalid=Select the number of years your most recent licence was valid for
 
 # Tax Situation
-taxSituation.title = How did you pay tax on any work carried out using your licence?
-taxSituation.PA = As an employee
+taxSituation.title = What was your tax status for work carried out using this type of licence?
+taxSituation.PA = An employee
 taxSituation.SA = Registered for Self Assessment
 taxSituation.SAPAYE = Registered for Self Assessment and an employee
-taxSituation.NotChargeable = I did not have to pay tax (not chargeable)
-taxSituation.NotChargeable.hint = For example, you may have been self-employed and earned less than your tax-free allowance.
+taxSituation.NotChargeable = I did not need to tell HMRC about this income
+taxSituation.NotChargeable.hint = For example, you may have had a licence but not used it to generate income.
 taxSituation.link = Find out who needs to register for Self Assessment (open in new window)
 taxSituation.error.required = Select how you reported income earned using your licence
 taxSituation.error.invalid = Select how did you report income earned using your licence
