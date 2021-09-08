@@ -153,8 +153,8 @@ taxSituation.SAPAYE = Registered for Self Assessment and an employee
 taxSituation.NotChargeable = I did not need to tell HMRC about this income
 taxSituation.NotChargeable.hint = For example, you may have had a licence but not used it to generate income.
 taxSituation.link = Find out who needs to register for Self Assessment (open in new window)
-taxSituation.error.required = Select what your tax status was for work carried out using this licence type
-taxSituation.error.invalid = Select what your tax status was for work carried out using this licence type
+taxSituation.error.required = Select your tax status
+taxSituation.error.invalid = Select your tax status
 taxSituation.hint = This is for the tax year 6 April {0} to 5 April {1}.
 
 # Entity Type
