@@ -16,7 +16,10 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.controllers
 
-import cats.instances.future._
+import java.time.LocalDate
+
+import cats.data.EitherT
+import cats.implicits._
 import com.google.inject.{Inject, Singleton}
 import play.api.data.Form
 import play.api.data.Forms.{mapping, of}
@@ -24,24 +27,28 @@ import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.{getTaxYear, taxSituationForm, taxSituationOptions}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
-import uk.gov.hmrc.hecapplicantfrontend.models.{TaxSituation, TaxYear}
+import uk.gov.hmrc.hecapplicantfrontend.models
+import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.IndividualRetrievedData
 import uk.gov.hmrc.hecapplicantfrontend.models.TaxSituation._
-import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
+import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
+import uk.gov.hmrc.hecapplicantfrontend.models.{SAStatusResponse, TaxSituation, TaxYear}
+import uk.gov.hmrc.hecapplicantfrontend.services.{JourneyService, TaxCheckService}
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging.LoggerOps
 import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging, TimeProvider, TimeUtils}
+import uk.gov.hmrc.hecapplicantfrontend.models.Error
 import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import java.time.LocalDate
-
-import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
 
 import scala.concurrent.{ExecutionContext, Future}
+
+import TaxSituationController.saTaxSituations
 
 @Singleton
 class TaxSituationController @Inject() (
   authAction: AuthAction,
   sessionDataAction: SessionDataAction,
   journeyService: JourneyService,
+  taxCheckService: TaxCheckService,
   mcc: MessagesControllerComponents,
   timeProvider: TimeProvider,
   taxSituationPage: html.TaxSituation
@@ -62,6 +69,8 @@ class TaxSituationController @Inject() (
           reportIncome.fold(emptyForm)(emptyForm.fill)
         }
 
+        // Note: We should store the tax year calculated here n the session to be reused later to avoid
+        // the edge case where the tax year might change from one page to the next
         Ok(taxSituationPage(form, back, options, getTaxYear(timeProvider.currentDate)))
       case None              =>
         logger.error("Couldn't find licence Type")
@@ -70,24 +79,47 @@ class TaxSituationController @Inject() (
   }
 
   val taxSituationSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
-    def handleReportedIncome(taxSituation: TaxSituation): Future[Result] = {
-      val updatedAnswers =
-        request.sessionData.userAnswers
-          .unset(_.taxSituation)
-          .copy(taxSituation = Some(taxSituation))
-      journeyService
-        .updateAndNext(
-          routes.TaxSituationController.taxSituation(),
-          request.sessionData.copy(userAnswers = updatedAnswers)
-        )
-        .fold(
-          { e =>
-            logger.warn("Could not update session and proceed", e)
-            InternalServerError
-          },
-          Redirect
-        )
-    }
+    val taxYear = getTaxYear(TimeUtils.today())
+
+    def fetchSAStatus(
+      individualRetrievedData: IndividualRetrievedData,
+      taxSituation: TaxSituation
+    ): EitherT[Future, models.Error, Option[SAStatusResponse]] =
+      if (saTaxSituations.contains(taxSituation)) {
+        individualRetrievedData.sautr
+          .traverse[EitherT[Future, Error, *], SAStatusResponse](taxCheckService.getSAStatus(_, taxYear))
+      } else {
+        EitherT.pure[Future, models.Error](None)
+      }
+
+    def handleValidTaxSituation(taxSituation: TaxSituation): Future[Result] =
+      request.sessionData.retrievedUserData match {
+        case individualRetrievedData: IndividualRetrievedData =>
+          val result = for {
+            maybeSaStatus <- fetchSAStatus(individualRetrievedData, taxSituation)
+
+            updatedRetrievedData = individualRetrievedData.copy(saStatus = maybeSaStatus)
+            updatedAnswers       =
+              request.sessionData.userAnswers.unset(_.taxSituation).copy(taxSituation = Some(taxSituation))
+            updatedRequest       = request.sessionData.copy(
+                                     userAnswers = updatedAnswers,
+                                     retrievedUserData = updatedRetrievedData
+                                   )
+
+            next <- journeyService.updateAndNext(routes.TaxSituationController.taxSituation(), updatedRequest)
+          } yield next
+
+          result.fold(
+            { e =>
+              logger.warn("Fetch SA status failed or could not update session and proceed", e)
+              InternalServerError
+            },
+            Redirect
+          )
+        case _                                                =>
+          logger.error("Companies should not see this page")
+          Future.successful(InternalServerError)
+      }
 
     val licenceTypeOpt = request.sessionData.userAnswers.fold(_.licenceType, c => Some(c.licenceType))
     licenceTypeOpt match {
@@ -102,17 +134,16 @@ class TaxSituationController @Inject() (
                   formWithErrors,
                   journeyService.previous(routes.TaxSituationController.taxSituation()),
                   options,
-                  getTaxYear(TimeUtils.today())
+                  taxYear
                 )
               ),
-            handleReportedIncome
+            handleValidTaxSituation
           )
       case None              =>
-        logger.error("Couldn't find licence Type")
+        logger.error("Couldn't find licence type")
         InternalServerError
     }
   }
-
 }
 
 object TaxSituationController {
@@ -124,6 +155,8 @@ object TaxSituationController {
   )
 
   private val nonPAYETaxSituations = List(SA, NotChargeable)
+
+  val saTaxSituations: Seq[TaxSituation] = Seq(TaxSituation.SA, TaxSituation.SAPAYE)
 
   def taxSituationOptions(licenceType: LicenceType): List[TaxSituation] =
     licenceType match {

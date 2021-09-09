@@ -177,7 +177,8 @@ class StartController @Inject() (
                       sautr,
                       citizenDetails.name,
                       citizenDetails.dateOfBirth,
-                      maybeEmail.map(EmailAddress(_))
+                      maybeEmail.map(EmailAddress(_)),
+                      None
                     )
                 )
                 .toEither

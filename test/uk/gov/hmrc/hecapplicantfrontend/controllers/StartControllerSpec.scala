@@ -141,7 +141,8 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
         Some(sautr),
         Name("First", "Last"),
         DateOfBirth(LocalDate.now()),
-        Some(emailAddress)
+        Some(emailAddress),
+        None
       )
 
       val completeCompanyRetrievedData = CompanyRetrievedData(
