@@ -18,17 +18,18 @@ package uk.gov.hmrc.hecapplicantfrontend.services
 
 import cats.Eq
 import cats.data.EitherT
-import cats.instances.string._
 import cats.instances.future._
+import cats.instances.string._
 import cats.syntax.eq._
 import com.google.inject.{ImplementedBy, Inject, Singleton}
 import play.api.mvc.Call
+import uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.saTaxSituations
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.RequestWithSessionData
-import uk.gov.hmrc.hecapplicantfrontend.models.{EntityType, Error, HECSession, SAStatus, TaxSituation, UserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRetrievedData, IndividualRetrievedData}
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.{CompleteUserAnswers, IncompleteUserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceExpiryDate, LicenceType}
+import uk.gov.hmrc.hecapplicantfrontend.models.{EntityType, Error, HECSession, SAStatus, UserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.util.TimeUtils
 import uk.gov.hmrc.hecapplicantfrontend.util.TimeUtils.LocalDateOps
@@ -230,21 +231,23 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
     else routes.EntityTypeController.wrongGGAccount()
   }
 
-  private def taxSituationRoute(session: HECSession): Call =
-    session.retrievedUserData match {
-      case IndividualRetrievedData(_, _, Some(_), _, _, _, Some(saStatus)) =>
-        UserAnswers.taxSituation(session.userAnswers) map {
-          case TaxSituation.PAYE | TaxSituation.NotChargeable => routes.CheckYourAnswersController.checkYourAnswers()
-          case TaxSituation.SA | TaxSituation.SAPAYE          =>
-            saStatus.status match {
-              case SAStatus.ReturnFound        => routes.TaxSituationController.confirmYourIncome()
-              case SAStatus.NoticeToFileIssued => routes.CheckYourAnswersController.checkYourAnswers()
-              case SAStatus.NoReturnFound      => routes.TaxSituationController.noReturnFoundExit()
-            }
-        } getOrElse sys.error("Could not find tax situation in session")
+  private def taxSituationRoute(session: HECSession): Call = {
+    val maybeTaxSituation = UserAnswers.taxSituation(session.userAnswers)
 
-      case i: IndividualRetrievedData if i.sautr.isEmpty => routes.TaxSituationController.sautrNotFoundExit()
-      case _: CompanyRetrievedData                       => routes.CheckYourAnswersController.checkYourAnswers()
+    if (maybeTaxSituation.exists(ts => saTaxSituations.contains(ts))) {
+      session.retrievedUserData match {
+        case IndividualRetrievedData(_, _, Some(_), _, _, _, Some(saStatus)) =>
+          saStatus.status match {
+            case SAStatus.ReturnFound        => routes.SAController.confirmYourIncome()
+            case SAStatus.NoticeToFileIssued => routes.CheckYourAnswersController.checkYourAnswers()
+            case SAStatus.NoReturnFound      => routes.SAController.noReturnFoundExit()
+          }
+        case i: IndividualRetrievedData if i.sautr.isEmpty                   => routes.SAController.sautrNotFoundExit()
+        case _: CompanyRetrievedData                                         => routes.CheckYourAnswersController.checkYourAnswers()
+      }
+    } else {
+      routes.CheckYourAnswersController.checkYourAnswers()
     }
+  }
 
 }

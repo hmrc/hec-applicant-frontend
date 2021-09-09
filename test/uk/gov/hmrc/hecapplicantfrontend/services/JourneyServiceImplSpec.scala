@@ -368,45 +368,6 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             taxSituation = Some(taxSituation)
           )
 
-          "applicant is individual and SAUTR is missing" in {
-            val individualWithoutSautr  = individualRetrievedData
-            val answersWithTaxSituation = answers.copy(taxSituation = Some(TaxSituation.SA))
-            val session                 = HECSession(individualWithoutSautr, answersWithTaxSituation, None)
-
-            val updatedIndividualData = individualWithoutSautr.copy(
-              saStatus = Some(SAStatusResponse(SAUTR(""), TaxYear(2020), SAStatus.NoticeToFileIssued))
-            )
-            val updatedSession        = HECSession(updatedIndividualData, answersWithTaxSituation, None)
-
-            implicit val request: RequestWithSessionData[_] =
-              requestWithSessionData(session)
-
-            mockStoreSession(updatedSession)(Right(()))
-
-            val result = journeyService.updateAndNext(
-              routes.TaxSituationController.taxSituation(),
-              updatedSession
-            )
-            await(result.value) shouldBe Right(routes.TaxSituationController.sautrNotFoundExit())
-          }
-
-          "applicant type is company" in {
-            val session        = HECSession(companyRetrievedData, answers, None)
-            val updatedSession =
-              HECSession(companyRetrievedData, answersWithTaxSituation(TaxSituation.SA), None)
-
-            implicit val request: RequestWithSessionData[_] =
-              requestWithSessionData(session)
-
-            mockStoreSession(updatedSession)(Right(()))
-
-            val result = journeyService.updateAndNext(
-              routes.TaxSituationController.taxSituation(),
-              updatedSession
-            )
-            await(result.value) shouldBe Right(routes.CheckYourAnswersController.checkYourAnswers())
-          }
-
           "tax situation is missing" in {
             val session        = HECSession(individualWithStatus(SAStatus.NoticeToFileIssued), answers, None)
             val updatedSession = HECSession(individualWithStatus(SAStatus.ReturnFound), answers, None)
@@ -447,6 +408,45 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
           }
 
           def testsForSelfAssessment(taxSituation: TaxSituation) = {
+            "SAUTR is missing" in {
+              val individualWithoutSautr  = individualRetrievedData
+              val answersWithTaxSituation = answers.copy(taxSituation = Some(taxSituation))
+              val session                 = HECSession(individualWithoutSautr, answersWithTaxSituation, None)
+
+              val updatedIndividualData = individualWithoutSautr.copy(
+                saStatus = Some(SAStatusResponse(SAUTR(""), TaxYear(2020), SAStatus.NoticeToFileIssued))
+              )
+              val updatedSession        = HECSession(updatedIndividualData, answersWithTaxSituation, None)
+
+              implicit val request: RequestWithSessionData[_] =
+                requestWithSessionData(session)
+
+              mockStoreSession(updatedSession)(Right(()))
+
+              val result = journeyService.updateAndNext(
+                routes.TaxSituationController.taxSituation(),
+                updatedSession
+              )
+              await(result.value) shouldBe Right(routes.SAController.sautrNotFoundExit())
+            }
+
+            "applicant type is company" in {
+              val session        = HECSession(companyRetrievedData, answers, None)
+              val updatedSession =
+                HECSession(companyRetrievedData, answersWithTaxSituation(taxSituation), None)
+
+              implicit val request: RequestWithSessionData[_] =
+                requestWithSessionData(session)
+
+              mockStoreSession(updatedSession)(Right(()))
+
+              val result = journeyService.updateAndNext(
+                routes.TaxSituationController.taxSituation(),
+                updatedSession
+              )
+              await(result.value) shouldBe Right(routes.CheckYourAnswersController.checkYourAnswers())
+            }
+
             "SA status = ReturnFound" in {
               val individualReturnFound = individualWithStatus(SAStatus.ReturnFound)
               val session               = HECSession(individualReturnFound, answers, None)
@@ -460,7 +460,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 routes.TaxSituationController.taxSituation(),
                 updatedSession
               )
-              await(result.value) shouldBe Right(routes.TaxSituationController.confirmYourIncome())
+              await(result.value) shouldBe Right(routes.SAController.confirmYourIncome())
             }
 
             "SA status = NoReturnFound" in {
@@ -476,7 +476,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 routes.TaxSituationController.taxSituation(),
                 updatedSession
               )
-              await(result.value) shouldBe Right(routes.TaxSituationController.noReturnFoundExit())
+              await(result.value) shouldBe Right(routes.SAController.noReturnFoundExit())
             }
 
             "SA status = NoticeToFileIssued" in {
@@ -1024,7 +1024,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
               requestWithSessionData(session)
 
             val result = journeyService.previous(
-              routes.TaxSituationController.confirmYourIncome()
+              routes.SAController.confirmYourIncome()
             )
 
             result shouldBe routes.TaxSituationController.taxSituation()
@@ -1046,7 +1046,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
 
             assertThrows[RuntimeException] {
               journeyService.previous(
-                routes.TaxSituationController.confirmYourIncome()
+                routes.SAController.confirmYourIncome()
               )
             }
           }
@@ -1069,7 +1069,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
               requestWithSessionData(session)
 
             val result = journeyService.previous(
-              routes.TaxSituationController.noReturnFoundExit()
+              routes.SAController.noReturnFoundExit()
             )
 
             result shouldBe routes.TaxSituationController.taxSituation()
@@ -1091,7 +1091,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
 
             assertThrows[RuntimeException] {
               journeyService.previous(
-                routes.TaxSituationController.noReturnFoundExit()
+                routes.SAController.noReturnFoundExit()
               )
             }
           }
@@ -1105,7 +1105,6 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
           }
         }
 
-        // "technical exception page"
       }
 
       "return the check your answers page" when {

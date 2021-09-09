@@ -41,6 +41,8 @@ import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
 import scala.concurrent.{ExecutionContext, Future}
 
+import TaxSituationController.saTaxSituations
+
 @Singleton
 class TaxSituationController @Inject() (
   authAction: AuthAction,
@@ -75,8 +77,6 @@ class TaxSituationController @Inject() (
         InternalServerError
     }
   }
-
-  private val saTaxSituations = Seq(TaxSituation.SA, TaxSituation.SAPAYE)
 
   val taxSituationSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     val taxYear = getTaxYear(TimeUtils.today())
@@ -155,6 +155,8 @@ object TaxSituationController {
   )
 
   private val nonPAYETaxSituations = List(SA, NotChargeable)
+
+  val saTaxSituations: Seq[TaxSituation] = Seq(TaxSituation.SA, TaxSituation.SAPAYE)
 
   def taxSituationOptions(licenceType: LicenceType): List[TaxSituation] =
     licenceType match {
