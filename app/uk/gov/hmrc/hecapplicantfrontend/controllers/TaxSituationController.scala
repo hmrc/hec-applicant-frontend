@@ -19,8 +19,6 @@ package uk.gov.hmrc.hecapplicantfrontend.controllers
 import java.time.LocalDate
 
 import cats.data.EitherT
-import uk.gov.hmrc.hecapplicantfrontend.models
-import uk.gov.hmrc.hecapplicantfrontend.models.SAStatusResponse
 import cats.implicits._
 import com.google.inject.{Inject, Singleton}
 import play.api.data.Form
@@ -29,16 +27,17 @@ import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.{getTaxYear, taxSituationForm, taxSituationOptions}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
+import uk.gov.hmrc.hecapplicantfrontend.models
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.IndividualRetrievedData
 import uk.gov.hmrc.hecapplicantfrontend.models.TaxSituation._
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
-import uk.gov.hmrc.hecapplicantfrontend.models.{TaxSituation, TaxYear}
+import uk.gov.hmrc.hecapplicantfrontend.models.{SAStatusResponse, TaxSituation, TaxYear}
 import uk.gov.hmrc.hecapplicantfrontend.services.{JourneyService, TaxCheckService}
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging.LoggerOps
 import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging, TimeProvider, TimeUtils}
+import uk.gov.hmrc.hecapplicantfrontend.models.Error
 import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import uk.gov.hmrc.hecapplicantfrontend.models.Error
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -68,6 +67,8 @@ class TaxSituationController @Inject() (
           reportIncome.fold(emptyForm)(emptyForm.fill)
         }
 
+        // Note: We should store the tax year calculated here n the session to be reused later to avoid
+        // the edge case where the tax year might change from one page to the next
         Ok(taxSituationPage(form, back, options, getTaxYear(timeProvider.currentDate)))
       case None              =>
         logger.error("Couldn't find licence Type")
@@ -86,8 +87,7 @@ class TaxSituationController @Inject() (
     ): EitherT[Future, models.Error, Option[SAStatusResponse]] =
       if (saTaxSituations.contains(taxSituation)) {
         individualRetrievedData.sautr
-          .map(taxCheckService.getSAStatus(_, taxYear))
-          .sequence[EitherT[Future, Error, *], SAStatusResponse]
+          .traverse[EitherT[Future, Error, *], SAStatusResponse](taxCheckService.getSAStatus(_, taxYear))
       } else {
         EitherT.pure[Future, models.Error](None)
       }
@@ -144,28 +144,6 @@ class TaxSituationController @Inject() (
         InternalServerError
     }
   }
-
-  // Placeholder for confirm your income (HEC-985)
-  val confirmYourIncome: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
-    Ok(
-      s"Session is ${request.sessionData} back Url ::${journeyService.previous(routes.TaxSituationController.confirmYourIncome())}"
-    )
-  }
-
-  // Placeholder for exit page when no tax return is found (HEC-987)
-  val noReturnFoundExit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
-    Ok(
-      s"Session is ${request.sessionData} back Url ::${journeyService.previous(routes.TaxSituationController.noReturnFoundExit())}"
-    )
-  }
-
-  // Placeholder for exit page when SAUTR not found (HEC-986)
-  val sautrNotFoundExit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
-    Ok(
-      s"Session is ${request.sessionData} back Url ::${journeyService.previous(routes.TaxSituationController.sautrNotFoundExit())}"
-    )
-  }
-
 }
 
 object TaxSituationController {
