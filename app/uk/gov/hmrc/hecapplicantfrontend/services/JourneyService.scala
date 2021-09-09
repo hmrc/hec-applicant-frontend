@@ -242,7 +242,9 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
             case SAStatus.NoticeToFileIssued => routes.CheckYourAnswersController.checkYourAnswers()
             case SAStatus.NoReturnFound      => routes.SAController.noReturnFoundExit()
           }
-        case i: IndividualRetrievedData if i.sautr.isEmpty                   => routes.SAController.sautrNotFoundExit()
+        // TODO: the below case also matches the case where SAUTR is present but the SA status is not
+        //  We could look at this as part of the ticket to handle missing fields better (HEC-1034)
+        case _: IndividualRetrievedData                                      => routes.SAController.sautrNotFoundExit()
         case _: CompanyRetrievedData                                         => routes.CheckYourAnswersController.checkYourAnswers()
       }
     } else {
