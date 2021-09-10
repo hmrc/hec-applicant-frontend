@@ -72,10 +72,9 @@ class SAControllerSpec
           mockJourneyServiceGetPrevious(routes.SAController.sautrNotFound(), session)(mockPreviousCall)
         }
 
-        def testLink(doc: Document, selector: String, expectedUrl: String) = {
-          val changeAnswerLink = doc.select(selector)
-          changeAnswerLink.size()       shouldBe 1
-          changeAnswerLink.attr("href") shouldBe expectedUrl
+        def testLink(doc: Document, url: String) = {
+          val link = doc.select(s"a.govuk-link[href=$url]")
+          link.size() shouldBe 1
         }
 
         checkPageIsDisplayed(
@@ -84,23 +83,9 @@ class SAControllerSpec
           doc => {
             doc.select("#back").attr("href") shouldBe mockPreviousCall.url
 
-            testLink(
-              doc,
-              selector = "a:contains(go back and change your answer)",
-              expectedUrl = routes.TaxSituationController.taxSituation().url
-            )
-
-            testLink(
-              doc,
-              selector = "a:contains(register for Self Assessment)",
-              expectedUrl = appConfig.registerForSaUrl
-            )
-
-            testLink(
-              doc,
-              selector = "a:contains(contact HMRC)",
-              expectedUrl = appConfig.contactHmrcSa
-            )
+            testLink(doc, routes.TaxSituationController.taxSituation().url)
+            testLink(doc, appConfig.registerForSaUrl)
+            testLink(doc, appConfig.contactHmrcSa)
           }
         )
 
