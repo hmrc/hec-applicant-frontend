@@ -495,7 +495,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 routes.TaxSituationController.taxSituation(),
                 updatedSession
               )
-              await(result.value) shouldBe Right(routes.SAController.sautrNotFoundExit())
+              await(result.value) shouldBe Right(routes.SAController.sautrNotFound())
             }
 
             "applicant type is company" in {

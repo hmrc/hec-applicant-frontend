@@ -19,9 +19,11 @@ package uk.gov.hmrc.hecapplicantfrontend.controllers
 import com.google.inject.{Inject, Singleton}
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
+import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
 @Singleton
@@ -29,8 +31,10 @@ class SAController @Inject() (
   authAction: AuthAction,
   sessionDataAction: SessionDataAction,
   journeyService: JourneyService,
-  mcc: MessagesControllerComponents
-) extends FrontendController(mcc)
+  mcc: MessagesControllerComponents,
+  sautrNotFoundPage: html.SautrNotFound
+)(implicit appConfig: AppConfig)
+    extends FrontendController(mcc)
     with I18nSupport
     with Logging {
 
@@ -48,11 +52,9 @@ class SAController @Inject() (
     )
   }
 
-  // Placeholder for exit page when SAUTR not found (HEC-986)
-  val sautrNotFoundExit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
-    Ok(
-      s"Session is ${request.sessionData} back Url ::${journeyService.previous(routes.SAController.sautrNotFoundExit())}"
-    )
+  val sautrNotFound: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
+    val back = journeyService.previous(routes.SAController.sautrNotFound())
+    Ok(sautrNotFoundPage(back))
   }
 
 }

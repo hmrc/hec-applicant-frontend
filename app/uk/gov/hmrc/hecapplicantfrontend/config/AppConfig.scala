@@ -85,5 +85,7 @@ class AppConfig @Inject() (config: Configuration, contactFrontendConfig: Contact
   }
 
   val taxCheckGuidanceUrl: String = config.get[String]("external-url.tax-check-guidance")
+  val registerForSaUrl: String    = config.get[String]("external-url.register-for-sa")
+  val contactHmrcSa: String       = config.get[String]("external-url.contact-hmrc-sa")
 
 }

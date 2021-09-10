@@ -257,7 +257,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
               sys.error("Found SA UTR for tax situation route but no SA status response")
 
             case i: IndividualRetrievedData if i.sautr.isEmpty =>
-              routes.SAController.sautrNotFoundExit()
+              routes.SAController.sautrNotFound()
 
             case _: CompanyRetrievedData =>
               sys.error("Retrieved data for company found for tax situation route")

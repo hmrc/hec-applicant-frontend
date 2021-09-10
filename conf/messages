@@ -201,3 +201,15 @@ taxCheckComplete.p2 = The last day it is valid is: <strong>{0}</strong>.
 taxCheckComplete.whatNext = What you need to do next
 taxCheckComplete.list1 = Make a note of your tax check code. <span class="js-visible">You can <a class="govuk-link" href="#print-dialogue">print or save this page as a PDF</a>.</span>
 taxCheckComplete.list2 = Enter your tax check code in your licence application. Make sure you leave enough time for your application to be processed before your tax check code expires.
+
+# SAUTR Not Found
+sautrNotFound.title = You cannot use this service
+sautrNotFound.intro = This is because we could not find a Self Assessment Unique Taxpayer Reference (UTR) for you.
+sautrNotFound.changeAnswer.heading = If you told us you were registered for Self Assessment but were not
+sautrNotFound.changeAnswer.p1 = You’ll need to <a href="{0}" class="govuk-link">go back and change your answer</a>.
+sautrNotFound.register.heading = If you have not registered for Self Assessment
+sautrNotFound.register.p1 = You’ll need to <a href="{0}" class="govuk-link">register for Self Assessment</a>. When you have received your UTR, you can then come back and do a tax check. It typically takes 2 to 3 weeks to register.
+sautrNotFound.newRegistration.heading = If you have registered for Self Assessment in the last 3 weeks
+sautrNotFound.newRegistration.p1 = Our systems will not have been updated yet. You’ll need to wait until you have received your UTR. You can then do a tax check.
+sautrNotFound.problem.heading = If you registered for Self Assessment more than 3 weeks ago
+sautrNotFound.problem.p1 = You’ll need to <a href="{0}" class="govuk-link">contact HMRC</a>.
