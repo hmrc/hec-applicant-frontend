@@ -18,6 +18,7 @@ package uk.gov.hmrc.hecapplicantfrontend.controllers
 
 import java.time.LocalDate
 
+import org.jsoup.nodes.Document
 import play.api.inject.bind
 import play.api.mvc.Result
 import play.api.test.FakeRequest
@@ -44,7 +45,7 @@ class SAControllerSpec
     bind[JourneyService].toInstance(mockJourneyService)
   )
 
-  val controller = instanceOf[SAController]
+  private val controller = instanceOf[SAController]
 
   val individuaRetrievedlData =
     IndividualRetrievedData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None, None)
@@ -71,10 +72,36 @@ class SAControllerSpec
           mockJourneyServiceGetPrevious(routes.SAController.sautrNotFound(), session)(mockPreviousCall)
         }
 
+        def testLink(doc: Document, selector: String, expectedUrl: String) = {
+          val changeAnswerLink = doc.select(selector)
+          changeAnswerLink.size()       shouldBe 1
+          changeAnswerLink.attr("href") shouldBe expectedUrl
+        }
+
         checkPageIsDisplayed(
           performAction(),
           messageFromMessageKey("sautrNotFound.title"),
-          doc => doc.select("#back").attr("href") shouldBe mockPreviousCall.url
+          doc => {
+            doc.select("#back").attr("href") shouldBe mockPreviousCall.url
+
+            testLink(
+              doc,
+              selector = "a:contains(go back and change your answer)",
+              expectedUrl = routes.TaxSituationController.taxSituation().url
+            )
+
+            testLink(
+              doc,
+              selector = "a:contains(register for Self Assessment)",
+              expectedUrl = appConfig.registerForSaUrl
+            )
+
+            testLink(
+              doc,
+              selector = "a:contains(contact HMRC)",
+              expectedUrl = appConfig.contactHmrcSa
+            )
+          }
         )
 
       }

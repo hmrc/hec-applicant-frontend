@@ -19,6 +19,7 @@ package uk.gov.hmrc.hecapplicantfrontend.controllers
 import com.google.inject.{Inject, Singleton}
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
@@ -32,7 +33,8 @@ class SAController @Inject() (
   journeyService: JourneyService,
   mcc: MessagesControllerComponents,
   sautrNotFoundPage: html.SautrNotFound
-) extends FrontendController(mcc)
+)(implicit appConfig: AppConfig)
+    extends FrontendController(mcc)
     with I18nSupport
     with Logging {
 
