@@ -33,6 +33,7 @@ object UserAnswers {
     licenceTimeTrading: Option[LicenceTimeTrading],
     licenceValidityPeriod: Option[LicenceValidityPeriod],
     taxSituation: Option[TaxSituation],
+    incomeConfirmation: Option[IncomeConfirmation],
     entityType: Option[EntityType]
   ) extends UserAnswers
 
@@ -42,6 +43,7 @@ object UserAnswers {
     licenceTimeTrading: LicenceTimeTrading,
     licenceValidityPeriod: LicenceValidityPeriod,
     taxSituation: TaxSituation,
+    incomeConfirmation: IncomeConfirmation,
     entityType: Option[EntityType]
   ) extends UserAnswers
 
@@ -54,6 +56,7 @@ object UserAnswers {
         Some(c.licenceTimeTrading),
         Some(c.licenceValidityPeriod),
         Some(c.taxSituation),
+        Some(c.incomeConfirmation),
         c.entityType
       )
 
@@ -78,7 +81,7 @@ object UserAnswers {
 
   }
 
-  val empty: IncompleteUserAnswers = IncompleteUserAnswers(None, None, None, None, None, None)
+  val empty: IncompleteUserAnswers = IncompleteUserAnswers(None, None, None, None, None, None, None)
 
   implicit val format: OFormat[UserAnswers] = derived.oformat()
 

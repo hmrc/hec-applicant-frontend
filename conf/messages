@@ -217,3 +217,11 @@ sautrNotFound.problem.p1 = You’ll need to <a href="{0}" class="govuk-link">con
 # No Return Found
 noReturnFound.title = You cannot do a tax check at the moment
 noReturnFound.p1 = You will need to <a href="{0}" class="govuk-link">contact HMRC</a> before doing your tax check.
+
+# Confirm Your Income
+confirmYourIncome.title = Did you include income you earned using this licence in your tax return?
+confirmYourIncome.yes = Yes
+confirmYourIncome.no = No
+confirmYourIncome.error.required = Select whether you included income you earned using this licence in your tax return
+confirmYourIncome.error.invalid = Select whether you included income you earned using this licence in your tax return
+confirmYourIncome.hint = This is for the tax year 6 April {0} to 5 April {1}.

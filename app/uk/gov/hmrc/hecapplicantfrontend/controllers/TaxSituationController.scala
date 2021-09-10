@@ -69,7 +69,7 @@ class TaxSituationController @Inject() (
           reportIncome.fold(emptyForm)(emptyForm.fill)
         }
 
-        // Note: We should store the tax year calculated here n the session to be reused later to avoid
+        // Note: We should store the tax year calculated here in the session to be reused later to avoid
         // the edge case where the tax year might change from one page to the next
         Ok(taxSituationPage(form, back, options, getTaxYear(timeProvider.currentDate)))
       case None              =>

@@ -23,9 +23,8 @@ import cats.instances.string._
 import cats.syntax.eq._
 import com.google.inject.{ImplementedBy, Inject, Singleton}
 import play.api.mvc.Call
-import uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.saTaxSituations
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.RequestWithSessionData
-import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
+import uk.gov.hmrc.hecapplicantfrontend.controllers.{TaxSituationController, routes}
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRetrievedData, IndividualRetrievedData}
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.{CompleteUserAnswers, IncompleteUserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceExpiryDate, LicenceType}
@@ -71,6 +70,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
     routes.LicenceDetailsController.recentLicenceLength()                -> licenceValidityPeriodRoute,
     routes.EntityTypeController.entityType()                             -> entityTypeRoute,
     routes.TaxSituationController.taxSituation()                         -> taxSituationRoute,
+    routes.SAController.confirmYourIncome()                              -> (_ => routes.CheckYourAnswersController.checkYourAnswers()),
     routes.CheckYourAnswersController.checkYourAnswers()                 -> (_ => routes.TaxCheckCompleteController.taxCheckComplete())
   )
 
@@ -165,6 +165,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
                 Some(licenceTimeTrading),
                 Some(licenceValidityPeriod),
                 Some(taxSituation),
+                Some(incomeConfirmation),
                 Some(entityType)
               ) if licenceTypeForIndividualAndCompany(licenceType) =>
             val completeAnswers =
@@ -174,6 +175,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
                 licenceTimeTrading,
                 licenceValidityPeriod,
                 taxSituation,
+                incomeConfirmation,
                 Some(entityType)
               )
             session.copy(userAnswers = completeAnswers)
@@ -184,6 +186,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
                 Some(licenceTimeTrading),
                 Some(licenceValidityPeriod),
                 Some(taxSituation),
+                Some(incomeConfirmation),
                 _
               ) if !licenceTypeForIndividualAndCompany(licenceType) =>
             val completeAnswers =
@@ -193,6 +196,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
                 licenceTimeTrading,
                 licenceValidityPeriod,
                 taxSituation,
+                incomeConfirmation,
                 None
               )
             session.copy(userAnswers = completeAnswers)
@@ -244,7 +248,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
       case None               =>
         sys.error("Could not find tax situation for tax situation route")
       case Some(taxSituation) =>
-        if (saTaxSituations.contains(taxSituation)) {
+        if (TaxSituationController.saTaxSituations.contains(taxSituation)) {
           session.retrievedUserData match {
             case IndividualRetrievedData(_, _, Some(_), _, _, _, Some(saStatus)) =>
               saStatus.status match {
