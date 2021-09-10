@@ -543,7 +543,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 routes.TaxSituationController.taxSituation(),
                 updatedSession
               )
-              await(result.value) shouldBe Right(routes.SAController.noReturnFoundExit())
+              await(result.value) shouldBe Right(routes.SAController.noReturnFound())
             }
 
             "SA status = NoticeToFileIssued" in {
@@ -1110,7 +1110,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
               requestWithSessionData(session)
 
             val result = journeyService.previous(
-              routes.SAController.noReturnFoundExit()
+              routes.SAController.noReturnFound()
             )
 
             result shouldBe routes.TaxSituationController.taxSituation()
@@ -1132,7 +1132,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
 
             assertThrows[RuntimeException] {
               journeyService.previous(
-                routes.SAController.noReturnFoundExit()
+                routes.SAController.noReturnFound()
               )
             }
           }

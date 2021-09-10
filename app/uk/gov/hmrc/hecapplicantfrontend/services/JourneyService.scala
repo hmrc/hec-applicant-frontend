@@ -250,7 +250,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
               saStatus.status match {
                 case SAStatus.ReturnFound        => routes.SAController.confirmYourIncome()
                 case SAStatus.NoticeToFileIssued => routes.CheckYourAnswersController.checkYourAnswers()
-                case SAStatus.NoReturnFound      => routes.SAController.noReturnFoundExit()
+                case SAStatus.NoReturnFound      => routes.SAController.noReturnFound()
               }
 
             case i: IndividualRetrievedData if i.sautr.isDefined && i.saStatus.isEmpty =>

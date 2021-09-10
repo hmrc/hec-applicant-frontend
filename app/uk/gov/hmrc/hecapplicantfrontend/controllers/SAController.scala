@@ -32,7 +32,8 @@ class SAController @Inject() (
   sessionDataAction: SessionDataAction,
   journeyService: JourneyService,
   mcc: MessagesControllerComponents,
-  sautrNotFoundPage: html.SautrNotFound
+  sautrNotFoundPage: html.SautrNotFound,
+  noReturnFoundPage: html.NoReturnFound
 )(implicit appConfig: AppConfig)
     extends FrontendController(mcc)
     with I18nSupport
@@ -45,11 +46,9 @@ class SAController @Inject() (
     )
   }
 
-  // Placeholder for exit page when no tax return is found (HEC-987)
-  val noReturnFoundExit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
-    Ok(
-      s"Session is ${request.sessionData} back Url ::${journeyService.previous(routes.SAController.noReturnFoundExit())}"
-    )
+  val noReturnFound: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
+    val back = journeyService.previous(routes.SAController.noReturnFound())
+    Ok(noReturnFoundPage(back))
   }
 
   val sautrNotFound: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
