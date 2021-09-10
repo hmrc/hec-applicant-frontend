@@ -98,23 +98,21 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
   override def updateAndNext(current: Call, updatedSession: HECSession)(implicit
     r: RequestWithSessionData[_],
     hc: HeaderCarrier
-  ): EitherT[Future, Error, Call] = {
-    val upliftedSession = upliftToCompleteAnswersIfComplete(updatedSession, current)
-    val nextOpt         = upliftedSession.userAnswers.fold(
-      _ => paths.get(current).map(_(upliftedSession)),
-      _ => Some(routes.CheckYourAnswersController.checkYourAnswers())
-    )
-
-    nextOpt match {
-      case None       =>
-        EitherT.leftT(Error(s"Could not find next for $current"))
-      case Some(next) =>
-        if (r.sessionData === upliftedSession)
-          EitherT.pure(next)
-        else
-          sessionStore.store(upliftedSession).map(_ => next)
-    }
-  }
+  ): EitherT[Future, Error, Call] =
+    for {
+      upliftedSession <- EitherT.fromEither[Future](upliftToCompleteAnswersIfComplete(updatedSession, current))
+      next            <- EitherT.fromOption[Future](
+                           upliftedSession.userAnswers.fold(
+                             _ => paths.get(current).map(_(upliftedSession)),
+                             _ => Some(routes.CheckYourAnswersController.checkYourAnswers())
+                           ),
+                           Error(s"Could not find next for $current")
+                         )
+      _               <- if (r.sessionData === upliftedSession)
+                           EitherT.pure[Future, Error](next)
+                         else
+                           sessionStore.store(upliftedSession).map(_ => next)
+    } yield next
 
   override def previous(current: Call)(implicit
     r: RequestWithSessionData[_]
@@ -147,76 +145,80 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
     case _                                        => true
   }
 
-  private def upliftToCompleteAnswersIfComplete(session: HECSession, current: Call): HECSession = {
-    val exitPageIsNext: Boolean = {
-      @tailrec
-      def loop(previous: Call): Call =
-        paths.get(previous) match {
-          case Some(next) => loop(next(session))
-          case None       => previous
+  private def upliftToCompleteAnswersIfComplete(session: HECSession, current: Call): Either[Error, HECSession] =
+    paths.get(current).map(_(session)) match {
+      case None =>
+        Left(Error(s"Could not find next for $current"))
+
+      case Some(next) =>
+        // if we're not on the last page and there is no next page some exit page has been reached
+        val isExitPageNext =
+          !paths.contains(next) && next =!= routes.TaxCheckCompleteController.taxCheckComplete()
+
+        val updatedSession = session.userAnswers match {
+          case _ if isExitPageNext =>
+            session
+
+          case IncompleteUserAnswers(
+                Some(licenceType),
+                Some(licenceExpiryDate),
+                Some(licenceTimeTrading),
+                Some(licenceValidityPeriod),
+                Some(taxSituation),
+                Some(entityType)
+              ) if licenceTypeForIndividualAndCompany(licenceType) =>
+            val completeAnswers =
+              CompleteUserAnswers(
+                licenceType,
+                licenceExpiryDate,
+                licenceTimeTrading,
+                licenceValidityPeriod,
+                taxSituation,
+                Some(entityType)
+              )
+            session.copy(userAnswers = completeAnswers)
+
+          case IncompleteUserAnswers(
+                Some(licenceType),
+                Some(licenceExpiryDate),
+                Some(licenceTimeTrading),
+                Some(licenceValidityPeriod),
+                Some(taxSituation),
+                _
+              ) if !licenceTypeForIndividualAndCompany(licenceType) =>
+            val completeAnswers =
+              CompleteUserAnswers(
+                licenceType,
+                licenceExpiryDate,
+                licenceTimeTrading,
+                licenceValidityPeriod,
+                taxSituation,
+                None
+              )
+            session.copy(userAnswers = completeAnswers)
+
+          case _ => session
         }
 
-      // if the paths don't reach the last page then some exit page has been reached
-      loop(current) =!= routes.TaxCheckCompleteController.taxCheckComplete()
+        Right(updatedSession)
     }
 
-    session.userAnswers match {
-      case _ if exitPageIsNext =>
-        session
-
-      case IncompleteUserAnswers(
-            Some(licenceType),
-            Some(licenceExpiryDate),
-            Some(licenceTimeTrading),
-            Some(licenceValidityPeriod),
-            Some(taxSituation),
-            Some(entityType)
-          ) if licenceTypeForIndividualAndCompany(licenceType) =>
-        val completeAnswers =
-          CompleteUserAnswers(
-            licenceType,
-            licenceExpiryDate,
-            licenceTimeTrading,
-            licenceValidityPeriod,
-            taxSituation,
-            Some(entityType)
-          )
-        session.copy(userAnswers = completeAnswers)
-
-      case IncompleteUserAnswers(
-            Some(licenceType),
-            Some(licenceExpiryDate),
-            Some(licenceTimeTrading),
-            Some(licenceValidityPeriod),
-            Some(taxSituation),
-            _
-          ) if !licenceTypeForIndividualAndCompany(licenceType) =>
-        val completeAnswers =
-          CompleteUserAnswers(
-            licenceType,
-            licenceExpiryDate,
-            licenceTimeTrading,
-            licenceValidityPeriod,
-            taxSituation,
-            None
-          )
-        session.copy(userAnswers = completeAnswers)
-
-      case _ => session
+  private def licenceValidityPeriodRoute(session: HECSession): Call =
+    session.userAnswers.fold(_.licenceType, c => Some(c.licenceType)) match {
+      case Some(licenceType) =>
+        if (licenceTypeForIndividualAndCompany(licenceType)) routes.EntityTypeController.entityType()
+        else routes.TaxSituationController.taxSituation()
+      case None              =>
+        sys.error("Could not find licence type to work out route after licence validity period")
     }
-  }
-
-  private def licenceValidityPeriodRoute(session: HECSession): Call = {
-    val licenceType = session.userAnswers.fold(_.licenceType, c => Some(c.licenceType))
-    if (licenceType.exists(licenceTypeForIndividualAndCompany)) routes.EntityTypeController.entityType()
-    else routes.TaxSituationController.taxSituation()
-  }
 
   private def licenceExpiryDateValid(expiryDate: LicenceExpiryDate): Boolean =
     expiryDate.value.isAfterOrOn(TimeUtils.today().minusYears(1L))
 
   private def licenceExpiryRoute(session: HECSession): Call =
     session.userAnswers.fold(_.licenceExpiryDate, c => Some(c.licenceExpiryDate)) match {
+      case None                                                   =>
+        sys.error("Could not find licence expiry date for licence expiry route")
       case Some(expiryDate) if licenceExpiryDateValid(expiryDate) =>
         routes.LicenceDetailsController.licenceTimeTrading()
       case _                                                      =>
@@ -224,32 +226,45 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
     }
 
   private def entityTypeRoute(session: HECSession): Call = {
-    val selectedEntityType = session.userAnswers.fold(_.entityType, _.entityType)
-    val ggEntityType       = EntityType.fromRetrievedApplicantAnswers(session.retrievedUserData)
+    val maybeSelectedEntityType = session.userAnswers.fold(_.entityType, _.entityType)
+    val ggEntityType            = EntityType.fromRetrievedApplicantAnswers(session.retrievedUserData)
 
-    if (selectedEntityType.contains(ggEntityType)) routes.TaxSituationController.taxSituation()
-    else routes.EntityTypeController.wrongGGAccount()
-  }
-
-  private def taxSituationRoute(session: HECSession): Call = {
-    val maybeTaxSituation = UserAnswers.taxSituation(session.userAnswers)
-
-    if (maybeTaxSituation.exists(ts => saTaxSituations.contains(ts))) {
-      session.retrievedUserData match {
-        case IndividualRetrievedData(_, _, Some(_), _, _, _, Some(saStatus)) =>
-          saStatus.status match {
-            case SAStatus.ReturnFound        => routes.SAController.confirmYourIncome()
-            case SAStatus.NoticeToFileIssued => routes.CheckYourAnswersController.checkYourAnswers()
-            case SAStatus.NoReturnFound      => routes.SAController.noReturnFoundExit()
-          }
-        // TODO: the below case also matches the case where SAUTR is present but the SA status is not
-        //  We could look at this as part of the ticket to handle missing fields better (HEC-1034)
-        case _: IndividualRetrievedData                                      => routes.SAController.sautrNotFoundExit()
-        case _: CompanyRetrievedData                                         => routes.CheckYourAnswersController.checkYourAnswers()
-      }
-    } else {
-      routes.CheckYourAnswersController.checkYourAnswers()
+    maybeSelectedEntityType match {
+      case None                     =>
+        sys.error("Could not find selected entity type for entity type route")
+      case Some(selectedEntityType) =>
+        if (selectedEntityType === ggEntityType) routes.TaxSituationController.taxSituation()
+        else routes.EntityTypeController.wrongGGAccount()
     }
+
   }
+
+  private def taxSituationRoute(session: HECSession): Call =
+    UserAnswers.taxSituation(session.userAnswers) match {
+      case None               =>
+        sys.error("Could not find tax situation for tax situation route")
+      case Some(taxSituation) =>
+        if (saTaxSituations.contains(taxSituation)) {
+          session.retrievedUserData match {
+            case IndividualRetrievedData(_, _, Some(_), _, _, _, Some(saStatus)) =>
+              saStatus.status match {
+                case SAStatus.ReturnFound        => routes.SAController.confirmYourIncome()
+                case SAStatus.NoticeToFileIssued => routes.CheckYourAnswersController.checkYourAnswers()
+                case SAStatus.NoReturnFound      => routes.SAController.noReturnFoundExit()
+              }
+
+            case i: IndividualRetrievedData if i.sautr.isDefined && i.saStatus.isEmpty =>
+              sys.error("Found SA UTR for tax situation route but no SA status response")
+
+            case i: IndividualRetrievedData if i.sautr.isEmpty =>
+              routes.SAController.sautrNotFoundExit()
+
+            case _: CompanyRetrievedData =>
+              sys.error("Retrieved data for company found for tax situation route")
+          }
+        } else {
+          routes.CheckYourAnswersController.checkYourAnswers()
+        }
+    }
 
 }
