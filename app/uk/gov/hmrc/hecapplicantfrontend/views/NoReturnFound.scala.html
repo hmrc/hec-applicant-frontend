@@ -1,0 +1,15 @@
+@import play.api.i18n.Messages
+@import play.api.mvc.{Call, Request}
+@import play.twirl.api.Html
+@import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
+
+@this(layout: Layout)
+
+@(back: Call)(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
+@key = @{"noReturnFound"}
+@title = @{messages(s"$key.title")}
+
+@layout(pageTitle = Some(title), backLocation = Some(back)) {
+    <h1 class="govuk-heading-xl">@title</h1>
+    <p class="govuk-body govuk-!-margin-bottom-9">@Html(messages(s"$key.p1", appConfig.contactHmrcSa))</p>
+}

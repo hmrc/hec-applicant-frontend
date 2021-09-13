@@ -52,6 +52,11 @@ class SAControllerSpec
 
   "SAController" when {
 
+    def testLink(doc: Document, url: String) = {
+      val link = doc.select(s"a.govuk-link[href=$url]")
+      link.size() shouldBe 1
+    }
+
     "handling requests to see the SAUTR not found exit page" must {
 
       def performAction(): Future[Result] = controller.sautrNotFound(FakeRequest())
@@ -72,11 +77,6 @@ class SAControllerSpec
           mockJourneyServiceGetPrevious(routes.SAController.sautrNotFound(), session)(mockPreviousCall)
         }
 
-        def testLink(doc: Document, url: String) = {
-          val link = doc.select(s"a.govuk-link[href=$url]")
-          link.size() shouldBe 1
-        }
-
         checkPageIsDisplayed(
           performAction(),
           messageFromMessageKey("sautrNotFound.title"),
@@ -85,6 +85,39 @@ class SAControllerSpec
 
             testLink(doc, routes.TaxSituationController.taxSituation().url)
             testLink(doc, appConfig.registerForSaUrl)
+            testLink(doc, appConfig.contactHmrcSa)
+          }
+        )
+
+      }
+
+    }
+
+    "handling requests to see the no return found exit page" must {
+
+      def performAction(): Future[Result] = controller.noReturnFound(FakeRequest())
+
+      behave like authAndSessionDataBehaviour(performAction)
+
+      "display the page" in {
+
+        val session = HECSession(
+          individuaRetrievedlData,
+          UserAnswers.empty,
+          None
+        )
+
+        inSequence {
+          mockAuthWithNoRetrievals()
+          mockGetSession(session)
+          mockJourneyServiceGetPrevious(routes.SAController.noReturnFound(), session)(mockPreviousCall)
+        }
+
+        checkPageIsDisplayed(
+          performAction(),
+          messageFromMessageKey("noReturnFound.title"),
+          doc => {
+            doc.select("#back").attr("href") shouldBe mockPreviousCall.url
             testLink(doc, appConfig.contactHmrcSa)
           }
         )
