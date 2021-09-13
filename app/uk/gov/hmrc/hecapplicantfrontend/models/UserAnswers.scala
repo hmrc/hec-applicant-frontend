@@ -33,7 +33,7 @@ object UserAnswers {
     licenceTimeTrading: Option[LicenceTimeTrading],
     licenceValidityPeriod: Option[LicenceValidityPeriod],
     taxSituation: Option[TaxSituation],
-    incomeConfirmation: Option[IncomeConfirmation],
+    saIncomeDeclared: Option[IncomeDeclared],
     entityType: Option[EntityType]
   ) extends UserAnswers
 
@@ -43,7 +43,7 @@ object UserAnswers {
     licenceTimeTrading: LicenceTimeTrading,
     licenceValidityPeriod: LicenceValidityPeriod,
     taxSituation: TaxSituation,
-    incomeConfirmation: IncomeConfirmation,
+    saIncomeDeclared: IncomeDeclared,
     entityType: Option[EntityType]
   ) extends UserAnswers
 
@@ -56,7 +56,7 @@ object UserAnswers {
         Some(c.licenceTimeTrading),
         Some(c.licenceValidityPeriod),
         Some(c.taxSituation),
-        Some(c.incomeConfirmation),
+        Some(c.saIncomeDeclared),
         c.entityType
       )
 

@@ -20,18 +20,18 @@ import cats.Eq
 import julienrf.json.derived
 import play.api.libs.json.OFormat
 
-sealed trait IncomeConfirmation extends Product with Serializable
+sealed trait IncomeDeclared extends Product with Serializable
 
-object IncomeConfirmation {
+object IncomeDeclared {
 
-  case object Yes extends IncomeConfirmation
+  case object Yes extends IncomeDeclared
 
-  case object No extends IncomeConfirmation
+  case object No extends IncomeDeclared
 
-  implicit val eq: Eq[IncomeConfirmation] = Eq.fromUniversalEquals
+  implicit val eq: Eq[IncomeDeclared] = Eq.fromUniversalEquals
 
-  implicit val format: OFormat[IncomeConfirmation] = derived.oformat()
+  implicit val format: OFormat[IncomeDeclared] = derived.oformat()
 
-  val values: List[IncomeConfirmation] = List(Yes, No)
+  val values: List[IncomeDeclared] = List(Yes, No)
 
 }

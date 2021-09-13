@@ -572,13 +572,13 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
           }
         }
 
-        "the confirm your income page" in {
+        "the SA income statement page" in {
           val session                                     = HECSession(individualRetrievedData, UserAnswers.empty, None)
           implicit val request: RequestWithSessionData[_] =
             requestWithSessionData(session)
 
           val result = journeyService.updateAndNext(
-            routes.SAController.confirmYourIncome(),
+            routes.SAController.saIncomeStatement(),
             session
           )
           await(result.value) shouldBe Right(routes.CheckYourAnswersController.checkYourAnswers())
@@ -607,7 +607,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             LicenceTimeTrading.ZeroToTwoYears,
             LicenceValidityPeriod.UpToOneYear,
             TaxSituation.PAYE,
-            IncomeConfirmation.Yes,
+            IncomeDeclared.Yes,
             None
           )
 
@@ -617,7 +617,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             Some(completeAnswers.licenceTimeTrading),
             Some(completeAnswers.licenceValidityPeriod),
             Some(completeAnswers.taxSituation),
-            Some(IncomeConfirmation.Yes),
+            Some(IncomeDeclared.Yes),
             None
           )
 
@@ -653,7 +653,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 LicenceTimeTrading.ZeroToTwoYears,
                 LicenceValidityPeriod.UpToOneYear,
                 TaxSituation.PAYE,
-                IncomeConfirmation.Yes,
+                IncomeDeclared.Yes,
                 Some(EntityType.Company)
               )
 
@@ -663,7 +663,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 Some(completeAnswers.licenceTimeTrading),
                 Some(completeAnswers.licenceValidityPeriod),
                 Some(completeAnswers.taxSituation),
-                Some(IncomeConfirmation.Yes),
+                Some(IncomeDeclared.Yes),
                 Some(EntityType.Company)
               )
 
@@ -696,7 +696,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             Some(LicenceTimeTrading.ZeroToTwoYears),
             Some(LicenceValidityPeriod.UpToOneYear),
             Some(TaxSituation.PAYE),
-            Some(IncomeConfirmation.Yes),
+            Some(IncomeDeclared.Yes),
             None
           )
 
@@ -718,7 +718,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             Some(LicenceTimeTrading.ZeroToTwoYears),
             Some(LicenceValidityPeriod.UpToOneYear),
             Some(TaxSituation.PAYE),
-            Some(IncomeConfirmation.Yes),
+            Some(IncomeDeclared.Yes),
             Some(EntityType.Company)
           )
 
@@ -1022,7 +1022,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToOneYear,
               taxSituation,
-              IncomeConfirmation.Yes,
+              IncomeDeclared.Yes,
               entityType
             )
 
@@ -1183,7 +1183,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
               Some(LicenceTimeTrading.ZeroToTwoYears),
               Some(LicenceValidityPeriod.UpToOneYear),
               Some(taxSituation),
-              Some(IncomeConfirmation.Yes),
+              Some(IncomeDeclared.Yes),
               None
             ),
             None
@@ -1201,7 +1201,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             LicenceTimeTrading.ZeroToTwoYears,
             LicenceValidityPeriod.UpToOneYear,
             TaxSituation.PAYE,
-            IncomeConfirmation.Yes,
+            IncomeDeclared.Yes,
             Some(EntityType.Individual)
           )
           implicit val request: RequestWithSessionData[_] =

@@ -107,7 +107,7 @@ class LicenceDetailsControllerSpec
                 LicenceTimeTrading.ZeroToTwoYears,
                 LicenceValidityPeriod.UpToTwoYears,
                 TaxSituation.SA,
-                IncomeConfirmation.Yes,
+                IncomeDeclared.Yes,
                 Some(EntityType.Individual)
               ),
               None
@@ -265,7 +265,7 @@ class LicenceDetailsControllerSpec
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToOneYear,
               TaxSituation.SA,
-              IncomeConfirmation.Yes,
+              IncomeDeclared.Yes,
               Some(EntityType.Individual)
             )
             val updatedAnswers = UserAnswers.empty.copy(licenceType = Some(LicenceType.ScrapMetalMobileCollector))
@@ -290,7 +290,7 @@ class LicenceDetailsControllerSpec
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToOneYear,
               TaxSituation.SA,
-              IncomeConfirmation.Yes,
+              IncomeDeclared.Yes,
               Some(EntityType.Individual)
             )
             val session = HECSession(individuaRetrievedlData, answers, None)
@@ -628,7 +628,7 @@ class LicenceDetailsControllerSpec
                 LicenceTimeTrading.TwoToFourYears,
                 LicenceValidityPeriod.UpToThreeYears,
                 TaxSituation.SA,
-                IncomeConfirmation.Yes,
+                IncomeDeclared.Yes,
                 Some(EntityType.Company)
               ),
               None
@@ -780,7 +780,7 @@ class LicenceDetailsControllerSpec
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToFiveYears,
               TaxSituation.SA,
-              IncomeConfirmation.Yes,
+              IncomeDeclared.Yes,
               Some(EntityType.Company)
             )
             val updatedAnswers = IncompleteUserAnswers(
@@ -789,7 +789,7 @@ class LicenceDetailsControllerSpec
               Some(LicenceTimeTrading.EightYearsOrMore),
               Some(LicenceValidityPeriod.UpToFiveYears),
               Some(TaxSituation.SA),
-              Some(IncomeConfirmation.Yes),
+              Some(IncomeDeclared.Yes),
               Some(EntityType.Company)
             )
             val session        = HECSession(individuaRetrievedlData, answers, None)
@@ -891,7 +891,7 @@ class LicenceDetailsControllerSpec
                     LicenceTimeTrading.TwoToFourYears,
                     LicenceValidityPeriod.UpToThreeYears,
                     TaxSituation.SA,
-                    IncomeConfirmation.Yes,
+                    IncomeDeclared.Yes,
                     Some(EntityType.Individual)
                   ),
                   None
@@ -1065,7 +1065,7 @@ class LicenceDetailsControllerSpec
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToThreeYears,
               TaxSituation.SA,
-              IncomeConfirmation.Yes,
+              IncomeDeclared.Yes,
               Some(EntityType.Individual)
             )
             val updatedAnswers = IncompleteUserAnswers(
@@ -1074,7 +1074,7 @@ class LicenceDetailsControllerSpec
               Some(LicenceTimeTrading.ZeroToTwoYears),
               Some(LicenceValidityPeriod.UpToFiveYears),
               Some(TaxSituation.SA),
-              Some(IncomeConfirmation.Yes),
+              Some(IncomeDeclared.Yes),
               Some(EntityType.Individual)
             )
             val session        = HECSession(individuaRetrievedlData, answers, None)

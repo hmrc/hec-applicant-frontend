@@ -174,7 +174,7 @@ class SAControllerSpec
                 LicenceTimeTrading.ZeroToTwoYears,
                 LicenceValidityPeriod.UpToTwoYears,
                 TaxSituation.PAYE,
-                IncomeConfirmation.Yes,
+                IncomeDeclared.Yes,
                 Some(EntityType.Individual)
               ),
               None
@@ -265,7 +265,7 @@ class SAControllerSpec
 
         "the call to update and next fails" in {
           val answers        = UserAnswers.empty
-          val updatedAnswers = UserAnswers.empty.copy(incomeConfirmation = Some(IncomeConfirmation.Yes))
+          val updatedAnswers = UserAnswers.empty.copy(saIncomeDeclared = Some(IncomeDeclared.Yes))
           val session        = HECSession(individuaRetrievedlData, answers, None)
           val updatedSession = session.copy(userAnswers = updatedAnswers)
 
@@ -288,7 +288,7 @@ class SAControllerSpec
 
           "the user has not previously completed answering questions" in {
             val answers        = UserAnswers.empty
-            val updatedAnswers = UserAnswers.empty.copy(incomeConfirmation = Some(IncomeConfirmation.No))
+            val updatedAnswers = UserAnswers.empty.copy(saIncomeDeclared = Some(IncomeDeclared.No))
             val session        = HECSession(individuaRetrievedlData, answers, None)
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 
@@ -310,12 +310,12 @@ class SAControllerSpec
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToOneYear,
               TaxSituation.PAYE,
-              IncomeConfirmation.Yes,
+              IncomeDeclared.Yes,
               None
             )
             val updatedAnswers = IncompleteUserAnswers
               .fromCompleteAnswers(answers)
-              .copy(incomeConfirmation = Some(IncomeConfirmation.No))
+              .copy(saIncomeDeclared = Some(IncomeDeclared.No))
             val session        = HECSession(individuaRetrievedlData, answers, None)
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 

@@ -37,8 +37,8 @@ GET        /tax-check-not-needed    uk.gov.hmrc.hecapplicantfrontend.controllers
 GET        /tax-situation           uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.taxSituation
 POST       /tax-situation           uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.taxSituationSubmit
 
-GET        /confirm-your-income             uk.gov.hmrc.hecapplicantfrontend.controllers.SAController.confirmYourIncome
-GET        /confirm-your-income-submit      uk.gov.hmrc.hecapplicantfrontend.controllers.SAController.confirmYourIncomeSubmit
+GET        /sa-income-statement             uk.gov.hmrc.hecapplicantfrontend.controllers.SAController.saIncomeStatement
+GET        /sa-income-statement-submit      uk.gov.hmrc.hecapplicantfrontend.controllers.SAController.saIncomeStatementSubmit
 GET        /exit-pages/no-notice-to-file    uk.gov.hmrc.hecapplicantfrontend.controllers.SAController.noReturnFound
 GET        /exit-pages/sa-utr-not-found     uk.gov.hmrc.hecapplicantfrontend.controllers.SAController.sautrNotFound
 

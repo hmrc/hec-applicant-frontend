@@ -25,8 +25,8 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 import uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.getTaxYear
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
-import uk.gov.hmrc.hecapplicantfrontend.models.IncomeConfirmation
-import uk.gov.hmrc.hecapplicantfrontend.models.views.IncomeConfirmationOption
+import uk.gov.hmrc.hecapplicantfrontend.models.IncomeDeclared
+import uk.gov.hmrc.hecapplicantfrontend.models.views.IncomeDeclaredOption
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging.LoggerOps
 import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging, TimeProvider}
@@ -44,30 +44,30 @@ class SAController @Inject() (
   timeProvider: TimeProvider,
   sautrNotFoundPage: html.SautrNotFound,
   noReturnFoundPage: html.NoReturnFound,
-  confirmYourIncomePage: html.ConfirmYourIncome
+  saIncomeStatementPage: html.SAIncomeStatement
 )(implicit appConfig: AppConfig, ec: ExecutionContext)
     extends FrontendController(mcc)
     with I18nSupport
     with Logging {
 
-  val confirmYourIncome: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
-    val back               = journeyService.previous(routes.SAController.confirmYourIncome())
-    val incomeConfirmation = request.sessionData.userAnswers.fold(_.incomeConfirmation, c => Some(c.incomeConfirmation))
+  val saIncomeStatement: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
+    val back             = journeyService.previous(routes.SAController.saIncomeStatement())
+    val saIncomeDeclared = request.sessionData.userAnswers.fold(_.saIncomeDeclared, c => Some(c.saIncomeDeclared))
     val form = {
-      val emptyForm = SAController.incomeConfirmationForm(IncomeConfirmation.values)
-      incomeConfirmation.fold(emptyForm)(emptyForm.fill)
+      val emptyForm = SAController.saIncomeDeclarationForm(IncomeDeclared.values)
+      saIncomeDeclared.fold(emptyForm)(emptyForm.fill)
     }
-    Ok(confirmYourIncomePage(form, back, SAController.incomeConfirmationOptions, getTaxYear(timeProvider.currentDate)))
+    Ok(saIncomeStatementPage(form, back, SAController.incomeDeclaredOptions, getTaxYear(timeProvider.currentDate)))
   }
 
-  val confirmYourIncomeSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
-    def handleValidAnswer(incomeConfirmation: IncomeConfirmation): Future[Result] = {
+  val saIncomeStatementSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
+    def handleValidAnswer(incomeDeclared: IncomeDeclared): Future[Result] = {
       val updatedAnswers =
-        request.sessionData.userAnswers.unset(_.incomeConfirmation).copy(incomeConfirmation = Some(incomeConfirmation))
+        request.sessionData.userAnswers.unset(_.saIncomeDeclared).copy(saIncomeDeclared = Some(incomeDeclared))
 
       journeyService
         .updateAndNext(
-          routes.SAController.confirmYourIncome(),
+          routes.SAController.saIncomeStatement(),
           request.sessionData.copy(userAnswers = updatedAnswers)
         )
         .fold(
@@ -80,15 +80,15 @@ class SAController @Inject() (
     }
 
     SAController
-      .incomeConfirmationForm(IncomeConfirmation.values)
+      .saIncomeDeclarationForm(IncomeDeclared.values)
       .bindFromRequest()
       .fold(
         formWithErrors =>
           Ok(
-            confirmYourIncomePage(
+            saIncomeStatementPage(
               formWithErrors,
-              journeyService.previous(routes.SAController.confirmYourIncome()),
-              SAController.incomeConfirmationOptions,
+              journeyService.previous(routes.SAController.saIncomeStatement()),
+              SAController.incomeDeclaredOptions,
               getTaxYear(timeProvider.currentDate)
             )
           ),
@@ -110,13 +110,13 @@ class SAController @Inject() (
 
 object SAController {
 
-  val incomeConfirmationOptions: List[IncomeConfirmationOption] =
-    IncomeConfirmation.values.map(IncomeConfirmationOption.incomeConfirmationOption)
+  val incomeDeclaredOptions: List[IncomeDeclaredOption] =
+    IncomeDeclared.values.map(IncomeDeclaredOption.incomeDeclaredOption)
 
-  def incomeConfirmationForm(options: List[IncomeConfirmation]): Form[IncomeConfirmation] =
+  def saIncomeDeclarationForm(options: List[IncomeDeclared]): Form[IncomeDeclared] =
     Form(
       mapping(
-        "confirmYourIncome" -> of(FormUtils.radioFormFormatter(options))
+        "saIncomeDeclared" -> of(FormUtils.radioFormFormatter(options))
       )(identity)(Some(_))
     )
 

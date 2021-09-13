@@ -70,7 +70,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
     routes.LicenceDetailsController.recentLicenceLength()                -> licenceValidityPeriodRoute,
     routes.EntityTypeController.entityType()                             -> entityTypeRoute,
     routes.TaxSituationController.taxSituation()                         -> taxSituationRoute,
-    routes.SAController.confirmYourIncome()                              -> (_ => routes.CheckYourAnswersController.checkYourAnswers()),
+    routes.SAController.saIncomeStatement()                              -> (_ => routes.CheckYourAnswersController.checkYourAnswers()),
     routes.CheckYourAnswersController.checkYourAnswers()                 -> (_ => routes.TaxCheckCompleteController.taxCheckComplete())
   )
 
@@ -165,7 +165,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
                 Some(licenceTimeTrading),
                 Some(licenceValidityPeriod),
                 Some(taxSituation),
-                Some(incomeConfirmation),
+                Some(saIncomeDeclared),
                 Some(entityType)
               ) if licenceTypeForIndividualAndCompany(licenceType) =>
             val completeAnswers =
@@ -175,7 +175,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
                 licenceTimeTrading,
                 licenceValidityPeriod,
                 taxSituation,
-                incomeConfirmation,
+                saIncomeDeclared,
                 Some(entityType)
               )
             session.copy(userAnswers = completeAnswers)
@@ -186,7 +186,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
                 Some(licenceTimeTrading),
                 Some(licenceValidityPeriod),
                 Some(taxSituation),
-                Some(incomeConfirmation),
+                Some(saIncomeDeclared),
                 _
               ) if !licenceTypeForIndividualAndCompany(licenceType) =>
             val completeAnswers =
@@ -196,7 +196,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
                 licenceTimeTrading,
                 licenceValidityPeriod,
                 taxSituation,
-                incomeConfirmation,
+                saIncomeDeclared,
                 None
               )
             session.copy(userAnswers = completeAnswers)
@@ -252,7 +252,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
           session.retrievedUserData match {
             case IndividualRetrievedData(_, _, Some(_), _, _, _, Some(saStatus)) =>
               saStatus.status match {
-                case SAStatus.ReturnFound        => routes.SAController.confirmYourIncome()
+                case SAStatus.ReturnFound        => routes.SAController.saIncomeStatement()
                 case SAStatus.NoticeToFileIssued => routes.CheckYourAnswersController.checkYourAnswers()
                 case SAStatus.NoReturnFound      => routes.SAController.noReturnFound()
               }

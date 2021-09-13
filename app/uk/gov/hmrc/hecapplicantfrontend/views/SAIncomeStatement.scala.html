@@ -3,14 +3,14 @@
 @import play.api.mvc.{Call, Request}
 @import uk.gov.hmrc.govukfrontend.views.html.components._
 @import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
-@import uk.gov.hmrc.hecapplicantfrontend.models.IncomeConfirmation
-@import uk.gov.hmrc.hecapplicantfrontend.models.views.IncomeConfirmationOption
+@import uk.gov.hmrc.hecapplicantfrontend.models.IncomeDeclared
+@import uk.gov.hmrc.hecapplicantfrontend.models.views.IncomeDeclaredOption
 @import uk.gov.hmrc.hecapplicantfrontend.models.TaxYear
 
 @this(layout: Layout, govukErrorSummary: GovukErrorSummary, govukRadios: GovukRadios, govukButton: GovukButton, formWithCSRF: FormWithCSRF)
 
-@(form: Form[IncomeConfirmation], back: Call, options: List[IncomeConfirmationOption], taxDisplayYear: TaxYear)(implicit request: Request[_], messages: Messages)
-@key = @{"confirmYourIncome"}
+@(form: Form[IncomeDeclared], back: Call, options: List[IncomeDeclaredOption], taxDisplayYear: TaxYear)(implicit request: Request[_], messages: Messages)
+@key = @{"saIncomeDeclared"}
 @title = @{messages(s"$key.title")}
 @radioOptions = @{options.zipWithIndex.map{ case (option, index) => RadioItem(
   content = Text(messages(s"$key.${option.messageKey}")),
@@ -27,7 +27,7 @@
       content = Text(s"${messages(s"${e.key}.${e.message}")}")
     )), title = Text(messages("generic.errorSummary"))))
   }
-  @formWithCSRF(action = routes.SAController.confirmYourIncomeSubmit()) {
+  @formWithCSRF(action = routes.SAController.saIncomeStatementSubmit()) {
 
     @govukRadios(Radios(
       fieldset = Some(Fieldset(
