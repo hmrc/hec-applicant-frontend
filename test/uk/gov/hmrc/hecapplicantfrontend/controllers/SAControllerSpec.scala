@@ -132,7 +132,7 @@ class SAControllerSpec
 
     "handling requests to the confirm your income page" must {
 
-      def performAction(): Future[Result] = controller.confirmYourIncome(FakeRequest())
+      def performAction(): Future[Result] = controller.saIncomeStatement(FakeRequest())
 
       behave like authAndSessionDataBehaviour(performAction)
 
@@ -144,12 +144,12 @@ class SAControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockJourneyServiceGetPrevious(routes.SAController.confirmYourIncome(), session)(mockPreviousCall)
+            mockJourneyServiceGetPrevious(routes.SAController.saIncomeStatement(), session)(mockPreviousCall)
           }
 
           checkPageIsDisplayed(
             performAction(),
-            messageFromMessageKey("confirmYourIncome.title"),
+            messageFromMessageKey("saIncomeDeclared.title"),
             { doc =>
               doc.select("#back").attr("href") shouldBe mockPreviousCall.url
 
@@ -158,7 +158,7 @@ class SAControllerSpec
 
               val form = doc.select("form")
               form
-                .attr("action") shouldBe routes.SAController.confirmYourIncomeSubmit().url
+                .attr("action") shouldBe routes.SAController.saIncomeStatementSubmit().url
             }
           )
 
@@ -174,7 +174,7 @@ class SAControllerSpec
                 LicenceTimeTrading.ZeroToTwoYears,
                 LicenceValidityPeriod.UpToTwoYears,
                 TaxSituation.PAYE,
-                IncomeDeclared.Yes,
+                Some(IncomeDeclared.Yes),
                 Some(EntityType.Individual)
               ),
               None
@@ -183,12 +183,12 @@ class SAControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockJourneyServiceGetPrevious(routes.SAController.confirmYourIncome(), session)(mockPreviousCall)
+            mockJourneyServiceGetPrevious(routes.SAController.saIncomeStatement(), session)(mockPreviousCall)
           }
 
           checkPageIsDisplayed(
             performAction(),
-            messageFromMessageKey("confirmYourIncome.title"),
+            messageFromMessageKey("saIncomeDeclared.title"),
             { doc =>
               doc.select("#back").attr("href") shouldBe mockPreviousCall.url
 
@@ -197,7 +197,7 @@ class SAControllerSpec
 
               val form = doc.select("form")
               form
-                .attr("action") shouldBe routes.SAController.confirmYourIncomeSubmit().url
+                .attr("action") shouldBe routes.SAController.saIncomeStatementSubmit().url
             }
           )
         }
@@ -209,7 +209,7 @@ class SAControllerSpec
     "handling submits to the entity type page" must {
 
       def performAction(data: (String, String)*): Future[Result] =
-        controller.confirmYourIncomeSubmit(FakeRequest().withFormUrlEncodedBody(data: _*))
+        controller.saIncomeStatementSubmit(FakeRequest().withFormUrlEncodedBody(data: _*))
 
       behave like authAndSessionDataBehaviour(() => performAction())
 
@@ -221,13 +221,13 @@ class SAControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockJourneyServiceGetPrevious(routes.SAController.confirmYourIncome(), session)(mockPreviousCall)
+            mockJourneyServiceGetPrevious(routes.SAController.saIncomeStatement(), session)(mockPreviousCall)
           }
 
           checkFormErrorIsDisplayed(
             performAction(),
-            messageFromMessageKey("confirmYourIncome.title"),
-            messageFromMessageKey("confirmYourIncome.error.required")
+            messageFromMessageKey("saIncomeDeclared.title"),
+            messageFromMessageKey("saIncomeDeclared.error.required")
           )
         }
 
@@ -235,13 +235,13 @@ class SAControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockJourneyServiceGetPrevious(routes.SAController.confirmYourIncome(), session)(mockPreviousCall)
+            mockJourneyServiceGetPrevious(routes.SAController.saIncomeStatement(), session)(mockPreviousCall)
           }
 
           checkFormErrorIsDisplayed(
             performAction("entityType" -> Int.MaxValue.toString),
-            messageFromMessageKey("confirmYourIncome.title"),
-            messageFromMessageKey("confirmYourIncome.error.invalid")
+            messageFromMessageKey("saIncomeDeclared.title"),
+            messageFromMessageKey("saIncomeDeclared.error.invalid")
           )
         }
 
@@ -249,13 +249,13 @@ class SAControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockJourneyServiceGetPrevious(routes.SAController.confirmYourIncome(), session)(mockPreviousCall)
+            mockJourneyServiceGetPrevious(routes.SAController.saIncomeStatement(), session)(mockPreviousCall)
           }
 
           checkFormErrorIsDisplayed(
             performAction("entityType" -> "xyz"),
-            messageFromMessageKey("confirmYourIncome.title"),
-            messageFromMessageKey("confirmYourIncome.error.invalid")
+            messageFromMessageKey("saIncomeDeclared.title"),
+            messageFromMessageKey("saIncomeDeclared.error.invalid")
           )
         }
 
@@ -272,12 +272,12 @@ class SAControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockJourneyServiceUpdateAndNext(routes.SAController.confirmYourIncome(), session, updatedSession)(
+            mockJourneyServiceUpdateAndNext(routes.SAController.saIncomeStatement(), session, updatedSession)(
               Left(Error(new Exception))
             )
           }
 
-          status(performAction("confirmYourIncome" -> "0")) shouldBe INTERNAL_SERVER_ERROR
+          status(performAction("saIncomeDeclared" -> "0")) shouldBe INTERNAL_SERVER_ERROR
         }
 
       }
@@ -295,12 +295,12 @@ class SAControllerSpec
             inSequence {
               mockAuthWithNoRetrievals()
               mockGetSession(session)
-              mockJourneyServiceUpdateAndNext(routes.SAController.confirmYourIncome(), session, updatedSession)(
+              mockJourneyServiceUpdateAndNext(routes.SAController.saIncomeStatement(), session, updatedSession)(
                 Right(mockNextCall)
               )
             }
 
-            checkIsRedirect(performAction("confirmYourIncome" -> "1"), mockNextCall)
+            checkIsRedirect(performAction("saIncomeDeclared" -> "1"), mockNextCall)
           }
 
           "the user has previously completed answering questions" in {
@@ -310,7 +310,7 @@ class SAControllerSpec
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToOneYear,
               TaxSituation.PAYE,
-              IncomeDeclared.Yes,
+              Some(IncomeDeclared.Yes),
               None
             )
             val updatedAnswers = IncompleteUserAnswers
@@ -322,12 +322,12 @@ class SAControllerSpec
             inSequence {
               mockAuthWithNoRetrievals()
               mockGetSession(session)
-              mockJourneyServiceUpdateAndNext(routes.SAController.confirmYourIncome(), session, updatedSession)(
+              mockJourneyServiceUpdateAndNext(routes.SAController.saIncomeStatement(), session, updatedSession)(
                 Right(mockNextCall)
               )
             }
 
-            checkIsRedirect(performAction("confirmYourIncome" -> "1"), mockNextCall)
+            checkIsRedirect(performAction("saIncomeDeclared" -> "1"), mockNextCall)
           }
         }
 

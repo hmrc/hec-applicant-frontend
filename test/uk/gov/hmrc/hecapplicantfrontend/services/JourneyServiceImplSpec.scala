@@ -527,7 +527,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 routes.TaxSituationController.taxSituation(),
                 updatedSession
               )
-              await(result.value) shouldBe Right(routes.SAController.confirmYourIncome())
+              await(result.value) shouldBe Right(routes.SAController.saIncomeStatement())
             }
 
             "SA status = NoReturnFound" in {
@@ -607,7 +607,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             LicenceTimeTrading.ZeroToTwoYears,
             LicenceValidityPeriod.UpToOneYear,
             TaxSituation.PAYE,
-            IncomeDeclared.Yes,
+            Some(IncomeDeclared.Yes),
             None
           )
 
@@ -653,7 +653,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 LicenceTimeTrading.ZeroToTwoYears,
                 LicenceValidityPeriod.UpToOneYear,
                 TaxSituation.PAYE,
-                IncomeDeclared.Yes,
+                Some(IncomeDeclared.Yes),
                 Some(EntityType.Company)
               )
 
@@ -1022,7 +1022,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToOneYear,
               taxSituation,
-              IncomeDeclared.Yes,
+              Some(IncomeDeclared.Yes),
               entityType
             )
 
@@ -1084,7 +1084,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
               requestWithSessionData(session)
 
             val result = journeyService.previous(
-              routes.SAController.confirmYourIncome()
+              routes.SAController.saIncomeStatement()
             )
 
             result shouldBe routes.TaxSituationController.taxSituation()
@@ -1098,7 +1098,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
 
             assertThrows[RuntimeException] {
               journeyService.previous(
-                routes.SAController.confirmYourIncome()
+                routes.SAController.saIncomeStatement()
               )
             }
           }
@@ -1201,7 +1201,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             LicenceTimeTrading.ZeroToTwoYears,
             LicenceValidityPeriod.UpToOneYear,
             TaxSituation.PAYE,
-            IncomeDeclared.Yes,
+            Some(IncomeDeclared.Yes),
             Some(EntityType.Individual)
           )
           implicit val request: RequestWithSessionData[_] =

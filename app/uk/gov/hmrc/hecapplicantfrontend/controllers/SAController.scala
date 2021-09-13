@@ -52,7 +52,7 @@ class SAController @Inject() (
 
   val saIncomeStatement: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     val back             = journeyService.previous(routes.SAController.saIncomeStatement())
-    val saIncomeDeclared = request.sessionData.userAnswers.fold(_.saIncomeDeclared, c => Some(c.saIncomeDeclared))
+    val saIncomeDeclared = request.sessionData.userAnswers.fold(_.saIncomeDeclared, _.saIncomeDeclared)
     val form = {
       val emptyForm = SAController.saIncomeDeclarationForm(IncomeDeclared.values)
       saIncomeDeclared.fold(emptyForm)(emptyForm.fill)

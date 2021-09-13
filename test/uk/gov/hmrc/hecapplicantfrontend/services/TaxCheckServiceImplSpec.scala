@@ -88,7 +88,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         LicenceTimeTrading.TwoToFourYears,
         LicenceValidityPeriod.UpToOneYear,
         TaxSituation.SA,
-        IncomeDeclared.Yes,
+        Some(IncomeDeclared.Yes),
         None
       )
 

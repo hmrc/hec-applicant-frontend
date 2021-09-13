@@ -175,7 +175,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
                 licenceTimeTrading,
                 licenceValidityPeriod,
                 taxSituation,
-                saIncomeDeclared,
+                Some(saIncomeDeclared),
                 Some(entityType)
               )
             session.copy(userAnswers = completeAnswers)
@@ -196,7 +196,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
                 licenceTimeTrading,
                 licenceValidityPeriod,
                 taxSituation,
-                saIncomeDeclared,
+                Some(saIncomeDeclared),
                 None
               )
             session.copy(userAnswers = completeAnswers)

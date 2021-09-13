@@ -101,7 +101,7 @@ class EntityTypeControllerSpec
                 LicenceTimeTrading.ZeroToTwoYears,
                 LicenceValidityPeriod.UpToTwoYears,
                 TaxSituation.PAYE,
-                IncomeDeclared.Yes,
+                Some(IncomeDeclared.Yes),
                 Some(EntityType.Individual)
               ),
               None
@@ -237,7 +237,7 @@ class EntityTypeControllerSpec
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToOneYear,
               TaxSituation.PAYE,
-              IncomeDeclared.Yes,
+              Some(IncomeDeclared.Yes),
               None
             )
             val updatedAnswers = IncompleteUserAnswers
