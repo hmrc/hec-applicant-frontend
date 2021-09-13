@@ -8,7 +8,6 @@
 @import uk.gov.hmrc.hecapplicantfrontend.models.views.LicenceValidityPeriodOption
 @import uk.gov.hmrc.hecapplicantfrontend.models.views.EntityTypeOption
 @import uk.gov.hmrc.hecapplicantfrontend.models.views.TaxSituationOption
-@import uk.gov.hmrc.hecapplicantfrontend.util.TimeUtils
 
 @this(layout: Layout, govukSummaryList : GovukSummaryList, govukButton: GovukButton, formWithCSRF: FormWithCSRF)
 
@@ -36,14 +35,6 @@
         messages(s"licenceType.${LicenceTypeOption.licenceTypeOption(completeAnswers.licenceType).messageKey}"),
         routes.LicenceDetailsController.licenceType(),
         messages(s"$key.licenceType.screenReaderText")
-    )
-}
-@licenceExpiryDateRow = @{
-    summaryListRow(
-        messages("licenceExpiryDate.title"),
-        TimeUtils.govDisplayFormat(completeAnswers.licenceExpiryDate.value),
-        routes.LicenceDetailsController.expiryDate(),
-        messages(s"$key.licenceExpiryDate.screenReaderText")
     )
 }
 @licenceTimeTradingRow = @{
@@ -83,7 +74,6 @@
 
 @rows = @{List(
     Some(licenceTypeRow),
-    Some(licenceExpiryDateRow),
     Some(licenceTimeTradingRow),
     Some(licenceValidityPeriodRow),
     entityTypeRow,

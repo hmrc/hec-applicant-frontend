@@ -19,9 +19,8 @@ package uk.gov.hmrc.hecapplicantfrontend.controllers
 import cats.instances.future._
 import com.google.inject.{Inject, Singleton}
 import play.api.data.Form
-import play.api.i18n.I18nSupport
-import play.api.i18n.Messages
 import play.api.data.Forms.{mapping, of}
+import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 import uk.gov.hmrc.hecapplicantfrontend.controllers.LicenceDetailsController._
@@ -30,10 +29,10 @@ import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceTimeTrading._
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType._
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceValidityPeriod._
-import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceExpiryDate, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
+import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
-import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging, TimeUtils}
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging.LoggerOps
+import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging}
 import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
@@ -47,8 +46,6 @@ class LicenceDetailsController @Inject() (
   mcc: MessagesControllerComponents,
   licenceTypePage: html.LicenceType,
   licenceTypeExitPage: html.LicenceTypeExit,
-  licenseExpiryDatePage: html.LicenceExpiryDate,
-  licenceExpiryDateExitPage: html.LicenceExpiryDateExit,
   licenceTimeTradingPage: html.LicenceTimeTrading,
   licenceValidityPeriodPage: html.LicenceValidityPeriod
 )(implicit appConfig: AppConfig, ec: ExecutionContext)
@@ -108,54 +105,6 @@ class LicenceDetailsController @Inject() (
       licenceTypeExitPage(
         journeyService.previous(routes.LicenceDetailsController.licenceTypeExit()),
         licenceTypeOptions
-      )
-    )
-  }
-
-  val expiryDate: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
-    val back       = journeyService.previous(routes.LicenceDetailsController.expiryDate())
-    val expiryDate = request.sessionData.userAnswers.fold(_.licenceExpiryDate, c => Some(c.licenceExpiryDate))
-    val form = {
-      val emptyForm = licenseExpiryDateForm()
-      expiryDate.fold(emptyForm)(emptyForm.fill)
-    }
-    Ok(licenseExpiryDatePage(form, back))
-  }
-
-  val expiryDateSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
-    def handleValidExpiryDate(licenceExpiryDate: LicenceExpiryDate): Future[Result] = {
-      val updatedAnswers =
-        request.sessionData.userAnswers.unset(_.licenceExpiryDate).copy(licenceExpiryDate = Some(licenceExpiryDate))
-      val updatedSession = request.sessionData.copy(userAnswers = updatedAnswers)
-      journeyService
-        .updateAndNext(
-          routes.LicenceDetailsController.expiryDate(),
-          updatedSession
-        )
-        .fold(
-          { e =>
-            logger.warn("Could not update session and proceed", e)
-            InternalServerError
-          },
-          Redirect
-        )
-    }
-
-    licenseExpiryDateForm()
-      .bindFromRequest()
-      .fold(
-        formWithErrors =>
-          Ok(
-            licenseExpiryDatePage(formWithErrors, journeyService.previous(routes.LicenceDetailsController.expiryDate()))
-          ),
-        handleValidExpiryDate
-      )
-  }
-
-  val expiryDateExit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
-    Ok(
-      licenceExpiryDateExitPage(
-        journeyService.previous(routes.LicenceDetailsController.expiryDateExit())
       )
     )
   }
@@ -311,29 +260,5 @@ object LicenceDetailsController {
         "licenceValidityPeriod" -> of(FormUtils.radioFormFormatter(options))
       )(identity)(Some(_))
     )
-
-  def licenseExpiryDateForm()(implicit message: Messages): Form[LicenceExpiryDate] = {
-    val key                             = "licenceExpiryDate"
-    val tooFarInFutureDate              = TimeUtils.today().plusYears(6L)
-    val tooFarInPastDate                = TimeUtils.today().minusYears(2L)
-    val tooFarInFutureArgs: Seq[String] = Seq(TimeUtils.govDisplayFormat(tooFarInFutureDate))
-    val tooFarInPastArgs                = Seq(TimeUtils.govDisplayFormat(tooFarInPastDate))
-    Form(
-      mapping(
-        "" -> of(
-          TimeUtils.dateFormatter(
-            Some(tooFarInFutureDate),
-            Some(tooFarInPastDate),
-            s"$key-day",
-            s"$key-month",
-            s"$key-year",
-            key,
-            tooFarInFutureArgs = tooFarInFutureArgs,
-            tooFarInPastArgs = tooFarInPastArgs
-          )
-        )
-      )(LicenceExpiryDate(_))(d => Some(d.value))
-    )
-  }
 
 }
