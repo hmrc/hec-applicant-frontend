@@ -36,7 +36,7 @@
     @headBlock.getOrElse(Html(""))
     @if(showSignOutLink) {
         @hmrcTimeoutDialogHelper(
-            title = Some(messages("hmrc-timeout-dialog.title")),
+            title = Some(messages("hmrcTimeoutDialog.title")),
             signOutUrl = appConfig.signOutUri,
             timeoutUrl = Some(routes.SignOutController.signOutFromTimeout().url),
             countdown = Some(appConfig.authTimeoutCountdownSeconds),
