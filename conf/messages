@@ -198,7 +198,7 @@ noReturnFound.title = You cannot do a tax check at the moment
 noReturnFound.p1 = You will need to <a href="{0}" class="govuk-link">contact HMRC</a> before doing your tax check.
 
 # SA Income Declared
-saIncomeDeclared.title = Did you include income you earned using this licence in your tax return?
+saIncomeDeclared.title = Did you include income you earned using this type of licence in your tax return?
 saIncomeDeclared.yes = Yes
 saIncomeDeclared.no = No
 saIncomeDeclared.error.required = Select whether you included income you earned using this licence in your tax return
