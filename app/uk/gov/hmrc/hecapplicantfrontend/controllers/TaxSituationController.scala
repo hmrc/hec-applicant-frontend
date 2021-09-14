@@ -99,8 +99,11 @@ class TaxSituationController @Inject() (
             maybeSaStatus <- fetchSAStatus(individualRetrievedData, taxSituation)
 
             updatedRetrievedData = individualRetrievedData.copy(saStatus = maybeSaStatus)
-            updatedAnswers       =
-              request.sessionData.userAnswers.unset(_.taxSituation).copy(taxSituation = Some(taxSituation))
+            // wipe the SA income declared answer since it is dependent on the tax situation answer
+            updatedAnswers       = request.sessionData.userAnswers
+                                     .unset(_.taxSituation)
+                                     .unset(_.saIncomeDeclared)
+                                     .copy(taxSituation = Some(taxSituation))
             updatedRequest       = request.sessionData.copy(
                                      userAnswers = updatedAnswers,
                                      retrievedUserData = updatedRetrievedData

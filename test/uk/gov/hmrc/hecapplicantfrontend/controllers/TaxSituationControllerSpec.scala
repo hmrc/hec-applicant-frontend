@@ -787,7 +787,7 @@ class TaxSituationControllerSpec
               Some(LicenceTimeTrading.ZeroToTwoYears),
               Some(LicenceValidityPeriod.UpToThreeYears),
               Some(TaxSituation.PAYE),
-              Some(IncomeDeclared.Yes),
+              None,
               Some(EntityType.Individual)
             )
             val updatedSession = session.copy(userAnswers = updatedAnswers)
