@@ -285,7 +285,7 @@ object JourneyServiceImpl {
     * Process the incomplete answers and retrieved user data to determine if all answers have been given by the user
     * @param incompleteUserAnswers The incomplete answers
     * @param retrievedUserData The retrieved user data
-    * @return A boolean representing whether or no the user has completed answering all relevant questions
+    * @return A boolean representing whether or not the user has completed answering all relevant questions
     */
   def allAnswersComplete(
     incompleteUserAnswers: IncompleteUserAnswers,

@@ -769,6 +769,49 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
           }
         }
 
+        "the user has selected an SA tax situation, SA status != ReturnFound" in {
+          List(
+            TaxSituation.SA,
+            TaxSituation.SAPAYE
+          ).foreach { taxSituation =>
+            withClue(s"For tax situation $taxSituation: ") {
+              val completeAnswers = CompleteUserAnswers(
+                LicenceType.DriverOfTaxisAndPrivateHires,
+                LicenceExpiryDate(TimeUtils.today()),
+                LicenceTimeTrading.ZeroToTwoYears,
+                LicenceValidityPeriod.UpToOneYear,
+                taxSituation,
+                None,
+                None
+              )
+
+              val incompleteAnswers = IncompleteUserAnswers(
+                Some(completeAnswers.licenceType),
+                Some(completeAnswers.licenceExpiryDate),
+                Some(completeAnswers.licenceTimeTrading),
+                Some(completeAnswers.licenceValidityPeriod),
+                Some(completeAnswers.taxSituation),
+                completeAnswers.saIncomeDeclared,
+                completeAnswers.entityType
+              )
+
+              val individualData = individualRetrievedData.copy(saStatus =
+                Some(SAStatusResponse(SAUTR("utr"), TaxYear(2020), SAStatus.NoReturnFound))
+              )
+              val session        = HECSession(individualData, incompleteAnswers, None)
+
+              implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+              mockStoreSession(session.copy(userAnswers = completeAnswers))(Right(()))
+
+              val result = journeyService.updateAndNext(
+                routes.LicenceDetailsController.licenceTimeTrading(),
+                session
+              )
+              await(result.value) shouldBe Right(routes.CheckYourAnswersController.checkYourAnswers())
+            }
+          }
+        }
+
       }
 
       "not convert incomplete answers to complete answers when all questions have been answered and" when {
@@ -1362,7 +1405,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
         }
       }
 
-      "return true for tax situation = non-SA (irrespective of whether income declaration is missing or present)" in {
+      "return true for tax situation = non-SA (irrespective of whether income declared is missing or present)" in {
         List(
           TaxSituation.PAYE,
           TaxSituation.NotChargeable
@@ -1389,7 +1432,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
         }
       }
 
-      "return true for tax situation = SA & status != ReturnFound (irrespective of whether income declaration is missing or present)" in {
+      "return true for tax situation = SA & status != ReturnFound (irrespective of whether income declared is missing or present)" in {
         val saTaxSituations = List(
           TaxSituation.SA,
           TaxSituation.SAPAYE
@@ -1430,7 +1473,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
         }
       }
 
-      "return true for tax situation = SA & status = ReturnFound & income declaration is present)" in {
+      "return true for tax situation = SA & status = ReturnFound & income declared is present)" in {
         List(
           TaxSituation.SA,
           TaxSituation.SAPAYE
@@ -1451,7 +1494,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
         }
       }
 
-      "return false for tax situation = SA & status = ReturnFound & income declaration is missing)" in {
+      "return false for tax situation = SA & status = ReturnFound & income declared is missing)" in {
         List(
           TaxSituation.SA,
           TaxSituation.SAPAYE
