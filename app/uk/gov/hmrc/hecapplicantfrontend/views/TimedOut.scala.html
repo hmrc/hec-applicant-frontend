@@ -1,0 +1,26 @@
+@import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
+@import play.api.i18n.Messages
+@import play.api.mvc.Request
+
+@this(layout: Layout)
+
+@()(implicit request: Request[_], messages: Messages)
+@key = @{"timedOut"}
+@title = @{messages(s"$key.title")}
+
+@layout(pageTitle = Some(title), showSignOutLink = false) {
+
+    <h1 class="govuk-heading-xl">
+      @title
+    </h1>
+
+    <p class="govuk-body">
+      @messages(s"$key.p1")
+    </p>
+
+    <p class="govuk-body">
+      <a href="@{routes.StartController.start()}" class="govuk-button govuk-!-margin-bottom-0">
+        @messages(s"$key.signIn")
+      </a>
+    </p>
+}

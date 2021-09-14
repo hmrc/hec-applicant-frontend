@@ -196,3 +196,9 @@ sautrNotFound.problem.p1 = You’ll need to <a href="{0}" class="govuk-link">con
 # No Return Found
 noReturnFound.title = You cannot do a tax check at the moment
 noReturnFound.p1 = You will need to <a href="{0}" class="govuk-link">contact HMRC</a> before doing your tax check.
+
+# Timed Out
+hmrc-timeout-dialog.title = You’re about to be signed out
+timedOut.title = For your security, we signed you out
+timedOut.p1 = We did not save your answers.
+timedOut.signIn = Sign in
