@@ -98,7 +98,7 @@ class CheckYourAnswersControllerSpec
           LicenceTimeTrading.ZeroToTwoYears,
           LicenceValidityPeriod.UpToTwoYears,
           TaxSituation.PAYE,
-          Some(IncomeDeclared.Yes),
+          None,
           Some(EntityType.Individual)
         )
 

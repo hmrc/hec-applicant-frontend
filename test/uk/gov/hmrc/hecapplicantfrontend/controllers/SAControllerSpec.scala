@@ -130,7 +130,7 @@ class SAControllerSpec
 
     }
 
-    "handling requests to the confirm your income page" must {
+    "handling requests to the SA income statement page" must {
 
       def performAction(): Future[Result] = controller.saIncomeStatement(FakeRequest())
 
@@ -206,7 +206,7 @@ class SAControllerSpec
 
     }
 
-    "handling submits to the entity type page" must {
+    "handling submits to the SA income statement page" must {
 
       def performAction(data: (String, String)*): Future[Result] =
         controller.saIncomeStatementSubmit(FakeRequest().withFormUrlEncodedBody(data: _*))
@@ -309,7 +309,7 @@ class SAControllerSpec
               LicenceExpiryDate(TimeUtils.today().minusDays(10L)),
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToOneYear,
-              TaxSituation.PAYE,
+              TaxSituation.SA,
               Some(IncomeDeclared.Yes),
               None
             )
