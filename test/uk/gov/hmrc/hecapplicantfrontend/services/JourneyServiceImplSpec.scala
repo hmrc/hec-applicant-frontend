@@ -1321,12 +1321,14 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
           retrievedUserData = individualRetrievedData
         ) shouldBe true
       }
+
       "return false for individual licence type & entity type is present" in {
         JourneyServiceImpl.allAnswersComplete(
           incompleteUserAnswers = incompleteAnswersBase.copy(entityType = Some(EntityType.Individual)),
           retrievedUserData = individualRetrievedData
         ) shouldBe false
       }
+
       "return false for company licence type & entity type is missing" in {
         List(
           LicenceType.OperatorOfPrivateHireVehicles,
@@ -1341,6 +1343,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
           }
         }
       }
+
       "return true for company licence type & entity type is present" in {
         List(
           LicenceType.OperatorOfPrivateHireVehicles,

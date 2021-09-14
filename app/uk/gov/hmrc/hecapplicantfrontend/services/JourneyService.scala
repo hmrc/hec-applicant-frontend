@@ -259,7 +259,7 @@ object JourneyServiceImpl {
   /**
     * Expect the entity type to be specified only for individual or company licence types
     */
-  private def checkEntityType(licenceType: LicenceType, entityType: Option[EntityType]): Boolean =
+  private def checkEntityTypePresentIfRequired(licenceType: LicenceType, entityType: Option[EntityType]): Boolean =
     entityType match {
       case Some(_) if licenceTypeForIndividualAndCompany(licenceType) => true
       case None if !licenceTypeForIndividualAndCompany(licenceType)   => true
@@ -301,7 +301,7 @@ object JourneyServiceImpl {
             saIncomeDeclared,
             entityType
           ) =>
-        val licenceTypeCheck      = checkEntityType(licenceType, entityType)
+        val licenceTypeCheck      = checkEntityTypePresentIfRequired(licenceType, entityType)
         val saIncomeDeclaredCheck = checkSAIncomeDeclared(taxSituation, saIncomeDeclared, retrievedUserData)
         licenceTypeCheck && saIncomeDeclaredCheck
       case _ => false
