@@ -28,10 +28,9 @@ import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.Individual
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.{CompleteUserAnswers, IncompleteUserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models._
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO}
-import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceExpiryDate, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
+import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
-import uk.gov.hmrc.hecapplicantfrontend.util.TimeUtils
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -170,7 +169,6 @@ class SAControllerSpec
               individuaRetrievedlData,
               CompleteUserAnswers(
                 LicenceType.DriverOfTaxisAndPrivateHires,
-                LicenceExpiryDate(TimeUtils.today()),
                 LicenceTimeTrading.ZeroToTwoYears,
                 LicenceValidityPeriod.UpToTwoYears,
                 TaxSituation.PAYE,
@@ -306,7 +304,6 @@ class SAControllerSpec
           "the user has previously completed answering questions" in {
             val answers        = CompleteUserAnswers(
               LicenceType.DriverOfTaxisAndPrivateHires,
-              LicenceExpiryDate(TimeUtils.today().minusDays(10L)),
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToOneYear,
               TaxSituation.SA,

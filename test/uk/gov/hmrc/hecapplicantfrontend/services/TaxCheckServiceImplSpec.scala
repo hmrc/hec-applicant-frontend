@@ -16,8 +16,10 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.services
 
-import cats.instances.future._
+import java.time.LocalDate
+
 import cats.data.EitherT
+import cats.instances.future._
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -30,11 +32,9 @@ import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.Individual
 import uk.gov.hmrc.hecapplicantfrontend.models.TaxDetails.IndividualTaxDetails
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.CompleteUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CTUTR, GGCredId, NINO, SAUTR}
-import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceDetails, LicenceExpiryDate, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
+import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hecapplicantfrontend.models.{AccountingPeriod, CTStatus, CTStatusResponse, DateOfBirth, EmailAddress, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, IncomeDeclared, Name, SAStatus, SAStatusResponse, TaxSituation, TaxYear}
-import uk.gov.hmrc.hecapplicantfrontend.util.TimeUtils
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
-import java.time.LocalDate
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -84,7 +84,6 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
 
       val completeAnswers = CompleteUserAnswers(
         LicenceType.OperatorOfPrivateHireVehicles,
-        LicenceExpiryDate(TimeUtils.today().plusDays(1L)),
         LicenceTimeTrading.TwoToFourYears,
         LicenceValidityPeriod.UpToOneYear,
         TaxSituation.SA,
@@ -100,7 +99,6 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         ),
         LicenceDetails(
           completeAnswers.licenceType,
-          completeAnswers.licenceExpiryDate,
           completeAnswers.licenceTimeTrading,
           completeAnswers.licenceValidityPeriod
         ),

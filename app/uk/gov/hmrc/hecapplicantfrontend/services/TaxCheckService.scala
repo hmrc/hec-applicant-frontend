@@ -104,7 +104,6 @@ class TaxCheckServiceImpl @Inject() (hecConnector: HECConnector)(implicit ec: Ex
   ): HECTaxCheckData = {
     val licenceDetails = LicenceDetails(
       answers.licenceType,
-      answers.licenceExpiryDate,
       answers.licenceTimeTrading,
       answers.licenceValidityPeriod
     )

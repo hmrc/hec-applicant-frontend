@@ -30,22 +30,21 @@ import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRe
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.{CompleteUserAnswers, IncompleteUserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models._
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO, SAUTR}
-import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceExpiryDate, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.hecapplicantfrontend.util.TimeUtils
+import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with SessionSupport {
 
-  val journeyService = new JourneyServiceImpl(mockSessionStore)
+  val journeyService: JourneyServiceImpl = new JourneyServiceImpl(mockSessionStore)
 
   def requestWithSessionData(s: HECSession): RequestWithSessionData[_] =
     RequestWithSessionData(AuthenticatedRequest(FakeRequest()), s)
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  val individualRetrievedData =
+  val individualRetrievedData: IndividualRetrievedData =
     IndividualRetrievedData(
       GGCredId(""),
       NINO(""),
@@ -56,7 +55,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
       None
     )
 
-  val companyRetrievedData =
+  val companyRetrievedData: CompanyRetrievedData =
     CompanyRetrievedData(GGCredId(""), None, None)
 
   "JourneyServiceImpl" when {
@@ -147,96 +146,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             routes.LicenceDetailsController.licenceType(),
             updatedSession
           )
-          await(result.value) shouldBe Right(routes.LicenceDetailsController.expiryDate())
-        }
-
-        "the expiry page and" when {
-
-          "no expiry date can be found in session" in {
-            val answers                                     = UserAnswers.empty
-            val session                                     = HECSession(individualRetrievedData, answers, None)
-            implicit val request: RequestWithSessionData[_] =
-              requestWithSessionData(session)
-
-            assertThrows[RuntimeException] {
-              journeyService.updateAndNext(
-                routes.LicenceDetailsController.expiryDate(),
-                session
-              )
-            }
-          }
-
-          "the expiry date is within the past one year" in {
-            val session        = HECSession(individualRetrievedData, UserAnswers.empty, None)
-            val updatedSession =
-              HECSession(
-                individualRetrievedData,
-                UserAnswers.empty.copy(
-                  licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires),
-                  licenceExpiryDate = Some(LicenceExpiryDate(TimeUtils.today().minusDays(10L)))
-                ),
-                None
-              )
-
-            implicit val request: RequestWithSessionData[_] =
-              requestWithSessionData(session)
-
-            mockStoreSession(updatedSession)(Right(()))
-
-            val result = journeyService.updateAndNext(
-              routes.LicenceDetailsController.expiryDate(),
-              updatedSession
-            )
-            await(result.value) shouldBe Right(routes.LicenceDetailsController.licenceTimeTrading())
-          }
-
-          "the expiry page and the expiry date is exactly one year ago" in {
-            val session        = HECSession(individualRetrievedData, UserAnswers.empty, None)
-            val updatedSession =
-              HECSession(
-                individualRetrievedData,
-                UserAnswers.empty.copy(
-                  licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires),
-                  licenceExpiryDate = Some(LicenceExpiryDate(TimeUtils.today().minusYears(1L)))
-                ),
-                None
-              )
-
-            implicit val request: RequestWithSessionData[_] =
-              requestWithSessionData(session)
-
-            mockStoreSession(updatedSession)(Right(()))
-
-            val result = journeyService.updateAndNext(
-              routes.LicenceDetailsController.expiryDate(),
-              updatedSession
-            )
-            await(result.value) shouldBe Right(routes.LicenceDetailsController.licenceTimeTrading())
-          }
-
-          "the expiry page and the expiry date is beyond the past one year" in {
-            val session        = HECSession(individualRetrievedData, UserAnswers.empty, None)
-            val updatedSession =
-              HECSession(
-                individualRetrievedData,
-                UserAnswers.empty.copy(
-                  licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires),
-                  licenceExpiryDate = Some(LicenceExpiryDate(TimeUtils.today().minusYears(1L).minusDays(1L)))
-                ),
-                None
-              )
-
-            implicit val request: RequestWithSessionData[_] =
-              requestWithSessionData(session)
-
-            mockStoreSession(updatedSession)(Right(()))
-
-            val result = journeyService.updateAndNext(
-              routes.LicenceDetailsController.expiryDate(),
-              updatedSession
-            )
-            await(result.value) shouldBe Right(routes.LicenceDetailsController.expiryDateExit())
-          }
+          await(result.value) shouldBe Right(routes.LicenceDetailsController.licenceTimeTrading())
         }
 
         "the licence time trading page" in {
@@ -461,7 +371,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             testPAYENotChargeable(TaxSituation.NotChargeable)
           }
 
-          def testsForSelfAssessment(taxSituation: TaxSituation) = {
+          def testsForSelfAssessment(taxSituation: TaxSituation): Unit = {
             "SAUTR is present but there is no SA status response" in {
               val answersWithTaxSituation = answers.copy(taxSituation = Some(taxSituation))
               val session                 = HECSession(
@@ -604,7 +514,6 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
         "the user has selected an individual only licence type" in {
           val completeAnswers = CompleteUserAnswers(
             LicenceType.DriverOfTaxisAndPrivateHires,
-            LicenceExpiryDate(TimeUtils.today()),
             LicenceTimeTrading.ZeroToTwoYears,
             LicenceValidityPeriod.UpToOneYear,
             TaxSituation.PAYE,
@@ -614,7 +523,6 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
 
           val incompleteAnswers = IncompleteUserAnswers(
             Some(completeAnswers.licenceType),
-            Some(completeAnswers.licenceExpiryDate),
             Some(completeAnswers.licenceTimeTrading),
             Some(completeAnswers.licenceValidityPeriod),
             Some(completeAnswers.taxSituation),
@@ -650,7 +558,6 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             withClue(s"For licence type $licenceType: ") {
               val completeAnswers = CompleteUserAnswers(
                 licenceType,
-                LicenceExpiryDate(TimeUtils.today()),
                 LicenceTimeTrading.ZeroToTwoYears,
                 LicenceValidityPeriod.UpToOneYear,
                 TaxSituation.PAYE,
@@ -660,7 +567,6 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
 
               val incompleteAnswers = IncompleteUserAnswers(
                 Some(completeAnswers.licenceType),
-                Some(completeAnswers.licenceExpiryDate),
                 Some(completeAnswers.licenceTimeTrading),
                 Some(completeAnswers.licenceValidityPeriod),
                 Some(completeAnswers.taxSituation),
@@ -694,7 +600,6 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             withClue(s"For tax situation $taxSituation: ") {
               val completeAnswers = CompleteUserAnswers(
                 LicenceType.DriverOfTaxisAndPrivateHires,
-                LicenceExpiryDate(TimeUtils.today()),
                 LicenceTimeTrading.ZeroToTwoYears,
                 LicenceValidityPeriod.UpToOneYear,
                 taxSituation,
@@ -704,7 +609,6 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
 
               val incompleteAnswers = IncompleteUserAnswers(
                 Some(completeAnswers.licenceType),
-                Some(completeAnswers.licenceExpiryDate),
                 Some(completeAnswers.licenceTimeTrading),
                 Some(completeAnswers.licenceValidityPeriod),
                 Some(completeAnswers.taxSituation),
@@ -734,7 +638,6 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             withClue(s"For tax situation $taxSituation: ") {
               val completeAnswers = CompleteUserAnswers(
                 LicenceType.DriverOfTaxisAndPrivateHires,
-                LicenceExpiryDate(TimeUtils.today()),
                 LicenceTimeTrading.ZeroToTwoYears,
                 LicenceValidityPeriod.UpToOneYear,
                 taxSituation,
@@ -744,7 +647,6 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
 
               val incompleteAnswers = IncompleteUserAnswers(
                 Some(completeAnswers.licenceType),
-                Some(completeAnswers.licenceExpiryDate),
                 Some(completeAnswers.licenceTimeTrading),
                 Some(completeAnswers.licenceValidityPeriod),
                 Some(completeAnswers.taxSituation),
@@ -777,7 +679,6 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             withClue(s"For tax situation $taxSituation: ") {
               val completeAnswers = CompleteUserAnswers(
                 LicenceType.DriverOfTaxisAndPrivateHires,
-                LicenceExpiryDate(TimeUtils.today()),
                 LicenceTimeTrading.ZeroToTwoYears,
                 LicenceValidityPeriod.UpToOneYear,
                 taxSituation,
@@ -787,7 +688,6 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
 
               val incompleteAnswers = IncompleteUserAnswers(
                 Some(completeAnswers.licenceType),
-                Some(completeAnswers.licenceExpiryDate),
                 Some(completeAnswers.licenceTimeTrading),
                 Some(completeAnswers.licenceValidityPeriod),
                 Some(completeAnswers.taxSituation),
@@ -816,32 +716,9 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
 
       "not convert incomplete answers to complete answers when all questions have been answered and" when {
 
-        "the licence expiry date is not valid" in {
-          val incompleteAnswers = IncompleteUserAnswers(
-            Some(LicenceType.DriverOfTaxisAndPrivateHires),
-            Some(LicenceExpiryDate(TimeUtils.today().minusMonths(13L))),
-            Some(LicenceTimeTrading.ZeroToTwoYears),
-            Some(LicenceValidityPeriod.UpToOneYear),
-            Some(TaxSituation.PAYE),
-            Some(IncomeDeclared.Yes),
-            None
-          )
-
-          val session                                     = HECSession(individualRetrievedData, incompleteAnswers, None)
-          implicit val request: RequestWithSessionData[_] =
-            requestWithSessionData(session)
-
-          val result = journeyService.updateAndNext(
-            routes.LicenceDetailsController.expiryDate(),
-            session
-          )
-          await(result.value) shouldBe Right(routes.LicenceDetailsController.expiryDateExit())
-        }
-
         "the selected entity type is not consistent with the entity type retrieved from the GG creds" in {
           val incompleteAnswers = IncompleteUserAnswers(
             Some(LicenceType.OperatorOfPrivateHireVehicles),
-            Some(LicenceExpiryDate(TimeUtils.today().minusMonths(13L))),
             Some(LicenceTimeTrading.ZeroToTwoYears),
             Some(LicenceValidityPeriod.UpToOneYear),
             Some(TaxSituation.PAYE),
@@ -959,44 +836,11 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
           result shouldBe routes.LicenceDetailsController.licenceType()
         }
 
-        "the licence expiry date page" in {
-          val session                                     = HECSession(
-            individualRetrievedData,
-            UserAnswers.empty.copy(licenceType = Some(LicenceType.ScrapMetalDealerSite)),
-            None
-          )
-          implicit val request: RequestWithSessionData[_] =
-            requestWithSessionData(session)
-
-          val result = journeyService.previous(
-            routes.LicenceDetailsController.expiryDate()
-          )
-
-          result shouldBe routes.LicenceDetailsController.licenceType()
-        }
-
-        "the licence expiry date exit page" in {
-          val session                                     = HECSession(
-            individualRetrievedData,
-            UserAnswers.empty.copy(licenceType = Some(LicenceType.ScrapMetalDealerSite)),
-            None
-          )
-          implicit val request: RequestWithSessionData[_] =
-            requestWithSessionData(session)
-
-          val result = journeyService.previous(
-            routes.LicenceDetailsController.expiryDateExit()
-          )
-
-          result shouldBe routes.LicenceDetailsController.expiryDate()
-        }
-
         "the licence time trading page when the session contains an licence expiry date which is not more than 1 year ago" in {
           val session                                     = HECSession(
             individualRetrievedData,
             UserAnswers.empty.copy(
-              licenceType = Some(LicenceType.ScrapMetalDealerSite),
-              licenceExpiryDate = Some(LicenceExpiryDate(TimeUtils.today()))
+              licenceType = Some(LicenceType.ScrapMetalDealerSite)
             ),
             None
           )
@@ -1007,7 +851,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             routes.LicenceDetailsController.licenceTimeTrading()
           )
 
-          result shouldBe routes.LicenceDetailsController.expiryDate()
+          result shouldBe routes.LicenceDetailsController.licenceType()
         }
 
         "the entity type page" when {
@@ -1022,8 +866,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 val session                                     = HECSession(
                   individualRetrievedData,
                   UserAnswers.empty.copy(
-                    licenceType = Some(licenceType),
-                    licenceExpiryDate = Some(LicenceExpiryDate(TimeUtils.today()))
+                    licenceType = Some(licenceType)
                   ),
                   None
                 )
@@ -1046,7 +889,6 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             individualRetrievedData,
             UserAnswers.empty.copy(
               licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles),
-              licenceExpiryDate = Some(LicenceExpiryDate(TimeUtils.today())),
               entityType = Some(EntityType.Company)
             ),
             None
@@ -1065,8 +907,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
           val session                                     = HECSession(
             individualRetrievedData,
             UserAnswers.empty.copy(
-              licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles),
-              licenceExpiryDate = Some(LicenceExpiryDate(TimeUtils.today()))
+              licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles)
             ),
             None
           )
@@ -1087,8 +928,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             val session                                     = HECSession(
               individualRetrievedData,
               UserAnswers.empty.copy(
-                licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires),
-                licenceExpiryDate = Some(LicenceExpiryDate(TimeUtils.today()))
+                licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)
               ),
               None
             )
@@ -1107,7 +947,6 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
               individualRetrievedData,
               UserAnswers.empty.copy(
                 licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles),
-                licenceExpiryDate = Some(LicenceExpiryDate(TimeUtils.today())),
                 entityType = Some(EntityType.Individual)
               ),
               None
@@ -1145,7 +984,6 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
           def userAnswers(licenceType: LicenceType, taxSituation: TaxSituation, entityType: Option[EntityType]) =
             CompleteUserAnswers(
               licenceType,
-              LicenceExpiryDate(TimeUtils.today()),
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToOneYear,
               taxSituation,
@@ -1306,7 +1144,6 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             individualData,
             IncompleteUserAnswers(
               Some(LicenceType.DriverOfTaxisAndPrivateHires),
-              Some(LicenceExpiryDate(TimeUtils.today())),
               Some(LicenceTimeTrading.ZeroToTwoYears),
               Some(LicenceValidityPeriod.UpToOneYear),
               Some(taxSituation),
@@ -1324,7 +1161,6 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
         "the answers in the session are complete and the current page is not the check your answers page" in {
           val completeAnswers                             = CompleteUserAnswers(
             LicenceType.DriverOfTaxisAndPrivateHires,
-            LicenceExpiryDate(TimeUtils.today()),
             LicenceTimeTrading.ZeroToTwoYears,
             LicenceValidityPeriod.UpToOneYear,
             TaxSituation.PAYE,
@@ -1350,7 +1186,6 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
     "JourneyServiceImpl.allAnswersComplete" must {
       val incompleteAnswersBase = IncompleteUserAnswers(
         licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires),
-        licenceExpiryDate = Some(LicenceExpiryDate(TimeUtils.today())),
         licenceTimeTrading = Some(LicenceTimeTrading.ZeroToTwoYears),
         licenceValidityPeriod = Some(LicenceValidityPeriod.UpToOneYear),
         taxSituation = Some(TaxSituation.PAYE),

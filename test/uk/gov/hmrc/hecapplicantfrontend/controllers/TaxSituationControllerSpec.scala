@@ -26,7 +26,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.{CompleteUserAnswers,
 import uk.gov.hmrc.hecapplicantfrontend.models._
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO, SAUTR}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType.DriverOfTaxisAndPrivateHires
-import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceExpiryDate, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
+import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.{JourneyService, TaxCheckService}
 import uk.gov.hmrc.hecapplicantfrontend.util.{TimeProvider, TimeUtils}
@@ -175,7 +175,6 @@ class TaxSituationControllerSpec
               individualRetrievedData,
               CompleteUserAnswers(
                 LicenceType.DriverOfTaxisAndPrivateHires,
-                LicenceExpiryDate(TimeUtils.today().minusDays(10L)),
                 LicenceTimeTrading.TwoToFourYears,
                 LicenceValidityPeriod.UpToThreeYears,
                 TaxSituation.PAYE,
@@ -772,7 +771,6 @@ class TaxSituationControllerSpec
           "the user has previously completed answering questions" in {
             val answers = CompleteUserAnswers(
               LicenceType.DriverOfTaxisAndPrivateHires,
-              LicenceExpiryDate(TimeUtils.today().minusDays(10L)),
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToThreeYears,
               TaxSituation.PAYE,
@@ -783,7 +781,6 @@ class TaxSituationControllerSpec
 
             val updatedAnswers = IncompleteUserAnswers(
               Some(LicenceType.DriverOfTaxisAndPrivateHires),
-              Some(LicenceExpiryDate(TimeUtils.today().minusDays(10L))),
               Some(LicenceTimeTrading.ZeroToTwoYears),
               Some(LicenceValidityPeriod.UpToThreeYears),
               Some(TaxSituation.PAYE),

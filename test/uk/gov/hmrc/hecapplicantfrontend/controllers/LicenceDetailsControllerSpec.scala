@@ -23,14 +23,13 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRetrievedData, IndividualRetrievedData}
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.{CompleteUserAnswers, IncompleteUserAnswers}
-import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO}
 import uk.gov.hmrc.hecapplicantfrontend.models._
+import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType.DriverOfTaxisAndPrivateHires
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceValidityPeriod.UpToOneYear
-import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceExpiryDate, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
+import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
-import uk.gov.hmrc.hecapplicantfrontend.util.TimeUtils
 
 import java.time.LocalDate
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -49,12 +48,12 @@ class LicenceDetailsControllerSpec
     bind[JourneyService].toInstance(mockJourneyService)
   )
 
-  val controller = instanceOf[LicenceDetailsController]
+  val controller: LicenceDetailsController = instanceOf[LicenceDetailsController]
 
-  val individuaRetrievedlData =
+  val individuaRetrievedlData: IndividualRetrievedData =
     IndividualRetrievedData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None, None)
 
-  val companyRetrievedData =
+  val companyRetrievedData: CompanyRetrievedData =
     CompanyRetrievedData(GGCredId(""), None, None)
 
   "LicenceDetailsController" when {
@@ -103,7 +102,6 @@ class LicenceDetailsControllerSpec
               individuaRetrievedlData,
               CompleteUserAnswers(
                 LicenceType.DriverOfTaxisAndPrivateHires,
-                LicenceExpiryDate(TimeUtils.today().minusDays(10L)),
                 LicenceTimeTrading.ZeroToTwoYears,
                 LicenceValidityPeriod.UpToTwoYears,
                 TaxSituation.SA,
@@ -240,8 +238,7 @@ class LicenceDetailsControllerSpec
 
           "the user has not previously completed answering questions" in {
             val answers        = UserAnswers.empty.copy(
-              licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires),
-              licenceExpiryDate = Some(LicenceExpiryDate(LocalDate.now()))
+              licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)
             )
             val updatedAnswers = UserAnswers.empty.copy(licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles))
             val session        = HECSession(individuaRetrievedlData, answers, None)
@@ -261,7 +258,6 @@ class LicenceDetailsControllerSpec
           "the user has previously completed answering questions" in {
             val answers        = CompleteUserAnswers(
               LicenceType.DriverOfTaxisAndPrivateHires,
-              LicenceExpiryDate(TimeUtils.today().minusDays(10L)),
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToOneYear,
               TaxSituation.SA,
@@ -286,7 +282,6 @@ class LicenceDetailsControllerSpec
           "the user has not changed the licence type they have already submitted previously" in {
             val answers = CompleteUserAnswers(
               LicenceType.DriverOfTaxisAndPrivateHires,
-              LicenceExpiryDate(TimeUtils.today().minusDays(10L)),
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToOneYear,
               TaxSituation.SA,
@@ -336,252 +331,6 @@ class LicenceDetailsControllerSpec
 
     }
 
-    "handling requests to licence expiry page" must {
-
-      def performAction(): Future[Result] =
-        controller.expiryDate(FakeRequest())
-
-      behave like authAndSessionDataBehaviour(() => performAction())
-
-      "display the page" when {
-
-        "a previous answer to the question is not found in session" in {
-          val session = HECSession(individuaRetrievedlData, UserAnswers.empty, None)
-
-          inSequence {
-            mockAuthWithNoRetrievals()
-            mockGetSession(session)
-            mockJourneyServiceGetPrevious(routes.LicenceDetailsController.expiryDate(), session)(mockPreviousCall)
-          }
-
-          checkPageIsDisplayed(
-            performAction(),
-            messageFromMessageKey("licenceExpiryDate.title"),
-            { doc =>
-              doc.select("#back").attr("href") shouldBe mockPreviousCall.url
-
-              doc.select("#licenceExpiryDate-day").attr("value")   shouldBe ""
-              doc.select("#licenceExpiryDate-month").attr("value") shouldBe ""
-              doc.select("#licenceExpiryDate-year").attr("value")  shouldBe ""
-
-              doc.select(".govuk-body > .govuk-link").attr("href") shouldBe routes.LicenceDetailsController
-                .expiryDateExit()
-                .url
-
-              val form = doc.select("form")
-              form
-                .attr("action") shouldBe routes.LicenceDetailsController.expiryDateSubmit().url
-            }
-          )
-
-        }
-
-        "a previous answer to the question is found in session" in {
-          val date    = TimeUtils.today()
-          val session =
-            HECSession(
-              individuaRetrievedlData,
-              UserAnswers.empty.copy(licenceExpiryDate = Some(LicenceExpiryDate(date))),
-              None
-            )
-
-          inSequence {
-            mockAuthWithNoRetrievals()
-            mockGetSession(session)
-            mockJourneyServiceGetPrevious(routes.LicenceDetailsController.expiryDate(), session)(mockPreviousCall)
-          }
-
-          checkPageIsDisplayed(
-            performAction(),
-            messageFromMessageKey("licenceExpiryDate.title"),
-            { doc =>
-              doc.select("#back").attr("href") shouldBe mockPreviousCall.url
-
-              doc.select("#licenceExpiryDate-day").attr("value")   shouldBe date.getDayOfMonth.toString
-              doc.select("#licenceExpiryDate-month").attr("value") shouldBe date.getMonthValue.toString
-              doc.select("#licenceExpiryDate-year").attr("value")  shouldBe date.getYear.toString
-
-              doc.select(".govuk-body > .govuk-link").attr("href") shouldBe routes.LicenceDetailsController
-                .expiryDateExit()
-                .url
-
-              val form = doc.select("form")
-              form
-                .attr("action") shouldBe routes.LicenceDetailsController.expiryDateSubmit().url
-            }
-          )
-        }
-
-      }
-
-    }
-
-    "handling submits on the licence Expiry page" must {
-
-      def performAction(data: (String, String)*): Future[Result] =
-        controller.expiryDateSubmit(FakeRequest().withFormUrlEncodedBody(data: _*))
-
-      def formData(date: LocalDate): List[(String, String)] = List(
-        "licenceExpiryDate-day"   -> date.getDayOfMonth.toString,
-        "licenceExpiryDate-month" -> date.getMonthValue.toString,
-        "licenceExpiryDate-year"  -> date.getYear.toString
-      )
-
-      behave like authAndSessionDataBehaviour(() => performAction())
-
-      "show a form error" when {
-
-        val session = HECSession(individuaRetrievedlData, UserAnswers.empty, None)
-
-        "nothing is submitted" in {
-          inSequence {
-            mockAuthWithNoRetrievals()
-            mockGetSession(session)
-            mockJourneyServiceGetPrevious(routes.LicenceDetailsController.expiryDate(), session)(mockPreviousCall)
-          }
-
-          checkFormErrorIsDisplayed(
-            performAction(),
-            messageFromMessageKey("licenceExpiryDate.title"),
-            messageFromMessageKey("licenceExpiryDate.error.required")
-          )
-        }
-
-        "the date entered is invalid" in {
-          DateErrorScenarios
-            .dateErrorScenarios("licenceExpiryDate")
-            .foreach { scenario =>
-              withClue(s"For date error scenario $scenario: ") {
-                val data = List(
-                  "licenceExpiryDate-day"   -> scenario.dayInput,
-                  "licenceExpiryDate-month" -> scenario.monthInput,
-                  "licenceExpiryDate-year"  -> scenario.yearInput
-                ).collect { case (key, Some(value)) => key -> value }
-                inSequence {
-                  mockAuthWithNoRetrievals()
-                  mockGetSession(session)
-                  mockJourneyServiceGetPrevious(routes.LicenceDetailsController.expiryDate(), session)(
-                    mockPreviousCall
-                  )
-                }
-
-                checkFormErrorIsDisplayed(
-                  performAction(data: _*),
-                  messageFromMessageKey("licenceExpiryDate.title"),
-                  messageFromMessageKey(scenario.expectedErrorMessageKey)
-                )
-              }
-            }
-        }
-
-        "date entered is more than 6 years in the future" in {
-          val cutoffDate = TimeUtils.today().plusYears(6L)
-          val date       = cutoffDate.plusDays(1L)
-
-          inSequence {
-            mockAuthWithNoRetrievals()
-            mockGetSession(session)
-            mockJourneyServiceGetPrevious(routes.LicenceDetailsController.expiryDate(), session)(mockPreviousCall)
-          }
-
-          checkFormErrorIsDisplayed(
-            performAction(formData(date): _*),
-            messageFromMessageKey("licenceExpiryDate.title"),
-            messageFromMessageKey("licenceExpiryDate.error.tooFarInFuture", TimeUtils.govDisplayFormat(cutoffDate))
-          )
-        }
-
-        "date entered is more than 2 years in the past" in {
-          val cutoffDate = TimeUtils.today().minusYears(2L)
-          val date       = cutoffDate.minusDays(1L)
-
-          inSequence {
-            mockAuthWithNoRetrievals()
-            mockGetSession(session)
-            mockJourneyServiceGetPrevious(routes.LicenceDetailsController.expiryDate(), session)(mockPreviousCall)
-          }
-
-          checkFormErrorIsDisplayed(
-            performAction(formData(date): _*),
-            messageFromMessageKey("licenceExpiryDate.title"),
-            messageFromMessageKey("licenceExpiryDate.error.tooFarInPast", TimeUtils.govDisplayFormat(cutoffDate))
-          )
-        }
-
-      }
-
-      "return an InternalServerError" when {
-
-        "there is an error updating and getting the next endpoint" in {
-          val date    = TimeUtils.today().plusYears(6L)
-          val answers = UserAnswers.empty
-          val session = HECSession(individuaRetrievedlData, answers, None)
-
-          val updatedAnswers = answers.copy(licenceExpiryDate = Some(LicenceExpiryDate(date)))
-          val updatedSession = session.copy(userAnswers = updatedAnswers)
-
-          inSequence {
-            mockAuthWithNoRetrievals()
-            mockGetSession(session)
-            mockJourneyServiceUpdateAndNext(routes.LicenceDetailsController.expiryDate(), session, updatedSession)(
-              Left(Error(""))
-            )
-          }
-
-          status(performAction(formData(date): _*)) shouldBe INTERNAL_SERVER_ERROR
-        }
-
-      }
-
-      "redirect to the next page" when {
-
-        "a valid expiry date is submitted" in {
-          val date    = TimeUtils.today().minusYears(2L)
-          val answers = UserAnswers.empty
-          val session = HECSession(individuaRetrievedlData, answers, None)
-
-          val updatedAnswers = answers.copy(licenceExpiryDate = Some(LicenceExpiryDate(date)))
-          val updatedSession = session.copy(userAnswers = updatedAnswers)
-
-          inSequence {
-            mockAuthWithNoRetrievals()
-            mockGetSession(session)
-            mockJourneyServiceUpdateAndNext(routes.LicenceDetailsController.expiryDate(), session, updatedSession)(
-              Right(mockNextCall)
-            )
-          }
-
-          checkIsRedirect(performAction(formData(date): _*), mockNextCall)
-        }
-
-      }
-
-    }
-
-    "handling requests to the licence expiry date exit page" must {
-
-      def performAction(): Future[Result] = controller.expiryDateExit(FakeRequest())
-
-      behave like authAndSessionDataBehaviour(performAction)
-
-      "display the page" in {
-        val session = HECSession(individuaRetrievedlData, UserAnswers.empty, None)
-        inSequence {
-          mockAuthWithNoRetrievals()
-          mockGetSession(session)
-          mockJourneyServiceGetPrevious(routes.LicenceDetailsController.expiryDateExit(), session)(mockPreviousCall)
-        }
-
-        checkPageIsDisplayed(
-          performAction(),
-          messageFromMessageKey("licenceExpiryDateExit.title"),
-          doc => doc.select("#back").attr("href") shouldBe mockPreviousCall.url
-        )
-
-      }
-
-    }
-
     "handling requests to the licence time trading  page" must {
 
       def performAction(): Future[Result] = controller.licenceTimeTrading(FakeRequest())
@@ -624,7 +373,6 @@ class LicenceDetailsControllerSpec
               individuaRetrievedlData,
               CompleteUserAnswers(
                 LicenceType.DriverOfTaxisAndPrivateHires,
-                LicenceExpiryDate(TimeUtils.today().minusDays(10L)),
                 LicenceTimeTrading.TwoToFourYears,
                 LicenceValidityPeriod.UpToThreeYears,
                 TaxSituation.SA,
@@ -776,7 +524,6 @@ class LicenceDetailsControllerSpec
           "the user has previously completed answering questions" in {
             val answers        = CompleteUserAnswers(
               LicenceType.DriverOfTaxisAndPrivateHires,
-              LicenceExpiryDate(TimeUtils.today().minusDays(10L)),
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToFiveYears,
               TaxSituation.SA,
@@ -785,7 +532,6 @@ class LicenceDetailsControllerSpec
             )
             val updatedAnswers = IncompleteUserAnswers(
               Some(LicenceType.DriverOfTaxisAndPrivateHires),
-              Some(LicenceExpiryDate(TimeUtils.today().minusDays(10L))),
               Some(LicenceTimeTrading.EightYearsOrMore),
               Some(LicenceValidityPeriod.UpToFiveYears),
               Some(TaxSituation.SA),
@@ -887,7 +633,6 @@ class LicenceDetailsControllerSpec
                   individuaRetrievedlData,
                   CompleteUserAnswers(
                     licenceType,
-                    LicenceExpiryDate(TimeUtils.today().minusDays(10L)),
                     LicenceTimeTrading.TwoToFourYears,
                     LicenceValidityPeriod.UpToThreeYears,
                     TaxSituation.SA,
@@ -1061,7 +806,6 @@ class LicenceDetailsControllerSpec
           "the user has previously completed answering questions" in {
             val answers        = CompleteUserAnswers(
               LicenceType.OperatorOfPrivateHireVehicles,
-              LicenceExpiryDate(TimeUtils.today().minusDays(10L)),
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToThreeYears,
               TaxSituation.SA,
@@ -1070,7 +814,6 @@ class LicenceDetailsControllerSpec
             )
             val updatedAnswers = IncompleteUserAnswers(
               Some(LicenceType.OperatorOfPrivateHireVehicles),
-              Some(LicenceExpiryDate(TimeUtils.today().minusDays(10L))),
               Some(LicenceTimeTrading.ZeroToTwoYears),
               Some(LicenceValidityPeriod.UpToFiveYears),
               Some(TaxSituation.SA),

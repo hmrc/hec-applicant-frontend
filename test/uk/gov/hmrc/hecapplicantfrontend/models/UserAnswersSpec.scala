@@ -19,15 +19,14 @@ package uk.gov.hmrc.hecapplicantfrontend.models
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.{CompleteUserAnswers, IncompleteUserAnswers}
-import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceExpiryDate, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.hecapplicantfrontend.util.TimeUtils
+import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 
 class UserAnswersSpec extends AnyWordSpec with Matchers {
 
   "UserAnswers" must {
 
     "have an empty val" in {
-      UserAnswers.empty shouldBe IncompleteUserAnswers(None, None, None, None, None, None, None)
+      UserAnswers.empty shouldBe IncompleteUserAnswers(None, None, None, None, None, None)
     }
 
     "have a fold method" which {
@@ -43,7 +42,6 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
       "works with complete answers" in {
         val completeAnswers = CompleteUserAnswers(
           LicenceType.DriverOfTaxisAndPrivateHires,
-          LicenceExpiryDate(TimeUtils.today().minusDays(10L)),
           LicenceTimeTrading.TwoToFourYears,
           LicenceValidityPeriod.UpToFiveYears,
           TaxSituation.PAYE,
@@ -61,7 +59,6 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
     "have a method which converts complete answers to incomplete" in {
       val completeAnswers = CompleteUserAnswers(
         LicenceType.DriverOfTaxisAndPrivateHires,
-        LicenceExpiryDate(TimeUtils.today()),
         LicenceTimeTrading.TwoToFourYears,
         LicenceValidityPeriod.UpToTwoYears,
         TaxSituation.PAYE,
@@ -70,7 +67,6 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
       )
       IncompleteUserAnswers.fromCompleteAnswers(completeAnswers) shouldBe IncompleteUserAnswers(
         Some(LicenceType.DriverOfTaxisAndPrivateHires),
-        Some(LicenceExpiryDate(TimeUtils.today())),
         Some(LicenceTimeTrading.TwoToFourYears),
         Some(LicenceValidityPeriod.UpToTwoYears),
         Some(TaxSituation.PAYE),
@@ -85,7 +81,6 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
       val incompleteAnswers =
         IncompleteUserAnswers(
           Some(LicenceType.DriverOfTaxisAndPrivateHires),
-          Some(LicenceExpiryDate(TimeUtils.today())),
           Some(LicenceTimeTrading.ZeroToTwoYears),
           Some(LicenceValidityPeriod.UpToThreeYears),
           Some(TaxSituation.PAYE),
@@ -96,7 +91,6 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
       val completeAnswers =
         CompleteUserAnswers(
           LicenceType.DriverOfTaxisAndPrivateHires,
-          LicenceExpiryDate(TimeUtils.today()),
           LicenceTimeTrading.ZeroToTwoYears,
           LicenceValidityPeriod.UpToThreeYears,
           TaxSituation.PAYE,
@@ -107,11 +101,6 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
       "unsets the licence type field" in {
         incompleteAnswers.unset(_.licenceType) shouldBe incompleteAnswers.copy(licenceType = None)
         completeAnswers.unset(_.licenceType)   shouldBe incompleteAnswers.copy(licenceType = None)
-      }
-
-      "unsets the licence Expiry Date field" in {
-        incompleteAnswers.unset(_.licenceExpiryDate) shouldBe incompleteAnswers.copy(licenceExpiryDate = None)
-        completeAnswers.unset(_.licenceExpiryDate)   shouldBe incompleteAnswers.copy(licenceExpiryDate = None)
       }
 
       "unsets the licence time trading field" in {
