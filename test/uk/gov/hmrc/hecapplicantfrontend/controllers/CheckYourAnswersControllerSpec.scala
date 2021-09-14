@@ -27,10 +27,9 @@ import uk.gov.hmrc.hecapplicantfrontend.models._
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRetrievedData, IndividualRetrievedData}
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.CompleteUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO}
-import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceExpiryDate, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
+import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.{JourneyService, TaxCheckService}
-import uk.gov.hmrc.hecapplicantfrontend.util.TimeUtils
 import uk.gov.hmrc.http.HeaderCarrier
 
 import collection.JavaConverters._
@@ -94,7 +93,6 @@ class CheckYourAnswersControllerSpec
       "display the page" in {
         val answers = CompleteUserAnswers(
           LicenceType.ScrapMetalMobileCollector,
-          LicenceExpiryDate(TimeUtils.today()),
           LicenceTimeTrading.ZeroToTwoYears,
           LicenceValidityPeriod.UpToTwoYears,
           TaxSituation.PAYE,
@@ -109,11 +107,6 @@ class CheckYourAnswersControllerSpec
               messageFromMessageKey("licenceType.title"),
               messageFromMessageKey("licenceType.scrapMetalCollector"),
               routes.LicenceDetailsController.licenceType().url
-            ),
-            CheckYourAnswersRow(
-              messageFromMessageKey("licenceExpiryDate.title"),
-              TimeUtils.govDisplayFormat(answers.licenceExpiryDate.value),
-              routes.LicenceDetailsController.expiryDate().url
             ),
             CheckYourAnswersRow(
               messageFromMessageKey("licenceTimeTrading.title"),
@@ -173,7 +166,6 @@ class CheckYourAnswersControllerSpec
 
       val completeAnswers = CompleteUserAnswers(
         LicenceType.OperatorOfPrivateHireVehicles,
-        LicenceExpiryDate(TimeUtils.today()),
         LicenceTimeTrading.TwoToFourYears,
         LicenceValidityPeriod.UpToOneYear,
         TaxSituation.SA,

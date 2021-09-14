@@ -26,7 +26,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.HECTaxCheckData.IndividualHECTaxC
 import uk.gov.hmrc.hecapplicantfrontend.models.{DateOfBirth, HECTaxCheckData, Name, TaxSituation, TaxYear}
 import uk.gov.hmrc.hecapplicantfrontend.models.TaxDetails.IndividualTaxDetails
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CTUTR, GGCredId, NINO, SAUTR}
-import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceDetails, LicenceExpiryDate, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
+import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
@@ -64,7 +64,6 @@ class HECConnectorImplSpec extends AnyWordSpec with Matchers with MockFactory wi
           ),
           LicenceDetails(
             LicenceType.ScrapMetalMobileCollector,
-            LicenceExpiryDate(LocalDate.now()),
             LicenceTimeTrading.EightYearsOrMore,
             LicenceValidityPeriod.UpToThreeYears
           ),

@@ -28,11 +28,9 @@ import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.RequestWithSessionDa
 import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRetrievedData, IndividualRetrievedData}
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.{CompleteUserAnswers, IncompleteUserAnswers}
-import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceExpiryDate, LicenceType}
+import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
 import uk.gov.hmrc.hecapplicantfrontend.models.{EntityType, Error, HECSession, SAStatus, UserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
-import uk.gov.hmrc.hecapplicantfrontend.util.TimeUtils
-import uk.gov.hmrc.hecapplicantfrontend.util.TimeUtils.LocalDateOps
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.annotation.tailrec
@@ -65,8 +63,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
     routes.ConfirmIndividualDetailsController.confirmIndividualDetails() -> (_ =>
       routes.LicenceDetailsController.licenceType()
     ),
-    routes.LicenceDetailsController.licenceType()                        -> (_ => routes.LicenceDetailsController.expiryDate()),
-    routes.LicenceDetailsController.expiryDate()                         -> licenceExpiryRoute,
+    routes.LicenceDetailsController.licenceType()                        -> (_ => routes.LicenceDetailsController.licenceTimeTrading()),
     routes.LicenceDetailsController.licenceTimeTrading                   -> (_ => routes.LicenceDetailsController.recentLicenceLength()),
     routes.LicenceDetailsController.recentLicenceLength()                -> licenceValidityPeriodRoute,
     routes.EntityTypeController.entityType()                             -> entityTypeRoute,
@@ -83,8 +80,6 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
         .confirmIndividualDetailsExit()                 -> routes.ConfirmIndividualDetailsController.confirmIndividualDetails(),
       routes.LicenceDetailsController.licenceTypeExit() ->
         routes.LicenceDetailsController.licenceType(),
-      routes.LicenceDetailsController.expiryDateExit()  ->
-        routes.LicenceDetailsController.expiryDate(),
       routes.EntityTypeController.wrongEntityType()     ->
         routes.EntityTypeController.entityType()
     )
@@ -161,7 +156,6 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
 
           case IncompleteUserAnswers(
                 Some(licenceType),
-                Some(licenceExpiryDate),
                 Some(licenceTimeTrading),
                 Some(licenceValidityPeriod),
                 Some(taxSituation),
@@ -170,7 +164,6 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
             val completeAnswers =
               CompleteUserAnswers(
                 licenceType,
-                licenceExpiryDate,
                 licenceTimeTrading,
                 licenceValidityPeriod,
                 taxSituation,
@@ -180,7 +173,6 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
 
           case IncompleteUserAnswers(
                 Some(licenceType),
-                Some(licenceExpiryDate),
                 Some(licenceTimeTrading),
                 Some(licenceValidityPeriod),
                 Some(taxSituation),
@@ -189,7 +181,6 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
             val completeAnswers =
               CompleteUserAnswers(
                 licenceType,
-                licenceExpiryDate,
                 licenceTimeTrading,
                 licenceValidityPeriod,
                 taxSituation,
@@ -210,19 +201,6 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
         else routes.TaxSituationController.taxSituation()
       case None              =>
         sys.error("Could not find licence type to work out route after licence validity period")
-    }
-
-  private def licenceExpiryDateValid(expiryDate: LicenceExpiryDate): Boolean =
-    expiryDate.value.isAfterOrOn(TimeUtils.today().minusYears(1L))
-
-  private def licenceExpiryRoute(session: HECSession): Call =
-    session.userAnswers.fold(_.licenceExpiryDate, c => Some(c.licenceExpiryDate)) match {
-      case None                                                   =>
-        sys.error("Could not find licence expiry date for licence expiry route")
-      case Some(expiryDate) if licenceExpiryDateValid(expiryDate) =>
-        routes.LicenceDetailsController.licenceTimeTrading()
-      case _                                                      =>
-        routes.LicenceDetailsController.expiryDateExit()
     }
 
   private def entityTypeRoute(session: HECSession): Call = {

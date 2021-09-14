@@ -23,6 +23,7 @@ import cats.instances.int._
 import cats.instances.list._
 import cats.syntax.alternative._
 import cats.syntax.eq._
+import org.scalamock.handlers.CallHandler2
 import play.api.http.Status.INTERNAL_SERVER_ERROR
 import play.api.inject.bind
 import play.api.inject.guice.GuiceableModule
@@ -36,6 +37,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.iv.IvErrorStatus._
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.IvService
 import uk.gov.hmrc.http.HeaderCarrier
+
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -46,22 +48,24 @@ class IvFailureControllerSpec
     with SessionSupport
     with AuthAndSessionDataBehaviour {
 
-  val mockIvService = mock[IvService]
+  val mockIvService: IvService = mock[IvService]
 
-  override val overrideBindings =
+  override val overrideBindings: List[GuiceableModule] =
     List[GuiceableModule](
       bind[IvService].toInstance(mockIvService),
       bind[AuthConnector].toInstance(mockAuthConnector),
       bind[SessionStore].toInstance(mockSessionStore)
     )
 
-  def mockGetFailedJourneyStatus(journeyId: UUID)(result: Either[Error, IvErrorStatus]) =
+  def mockGetFailedJourneyStatus(
+    journeyId: UUID
+  )(result: Either[Error, IvErrorStatus]): CallHandler2[UUID, HeaderCarrier, EitherT[Future, Error, IvErrorStatus]] =
     (mockIvService
       .getFailedJourneyStatus(_: UUID)(_: HeaderCarrier))
       .expects(journeyId, *)
       .returning(EitherT.fromEither(result))
 
-  lazy val controller = instanceOf[IvFailureController]
+  lazy val controller: IvFailureController = instanceOf[IvFailureController]
 
   "IvFailureController" when {
 

@@ -15,12 +15,6 @@ POST       /licence-type            uk.gov.hmrc.hecapplicantfrontend.controllers
 
 GET        /wrong-licence-type      uk.gov.hmrc.hecapplicantfrontend.controllers.LicenceDetailsController.licenceTypeExit
 
-
-GET        /when-licence-expire     uk.gov.hmrc.hecapplicantfrontend.controllers.LicenceDetailsController.expiryDate
-POST       /when-licence-expire     uk.gov.hmrc.hecapplicantfrontend.controllers.LicenceDetailsController.expiryDateSubmit
-
-GET        /not-a-renewal           uk.gov.hmrc.hecapplicantfrontend.controllers.LicenceDetailsController.expiryDateExit
-
 GET        /time-trading            uk.gov.hmrc.hecapplicantfrontend.controllers.LicenceDetailsController.licenceTimeTrading
 POST       /time-trading            uk.gov.hmrc.hecapplicantfrontend.controllers.LicenceDetailsController.licenceTimeTradingSubmit
 
