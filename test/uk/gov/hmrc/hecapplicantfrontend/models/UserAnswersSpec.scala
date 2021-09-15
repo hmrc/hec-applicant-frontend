@@ -26,7 +26,7 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
   "UserAnswers" must {
 
     "have an empty val" in {
-      UserAnswers.empty shouldBe IncompleteUserAnswers(None, None, None, None, None)
+      UserAnswers.empty shouldBe IncompleteUserAnswers(None, None, None, None, None, None)
     }
 
     "have a fold method" which {
@@ -45,6 +45,7 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
           LicenceTimeTrading.TwoToFourYears,
           LicenceValidityPeriod.UpToFiveYears,
           TaxSituation.PAYE,
+          None,
           Some(EntityType.Individual)
         )
         completeAnswers.fold(
@@ -61,6 +62,7 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
         LicenceTimeTrading.TwoToFourYears,
         LicenceValidityPeriod.UpToTwoYears,
         TaxSituation.PAYE,
+        None,
         Some(EntityType.Individual)
       )
       IncompleteUserAnswers.fromCompleteAnswers(completeAnswers) shouldBe IncompleteUserAnswers(
@@ -68,6 +70,7 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
         Some(LicenceTimeTrading.TwoToFourYears),
         Some(LicenceValidityPeriod.UpToTwoYears),
         Some(TaxSituation.PAYE),
+        None,
         Some(EntityType.Individual)
       )
 
@@ -81,6 +84,7 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
           Some(LicenceTimeTrading.ZeroToTwoYears),
           Some(LicenceValidityPeriod.UpToThreeYears),
           Some(TaxSituation.PAYE),
+          None,
           Some(EntityType.Company)
         )
 
@@ -90,6 +94,7 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
           LicenceTimeTrading.ZeroToTwoYears,
           LicenceValidityPeriod.UpToThreeYears,
           TaxSituation.PAYE,
+          None,
           Some(EntityType.Company)
         )
 

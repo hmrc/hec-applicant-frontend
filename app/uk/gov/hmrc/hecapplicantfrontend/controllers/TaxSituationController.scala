@@ -69,7 +69,7 @@ class TaxSituationController @Inject() (
           reportIncome.fold(emptyForm)(emptyForm.fill)
         }
 
-        // Note: We should store the tax year calculated here n the session to be reused later to avoid
+        // Note: We should store the tax year calculated here in the session to be reused later to avoid
         // the edge case where the tax year might change from one page to the next
         Ok(taxSituationPage(form, back, options, getTaxYear(timeProvider.currentDate)))
       case None              =>
@@ -99,8 +99,11 @@ class TaxSituationController @Inject() (
             maybeSaStatus <- fetchSAStatus(individualRetrievedData, taxSituation)
 
             updatedRetrievedData = individualRetrievedData.copy(saStatus = maybeSaStatus)
-            updatedAnswers       =
-              request.sessionData.userAnswers.unset(_.taxSituation).copy(taxSituation = Some(taxSituation))
+            // wipe the SA income declared answer since it is dependent on the tax situation answer
+            updatedAnswers       = request.sessionData.userAnswers
+                                     .unset(_.taxSituation)
+                                     .unset(_.saIncomeDeclared)
+                                     .copy(taxSituation = Some(taxSituation))
             updatedRequest       = request.sessionData.copy(
                                      userAnswers = updatedAnswers,
                                      retrievedUserData = updatedRetrievedData

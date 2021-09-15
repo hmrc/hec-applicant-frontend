@@ -27,10 +27,12 @@ import uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.saTax
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.RequestWithSessionData
 import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRetrievedData, IndividualRetrievedData}
+import uk.gov.hmrc.hecapplicantfrontend.models.SAStatus.ReturnFound
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.{CompleteUserAnswers, IncompleteUserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
-import uk.gov.hmrc.hecapplicantfrontend.models.{EntityType, Error, HECSession, SAStatus, UserAnswers}
+import uk.gov.hmrc.hecapplicantfrontend.models.{EntityType, Error, HECSession, IncomeDeclared, RetrievedApplicantData, SAStatus, SAStatusResponse, TaxSituation, UserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
+import uk.gov.hmrc.hecapplicantfrontend.services.JourneyServiceImpl._
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.annotation.tailrec
@@ -68,6 +70,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
     routes.LicenceDetailsController.recentLicenceLength()                -> licenceValidityPeriodRoute,
     routes.EntityTypeController.entityType()                             -> entityTypeRoute,
     routes.TaxSituationController.taxSituation()                         -> taxSituationRoute,
+    routes.SAController.saIncomeStatement()                              -> (_ => routes.CheckYourAnswersController.checkYourAnswers()),
     routes.CheckYourAnswersController.checkYourAnswers()                 -> (_ => routes.TaxCheckCompleteController.taxCheckComplete())
   )
 
@@ -135,11 +138,6 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
         .getOrElse(sys.error(s"Could not find previous for $current"))
   }
 
-  private def licenceTypeForIndividualAndCompany(licenceType: LicenceType): Boolean = licenceType match {
-    case LicenceType.DriverOfTaxisAndPrivateHires => false
-    case _                                        => true
-  }
-
   private def upliftToCompleteAnswersIfComplete(session: HECSession, current: Call): Either[Error, HECSession] =
     paths.get(current).map(_(session)) match {
       case None =>
@@ -154,37 +152,22 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
           case _ if isExitPageNext =>
             session
 
-          case IncompleteUserAnswers(
+          case incomplete @ IncompleteUserAnswers(
                 Some(licenceType),
                 Some(licenceTimeTrading),
                 Some(licenceValidityPeriod),
                 Some(taxSituation),
-                Some(entityType)
-              ) if licenceTypeForIndividualAndCompany(licenceType) =>
+                saIncomeDeclared,
+                entityType
+              ) if allAnswersComplete(incomplete, session.retrievedUserData) =>
             val completeAnswers =
               CompleteUserAnswers(
                 licenceType,
                 licenceTimeTrading,
                 licenceValidityPeriod,
                 taxSituation,
-                Some(entityType)
-              )
-            session.copy(userAnswers = completeAnswers)
-
-          case IncompleteUserAnswers(
-                Some(licenceType),
-                Some(licenceTimeTrading),
-                Some(licenceValidityPeriod),
-                Some(taxSituation),
-                _
-              ) if !licenceTypeForIndividualAndCompany(licenceType) =>
-            val completeAnswers =
-              CompleteUserAnswers(
-                licenceType,
-                licenceTimeTrading,
-                licenceValidityPeriod,
-                taxSituation,
-                None
+                saIncomeDeclared,
+                entityType
               )
             session.copy(userAnswers = completeAnswers)
 
@@ -226,7 +209,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
           session.retrievedUserData match {
             case IndividualRetrievedData(_, _, Some(_), _, _, _, Some(saStatus)) =>
               saStatus.status match {
-                case SAStatus.ReturnFound        => routes.SAController.confirmYourIncome()
+                case SAStatus.ReturnFound        => routes.SAController.saIncomeStatement()
                 case SAStatus.NoticeToFileIssued => routes.CheckYourAnswersController.checkYourAnswers()
                 case SAStatus.NoReturnFound      => routes.SAController.noReturnFound()
               }
@@ -245,4 +228,61 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
         }
     }
 
+}
+
+object JourneyServiceImpl {
+  def licenceTypeForIndividualAndCompany(licenceType: LicenceType): Boolean = licenceType match {
+    case LicenceType.DriverOfTaxisAndPrivateHires => false
+    case _                                        => true
+  }
+
+  /**
+    * Expect the entity type to be specified only for individual or company licence types
+    */
+  private def checkEntityTypePresentIfRequired(licenceType: LicenceType, entityType: Option[EntityType]): Boolean =
+    entityType match {
+      case Some(_) if licenceTypeForIndividualAndCompany(licenceType) => true
+      case None if !licenceTypeForIndividualAndCompany(licenceType)   => true
+      case _                                                          => false
+    }
+
+  /**
+    * Expect the SA income to be declared only for an SA tax situation whose return has been found
+    */
+  private def checkSAIncomeDeclared(
+    taxSituation: TaxSituation,
+    saIncomeDeclared: Option[IncomeDeclared],
+    retrievedUserData: RetrievedApplicantData
+  ): Boolean =
+    (retrievedUserData, saIncomeDeclared) match {
+      case (IndividualRetrievedData(_, _, _, _, _, _, Some(SAStatusResponse(_, _, ReturnFound))), None)
+          if saTaxSituations.contains(taxSituation) =>
+        false
+      case _ => true
+    }
+
+  /**
+    * Process the incomplete answers and retrieved user data to determine if all answers have been given by the user
+    * @param incompleteUserAnswers The incomplete answers
+    * @param retrievedUserData The retrieved user data
+    * @return A boolean representing whether or not the user has completed answering all relevant questions
+    */
+  def allAnswersComplete(
+    incompleteUserAnswers: IncompleteUserAnswers,
+    retrievedUserData: RetrievedApplicantData
+  ): Boolean =
+    incompleteUserAnswers match {
+      case IncompleteUserAnswers(
+            Some(licenceType),
+            Some(_),
+            Some(_),
+            Some(taxSituation),
+            saIncomeDeclared,
+            entityType
+          ) =>
+        val licenceTypeCheck      = checkEntityTypePresentIfRequired(licenceType, entityType)
+        val saIncomeDeclaredCheck = checkSAIncomeDeclared(taxSituation, saIncomeDeclared, retrievedUserData)
+        licenceTypeCheck && saIncomeDeclaredCheck
+      case _ => false
+    }
 }
