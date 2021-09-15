@@ -1,0 +1,50 @@
+@import play.api.i18n.Messages
+@import play.api.data.Form
+@import play.api.mvc.{Call, Request}
+@import uk.gov.hmrc.govukfrontend.views.html.components._
+@import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
+@import uk.gov.hmrc.hecapplicantfrontend.models.IncomeDeclared
+@import uk.gov.hmrc.hecapplicantfrontend.models.views.IncomeDeclaredOption
+@import uk.gov.hmrc.hecapplicantfrontend.models.TaxYear
+
+@this(layout: Layout, govukErrorSummary: GovukErrorSummary, govukRadios: GovukRadios, govukButton: GovukButton, formWithCSRF: FormWithCSRF)
+
+@(form: Form[IncomeDeclared], back: Call, options: List[IncomeDeclaredOption], taxDisplayYear: TaxYear)(implicit request: Request[_], messages: Messages)
+@key = @{"saIncomeDeclared"}
+@title = @{messages(s"$key.title")}
+@radioOptions = @{options.zipWithIndex.map{ case (option, index) => RadioItem(
+  content = Text(messages(s"$key.${option.messageKey}")),
+  value = Some(index.toString),
+  checked = form.data.values.toList.contains(index.toString)
+)}}
+@startYear = @{taxDisplayYear.startYear.toString}
+@endYear = @{s"${taxDisplayYear.startYear + 1}"}
+
+@layout(pageTitle = Some(title), hasErrors = form.hasErrors, backLocation = Some(back)) {
+  @if(form.errors.nonEmpty) {
+    @govukErrorSummary(ErrorSummary(errorList = form.errors.map(e => ErrorLink(
+      href = Some(s"#${e.key}"),
+      content = Text(s"${messages(s"${e.key}.${e.message}")}")
+    )), title = Text(messages("generic.errorSummary"))))
+  }
+  @formWithCSRF(action = routes.SAController.saIncomeStatementSubmit()) {
+
+    @govukRadios(Radios(
+      fieldset = Some(Fieldset(
+        legend = Some(Legend(
+          content = Text(title),
+          classes = "govuk-fieldset__legend--xl",
+          isPageHeading = true
+        ))
+      )),
+      hint = Some(Hint(content = Text(messages(s"$key.hint", startYear, endYear)))),
+      idPrefix = Some(key),
+      name = key,
+      items = radioOptions,
+      errorMessage = form.error(key).map(e => ErrorMessage(
+        content = Text(messages(s"$key.${e.message}"))
+      ))
+    ))
+    @govukButton(Button(content = Text(messages("button.continue"))))
+  }
+}

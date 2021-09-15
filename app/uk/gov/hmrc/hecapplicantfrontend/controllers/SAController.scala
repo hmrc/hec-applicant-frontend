@@ -16,15 +16,24 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.controllers
 
+import cats.instances.future._
 import com.google.inject.{Inject, Singleton}
+import play.api.data.Form
+import play.api.data.Forms.{mapping, of}
 import play.api.i18n.I18nSupport
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
+import uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.getTaxYear
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
+import uk.gov.hmrc.hecapplicantfrontend.models.IncomeDeclared
+import uk.gov.hmrc.hecapplicantfrontend.models.views.IncomeDeclaredOption
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
-import uk.gov.hmrc.hecapplicantfrontend.util.Logging
+import uk.gov.hmrc.hecapplicantfrontend.util.Logging.LoggerOps
+import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging, TimeProvider}
 import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
+
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class SAController @Inject() (
@@ -32,18 +41,59 @@ class SAController @Inject() (
   sessionDataAction: SessionDataAction,
   journeyService: JourneyService,
   mcc: MessagesControllerComponents,
+  timeProvider: TimeProvider,
   sautrNotFoundPage: html.SautrNotFound,
-  noReturnFoundPage: html.NoReturnFound
-)(implicit appConfig: AppConfig)
+  noReturnFoundPage: html.NoReturnFound,
+  saIncomeStatementPage: html.SAIncomeStatement
+)(implicit appConfig: AppConfig, ec: ExecutionContext)
     extends FrontendController(mcc)
     with I18nSupport
     with Logging {
 
-  // Placeholder for confirm your income (HEC-985)
-  val confirmYourIncome: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
-    Ok(
-      s"Session is ${request.sessionData} back Url ::${journeyService.previous(routes.SAController.confirmYourIncome())}"
-    )
+  val saIncomeStatement: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
+    val back             = journeyService.previous(routes.SAController.saIncomeStatement())
+    val saIncomeDeclared = request.sessionData.userAnswers.fold(_.saIncomeDeclared, _.saIncomeDeclared)
+    val form = {
+      val emptyForm = SAController.saIncomeDeclarationForm(IncomeDeclared.values)
+      saIncomeDeclared.fold(emptyForm)(emptyForm.fill)
+    }
+    Ok(saIncomeStatementPage(form, back, SAController.incomeDeclaredOptions, getTaxYear(timeProvider.currentDate)))
+  }
+
+  val saIncomeStatementSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
+    def handleValidAnswer(incomeDeclared: IncomeDeclared): Future[Result] = {
+      val updatedAnswers =
+        request.sessionData.userAnswers.unset(_.saIncomeDeclared).copy(saIncomeDeclared = Some(incomeDeclared))
+
+      journeyService
+        .updateAndNext(
+          routes.SAController.saIncomeStatement(),
+          request.sessionData.copy(userAnswers = updatedAnswers)
+        )
+        .fold(
+          { e =>
+            logger.warn("Could not update session and proceed", e)
+            InternalServerError
+          },
+          Redirect
+        )
+    }
+
+    SAController
+      .saIncomeDeclarationForm(IncomeDeclared.values)
+      .bindFromRequest()
+      .fold(
+        formWithErrors =>
+          Ok(
+            saIncomeStatementPage(
+              formWithErrors,
+              journeyService.previous(routes.SAController.saIncomeStatement()),
+              SAController.incomeDeclaredOptions,
+              getTaxYear(timeProvider.currentDate)
+            )
+          ),
+        handleValidAnswer
+      )
   }
 
   val noReturnFound: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
@@ -55,5 +105,19 @@ class SAController @Inject() (
     val back = journeyService.previous(routes.SAController.sautrNotFound())
     Ok(sautrNotFoundPage(back))
   }
+
+}
+
+object SAController {
+
+  val incomeDeclaredOptions: List[IncomeDeclaredOption] =
+    IncomeDeclared.values.map(IncomeDeclaredOption.incomeDeclaredOption)
+
+  def saIncomeDeclarationForm(options: List[IncomeDeclared]): Form[IncomeDeclared] =
+    Form(
+      mapping(
+        "saIncomeDeclared" -> of(FormUtils.radioFormFormatter(options))
+      )(identity)(Some(_))
+    )
 
 }

@@ -22,10 +22,13 @@ import org.jsoup.nodes.Document
 import play.api.inject.bind
 import play.api.mvc.Result
 import play.api.test.FakeRequest
+import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.IndividualRetrievedData
+import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.{CompleteUserAnswers, IncompleteUserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models._
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO}
+import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
 
@@ -121,6 +124,209 @@ class SAControllerSpec
             testLink(doc, appConfig.contactHmrcSa)
           }
         )
+
+      }
+
+    }
+
+    "handling requests to the SA income statement page" must {
+
+      def performAction(): Future[Result] = controller.saIncomeStatement(FakeRequest())
+
+      behave like authAndSessionDataBehaviour(performAction)
+
+      "display the page" when {
+
+        "the user has not previously answered the question" in {
+          val session = HECSession(individuaRetrievedlData, UserAnswers.empty, None)
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockJourneyServiceGetPrevious(routes.SAController.saIncomeStatement(), session)(mockPreviousCall)
+          }
+
+          checkPageIsDisplayed(
+            performAction(),
+            messageFromMessageKey("saIncomeDeclared.title"),
+            { doc =>
+              doc.select("#back").attr("href") shouldBe mockPreviousCall.url
+
+              val selectedOptions = doc.select(".govuk-radios__input[checked]")
+              selectedOptions.isEmpty shouldBe true
+
+              val form = doc.select("form")
+              form
+                .attr("action") shouldBe routes.SAController.saIncomeStatementSubmit().url
+            }
+          )
+
+        }
+
+        "the user has previously answered the question" in {
+          val session =
+            HECSession(
+              individuaRetrievedlData,
+              CompleteUserAnswers(
+                LicenceType.DriverOfTaxisAndPrivateHires,
+                LicenceTimeTrading.ZeroToTwoYears,
+                LicenceValidityPeriod.UpToTwoYears,
+                TaxSituation.PAYE,
+                Some(IncomeDeclared.Yes),
+                Some(EntityType.Individual)
+              ),
+              None
+            )
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockJourneyServiceGetPrevious(routes.SAController.saIncomeStatement(), session)(mockPreviousCall)
+          }
+
+          checkPageIsDisplayed(
+            performAction(),
+            messageFromMessageKey("saIncomeDeclared.title"),
+            { doc =>
+              doc.select("#back").attr("href") shouldBe mockPreviousCall.url
+
+              val selectedOptions = doc.select(".govuk-radios__input[checked]")
+              selectedOptions.attr("value") shouldBe "0"
+
+              val form = doc.select("form")
+              form
+                .attr("action") shouldBe routes.SAController.saIncomeStatementSubmit().url
+            }
+          )
+        }
+
+      }
+
+    }
+
+    "handling submits to the SA income statement page" must {
+
+      def performAction(data: (String, String)*): Future[Result] =
+        controller.saIncomeStatementSubmit(FakeRequest().withFormUrlEncodedBody(data: _*))
+
+      behave like authAndSessionDataBehaviour(() => performAction())
+
+      "show a form error" when {
+
+        val session = HECSession(individuaRetrievedlData, UserAnswers.empty, None)
+
+        "nothing is submitted" in {
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockJourneyServiceGetPrevious(routes.SAController.saIncomeStatement(), session)(mockPreviousCall)
+          }
+
+          checkFormErrorIsDisplayed(
+            performAction(),
+            messageFromMessageKey("saIncomeDeclared.title"),
+            messageFromMessageKey("saIncomeDeclared.error.required")
+          )
+        }
+
+        "an index is submitted which is too large" in {
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockJourneyServiceGetPrevious(routes.SAController.saIncomeStatement(), session)(mockPreviousCall)
+          }
+
+          checkFormErrorIsDisplayed(
+            performAction("entityType" -> Int.MaxValue.toString),
+            messageFromMessageKey("saIncomeDeclared.title"),
+            messageFromMessageKey("saIncomeDeclared.error.invalid")
+          )
+        }
+
+        "a value is submitted which is not a number" in {
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockJourneyServiceGetPrevious(routes.SAController.saIncomeStatement(), session)(mockPreviousCall)
+          }
+
+          checkFormErrorIsDisplayed(
+            performAction("entityType" -> "xyz"),
+            messageFromMessageKey("saIncomeDeclared.title"),
+            messageFromMessageKey("saIncomeDeclared.error.invalid")
+          )
+        }
+
+      }
+
+      "return an internal server error" when {
+
+        "the call to update and next fails" in {
+          val answers        = UserAnswers.empty
+          val updatedAnswers = UserAnswers.empty.copy(saIncomeDeclared = Some(IncomeDeclared.Yes))
+          val session        = HECSession(individuaRetrievedlData, answers, None)
+          val updatedSession = session.copy(userAnswers = updatedAnswers)
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockJourneyServiceUpdateAndNext(routes.SAController.saIncomeStatement(), session, updatedSession)(
+              Left(Error(new Exception))
+            )
+          }
+
+          status(performAction("saIncomeDeclared" -> "0")) shouldBe INTERNAL_SERVER_ERROR
+        }
+
+      }
+
+      "redirect to the next page" when {
+
+        "valid data is submitted and" when {
+
+          "the user has not previously completed answering questions" in {
+            val answers        = UserAnswers.empty
+            val updatedAnswers = UserAnswers.empty.copy(saIncomeDeclared = Some(IncomeDeclared.No))
+            val session        = HECSession(individuaRetrievedlData, answers, None)
+            val updatedSession = session.copy(userAnswers = updatedAnswers)
+
+            inSequence {
+              mockAuthWithNoRetrievals()
+              mockGetSession(session)
+              mockJourneyServiceUpdateAndNext(routes.SAController.saIncomeStatement(), session, updatedSession)(
+                Right(mockNextCall)
+              )
+            }
+
+            checkIsRedirect(performAction("saIncomeDeclared" -> "1"), mockNextCall)
+          }
+
+          "the user has previously completed answering questions" in {
+            val answers        = CompleteUserAnswers(
+              LicenceType.DriverOfTaxisAndPrivateHires,
+              LicenceTimeTrading.ZeroToTwoYears,
+              LicenceValidityPeriod.UpToOneYear,
+              TaxSituation.SA,
+              Some(IncomeDeclared.Yes),
+              None
+            )
+            val updatedAnswers = IncompleteUserAnswers
+              .fromCompleteAnswers(answers)
+              .copy(saIncomeDeclared = Some(IncomeDeclared.No))
+            val session        = HECSession(individuaRetrievedlData, answers, None)
+            val updatedSession = session.copy(userAnswers = updatedAnswers)
+
+            inSequence {
+              mockAuthWithNoRetrievals()
+              mockGetSession(session)
+              mockJourneyServiceUpdateAndNext(routes.SAController.saIncomeStatement(), session, updatedSession)(
+                Right(mockNextCall)
+              )
+            }
+
+            checkIsRedirect(performAction("saIncomeDeclared" -> "1"), mockNextCall)
+          }
+        }
 
       }
 
