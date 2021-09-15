@@ -201,6 +201,6 @@ noReturnFound.p1 = You will need to <a href="{0}" class="govuk-link">contact HMR
 saIncomeDeclared.title = Did you include income you earned using this type of licence in your tax return?
 saIncomeDeclared.yes = Yes
 saIncomeDeclared.no = No
-saIncomeDeclared.error.required = Select whether you included income you earned using this licence in your tax return
-saIncomeDeclared.error.invalid = Select whether you included income you earned using this licence in your tax return
-saIncomeDeclared.hint = This is for the tax year 6 April {0} to 5 April {1}.
+saIncomeDeclared.error.required = Select whether you included income you earned using this type of licence in your tax return
+saIncomeDeclared.error.invalid = Select whether you included income you earned using this type of licence in your tax return
+saIncomeDeclared.hint = This is your Self Assessment tax return for tax year 6 April {0} to 5 April {1}.
