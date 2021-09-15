@@ -31,7 +31,7 @@ class SignOutController @Inject() (
     with I18nSupport
     with Logging {
 
-  def signOutFromTimeout: Action[AnyContent] = Action.async { implicit request =>
+  def signOutFromTimeout: Action[AnyContent] = Action { implicit request =>
     Ok(timedOutPage()).withNewSession
   }
 }
