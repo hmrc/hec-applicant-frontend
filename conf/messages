@@ -171,6 +171,7 @@ checkYourAnswers.licenceTimeTrading.screenReaderText = how many years ago you fi
 checkYourAnswers.licenceValidityPeriod.screenReaderText = how long your most recent licence was valid for
 checkYourAnswers.entityType.screenReaderText = who the tax check is for
 checkYourAnswers.taxSituation.screenReaderText = how you pay tax on any work carried out using your licence
+checkYourAnswers.saIncomeDeclared.screenReaderText = if you included income you earned using this type of licence in your tax return
 
 # Tax Check Complete
 taxCheckComplete.title = Tax Check Complete

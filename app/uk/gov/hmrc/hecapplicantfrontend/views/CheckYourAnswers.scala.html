@@ -8,6 +8,7 @@
 @import uk.gov.hmrc.hecapplicantfrontend.models.views.LicenceValidityPeriodOption
 @import uk.gov.hmrc.hecapplicantfrontend.models.views.EntityTypeOption
 @import uk.gov.hmrc.hecapplicantfrontend.models.views.TaxSituationOption
+@import uk.gov.hmrc.hecapplicantfrontend.models.views.IncomeDeclaredOption
 
 @this(layout: Layout, govukSummaryList : GovukSummaryList, govukButton: GovukButton, formWithCSRF: FormWithCSRF)
 
@@ -71,13 +72,24 @@
         messages(s"$key.taxSituation.screenReaderText")
     )
 }
+@saIncomeDeclaredRow = @{
+    completeAnswers.saIncomeDeclared.map { saIncomeDeclared =>
+        summaryListRow(
+            messages("saIncomeDeclared.title"),
+            messages(s"saIncomeDeclared.${IncomeDeclaredOption.incomeDeclaredOption(saIncomeDeclared).messageKey}"),
+            routes.SAController.saIncomeStatement(),
+            messages(s"$key.saIncomeDeclared.screenReaderText")
+        )
+    }
+}
 
 @rows = @{List(
     Some(licenceTypeRow),
     Some(licenceTimeTradingRow),
     Some(licenceValidityPeriodRow),
     entityTypeRow,
-    Some(taxSituationRow)
+    Some(taxSituationRow),
+    saIncomeDeclaredRow
 ).collect{ case Some(r) => r }}
 
 @layout(pageTitle = Some(title), backLocation = Some(back)) {

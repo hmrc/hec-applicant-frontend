@@ -96,7 +96,7 @@ class CheckYourAnswersControllerSpec
           LicenceTimeTrading.ZeroToTwoYears,
           LicenceValidityPeriod.UpToTwoYears,
           TaxSituation.PAYE,
-          None,
+          Some(IncomeDeclared.Yes),
           Some(EntityType.Individual)
         )
 
@@ -128,6 +128,11 @@ class CheckYourAnswersControllerSpec
               messageFromMessageKey("taxSituation.title"),
               messageFromMessageKey("taxSituation.PA"),
               routes.TaxSituationController.taxSituation().url
+            ),
+            CheckYourAnswersRow(
+              messageFromMessageKey("saIncomeDeclared.title"),
+              messageFromMessageKey("saIncomeDeclared.yes"),
+              routes.SAController.saIncomeStatement().url
             )
           )
 
