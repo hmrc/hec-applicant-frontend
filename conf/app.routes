@@ -52,3 +52,6 @@ GET  /failed-iv/user-aborted                     uk.gov.hmrc.hecapplicantfronten
 GET  /failed-iv/time-out                         uk.gov.hmrc.hecapplicantfrontend.controllers.IvFailureController.timedOut()
 GET  /failed-iv/technical-issue                  uk.gov.hmrc.hecapplicantfrontend.controllers.IvFailureController.technicalIssue()
 GET  /failed-iv/precondition-failed              uk.gov.hmrc.hecapplicantfrontend.controllers.IvFailureController.preconditionFailed()
+
+# Timeout from auth
+GET /timed-out                                   uk.gov.hmrc.hecapplicantfrontend.controllers.SignOutController.signOutFromTimeout()

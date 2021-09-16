@@ -204,3 +204,11 @@ saIncomeDeclared.no = No
 saIncomeDeclared.error.required = Select whether you included income you earned using this type of licence in your tax return
 saIncomeDeclared.error.invalid = Select whether you included income you earned using this type of licence in your tax return
 saIncomeDeclared.hint = This is your Self Assessment tax return for tax year 6 April {0} to 5 April {1}.
+
+# HMRC Timeout Dialog
+hmrcTimeoutDialog.title = You’re about to be signed out
+
+# Timed Out
+timedOut.title = For your security, we signed you out
+timedOut.p1 = We did not save your answers.
+timedOut.signIn = Sign in

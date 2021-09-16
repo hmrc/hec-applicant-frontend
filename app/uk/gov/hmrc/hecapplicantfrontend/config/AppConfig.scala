@@ -28,6 +28,7 @@ import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 import uk.gov.hmrc.hmrcfrontend.config.ContactFrontendConfig
 
 import java.util.UUID
+import scala.concurrent.duration.FiniteDuration
 
 @Singleton
 class AppConfig @Inject() (config: Configuration, contactFrontendConfig: ContactFrontendConfig) {
@@ -53,6 +54,10 @@ class AppConfig @Inject() (config: Configuration, contactFrontendConfig: Contact
   }
 
   lazy val signOutUri: String = config.get[String]("auth.sign-out.uri")
+
+  val authTimeoutSeconds: Int          = config.get[FiniteDuration]("auth.sign-out.inactivity-timeout").toSeconds.toInt
+  val authTimeoutCountdownSeconds: Int =
+    config.get[FiniteDuration]("auth.sign-out.inactivity-countdown").toSeconds.toInt
 
   lazy val redirectToIvUplift: Result = {
     val ivUrl: String = platformHost.getOrElse(config.get[String]("iv.url"))
