@@ -16,26 +16,29 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.services
 
+import java.time.LocalDate
+
 import cats.data.EitherT
 import cats.instances.future._
 import cats.instances.int._
 import cats.syntax.either._
 import cats.syntax.eq._
-import play.mvc.Http.Status.CREATED
 import com.google.inject.{ImplementedBy, Inject, Singleton}
 import play.api.http.Status.OK
+import play.api.libs.json.{Json, OFormat}
+import play.mvc.Http.Status.CREATED
 import uk.gov.hmrc.hecapplicantfrontend.connectors.HECConnector
 import uk.gov.hmrc.hecapplicantfrontend.models.ApplicantDetails.IndividualApplicantDetails
 import uk.gov.hmrc.hecapplicantfrontend.models.HECTaxCheckData.IndividualHECTaxCheckData
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRetrievedData, IndividualRetrievedData}
 import uk.gov.hmrc.hecapplicantfrontend.models.TaxDetails.IndividualTaxDetails
-import uk.gov.hmrc.hecapplicantfrontend.models.{CRN, CTStatusResponse, CTUTRFromCRNResponse, Error, HECTaxCheck, HECTaxCheckData, RetrievedApplicantData, SAStatusResponse, TaxYear}
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.CompleteUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CTUTR, SAUTR}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceDetails
+import uk.gov.hmrc.hecapplicantfrontend.models.{CRN, CTStatusResponse, Error, HECTaxCheck, HECTaxCheckData, RetrievedApplicantData, SAStatusResponse, TaxYear}
+import uk.gov.hmrc.hecapplicantfrontend.services.TaxCheckService._
 import uk.gov.hmrc.hecapplicantfrontend.util.HttpResponseOps._
 import uk.gov.hmrc.http.HeaderCarrier
-import java.time.LocalDate
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -53,7 +56,7 @@ trait TaxCheckService {
     hc: HeaderCarrier
   ): EitherT[Future, Error, CTStatusResponse]
 
-  def getCtutr(crn: CRN)(implicit hc: HeaderCarrier): EitherT[Future, Error, CTUTRFromCRNResponse]
+  def getCtutr(crn: CRN)(implicit hc: HeaderCarrier): EitherT[Future, Error, CTUTR]
 
 }
 
@@ -100,14 +103,15 @@ class TaxCheckServiceImpl @Inject() (hecConnector: HECConnector)(implicit ec: Ex
           response.parseJSON[CTStatusResponse].leftMap(Error(_))
       }
 
-  def getCtutr(crn: CRN)(implicit hc: HeaderCarrier): EitherT[Future, Error, CTUTRFromCRNResponse] =
+  def getCtutr(crn: CRN)(implicit hc: HeaderCarrier): EitherT[Future, Error, CTUTR] =
     hecConnector
       .getCtutr(crn)
       .subflatMap { response =>
         if (response.status =!= OK)
           Left(Error(s"Call to get CTUTR came back with status ${response.status}. Body is ${response.body}"))
-        else
-          response.parseJSON[CTUTRFromCRNResponse].leftMap(Error(_))
+        else {
+          response.parseJSON[CTUTRFromCRNResponse].map(_.ctutr).leftMap(Error(_))
+        }
       }
 
   private def toHECTaxCheckData(
@@ -142,4 +146,9 @@ class TaxCheckServiceImpl @Inject() (hecConnector: HECConnector)(implicit ec: Ex
 
   }
 
+}
+
+object TaxCheckService {
+  final case class CTUTRFromCRNResponse(ctutr: CTUTR)
+  implicit val format: OFormat[CTUTRFromCRNResponse] = Json.format
 }

@@ -33,7 +33,8 @@ import uk.gov.hmrc.hecapplicantfrontend.models.TaxDetails.IndividualTaxDetails
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.CompleteUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CTUTR, GGCredId, NINO, SAUTR}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.hecapplicantfrontend.models.{AccountingPeriod, CRN, CTStatus, CTStatusResponse, CTUTRFromCRNResponse, DateOfBirth, EmailAddress, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, IncomeDeclared, Name, SAStatus, SAStatusResponse, TaxSituation, TaxYear}
+import uk.gov.hmrc.hecapplicantfrontend.models.{AccountingPeriod, CRN, CTStatus, CTStatusResponse, DateOfBirth, EmailAddress, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, IncomeDeclared, Name, SAStatus, SAStatusResponse, TaxSituation, TaxYear}
+import TaxCheckService._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -329,7 +330,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
           mockGetCtutr(crn)(Right(HttpResponse(OK, responseJson, emptyHeaders)))
 
           val result = service.getCtutr(crn)
-          await(result.value) shouldBe Right(response)
+          await(result.value) shouldBe Right(response.ctutr)
         }
 
       }
