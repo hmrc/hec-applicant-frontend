@@ -33,7 +33,8 @@ import uk.gov.hmrc.hecapplicantfrontend.models.TaxDetails.IndividualTaxDetails
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.CompleteUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CTUTR, GGCredId, NINO, SAUTR}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.hecapplicantfrontend.models.{AccountingPeriod, CTStatus, CTStatusResponse, DateOfBirth, EmailAddress, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, IncomeDeclared, Name, SAStatus, SAStatusResponse, TaxSituation, TaxYear}
+import uk.gov.hmrc.hecapplicantfrontend.models.{AccountingPeriod, CRN, CTStatus, CTStatusResponse, DateOfBirth, EmailAddress, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, IncomeDeclared, Name, SAStatus, SAStatusResponse, TaxSituation, TaxYear}
+import TaxCheckService._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -60,6 +61,12 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
     (mockHECConnector
       .getCTStatus(_: CTUTR, _: LocalDate, _: LocalDate)(_: HeaderCarrier))
       .expects(ctutr, startDate, endDate, *)
+      .returning(EitherT.fromEither(result))
+
+  def mockGetCtutr(crn: CRN)(result: Either[Error, HttpResponse]) =
+    (mockHECConnector
+      .getCtutr(_: CRN)(_: HeaderCarrier))
+      .expects(crn, *)
       .returning(EitherT.fromEither(result))
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
@@ -204,7 +211,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
 
       "return successfully" when {
 
-        "the http call succeeds and the body of the repsonse can be parsed" in {
+        "the http call succeeds and the body of the response can be parsed" in {
           mockGetSAStatus(sautr, taxYear)(Right(HttpResponse(OK, saStatusResponseJson, emptyHeaders)))
 
           val result = service.getSAStatus(sautr, taxYear)
@@ -266,11 +273,64 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
 
       "return successfully" when {
 
-        "the http call succeeds and the body of the repsonse can be parsed" in {
+        "the http call succeeds and the body of the response can be parsed" in {
           mockGetCTStatus(ctutr, startDate, endDate)(Right(HttpResponse(OK, ctStatusResponseJson, emptyHeaders)))
 
           val result = service.getCTStatus(ctutr, startDate, endDate)
           await(result.value) shouldBe Right(ctStatusResponse)
+        }
+
+      }
+
+    }
+
+    "handling requests to get CTUTR from CRN" must {
+
+      val crn = CRN("AA12345")
+
+      val response = CTUTRFromCRNResponse(CTUTR("111111111"))
+
+      val responseJson = Json.toJson(response)
+
+      "return an error" when {
+
+        "the http call fails" in {
+          mockGetCtutr(crn)(Left(Error("")))
+
+          val result = service.getCtutr(crn)
+          await(result.value) shouldBe a[Left[_, _]]
+        }
+
+        "the http response comes back with a non-OK (200) response" in {
+          mockGetCtutr(crn)(Right(HttpResponse(ACCEPTED, responseJson, emptyHeaders)))
+
+          val result = service.getCtutr(crn)
+          await(result.value) shouldBe a[Left[_, _]]
+        }
+
+        "there is no json in the response" in {
+          mockGetCtutr(crn)(Right(HttpResponse(OK, "", emptyHeaders)))
+
+          val result = service.getCtutr(crn)
+          await(result.value) shouldBe a[Left[_, _]]
+        }
+
+        "the json in the body cannot be parsed" in {
+          mockGetCtutr(crn)(Right(HttpResponse(ACCEPTED, Json.parse("{ }"), emptyHeaders)))
+
+          val result = service.getCtutr(crn)
+          await(result.value) shouldBe a[Left[_, _]]
+        }
+
+      }
+
+      "return successfully" when {
+
+        "the http call succeeds and the body of the response can be parsed" in {
+          mockGetCtutr(crn)(Right(HttpResponse(OK, responseJson, emptyHeaders)))
+
+          val result = service.getCtutr(crn)
+          await(result.value) shouldBe Right(response.ctutr)
         }
 
       }

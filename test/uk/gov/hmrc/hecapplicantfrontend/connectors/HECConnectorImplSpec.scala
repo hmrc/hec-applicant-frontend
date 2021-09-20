@@ -23,7 +23,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
 import uk.gov.hmrc.hecapplicantfrontend.models.ApplicantDetails.IndividualApplicantDetails
 import uk.gov.hmrc.hecapplicantfrontend.models.HECTaxCheckData.IndividualHECTaxCheckData
-import uk.gov.hmrc.hecapplicantfrontend.models.{DateOfBirth, HECTaxCheckData, IncomeDeclared, Name, TaxSituation, TaxYear}
+import uk.gov.hmrc.hecapplicantfrontend.models.{CRN, DateOfBirth, HECTaxCheckData, IncomeDeclared, Name, TaxSituation, TaxYear}
 import uk.gov.hmrc.hecapplicantfrontend.models.TaxDetails.IndividualTaxDetails
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CTUTR, GGCredId, NINO, SAUTR}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
@@ -116,6 +116,21 @@ class HECConnectorImplSpec extends AnyWordSpec with Matchers with MockFactory wi
       behave like connectorBehaviour(
         mockGet(expectedUrl)(_),
         () => connector.getCTStatus(ctutr, startDate, endDate)
+      )
+
+    }
+
+    "handling requests to get CTUTR from CRN" must {
+
+      implicit val hc: HeaderCarrier = HeaderCarrier()
+
+      val crn = CRN("AA12345")
+
+      val expectedUrl = s"$protocol://$host:$port/hec/ctutr/${crn.value}"
+
+      behave like connectorBehaviour(
+        mockGet(expectedUrl)(_),
+        () => connector.getCtutr(crn)
       )
 
     }
