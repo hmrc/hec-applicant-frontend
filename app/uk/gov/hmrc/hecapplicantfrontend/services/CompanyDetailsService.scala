@@ -25,7 +25,7 @@ import play.api.http.Status.OK
 import com.google.inject.{ImplementedBy, Inject}
 import uk.gov.hmrc.hecapplicantfrontend.connectors.CompanyDetailsConnector
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.CRN
-import uk.gov.hmrc.hecapplicantfrontend.models.{CompanyDetails, Error}
+import uk.gov.hmrc.hecapplicantfrontend.models.{CompanyHouseDetails, Error}
 import uk.gov.hmrc.hecapplicantfrontend.util.HttpResponseOps._
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -34,7 +34,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @ImplementedBy(classOf[CompanyDetailsServiceImpl])
 trait CompanyDetailsService {
-  def findCompany(companyNumber: CRN)(implicit hc: HeaderCarrier): EitherT[Future, Error, CompanyDetails]
+  def findCompany(companyNumber: CRN)(implicit hc: HeaderCarrier): EitherT[Future, Error, CompanyHouseDetails]
 }
 
 @Singleton
@@ -42,13 +42,15 @@ class CompanyDetailsServiceImpl @Inject() (
   companyDetailsConnector: CompanyDetailsConnector
 )(implicit ec: ExecutionContext)
     extends CompanyDetailsService {
-  override def findCompany(companyNumber: CRN)(implicit hc: HeaderCarrier): EitherT[Future, Error, CompanyDetails] =
+  override def findCompany(
+    companyNumber: CRN
+  )(implicit hc: HeaderCarrier): EitherT[Future, Error, CompanyHouseDetails] =
     companyDetailsConnector.findCompany(companyNumber).subflatMap { httpResponse =>
       if (httpResponse.status =!= OK)
         Left(Error(s"Response to get company details came back with status ${httpResponse.status}"))
       else
         httpResponse
-          .parseJSON[CompanyDetails]
+          .parseJSON[CompanyHouseDetails]
           .leftMap(Error(_))
     }
 

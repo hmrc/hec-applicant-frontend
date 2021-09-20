@@ -24,7 +24,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.Json
 import play.api.test.Helpers._
 import uk.gov.hmrc.hecapplicantfrontend.connectors.CompanyDetailsConnector
-import uk.gov.hmrc.hecapplicantfrontend.models.{CompanyDetails, Error}
+import uk.gov.hmrc.hecapplicantfrontend.models.{CompanyHouseDetails, CompanyHouseName, Error}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.CRN
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 
@@ -97,7 +97,7 @@ class CompanyDetailsServiceImplSpec extends AnyWordSpec with Matchers with MockF
         "the response from company details is OK and the json body can be parsed" in {
 
           val crn            = CRN("1234567")
-          val companyDetails = CompanyDetails("Test Tech Ltd")
+          val companyDetails = CompanyHouseDetails(CompanyHouseName("Test Tech Ltd"))
 
           val json = Json.parse(s"""
                |{"company_name" : "Test Tech Ltd"}

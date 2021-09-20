@@ -20,9 +20,9 @@ import play.api.libs.json.JsonConfiguration.Aux
 import play.api.libs.json.JsonNaming.SnakeCase
 import play.api.libs.json.{Json, JsonConfiguration, OFormat}
 
-final case class CompanyDetails(companyName: String)
-object CompanyDetails {
+final case class CompanyHouseDetails(companyName: CompanyHouseName)
+object CompanyHouseDetails {
 
-  implicit val config: Aux[Json.MacroOptions]      = JsonConfiguration(SnakeCase)
-  implicit val userFormat: OFormat[CompanyDetails] = Json.format[CompanyDetails]
+  implicit val config: Aux[Json.MacroOptions]           = JsonConfiguration(SnakeCase)
+  implicit val userFormat: OFormat[CompanyHouseDetails] = Json.format[CompanyHouseDetails]
 }

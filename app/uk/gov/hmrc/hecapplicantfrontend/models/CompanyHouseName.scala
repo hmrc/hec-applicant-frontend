@@ -14,16 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hecapplicantfrontend.models.ids
+package uk.gov.hmrc.hecapplicantfrontend.models
 
-import cats.Eq
 import play.api.libs.json.{Format, Json}
 
-final case class CRN(value: String) extends AnyVal
+final case class CompanyHouseName(name: String)
 
-object CRN {
-
-  implicit val format: Format[CRN] = Json.valueFormat
-  implicit val eq: Eq[CRN]         = Eq.fromUniversalEquals
-
+object CompanyHouseName {
+  implicit val format: Format[CompanyHouseName] = Json.valueFormat
 }
