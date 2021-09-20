@@ -19,13 +19,13 @@ package uk.gov.hmrc.hecapplicantfrontend.connectors
 import cats.data.EitherT
 import com.google.inject.{ImplementedBy, Inject, Singleton}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CTUTR, SAUTR}
-import uk.gov.hmrc.hecapplicantfrontend.models.{Error, HECTaxCheckData, TaxYear}
+import uk.gov.hmrc.hecapplicantfrontend.models.{CRN, Error, HECTaxCheckData, TaxYear}
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+
 import scala.concurrent.{ExecutionContext, Future}
 
 @ImplementedBy(classOf[HECConnectorImpl])
@@ -38,6 +38,8 @@ trait HECConnector {
   def getCTStatus(ctutr: CTUTR, startDate: LocalDate, endDate: LocalDate)(implicit
     hc: HeaderCarrier
   ): EitherT[Future, Error, HttpResponse]
+
+  def getCtutr(crn: CRN)(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse]
 
 }
 
@@ -58,6 +60,8 @@ class HECConnectorImpl @Inject() (http: HttpClient, servicesConfig: ServicesConf
 
   private def toUrlString(d: LocalDate): String =
     d.format(DateTimeFormatter.ISO_LOCAL_DATE)
+
+  private def getCtutrUrl(crn: CRN): String = s"$baseUrl/hec/ctutr/${crn.value}"
 
   override def saveTaxCheck(
     taxCheckData: HECTaxCheckData
@@ -83,6 +87,14 @@ class HECConnectorImpl @Inject() (http: HttpClient, servicesConfig: ServicesConf
     EitherT[Future, Error, HttpResponse](
       http
         .GET[HttpResponse](ctStatusUrl(ctutr, startDate, endDate))
+        .map(Right(_))
+        .recover { case e => Left(Error(e)) }
+    )
+
+  def getCtutr(crn: CRN)(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse] =
+    EitherT[Future, Error, HttpResponse](
+      http
+        .GET[HttpResponse](getCtutrUrl(crn))
         .map(Right(_))
         .recover { case e => Left(Error(e)) }
     )

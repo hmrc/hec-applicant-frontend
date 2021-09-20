@@ -29,14 +29,14 @@ import uk.gov.hmrc.hecapplicantfrontend.models.ApplicantDetails.IndividualApplic
 import uk.gov.hmrc.hecapplicantfrontend.models.HECTaxCheckData.IndividualHECTaxCheckData
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRetrievedData, IndividualRetrievedData}
 import uk.gov.hmrc.hecapplicantfrontend.models.TaxDetails.IndividualTaxDetails
-import uk.gov.hmrc.hecapplicantfrontend.models.{CTStatusResponse, Error, HECTaxCheck, HECTaxCheckData, RetrievedApplicantData, SAStatusResponse, TaxYear}
+import uk.gov.hmrc.hecapplicantfrontend.models.{CRN, CTStatusResponse, CTUTRFromCRNResponse, Error, HECTaxCheck, HECTaxCheckData, RetrievedApplicantData, SAStatusResponse, TaxYear}
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.CompleteUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CTUTR, SAUTR}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceDetails
 import uk.gov.hmrc.hecapplicantfrontend.util.HttpResponseOps._
 import uk.gov.hmrc.http.HeaderCarrier
-
 import java.time.LocalDate
+
 import scala.concurrent.{ExecutionContext, Future}
 
 @ImplementedBy(classOf[TaxCheckServiceImpl])
@@ -52,6 +52,8 @@ trait TaxCheckService {
   def getCTStatus(ctutr: CTUTR, startDate: LocalDate, endDate: LocalDate)(implicit
     hc: HeaderCarrier
   ): EitherT[Future, Error, CTStatusResponse]
+
+  def getCtutr(crn: CRN)(implicit hc: HeaderCarrier): EitherT[Future, Error, CTUTRFromCRNResponse]
 
 }
 
@@ -96,6 +98,16 @@ class TaxCheckServiceImpl @Inject() (hecConnector: HECConnector)(implicit ec: Ex
           Left(Error(s"Call to get CT status came back with status ${response.status}. Body is ${response.body}"))
         else
           response.parseJSON[CTStatusResponse].leftMap(Error(_))
+      }
+
+  def getCtutr(crn: CRN)(implicit hc: HeaderCarrier): EitherT[Future, Error, CTUTRFromCRNResponse] =
+    hecConnector
+      .getCtutr(crn)
+      .subflatMap { response =>
+        if (response.status =!= OK)
+          Left(Error(s"Call to get CTUTR came back with status ${response.status}. Body is ${response.body}"))
+        else
+          response.parseJSON[CTUTRFromCRNResponse].leftMap(Error(_))
       }
 
   private def toHECTaxCheckData(
