@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models
 
-import julienrf.json.derived
-import play.api.libs.json.OFormat
+import ai.x.play.json.Jsonx
+import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CTUTR, GGCredId, NINO, SAUTR}
 
 sealed trait RetrievedApplicantData extends Product with Serializable
@@ -40,7 +40,10 @@ object RetrievedApplicantData {
     emailAddress: Option[EmailAddress]
   ) extends RetrievedApplicantData
 
+  implicit val formatIndividual: OFormat[IndividualRetrievedData] = Json.format[IndividualRetrievedData]
+  implicit val formatCompany: OFormat[CompanyRetrievedData]       = Json.format[CompanyRetrievedData]
+
   @SuppressWarnings(Array("org.wartremover.warts.PublicInference"))
-  implicit val format: OFormat[RetrievedApplicantData] = derived.oformat()
+  implicit val format: OFormat[RetrievedApplicantData] = Jsonx.oFormatSealed[RetrievedApplicantData]
 
 }

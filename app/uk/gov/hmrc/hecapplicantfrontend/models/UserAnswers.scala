@@ -16,10 +16,12 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models
 
-import julienrf.json.derived
+import ai.x.play.json.Jsonx
+import ai.x.play.json.SingletonEncoder.simpleName
+import ai.x.play.json.implicits.formatSingleton
 import monocle.Lens
 import monocle.macros.Lenses
-import play.api.libs.json.OFormat
+import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 
 sealed trait UserAnswers extends Product with Serializable
@@ -80,7 +82,9 @@ object UserAnswers {
 
   val empty: IncompleteUserAnswers = IncompleteUserAnswers(None, None, None, None, None, None)
 
-  implicit val format: OFormat[UserAnswers] = derived.oformat()
+  implicit val formatIncomplete: OFormat[IncompleteUserAnswers] = Json.format[IncompleteUserAnswers]
+  implicit val formatComplete: OFormat[CompleteUserAnswers]     = Json.format[CompleteUserAnswers]
+  implicit val format: OFormat[UserAnswers]                     = Jsonx.oFormatSealed[UserAnswers]
 
   def taxSituation(userAnswers: UserAnswers): Option[TaxSituation] =
     userAnswers match {

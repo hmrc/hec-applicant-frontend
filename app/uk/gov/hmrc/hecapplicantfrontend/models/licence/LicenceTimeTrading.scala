@@ -16,9 +16,11 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models.licence
 
+import ai.x.play.json.Jsonx
+import ai.x.play.json.SingletonEncoder.simpleName
+import ai.x.play.json.implicits.formatSingleton
 import cats.Eq
-import julienrf.json.derived
-import play.api.libs.json.OFormat
+import play.api.libs.json.Format
 
 sealed trait LicenceTimeTrading extends Product with Serializable
 
@@ -33,5 +35,5 @@ object LicenceTimeTrading {
 
   implicit val eq: Eq[LicenceTimeTrading] = Eq.fromUniversalEquals
 
-  implicit val format: OFormat[LicenceTimeTrading] = derived.oformat()
+  implicit val format: Format[LicenceTimeTrading] = Jsonx.formatSealed[LicenceTimeTrading]
 }

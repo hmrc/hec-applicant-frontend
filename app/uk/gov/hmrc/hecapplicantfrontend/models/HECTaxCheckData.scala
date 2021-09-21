@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models
 
-import julienrf.json.derived
-import play.api.libs.json.OFormat
+import ai.x.play.json.Jsonx
+import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.hecapplicantfrontend.models.ApplicantDetails.{CompanyApplicantDetails, IndividualApplicantDetails}
 import uk.gov.hmrc.hecapplicantfrontend.models.TaxDetails.{CompanyTaxDetails, IndividualTaxDetails}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceDetails
@@ -38,6 +38,8 @@ object HECTaxCheckData {
     taxDetails: CompanyTaxDetails
   ) extends HECTaxCheckData
 
-  implicit val format: OFormat[HECTaxCheckData] = derived.oformat()
+  implicit val formatIndividual: OFormat[IndividualHECTaxCheckData] = Json.format[IndividualHECTaxCheckData]
+  implicit val formatCompany: OFormat[CompanyHECTaxCheckData]       = Json.format[CompanyHECTaxCheckData]
+  implicit val format: OFormat[HECTaxCheckData]                     = Jsonx.oFormatSealed[HECTaxCheckData]
 
 }
