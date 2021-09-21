@@ -40,6 +40,8 @@ object HECTaxCheckData {
 
   implicit val formatIndividual: OFormat[IndividualHECTaxCheckData] = Json.format[IndividualHECTaxCheckData]
   implicit val formatCompany: OFormat[CompanyHECTaxCheckData]       = Json.format[CompanyHECTaxCheckData]
-  implicit val format: OFormat[HECTaxCheckData]                     = Jsonx.oFormatSealed[HECTaxCheckData]
+
+  @SuppressWarnings(Array("org.wartremover.warts.Throw", "org.wartremover.warts.Equals"))
+  implicit val format: OFormat[HECTaxCheckData] = Jsonx.oFormatSealed[HECTaxCheckData]
 
 }

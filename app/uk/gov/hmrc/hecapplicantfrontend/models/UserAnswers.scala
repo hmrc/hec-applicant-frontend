@@ -84,7 +84,9 @@ object UserAnswers {
 
   implicit val formatIncomplete: OFormat[IncompleteUserAnswers] = Json.format[IncompleteUserAnswers]
   implicit val formatComplete: OFormat[CompleteUserAnswers]     = Json.format[CompleteUserAnswers]
-  implicit val format: OFormat[UserAnswers]                     = Jsonx.oFormatSealed[UserAnswers]
+
+  @SuppressWarnings(Array("org.wartremover.warts.Throw", "org.wartremover.warts.Equals"))
+  implicit val format: OFormat[UserAnswers] = Jsonx.oFormatSealed[UserAnswers]
 
   def taxSituation(userAnswers: UserAnswers): Option[TaxSituation] =
     userAnswers match {

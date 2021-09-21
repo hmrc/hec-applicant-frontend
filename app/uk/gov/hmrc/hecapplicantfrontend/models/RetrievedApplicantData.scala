@@ -43,7 +43,8 @@ object RetrievedApplicantData {
   implicit val formatIndividual: OFormat[IndividualRetrievedData] = Json.format[IndividualRetrievedData]
   implicit val formatCompany: OFormat[CompanyRetrievedData]       = Json.format[CompanyRetrievedData]
 
-  @SuppressWarnings(Array("org.wartremover.warts.PublicInference"))
+  //@SuppressWarnings(Array("org.wartremover.warts.PublicInference"))
+  @SuppressWarnings(Array("org.wartremover.warts.Throw", "org.wartremover.warts.Equals"))
   implicit val format: OFormat[RetrievedApplicantData] = Jsonx.oFormatSealed[RetrievedApplicantData]
 
 }
