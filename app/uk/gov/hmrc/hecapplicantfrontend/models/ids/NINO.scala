@@ -16,8 +16,7 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models.ids
 
-import play.api.libs.functional.syntax.toInvariantFunctorOps
-import play.api.libs.json.Format
+import play.api.libs.json.{Format, Json}
 
 /**
   * National Insurance number
@@ -30,7 +29,6 @@ final case class NINO(value: String) extends AnyVal {
 
 object NINO {
 
-  implicit val format: Format[NINO] =
-    implicitly[Format[String]].inmap(NINO(_), _.value)
+  implicit val format: Format[NINO] = Json.valueFormat[NINO]
 
 }

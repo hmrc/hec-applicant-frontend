@@ -16,10 +16,9 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models.ids
 
-import play.api.libs.functional.syntax.toInvariantFunctorOps
-import play.api.libs.json.Format
-import uk.gov.hmrc.referencechecker.SelfAssessmentReferenceChecker
+import play.api.libs.json.{Format, Json}
 import uk.gov.hmrc.hecapplicantfrontend.util.StringUtils._
+import uk.gov.hmrc.referencechecker.SelfAssessmentReferenceChecker
 
 /**
   * Self Assessment (Individual) Unique Taxpayer Reference number
@@ -28,8 +27,7 @@ final case class SAUTR(value: String) extends AnyVal
 
 object SAUTR {
 
-  implicit val format: Format[SAUTR] =
-    implicitly[Format[String]].inmap(SAUTR(_), _.value)
+  implicit val format: Format[SAUTR] = Json.valueFormat[SAUTR]
 
   def fromString(s: String): Option[SAUTR] = {
     val withoutSpaces = s.removeWhitespace
