@@ -16,13 +16,14 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models
 
-import ai.x.play.json.Jsonx
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json._
 import uk.gov.hmrc.hecapplicantfrontend.models.ApplicantDetails.{CompanyApplicantDetails, IndividualApplicantDetails}
 import uk.gov.hmrc.hecapplicantfrontend.models.TaxDetails.{CompanyTaxDetails, IndividualTaxDetails}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceDetails
 
-sealed trait HECTaxCheckData extends Product with Serializable
+sealed trait HECTaxCheckData extends Product with Serializable {
+  val entityType: EntityType
+}
 
 object HECTaxCheckData {
 
@@ -30,18 +31,41 @@ object HECTaxCheckData {
     applicantDetails: IndividualApplicantDetails,
     licenceDetails: LicenceDetails,
     taxDetails: IndividualTaxDetails
-  ) extends HECTaxCheckData
+  ) extends HECTaxCheckData {
+    val entityType: EntityType = EntityType.Individual
+  }
 
   final case class CompanyHECTaxCheckData(
     applicantDetails: CompanyApplicantDetails,
     licenceDetails: LicenceDetails,
     taxDetails: CompanyTaxDetails
-  ) extends HECTaxCheckData
+  ) extends HECTaxCheckData {
+    val entityType: EntityType = EntityType.Company
+  }
 
   implicit val formatIndividual: OFormat[IndividualHECTaxCheckData] = Json.format[IndividualHECTaxCheckData]
   implicit val formatCompany: OFormat[CompanyHECTaxCheckData]       = Json.format[CompanyHECTaxCheckData]
 
-  @SuppressWarnings(Array("org.wartremover.warts.Throw", "org.wartremover.warts.Equals"))
-  implicit val format: OFormat[HECTaxCheckData] = Jsonx.oFormatSealed[HECTaxCheckData]
+  implicit val format: OFormat[HECTaxCheckData] = new OFormat[HECTaxCheckData] {
+
+    override def reads(json: JsValue): JsResult[HECTaxCheckData] = {
+      val entityType = (json \ "type")
+        .validate[EntityType]
+        .getOrElse(sys.error("Invalid HECTaxCheckData type"))
+
+      entityType match {
+        case EntityType.Individual => formatIndividual.reads(json)
+        case EntityType.Company    => formatCompany.reads(json)
+      }
+    }
+
+    override def writes(o: HECTaxCheckData): JsObject = {
+      val json = o match {
+        case i: IndividualHECTaxCheckData => formatIndividual.writes(i)
+        case c: CompanyHECTaxCheckData    => formatCompany.writes(c)
+      }
+      json ++ Json.obj("type" -> o.entityType)
+    }
+  }
 
 }

@@ -17,14 +17,33 @@
 package uk.gov.hmrc.hecapplicantfrontend.models
 
 import ai.x.play.json.Jsonx
-import ai.x.play.json.SingletonEncoder.simpleName
-import ai.x.play.json.implicits.formatSingleton
 import monocle.Lens
 import monocle.macros.Lenses
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json._
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 
-sealed trait UserAnswers extends Product with Serializable
+sealed trait UserAnswersType
+object UserAnswersType {
+  case object Incomplete extends UserAnswersType
+  case object Complete extends UserAnswersType
+
+  import ai.x.play.json.SingletonEncoder.simpleName
+  import ai.x.play.json.implicits.formatSingleton
+
+  @SuppressWarnings(
+    Array(
+      "org.wartremover.warts.Throw",
+      "org.wartremover.warts.Equals",
+      "org.wartremover.warts.Product",
+      "org.wartremover.warts.Serializable"
+    )
+  )
+  implicit val format: Format[UserAnswersType] = Jsonx.formatSealed[UserAnswersType]
+}
+
+sealed trait UserAnswers extends Product with Serializable {
+  val userAnswersType: UserAnswersType
+}
 
 object UserAnswers {
 
@@ -36,7 +55,9 @@ object UserAnswers {
     taxSituation: Option[TaxSituation],
     saIncomeDeclared: Option[IncomeDeclared],
     entityType: Option[EntityType]
-  ) extends UserAnswers
+  ) extends UserAnswers {
+    val userAnswersType: UserAnswersType = UserAnswersType.Incomplete
+  }
 
   final case class CompleteUserAnswers(
     licenceType: LicenceType,
@@ -45,7 +66,9 @@ object UserAnswers {
     taxSituation: TaxSituation,
     saIncomeDeclared: Option[IncomeDeclared],
     entityType: Option[EntityType]
-  ) extends UserAnswers
+  ) extends UserAnswers {
+    val userAnswersType: UserAnswersType = UserAnswersType.Complete
+  }
 
   object IncompleteUserAnswers {
 
@@ -85,8 +108,26 @@ object UserAnswers {
   implicit val formatIncomplete: OFormat[IncompleteUserAnswers] = Json.format[IncompleteUserAnswers]
   implicit val formatComplete: OFormat[CompleteUserAnswers]     = Json.format[CompleteUserAnswers]
 
-  @SuppressWarnings(Array("org.wartremover.warts.Throw", "org.wartremover.warts.Equals"))
-  implicit val format: OFormat[UserAnswers] = Jsonx.oFormatSealed[UserAnswers]
+  implicit val format: OFormat[UserAnswers] = new OFormat[UserAnswers] {
+    override def reads(json: JsValue): JsResult[UserAnswers] = {
+      val userAnswersType = (json \ "type")
+        .validate[UserAnswersType]
+        .getOrElse(sys.error("Invalid UserAnswers type"))
+
+      userAnswersType match {
+        case UserAnswersType.Incomplete => formatIncomplete.reads(json)
+        case UserAnswersType.Complete   => formatComplete.reads(json)
+      }
+    }
+
+    override def writes(o: UserAnswers): JsObject = {
+      val json = o match {
+        case i: IncompleteUserAnswers => formatIncomplete.writes(i)
+        case c: CompleteUserAnswers   => formatComplete.writes(c)
+      }
+      json ++ Json.obj("type" -> o.userAnswersType)
+    }
+  }
 
   def taxSituation(userAnswers: UserAnswers): Option[TaxSituation] =
     userAnswers match {

@@ -16,11 +16,12 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models
 
-import ai.x.play.json.Jsonx
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json._
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CTUTR, GGCredId, NINO, SAUTR}
 
-sealed trait RetrievedApplicantData extends Product with Serializable
+sealed trait RetrievedApplicantData extends Product with Serializable {
+  val entityType: EntityType
+}
 
 object RetrievedApplicantData {
 
@@ -32,19 +33,40 @@ object RetrievedApplicantData {
     dateOfBirth: DateOfBirth,
     emailAddress: Option[EmailAddress],
     saStatus: Option[SAStatusResponse]
-  ) extends RetrievedApplicantData
+  ) extends RetrievedApplicantData {
+    val entityType: EntityType = EntityType.Individual
+  }
 
   final case class CompanyRetrievedData(
     ggCredId: GGCredId,
     ctutr: Option[CTUTR],
     emailAddress: Option[EmailAddress]
-  ) extends RetrievedApplicantData
+  ) extends RetrievedApplicantData {
+    val entityType: EntityType = EntityType.Company
+  }
 
   implicit val formatIndividual: OFormat[IndividualRetrievedData] = Json.format[IndividualRetrievedData]
   implicit val formatCompany: OFormat[CompanyRetrievedData]       = Json.format[CompanyRetrievedData]
 
-  //@SuppressWarnings(Array("org.wartremover.warts.PublicInference"))
-  @SuppressWarnings(Array("org.wartremover.warts.Throw", "org.wartremover.warts.Equals"))
-  implicit val format: OFormat[RetrievedApplicantData] = Jsonx.oFormatSealed[RetrievedApplicantData]
+  implicit val format: OFormat[RetrievedApplicantData] = new OFormat[RetrievedApplicantData] {
+    override def reads(json: JsValue): JsResult[RetrievedApplicantData] = {
+      val entityType = (json \ "type")
+        .validate[EntityType]
+        .getOrElse(sys.error("Invalid RetrievedApplicantData type"))
+
+      entityType match {
+        case EntityType.Individual => formatIndividual.reads(json)
+        case EntityType.Company    => formatCompany.reads(json)
+      }
+    }
+
+    override def writes(o: RetrievedApplicantData): JsObject = {
+      val json = o match {
+        case i: IndividualRetrievedData => formatIndividual.writes(i)
+        case c: CompanyRetrievedData    => formatCompany.writes(c)
+      }
+      json ++ Json.obj("type" -> o.entityType)
+    }
+  }
 
 }
