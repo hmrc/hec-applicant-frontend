@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.controllers
 
+import cats.implicits.catsSyntaxEq
 import cats.instances.future._
 import com.google.inject.{Inject, Singleton}
 import play.api.data.Form
@@ -25,7 +26,8 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 import uk.gov.hmrc.hecapplicantfrontend.controllers.LicenceDetailsController._
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
-import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers
+import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRetrievedData, IndividualRetrievedData}
+import uk.gov.hmrc.hecapplicantfrontend.models.{HECSession, UserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceTimeTrading._
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType._
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceValidityPeriod._
@@ -56,14 +58,17 @@ class LicenceDetailsController @Inject() (
   val licenceType: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     val back        = journeyService.previous(routes.LicenceDetailsController.licenceType())
     val licenceType = request.sessionData.userAnswers.fold(_.licenceType, c => Some(c.licenceType))
+
+    val licenceOptions = licenceTypeOptions(request.sessionData)
     val form = {
-      val emptyForm = licenceTypeForm(licenceTypeOptions)
+      val emptyForm = licenceTypeForm(licenceOptions)
       licenceType.fold(emptyForm)(emptyForm.fill)
     }
-    Ok(licenceTypePage(form, back, licenceTypeOptions))
+    Ok(licenceTypePage(form, back, licenceOptions))
   }
 
   val licenceTypeSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
+    val licenceOptions = licenceTypeOptions(request.sessionData)
     def handleValidLicenceType(licenceType: LicenceType): Future[Result] = {
       val updatedAnswers =
         if (request.sessionData.userAnswers.fold(_.licenceType, c => Some(c.licenceType)).contains(licenceType))
@@ -85,7 +90,7 @@ class LicenceDetailsController @Inject() (
         )
     }
 
-    licenceTypeForm(licenceTypeOptions)
+    licenceTypeForm(licenceOptions)
       .bindFromRequest()
       .fold(
         formWithErrors =>
@@ -93,7 +98,7 @@ class LicenceDetailsController @Inject() (
             licenceTypePage(
               formWithErrors,
               journeyService.previous(routes.LicenceDetailsController.licenceType()),
-              licenceTypeOptions
+              licenceOptions
             )
           ),
         handleValidLicenceType
@@ -101,10 +106,11 @@ class LicenceDetailsController @Inject() (
   }
 
   val licenceTypeExit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
+    val licenceOptions = licenceTypeOptions(request.sessionData)
     Ok(
       licenceTypeExitPage(
         journeyService.previous(routes.LicenceDetailsController.licenceTypeExit()),
-        licenceTypeOptions
+        licenceOptions
       )
     )
   }
@@ -218,12 +224,15 @@ class LicenceDetailsController @Inject() (
 
 object LicenceDetailsController {
 
-  val licenceTypeOptions: List[LicenceType] = List(
+  val licenceTypes: List[LicenceType] = List(
     DriverOfTaxisAndPrivateHires,
     OperatorOfPrivateHireVehicles,
     ScrapMetalMobileCollector,
     ScrapMetalDealerSite
   )
+
+  val individualLicenceTypeOptions: List[LicenceType] = licenceTypes
+  val companyLicenceTypeOptions: List[LicenceType]    = licenceTypes.filter(_ =!= DriverOfTaxisAndPrivateHires)
 
   val licenceTimeTradingOptions: List[LicenceTimeTrading] = List(
     ZeroToTwoYears,
@@ -233,6 +242,11 @@ object LicenceDetailsController {
   )
 
   private val validityPeriodList = List(UpToOneYear, UpToTwoYears, UpToThreeYears, UpToFourYears, UpToFiveYears)
+
+  def licenceTypeOptions(session: HECSession): List[LicenceType] = session.retrievedUserData match {
+    case _: IndividualRetrievedData => individualLicenceTypeOptions
+    case _: CompanyRetrievedData    => companyLicenceTypeOptions
+  }
 
   def licenceValidityPeriodOptions(licenceType: LicenceType): List[LicenceValidityPeriod] =
     licenceType match {
