@@ -212,7 +212,7 @@ class EntityTypeControllerSpec
 
         "valid data is submitted and" when {
 
-          "the user has not previously completed answering questions" in {
+          "the user is Individual has not previously completed answering questions" in {
             val answers        = UserAnswers.empty
             val updatedAnswers = UserAnswers.empty.copy(entityType = Some(EntityType.Company))
             val session        = HECSession(individuaRetrievedlData, answers, None)
@@ -222,6 +222,27 @@ class EntityTypeControllerSpec
               mockAuthWithNoRetrievals()
               mockGetSession(session)
               mockJourneyServiceUpdateAndNext(routes.EntityTypeController.entityType(), session, updatedSession)(
+                Right(mockNextCall)
+              )
+            }
+
+            checkIsRedirect(performAction("entityType" -> "1"), mockNextCall)
+          }
+
+          "the user is Company has not previously completed answering questions" in {
+            val answers        = UserAnswers.empty
+            val updatedAnswers = UserAnswers.empty.copy(entityType = Some(EntityType.Company))
+            val session        = HECSession(companyRetrievedData, answers, None)
+            val updatedSession = session.copy(userAnswers = updatedAnswers)
+
+            inSequence {
+              mockAuthWithNoRetrievals()
+              mockGetSession(session)
+              mockJourneyServiceUpdateAndNext(
+                routes.EntityTypeController.entityType(),
+                session,
+                updatedSession
+              )(
                 Right(mockNextCall)
               )
             }
@@ -248,6 +269,36 @@ class EntityTypeControllerSpec
               mockAuthWithNoRetrievals()
               mockGetSession(session)
               mockJourneyServiceUpdateAndNext(routes.EntityTypeController.entityType(), session, updatedSession)(
+                Right(mockNextCall)
+              )
+            }
+
+            checkIsRedirect(performAction("entityType" -> "1"), mockNextCall)
+          }
+
+          "the user is a company and  has previously completed answering questions" in {
+            val answers        = CompleteUserAnswers(
+              LicenceType.OperatorOfPrivateHireVehicles,
+              LicenceTimeTrading.ZeroToTwoYears,
+              LicenceValidityPeriod.UpToOneYear,
+              TaxSituation.SAPAYE,
+              Some(IncomeDeclared.Yes),
+              None
+            )
+            val updatedAnswers = IncompleteUserAnswers
+              .fromCompleteAnswers(answers)
+              .copy(entityType = Some(EntityType.Company))
+            val session        = HECSession(companyRetrievedData, answers, None)
+            val updatedSession = session.copy(userAnswers = updatedAnswers)
+
+            inSequence {
+              mockAuthWithNoRetrievals()
+              mockGetSession(session)
+              mockJourneyServiceUpdateAndNext(
+                routes.EntityTypeController.entityType(),
+                session,
+                updatedSession
+              )(
                 Right(mockNextCall)
               )
             }

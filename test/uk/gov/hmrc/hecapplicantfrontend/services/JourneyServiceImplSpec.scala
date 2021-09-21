@@ -297,12 +297,12 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             test(companyRetrievedData, EntityType.Individual, routes.EntityTypeController.wrongGGAccount())
           }
 
-          "the user is a individual but has selected individual" in {
+          "the user is a individual and  has selected individual" in {
             test(individualRetrievedData, EntityType.Individual, routes.TaxSituationController.taxSituation())
           }
 
-          "the user is a company but has selected company" in {
-            test(companyRetrievedData, EntityType.Company, routes.TaxSituationController.taxSituation())
+          "the user is a company and  has selected company" in {
+            test(companyRetrievedData, EntityType.Company, routes.CRNController.companyRegistrationNumber())
           }
 
         }
