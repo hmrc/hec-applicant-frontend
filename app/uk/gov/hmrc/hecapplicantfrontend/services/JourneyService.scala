@@ -26,6 +26,7 @@ import play.api.mvc.Call
 import uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.saTaxSituations
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.RequestWithSessionData
 import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
+import uk.gov.hmrc.hecapplicantfrontend.models.EntityType.{Company, Individual}
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRetrievedData, IndividualRetrievedData}
 import uk.gov.hmrc.hecapplicantfrontend.models.SAStatus.ReturnFound
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.{CompleteUserAnswers, IncompleteUserAnswers}
@@ -194,7 +195,10 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
       case None                     =>
         sys.error("Could not find selected entity type for entity type route")
       case Some(selectedEntityType) =>
-        if (selectedEntityType === ggEntityType) routes.TaxSituationController.taxSituation()
+        if (selectedEntityType === ggEntityType && selectedEntityType === Individual)
+          routes.TaxSituationController.taxSituation()
+        else if (selectedEntityType === ggEntityType && selectedEntityType === Company)
+          routes.CRNController.companyRegistrationNumber()
         else routes.EntityTypeController.wrongGGAccount()
     }
 
