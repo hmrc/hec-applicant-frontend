@@ -17,18 +17,20 @@
 package uk.gov.hmrc.hecapplicantfrontend.models
 
 import ai.x.play.json.Jsonx
+import ai.x.play.json.SingletonEncoder.simpleName
+import ai.x.play.json.implicits.formatSingleton
 import monocle.Lens
 import monocle.macros.Lenses
 import play.api.libs.json._
+import play.api.libs.json.OFormat
+import uk.gov.hmrc.hecapplicantfrontend.models.ids.CRN
+
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 
 sealed trait UserAnswersType
 object UserAnswersType {
   case object Incomplete extends UserAnswersType
   case object Complete extends UserAnswersType
-
-  import ai.x.play.json.SingletonEncoder.simpleName
-  import ai.x.play.json.implicits.formatSingleton
 
   @SuppressWarnings(Array("org.wartremover.warts.All"))
   implicit val format: Format[UserAnswersType] = Jsonx.formatSealed[UserAnswersType]
@@ -47,7 +49,9 @@ object UserAnswers {
     licenceValidityPeriod: Option[LicenceValidityPeriod],
     taxSituation: Option[TaxSituation],
     saIncomeDeclared: Option[IncomeDeclared],
-    entityType: Option[EntityType]
+    entityType: Option[EntityType],
+    crn: Option[CRN],
+    companyName: Option[CompanyHouseName]
   ) extends UserAnswers {
     val userAnswersType: UserAnswersType = UserAnswersType.Incomplete
   }
@@ -58,7 +62,9 @@ object UserAnswers {
     licenceValidityPeriod: LicenceValidityPeriod,
     taxSituation: TaxSituation,
     saIncomeDeclared: Option[IncomeDeclared],
-    entityType: Option[EntityType]
+    entityType: Option[EntityType],
+    crn: Option[CRN],
+    companyName: Option[CompanyHouseName]
   ) extends UserAnswers {
     val userAnswersType: UserAnswersType = UserAnswersType.Complete
   }
@@ -72,7 +78,9 @@ object UserAnswers {
         Some(c.licenceValidityPeriod),
         Some(c.taxSituation),
         c.saIncomeDeclared,
-        c.entityType
+        c.entityType,
+        c.crn,
+        c.companyName
       )
 
   }
@@ -96,7 +104,7 @@ object UserAnswers {
 
   }
 
-  val empty: IncompleteUserAnswers = IncompleteUserAnswers(None, None, None, None, None, None)
+  val empty: IncompleteUserAnswers = IncompleteUserAnswers(None, None, None, None, None, None, None, None)
 
   implicit val format: OFormat[UserAnswers] = new OFormat[UserAnswers] {
     override def reads(json: JsValue): JsResult[UserAnswers] =

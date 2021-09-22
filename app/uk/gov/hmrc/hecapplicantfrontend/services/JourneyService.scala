@@ -159,7 +159,9 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
                 Some(licenceValidityPeriod),
                 Some(taxSituation),
                 saIncomeDeclared,
-                entityType
+                entityType,
+                crn,
+                companyName
               ) if allAnswersComplete(incomplete, session.retrievedUserData) =>
             val completeAnswers =
               CompleteUserAnswers(
@@ -168,7 +170,9 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
                 licenceValidityPeriod,
                 taxSituation,
                 saIncomeDeclared,
-                entityType
+                entityType,
+                crn,
+                companyName
               )
             session.copy(userAnswers = completeAnswers)
 
@@ -282,7 +286,9 @@ object JourneyServiceImpl {
             Some(_),
             Some(taxSituation),
             saIncomeDeclared,
-            entityType
+            entityType,
+            _,
+            _
           ) =>
         val licenceTypeCheck      = checkEntityTypePresentIfRequired(licenceType, entityType)
         val saIncomeDeclaredCheck = checkSAIncomeDeclared(taxSituation, saIncomeDeclared, retrievedUserData)
