@@ -49,16 +49,13 @@ object RetrievedApplicantData {
   implicit val formatCompany: OFormat[CompanyRetrievedData]       = Json.format[CompanyRetrievedData]
 
   implicit val format: OFormat[RetrievedApplicantData] = new OFormat[RetrievedApplicantData] {
-    override def reads(json: JsValue): JsResult[RetrievedApplicantData] = {
-      val entityType = (json \ "type")
+    override def reads(json: JsValue): JsResult[RetrievedApplicantData] =
+      (json \ "type")
         .validate[EntityType]
-        .getOrElse(sys.error("Invalid RetrievedApplicantData type"))
-
-      entityType match {
-        case EntityType.Individual => formatIndividual.reads(json)
-        case EntityType.Company    => formatCompany.reads(json)
-      }
-    }
+        .flatMap {
+          case EntityType.Individual => formatIndividual.reads(json)
+          case EntityType.Company    => formatCompany.reads(json)
+        }
 
     override def writes(o: RetrievedApplicantData): JsObject = {
       val json = o match {

@@ -109,16 +109,13 @@ object UserAnswers {
   implicit val formatComplete: OFormat[CompleteUserAnswers]     = Json.format[CompleteUserAnswers]
 
   implicit val format: OFormat[UserAnswers] = new OFormat[UserAnswers] {
-    override def reads(json: JsValue): JsResult[UserAnswers] = {
-      val userAnswersType = (json \ "type")
+    override def reads(json: JsValue): JsResult[UserAnswers] =
+      (json \ "type")
         .validate[UserAnswersType]
-        .getOrElse(sys.error("Invalid UserAnswers type"))
-
-      userAnswersType match {
-        case UserAnswersType.Incomplete => formatIncomplete.reads(json)
-        case UserAnswersType.Complete   => formatComplete.reads(json)
-      }
-    }
+        .flatMap {
+          case UserAnswersType.Incomplete => formatIncomplete.reads(json)
+          case UserAnswersType.Complete   => formatComplete.reads(json)
+        }
 
     override def writes(o: UserAnswers): JsObject = {
       val json = o match {

@@ -48,16 +48,13 @@ object HECTaxCheckData {
 
   implicit val format: OFormat[HECTaxCheckData] = new OFormat[HECTaxCheckData] {
 
-    override def reads(json: JsValue): JsResult[HECTaxCheckData] = {
-      val entityType = (json \ "type")
+    override def reads(json: JsValue): JsResult[HECTaxCheckData] =
+      (json \ "type")
         .validate[EntityType]
-        .getOrElse(sys.error("Invalid HECTaxCheckData type"))
-
-      entityType match {
-        case EntityType.Individual => formatIndividual.reads(json)
-        case EntityType.Company    => formatCompany.reads(json)
-      }
-    }
+        .flatMap {
+          case EntityType.Individual => formatIndividual.reads(json)
+          case EntityType.Company    => formatCompany.reads(json)
+        }
 
     override def writes(o: HECTaxCheckData): JsObject = {
       val json = o match {
