@@ -29,18 +29,21 @@ class RetrievedApplicantDataSpec extends AnyWordSpec with Matchers {
   "RetrievedApplicantData" must {
 
     "perform JSON de/serialisation correctly" must {
+      val dateOfBirthStr = "20001010"
+      val dateOfBirth    = LocalDate.of(2000, 10, 10)
+
       val individualRetrievedData: RetrievedApplicantData =
         IndividualRetrievedData(
           GGCredId("ggCredId"),
           NINO("nino"),
           Some(SAUTR("utr")),
           Name("first", "last"),
-          DateOfBirth(LocalDate.now()),
+          DateOfBirth(dateOfBirth),
           Some(EmailAddress("email")),
           None
         )
 
-      val individualJson = Json.parse("""{
+      val individualJson = Json.parse(s"""{
           |"ggCredId":"ggCredId",
           |"nino":"nino",
           |"sautr":"utr",
@@ -48,7 +51,7 @@ class RetrievedApplicantDataSpec extends AnyWordSpec with Matchers {
           |   "firstName":"first",
           |   "lastName":"last"
           |},
-          |"dateOfBirth":"20210922",
+          |"dateOfBirth":"$dateOfBirthStr",
           |"emailAddress":"email",
           |"type":"Individual"
           |}""".stripMargin)

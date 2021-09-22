@@ -32,12 +32,15 @@ class HECTaxCheckDataSpec extends AnyWordSpec with Matchers {
   "HECTaxCheckData" must {
 
     "perform JSON de/serialisation correctly" must {
+      val dateOfBirthStr = "20001010"
+      val dateOfBirth    = LocalDate.of(2000, 10, 10)
+
       val individualTaxCheckData: HECTaxCheckData =
         IndividualHECTaxCheckData(
           IndividualApplicantDetails(
             GGCredId("ggCredId"),
             Name("first", "last"),
-            DateOfBirth(LocalDate.now())
+            DateOfBirth(dateOfBirth)
           ),
           LicenceDetails(
             LicenceType.ScrapMetalMobileCollector,
@@ -52,14 +55,14 @@ class HECTaxCheckDataSpec extends AnyWordSpec with Matchers {
           )
         )
 
-      val individualJson = Json.parse("""{
+      val individualJson = Json.parse(s"""{
           | "applicantDetails":{
           |    "ggCredId":"ggCredId",
           |    "name":{
           |      "firstName":"first",
           |      "lastName":"last"
           |    },
-          |    "dateOfBirth":"20210922"
+          |    "dateOfBirth":"$dateOfBirthStr"
           | },
           | "licenceDetails":{
           |    "licenceType":"ScrapMetalMobileCollector",
