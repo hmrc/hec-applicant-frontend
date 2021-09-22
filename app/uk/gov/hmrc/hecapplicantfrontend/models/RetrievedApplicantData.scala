@@ -45,22 +45,19 @@ object RetrievedApplicantData {
     val entityType: EntityType = EntityType.Company
   }
 
-  implicit val formatIndividual: OFormat[IndividualRetrievedData] = Json.format[IndividualRetrievedData]
-  implicit val formatCompany: OFormat[CompanyRetrievedData]       = Json.format[CompanyRetrievedData]
-
   implicit val format: OFormat[RetrievedApplicantData] = new OFormat[RetrievedApplicantData] {
     override def reads(json: JsValue): JsResult[RetrievedApplicantData] =
       (json \ "type")
         .validate[EntityType]
         .flatMap {
-          case EntityType.Individual => formatIndividual.reads(json)
-          case EntityType.Company    => formatCompany.reads(json)
+          case EntityType.Individual => Json.reads[IndividualRetrievedData].reads(json)
+          case EntityType.Company    => Json.reads[CompanyRetrievedData].reads(json)
         }
 
     override def writes(o: RetrievedApplicantData): JsObject = {
       val json = o match {
-        case i: IndividualRetrievedData => formatIndividual.writes(i)
-        case c: CompanyRetrievedData    => formatCompany.writes(c)
+        case i: IndividualRetrievedData => Json.writes[IndividualRetrievedData].writes(i)
+        case c: CompanyRetrievedData    => Json.writes[CompanyRetrievedData].writes(c)
       }
       json ++ Json.obj("type" -> o.entityType)
     }

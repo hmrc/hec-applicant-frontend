@@ -98,22 +98,19 @@ object UserAnswers {
 
   val empty: IncompleteUserAnswers = IncompleteUserAnswers(None, None, None, None, None, None)
 
-  implicit val formatIncomplete: OFormat[IncompleteUserAnswers] = Json.format[IncompleteUserAnswers]
-  implicit val formatComplete: OFormat[CompleteUserAnswers]     = Json.format[CompleteUserAnswers]
-
   implicit val format: OFormat[UserAnswers] = new OFormat[UserAnswers] {
     override def reads(json: JsValue): JsResult[UserAnswers] =
       (json \ "type")
         .validate[UserAnswersType]
         .flatMap {
-          case UserAnswersType.Incomplete => formatIncomplete.reads(json)
-          case UserAnswersType.Complete   => formatComplete.reads(json)
+          case UserAnswersType.Incomplete => Json.reads[IncompleteUserAnswers].reads(json)
+          case UserAnswersType.Complete   => Json.reads[CompleteUserAnswers].reads(json)
         }
 
     override def writes(o: UserAnswers): JsObject = {
       val json = o match {
-        case i: IncompleteUserAnswers => formatIncomplete.writes(i)
-        case c: CompleteUserAnswers   => formatComplete.writes(c)
+        case i: IncompleteUserAnswers => Json.writes[IncompleteUserAnswers].writes(i)
+        case c: CompleteUserAnswers   => Json.writes[CompleteUserAnswers].writes(c)
       }
       json ++ Json.obj("type" -> o.userAnswersType)
     }

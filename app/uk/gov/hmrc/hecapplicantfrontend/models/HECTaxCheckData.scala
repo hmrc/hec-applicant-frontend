@@ -43,23 +43,20 @@ object HECTaxCheckData {
     val entityType: EntityType = EntityType.Company
   }
 
-  implicit val formatIndividual: OFormat[IndividualHECTaxCheckData] = Json.format[IndividualHECTaxCheckData]
-  implicit val formatCompany: OFormat[CompanyHECTaxCheckData]       = Json.format[CompanyHECTaxCheckData]
-
   implicit val format: OFormat[HECTaxCheckData] = new OFormat[HECTaxCheckData] {
 
     override def reads(json: JsValue): JsResult[HECTaxCheckData] =
       (json \ "type")
         .validate[EntityType]
         .flatMap {
-          case EntityType.Individual => formatIndividual.reads(json)
-          case EntityType.Company    => formatCompany.reads(json)
+          case EntityType.Individual => Json.reads[IndividualHECTaxCheckData].reads(json)
+          case EntityType.Company    => Json.reads[CompanyHECTaxCheckData].reads(json)
         }
 
     override def writes(o: HECTaxCheckData): JsObject = {
       val json = o match {
-        case i: IndividualHECTaxCheckData => formatIndividual.writes(i)
-        case c: CompanyHECTaxCheckData    => formatCompany.writes(c)
+        case i: IndividualHECTaxCheckData => Json.writes[IndividualHECTaxCheckData].writes(i)
+        case c: CompanyHECTaxCheckData    => Json.writes[CompanyHECTaxCheckData].writes(c)
       }
       json ++ Json.obj("type" -> o.entityType)
     }
