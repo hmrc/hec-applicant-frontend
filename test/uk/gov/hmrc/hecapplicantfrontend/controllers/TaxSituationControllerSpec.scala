@@ -84,14 +84,6 @@ class TaxSituationControllerSpec
 
       def performAction(): Future[Result] = controller.taxSituation(FakeRequest())
 
-      def testRadioButtonOptions(doc: Document, expectedRadioOptionsTexts: List[String]) = {
-        val radioOptions = doc.select(".govuk-radios__item")
-        radioOptions.size shouldBe expectedRadioOptionsTexts.size
-        expectedRadioOptionsTexts.zipWithIndex.map({ case (text, i) =>
-          radioOptions.get(i).text() shouldBe text
-        })
-      }
-
       val allRadioTexts     = List(
         messageFromMessageKey("taxSituation.PA"),
         messageFromMessageKey("taxSituation.SA"),

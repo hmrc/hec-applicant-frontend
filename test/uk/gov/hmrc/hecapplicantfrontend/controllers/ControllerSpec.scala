@@ -133,6 +133,14 @@ trait ControllerSpec extends AnyWordSpec with Matchers with BeforeAndAfterAll wi
       expectedStatus
     )
 
+  def testRadioButtonOptions(doc: Document, expectedRadioOptionsTexts: List[String]) = {
+    val radioOptions = doc.select(".govuk-radios__item")
+    radioOptions.size shouldBe expectedRadioOptionsTexts.size
+    expectedRadioOptionsTexts.zipWithIndex.map({ case (text, i) =>
+      radioOptions.get(i).text() shouldBe text
+    })
+  }
+
 }
 
 @Singleton
