@@ -31,14 +31,7 @@ object SAStatus {
 
   case object NoReturnFound extends SAStatus
 
-  @SuppressWarnings(
-    Array(
-      "org.wartremover.warts.Throw",
-      "org.wartremover.warts.Equals",
-      "org.wartremover.warts.Product",
-      "org.wartremover.warts.Serializable"
-    )
-  )
+  @SuppressWarnings(Array("org.wartremover.warts.All"))
   implicit val format: Format[SAStatus] = Jsonx.formatSealed[SAStatus]
 
 }

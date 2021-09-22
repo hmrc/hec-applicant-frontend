@@ -30,14 +30,7 @@ object UserAnswersType {
   import ai.x.play.json.SingletonEncoder.simpleName
   import ai.x.play.json.implicits.formatSingleton
 
-  @SuppressWarnings(
-    Array(
-      "org.wartremover.warts.Throw",
-      "org.wartremover.warts.Equals",
-      "org.wartremover.warts.Product",
-      "org.wartremover.warts.Serializable"
-    )
-  )
+  @SuppressWarnings(Array("org.wartremover.warts.All"))
   implicit val format: Format[UserAnswersType] = Jsonx.formatSealed[UserAnswersType]
 }
 
