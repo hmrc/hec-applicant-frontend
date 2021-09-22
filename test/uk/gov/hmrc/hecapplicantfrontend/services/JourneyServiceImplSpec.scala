@@ -128,25 +128,50 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
           await(result.value) shouldBe Right(routes.LicenceDetailsController.licenceType())
         }
 
-        "the licence type page" in {
-          val session        = HECSession(individualRetrievedData, UserAnswers.empty, None)
-          val updatedSession =
-            HECSession(
-              individualRetrievedData,
-              UserAnswers.empty.copy(licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)),
-              None
+        "the licence type page" when afterWord("the user is") {
+
+          "an Individual" in {
+
+            val session        = HECSession(individualRetrievedData, UserAnswers.empty, None)
+            val updatedSession =
+              HECSession(
+                individualRetrievedData,
+                UserAnswers.empty.copy(licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)),
+                None
+              )
+
+            implicit val request: RequestWithSessionData[_] =
+              requestWithSessionData(session)
+
+            mockStoreSession(updatedSession)(Right(()))
+
+            val result = journeyService.updateAndNext(
+              routes.LicenceDetailsController.licenceType(),
+              updatedSession
             )
+            await(result.value) shouldBe Right(routes.LicenceDetailsController.licenceTimeTrading())
+          }
 
-          implicit val request: RequestWithSessionData[_] =
-            requestWithSessionData(session)
+          "a Company" in {
 
-          mockStoreSession(updatedSession)(Right(()))
+            val session        = HECSession(companyRetrievedData, UserAnswers.empty, None)
+            val updatedSession =
+              session.copy(
+                userAnswers = UserAnswers.empty.copy(licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles))
+              )
 
-          val result = journeyService.updateAndNext(
-            routes.LicenceDetailsController.licenceType(),
-            updatedSession
-          )
-          await(result.value) shouldBe Right(routes.LicenceDetailsController.licenceTimeTrading())
+            implicit val request: RequestWithSessionData[_] =
+              requestWithSessionData(session)
+
+            mockStoreSession(updatedSession)(Right(()))
+
+            val result = journeyService.updateAndNext(
+              routes.LicenceDetailsController.licenceType(),
+              updatedSession
+            )
+            await(result.value) shouldBe Right(routes.LicenceDetailsController.licenceTimeTrading())
+          }
+
         }
 
         "the licence time trading page" in {

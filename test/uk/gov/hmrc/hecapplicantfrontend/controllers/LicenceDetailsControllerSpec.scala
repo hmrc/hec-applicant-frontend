@@ -62,93 +62,151 @@ class LicenceDetailsControllerSpec
 
       def performAction(): Future[Result] = controller.licenceType(FakeRequest())
 
+      def checkPageDetailsWithNoPreviousAns(session: HECSession, radioTextList: List[String]) = {
+
+        inSequence {
+          mockAuthWithNoRetrievals()
+          mockGetSession(session)
+          mockJourneyServiceGetPrevious(routes.LicenceDetailsController.licenceType(), session)(mockPreviousCall)
+        }
+        checkPageIsDisplayed(
+          performAction(),
+          messageFromMessageKey("licenceType.title"),
+          { doc =>
+            doc.select("#back").attr("href") shouldBe mockPreviousCall.url
+
+            val selectedOptions = doc.select(".govuk-radios__input[checked]")
+            selectedOptions.isEmpty shouldBe true
+
+            testRadioButtonOptions(doc, radioTextList)
+
+            doc.select(".govuk-body > .govuk-link").attr("href") shouldBe routes.LicenceDetailsController
+              .licenceTypeExit()
+              .url
+
+            val form = doc.select("form")
+            form
+              .attr("action") shouldBe routes.LicenceDetailsController.licenceTypeSubmit().url
+          }
+        )
+      }
+
+      def checkPageDetailsWithPreviousAns(session: HECSession, value: String) = {
+
+        inSequence {
+          mockAuthWithNoRetrievals()
+          mockGetSession(session)
+          mockJourneyServiceGetPrevious(routes.LicenceDetailsController.licenceType(), session)(mockPreviousCall)
+        }
+        checkPageIsDisplayed(
+          performAction(),
+          messageFromMessageKey("licenceType.title"),
+          { doc =>
+            doc.select("#back").attr("href") shouldBe mockPreviousCall.url
+
+            val selectedOptions = doc.select(".govuk-radios__input[checked]")
+            selectedOptions.attr("value") shouldBe value
+
+            val form = doc.select("form")
+            form
+              .attr("action") shouldBe routes.LicenceDetailsController.licenceTypeSubmit().url
+          }
+        )
+      }
+
+      def backUrlTest(session: HECSession) = {
+        inSequence {
+          mockAuthWithNoRetrievals()
+          mockGetSession(session)
+          mockJourneyServiceGetPrevious(routes.LicenceDetailsController.licenceType(), session)(
+            routes.StartController.start()
+          )
+        }
+
+        checkPageIsDisplayed(
+          performAction(),
+          messageFromMessageKey("licenceType.title"),
+          _.select("#back").isEmpty shouldBe true
+        )
+      }
       behave like authAndSessionDataBehaviour(performAction)
 
       "display the page" when {
 
-        "the user has not previously answered the question" in {
-          val session = HECSession(individuaRetrievedlData, UserAnswers.empty, None)
+        val allLicenceRadioTexts: List[String] = List(
+          s"${messageFromMessageKey("licenceType.driverOfTaxis")}" +
+            s" ${messageFromMessageKey("licenceType.driverOfTaxis.hint")}",
+          messageFromMessageKey("licenceType.operatorOfPrivateHireVehicles"),
+          messageFromMessageKey("licenceType.scrapMetalCollector"),
+          messageFromMessageKey("licenceType.scrapMetalDealer")
+        )
 
-          inSequence {
-            mockAuthWithNoRetrievals()
-            mockGetSession(session)
-            mockJourneyServiceGetPrevious(routes.LicenceDetailsController.licenceType(), session)(mockPreviousCall)
+        "user is Individual" when {
+
+          "the user has not previously answered the question" in {
+            val session = HECSession(individuaRetrievedlData, UserAnswers.empty, None)
+            checkPageDetailsWithNoPreviousAns(session, allLicenceRadioTexts)
+
           }
 
-          checkPageIsDisplayed(
-            performAction(),
-            messageFromMessageKey("licenceType.title"),
-            { doc =>
-              doc.select("#back").attr("href") shouldBe mockPreviousCall.url
+          "the user has previously answered the question" in {
+            val session =
+              HECSession(
+                individuaRetrievedlData,
+                CompleteUserAnswers(
+                  LicenceType.DriverOfTaxisAndPrivateHires,
+                  LicenceTimeTrading.ZeroToTwoYears,
+                  LicenceValidityPeriod.UpToTwoYears,
+                  TaxSituation.SA,
+                  Some(IncomeDeclared.Yes),
+                  Some(EntityType.Individual)
+                ),
+                None
+              )
 
-              val selectedOptions = doc.select(".govuk-radios__input[checked]")
-              selectedOptions.isEmpty shouldBe true
+            checkPageDetailsWithPreviousAns(session, "0")
+          }
 
-              doc.select(".govuk-body > .govuk-link").attr("href") shouldBe routes.LicenceDetailsController
-                .licenceTypeExit()
-                .url
+          "the back location is the start endpoint" in {
 
-              val form = doc.select("form")
-              form
-                .attr("action") shouldBe routes.LicenceDetailsController.licenceTypeSubmit().url
-            }
-          )
+            val session = HECSession(individuaRetrievedlData, UserAnswers.empty, None)
+            backUrlTest(session)
+
+          }
 
         }
 
-        "the user has previously answered the question" in {
-          val session =
-            HECSession(
-              individuaRetrievedlData,
-              CompleteUserAnswers(
-                LicenceType.DriverOfTaxisAndPrivateHires,
-                LicenceTimeTrading.ZeroToTwoYears,
-                LicenceValidityPeriod.UpToTwoYears,
-                TaxSituation.SA,
-                Some(IncomeDeclared.Yes),
-                Some(EntityType.Individual)
-              ),
-              None
-            )
+        "user is Company" when {
 
-          inSequence {
-            mockAuthWithNoRetrievals()
-            mockGetSession(session)
-            mockJourneyServiceGetPrevious(routes.LicenceDetailsController.licenceType(), session)(mockPreviousCall)
+          "the user has not previously answered the question" in {
+
+            val session = HECSession(companyRetrievedData, UserAnswers.empty, None)
+            checkPageDetailsWithNoPreviousAns(session, allLicenceRadioTexts.takeRight(3))
+
           }
 
-          checkPageIsDisplayed(
-            performAction(),
-            messageFromMessageKey("licenceType.title"),
-            { doc =>
-              doc.select("#back").attr("href") shouldBe mockPreviousCall.url
+          "the user has previously answered the question" in {
+            val session =
+              HECSession(
+                companyRetrievedData,
+                CompleteUserAnswers(
+                  LicenceType.ScrapMetalDealerSite,
+                  LicenceTimeTrading.ZeroToTwoYears,
+                  LicenceValidityPeriod.UpToTwoYears,
+                  TaxSituation.SAPAYE,
+                  Some(IncomeDeclared.Yes),
+                  Some(EntityType.Company)
+                ),
+                None
+              )
 
-              val selectedOptions = doc.select(".govuk-radios__input[checked]")
-              selectedOptions.attr("value") shouldBe "0"
-
-              val form = doc.select("form")
-              form
-                .attr("action") shouldBe routes.LicenceDetailsController.licenceTypeSubmit().url
-            }
-          )
-        }
-
-        "the back location is the start endpoint" in {
-          val session = HECSession(companyRetrievedData, UserAnswers.empty, None)
-
-          inSequence {
-            mockAuthWithNoRetrievals()
-            mockGetSession(session)
-            mockJourneyServiceGetPrevious(routes.LicenceDetailsController.licenceType(), session)(
-              routes.StartController.start()
-            )
+            checkPageDetailsWithPreviousAns(session, "2")
           }
 
-          checkPageIsDisplayed(
-            performAction(),
-            messageFromMessageKey("licenceType.title"),
-            _.select("#back").isEmpty shouldBe true
-          )
+          "the back location is the start endpoint" in {
+            val session = HECSession(individuaRetrievedlData, UserAnswers.empty, None)
+            backUrlTest(session)
+          }
 
         }
 
@@ -234,7 +292,19 @@ class LicenceDetailsControllerSpec
 
       "redirect to the next page" when {
 
-        "valid data is submitted and" when {
+        def nextpageRedirectTest(session: HECSession, updatedSession: HECSession, radioIndex: String) = {
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockJourneyServiceUpdateAndNext(routes.LicenceDetailsController.licenceType(), session, updatedSession)(
+              Right(mockNextCall)
+            )
+          }
+
+          checkIsRedirect(performAction("licenceType" -> radioIndex), mockNextCall)
+        }
+
+        "valid Individual data is submitted and" when {
 
           "the user has not previously completed answering questions" in {
             val answers        = UserAnswers.empty.copy(
@@ -243,16 +313,8 @@ class LicenceDetailsControllerSpec
             val updatedAnswers = UserAnswers.empty.copy(licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles))
             val session        = HECSession(individuaRetrievedlData, answers, None)
             val updatedSession = session.copy(userAnswers = updatedAnswers)
+            nextpageRedirectTest(session, updatedSession, "1")
 
-            inSequence {
-              mockAuthWithNoRetrievals()
-              mockGetSession(session)
-              mockJourneyServiceUpdateAndNext(routes.LicenceDetailsController.licenceType(), session, updatedSession)(
-                Right(mockNextCall)
-              )
-            }
-
-            checkIsRedirect(performAction("licenceType" -> "1"), mockNextCall)
           }
 
           "the user has previously completed answering questions" in {
@@ -267,16 +329,8 @@ class LicenceDetailsControllerSpec
             val updatedAnswers = UserAnswers.empty.copy(licenceType = Some(LicenceType.ScrapMetalMobileCollector))
             val session        = HECSession(individuaRetrievedlData, answers, None)
             val updatedSession = session.copy(userAnswers = updatedAnswers)
+            nextpageRedirectTest(session, updatedSession, "2")
 
-            inSequence {
-              mockAuthWithNoRetrievals()
-              mockGetSession(session)
-              mockJourneyServiceUpdateAndNext(routes.LicenceDetailsController.licenceType(), session, updatedSession)(
-                Right(mockNextCall)
-              )
-            }
-
-            checkIsRedirect(performAction("licenceType" -> "2"), mockNextCall)
           }
 
           "the user has not changed the licence type they have already submitted previously" in {
@@ -290,15 +344,54 @@ class LicenceDetailsControllerSpec
             )
             val session = HECSession(individuaRetrievedlData, answers, None)
 
-            inSequence {
-              mockAuthWithNoRetrievals()
-              mockGetSession(session)
-              mockJourneyServiceUpdateAndNext(routes.LicenceDetailsController.licenceType(), session, session)(
-                Right(mockNextCall)
-              )
-            }
+            nextpageRedirectTest(session, session, "0")
 
-            checkIsRedirect(performAction("licenceType" -> "0"), mockNextCall)
+          }
+
+        }
+
+        "valid Company data is submitted and" when {
+
+          "the user has not previously completed answering questions" in {
+            val answers        = UserAnswers.empty.copy(
+              licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles)
+            )
+            val updatedAnswers = UserAnswers.empty.copy(licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles))
+            val session        = HECSession(companyRetrievedData, answers, None)
+            val updatedSession = session.copy(userAnswers = updatedAnswers)
+            nextpageRedirectTest(session, updatedSession, "0")
+
+          }
+
+          "the user has previously completed answering questions" in {
+            val answers        = CompleteUserAnswers(
+              LicenceType.DriverOfTaxisAndPrivateHires,
+              LicenceTimeTrading.ZeroToTwoYears,
+              LicenceValidityPeriod.UpToOneYear,
+              TaxSituation.SA,
+              Some(IncomeDeclared.Yes),
+              Some(EntityType.Individual)
+            )
+            val updatedAnswers = UserAnswers.empty.copy(licenceType = Some(LicenceType.ScrapMetalMobileCollector))
+            val session        = HECSession(companyRetrievedData, answers, None)
+            val updatedSession = session.copy(userAnswers = updatedAnswers)
+
+            nextpageRedirectTest(session, updatedSession, "1")
+
+          }
+
+          "the user has not changed the licence type they have already submitted previously" in {
+            val answers = CompleteUserAnswers(
+              LicenceType.OperatorOfPrivateHireVehicles,
+              LicenceTimeTrading.ZeroToTwoYears,
+              LicenceValidityPeriod.UpToOneYear,
+              TaxSituation.SA,
+              Some(IncomeDeclared.Yes),
+              Some(EntityType.Individual)
+            )
+            val session = HECSession(companyRetrievedData, answers, None)
+            nextpageRedirectTest(session, session, "0")
+
           }
 
         }
