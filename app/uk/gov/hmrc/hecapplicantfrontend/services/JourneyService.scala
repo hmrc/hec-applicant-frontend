@@ -72,7 +72,8 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
     routes.EntityTypeController.entityType()                             -> entityTypeRoute,
     routes.TaxSituationController.taxSituation()                         -> taxSituationRoute,
     routes.SAController.saIncomeStatement()                              -> (_ => routes.CheckYourAnswersController.checkYourAnswers()),
-    routes.CheckYourAnswersController.checkYourAnswers()                 -> (_ => routes.TaxCheckCompleteController.taxCheckComplete())
+    routes.CheckYourAnswersController.checkYourAnswers()                 -> (_ => routes.TaxCheckCompleteController.taxCheckComplete()),
+    routes.CRNController.companyRegistrationNumber()                     -> (_ => routes.CompanyDetailsController.confirmCompanyDetails())
   )
 
   // map which describes routes from an exit page to their previous page. The keys are the exit page and the values are

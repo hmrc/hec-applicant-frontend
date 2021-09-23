@@ -39,10 +39,10 @@ class CompanyDetailsConnectorImpl @Inject() (http: HttpClient, servicesConfig: S
   ec: ExecutionContext
 ) extends CompanyDetailsConnector {
 
-  private val baseUrl: String = s"${servicesConfig.baseUrl("companies-house-proxy")}/companies-house-api-proxy"
+  private val baseUrl: String = s"${servicesConfig.baseUrl("companies-house-proxy")}"
 
   private def getDetailsUrl(companyNumber: CRN): String =
-    s"$baseUrl/company/${companyNumber.value}"
+    s"$baseUrl/companies-house-api-proxy/company/${companyNumber.value}"
 
   override def findCompany(companyNumber: CRN)(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse] =
     EitherT[Future, Error, HttpResponse](

@@ -60,25 +60,18 @@ class CRNController @Inject() (
 
   val companyRegistrationNumberSubmit: Action[AnyContent] =
     authAction.andThen(sessionDataAction).async { implicit request =>
-      val crnOpt: Option[CRN] = request.sessionData.userAnswers.fold(_.crn, _.crn)
-      crnOpt match {
-        case Some(_) =>
-          crnForm
-            .bindFromRequest()
-            .fold(
-              formWithErrors =>
-                Ok(
-                  crnPage(
-                    formWithErrors,
-                    journeyService.previous(routes.CRNController.companyRegistrationNumber())
-                  )
-                ),
-              handleValidCrn
-            )
-        case None    =>
-          logger.error("Couldn't find company Registration number in Session")
-          InternalServerError
-      }
+      crnForm
+        .bindFromRequest()
+        .fold(
+          formWithErrors =>
+            Ok(
+              crnPage(
+                formWithErrors,
+                journeyService.previous(routes.CRNController.companyRegistrationNumber())
+              )
+            ),
+          handleValidCrn
+        )
 
     }
 
