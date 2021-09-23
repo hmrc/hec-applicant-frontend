@@ -45,7 +45,7 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
           LicenceType.DriverOfTaxisAndPrivateHires,
           LicenceTimeTrading.TwoToFourYears,
           LicenceValidityPeriod.UpToFiveYears,
-          TaxSituation.PAYE,
+          Some(TaxSituation.PAYE),
           None,
           Some(EntityType.Individual),
           None,
@@ -64,7 +64,7 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
         LicenceType.DriverOfTaxisAndPrivateHires,
         LicenceTimeTrading.TwoToFourYears,
         LicenceValidityPeriod.UpToTwoYears,
-        TaxSituation.PAYE,
+        Some(TaxSituation.PAYE),
         None,
         Some(EntityType.Individual),
         None,
@@ -102,7 +102,7 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
           LicenceType.DriverOfTaxisAndPrivateHires,
           LicenceTimeTrading.ZeroToTwoYears,
           LicenceValidityPeriod.UpToThreeYears,
-          TaxSituation.PAYE,
+          Some(TaxSituation.PAYE),
           None,
           Some(EntityType.Company),
           None,
@@ -139,7 +139,9 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
           Some(LicenceValidityPeriod.UpToThreeYears),
           Some(TaxSituation.PAYE),
           None,
-          Some(EntityType.Company)
+          Some(EntityType.Company),
+          None,
+          None
         )
 
       val incompleteJson = Json.parse("""{
@@ -156,9 +158,11 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
           LicenceType.DriverOfTaxisAndPrivateHires,
           LicenceTimeTrading.ZeroToTwoYears,
           LicenceValidityPeriod.UpToThreeYears,
-          TaxSituation.PAYE,
+          Some(TaxSituation.PAYE),
           None,
-          Some(EntityType.Company)
+          Some(EntityType.Company),
+          None,
+          None
         )
 
       val completeJson = Json.parse("""{

@@ -92,7 +92,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         LicenceType.OperatorOfPrivateHireVehicles,
         LicenceTimeTrading.TwoToFourYears,
         LicenceValidityPeriod.UpToOneYear,
-        TaxSituation.SA,
+        Some(TaxSituation.SA),
         Some(IncomeDeclared.Yes),
         None,
         None,

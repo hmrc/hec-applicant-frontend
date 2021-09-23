@@ -19,7 +19,6 @@ package uk.gov.hmrc.hecapplicantfrontend.controllers
 import cats.data.EitherT
 import cats.instances.future._
 import play.api.http.Status.INTERNAL_SERVER_ERROR
-import play.api.test.Helpers.status
 import play.api.inject.bind
 import play.api.mvc.Result
 import play.api.test.FakeRequest
@@ -29,11 +28,11 @@ import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.CompanyRet
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.{CompleteUserAnswers, IncompleteUserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, GGCredId}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.hecapplicantfrontend.models.{CompanyHouseDetails, CompanyHouseName, Error, HECSession, TaxSituation, UserAnswers}
+import uk.gov.hmrc.hecapplicantfrontend.models.{CompanyHouseDetails, CompanyHouseName, Error, HECSession, UserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.{CompanyDetailsService, JourneyService}
-import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.hecapplicantfrontend.util.StringUtils.StringOps
+import uk.gov.hmrc.http.HeaderCarrier
 
 import java.util.Locale
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -112,7 +111,7 @@ class CRNControllerSpec
             LicenceType.OperatorOfPrivateHireVehicles,
             LicenceTimeTrading.ZeroToTwoYears,
             LicenceValidityPeriod.UpToOneYear,
-            TaxSituation.SAPAYE,
+            None,
             None,
             None,
             None,
@@ -271,7 +270,7 @@ class CRNControllerSpec
             LicenceType.OperatorOfPrivateHireVehicles,
             LicenceTimeTrading.ZeroToTwoYears,
             LicenceValidityPeriod.UpToOneYear,
-            TaxSituation.SAPAYE,
+            None,
             None,
             None,
             None,
@@ -340,7 +339,7 @@ class CRNControllerSpec
                 LicenceType.OperatorOfPrivateHireVehicles,
                 LicenceTimeTrading.ZeroToTwoYears,
                 LicenceValidityPeriod.UpToOneYear,
-                TaxSituation.SAPAYE,
+                None,
                 None,
                 None,
                 None,
