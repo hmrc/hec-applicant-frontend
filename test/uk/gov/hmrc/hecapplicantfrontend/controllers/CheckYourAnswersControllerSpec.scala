@@ -97,7 +97,9 @@ class CheckYourAnswersControllerSpec
           LicenceValidityPeriod.UpToTwoYears,
           TaxSituation.PAYE,
           Some(IncomeDeclared.Yes),
-          Some(EntityType.Individual)
+          Some(EntityType.Individual),
+          None,
+          None
         )
 
         val session = HECSession(individualRetrievedData, answers, None)
@@ -176,7 +178,9 @@ class CheckYourAnswersControllerSpec
         LicenceValidityPeriod.UpToOneYear,
         TaxSituation.SA,
         Some(IncomeDeclared.Yes),
-        Some(EntityType.Individual)
+        Some(EntityType.Individual),
+        None,
+        None
       )
 
       val session = HECSession(individualRetrievedData, completeAnswers, None)

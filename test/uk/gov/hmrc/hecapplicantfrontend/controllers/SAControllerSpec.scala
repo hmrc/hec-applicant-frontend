@@ -50,7 +50,7 @@ class SAControllerSpec
 
   private val controller = instanceOf[SAController]
 
-  val individuaRetrievedlData =
+  val individuaRetrievedlData: IndividualRetrievedData =
     IndividualRetrievedData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None, None)
 
   "SAController" when {
@@ -173,7 +173,9 @@ class SAControllerSpec
                 LicenceValidityPeriod.UpToTwoYears,
                 TaxSituation.PAYE,
                 Some(IncomeDeclared.Yes),
-                Some(EntityType.Individual)
+                Some(EntityType.Individual),
+                None,
+                None
               ),
               None
             )
@@ -308,6 +310,8 @@ class SAControllerSpec
               LicenceValidityPeriod.UpToOneYear,
               TaxSituation.SA,
               Some(IncomeDeclared.Yes),
+              None,
+              None,
               None
             )
             val updatedAnswers = IncompleteUserAnswers

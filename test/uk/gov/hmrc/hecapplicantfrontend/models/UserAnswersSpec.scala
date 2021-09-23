@@ -27,7 +27,7 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
   "UserAnswers" must {
 
     "have an empty val" in {
-      UserAnswers.empty shouldBe IncompleteUserAnswers(None, None, None, None, None, None)
+      UserAnswers.empty shouldBe IncompleteUserAnswers(None, None, None, None, None, None, None, None)
     }
 
     "have a fold method" which {
@@ -47,7 +47,9 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
           LicenceValidityPeriod.UpToFiveYears,
           TaxSituation.PAYE,
           None,
-          Some(EntityType.Individual)
+          Some(EntityType.Individual),
+          None,
+          None
         )
         completeAnswers.fold(
           _ => fail(),
@@ -64,7 +66,9 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
         LicenceValidityPeriod.UpToTwoYears,
         TaxSituation.PAYE,
         None,
-        Some(EntityType.Individual)
+        Some(EntityType.Individual),
+        None,
+        None
       )
       IncompleteUserAnswers.fromCompleteAnswers(completeAnswers) shouldBe IncompleteUserAnswers(
         Some(LicenceType.DriverOfTaxisAndPrivateHires),
@@ -72,7 +76,9 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
         Some(LicenceValidityPeriod.UpToTwoYears),
         Some(TaxSituation.PAYE),
         None,
-        Some(EntityType.Individual)
+        Some(EntityType.Individual),
+        None,
+        None
       )
 
     }
@@ -86,7 +92,9 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
           Some(LicenceValidityPeriod.UpToThreeYears),
           Some(TaxSituation.PAYE),
           None,
-          Some(EntityType.Company)
+          Some(EntityType.Company),
+          None,
+          None
         )
 
       val completeAnswers =
@@ -96,7 +104,9 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
           LicenceValidityPeriod.UpToThreeYears,
           TaxSituation.PAYE,
           None,
-          Some(EntityType.Company)
+          Some(EntityType.Company),
+          None,
+          None
         )
 
       "unsets the licence type field" in {

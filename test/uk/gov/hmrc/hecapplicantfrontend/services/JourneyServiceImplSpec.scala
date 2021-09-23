@@ -543,6 +543,8 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             LicenceValidityPeriod.UpToOneYear,
             TaxSituation.PAYE,
             None,
+            None,
+            None,
             None
           )
 
@@ -552,6 +554,8 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             Some(completeAnswers.licenceValidityPeriod),
             Some(completeAnswers.taxSituation),
             completeAnswers.saIncomeDeclared,
+            None,
+            None,
             None
           )
 
@@ -587,7 +591,9 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 LicenceValidityPeriod.UpToOneYear,
                 TaxSituation.PAYE,
                 Some(IncomeDeclared.Yes),
-                Some(EntityType.Company)
+                Some(EntityType.Company),
+                None,
+                None
               )
 
               val incompleteAnswers = IncompleteUserAnswers(
@@ -596,7 +602,9 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 Some(completeAnswers.licenceValidityPeriod),
                 Some(completeAnswers.taxSituation),
                 Some(IncomeDeclared.Yes),
-                Some(EntityType.Company)
+                Some(EntityType.Company),
+                None,
+                None
               )
 
               val session                                     = HECSession(companyRetrievedData, incompleteAnswers, None)
@@ -629,6 +637,8 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 LicenceValidityPeriod.UpToOneYear,
                 taxSituation,
                 None,
+                None,
+                None,
                 None
               )
 
@@ -638,7 +648,9 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 Some(completeAnswers.licenceValidityPeriod),
                 Some(completeAnswers.taxSituation),
                 completeAnswers.saIncomeDeclared,
-                completeAnswers.entityType
+                completeAnswers.entityType,
+                None,
+                None
               )
 
               val session = HECSession(individualRetrievedData, incompleteAnswers, None)
@@ -667,6 +679,8 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 LicenceValidityPeriod.UpToOneYear,
                 taxSituation,
                 Some(IncomeDeclared.Yes),
+                None,
+                None,
                 None
               )
 
@@ -676,7 +690,9 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 Some(completeAnswers.licenceValidityPeriod),
                 Some(completeAnswers.taxSituation),
                 completeAnswers.saIncomeDeclared,
-                completeAnswers.entityType
+                completeAnswers.entityType,
+                None,
+                None
               )
 
               val individualData = individualRetrievedData.copy(saStatus =
@@ -708,6 +724,8 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 LicenceValidityPeriod.UpToOneYear,
                 taxSituation,
                 None,
+                None,
+                None,
                 None
               )
 
@@ -717,7 +735,9 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 Some(completeAnswers.licenceValidityPeriod),
                 Some(completeAnswers.taxSituation),
                 completeAnswers.saIncomeDeclared,
-                completeAnswers.entityType
+                completeAnswers.entityType,
+                None,
+                None
               )
 
               val individualData = individualRetrievedData.copy(saStatus =
@@ -748,7 +768,9 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             Some(LicenceValidityPeriod.UpToOneYear),
             Some(TaxSituation.PAYE),
             Some(IncomeDeclared.Yes),
-            Some(EntityType.Company)
+            Some(EntityType.Company),
+            None,
+            None
           )
 
           val session                                     = HECSession(individualRetrievedData, incompleteAnswers, None)
@@ -1013,7 +1035,9 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
               LicenceValidityPeriod.UpToOneYear,
               taxSituation,
               Some(IncomeDeclared.Yes),
-              entityType
+              entityType,
+              None,
+              None
             )
 
           "tax situation = SA & SA status = NoticeToFileIssued" in {
@@ -1173,6 +1197,8 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
               Some(LicenceValidityPeriod.UpToOneYear),
               Some(taxSituation),
               Some(IncomeDeclared.Yes),
+              None,
+              None,
               None
             ),
             None
@@ -1190,7 +1216,9 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             LicenceValidityPeriod.UpToOneYear,
             TaxSituation.PAYE,
             Some(IncomeDeclared.Yes),
-            Some(EntityType.Individual)
+            Some(EntityType.Individual),
+            None,
+            None
           )
           implicit val request: RequestWithSessionData[_] =
             requestWithSessionData(
@@ -1215,7 +1243,9 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
         licenceValidityPeriod = Some(LicenceValidityPeriod.UpToOneYear),
         taxSituation = Some(TaxSituation.PAYE),
         saIncomeDeclared = None,
-        entityType = None
+        entityType = None,
+        None,
+        None
       )
 
       "return true for individual licence type & entity type is missing" in {

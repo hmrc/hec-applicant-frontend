@@ -164,10 +164,8 @@ class TestMessagesApiProvider @Inject() (
       httpConfiguration,
       langCookieMaxAge
     ) {
-      override protected def noMatch(key: String, args: Seq[Any])(implicit lang: Lang): String = {
-        logger.error(s"Could not find message for key: $key ${args.mkString("-")}")
-        s"""not_found_message("$key")"""
-      }
+      override protected def noMatch(key: String, args: Seq[Any])(implicit lang: Lang): String =
+        sys.error(s"Could not find message for key: $key ${args.mkString("-")}")
     }
 
 }

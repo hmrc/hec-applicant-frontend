@@ -92,6 +92,8 @@ class CRNController @Inject() (
       .fold(
         { e =>
           logger.warn(" Couldn't get company Name from the given CRN", e)
+          //There will be a page in future, which hasn't been designed yet. Its WIP.
+          //So for now, it's an internal server error
           InternalServerError
         },
         Redirect

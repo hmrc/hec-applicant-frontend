@@ -171,6 +171,8 @@ class TaxSituationControllerSpec
                 LicenceValidityPeriod.UpToThreeYears,
                 TaxSituation.PAYE,
                 Some(IncomeDeclared.Yes),
+                None,
+                None,
                 None
               ),
               None
@@ -767,7 +769,9 @@ class TaxSituationControllerSpec
               LicenceValidityPeriod.UpToThreeYears,
               TaxSituation.PAYE,
               Some(IncomeDeclared.Yes),
-              Some(EntityType.Individual)
+              Some(EntityType.Individual),
+              None,
+              None
             )
             val session = HECSession(individualRetrievedData.copy(sautr = Some(SAUTR("utr"))), answers, None)
 
@@ -777,7 +781,9 @@ class TaxSituationControllerSpec
               Some(LicenceValidityPeriod.UpToThreeYears),
               Some(TaxSituation.PAYE),
               None,
-              Some(EntityType.Individual)
+              Some(EntityType.Individual),
+              None,
+              None
             )
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 

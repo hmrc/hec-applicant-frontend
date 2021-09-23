@@ -101,7 +101,9 @@ class EntityTypeControllerSpec
                 LicenceValidityPeriod.UpToTwoYears,
                 TaxSituation.PAYE,
                 Some(IncomeDeclared.Yes),
-                Some(EntityType.Individual)
+                Some(EntityType.Individual),
+                None,
+                None
               ),
               None
             )
@@ -257,6 +259,8 @@ class EntityTypeControllerSpec
               LicenceValidityPeriod.UpToOneYear,
               TaxSituation.PAYE,
               Some(IncomeDeclared.Yes),
+              None,
+              None,
               None
             )
             val updatedAnswers = IncompleteUserAnswers
@@ -278,12 +282,14 @@ class EntityTypeControllerSpec
 
           "the user is a company and  has previously completed answering questions" in {
             val answers        = CompleteUserAnswers(
-              LicenceType.OperatorOfPrivateHireVehicles,
-              LicenceTimeTrading.ZeroToTwoYears,
-              LicenceValidityPeriod.UpToOneYear,
-              TaxSituation.SAPAYE,
-              Some(IncomeDeclared.Yes),
-              None
+              licenceType = LicenceType.OperatorOfPrivateHireVehicles,
+              licenceTimeTrading = LicenceTimeTrading.ZeroToTwoYears,
+              licenceValidityPeriod = LicenceValidityPeriod.UpToOneYear,
+              taxSituation = TaxSituation.SAPAYE,
+              saIncomeDeclared = Some(IncomeDeclared.Yes),
+              entityType = None,
+              crn = None,
+              companyName = None
             )
             val updatedAnswers = IncompleteUserAnswers
               .fromCompleteAnswers(answers)

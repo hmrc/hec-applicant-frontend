@@ -1,3 +1,4 @@
+lang.code = en
 gov.uk = GOV.UK
 service.name = Do a tax check when renewing or applying for a licence
 service.text = This is your new service
@@ -214,7 +215,7 @@ timedOut.title = For your security, we signed you out
 timedOut.p1 = We did not save your answers.
 timedOut.signIn = Sign in
 
-#CRN
+# CRN
 crn.title = What is your company registration number?
 crn.hint = Companies House sent this to you when you set up your company. This is also called a company number. For example, SN898989 or 12345678.
 crn.link = Search for a company registration number
