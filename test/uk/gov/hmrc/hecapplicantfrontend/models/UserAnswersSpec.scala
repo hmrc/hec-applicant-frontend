@@ -18,6 +18,7 @@ package uk.gov.hmrc.hecapplicantfrontend.models
 
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import play.api.libs.json.Json
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.{CompleteUserAnswers, IncompleteUserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 
@@ -120,6 +121,61 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
 
     }
 
+    "perform JSON de/serialisation correctly" must {
+      val incompleteAnswers: UserAnswers =
+        IncompleteUserAnswers(
+          Some(LicenceType.DriverOfTaxisAndPrivateHires),
+          Some(LicenceTimeTrading.ZeroToTwoYears),
+          Some(LicenceValidityPeriod.UpToThreeYears),
+          Some(TaxSituation.PAYE),
+          None,
+          Some(EntityType.Company)
+        )
+
+      val incompleteJson = Json.parse("""{
+                                        |"licenceType":"DriverOfTaxisAndPrivateHires",
+                                        |"licenceTimeTrading":"ZeroToTwoYears",
+                                        |"licenceValidityPeriod":"UpToThreeYears",
+                                        |"taxSituation":"PAYE",
+                                        |"entityType":"Company",
+                                        |"type":"Incomplete"
+                                        |}""".stripMargin)
+
+      val completeAnswers: UserAnswers =
+        CompleteUserAnswers(
+          LicenceType.DriverOfTaxisAndPrivateHires,
+          LicenceTimeTrading.ZeroToTwoYears,
+          LicenceValidityPeriod.UpToThreeYears,
+          TaxSituation.PAYE,
+          None,
+          Some(EntityType.Company)
+        )
+
+      val completeJson = Json.parse("""{
+                                      |"licenceType":"DriverOfTaxisAndPrivateHires",
+                                      |"licenceTimeTrading":"ZeroToTwoYears",
+                                      |"licenceValidityPeriod":"UpToThreeYears",
+                                      |"taxSituation":"PAYE",
+                                      |"entityType":"Company",
+                                      |"type":"Complete"
+                                      |}""".stripMargin)
+
+      "serialize Incomplete answers" in {
+        Json.toJson(incompleteAnswers) shouldBe incompleteJson
+      }
+
+      "serialize Complete answers" in {
+        Json.toJson(completeAnswers) shouldBe completeJson
+      }
+
+      "deserialize Incomplete answers" in {
+        Json.fromJson[UserAnswers](incompleteJson).get shouldBe incompleteAnswers
+      }
+
+      "deserialize Complete answers" in {
+        Json.fromJson[UserAnswers](completeJson).get shouldBe completeAnswers
+      }
+    }
   }
 
 }

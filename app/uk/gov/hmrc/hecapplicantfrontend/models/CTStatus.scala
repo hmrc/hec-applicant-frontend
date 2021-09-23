@@ -16,8 +16,10 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models
 
-import julienrf.json.derived
-import play.api.libs.json.OFormat
+import ai.x.play.json.Jsonx
+import ai.x.play.json.SingletonEncoder.simpleName
+import ai.x.play.json.implicits.formatSingleton
+import play.api.libs.json.Format
 
 sealed trait CTStatus
 
@@ -31,6 +33,7 @@ object CTStatus {
 
   case object NoReturnFound extends CTStatus
 
-  implicit val format: OFormat[CTStatus] = derived.oformat()
+  @SuppressWarnings(Array("org.wartremover.warts.All"))
+  implicit val format: Format[CTStatus] = Jsonx.formatSealed[CTStatus]
 
 }

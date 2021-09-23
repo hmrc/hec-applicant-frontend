@@ -16,13 +16,27 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models
 
-import julienrf.json.derived
+import ai.x.play.json.Jsonx
 import monocle.Lens
 import monocle.macros.Lenses
-import play.api.libs.json.OFormat
+import play.api.libs.json._
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 
-sealed trait UserAnswers extends Product with Serializable
+sealed trait UserAnswersType
+object UserAnswersType {
+  case object Incomplete extends UserAnswersType
+  case object Complete extends UserAnswersType
+
+  import ai.x.play.json.SingletonEncoder.simpleName
+  import ai.x.play.json.implicits.formatSingleton
+
+  @SuppressWarnings(Array("org.wartremover.warts.All"))
+  implicit val format: Format[UserAnswersType] = Jsonx.formatSealed[UserAnswersType]
+}
+
+sealed trait UserAnswers extends Product with Serializable {
+  val userAnswersType: UserAnswersType
+}
 
 object UserAnswers {
 
@@ -34,7 +48,9 @@ object UserAnswers {
     taxSituation: Option[TaxSituation],
     saIncomeDeclared: Option[IncomeDeclared],
     entityType: Option[EntityType]
-  ) extends UserAnswers
+  ) extends UserAnswers {
+    val userAnswersType: UserAnswersType = UserAnswersType.Incomplete
+  }
 
   final case class CompleteUserAnswers(
     licenceType: LicenceType,
@@ -43,7 +59,9 @@ object UserAnswers {
     taxSituation: TaxSituation,
     saIncomeDeclared: Option[IncomeDeclared],
     entityType: Option[EntityType]
-  ) extends UserAnswers
+  ) extends UserAnswers {
+    val userAnswersType: UserAnswersType = UserAnswersType.Complete
+  }
 
   object IncompleteUserAnswers {
 
@@ -80,7 +98,23 @@ object UserAnswers {
 
   val empty: IncompleteUserAnswers = IncompleteUserAnswers(None, None, None, None, None, None)
 
-  implicit val format: OFormat[UserAnswers] = derived.oformat()
+  implicit val format: OFormat[UserAnswers] = new OFormat[UserAnswers] {
+    override def reads(json: JsValue): JsResult[UserAnswers] =
+      (json \ "type")
+        .validate[UserAnswersType]
+        .flatMap {
+          case UserAnswersType.Incomplete => Json.reads[IncompleteUserAnswers].reads(json)
+          case UserAnswersType.Complete   => Json.reads[CompleteUserAnswers].reads(json)
+        }
+
+    override def writes(o: UserAnswers): JsObject = {
+      val json = o match {
+        case i: IncompleteUserAnswers => Json.writes[IncompleteUserAnswers].writes(i)
+        case c: CompleteUserAnswers   => Json.writes[CompleteUserAnswers].writes(c)
+      }
+      json ++ Json.obj("type" -> o.userAnswersType)
+    }
+  }
 
   def taxSituation(userAnswers: UserAnswers): Option[TaxSituation] =
     userAnswers match {

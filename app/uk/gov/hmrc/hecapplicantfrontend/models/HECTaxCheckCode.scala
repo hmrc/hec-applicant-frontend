@@ -16,14 +16,12 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models
 
-import play.api.libs.functional.syntax.toInvariantFunctorOps
-import play.api.libs.json.Format
+import play.api.libs.json.{Format, Json}
 
 final case class HECTaxCheckCode(value: String) extends AnyVal
 
 object HECTaxCheckCode {
 
-  implicit val format: Format[HECTaxCheckCode] =
-    implicitly[Format[String]].inmap(HECTaxCheckCode(_), _.value)
+  implicit val format: Format[HECTaxCheckCode] = Json.valueFormat[HECTaxCheckCode]
 
 }

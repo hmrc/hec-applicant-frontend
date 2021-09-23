@@ -17,8 +17,10 @@
 package uk.gov.hmrc.hecapplicantfrontend.models
 
 import cats.Eq
-import julienrf.json.derived
-import play.api.libs.json.OFormat
+import ai.x.play.json.Jsonx
+import ai.x.play.json.SingletonEncoder.simpleName
+import ai.x.play.json.implicits.formatSingleton
+import play.api.libs.json.Format
 
 sealed trait EntityType extends Product with Serializable
 
@@ -35,6 +37,7 @@ object EntityType {
 
   implicit val eq: Eq[EntityType] = Eq.fromUniversalEquals
 
-  implicit val format: OFormat[EntityType] = derived.oformat()
+  @SuppressWarnings(Array("org.wartremover.warts.Throw", "org.wartremover.warts.Equals"))
+  implicit val format: Format[EntityType] = Jsonx.formatSealed[EntityType]
 
 }

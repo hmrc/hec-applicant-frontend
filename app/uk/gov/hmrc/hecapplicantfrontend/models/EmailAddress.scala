@@ -16,14 +16,12 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models
 
-import play.api.libs.functional.syntax.toInvariantFunctorOps
-import play.api.libs.json.Format
+import play.api.libs.json.{Format, Json}
 
 final case class EmailAddress(value: String) extends AnyVal
 
 object EmailAddress {
 
-  implicit val format: Format[EmailAddress] =
-    implicitly[Format[String]].inmap(EmailAddress(_), _.value)
+  implicit val format: Format[EmailAddress] = Json.valueFormat[EmailAddress]
 
 }

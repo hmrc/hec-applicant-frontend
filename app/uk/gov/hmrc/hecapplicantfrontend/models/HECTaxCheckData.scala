@@ -16,13 +16,14 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models
 
-import julienrf.json.derived
-import play.api.libs.json.OFormat
+import play.api.libs.json._
 import uk.gov.hmrc.hecapplicantfrontend.models.ApplicantDetails.{CompanyApplicantDetails, IndividualApplicantDetails}
 import uk.gov.hmrc.hecapplicantfrontend.models.TaxDetails.{CompanyTaxDetails, IndividualTaxDetails}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceDetails
 
-sealed trait HECTaxCheckData extends Product with Serializable
+sealed trait HECTaxCheckData extends Product with Serializable {
+  val entityType: EntityType
+}
 
 object HECTaxCheckData {
 
@@ -30,14 +31,35 @@ object HECTaxCheckData {
     applicantDetails: IndividualApplicantDetails,
     licenceDetails: LicenceDetails,
     taxDetails: IndividualTaxDetails
-  ) extends HECTaxCheckData
+  ) extends HECTaxCheckData {
+    val entityType: EntityType = EntityType.Individual
+  }
 
   final case class CompanyHECTaxCheckData(
     applicantDetails: CompanyApplicantDetails,
     licenceDetails: LicenceDetails,
     taxDetails: CompanyTaxDetails
-  ) extends HECTaxCheckData
+  ) extends HECTaxCheckData {
+    val entityType: EntityType = EntityType.Company
+  }
 
-  implicit val format: OFormat[HECTaxCheckData] = derived.oformat()
+  implicit val format: OFormat[HECTaxCheckData] = new OFormat[HECTaxCheckData] {
+
+    override def reads(json: JsValue): JsResult[HECTaxCheckData] =
+      (json \ "type")
+        .validate[EntityType]
+        .flatMap {
+          case EntityType.Individual => Json.reads[IndividualHECTaxCheckData].reads(json)
+          case EntityType.Company    => Json.reads[CompanyHECTaxCheckData].reads(json)
+        }
+
+    override def writes(o: HECTaxCheckData): JsObject = {
+      val json = o match {
+        case i: IndividualHECTaxCheckData => Json.writes[IndividualHECTaxCheckData].writes(i)
+        case c: CompanyHECTaxCheckData    => Json.writes[CompanyHECTaxCheckData].writes(c)
+      }
+      json ++ Json.obj("type" -> o.entityType)
+    }
+  }
 
 }
