@@ -60,7 +60,7 @@ object UserAnswers {
     licenceType: LicenceType,
     licenceTimeTrading: LicenceTimeTrading,
     licenceValidityPeriod: LicenceValidityPeriod,
-    taxSituation: TaxSituation,
+    taxSituation: Option[TaxSituation],
     saIncomeDeclared: Option[IncomeDeclared],
     entityType: Option[EntityType],
     crn: Option[CRN],
@@ -76,7 +76,7 @@ object UserAnswers {
         Some(c.licenceType),
         Some(c.licenceTimeTrading),
         Some(c.licenceValidityPeriod),
-        Some(c.taxSituation),
+        c.taxSituation,
         c.saIncomeDeclared,
         c.entityType,
         c.crn,
@@ -127,7 +127,7 @@ object UserAnswers {
   def taxSituation(userAnswers: UserAnswers): Option[TaxSituation] =
     userAnswers match {
       case i: IncompleteUserAnswers => i.taxSituation
-      case c: CompleteUserAnswers   => Some(c.taxSituation)
+      case c: CompleteUserAnswers   => c.taxSituation
     }
 
 }

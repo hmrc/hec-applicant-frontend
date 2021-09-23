@@ -65,12 +65,14 @@
     }
 }
 @taxSituationRow = @{
-    summaryListRow(
-        messages("taxSituation.title"),
-        messages(s"taxSituation.${TaxSituationOption.taxSituationOption(completeAnswers.taxSituation).messageKey}"),
-        routes.TaxSituationController.taxSituation(),
-        messages(s"$key.taxSituation.screenReaderText")
-    )
+    completeAnswers.taxSituation.map { taxSituation =>
+        summaryListRow(
+            messages("taxSituation.title"),
+            messages(s"taxSituation.${TaxSituationOption.taxSituationOption(taxSituation).messageKey}"),
+            routes.TaxSituationController.taxSituation(),
+            messages(s"$key.taxSituation.screenReaderText")
+        )
+    }
 }
 @saIncomeDeclaredRow = @{
     completeAnswers.saIncomeDeclared.map { saIncomeDeclared =>
@@ -88,7 +90,7 @@
     Some(licenceTimeTradingRow),
     Some(licenceValidityPeriodRow),
     entityTypeRow,
-    Some(taxSituationRow),
+    taxSituationRow,
     saIncomeDeclaredRow
 ).collect{ case Some(r) => r }}
 

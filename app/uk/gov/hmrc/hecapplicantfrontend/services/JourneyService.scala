@@ -169,7 +169,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
                 licenceType,
                 licenceTimeTrading,
                 licenceValidityPeriod,
-                taxSituation,
+                Some(taxSituation),
                 saIncomeDeclared,
                 entityType,
                 crn,
