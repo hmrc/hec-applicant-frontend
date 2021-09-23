@@ -17,7 +17,6 @@
 package uk.gov.hmrc.hecapplicantfrontend.services
 
 import java.time.LocalDate
-
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -26,10 +25,11 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthenticatedRequest, RequestWithSessionData}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.{SessionSupport, routes}
+import uk.gov.hmrc.hecapplicantfrontend.models.EntityType.Company
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRetrievedData, IndividualRetrievedData}
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.{CompleteUserAnswers, IncompleteUserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models._
-import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO, SAUTR}
+import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, GGCredId, NINO, SAUTR}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -530,6 +530,27 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             session
           )
           await(result.value) shouldBe Right(routes.TaxCheckCompleteController.taxCheckComplete())
+        }
+
+        "the company registration number  page" in {
+          val session        = HECSession(companyRetrievedData, UserAnswers.empty, None)
+          val updatedSession =
+            HECSession(
+              companyRetrievedData,
+              UserAnswers.empty.copy(crn = Some(CRN("123456")), companyName = Some(CompanyHouseName("Test Teach Ltd"))),
+              None
+            )
+
+          implicit val request: RequestWithSessionData[_] =
+            requestWithSessionData(session)
+
+          mockStoreSession(updatedSession)(Right(()))
+
+          val result = journeyService.updateAndNext(
+            routes.CRNController.companyRegistrationNumber(),
+            updatedSession
+          )
+          await(result.value) shouldBe Right(routes.CompanyDetailsController.confirmCompanyDetails())
         }
 
       }
@@ -1177,6 +1198,27 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
           "tax situation = Not Chargeable" in {
             testThrows(TaxSituation.NotChargeable)
           }
+        }
+
+        "the company registration number page" in {
+          val session                                     = HECSession(
+            companyRetrievedData,
+            UserAnswers.empty.copy(
+              licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles),
+              entityType = Some(Company),
+              crn = Some(CRN("123456")),
+              companyName = Some(CompanyHouseName("Test Tech Ltd"))
+            ),
+            None
+          )
+          implicit val request: RequestWithSessionData[_] =
+            requestWithSessionData(session)
+
+          val result = journeyService.previous(
+            routes.CRNController.companyRegistrationNumber()
+          )
+
+          result shouldBe routes.EntityTypeController.entityType
         }
 
         def buildIndividualSession(taxSituation: TaxSituation, saStatus: SAStatus): HECSession = {
