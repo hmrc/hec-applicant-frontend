@@ -17,12 +17,12 @@
 package uk.gov.hmrc.hecapplicantfrontend.services
 
 import cats.data.EitherT
-import cats.instances.int._
 import cats.instances.future._
+import cats.instances.int._
 import cats.syntax.either._
 import cats.syntax.eq._
-import play.api.http.Status.OK
 import com.google.inject.{ImplementedBy, Inject}
+import play.api.http.Status.{NOT_FOUND, OK}
 import uk.gov.hmrc.hecapplicantfrontend.connectors.CompanyDetailsConnector
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.CRN
 import uk.gov.hmrc.hecapplicantfrontend.models.{CompanyHouseDetails, Error}
@@ -34,7 +34,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @ImplementedBy(classOf[CompanyDetailsServiceImpl])
 trait CompanyDetailsService {
-  def findCompany(companyNumber: CRN)(implicit hc: HeaderCarrier): EitherT[Future, Error, CompanyHouseDetails]
+  def findCompany(companyNumber: CRN)(implicit hc: HeaderCarrier): EitherT[Future, Error, Option[CompanyHouseDetails]]
 }
 
 @Singleton
@@ -44,14 +44,15 @@ class CompanyDetailsServiceImpl @Inject() (
     extends CompanyDetailsService {
   override def findCompany(
     companyNumber: CRN
-  )(implicit hc: HeaderCarrier): EitherT[Future, Error, CompanyHouseDetails] =
+  )(implicit hc: HeaderCarrier): EitherT[Future, Error, Option[CompanyHouseDetails]] =
     companyDetailsConnector.findCompany(companyNumber).subflatMap { httpResponse =>
-      if (httpResponse.status =!= OK)
-        Left(Error(s"Response to get company details came back with status ${httpResponse.status}"))
-      else
+      if (httpResponse.status === OK) {
         httpResponse
-          .parseJSON[CompanyHouseDetails]
+          .parseJSON[Option[CompanyHouseDetails]]
           .leftMap(Error(_))
+      } else if (httpResponse.status === NOT_FOUND) {
+        Right(None)
+      } else Left(Error(s"Response to get company details came back with status ${httpResponse.status}"))
     }
 
 }

@@ -77,14 +77,15 @@ class CRNController @Inject() (
 
   private def checkCompanyName(crn: CRN)(implicit request: RequestWithSessionData[_]): EitherT[Future, Error, Call] =
     for {
-      companyHouseDetails <- companyDetailsService.findCompany(crn)
-      updatedAnswers       = request.sessionData.userAnswers
-                               .unset(_.crn)
-                               .unset(_.companyName)
-                               .copy(crn = Some(crn), companyName = Some(companyHouseDetails.companyName))
-      updatedSession       = request.sessionData.copy(userAnswers = updatedAnswers)
-      next                <- journeyService
-                               .updateAndNext(routes.CRNController.companyRegistrationNumber(), updatedSession)
+      companyHouseDetailsOpt <- companyDetailsService.findCompany(crn)
+      updatedAnswers          =
+        request.sessionData.userAnswers
+          .unset(_.crn)
+          .unset(_.companyName)
+          .copy(crn = Some(crn), companyName = companyHouseDetailsOpt.map(_.companyName))
+      updatedSession          = request.sessionData.copy(userAnswers = updatedAnswers)
+      next                   <- journeyService
+                                  .updateAndNext(routes.CRNController.companyRegistrationNumber(), updatedSession)
     } yield next
 
   private def handleValidCrn(crn: CRN)(implicit request: RequestWithSessionData[_]): Future[Result] =
@@ -92,8 +93,6 @@ class CRNController @Inject() (
       .fold(
         { e =>
           logger.warn(" Couldn't get company Name from the given CRN", e)
-          //There will be a page in future, which hasn't been designed yet. Its WIP.
-          //So for now, it's an internal server error
           InternalServerError
         },
         Redirect

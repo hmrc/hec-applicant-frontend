@@ -73,7 +73,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
     routes.TaxSituationController.taxSituation()                         -> taxSituationRoute,
     routes.SAController.saIncomeStatement()                              -> (_ => routes.CheckYourAnswersController.checkYourAnswers()),
     routes.CheckYourAnswersController.checkYourAnswers()                 -> (_ => routes.TaxCheckCompleteController.taxCheckComplete()),
-    routes.CRNController.companyRegistrationNumber()                     -> (_ => routes.CompanyDetailsController.confirmCompanyDetails())
+    routes.CRNController.companyRegistrationNumber()                     -> companyRegistrationNumberRoute
   )
 
   // map which describes routes from an exit page to their previous page. The keys are the exit page and the values are
@@ -236,6 +236,15 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
           routes.CheckYourAnswersController.checkYourAnswers()
         }
     }
+
+  private def companyRegistrationNumberRoute(session: HECSession) = {
+    val companyNameOpt = session.userAnswers.fold(_.companyName, _.companyName)
+    companyNameOpt match {
+      case Some(_) => routes.CompanyDetailsController.confirmCompanyDetails()
+      case None    => routes.CompanyDetailsNotFoundController.companyNotFound()
+    }
+
+  }
 
 }
 

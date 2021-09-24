@@ -24,7 +24,7 @@ import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
-class CompanyDetailsController @Inject() (
+class CompanyDetailsNotFoundController @Inject() (
   authAction: AuthAction,
   sessionDataAction: SessionDataAction,
   journeyService: JourneyService,
@@ -32,10 +32,10 @@ class CompanyDetailsController @Inject() (
 ) extends FrontendController(mcc)
     with I18nSupport
     with Logging {
-  val confirmCompanyDetails: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
+  val companyNotFound: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
     Ok(
       s" The session is ${request.sessionData} and back Url is : ${journeyService
-        .previous(routes.CompanyDetailsController.confirmCompanyDetails())}"
+        .previous(routes.CompanyDetailsNotFoundController.companyNotFound())}"
     )
   }
 

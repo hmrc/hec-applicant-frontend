@@ -46,6 +46,8 @@ POST       /company-registration-number    uk.gov.hmrc.hecapplicantfrontend.cont
 
 GET        /confirm-company-details        uk.gov.hmrc.hecapplicantfrontend.controllers.CompanyDetailsController.confirmCompanyDetails
 
+GET        /company-not-found              uk.gov.hmrc.hecapplicantfrontend.controllers.CompanyDetailsNotFoundController.companyNotFound
+
 # IV
 GET  /failed-iv/callback                         uk.gov.hmrc.hecapplicantfrontend.controllers.IvFailureController.ivFailure(journeyId: java.util.UUID)
 GET  /failed-iv/retry                            uk.gov.hmrc.hecapplicantfrontend.controllers.IvFailureController.retry
