@@ -26,21 +26,21 @@ import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.authorise.EmptyPredicate
-import uk.gov.hmrc.auth.core.retrieve.{Credentials, ~}
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
-import uk.gov.hmrc.auth.core.{AffinityGroup, AuthConnector, AuthorisationException, BearerTokenExpired, ConfidenceLevel, Enrolment, EnrolmentIdentifier, Enrolments, IncorrectCredentialStrength, InsufficientEnrolments, InternalError, InvalidBearerToken, MissingBearerToken, NoActiveSession, SessionRecordNotFound, UnsupportedAffinityGroup, UnsupportedAuthProvider, UnsupportedCredentialRole}
+import uk.gov.hmrc.auth.core.retrieve.{Credentials, ~}
+import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.hecapplicantfrontend.config.EnrolmentConfig
-import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
-import uk.gov.hmrc.hecapplicantfrontend.services.{CitizenDetailsService, JourneyService}
-import uk.gov.hmrc.hecapplicantfrontend.models.{CitizenDetails, DateOfBirth, EmailAddress, Error, HECSession, Name, UserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRetrievedData, IndividualRetrievedData}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CTUTR, GGCredId, NINO, SAUTR}
+import uk.gov.hmrc.hecapplicantfrontend.models.{CitizenDetails, DateOfBirth, EmailAddress, Error, HECSession, Name, UserAnswers}
+import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
+import uk.gov.hmrc.hecapplicantfrontend.services.{CitizenDetailsService, JourneyService}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import java.net.URLEncoder
 import java.time.LocalDate
-import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSupport with JourneyServiceSupport {
 
@@ -148,7 +148,8 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
       val completeCompanyRetrievedData = CompanyRetrievedData(
         ggCredId,
         Some(ctutr),
-        Some(emailAddress)
+        Some(emailAddress),
+        None
       )
 
       def performAction(): Future[Result] = controller.start(FakeRequest())

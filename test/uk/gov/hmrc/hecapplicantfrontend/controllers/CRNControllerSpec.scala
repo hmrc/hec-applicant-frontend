@@ -61,7 +61,7 @@ class CRNControllerSpec
   )
 
   val controller           = instanceOf[CRNController]
-  val companyRetrievedData = CompanyRetrievedData(GGCredId(""), None, None)
+  val companyRetrievedData = CompanyRetrievedData(GGCredId(""), None, None, None)
 
   def mockFindCompany(crn: CRN)(
     result: Either[Error, Option[CompanyHouseDetails]]
@@ -114,7 +114,6 @@ class CRNControllerSpec
             None,
             None,
             None,
-            None,
             None
           )
 
@@ -122,8 +121,7 @@ class CRNControllerSpec
             .fromCompleteAnswers(answers)
             .copy(
               taxSituation = None,
-              crn = Some(validCRN(0)),
-              companyName = Some(CompanyHouseName("Test Tech Ltd"))
+              crn = Some(validCRN(0))
             )
           val session        = HECSession(companyRetrievedData, answers, None)
           val updatedSession = session.copy(userAnswers = updatedAnswers)
@@ -273,7 +271,6 @@ class CRNControllerSpec
             None,
             None,
             None,
-            None,
             None
           )
           val session = HECSession(companyRetrievedData, answers, None)
@@ -281,12 +278,12 @@ class CRNControllerSpec
           "there is an error updating and getting the next endpoint" in {
             val updatedAnswers = IncompleteUserAnswers
               .fromCompleteAnswers(answers)
-              .copy(
-                crn = Some(validCRN(0)),
-                companyName = Some(CompanyHouseName("Test Tech Ltd"))
-              )
+              .copy(crn = Some(validCRN(0)))
 
-            val updatedSession = session.copy(userAnswers = updatedAnswers)
+            val updatedSession = session.copy(
+              retrievedUserData = companyRetrievedData.copy(companyName = Some(companyHouseName)),
+              userAnswers = updatedAnswers
+            )
 
             inSequence {
               mockAuthWithNoRetrievals()
@@ -328,7 +325,6 @@ class CRNControllerSpec
                 None,
                 None,
                 None,
-                None,
                 None
               )
               val session      = HECSession(companyRetrievedData, answers, None)
@@ -336,11 +332,14 @@ class CRNControllerSpec
               val updatedAnswers = IncompleteUserAnswers
                 .fromCompleteAnswers(answers)
                 .copy(
-                  crn = Some(formattedCrn),
-                  companyName = companyDetails.map(_.companyName)
+                  crn = Some(formattedCrn)
                 )
 
-              val updatedSession = session.copy(userAnswers = updatedAnswers)
+              val updatedCompanyRetreiveData =
+                companyRetrievedData.copy(companyName = companyDetails.map(_.companyName))
+              val updatedSession             =
+                session.copy(retrievedUserData = updatedCompanyRetreiveData, userAnswers = updatedAnswers)
+
               inSequence {
                 mockAuthWithNoRetrievals()
                 mockGetSession(session)
@@ -361,13 +360,14 @@ class CRNControllerSpec
 
           }
 
-        "a valid CRN is submitted and company " in {
-          testNextCall(Some(CompanyHouseDetails(CompanyHouseName("TestTech Ltd"))))
-
+        "a valid CRN is submitted and company is found " in {
+          testNextCall(Some(CompanyHouseDetails(companyHouseName)))
         }
 
-        "a valid CRN is submitted but company is not found " in {}
-        testNextCall(None)
+        "a valid CRN is submitted but company is not found " in {
+          testNextCall(None)
+        }
+
       }
 
     }

@@ -18,21 +18,12 @@ package uk.gov.hmrc.hecapplicantfrontend.models
 
 import play.api.libs.json.JsonConfiguration.Aux
 import play.api.libs.json.JsonNaming.SnakeCase
-import play.api.libs.json.{Format, JsNull, JsResult, JsValue, Json, JsonConfiguration, OFormat, Writes}
+import play.api.libs.json.{Json, JsonConfiguration, OFormat}
 
 final case class CompanyHouseDetails(companyName: CompanyHouseName)
 object CompanyHouseDetails {
 
   implicit val config: Aux[Json.MacroOptions]           = JsonConfiguration(SnakeCase)
   implicit val userFormat: OFormat[CompanyHouseDetails] = Json.format[CompanyHouseDetails]
-
-  implicit def optionFormat[T : Format]: Format[Option[T]] = new Format[Option[T]] {
-    override def reads(json: JsValue): JsResult[Option[T]] = json.validateOpt[T]
-
-    override def writes(o: Option[T]): JsValue = o match {
-      case Some(t) ⇒ implicitly[Writes[T]].writes(t)
-      case None ⇒ JsNull
-    }
-  }
 
 }

@@ -27,7 +27,7 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
   "UserAnswers" must {
 
     "have an empty val" in {
-      UserAnswers.empty shouldBe IncompleteUserAnswers(None, None, None, None, None, None, None, None)
+      UserAnswers.empty shouldBe IncompleteUserAnswers(None, None, None, None, None, None, None)
     }
 
     "have a fold method" which {
@@ -48,7 +48,6 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
           Some(TaxSituation.PAYE),
           None,
           Some(EntityType.Individual),
-          None,
           None
         )
         completeAnswers.fold(
@@ -67,7 +66,6 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
         Some(TaxSituation.PAYE),
         None,
         Some(EntityType.Individual),
-        None,
         None
       )
       IncompleteUserAnswers.fromCompleteAnswers(completeAnswers) shouldBe IncompleteUserAnswers(
@@ -77,7 +75,6 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
         Some(TaxSituation.PAYE),
         None,
         Some(EntityType.Individual),
-        None,
         None
       )
 
@@ -93,7 +90,6 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
           Some(TaxSituation.PAYE),
           None,
           Some(EntityType.Company),
-          None,
           None
         )
 
@@ -105,7 +101,6 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
           Some(TaxSituation.PAYE),
           None,
           Some(EntityType.Company),
-          None,
           None
         )
 
@@ -140,7 +135,6 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
           Some(TaxSituation.PAYE),
           None,
           Some(EntityType.Company),
-          None,
           None
         )
 
@@ -161,7 +155,6 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
           Some(TaxSituation.PAYE),
           None,
           Some(EntityType.Company),
-          None,
           None
         )
 

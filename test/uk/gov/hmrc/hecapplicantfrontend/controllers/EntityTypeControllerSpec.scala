@@ -53,7 +53,7 @@ class EntityTypeControllerSpec
     IndividualRetrievedData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None, None)
 
   val companyRetrievedData =
-    CompanyRetrievedData(GGCredId(""), None, None)
+    CompanyRetrievedData(GGCredId(""), None, None, None)
 
   "EntityTypeController" when {
 
@@ -102,7 +102,6 @@ class EntityTypeControllerSpec
                 Some(TaxSituation.PAYE),
                 Some(IncomeDeclared.Yes),
                 Some(EntityType.Individual),
-                None,
                 None
               ),
               None
@@ -260,7 +259,6 @@ class EntityTypeControllerSpec
               Some(TaxSituation.PAYE),
               Some(IncomeDeclared.Yes),
               None,
-              None,
               None
             )
             val updatedAnswers = IncompleteUserAnswers
@@ -288,8 +286,7 @@ class EntityTypeControllerSpec
               taxSituation = Some(TaxSituation.SAPAYE),
               saIncomeDeclared = Some(IncomeDeclared.Yes),
               entityType = None,
-              crn = None,
-              companyName = None
+              crn = None
             )
             val updatedAnswers = IncompleteUserAnswers
               .fromCompleteAnswers(answers)

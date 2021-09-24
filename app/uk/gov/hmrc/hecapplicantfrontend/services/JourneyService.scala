@@ -153,7 +153,8 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
         val updatedSession = session.userAnswers match {
           case _ if isExitPageNext =>
             session
-
+          //will add a case for when company when it reaches the complete answers page
+          //if it's  added now, the code thinks the company's answers are all complete and take it to check your answers page
           case incomplete @ IncompleteUserAnswers(
                 Some(licenceType),
                 Some(licenceTimeTrading),
@@ -161,8 +162,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
                 Some(taxSituation),
                 saIncomeDeclared,
                 entityType,
-                crn,
-                companyName
+                crn
               ) if allAnswersComplete(incomplete, session.retrievedUserData) =>
             val completeAnswers =
               CompleteUserAnswers(
@@ -172,8 +172,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
                 Some(taxSituation),
                 saIncomeDeclared,
                 entityType,
-                crn,
-                companyName
+                crn
               )
             session.copy(userAnswers = completeAnswers)
 
@@ -237,14 +236,13 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
         }
     }
 
-  private def companyRegistrationNumberRoute(session: HECSession) = {
-    val companyNameOpt = session.userAnswers.fold(_.companyName, _.companyName)
-    companyNameOpt match {
-      case Some(_) => routes.CompanyDetailsController.confirmCompanyDetails()
-      case None    => routes.CompanyDetailsNotFoundController.companyNotFound()
+  private def companyRegistrationNumberRoute(session: HECSession) =
+    session.retrievedUserData match {
+      case IndividualRetrievedData(_, _, _, _, _, _, _) =>
+        sys.error("This may never happen, Individual data shouldn't be present  in company journey")
+      case CompanyRetrievedData(_, _, _, Some(_))       => routes.CompanyDetailsController.confirmCompanyDetails()
+      case _                                            => routes.CompanyDetailsNotFoundController.companyNotFound()
     }
-
-  }
 
 }
 
@@ -294,15 +292,19 @@ object JourneyServiceImpl {
             Some(licenceType),
             Some(_),
             Some(_),
-            Some(taxSituation),
+            taxSituation,
             saIncomeDeclared,
             entityType,
-            _,
             _
           ) =>
-        val licenceTypeCheck      = checkEntityTypePresentIfRequired(licenceType, entityType)
-        val saIncomeDeclaredCheck = checkSAIncomeDeclared(taxSituation, saIncomeDeclared, retrievedUserData)
-        licenceTypeCheck && saIncomeDeclaredCheck
+        val licenceTypeCheck = checkEntityTypePresentIfRequired(licenceType, entityType)
+        taxSituation match {
+          case Some(taxSituation) =>
+            val saIncomeDeclaredCheck = checkSAIncomeDeclared(taxSituation, saIncomeDeclared, retrievedUserData)
+            licenceTypeCheck && saIncomeDeclaredCheck
+          case None               => licenceTypeCheck
+        }
+
       case _ => false
     }
 }

@@ -57,7 +57,7 @@ class CheckYourAnswersControllerSpec
   val individualRetrievedData =
     IndividualRetrievedData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None, None)
 
-  val companyRetrievedData = CompanyRetrievedData(GGCredId(""), None, None)
+  val companyRetrievedData = CompanyRetrievedData(GGCredId(""), None, None, None)
 
   def mockSaveTaxCheck(applicantData: RetrievedApplicantData, completeAnswers: CompleteUserAnswers)(
     result: Either[Error, HECTaxCheck]
@@ -98,7 +98,6 @@ class CheckYourAnswersControllerSpec
           Some(TaxSituation.PAYE),
           Some(IncomeDeclared.Yes),
           Some(EntityType.Individual),
-          None,
           None
         )
 
@@ -179,7 +178,6 @@ class CheckYourAnswersControllerSpec
         Some(TaxSituation.SA),
         Some(IncomeDeclared.Yes),
         Some(EntityType.Individual),
-        None,
         None
       )
 

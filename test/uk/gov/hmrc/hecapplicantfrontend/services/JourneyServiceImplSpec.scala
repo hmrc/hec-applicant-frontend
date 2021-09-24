@@ -56,7 +56,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
     )
 
   val companyRetrievedData: CompanyRetrievedData =
-    CompanyRetrievedData(GGCredId(""), None, None)
+    CompanyRetrievedData(GGCredId(""), None, None, None)
 
   "JourneyServiceImpl" when {
 
@@ -538,8 +538,8 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             val session        = HECSession(companyRetrievedData, UserAnswers.empty, None)
             val updatedSession =
               HECSession(
-                companyRetrievedData,
-                UserAnswers.empty.copy(crn = Some(CRN("123456")), companyName = companyName),
+                companyRetrievedData.copy(companyName = companyName),
+                UserAnswers.empty.copy(crn = Some(CRN("1234567"))),
                 None
               )
 
@@ -557,7 +557,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
 
           "the company is found" in {
             testCrnNextpage(
-              Some(CompanyHouseName("Test Teach Ltd")),
+              Some(CompanyHouseName("Test tech Ltd")),
               routes.CompanyDetailsController.confirmCompanyDetails()
             )
           }
@@ -580,7 +580,6 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             Some(TaxSituation.PAYE),
             None,
             None,
-            None,
             None
           )
 
@@ -590,7 +589,6 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             Some(completeAnswers.licenceValidityPeriod),
             completeAnswers.taxSituation,
             completeAnswers.saIncomeDeclared,
-            None,
             None,
             None
           )
@@ -628,7 +626,6 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 Some(TaxSituation.PAYE),
                 Some(IncomeDeclared.Yes),
                 Some(EntityType.Company),
-                None,
                 None
               )
 
@@ -639,7 +636,6 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 completeAnswers.taxSituation,
                 Some(IncomeDeclared.Yes),
                 Some(EntityType.Company),
-                None,
                 None
               )
 
@@ -674,7 +670,6 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 Some(taxSituation),
                 None,
                 None,
-                None,
                 None
               )
 
@@ -685,7 +680,6 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 completeAnswers.taxSituation,
                 completeAnswers.saIncomeDeclared,
                 completeAnswers.entityType,
-                None,
                 None
               )
 
@@ -716,7 +710,6 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 Some(taxSituation),
                 Some(IncomeDeclared.Yes),
                 None,
-                None,
                 None
               )
 
@@ -727,7 +720,6 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 completeAnswers.taxSituation,
                 completeAnswers.saIncomeDeclared,
                 completeAnswers.entityType,
-                None,
                 None
               )
 
@@ -761,7 +753,6 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 Some(taxSituation),
                 None,
                 None,
-                None,
                 None
               )
 
@@ -772,7 +763,6 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 completeAnswers.taxSituation,
                 completeAnswers.saIncomeDeclared,
                 completeAnswers.entityType,
-                None,
                 None
               )
 
@@ -805,7 +795,6 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             Some(TaxSituation.PAYE),
             Some(IncomeDeclared.Yes),
             Some(EntityType.Company),
-            None,
             None
           )
 
@@ -1072,7 +1061,6 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
               Some(taxSituation),
               Some(IncomeDeclared.Yes),
               entityType,
-              None,
               None
             )
 
@@ -1217,12 +1205,11 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
 
         "the company registration number page" in {
           val session                                     = HECSession(
-            companyRetrievedData,
+            companyRetrievedData.copy(companyName = Some(CompanyHouseName("Test Tech Ltd"))),
             UserAnswers.empty.copy(
               licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles),
               entityType = Some(Company),
-              crn = Some(CRN("123456")),
-              companyName = Some(CompanyHouseName("Test Tech Ltd"))
+              crn = Some(CRN("123456"))
             ),
             None
           )
@@ -1238,12 +1225,11 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
 
         "the confirm company details page" in {
           val session                                     = HECSession(
-            companyRetrievedData,
+            companyRetrievedData.copy(companyName = Some(CompanyHouseName("Test Tech Ltd"))),
             UserAnswers.empty.copy(
               licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles),
               entityType = Some(Company),
-              crn = Some(CRN("123456")),
-              companyName = Some(CompanyHouseName("Test Tech Ltd"))
+              crn = Some(CRN("123456"))
             ),
             None
           )
@@ -1264,8 +1250,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             UserAnswers.empty.copy(
               licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles),
               entityType = Some(Company),
-              crn = Some(CRN("123456")),
-              companyName = None
+              crn = Some(CRN("123456"))
             ),
             None
           )
@@ -1299,7 +1284,6 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
               Some(taxSituation),
               Some(IncomeDeclared.Yes),
               None,
-              None,
               None
             ),
             None
@@ -1318,7 +1302,6 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             Some(TaxSituation.PAYE),
             Some(IncomeDeclared.Yes),
             Some(EntityType.Individual),
-            None,
             None
           )
           implicit val request: RequestWithSessionData[_] =
@@ -1345,7 +1328,6 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
         taxSituation = Some(TaxSituation.PAYE),
         saIncomeDeclared = None,
         entityType = None,
-        None,
         None
       )
 

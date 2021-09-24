@@ -49,8 +49,7 @@ object UserAnswers {
     taxSituation: Option[TaxSituation],
     saIncomeDeclared: Option[IncomeDeclared],
     entityType: Option[EntityType],
-    crn: Option[CRN],
-    companyName: Option[CompanyHouseName]
+    crn: Option[CRN]
   ) extends UserAnswers {
     val userAnswersType: UserAnswersType = UserAnswersType.Incomplete
   }
@@ -62,8 +61,7 @@ object UserAnswers {
     taxSituation: Option[TaxSituation],
     saIncomeDeclared: Option[IncomeDeclared],
     entityType: Option[EntityType],
-    crn: Option[CRN],
-    companyName: Option[CompanyHouseName]
+    crn: Option[CRN]
   ) extends UserAnswers {
     val userAnswersType: UserAnswersType = UserAnswersType.Complete
   }
@@ -78,8 +76,7 @@ object UserAnswers {
         c.taxSituation,
         c.saIncomeDeclared,
         c.entityType,
-        c.crn,
-        c.companyName
+        c.crn
       )
 
   }
@@ -103,7 +100,7 @@ object UserAnswers {
 
   }
 
-  val empty: IncompleteUserAnswers = IncompleteUserAnswers(None, None, None, None, None, None, None, None)
+  val empty: IncompleteUserAnswers = IncompleteUserAnswers(None, None, None, None, None, None, None)
 
   implicit val format: OFormat[UserAnswers] = new OFormat[UserAnswers] {
     override def reads(json: JsValue): JsResult[UserAnswers] =

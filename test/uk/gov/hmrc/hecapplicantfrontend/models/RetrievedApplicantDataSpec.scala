@@ -60,14 +60,16 @@ class RetrievedApplicantDataSpec extends AnyWordSpec with Matchers {
         CompanyRetrievedData(
           GGCredId("ggCredId"),
           Some(CTUTR("utr")),
-          Some(EmailAddress("email"))
+          Some(EmailAddress("email")),
+          Some(CompanyHouseName("Test Tech Ltd"))
         )
 
       val companyJson = Json.parse("""{
           |"ggCredId":"ggCredId",
           |"ctutr":"utr",
           |"emailAddress":"email",
-          |"type":"Company"
+          |"type":"Company",
+          |"companyName":"Test Tech Ltd"
           |}""".stripMargin)
 
       "serialize Individual retrieved data" in {
@@ -90,7 +92,7 @@ class RetrievedApplicantDataSpec extends AnyWordSpec with Matchers {
         "only mandatory fields are present" in {
           Json
             .fromJson[RetrievedApplicantData](Json.parse("""{"ggCredId":"ggCredId", "type":"Company"}"""))
-            .get shouldBe CompanyRetrievedData(GGCredId("ggCredId"), None, None)
+            .get shouldBe CompanyRetrievedData(GGCredId("ggCredId"), None, None, None)
         }
       }
     }

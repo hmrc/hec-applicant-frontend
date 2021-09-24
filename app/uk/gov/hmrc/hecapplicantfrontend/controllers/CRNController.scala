@@ -17,22 +17,24 @@
 package uk.gov.hmrc.hecapplicantfrontend.controllers
 
 import cats.data.EitherT
+import cats.implicits.{catsKernelStdOrderForString, catsSyntaxEq}
 import cats.instances.future._
 import com.google.inject.Inject
 import play.api.data.Form
 import play.api.data.Forms.{mapping, nonEmptyText}
 import play.api.data.validation.{Constraint, Invalid, Valid}
 import play.api.i18n.I18nSupport
-import play.api.mvc.{Action, AnyContent, Call, MessagesControllerComponents, Result}
+import play.api.mvc._
 import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 import uk.gov.hmrc.hecapplicantfrontend.controllers.CRNController.crnForm
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, RequestWithSessionData, SessionDataAction}
-import uk.gov.hmrc.hecapplicantfrontend.models.ids.CRN
-import uk.gov.hmrc.hecapplicantfrontend.util.StringUtils.StringOps
 import uk.gov.hmrc.hecapplicantfrontend.models.Error
-import uk.gov.hmrc.hecapplicantfrontend.util.Logging.LoggerOps
+import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.CompanyRetrievedData
+import uk.gov.hmrc.hecapplicantfrontend.models.ids.CRN
 import uk.gov.hmrc.hecapplicantfrontend.services.{CompanyDetailsService, JourneyService}
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
+import uk.gov.hmrc.hecapplicantfrontend.util.Logging.LoggerOps
+import uk.gov.hmrc.hecapplicantfrontend.util.StringUtils.StringOps
 import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
@@ -75,28 +77,50 @@ class CRNController @Inject() (
 
     }
 
-  private def checkCompanyName(crn: CRN)(implicit request: RequestWithSessionData[_]): EitherT[Future, Error, Call] =
-    for {
-      companyHouseDetailsOpt <- companyDetailsService.findCompany(crn)
-      updatedAnswers          =
-        request.sessionData.userAnswers
-          .unset(_.crn)
-          .unset(_.companyName)
-          .copy(crn = Some(crn), companyName = companyHouseDetailsOpt.map(_.companyName))
-      updatedSession          = request.sessionData.copy(userAnswers = updatedAnswers)
-      next                   <- journeyService
-                                  .updateAndNext(routes.CRNController.companyRegistrationNumber(), updatedSession)
-    } yield next
-
   private def handleValidCrn(crn: CRN)(implicit request: RequestWithSessionData[_]): Future[Result] =
-    checkCompanyName(crn)
-      .fold(
-        { e =>
-          logger.warn(" Couldn't get company Name from the given CRN", e)
-          InternalServerError
-        },
-        Redirect
-      )
+    request.sessionData.retrievedUserData match {
+      case companyRetrievedData: CompanyRetrievedData =>
+        checkCompanyName(crn, companyRetrievedData)
+          .fold(
+            { e =>
+              logger.warn(" Couldn't get company Name from the given CRN", e)
+              InternalServerError
+            },
+            Redirect
+          )
+      case _                                          =>
+        logger.error("Individual should not see this page")
+        Future.successful(InternalServerError)
+    }
+
+  private def checkCompanyName(crn: CRN, companyRetrievedData: CompanyRetrievedData)(implicit
+    request: RequestWithSessionData[_]
+  ): EitherT[Future, Error, Call] = {
+    val sessionCrn = request.sessionData.userAnswers.fold(_.crn, _.crn)
+    (crn, sessionCrn, companyRetrievedData.companyName) match {
+      //check if the submitted crn is equal to the crn in session and company name is present
+      //then no need to call the companyDetailsService
+      //else fetch company name using the service
+      case (crn, Some(crnSession), Some(_)) if crn.value === crnSession.value =>
+        journeyService
+          .updateAndNext(routes.CRNController.companyRegistrationNumber(), request.sessionData)
+      case _                                                                  => fetchCompanyName(crn, companyRetrievedData)
+    }
+  }
+
+  private def fetchCompanyName(crn: CRN, companyRetrievedData: CompanyRetrievedData)(implicit
+    request: RequestWithSessionData[_]
+  ): EitherT[Future, Error, Call] = for {
+    companyHouseDetailsOpt <- companyDetailsService.findCompany(crn)
+    updatedAnswers          =
+      request.sessionData.userAnswers
+        .unset(_.crn)
+        .copy(crn = Some(crn))
+    updatedCompanyData      = companyRetrievedData.copy(companyName = companyHouseDetailsOpt.map(_.companyName))
+    updatedSession          = request.sessionData.copy(retrievedUserData = updatedCompanyData, userAnswers = updatedAnswers)
+    next                   <- journeyService
+                                .updateAndNext(routes.CRNController.companyRegistrationNumber(), updatedSession)
+  } yield next
 
 }
 

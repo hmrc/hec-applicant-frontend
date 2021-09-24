@@ -206,7 +206,8 @@ class StartController @Inject() (
         CompanyRetrievedData(
           GGCredId(ggCredId.value),
           _,
-          maybeEmail.map(EmailAddress(_))
+          maybeEmail.map(EmailAddress(_)),
+          None
         )
       )
       .toEither

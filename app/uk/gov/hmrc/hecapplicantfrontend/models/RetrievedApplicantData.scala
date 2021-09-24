@@ -40,7 +40,8 @@ object RetrievedApplicantData {
   final case class CompanyRetrievedData(
     ggCredId: GGCredId,
     ctutr: Option[CTUTR],
-    emailAddress: Option[EmailAddress]
+    emailAddress: Option[EmailAddress],
+    companyName: Option[CompanyHouseName]
   ) extends RetrievedApplicantData {
     val entityType: EntityType = EntityType.Company
   }

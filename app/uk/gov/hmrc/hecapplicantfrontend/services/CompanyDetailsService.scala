@@ -48,8 +48,8 @@ class CompanyDetailsServiceImpl @Inject() (
     companyDetailsConnector.findCompany(companyNumber).subflatMap { httpResponse =>
       if (httpResponse.status === OK) {
         httpResponse
-          .parseJSON[Option[CompanyHouseDetails]]
-          .leftMap(Error(_))
+          .parseJSON[CompanyHouseDetails]
+          .bimap(Error(_), Some(_))
       } else if (httpResponse.status === NOT_FOUND) {
         Right(None) //this helps in navigating to company not found page
       } else Left(Error(s"Response to get company details came back with status ${httpResponse.status}"))
