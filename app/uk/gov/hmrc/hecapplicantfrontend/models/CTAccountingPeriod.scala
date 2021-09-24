@@ -17,19 +17,15 @@
 package uk.gov.hmrc.hecapplicantfrontend.models
 
 import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.hecapplicantfrontend.models.ids.CTUTR
 
 import java.time.LocalDate
 
-final case class CTStatusResponse(
-  ctutr: CTUTR,
+final case class CTAccountingPeriod(
   startDate: LocalDate,
   endDate: LocalDate,
-  latestAccountingPeriod: Option[CTAccountingPeriod]
+  ctStatus: CTStatus
 )
 
-object CTStatusResponse {
-
-  implicit val format: OFormat[CTStatusResponse] = Json.format
-
+object CTAccountingPeriod {
+  implicit val format: OFormat[CTAccountingPeriod] = Json.format
 }

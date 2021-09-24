@@ -32,7 +32,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.TaxDetails.IndividualTaxDetails
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.CompleteUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR, GGCredId, NINO, SAUTR}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.hecapplicantfrontend.models.{AccountingPeriod, CTStatus, CTStatusResponse, DateOfBirth, EmailAddress, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, IncomeDeclared, Name, SAStatus, SAStatusResponse, TaxSituation, TaxYear}
+import uk.gov.hmrc.hecapplicantfrontend.models.{CTAccountingPeriod, CTStatus, CTStatusResponse, DateOfBirth, EmailAddress, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, IncomeDeclared, Name, SAStatus, SAStatusResponse, TaxSituation, TaxYear}
 import TaxCheckService._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 
@@ -233,8 +233,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         ctutr,
         startDate,
         endDate,
-        CTStatus.ReturnFound,
-        List(AccountingPeriod("01", LocalDate.now.plusDays(2L), LocalDate.now().plusDays(3L)))
+        Some(CTAccountingPeriod(LocalDate.now.plusDays(2L), LocalDate.now().plusDays(3L), CTStatus.ReturnFound))
       )
 
       val ctStatusResponseJson = Json.toJson(ctStatusResponse)
