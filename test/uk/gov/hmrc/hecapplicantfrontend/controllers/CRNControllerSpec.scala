@@ -64,7 +64,7 @@ class CRNControllerSpec
   val companyRetrievedData = CompanyRetrievedData(GGCredId(""), None, None)
 
   def mockFindCompany(crn: CRN)(
-    result: Either[Error, CompanyHouseDetails]
+    result: Either[Error, Option[CompanyHouseDetails]]
   ) = (mockCompanyDetailsService
     .findCompany(_: CRN)(_: HeaderCarrier))
     .expects(crn, *)
@@ -292,7 +292,7 @@ class CRNControllerSpec
               mockAuthWithNoRetrievals()
               mockGetSession(session)
               mockFindCompany(validCRN(0))(
-                Right(CompanyHouseDetails(companyHouseName))
+                Right(Some(CompanyHouseDetails(companyHouseName)))
               )
               mockJourneyServiceUpdateAndNext(
                 routes.CRNController.companyRegistrationNumber(),
@@ -307,30 +307,16 @@ class CRNControllerSpec
 
           }
 
-          "company name is not found through company house api" in {
-
-            inSequence {
-              mockAuthWithNoRetrievals()
-              mockGetSession(session)
-              mockFindCompany(validCRN(0))(
-                Left(Error(""))
-              )
-            }
-            status(performAction("crn" -> validCRN(0).value)) shouldBe INTERNAL_SERVER_ERROR
-
-          }
-
         }
 
       }
 
-      "redirect to teh next page" when {
+      "redirect to the next page" when {
 
         def performAction(data: (String, String)*): Future[Result] =
           controller.companyRegistrationNumberSubmit(FakeRequest().withFormUrlEncodedBody(data: _*))
 
-        "a valid CRN is submitted" in {
-
+        def testNextCall(companyDetails: Option[CompanyHouseDetails]) =
           validCRN.foreach { crn =>
             withClue(s" For CRN : $crn") {
 
@@ -351,7 +337,7 @@ class CRNControllerSpec
                 .fromCompleteAnswers(answers)
                 .copy(
                   crn = Some(formattedCrn),
-                  companyName = Some(CompanyHouseName("Test Tech Ltd"))
+                  companyName = companyDetails.map(_.companyName)
                 )
 
               val updatedSession = session.copy(userAnswers = updatedAnswers)
@@ -359,7 +345,7 @@ class CRNControllerSpec
                 mockAuthWithNoRetrievals()
                 mockGetSession(session)
                 mockFindCompany(formattedCrn)(
-                  Right(CompanyHouseDetails(companyHouseName))
+                  Right(companyDetails)
                 )
                 mockJourneyServiceUpdateAndNext(
                   routes.CRNController.companyRegistrationNumber(),
@@ -375,8 +361,13 @@ class CRNControllerSpec
 
           }
 
+        "a valid CRN is submitted and company " in {
+          testNextCall(Some(CompanyHouseDetails(CompanyHouseName("TestTech Ltd"))))
+
         }
 
+        "a valid CRN is submitted but company is not found " in {}
+        testNextCall(None)
       }
 
     }

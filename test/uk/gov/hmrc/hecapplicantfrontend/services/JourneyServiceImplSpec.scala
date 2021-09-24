@@ -532,25 +532,40 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
           await(result.value) shouldBe Right(routes.TaxCheckCompleteController.taxCheckComplete())
         }
 
-        "the company registration number  page" in {
-          val session        = HECSession(companyRetrievedData, UserAnswers.empty, None)
-          val updatedSession =
-            HECSession(
-              companyRetrievedData,
-              UserAnswers.empty.copy(crn = Some(CRN("123456")), companyName = Some(CompanyHouseName("Test Teach Ltd"))),
-              None
+        "the company registration number  page" when {
+
+          def testCrnNextpage(companyName: Option[CompanyHouseName], resultCall: Call) = {
+            val session        = HECSession(companyRetrievedData, UserAnswers.empty, None)
+            val updatedSession =
+              HECSession(
+                companyRetrievedData,
+                UserAnswers.empty.copy(crn = Some(CRN("123456")), companyName = companyName),
+                None
+              )
+
+            implicit val request: RequestWithSessionData[_] =
+              requestWithSessionData(session)
+
+            mockStoreSession(updatedSession)(Right(()))
+
+            val result = journeyService.updateAndNext(
+              routes.CRNController.companyRegistrationNumber(),
+              updatedSession
             )
+            await(result.value) shouldBe Right(resultCall)
+          }
 
-          implicit val request: RequestWithSessionData[_] =
-            requestWithSessionData(session)
+          "the company is found" in {
+            testCrnNextpage(
+              Some(CompanyHouseName("Test Teach Ltd")),
+              routes.CompanyDetailsController.confirmCompanyDetails()
+            )
+          }
 
-          mockStoreSession(updatedSession)(Right(()))
+          "the company is  not found" in {
+            testCrnNextpage(None, routes.CompanyDetailsNotFoundController.companyNotFound())
+          }
 
-          val result = journeyService.updateAndNext(
-            routes.CRNController.companyRegistrationNumber(),
-            updatedSession
-          )
-          await(result.value) shouldBe Right(routes.CompanyDetailsController.confirmCompanyDetails())
         }
 
       }
@@ -1219,6 +1234,50 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
           )
 
           result shouldBe routes.EntityTypeController.entityType
+        }
+
+        "the confirm company details page" in {
+          val session                                     = HECSession(
+            companyRetrievedData,
+            UserAnswers.empty.copy(
+              licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles),
+              entityType = Some(Company),
+              crn = Some(CRN("123456")),
+              companyName = Some(CompanyHouseName("Test Tech Ltd"))
+            ),
+            None
+          )
+          implicit val request: RequestWithSessionData[_] =
+            requestWithSessionData(session)
+
+          val result = journeyService.previous(
+            routes.CompanyDetailsController.confirmCompanyDetails()
+          )
+
+          result shouldBe routes.CRNController.companyRegistrationNumber()
+
+        }
+
+        "the company details not found page" in {
+          val session                                     = HECSession(
+            companyRetrievedData,
+            UserAnswers.empty.copy(
+              licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles),
+              entityType = Some(Company),
+              crn = Some(CRN("123456")),
+              companyName = None
+            ),
+            None
+          )
+          implicit val request: RequestWithSessionData[_] =
+            requestWithSessionData(session)
+
+          val result = journeyService.previous(
+            routes.CompanyDetailsNotFoundController.companyNotFound()
+          )
+
+          result shouldBe routes.CRNController.companyRegistrationNumber()
+
         }
 
         def buildIndividualSession(taxSituation: TaxSituation, saStatus: SAStatus): HECSession = {

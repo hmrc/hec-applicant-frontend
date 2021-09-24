@@ -51,7 +51,7 @@ class CompanyDetailsServiceImpl @Inject() (
           .parseJSON[Option[CompanyHouseDetails]]
           .leftMap(Error(_))
       } else if (httpResponse.status === NOT_FOUND) {
-        Right(None)
+        Right(None) //this helps in navigating to company not found page
       } else Left(Error(s"Response to get company details came back with status ${httpResponse.status}"))
     }
 
