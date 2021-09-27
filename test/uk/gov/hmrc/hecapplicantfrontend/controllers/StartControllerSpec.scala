@@ -32,9 +32,9 @@ import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.hecapplicantfrontend.config.EnrolmentConfig
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRetrievedData, IndividualRetrievedData}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CTUTR, GGCredId, NINO, SAUTR}
-import uk.gov.hmrc.hecapplicantfrontend.models.{CitizenDetails, DateOfBirth, EmailAddress, Error, HECSession, Name, UserAnswers}
+import uk.gov.hmrc.hecapplicantfrontend.models.{CitizenDetails, DateOfBirth, EmailAddress, Error, HECSession, Name, TaxCheckListItem, UserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
-import uk.gov.hmrc.hecapplicantfrontend.services.{CitizenDetailsService, JourneyService}
+import uk.gov.hmrc.hecapplicantfrontend.services.{CitizenDetailsService, JourneyService, TaxCheckService}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import java.net.URLEncoder
@@ -72,12 +72,14 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
   )
 
   val mockCitizenDetailsService = mock[CitizenDetailsService]
+  val mockTaxCheckService       = mock[TaxCheckService]
 
   override val overrideBindings =
     List[GuiceableModule](
       bind[AuthConnector].toInstance(mockAuthConnector),
       bind[SessionStore].toInstance(mockSessionStore),
       bind[CitizenDetailsService].toInstance(mockCitizenDetailsService),
+      bind[TaxCheckService].toInstance(mockTaxCheckService),
       bind[JourneyService].toInstance(mockJourneyService)
     )
 
@@ -109,6 +111,12 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
     (mockCitizenDetailsService
       .getCitizenDetails(_: NINO)(_: HeaderCarrier))
       .expects(nino, *)
+      .returning(EitherT.fromEither(result))
+
+  def mockGetUnexpiredTaxCheckCodes(result: Either[Error, List[TaxCheckListItem]]) =
+    (mockTaxCheckService
+      .getUnexpiredTaxCheckCodes()(_: HeaderCarrier))
+      .expects(*)
       .returning(EitherT.fromEither(result))
 
   def retrievedGGCredential(ggCredId: GGCredId) =
@@ -197,6 +205,7 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
                   )
                   mockGetSession(Right(None))
                   mockGetCitizenDetails(individualRetrievedData.nino)(Right(citizenDetails))
+                  mockGetUnexpiredTaxCheckCodes(Right(List.empty))
                   mockStoreSession(session)(Right(()))
                   mockFirstPge(session)(mockNextCall)
                 }
@@ -226,6 +235,7 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
               )
               mockGetSession(Right(None))
               mockGetCitizenDetails(completeIndividualRetrievedData.nino)(Right(citizenDetails))
+              mockGetUnexpiredTaxCheckCodes(Right(List.empty))
               mockStoreSession(session)(Right(()))
               mockFirstPge(session)(mockNextCall)
             }
@@ -262,6 +272,7 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
               )
               mockGetSession(Right(None))
               mockGetCitizenDetails(completeIndividualRetrievedData.nino)(Right(citizenDetails))
+              mockGetUnexpiredTaxCheckCodes(Right(List.empty))
               mockStoreSession(session)(Right(()))
               mockFirstPge(session)(mockNextCall)
             }
@@ -297,6 +308,7 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
                 )
                 mockGetSession(Right(None))
                 mockGetCitizenDetails(completeIndividualRetrievedData.nino)(Right(citizenDetails))
+                mockGetUnexpiredTaxCheckCodes(Right(List.empty))
                 mockStoreSession(session)(Right(()))
                 mockFirstPge(session)(mockNextCall)
               }
@@ -321,6 +333,7 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
                   Some(retrievedGGCredential(companyRetrievedData.ggCredId))
                 )
                 mockGetSession(Right(None))
+                mockGetUnexpiredTaxCheckCodes(Right(List.empty))
                 mockStoreSession(session)(Right(()))
                 mockFirstPge(session)(mockNextCall)
               }
@@ -343,6 +356,7 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
                 Some(retrievedGGCredential(completeCompanyRetrievedData.ggCredId))
               )
               mockGetSession(Right(None))
+              mockGetUnexpiredTaxCheckCodes(Right(List.empty))
               mockStoreSession(session)(Right(()))
               mockFirstPge(session)(mockNextCall)
 
@@ -494,6 +508,32 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
               )
               mockGetSession(Right(None))
               mockGetCitizenDetails(completeIndividualRetrievedData.nino)(Left(Error("")))
+              mockGetUnexpiredTaxCheckCodes(Right(List.empty))
+            }
+          )
+        }
+
+        "there is an error fetching existing tax check codes for an individual" in {
+          val citizenDetails = CitizenDetails(
+            completeIndividualRetrievedData.name,
+            completeIndividualRetrievedData.dateOfBirth,
+            None
+          )
+
+          testIsError(() =>
+            inSequence {
+              mockAuthWithRetrievals(
+                ConfidenceLevel.L250,
+                Some(AffinityGroup.Individual),
+                Some(completeIndividualRetrievedData.nino),
+                Some(sautr),
+                completeIndividualRetrievedData.emailAddress,
+                Enrolments(Set.empty),
+                Some(retrievedGGCredential(completeIndividualRetrievedData.ggCredId))
+              )
+              mockGetSession(Right(None))
+              mockGetCitizenDetails(completeIndividualRetrievedData.nino)(Right(citizenDetails))
+              mockGetUnexpiredTaxCheckCodes(Left(Error("")))
             }
           )
         }
@@ -511,6 +551,7 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
                 Some(retrievedGGCredential(completeCompanyRetrievedData.ggCredId))
               )
               mockGetSession(Right(None))
+              mockGetUnexpiredTaxCheckCodes(Right(List.empty))
               mockStoreSession(HECSession(completeCompanyRetrievedData, UserAnswers.empty, None))(Left(Error("")))
             }
           )
@@ -536,6 +577,7 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
               )
               mockGetSession(Right(None))
               mockGetCitizenDetails(completeIndividualRetrievedData.nino)(Right(citizenDetails))
+              mockGetUnexpiredTaxCheckCodes(Right(List.empty))
             }
           )
         }
@@ -553,6 +595,24 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
                 Some(retrievedGGCredential(completeCompanyRetrievedData.ggCredId))
               )
               mockGetSession(Right(None))
+            }
+          )
+        }
+
+        "there is an error fetching existing tax check codes for a company" in {
+          testIsError(() =>
+            inSequence {
+              mockAuthWithRetrievals(
+                ConfidenceLevel.L50,
+                Some(AffinityGroup.Organisation),
+                None,
+                None,
+                completeCompanyRetrievedData.emailAddress,
+                Enrolments(Set(retrievedCtEnrolment(ctutr))),
+                Some(retrievedGGCredential(completeCompanyRetrievedData.ggCredId))
+              )
+              mockGetSession(Right(None))
+              mockGetUnexpiredTaxCheckCodes(Left(Error("")))
             }
           )
         }

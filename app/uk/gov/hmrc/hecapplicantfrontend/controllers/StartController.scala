@@ -16,25 +16,25 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.controllers
 
-import cats.data.{EitherT, Validated}
 import cats.data.Validated.Valid
-import cats.syntax.option._
-import cats.syntax.eq._
-import cats.syntax.traverse._
+import cats.data.{EitherT, Validated}
 import cats.instances.future._
 import cats.instances.option._
 import cats.instances.string._
+import cats.syntax.eq._
+import cats.syntax.option._
+import cats.syntax.traverse._
 import com.google.inject.{Inject, Singleton}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
-import uk.gov.hmrc.auth.core.{AffinityGroup, ConfidenceLevel, Enrolments}
 import uk.gov.hmrc.auth.core.retrieve.Credentials
+import uk.gov.hmrc.auth.core.{AffinityGroup, ConfidenceLevel, Enrolments}
 import uk.gov.hmrc.hecapplicantfrontend.config.{AppConfig, EnrolmentConfig}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.AuthWithRetrievalsAction
-import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, Error, HECSession, RetrievedApplicantData, RetrievedGGData, UserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRetrievedData, IndividualRetrievedData}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CTUTR, GGCredId, NINO, SAUTR}
+import uk.gov.hmrc.hecapplicantfrontend.models.{CitizenDetails, EmailAddress, Error, HECSession, RetrievedApplicantData, RetrievedGGData, TaxCheckListItem, UserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
-import uk.gov.hmrc.hecapplicantfrontend.services.{CitizenDetailsService, JourneyService}
+import uk.gov.hmrc.hecapplicantfrontend.services.{CitizenDetailsService, JourneyService, TaxCheckService}
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging.LoggerOps
 import uk.gov.hmrc.http.HeaderCarrier
@@ -46,6 +46,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class StartController @Inject() (
   appConfig: AppConfig,
   citizenDetailsService: CitizenDetailsService,
+  taxCheckService: TaxCheckService,
   journeyService: JourneyService,
   sessionStore: SessionStore,
   authWithRetrievalsAction: AuthWithRetrievalsAction,
@@ -126,7 +127,7 @@ class StartController @Inject() (
               )
 
             case _ =>
-              EitherT.fromEither(handleOrganisation(maybeEmail, enrolments, ggCredId))
+              handleOrganisation(maybeEmail, enrolments, ggCredId)
           }
 
         case Some(AffinityGroup.Agent) =>
@@ -146,7 +147,40 @@ class StartController @Inject() (
     ggCredId: GGCredId
   )(implicit
     hc: HeaderCarrier
-  ): EitherT[Future, StartError, RetrievedApplicantData] =
+  ): EitherT[Future, StartError, RetrievedApplicantData] = {
+
+    def validateSautrAndBuildIndividualData(
+      citizenDetails: CitizenDetails,
+      taxChecks: List[TaxCheckListItem],
+      nino: String
+    ): EitherT[Future, StartError, RetrievedApplicantData] = {
+      val sautrValidation = citizenDetails.sautr match {
+        case Some(s) => Valid(Some(s))
+        case None    =>
+          maybeSautr
+            .map(SAUTR.fromString(_).toValid("Got invalid SAUTR from GG"))
+            .sequence[Validated[String, *], SAUTR]
+      }
+
+      val eitherResult = sautrValidation
+        .bimap[StartError, RetrievedApplicantData](
+          DataError,
+          sautr =>
+            IndividualRetrievedData(
+              GGCredId(ggCredId.value),
+              NINO(nino),
+              sautr,
+              citizenDetails.name,
+              citizenDetails.dateOfBirth,
+              maybeEmail.map(EmailAddress(_)),
+              None,
+              taxChecks
+            )
+        )
+        .toEither
+      EitherT.fromEither[Future](eitherResult)
+    }
+
     if (confidenceLevel < ConfidenceLevel.L250)
       EitherT.leftT(InsufficientConfidenceLevel)
     else {
@@ -155,43 +189,29 @@ class StartController @Inject() (
           EitherT.leftT(DataError("Could not find NINO for CL≥250"))
 
         case Some(nino) =>
-          citizenDetailsService
+          val citizenDetailsFut = citizenDetailsService
             .getCitizenDetails(NINO(nino))
             .leftMap(BackendError(_): StartError)
-            .subflatMap { citizenDetails =>
-              val sautrValidation = citizenDetails.sautr match {
-                case Some(s) => Valid(Some(s))
-                case None    =>
-                  maybeSautr
-                    .map(SAUTR.fromString(_).toValid("Got invalid SAUTR from GG"))
-                    .sequence[Validated[String, *], SAUTR]
-              }
+          val taxChecksFut      = taxCheckService
+            .getUnexpiredTaxCheckCodes()
+            .leftMap(BackendError(_): StartError)
 
-              sautrValidation
-                .bimap[StartError, RetrievedApplicantData](
-                  DataError(_),
-                  sautr =>
-                    IndividualRetrievedData(
-                      GGCredId(ggCredId.value),
-                      NINO(nino),
-                      sautr,
-                      citizenDetails.name,
-                      citizenDetails.dateOfBirth,
-                      maybeEmail.map(EmailAddress(_)),
-                      None,
-                      List.empty
-                    )
-                )
-                .toEither
-            }
+          for {
+            citizenDetails <- citizenDetailsFut
+            taxChecks      <- taxChecksFut
+            result         <- validateSautrAndBuildIndividualData(citizenDetails, taxChecks, nino)
+          } yield result
       }
     }
+  }
 
   private def handleOrganisation(
     maybeEmail: Option[String],
     enrolments: Enrolments,
     ggCredId: GGCredId
-  ): Either[StartError, RetrievedApplicantData] = {
+  )(implicit
+    hc: HeaderCarrier
+  ): EitherT[Future, StartError, RetrievedApplicantData] = {
     val ctutrValidation = enrolments.enrolments
       .find(_.key === EnrolmentConfig.CTEnrolment.key)
       .flatMap(
@@ -200,19 +220,18 @@ class StartController @Inject() (
         )
       )
       .sequence[Validated[String, *], CTUTR]
-
-    ctutrValidation
-      .bimap[StartError, RetrievedApplicantData](
-        DataError(_),
-        CompanyRetrievedData(
-          GGCredId(ggCredId.value),
-          _,
-          maybeEmail.map(EmailAddress(_)),
-          None,
-          List.empty
-        )
-      )
       .toEither
+
+    for {
+      maybeCtutr <- EitherT.fromEither[Future](ctutrValidation).leftMap(DataError)
+      taxChecks  <- taxCheckService.getUnexpiredTaxCheckCodes().leftMap(BackendError(_): StartError)
+    } yield CompanyRetrievedData(
+      GGCredId(ggCredId.value),
+      maybeCtutr,
+      maybeEmail.map(EmailAddress(_)),
+      None,
+      taxChecks
+    )
   }
 
   private def withGGCredentials[A](

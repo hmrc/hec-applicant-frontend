@@ -38,7 +38,7 @@ class TaxChecksListController @Inject() (
   val unexpiredTaxChecks: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
     request.sessionData.retrievedUserData.unexpiredTaxChecks match {
       case Nil       =>
-        logger.warn("No tax chek codes found")
+        logger.warn("No tax check codes found")
         InternalServerError
       case taxChecks =>
         Ok(s"$taxChecks")
