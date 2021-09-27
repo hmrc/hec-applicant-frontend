@@ -42,6 +42,11 @@ POST       /check-your-answers       uk.gov.hmrc.hecapplicantfrontend.controller
 GET        /tax-check-complete       uk.gov.hmrc.hecapplicantfrontend.controllers.TaxCheckCompleteController.taxCheckComplete
 
 GET        /company-registration-number    uk.gov.hmrc.hecapplicantfrontend.controllers.CRNController.companyRegistrationNumber
+POST       /company-registration-number    uk.gov.hmrc.hecapplicantfrontend.controllers.CRNController.companyRegistrationNumberSubmit
+
+GET        /confirm-company-details        uk.gov.hmrc.hecapplicantfrontend.controllers.CompanyDetailsController.confirmCompanyDetails
+
+GET        /company-not-found              uk.gov.hmrc.hecapplicantfrontend.controllers.CompanyDetailsNotFoundController.companyNotFound
 
 # IV
 GET  /failed-iv/callback                         uk.gov.hmrc.hecapplicantfrontend.controllers.IvFailureController.ivFailure(journeyId: java.util.UUID)

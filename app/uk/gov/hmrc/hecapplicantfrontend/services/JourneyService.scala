@@ -72,7 +72,8 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
     routes.EntityTypeController.entityType()                             -> entityTypeRoute,
     routes.TaxSituationController.taxSituation()                         -> taxSituationRoute,
     routes.SAController.saIncomeStatement()                              -> (_ => routes.CheckYourAnswersController.checkYourAnswers()),
-    routes.CheckYourAnswersController.checkYourAnswers()                 -> (_ => routes.TaxCheckCompleteController.taxCheckComplete())
+    routes.CheckYourAnswersController.checkYourAnswers()                 -> (_ => routes.TaxCheckCompleteController.taxCheckComplete()),
+    routes.CRNController.companyRegistrationNumber()                     -> companyRegistrationNumberRoute
   )
 
   // map which describes routes from an exit page to their previous page. The keys are the exit page and the values are
@@ -152,14 +153,16 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
         val updatedSession = session.userAnswers match {
           case _ if isExitPageNext =>
             session
-
+          //will add a case for when company when it reaches the complete answers page
+          //if it's  added now, the code thinks the company's answers are all complete and take it to check your answers page
           case incomplete @ IncompleteUserAnswers(
                 Some(licenceType),
                 Some(licenceTimeTrading),
                 Some(licenceValidityPeriod),
-                Some(taxSituation),
+                taxSituation,
                 saIncomeDeclared,
-                entityType
+                entityType,
+                crn
               ) if allAnswersComplete(incomplete, session.retrievedUserData) =>
             val completeAnswers =
               CompleteUserAnswers(
@@ -168,7 +171,8 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
                 licenceValidityPeriod,
                 taxSituation,
                 saIncomeDeclared,
-                entityType
+                entityType,
+                crn
               )
             session.copy(userAnswers = completeAnswers)
 
@@ -232,6 +236,14 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
         }
     }
 
+  private def companyRegistrationNumberRoute(session: HECSession) =
+    session.retrievedUserData match {
+      case _: IndividualRetrievedData             =>
+        sys.error("This may never happen, Individual data shouldn't be present  in company journey")
+      case CompanyRetrievedData(_, _, _, Some(_)) => routes.CompanyDetailsController.confirmCompanyDetails()
+      case _                                      => routes.CompanyDetailsNotFoundController.companyNotFound()
+    }
+
 }
 
 object JourneyServiceImpl {
@@ -274,7 +286,11 @@ object JourneyServiceImpl {
   def allAnswersComplete(
     incompleteUserAnswers: IncompleteUserAnswers,
     retrievedUserData: RetrievedApplicantData
-  ): Boolean =
+  ): Boolean = {
+    val isIndividual = retrievedUserData match {
+      case _: IndividualRetrievedData => true
+      case _: CompanyRetrievedData    => false
+    }
     incompleteUserAnswers match {
       case IncompleteUserAnswers(
             Some(licenceType),
@@ -282,11 +298,15 @@ object JourneyServiceImpl {
             Some(_),
             Some(taxSituation),
             saIncomeDeclared,
-            entityType
-          ) =>
+            entityType,
+            _
+          ) if isIndividual =>
         val licenceTypeCheck      = checkEntityTypePresentIfRequired(licenceType, entityType)
         val saIncomeDeclaredCheck = checkSAIncomeDeclared(taxSituation, saIncomeDeclared, retrievedUserData)
         licenceTypeCheck && saIncomeDeclaredCheck
+
+      //TODO add company scenario later when it reaches the check your answer page
       case _ => false
     }
+  }
 }

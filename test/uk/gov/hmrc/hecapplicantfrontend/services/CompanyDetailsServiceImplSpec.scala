@@ -68,8 +68,12 @@ class CompanyDetailsServiceImplSpec extends AnyWordSpec with Matchers with MockF
           testIsError(mockFindComapny(_)(Right(HttpResponse(500, ""))))
         }
 
-        "the call to get company details comes back with a 404 response" in {
-          testIsError(mockFindComapny(_)(Right(HttpResponse(404, ""))))
+        "the call to get company details comes back with a 503 response" in {
+          testIsError(mockFindComapny(_)(Right(HttpResponse(503, ""))))
+        }
+
+        "the call to get company details comes back with a 400 response" in {
+          testIsError(mockFindComapny(_)(Right(HttpResponse(400, ""))))
         }
 
         "there is no JSON in the response body" in {
@@ -105,7 +109,18 @@ class CompanyDetailsServiceImplSpec extends AnyWordSpec with Matchers with MockF
 
           mockFindComapny(CRN("1234567"))(Right(HttpResponse(200, json, responseHeaders)))
           val result = companyDetailsService.findCompany(crn)
-          await(result.value) shouldBe Right(companyDetails)
+          await(result.value) shouldBe Right(Some(companyDetails))
+        }
+
+        "the response from company details is Not Found and the json body is blank" in {
+          val crn  = CRN("1234567")
+          val json = Json.parse(s"""
+                                   |{}
+                                   |""".stripMargin)
+
+          mockFindComapny(crn)(Right(HttpResponse(404, json, responseHeaders)))
+          val result = companyDetailsService.findCompany(crn)
+          await(result.value) shouldBe Right(None)
         }
       }
 

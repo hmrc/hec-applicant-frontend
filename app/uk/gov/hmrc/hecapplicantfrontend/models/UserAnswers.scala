@@ -20,6 +20,7 @@ import ai.x.play.json.Jsonx
 import monocle.Lens
 import monocle.macros.Lenses
 import play.api.libs.json._
+import uk.gov.hmrc.hecapplicantfrontend.models.ids.CRN
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 
 sealed trait UserAnswersType
@@ -47,7 +48,8 @@ object UserAnswers {
     licenceValidityPeriod: Option[LicenceValidityPeriod],
     taxSituation: Option[TaxSituation],
     saIncomeDeclared: Option[IncomeDeclared],
-    entityType: Option[EntityType]
+    entityType: Option[EntityType],
+    crn: Option[CRN]
   ) extends UserAnswers {
     val userAnswersType: UserAnswersType = UserAnswersType.Incomplete
   }
@@ -56,9 +58,10 @@ object UserAnswers {
     licenceType: LicenceType,
     licenceTimeTrading: LicenceTimeTrading,
     licenceValidityPeriod: LicenceValidityPeriod,
-    taxSituation: TaxSituation,
+    taxSituation: Option[TaxSituation],
     saIncomeDeclared: Option[IncomeDeclared],
-    entityType: Option[EntityType]
+    entityType: Option[EntityType],
+    crn: Option[CRN]
   ) extends UserAnswers {
     val userAnswersType: UserAnswersType = UserAnswersType.Complete
   }
@@ -70,9 +73,10 @@ object UserAnswers {
         Some(c.licenceType),
         Some(c.licenceTimeTrading),
         Some(c.licenceValidityPeriod),
-        Some(c.taxSituation),
+        c.taxSituation,
         c.saIncomeDeclared,
-        c.entityType
+        c.entityType,
+        c.crn
       )
 
   }
@@ -96,7 +100,7 @@ object UserAnswers {
 
   }
 
-  val empty: IncompleteUserAnswers = IncompleteUserAnswers(None, None, None, None, None, None)
+  val empty: IncompleteUserAnswers = IncompleteUserAnswers(None, None, None, None, None, None, None)
 
   implicit val format: OFormat[UserAnswers] = new OFormat[UserAnswers] {
     override def reads(json: JsValue): JsResult[UserAnswers] =
@@ -119,7 +123,7 @@ object UserAnswers {
   def taxSituation(userAnswers: UserAnswers): Option[TaxSituation] =
     userAnswers match {
       case i: IncompleteUserAnswers => i.taxSituation
-      case c: CompleteUserAnswers   => Some(c.taxSituation)
+      case c: CompleteUserAnswers   => c.taxSituation
     }
 
 }

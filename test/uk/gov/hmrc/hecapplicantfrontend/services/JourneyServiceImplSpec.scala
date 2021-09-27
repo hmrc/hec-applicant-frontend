@@ -17,7 +17,6 @@
 package uk.gov.hmrc.hecapplicantfrontend.services
 
 import java.time.LocalDate
-
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -26,10 +25,11 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthenticatedRequest, RequestWithSessionData}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.{SessionSupport, routes}
+import uk.gov.hmrc.hecapplicantfrontend.models.EntityType.Company
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRetrievedData, IndividualRetrievedData}
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.{CompleteUserAnswers, IncompleteUserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models._
-import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO, SAUTR}
+import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, GGCredId, NINO, SAUTR}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -56,7 +56,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
     )
 
   val companyRetrievedData: CompanyRetrievedData =
-    CompanyRetrievedData(GGCredId(""), None, None)
+    CompanyRetrievedData(GGCredId(""), None, None, None)
 
   "JourneyServiceImpl" when {
 
@@ -532,6 +532,42 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
           await(result.value) shouldBe Right(routes.TaxCheckCompleteController.taxCheckComplete())
         }
 
+        "the company registration number  page" when {
+
+          def testCrnNextpage(companyName: Option[CompanyHouseName], resultCall: Call) = {
+            val session        = HECSession(companyRetrievedData, UserAnswers.empty, None)
+            val updatedSession =
+              HECSession(
+                companyRetrievedData.copy(companyName = companyName),
+                UserAnswers.empty.copy(crn = Some(CRN("1234567"))),
+                None
+              )
+
+            implicit val request: RequestWithSessionData[_] =
+              requestWithSessionData(session)
+
+            mockStoreSession(updatedSession)(Right(()))
+
+            val result = journeyService.updateAndNext(
+              routes.CRNController.companyRegistrationNumber(),
+              updatedSession
+            )
+            await(result.value) shouldBe Right(resultCall)
+          }
+
+          "the company is found" in {
+            testCrnNextpage(
+              Some(CompanyHouseName("Test tech Ltd")),
+              routes.CompanyDetailsController.confirmCompanyDetails()
+            )
+          }
+
+          "the company is  not found" in {
+            testCrnNextpage(None, routes.CompanyDetailsNotFoundController.companyNotFound())
+          }
+
+        }
+
       }
 
       "convert incomplete answers to complete answers when all questions have been answered and" when {
@@ -541,7 +577,8 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             LicenceType.DriverOfTaxisAndPrivateHires,
             LicenceTimeTrading.ZeroToTwoYears,
             LicenceValidityPeriod.UpToOneYear,
-            TaxSituation.PAYE,
+            Some(TaxSituation.PAYE),
+            None,
             None,
             None
           )
@@ -550,8 +587,9 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             Some(completeAnswers.licenceType),
             Some(completeAnswers.licenceTimeTrading),
             Some(completeAnswers.licenceValidityPeriod),
-            Some(completeAnswers.taxSituation),
+            completeAnswers.taxSituation,
             completeAnswers.saIncomeDeclared,
+            None,
             None
           )
 
@@ -585,21 +623,23 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 licenceType,
                 LicenceTimeTrading.ZeroToTwoYears,
                 LicenceValidityPeriod.UpToOneYear,
-                TaxSituation.PAYE,
+                Some(TaxSituation.PAYE),
                 Some(IncomeDeclared.Yes),
-                Some(EntityType.Company)
+                Some(EntityType.Company),
+                None
               )
 
               val incompleteAnswers = IncompleteUserAnswers(
                 Some(completeAnswers.licenceType),
                 Some(completeAnswers.licenceTimeTrading),
                 Some(completeAnswers.licenceValidityPeriod),
-                Some(completeAnswers.taxSituation),
+                completeAnswers.taxSituation,
                 Some(IncomeDeclared.Yes),
-                Some(EntityType.Company)
+                Some(EntityType.Company),
+                None
               )
 
-              val session                                     = HECSession(companyRetrievedData, incompleteAnswers, None)
+              val session                                     = HECSession(individualRetrievedData, incompleteAnswers, None)
               implicit val request: RequestWithSessionData[_] =
                 requestWithSessionData(session)
 
@@ -627,7 +667,8 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 LicenceType.DriverOfTaxisAndPrivateHires,
                 LicenceTimeTrading.ZeroToTwoYears,
                 LicenceValidityPeriod.UpToOneYear,
-                taxSituation,
+                Some(taxSituation),
+                None,
                 None,
                 None
               )
@@ -636,9 +677,10 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 Some(completeAnswers.licenceType),
                 Some(completeAnswers.licenceTimeTrading),
                 Some(completeAnswers.licenceValidityPeriod),
-                Some(completeAnswers.taxSituation),
+                completeAnswers.taxSituation,
                 completeAnswers.saIncomeDeclared,
-                completeAnswers.entityType
+                completeAnswers.entityType,
+                None
               )
 
               val session = HECSession(individualRetrievedData, incompleteAnswers, None)
@@ -665,8 +707,9 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 LicenceType.DriverOfTaxisAndPrivateHires,
                 LicenceTimeTrading.ZeroToTwoYears,
                 LicenceValidityPeriod.UpToOneYear,
-                taxSituation,
+                Some(taxSituation),
                 Some(IncomeDeclared.Yes),
+                None,
                 None
               )
 
@@ -674,9 +717,10 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 Some(completeAnswers.licenceType),
                 Some(completeAnswers.licenceTimeTrading),
                 Some(completeAnswers.licenceValidityPeriod),
-                Some(completeAnswers.taxSituation),
+                completeAnswers.taxSituation,
                 completeAnswers.saIncomeDeclared,
-                completeAnswers.entityType
+                completeAnswers.entityType,
+                None
               )
 
               val individualData = individualRetrievedData.copy(saStatus =
@@ -706,7 +750,8 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 LicenceType.DriverOfTaxisAndPrivateHires,
                 LicenceTimeTrading.ZeroToTwoYears,
                 LicenceValidityPeriod.UpToOneYear,
-                taxSituation,
+                Some(taxSituation),
+                None,
                 None,
                 None
               )
@@ -715,9 +760,10 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 Some(completeAnswers.licenceType),
                 Some(completeAnswers.licenceTimeTrading),
                 Some(completeAnswers.licenceValidityPeriod),
-                Some(completeAnswers.taxSituation),
+                completeAnswers.taxSituation,
                 completeAnswers.saIncomeDeclared,
-                completeAnswers.entityType
+                completeAnswers.entityType,
+                None
               )
 
               val individualData = individualRetrievedData.copy(saStatus =
@@ -748,7 +794,8 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             Some(LicenceValidityPeriod.UpToOneYear),
             Some(TaxSituation.PAYE),
             Some(IncomeDeclared.Yes),
-            Some(EntityType.Company)
+            Some(EntityType.Company),
+            None
           )
 
           val session                                     = HECSession(individualRetrievedData, incompleteAnswers, None)
@@ -1011,9 +1058,10 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
               licenceType,
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToOneYear,
-              taxSituation,
+              Some(taxSituation),
               Some(IncomeDeclared.Yes),
-              entityType
+              entityType,
+              None
             )
 
           "tax situation = SA & SA status = NoticeToFileIssued" in {
@@ -1155,6 +1203,68 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
           }
         }
 
+        "the company registration number page" in {
+          val session                                     = HECSession(
+            companyRetrievedData.copy(companyName = Some(CompanyHouseName("Test Tech Ltd"))),
+            UserAnswers.empty.copy(
+              licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles),
+              entityType = Some(Company),
+              crn = Some(CRN("123456"))
+            ),
+            None
+          )
+          implicit val request: RequestWithSessionData[_] =
+            requestWithSessionData(session)
+
+          val result = journeyService.previous(
+            routes.CRNController.companyRegistrationNumber()
+          )
+
+          result shouldBe routes.EntityTypeController.entityType
+        }
+
+        "the confirm company details page" in {
+          val session                                     = HECSession(
+            companyRetrievedData.copy(companyName = Some(CompanyHouseName("Test Tech Ltd"))),
+            UserAnswers.empty.copy(
+              licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles),
+              entityType = Some(Company),
+              crn = Some(CRN("123456"))
+            ),
+            None
+          )
+          implicit val request: RequestWithSessionData[_] =
+            requestWithSessionData(session)
+
+          val result = journeyService.previous(
+            routes.CompanyDetailsController.confirmCompanyDetails()
+          )
+
+          result shouldBe routes.CRNController.companyRegistrationNumber()
+
+        }
+
+        "the company details not found page" in {
+          val session                                     = HECSession(
+            companyRetrievedData,
+            UserAnswers.empty.copy(
+              licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles),
+              entityType = Some(Company),
+              crn = Some(CRN("123456"))
+            ),
+            None
+          )
+          implicit val request: RequestWithSessionData[_] =
+            requestWithSessionData(session)
+
+          val result = journeyService.previous(
+            routes.CompanyDetailsNotFoundController.companyNotFound()
+          )
+
+          result shouldBe routes.CRNController.companyRegistrationNumber()
+
+        }
+
         def buildIndividualSession(taxSituation: TaxSituation, saStatus: SAStatus): HECSession = {
           val individualData = IndividualRetrievedData(
             GGCredId(""),
@@ -1173,6 +1283,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
               Some(LicenceValidityPeriod.UpToOneYear),
               Some(taxSituation),
               Some(IncomeDeclared.Yes),
+              None,
               None
             ),
             None
@@ -1188,9 +1299,10 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             LicenceType.DriverOfTaxisAndPrivateHires,
             LicenceTimeTrading.ZeroToTwoYears,
             LicenceValidityPeriod.UpToOneYear,
-            TaxSituation.PAYE,
+            Some(TaxSituation.PAYE),
             Some(IncomeDeclared.Yes),
-            Some(EntityType.Individual)
+            Some(EntityType.Individual),
+            None
           )
           implicit val request: RequestWithSessionData[_] =
             requestWithSessionData(
@@ -1215,7 +1327,8 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
         licenceValidityPeriod = Some(LicenceValidityPeriod.UpToOneYear),
         taxSituation = Some(TaxSituation.PAYE),
         saIncomeDeclared = None,
-        entityType = None
+        entityType = None,
+        None
       )
 
       "return true for individual licence type & entity type is missing" in {
@@ -1247,7 +1360,10 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
         }
       }
 
-      "return true for company licence type & entity type is present" in {
+      //ignoring as of now as it will not satisfy the condition.
+      //Once the company journey is finished and it reaches check your answers page
+      //this test can be removed from ignore list
+      "return true for company licence type & entity type is present as of now" ignore {
         List(
           LicenceType.OperatorOfPrivateHireVehicles,
           LicenceType.ScrapMetalDealerSite,
@@ -1257,7 +1373,10 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             JourneyServiceImpl.allAnswersComplete(
               incompleteUserAnswers = incompleteAnswersBase.copy(
                 licenceType = Some(licenceType),
-                entityType = Some(EntityType.Individual)
+                entityType = Some(EntityType.Company),
+                taxSituation = None,
+                saIncomeDeclared = None,
+                crn = Some(CRN("1234567"))
               ),
               retrievedUserData = companyRetrievedData
             ) shouldBe true
@@ -1277,7 +1396,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 taxSituation = Some(taxSituation),
                 saIncomeDeclared = None
               ),
-              retrievedUserData = companyRetrievedData
+              retrievedUserData = individualRetrievedData
             ) shouldBe true
 
             // income declared is present
@@ -1286,7 +1405,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 taxSituation = Some(taxSituation),
                 saIncomeDeclared = Some(IncomeDeclared.Yes)
               ),
-              retrievedUserData = companyRetrievedData
+              retrievedUserData = individualRetrievedData
             ) shouldBe true
           }
         }

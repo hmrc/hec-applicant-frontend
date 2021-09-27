@@ -17,7 +17,6 @@
 package uk.gov.hmrc.hecapplicantfrontend.services
 
 import java.time.LocalDate
-
 import cats.data.EitherT
 import cats.instances.future._
 import cats.instances.int._
@@ -33,9 +32,9 @@ import uk.gov.hmrc.hecapplicantfrontend.models.HECTaxCheckData.IndividualHECTaxC
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRetrievedData, IndividualRetrievedData}
 import uk.gov.hmrc.hecapplicantfrontend.models.TaxDetails.IndividualTaxDetails
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.CompleteUserAnswers
-import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CTUTR, SAUTR}
+import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR, SAUTR}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceDetails
-import uk.gov.hmrc.hecapplicantfrontend.models.{CRN, CTStatusResponse, Error, HECTaxCheck, HECTaxCheckData, RetrievedApplicantData, SAStatusResponse, TaxYear}
+import uk.gov.hmrc.hecapplicantfrontend.models.{CTStatusResponse, Error, HECTaxCheck, HECTaxCheckData, RetrievedApplicantData, SAStatusResponse, TaxYear}
 import uk.gov.hmrc.hecapplicantfrontend.services.TaxCheckService._
 import uk.gov.hmrc.hecapplicantfrontend.util.HttpResponseOps._
 import uk.gov.hmrc.http.HeaderCarrier

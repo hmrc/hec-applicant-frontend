@@ -25,4 +25,5 @@ object CompanyHouseDetails {
 
   implicit val config: Aux[Json.MacroOptions]           = JsonConfiguration(SnakeCase)
   implicit val userFormat: OFormat[CompanyHouseDetails] = Json.format[CompanyHouseDetails]
+
 }

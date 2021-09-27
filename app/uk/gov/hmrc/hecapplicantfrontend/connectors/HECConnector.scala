@@ -18,14 +18,14 @@ package uk.gov.hmrc.hecapplicantfrontend.connectors
 
 import cats.data.EitherT
 import com.google.inject.{ImplementedBy, Inject, Singleton}
-import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CTUTR, SAUTR}
-import uk.gov.hmrc.hecapplicantfrontend.models.{CRN, Error, HECTaxCheckData, TaxYear}
+import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR, SAUTR}
+import uk.gov.hmrc.hecapplicantfrontend.models.{Error, HECTaxCheckData, TaxYear}
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-
 import scala.concurrent.{ExecutionContext, Future}
 
 @ImplementedBy(classOf[HECConnectorImpl])

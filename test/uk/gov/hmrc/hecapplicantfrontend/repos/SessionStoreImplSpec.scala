@@ -58,7 +58,7 @@ class SessionStoreImplSpec extends AnyWordSpec with Matchers with MongoSupport w
 
     val sessionData =
       HECSession(
-        CompanyRetrievedData(GGCredId("id"), Some(CTUTR("utr")), Some(EmailAddress("email"))),
+        CompanyRetrievedData(GGCredId("id"), Some(CTUTR("utr")), Some(EmailAddress("email")), None),
         UserAnswers.empty,
         None
       )

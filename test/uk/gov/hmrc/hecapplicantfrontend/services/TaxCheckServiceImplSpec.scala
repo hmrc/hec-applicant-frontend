@@ -17,7 +17,6 @@
 package uk.gov.hmrc.hecapplicantfrontend.services
 
 import java.time.LocalDate
-
 import cats.data.EitherT
 import cats.instances.future._
 import org.scalamock.scalatest.MockFactory
@@ -31,9 +30,9 @@ import uk.gov.hmrc.hecapplicantfrontend.models.HECTaxCheckData.IndividualHECTaxC
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.IndividualRetrievedData
 import uk.gov.hmrc.hecapplicantfrontend.models.TaxDetails.IndividualTaxDetails
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.CompleteUserAnswers
-import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CTUTR, GGCredId, NINO, SAUTR}
+import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR, GGCredId, NINO, SAUTR}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.hecapplicantfrontend.models.{AccountingPeriod, CRN, CTStatus, CTStatusResponse, DateOfBirth, EmailAddress, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, IncomeDeclared, Name, SAStatus, SAStatusResponse, TaxSituation, TaxYear}
+import uk.gov.hmrc.hecapplicantfrontend.models.{AccountingPeriod, CTStatus, CTStatusResponse, DateOfBirth, EmailAddress, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, IncomeDeclared, Name, SAStatus, SAStatusResponse, TaxSituation, TaxYear}
 import TaxCheckService._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 
@@ -93,8 +92,9 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         LicenceType.OperatorOfPrivateHireVehicles,
         LicenceTimeTrading.TwoToFourYears,
         LicenceValidityPeriod.UpToOneYear,
-        TaxSituation.SA,
+        Some(TaxSituation.SA),
         Some(IncomeDeclared.Yes),
+        None,
         None
       )
 

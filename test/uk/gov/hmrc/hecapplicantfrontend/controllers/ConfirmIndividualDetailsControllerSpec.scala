@@ -56,7 +56,7 @@ class ConfirmIndividualDetailsControllerSpec
       "redirect to the start endpoint" when {
 
         "company details are found in session" in {
-          val companyRetrievedData = CompanyRetrievedData(GGCredId(""), None, None)
+          val companyRetrievedData = CompanyRetrievedData(GGCredId(""), None, None, None)
 
           inSequence {
             mockAuthWithNoRetrievals()
@@ -118,7 +118,7 @@ class ConfirmIndividualDetailsControllerSpec
       "redirect to the start endpoint" when {
 
         "company details are found in session" in {
-          val companyRetrievedData = CompanyRetrievedData(GGCredId(""), None, None)
+          val companyRetrievedData = CompanyRetrievedData(GGCredId(""), None, None, None)
 
           inSequence {
             mockAuthWithNoRetrievals()
@@ -205,7 +205,7 @@ class ConfirmIndividualDetailsControllerSpec
       "redirect to the start endpoint" when {
 
         "company details are found in session" in {
-          val companyRetrievedData = CompanyRetrievedData(GGCredId(""), None, None)
+          val companyRetrievedData = CompanyRetrievedData(GGCredId(""), None, None, None)
 
           inSequence {
             mockAuthWithNoRetrievals()

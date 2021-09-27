@@ -23,14 +23,14 @@ import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
 import uk.gov.hmrc.hecapplicantfrontend.models.ApplicantDetails.IndividualApplicantDetails
 import uk.gov.hmrc.hecapplicantfrontend.models.HECTaxCheckData.IndividualHECTaxCheckData
-import uk.gov.hmrc.hecapplicantfrontend.models.{CRN, DateOfBirth, HECTaxCheckData, IncomeDeclared, Name, TaxSituation, TaxYear}
+import uk.gov.hmrc.hecapplicantfrontend.models.{DateOfBirth, HECTaxCheckData, IncomeDeclared, Name, TaxSituation, TaxYear}
 import uk.gov.hmrc.hecapplicantfrontend.models.TaxDetails.IndividualTaxDetails
-import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CTUTR, GGCredId, NINO, SAUTR}
+import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR, GGCredId, NINO, SAUTR}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-import java.time.LocalDate
 
+import java.time.LocalDate
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class HECConnectorImplSpec extends AnyWordSpec with Matchers with MockFactory with HttpSupport with ConnectorSpec {
@@ -70,7 +70,7 @@ class HECConnectorImplSpec extends AnyWordSpec with Matchers with MockFactory wi
           IndividualTaxDetails(
             NINO(""),
             Some(SAUTR("")),
-            TaxSituation.SA,
+            Some(TaxSituation.SA),
             Some(IncomeDeclared.Yes)
           )
         )

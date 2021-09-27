@@ -53,7 +53,7 @@ class EntityTypeControllerSpec
     IndividualRetrievedData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None, None)
 
   val companyRetrievedData =
-    CompanyRetrievedData(GGCredId(""), None, None)
+    CompanyRetrievedData(GGCredId(""), None, None, None)
 
   "EntityTypeController" when {
 
@@ -99,9 +99,10 @@ class EntityTypeControllerSpec
                 LicenceType.DriverOfTaxisAndPrivateHires,
                 LicenceTimeTrading.ZeroToTwoYears,
                 LicenceValidityPeriod.UpToTwoYears,
-                TaxSituation.PAYE,
+                Some(TaxSituation.PAYE),
                 Some(IncomeDeclared.Yes),
-                Some(EntityType.Individual)
+                Some(EntityType.Individual),
+                None
               ),
               None
             )
@@ -255,8 +256,9 @@ class EntityTypeControllerSpec
               LicenceType.DriverOfTaxisAndPrivateHires,
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToOneYear,
-              TaxSituation.PAYE,
+              Some(TaxSituation.PAYE),
               Some(IncomeDeclared.Yes),
+              None,
               None
             )
             val updatedAnswers = IncompleteUserAnswers
@@ -278,12 +280,13 @@ class EntityTypeControllerSpec
 
           "the user is a company and  has previously completed answering questions" in {
             val answers        = CompleteUserAnswers(
-              LicenceType.OperatorOfPrivateHireVehicles,
-              LicenceTimeTrading.ZeroToTwoYears,
-              LicenceValidityPeriod.UpToOneYear,
-              TaxSituation.SAPAYE,
-              Some(IncomeDeclared.Yes),
-              None
+              licenceType = LicenceType.OperatorOfPrivateHireVehicles,
+              licenceTimeTrading = LicenceTimeTrading.ZeroToTwoYears,
+              licenceValidityPeriod = LicenceValidityPeriod.UpToOneYear,
+              taxSituation = Some(TaxSituation.SAPAYE),
+              saIncomeDeclared = Some(IncomeDeclared.Yes),
+              entityType = None,
+              crn = None
             )
             val updatedAnswers = IncompleteUserAnswers
               .fromCompleteAnswers(answers)

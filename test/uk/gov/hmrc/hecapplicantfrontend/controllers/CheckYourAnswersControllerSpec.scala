@@ -57,7 +57,7 @@ class CheckYourAnswersControllerSpec
   val individualRetrievedData =
     IndividualRetrievedData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None, None)
 
-  val companyRetrievedData = CompanyRetrievedData(GGCredId(""), None, None)
+  val companyRetrievedData = CompanyRetrievedData(GGCredId(""), None, None, None)
 
   def mockSaveTaxCheck(applicantData: RetrievedApplicantData, completeAnswers: CompleteUserAnswers)(
     result: Either[Error, HECTaxCheck]
@@ -95,9 +95,10 @@ class CheckYourAnswersControllerSpec
           LicenceType.ScrapMetalMobileCollector,
           LicenceTimeTrading.ZeroToTwoYears,
           LicenceValidityPeriod.UpToTwoYears,
-          TaxSituation.PAYE,
+          Some(TaxSituation.PAYE),
           Some(IncomeDeclared.Yes),
-          Some(EntityType.Individual)
+          Some(EntityType.Individual),
+          None
         )
 
         val session = HECSession(individualRetrievedData, answers, None)
@@ -174,9 +175,10 @@ class CheckYourAnswersControllerSpec
         LicenceType.OperatorOfPrivateHireVehicles,
         LicenceTimeTrading.TwoToFourYears,
         LicenceValidityPeriod.UpToOneYear,
-        TaxSituation.SA,
+        Some(TaxSituation.SA),
         Some(IncomeDeclared.Yes),
-        Some(EntityType.Individual)
+        Some(EntityType.Individual),
+        None
       )
 
       val session = HECSession(individualRetrievedData, completeAnswers, None)
