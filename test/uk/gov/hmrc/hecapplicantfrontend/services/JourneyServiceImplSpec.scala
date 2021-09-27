@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.services
 
-import java.time.LocalDate
+import java.time.{LocalDate, ZonedDateTime}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -61,21 +61,52 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
 
   "JourneyServiceImpl" when {
 
-    "handling calls to 'firstPage'" must {
+    "handling calls to 'firstPage'" when {
 
-      "return the correct call" when afterWord("the user is") {
+      "tax checks list is not empty" must {
 
-        "an individual" in {
-          val session = HECSession(individualRetrievedData, UserAnswers.empty, None)
-          journeyService.firstPage(session) shouldBe routes.ConfirmIndividualDetailsController
-            .confirmIndividualDetails()
+        val taxChecks = List(
+          TaxCheckListItem(
+            LicenceType.DriverOfTaxisAndPrivateHires,
+            HECTaxCheckCode("some-code"),
+            LocalDate.now(),
+            ZonedDateTime.now()
+          )
+        )
+
+        "return the correct call" when afterWord("the user is") {
+
+          "an individual" in {
+            val individualData = individualRetrievedData.copy(unexpiredTaxChecks = taxChecks)
+            val session        = HECSession(individualData, UserAnswers.empty, None)
+            journeyService.firstPage(session) shouldBe routes.ConfirmIndividualDetailsController
+              .confirmIndividualDetails()
+          }
+
+          "a company" in {
+            val companyData = companyRetrievedData.copy(unexpiredTaxChecks = taxChecks)
+            val session     = HECSession(companyData, UserAnswers.empty, None)
+            journeyService.firstPage(session) shouldBe routes.TaxChecksListController.unexpiredTaxChecks()
+          }
         }
+      }
 
-        "a company" in {
-          val session = HECSession(companyRetrievedData, UserAnswers.empty, None)
-          journeyService.firstPage(session) shouldBe routes.LicenceDetailsController.licenceType()
+      "tax checks list is empty" must {
+
+        "return the correct call" when afterWord("the user is") {
+
+          "an individual" in {
+            val session = HECSession(individualRetrievedData, UserAnswers.empty, None)
+            journeyService.firstPage(session) shouldBe routes.ConfirmIndividualDetailsController
+              .confirmIndividualDetails()
+          }
+
+          "a company" in {
+            val session = HECSession(companyRetrievedData, UserAnswers.empty, None)
+            journeyService.firstPage(session) shouldBe routes.LicenceDetailsController.licenceType()
+          }
+
         }
-
       }
 
     }

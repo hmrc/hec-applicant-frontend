@@ -89,11 +89,14 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
         routes.EntityTypeController.entityType()
     )
 
-  override def firstPage(session: HECSession): Call =
+  override def firstPage(session: HECSession): Call = {
+    val hasTaxCheckCodes = session.retrievedUserData.unexpiredTaxChecks.nonEmpty
     session.retrievedUserData match {
-      case _: IndividualRetrievedData => routes.ConfirmIndividualDetailsController.confirmIndividualDetails()
-      case _: CompanyRetrievedData    => routes.LicenceDetailsController.licenceType()
+      case _: IndividualRetrievedData                  => routes.ConfirmIndividualDetailsController.confirmIndividualDetails()
+      case _: CompanyRetrievedData if hasTaxCheckCodes => routes.TaxChecksListController.unexpiredTaxChecks()
+      case _: CompanyRetrievedData                     => routes.LicenceDetailsController.licenceType()
     }
+  }
 
   override def updateAndNext(current: Call, updatedSession: HECSession)(implicit
     r: RequestWithSessionData[_],
