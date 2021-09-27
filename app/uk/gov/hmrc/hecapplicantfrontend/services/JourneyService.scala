@@ -286,25 +286,36 @@ object JourneyServiceImpl {
   def allAnswersComplete(
     incompleteUserAnswers: IncompleteUserAnswers,
     retrievedUserData: RetrievedApplicantData
-  ): Boolean =
+  ): Boolean = {
+    val isIndividual = retrievedUserData match {
+      case _: IndividualRetrievedData => true
+      case _: CompanyRetrievedData    => false
+    }
     incompleteUserAnswers match {
       case IncompleteUserAnswers(
             Some(licenceType),
             Some(_),
             Some(_),
-            taxSituation,
+            Some(taxSituation),
             saIncomeDeclared,
             entityType,
             _
-          ) =>
-        val licenceTypeCheck = checkEntityTypePresentIfRequired(licenceType, entityType)
-        taxSituation match {
-          case Some(taxSituation) =>
-            val saIncomeDeclaredCheck = checkSAIncomeDeclared(taxSituation, saIncomeDeclared, retrievedUserData)
-            licenceTypeCheck && saIncomeDeclaredCheck
-          case None               => licenceTypeCheck
-        }
+          ) if isIndividual =>
+        val licenceTypeCheck      = checkEntityTypePresentIfRequired(licenceType, entityType)
+        val saIncomeDeclaredCheck = checkSAIncomeDeclared(taxSituation, saIncomeDeclared, retrievedUserData)
+        licenceTypeCheck && saIncomeDeclaredCheck
+      case IncompleteUserAnswers(
+            Some(licenceType),
+            Some(_),
+            Some(_),
+            _,
+            _,
+            entityType,
+            Some(_)
+          ) if !isIndividual =>
+        checkEntityTypePresentIfRequired(licenceType, entityType)
 
       case _ => false
     }
+  }
 }

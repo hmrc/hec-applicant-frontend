@@ -97,14 +97,14 @@ class CRNController @Inject() (
     request: RequestWithSessionData[_]
   ): EitherT[Future, Error, Call] = {
     val sessionCrn = request.sessionData.userAnswers.fold(_.crn, _.crn)
-    (crn, sessionCrn, companyRetrievedData.companyName) match {
-      //check if the submitted crn is equal to the crn in session and company name is present
-      //then no need to call the companyDetailsService
+    (crn, sessionCrn) match {
+      //check if the submitted crn is equal to the crn in session
+      //then no need to call the companyDetailsService, pick company name from the sesison
       //else fetch company name using the service
-      case (crn, Some(crnSession), Some(_)) if crn.value === crnSession.value =>
+      case (crn, Some(crnSession)) if crn.value === crnSession.value =>
         journeyService
           .updateAndNext(routes.CRNController.companyRegistrationNumber(), request.sessionData)
-      case _                                                                  => fetchCompanyName(crn, companyRetrievedData)
+      case _                                                         => fetchCompanyName(crn, companyRetrievedData)
     }
   }
 

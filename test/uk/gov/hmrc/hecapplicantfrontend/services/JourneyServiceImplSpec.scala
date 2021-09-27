@@ -639,7 +639,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 None
               )
 
-              val session                                     = HECSession(companyRetrievedData, incompleteAnswers, None)
+              val session                                     = HECSession(individualRetrievedData, incompleteAnswers, None)
               implicit val request: RequestWithSessionData[_] =
                 requestWithSessionData(session)
 
@@ -1370,7 +1370,10 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             JourneyServiceImpl.allAnswersComplete(
               incompleteUserAnswers = incompleteAnswersBase.copy(
                 licenceType = Some(licenceType),
-                entityType = Some(EntityType.Individual)
+                entityType = Some(EntityType.Company),
+                taxSituation = None,
+                saIncomeDeclared = None,
+                crn = Some(CRN("1234567"))
               ),
               retrievedUserData = companyRetrievedData
             ) shouldBe true
@@ -1390,7 +1393,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 taxSituation = Some(taxSituation),
                 saIncomeDeclared = None
               ),
-              retrievedUserData = companyRetrievedData
+              retrievedUserData = individualRetrievedData
             ) shouldBe true
 
             // income declared is present
@@ -1399,7 +1402,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 taxSituation = Some(taxSituation),
                 saIncomeDeclared = Some(IncomeDeclared.Yes)
               ),
-              retrievedUserData = companyRetrievedData
+              retrievedUserData = individualRetrievedData
             ) shouldBe true
           }
         }
