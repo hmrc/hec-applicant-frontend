@@ -159,7 +159,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
                 Some(licenceType),
                 Some(licenceTimeTrading),
                 Some(licenceValidityPeriod),
-                Some(taxSituation),
+                taxSituation,
                 saIncomeDeclared,
                 entityType,
                 crn
@@ -169,7 +169,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
                 licenceType,
                 licenceTimeTrading,
                 licenceValidityPeriod,
-                Some(taxSituation),
+                taxSituation,
                 saIncomeDeclared,
                 entityType,
                 crn
@@ -238,10 +238,10 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
 
   private def companyRegistrationNumberRoute(session: HECSession) =
     session.retrievedUserData match {
-      case IndividualRetrievedData(_, _, _, _, _, _, _) =>
+      case _: IndividualRetrievedData             =>
         sys.error("This may never happen, Individual data shouldn't be present  in company journey")
-      case CompanyRetrievedData(_, _, _, Some(_))       => routes.CompanyDetailsController.confirmCompanyDetails()
-      case _                                            => routes.CompanyDetailsNotFoundController.companyNotFound()
+      case CompanyRetrievedData(_, _, _, Some(_)) => routes.CompanyDetailsController.confirmCompanyDetails()
+      case _                                      => routes.CompanyDetailsNotFoundController.companyNotFound()
     }
 
 }
@@ -304,17 +304,8 @@ object JourneyServiceImpl {
         val licenceTypeCheck      = checkEntityTypePresentIfRequired(licenceType, entityType)
         val saIncomeDeclaredCheck = checkSAIncomeDeclared(taxSituation, saIncomeDeclared, retrievedUserData)
         licenceTypeCheck && saIncomeDeclaredCheck
-      case IncompleteUserAnswers(
-            Some(licenceType),
-            Some(_),
-            Some(_),
-            _,
-            _,
-            entityType,
-            Some(_)
-          ) if !isIndividual =>
-        checkEntityTypePresentIfRequired(licenceType, entityType)
 
+      //TODO add company scenario later when it reaches the check your answer page
       case _ => false
     }
   }
