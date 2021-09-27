@@ -52,11 +52,12 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
       Name("", ""),
       DateOfBirth(LocalDate.now()),
       None,
-      None
+      None,
+      List.empty
     )
 
   val companyRetrievedData: CompanyRetrievedData =
-    CompanyRetrievedData(GGCredId(""), None, None, None)
+    CompanyRetrievedData(GGCredId(""), None, None, None, List.empty)
 
   "JourneyServiceImpl" when {
 
@@ -342,7 +343,8 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
               Name("", ""),
               DateOfBirth(LocalDate.now()),
               None,
-              None
+              None,
+              List.empty
             )
 
           def individualWithStatus(status: SAStatus = SAStatus.NoticeToFileIssued): IndividualRetrievedData =
@@ -1273,7 +1275,8 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             Name("", ""),
             DateOfBirth(LocalDate.now()),
             None,
-            Some(SAStatusResponse(SAUTR(""), TaxYear(2020), saStatus))
+            Some(SAStatusResponse(SAUTR(""), TaxYear(2020), saStatus)),
+            List.empty
           )
           HECSession(
             individualData,

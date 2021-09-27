@@ -51,10 +51,19 @@ class LicenceDetailsControllerSpec
   val controller: LicenceDetailsController = instanceOf[LicenceDetailsController]
 
   val individuaRetrievedlData: IndividualRetrievedData =
-    IndividualRetrievedData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None, None)
+    IndividualRetrievedData(
+      GGCredId(""),
+      NINO(""),
+      None,
+      Name("", ""),
+      DateOfBirth(LocalDate.now()),
+      None,
+      None,
+      List.empty
+    )
 
   val companyRetrievedData: CompanyRetrievedData =
-    CompanyRetrievedData(GGCredId(""), None, None, None)
+    CompanyRetrievedData(GGCredId(""), None, None, None, List.empty)
 
   "LicenceDetailsController" when {
 

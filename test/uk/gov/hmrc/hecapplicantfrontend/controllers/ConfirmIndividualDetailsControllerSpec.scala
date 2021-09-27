@@ -56,7 +56,7 @@ class ConfirmIndividualDetailsControllerSpec
       "redirect to the start endpoint" when {
 
         "company details are found in session" in {
-          val companyRetrievedData = CompanyRetrievedData(GGCredId(""), None, None, None)
+          val companyRetrievedData = CompanyRetrievedData(GGCredId(""), None, None, None, List.empty)
 
           inSequence {
             mockAuthWithNoRetrievals()
@@ -74,7 +74,7 @@ class ConfirmIndividualDetailsControllerSpec
           val dateOfBirth = DateOfBirth(LocalDate.of(2000, 12, 3))
 
           val session = HECSession(
-            IndividualRetrievedData(GGCredId(""), NINO(""), None, name, dateOfBirth, None, None),
+            IndividualRetrievedData(GGCredId(""), NINO(""), None, name, dateOfBirth, None, None, List.empty),
             UserAnswers.empty,
             None
           )
@@ -118,7 +118,7 @@ class ConfirmIndividualDetailsControllerSpec
       "redirect to the start endpoint" when {
 
         "company details are found in session" in {
-          val companyRetrievedData = CompanyRetrievedData(GGCredId(""), None, None, None)
+          val companyRetrievedData = CompanyRetrievedData(GGCredId(""), None, None, None, List.empty)
 
           inSequence {
             mockAuthWithNoRetrievals()
@@ -141,7 +141,8 @@ class ConfirmIndividualDetailsControllerSpec
               Name("", ""),
               DateOfBirth(LocalDate.now()),
               None,
-              None
+              None,
+              List.empty
             ),
             UserAnswers.empty,
             None
@@ -173,7 +174,8 @@ class ConfirmIndividualDetailsControllerSpec
               Name("", ""),
               DateOfBirth(LocalDate.now()),
               None,
-              None
+              None,
+              List.empty
             ),
             UserAnswers.empty,
             None
@@ -205,7 +207,7 @@ class ConfirmIndividualDetailsControllerSpec
       "redirect to the start endpoint" when {
 
         "company details are found in session" in {
-          val companyRetrievedData = CompanyRetrievedData(GGCredId(""), None, None, None)
+          val companyRetrievedData = CompanyRetrievedData(GGCredId(""), None, None, None, List.empty)
 
           inSequence {
             mockAuthWithNoRetrievals()
@@ -227,7 +229,8 @@ class ConfirmIndividualDetailsControllerSpec
               Name("", ""),
               DateOfBirth(LocalDate.now()),
               None,
-              None
+              None,
+              List.empty
             ),
             UserAnswers.empty,
             None

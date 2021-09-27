@@ -178,7 +178,8 @@ class StartController @Inject() (
                       citizenDetails.name,
                       citizenDetails.dateOfBirth,
                       maybeEmail.map(EmailAddress(_)),
-                      None
+                      None,
+                      List.empty
                     )
                 )
                 .toEither
@@ -207,7 +208,8 @@ class StartController @Inject() (
           GGCredId(ggCredId.value),
           _,
           maybeEmail.map(EmailAddress(_)),
-          None
+          None,
+          List.empty
         )
       )
       .toEither

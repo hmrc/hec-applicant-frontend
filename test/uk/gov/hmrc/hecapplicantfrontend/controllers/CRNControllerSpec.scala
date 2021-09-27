@@ -61,7 +61,7 @@ class CRNControllerSpec
   )
 
   val controller           = instanceOf[CRNController]
-  val companyRetrievedData = CompanyRetrievedData(GGCredId(""), None, None, None)
+  val companyRetrievedData = CompanyRetrievedData(GGCredId(""), None, None, None, List.empty)
 
   def mockFindCompany(crn: CRN)(
     result: Either[Error, Option[CompanyHouseDetails]]

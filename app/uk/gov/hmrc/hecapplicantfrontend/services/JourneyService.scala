@@ -215,7 +215,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
       case Some(taxSituation) =>
         if (saTaxSituations.contains(taxSituation)) {
           session.retrievedUserData match {
-            case IndividualRetrievedData(_, _, Some(_), _, _, _, Some(saStatus)) =>
+            case IndividualRetrievedData(_, _, Some(_), _, _, _, Some(saStatus), _) =>
               saStatus.status match {
                 case SAStatus.ReturnFound        => routes.SAController.saIncomeStatement()
                 case SAStatus.NoticeToFileIssued => routes.CheckYourAnswersController.checkYourAnswers()
@@ -238,10 +238,10 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
 
   private def companyRegistrationNumberRoute(session: HECSession) =
     session.retrievedUserData match {
-      case _: IndividualRetrievedData             =>
+      case _: IndividualRetrievedData                =>
         sys.error("This may never happen, Individual data shouldn't be present  in company journey")
-      case CompanyRetrievedData(_, _, _, Some(_)) => routes.CompanyDetailsController.confirmCompanyDetails()
-      case _                                      => routes.CompanyDetailsNotFoundController.companyNotFound()
+      case CompanyRetrievedData(_, _, _, Some(_), _) => routes.CompanyDetailsController.confirmCompanyDetails()
+      case _                                         => routes.CompanyDetailsNotFoundController.companyNotFound()
     }
 
 }
@@ -271,7 +271,7 @@ object JourneyServiceImpl {
     retrievedUserData: RetrievedApplicantData
   ): Boolean =
     (retrievedUserData, saIncomeDeclared) match {
-      case (IndividualRetrievedData(_, _, _, _, _, _, Some(SAStatusResponse(_, _, ReturnFound))), None)
+      case (IndividualRetrievedData(_, _, _, _, _, _, Some(SAStatusResponse(_, _, ReturnFound)), _), None)
           if saTaxSituations.contains(taxSituation) =>
         false
       case _ => true
