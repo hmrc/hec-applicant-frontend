@@ -1,0 +1,18 @@
+@import play.api.i18n.Messages
+@import play.api.mvc.{Call, Request}
+@import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
+@import uk.gov.hmrc.govukfrontend.views.html.components._
+@import uk.gov.hmrc.hecapplicantfrontend.models.TaxCheckListItem
+
+@this(layout: Layout, govukButton: GovukButton, formWithCSRF: FormWithCSRF)
+
+@(back: Call, taxChecks: List[TaxCheckListItem])(implicit request: Request[_], messages: Messages)
+@key = @{"taxChecksList"}
+@title = @{messages(s"$key.title")}
+@layout(pageTitle = Some(title), backLocation = Some(back)) {
+    <h1 class="govuk-heading-xl">@title</h1>
+    <p class="govuk-body">@taxChecks</p>
+    @formWithCSRF(action = routes.LicenceDetailsController.licenceType()) {
+        @govukButton(Button(content = Text(messages(s"$key.button"))))
+    }
+}

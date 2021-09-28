@@ -20,13 +20,17 @@ import com.google.inject.{Inject, Singleton}
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
+import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
+import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
 @Singleton
 class TaxChecksListController @Inject() (
   authAction: AuthAction,
   sessionDataAction: SessionDataAction,
+  journeyService: JourneyService,
+  taxChecksListPage: html.TaxChecksList,
   mcc: MessagesControllerComponents
 ) extends FrontendController(mcc)
     with I18nSupport
@@ -41,7 +45,8 @@ class TaxChecksListController @Inject() (
         logger.warn("No tax check codes found")
         InternalServerError
       case taxChecks =>
-        Ok(s"$taxChecks")
+        val back = journeyService.previous(routes.TaxChecksListController.unexpiredTaxChecks())
+        Ok(taxChecksListPage(back, taxChecks))
     }
   }
 }

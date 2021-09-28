@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.services
 
-import java.time.{LocalDate, ZonedDateTime}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -33,6 +32,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, GGCredId, NINO, SAUTR}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.http.HeaderCarrier
 
+import java.time.{LocalDate, ZonedDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with SessionSupport {
@@ -148,13 +148,46 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
 
       "try to return the correct next page" when afterWord("the current page is") {
 
-        "the tax check code page" in {
+        "the confirm your details page" when {
+
+          "they do not have any existing tax checks" in {
+            val session                                     = HECSession(individualRetrievedData, UserAnswers.empty, None)
+            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+
+            val result = journeyService.updateAndNext(
+              routes.ConfirmIndividualDetailsController.confirmIndividualDetails(),
+              session
+            )
+            await(result.value) shouldBe Right(routes.LicenceDetailsController.licenceType())
+          }
+
+          "they have existing tax checks" in {
+            val taxChecks                                   = List(
+              TaxCheckListItem(
+                LicenceType.DriverOfTaxisAndPrivateHires,
+                HECTaxCheckCode("some-code"),
+                LocalDate.now(),
+                ZonedDateTime.now()
+              )
+            )
+            val individualData                              = individualRetrievedData.copy(unexpiredTaxChecks = taxChecks)
+            val session                                     = HECSession(individualData, UserAnswers.empty, None)
+            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+
+            val result = journeyService.updateAndNext(
+              routes.ConfirmIndividualDetailsController.confirmIndividualDetails(),
+              session
+            )
+            await(result.value) shouldBe Right(routes.TaxChecksListController.unexpiredTaxChecks())
+          }
+        }
+
+        "the tax check codes page" in {
           val session                                     = HECSession(individualRetrievedData, UserAnswers.empty, None)
-          implicit val request: RequestWithSessionData[_] =
-            requestWithSessionData(session)
+          implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
 
           val result = journeyService.updateAndNext(
-            routes.ConfirmIndividualDetailsController.confirmIndividualDetails(),
+            routes.TaxChecksListController.unexpiredTaxChecks(),
             session
           )
           await(result.value) shouldBe Right(routes.LicenceDetailsController.licenceType())

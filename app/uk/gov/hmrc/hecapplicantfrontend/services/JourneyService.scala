@@ -63,9 +63,8 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
   // on state (e.g. the type of user or the answers users have submitted), hence the value type `HECSession => Call`
   lazy val paths: Map[Call, HECSession => Call] = Map(
     routes.StartController.start()                                       -> firstPage,
-    routes.ConfirmIndividualDetailsController.confirmIndividualDetails() -> (_ =>
-      routes.LicenceDetailsController.licenceType()
-    ),
+    routes.ConfirmIndividualDetailsController.confirmIndividualDetails() -> confirmIndividualDetailsRoute,
+    routes.TaxChecksListController.unexpiredTaxChecks()                  -> (_ => routes.LicenceDetailsController.licenceType()),
     routes.LicenceDetailsController.licenceType()                        -> (_ => routes.LicenceDetailsController.licenceTimeTrading()),
     routes.LicenceDetailsController.licenceTimeTrading                   -> (_ => routes.LicenceDetailsController.recentLicenceLength()),
     routes.LicenceDetailsController.recentLicenceLength()                -> licenceValidityPeriodRoute,
@@ -183,6 +182,13 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
         }
 
         Right(updatedSession)
+    }
+
+  private def confirmIndividualDetailsRoute(session: HECSession): Call =
+    if (session.retrievedUserData.unexpiredTaxChecks.nonEmpty) {
+      routes.TaxChecksListController.unexpiredTaxChecks()
+    } else {
+      routes.LicenceDetailsController.licenceType()
     }
 
   private def licenceValidityPeriodRoute(session: HECSession): Call =
