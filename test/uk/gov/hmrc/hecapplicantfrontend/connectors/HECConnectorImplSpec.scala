@@ -135,6 +135,19 @@ class HECConnectorImplSpec extends AnyWordSpec with Matchers with MockFactory wi
 
     }
 
+    "handling requests to get unexpired tax checks" must {
+
+      implicit val hc: HeaderCarrier = HeaderCarrier()
+
+      val expectedUrl = s"$protocol://$host:$port/hec/unexpired-tax-checks"
+
+      behave like connectorBehaviour(
+        mockGet(expectedUrl)(_),
+        () => connector.getUnexpiredTaxCheckCodes()
+      )
+
+    }
+
   }
 
 }

@@ -21,6 +21,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CTUTR, GGCredId, NINO, SAUTR
 
 sealed trait RetrievedApplicantData extends Product with Serializable {
   val entityType: EntityType
+  val unexpiredTaxChecks: List[TaxCheckListItem]
 }
 
 object RetrievedApplicantData {
@@ -32,7 +33,8 @@ object RetrievedApplicantData {
     name: Name,
     dateOfBirth: DateOfBirth,
     emailAddress: Option[EmailAddress],
-    saStatus: Option[SAStatusResponse]
+    saStatus: Option[SAStatusResponse],
+    unexpiredTaxChecks: List[TaxCheckListItem]
   ) extends RetrievedApplicantData {
     val entityType: EntityType = EntityType.Individual
   }
@@ -41,7 +43,8 @@ object RetrievedApplicantData {
     ggCredId: GGCredId,
     ctutr: Option[CTUTR],
     emailAddress: Option[EmailAddress],
-    companyName: Option[CompanyHouseName]
+    companyName: Option[CompanyHouseName],
+    unexpiredTaxChecks: List[TaxCheckListItem]
   ) extends RetrievedApplicantData {
     val entityType: EntityType = EntityType.Company
   }

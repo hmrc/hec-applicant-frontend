@@ -47,10 +47,19 @@ class TaxCheckCompleteControllerSpec
   val controller = instanceOf[TaxCheckCompleteController]
 
   val individualRetrievedData =
-    IndividualRetrievedData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None, None)
+    IndividualRetrievedData(
+      GGCredId(""),
+      NINO(""),
+      None,
+      Name("", ""),
+      DateOfBirth(LocalDate.now()),
+      None,
+      None,
+      List.empty
+    )
 
   val companyRetrievedData =
-    CompanyRetrievedData(GGCredId(""), None, None, None)
+    CompanyRetrievedData(GGCredId(""), None, None, None, List.empty)
 
   "TaxCheckCompleteController" when {
 

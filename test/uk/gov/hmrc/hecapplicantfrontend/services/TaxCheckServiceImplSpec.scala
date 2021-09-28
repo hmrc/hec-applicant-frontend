@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.services
 
-import java.time.LocalDate
 import cats.data.EitherT
 import cats.instances.future._
 import org.scalamock.scalatest.MockFactory
@@ -30,12 +29,13 @@ import uk.gov.hmrc.hecapplicantfrontend.models.HECTaxCheckData.IndividualHECTaxC
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.IndividualRetrievedData
 import uk.gov.hmrc.hecapplicantfrontend.models.TaxDetails.IndividualTaxDetails
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.CompleteUserAnswers
-import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR, GGCredId, NINO, SAUTR}
+import uk.gov.hmrc.hecapplicantfrontend.models.ids._
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.hecapplicantfrontend.models.{AccountingPeriod, CTStatus, CTStatusResponse, DateOfBirth, EmailAddress, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, IncomeDeclared, Name, SAStatus, SAStatusResponse, TaxSituation, TaxYear}
-import TaxCheckService._
+import uk.gov.hmrc.hecapplicantfrontend.models.{AccountingPeriod, CTStatus, CTStatusResponse, DateOfBirth, EmailAddress, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, IncomeDeclared, Name, SAStatus, SAStatusResponse, TaxCheckListItem, TaxSituation, TaxYear}
+import uk.gov.hmrc.hecapplicantfrontend.services.TaxCheckService._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 
+import java.time.{LocalDate, ZonedDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory {
@@ -68,6 +68,12 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
       .expects(crn, *)
       .returning(EitherT.fromEither(result))
 
+  def mockGetUnexpiredTaxChecks(result: Either[Error, HttpResponse]) =
+    (mockHECConnector
+      .getUnexpiredTaxCheckCodes()(_: HeaderCarrier))
+      .expects(*)
+      .returning(EitherT.fromEither(result))
+
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
   val emptyHeaders = Map.empty[String, Seq[String]]
@@ -85,7 +91,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         Name("first", "last"),
         DateOfBirth(LocalDate.now()),
         Some(email),
-        None
+        None,
+        List.empty
       )
 
       val completeAnswers = CompleteUserAnswers(
@@ -331,6 +338,64 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
 
           val result = service.getCtutr(crn)
           await(result.value) shouldBe Right(response.ctutr)
+        }
+
+      }
+
+    }
+
+    "handling requests to get unexpired tax checks" must {
+
+      val response = List(
+        TaxCheckListItem(
+          licenceType = LicenceType.ScrapMetalMobileCollector,
+          taxCheckCode = HECTaxCheckCode("some-code"),
+          expiresAfter = LocalDate.now(),
+          createDate = ZonedDateTime.now()
+        )
+      )
+
+      val responseJson = Json.toJson(response)
+
+      "return an error" when {
+
+        "the http call fails" in {
+          mockGetUnexpiredTaxChecks(Left(Error("")))
+
+          val result = service.getUnexpiredTaxCheckCodes()
+          await(result.value) shouldBe a[Left[_, _]]
+        }
+
+        "the http response comes back with a non-OK (200) response" in {
+          mockGetUnexpiredTaxChecks(Right(HttpResponse(ACCEPTED, responseJson, emptyHeaders)))
+
+          val result = service.getUnexpiredTaxCheckCodes()
+          await(result.value) shouldBe a[Left[_, _]]
+        }
+
+        "there is no json in the response" in {
+          mockGetUnexpiredTaxChecks(Right(HttpResponse(OK, "", emptyHeaders)))
+
+          val result = service.getUnexpiredTaxCheckCodes()
+          await(result.value) shouldBe a[Left[_, _]]
+        }
+
+        "the json in the body cannot be parsed" in {
+          mockGetUnexpiredTaxChecks(Right(HttpResponse(ACCEPTED, Json.parse("{ }"), emptyHeaders)))
+
+          val result = service.getUnexpiredTaxCheckCodes()
+          await(result.value) shouldBe a[Left[_, _]]
+        }
+
+      }
+
+      "return successfully" when {
+
+        "the http call succeeds and the body of the response can be parsed" in {
+          mockGetUnexpiredTaxChecks(Right(HttpResponse(OK, responseJson, emptyHeaders)))
+
+          val result = service.getUnexpiredTaxCheckCodes()
+          await(result.value) shouldBe Right(response)
         }
 
       }

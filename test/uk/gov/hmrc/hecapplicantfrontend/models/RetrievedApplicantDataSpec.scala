@@ -40,7 +40,8 @@ class RetrievedApplicantDataSpec extends AnyWordSpec with Matchers {
           Name("first", "last"),
           DateOfBirth(dateOfBirth),
           Some(EmailAddress("email")),
-          None
+          None,
+          List.empty
         )
 
       val individualJson = Json.parse(s"""{
@@ -53,7 +54,8 @@ class RetrievedApplicantDataSpec extends AnyWordSpec with Matchers {
           |},
           |"dateOfBirth":"$dateOfBirthStr",
           |"emailAddress":"email",
-          |"type":"Individual"
+          |"type":"Individual",
+          |"unexpiredTaxChecks":[]
           |}""".stripMargin)
 
       val companyRetrievedData: RetrievedApplicantData =
@@ -61,7 +63,8 @@ class RetrievedApplicantDataSpec extends AnyWordSpec with Matchers {
           GGCredId("ggCredId"),
           Some(CTUTR("utr")),
           Some(EmailAddress("email")),
-          Some(CompanyHouseName("Test Tech Ltd"))
+          Some(CompanyHouseName("Test Tech Ltd")),
+          List.empty
         )
 
       val companyJson = Json.parse("""{
@@ -69,7 +72,8 @@ class RetrievedApplicantDataSpec extends AnyWordSpec with Matchers {
           |"ctutr":"utr",
           |"emailAddress":"email",
           |"type":"Company",
-          |"companyName":"Test Tech Ltd"
+          |"companyName":"Test Tech Ltd",
+          |"unexpiredTaxChecks":[]
           |}""".stripMargin)
 
       "serialize Individual retrieved data" in {
@@ -91,8 +95,10 @@ class RetrievedApplicantDataSpec extends AnyWordSpec with Matchers {
 
         "only mandatory fields are present" in {
           Json
-            .fromJson[RetrievedApplicantData](Json.parse("""{"ggCredId":"ggCredId", "type":"Company"}"""))
-            .get shouldBe CompanyRetrievedData(GGCredId("ggCredId"), None, None, None)
+            .fromJson[RetrievedApplicantData](
+              Json.parse("""{"ggCredId":"ggCredId", "type":"Company", "unexpiredTaxChecks":[]}""")
+            )
+            .get shouldBe CompanyRetrievedData(GGCredId("ggCredId"), None, None, None, List.empty)
         }
       }
     }

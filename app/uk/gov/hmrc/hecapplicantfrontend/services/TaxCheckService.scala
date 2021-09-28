@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.services
 
-import java.time.LocalDate
 import cats.data.EitherT
 import cats.instances.future._
 import cats.instances.int._
@@ -34,11 +33,12 @@ import uk.gov.hmrc.hecapplicantfrontend.models.TaxDetails.IndividualTaxDetails
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.CompleteUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR, SAUTR}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceDetails
-import uk.gov.hmrc.hecapplicantfrontend.models.{CTStatusResponse, Error, HECTaxCheck, HECTaxCheckData, RetrievedApplicantData, SAStatusResponse, TaxYear}
+import uk.gov.hmrc.hecapplicantfrontend.models.{CTStatusResponse, Error, HECTaxCheck, HECTaxCheckData, RetrievedApplicantData, SAStatusResponse, TaxCheckListItem, TaxYear}
 import uk.gov.hmrc.hecapplicantfrontend.services.TaxCheckService._
 import uk.gov.hmrc.hecapplicantfrontend.util.HttpResponseOps._
 import uk.gov.hmrc.http.HeaderCarrier
 
+import java.time.LocalDate
 import scala.concurrent.{ExecutionContext, Future}
 
 @ImplementedBy(classOf[TaxCheckServiceImpl])
@@ -56,6 +56,8 @@ trait TaxCheckService {
   ): EitherT[Future, Error, CTStatusResponse]
 
   def getCtutr(crn: CRN)(implicit hc: HeaderCarrier): EitherT[Future, Error, CTUTR]
+
+  def getUnexpiredTaxCheckCodes()(implicit hc: HeaderCarrier): EitherT[Future, Error, List[TaxCheckListItem]]
 
 }
 
@@ -144,6 +146,17 @@ class TaxCheckServiceImpl @Inject() (hecConnector: HECConnector)(implicit ec: Ex
     }
 
   }
+
+  def getUnexpiredTaxCheckCodes()(implicit hc: HeaderCarrier): EitherT[Future, Error, List[TaxCheckListItem]] =
+    hecConnector
+      .getUnexpiredTaxCheckCodes()
+      .subflatMap { response =>
+        if (response.status =!= OK)
+          Left(Error(s"Call to get tax check codes came back with status ${response.status}. Body is ${response.body}"))
+        else {
+          response.parseJSON[List[TaxCheckListItem]].leftMap(Error(_))
+        }
+      }
 
 }
 
