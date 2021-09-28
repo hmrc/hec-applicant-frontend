@@ -55,9 +55,18 @@ class CheckYourAnswersControllerSpec
   val controller = instanceOf[CheckYourAnswersController]
 
   val individualRetrievedData =
-    IndividualRetrievedData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None, None)
+    IndividualRetrievedData(
+      GGCredId(""),
+      NINO(""),
+      None,
+      Name("", ""),
+      DateOfBirth(LocalDate.now()),
+      None,
+      None,
+      List.empty
+    )
 
-  val companyRetrievedData = CompanyRetrievedData(GGCredId(""), None, None, None)
+  val companyRetrievedData = CompanyRetrievedData(GGCredId(""), None, None, None, List.empty)
 
   def mockSaveTaxCheck(applicantData: RetrievedApplicantData, completeAnswers: CompleteUserAnswers)(
     result: Either[Error, HECTaxCheck]

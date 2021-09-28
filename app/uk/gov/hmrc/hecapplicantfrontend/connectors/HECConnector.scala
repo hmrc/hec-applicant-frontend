@@ -41,6 +41,8 @@ trait HECConnector {
 
   def getCtutr(crn: CRN)(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse]
 
+  def getUnexpiredTaxCheckCodes()(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse]
+
 }
 
 @Singleton
@@ -62,6 +64,8 @@ class HECConnectorImpl @Inject() (http: HttpClient, servicesConfig: ServicesConf
     d.format(DateTimeFormatter.ISO_LOCAL_DATE)
 
   private def getCtutrUrl(crn: CRN): String = s"$baseUrl/hec/ctutr/${crn.value}"
+
+  private val getTaxCheckCodesUrl: String = s"$baseUrl/hec/unexpired-tax-checks"
 
   override def saveTaxCheck(
     taxCheckData: HECTaxCheckData
@@ -99,4 +103,11 @@ class HECConnectorImpl @Inject() (http: HttpClient, servicesConfig: ServicesConf
         .recover { case e => Left(Error(e)) }
     )
 
+  def getUnexpiredTaxCheckCodes()(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse] =
+    EitherT[Future, Error, HttpResponse](
+      http
+        .GET[HttpResponse](getTaxCheckCodesUrl)
+        .map(Right(_))
+        .recover { case e => Left(Error(e)) }
+    )
 }

@@ -51,7 +51,16 @@ class SAControllerSpec
   private val controller = instanceOf[SAController]
 
   val individuaRetrievedlData: IndividualRetrievedData =
-    IndividualRetrievedData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None, None)
+    IndividualRetrievedData(
+      GGCredId(""),
+      NINO(""),
+      None,
+      Name("", ""),
+      DateOfBirth(LocalDate.now()),
+      None,
+      None,
+      List.empty
+    )
 
   "SAController" when {
 
