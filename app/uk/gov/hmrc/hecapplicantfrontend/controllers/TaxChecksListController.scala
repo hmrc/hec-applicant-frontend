@@ -25,6 +25,8 @@ import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
+import java.time.ZonedDateTime
+
 @Singleton
 class TaxChecksListController @Inject() (
   authAction: AuthAction,
@@ -36,6 +38,8 @@ class TaxChecksListController @Inject() (
     with I18nSupport
     with Logging {
 
+  implicit val dateOrdering: Ordering[ZonedDateTime] = (x: ZonedDateTime, y: ZonedDateTime) => x compareTo y
+
   /**
     * Fetches unexpired tax check codes for applicant
     */
@@ -45,8 +49,9 @@ class TaxChecksListController @Inject() (
         logger.warn("No tax check codes found")
         InternalServerError
       case taxChecks =>
-        val back = journeyService.previous(routes.TaxChecksListController.unexpiredTaxChecks())
-        Ok(taxChecksListPage(back, taxChecks))
+        val sorted = taxChecks.sortBy(_.createDate)
+        val back   = journeyService.previous(routes.TaxChecksListController.unexpiredTaxChecks())
+        Ok(taxChecksListPage(back, sorted))
     }
   }
 }
