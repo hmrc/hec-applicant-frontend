@@ -934,6 +934,37 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
           result shouldBe routes.ConfirmIndividualDetailsController.confirmIndividualDetails()
         }
 
+        "the tax check codes page" when {
+          val taxChecks = List(
+            TaxCheckListItem(
+              LicenceType.DriverOfTaxisAndPrivateHires,
+              HECTaxCheckCode("some-code"),
+              LocalDate.now(),
+              ZonedDateTime.now()
+            )
+          )
+
+          "applicant is individual" in {
+            val individualData = individualRetrievedData.copy(unexpiredTaxChecks = taxChecks)
+            val session        = HECSession(individualData, UserAnswers.empty, None)
+
+            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+
+            val result = journeyService.previous(routes.TaxChecksListController.unexpiredTaxChecks())
+            result shouldBe routes.ConfirmIndividualDetailsController.confirmIndividualDetails()
+          }
+
+          "applicant is company" in {
+            val companyData = companyRetrievedData.copy(unexpiredTaxChecks = taxChecks)
+            val session     = HECSession(companyData, UserAnswers.empty, None)
+
+            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+
+            val result = journeyService.previous(routes.TaxChecksListController.unexpiredTaxChecks())
+            result shouldBe routes.StartController.start()
+          }
+        }
+
         "the licence type page" when afterWord("the user is") {
 
           "an individual" in {
