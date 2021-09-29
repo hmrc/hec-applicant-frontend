@@ -11,9 +11,9 @@
 @licenceType = @{messages(s"licenceType.${LicenceTypeOption.licenceTypeOption(taxCheckDetails.licenceType).messageKey}")}
 
 <div class="existing-code">
-  <h3 class="govuk-heading-m">
+  <h2 class="govuk-heading-m">
     @licenceType
-  </h3>
+  </h2>
   <span class="govuk-caption-m">
      @messages("taxCheck.expiryKey") @TimeUtils.govDisplayFormat(taxCheckDetails.expiresAfter)
   </span>

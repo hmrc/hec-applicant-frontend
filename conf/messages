@@ -235,3 +235,6 @@ taxCheck.codeKey = Tax check code:
 
 # Tax Checks List
 taxChecksList.title = Your tax check codes
+taxChecksList.p1 = Check if you have a valid tax check code, before you do another tax check.
+taxChecksList.p2 = If your tax check code expires before your application is likely to be processed, you should do another tax check.
+taxChecksList.link = Print or save this page as a PDF
