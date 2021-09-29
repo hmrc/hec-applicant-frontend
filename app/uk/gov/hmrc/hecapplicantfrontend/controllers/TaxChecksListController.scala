@@ -16,16 +16,19 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.controllers
 
+import cats.instances.future._
 import com.google.inject.{Inject, Singleton}
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
+import uk.gov.hmrc.hecapplicantfrontend.util.Logging.LoggerOps
 import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
 import java.time.ZonedDateTime
+import scala.concurrent.ExecutionContext
 
 @Singleton
 class TaxChecksListController @Inject() (
@@ -34,7 +37,8 @@ class TaxChecksListController @Inject() (
   journeyService: JourneyService,
   taxChecksListPage: html.TaxChecksList,
   mcc: MessagesControllerComponents
-) extends FrontendController(mcc)
+)(implicit ec: ExecutionContext)
+    extends FrontendController(mcc)
     with I18nSupport
     with Logging {
 
@@ -53,5 +57,17 @@ class TaxChecksListController @Inject() (
         val back   = journeyService.previous(routes.TaxChecksListController.unexpiredTaxChecks())
         Ok(taxChecksListPage(back, sorted))
     }
+  }
+
+  val unexpiredTaxChecksSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
+    journeyService
+      .updateAndNext(routes.TaxChecksListController.unexpiredTaxChecks(), request.sessionData)
+      .fold(
+        { e =>
+          logger.warn("Could not save tax check", e)
+          InternalServerError
+        },
+        Redirect
+      )
   }
 }

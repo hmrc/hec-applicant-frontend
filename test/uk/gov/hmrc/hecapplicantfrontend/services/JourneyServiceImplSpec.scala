@@ -150,7 +150,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
 
         "the confirm your details page" when {
 
-          "they do not have any existing tax checks" in {
+          "there are no preexisting tax check codes" in {
             val session                                     = HECSession(individualRetrievedData, UserAnswers.empty, None)
             implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
 
@@ -161,7 +161,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             await(result.value) shouldBe Right(routes.LicenceDetailsController.licenceType())
           }
 
-          "they have existing tax checks" in {
+          "there are preexisting tax check codes" in {
             val taxChecks                                   = List(
               TaxCheckListItem(
                 LicenceType.DriverOfTaxisAndPrivateHires,
@@ -967,28 +967,73 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
 
         "the licence type page" when afterWord("the user is") {
 
-          "an individual" in {
-            val session                                     = HECSession(individualRetrievedData, UserAnswers.empty, None)
-            implicit val request: RequestWithSessionData[_] =
-              requestWithSessionData(session)
-
-            val result = journeyService.previous(
-              routes.LicenceDetailsController.licenceType()
+          val taxChecks = List(
+            TaxCheckListItem(
+              LicenceType.DriverOfTaxisAndPrivateHires,
+              HECTaxCheckCode("some-code"),
+              LocalDate.now(),
+              ZonedDateTime.now()
             )
+          )
 
-            result shouldBe routes.ConfirmIndividualDetailsController.confirmIndividualDetails()
+          "an individual" when {
+            "there are preexisting tax check codes" in {
+              val session                                     = HECSession(
+                individualRetrievedData.copy(unexpiredTaxChecks = taxChecks),
+                UserAnswers.empty,
+                None
+              )
+              implicit val request: RequestWithSessionData[_] =
+                requestWithSessionData(session)
+
+              val result = journeyService.previous(
+                routes.LicenceDetailsController.licenceType()
+              )
+
+              result shouldBe routes.TaxChecksListController.unexpiredTaxChecks()
+            }
+
+            "there are no preexisting tax check codes" in {
+              val session                                     = HECSession(individualRetrievedData, UserAnswers.empty, None)
+              implicit val request: RequestWithSessionData[_] =
+                requestWithSessionData(session)
+
+              val result = journeyService.previous(
+                routes.LicenceDetailsController.licenceType()
+              )
+
+              result shouldBe routes.ConfirmIndividualDetailsController.confirmIndividualDetails()
+            }
           }
 
-          "a company" in {
-            val session                                     = HECSession(companyRetrievedData, UserAnswers.empty, None)
-            implicit val request: RequestWithSessionData[_] =
-              requestWithSessionData(session)
+          "a company" when {
+            "there are preexisting tax check codes" in {
+              val session                                     = HECSession(
+                companyRetrievedData.copy(unexpiredTaxChecks = taxChecks),
+                UserAnswers.empty,
+                None
+              )
+              implicit val request: RequestWithSessionData[_] =
+                requestWithSessionData(session)
 
-            val result = journeyService.previous(
-              routes.LicenceDetailsController.licenceType()
-            )
+              val result = journeyService.previous(
+                routes.LicenceDetailsController.licenceType()
+              )
 
-            result shouldBe routes.StartController.start()
+              result shouldBe routes.TaxChecksListController.unexpiredTaxChecks()
+            }
+
+            "there are no preexisting tax check codes" in {
+              val session                                     = HECSession(companyRetrievedData, UserAnswers.empty, None)
+              implicit val request: RequestWithSessionData[_] =
+                requestWithSessionData(session)
+
+              val result = journeyService.previous(
+                routes.LicenceDetailsController.licenceType()
+              )
+
+              result shouldBe routes.StartController.start()
+            }
           }
 
         }
