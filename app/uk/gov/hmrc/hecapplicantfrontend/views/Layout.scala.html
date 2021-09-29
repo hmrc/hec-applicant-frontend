@@ -43,10 +43,13 @@
             timeout = Some(appConfig.authTimeoutSeconds)
         )
     }
-    <style @{CSPNonce.attr} media="all">
-            .js-visible { display: none; }
-            .js-enabled .js-visible { display: inline; }
-    </style>
+
+    @Html(s"""<link rel="stylesheet" media="all" href="${controllers.routes.Assets.versioned("stylesheets/application.css")}" ${CSPNonce.attr}>""")
+}
+
+@scripts = {
+    @scriptsBlock.getOrElse(Html(""))
+    @Html(s"""<script src="${controllers.routes.Assets.versioned("javascripts/application.js")}" ${CSPNonce.attr}></script>""")
 }
 
 @beforeContentBlock = {
@@ -76,7 +79,7 @@
     pageTitle = Some(documentTitle),
     headBlock = Some(hmrcHead(headBlock = Some(head), nonce = CSPNonce.get)),
     headerBlock = Some(hmrcStandardHeader(signOutUrl = if(showSignOutLink) Some(appConfig.signOutUri) else None)),
-    scriptsBlock = Some(hmrcScripts(scriptsBlock = scriptsBlock, nonce = CSPNonce.get)),
+    scriptsBlock = Some(hmrcScripts(scriptsBlock = Some(scripts), nonce = CSPNonce.get)),
     beforeContentBlock = Some(beforeContentBlock),
     footerBlock = Some(hmrcStandardFooter())
 )(content)

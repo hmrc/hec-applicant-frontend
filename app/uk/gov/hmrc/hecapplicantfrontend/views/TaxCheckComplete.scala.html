@@ -11,9 +11,8 @@
 @(hecTaxCheck: HECTaxCheck)(implicit request: Request[_], messages: Messages)
 @key = @{"taxCheckComplete"}
 @title = @{messages(s"$key.title")}
-@scripts = { <script src="@{controllers.routes.Assets.versioned("javascripts/application.js")}" @{CSPNonce.attr}></script> }
 
-@layout(pageTitle = Some(title), scriptsBlock = Some(scripts)) {
+@layout(pageTitle = Some(title)) {
     @govukPanel(Panel(
         title = Text(title),
         content = HtmlContent(s"""${messages(s"$key.subtitle")}<br><strong>${hecTaxCheck.taxCheckCode.value.grouped(3).mkString(" ")}</strong>""")

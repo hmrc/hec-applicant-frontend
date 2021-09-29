@@ -13,6 +13,8 @@ button.sign-in=Sign in
 button.try-again=Try again
 button.confirm=Confirm
 button.continue=Continue
+button.copy=Copy
+button.copied=Copied
 
 # Failed IV
 iv.failedIv.title=We could not confirm your identity
@@ -226,3 +228,10 @@ crn.link = Search for a company registration number
 crn.error.required = Enter your Company Registration Number
 crn.error.nonAlphanumericChars = The applicant’s company registration number must only include letters A to Z and numbers 0 to 9
 crn.error.crnInvalid = Enter the applicant's company registration number in the correct format
+
+# Tax Check Codes
+taxCheck.expiryKey=Last day this code can be used is:
+taxCheck.codeKey = Tax check code:
+
+# Tax Checks List
+taxChecksList.title = Your tax check codes

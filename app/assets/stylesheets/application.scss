@@ -1,1 +1,19 @@
 @import "lib/govuk-frontend/govuk/base";
+
+body:not(.js-enabled) .js-visible {
+  display: none;
+}
+
+.copy-to-clipboard {
+  .copied-content {
+    display: none;
+  }
+  &.copied-to-clipboard {
+    .copied-content {
+      display: inline;
+    }
+    .copy-content {
+      display: none
+    }
+  }
+}

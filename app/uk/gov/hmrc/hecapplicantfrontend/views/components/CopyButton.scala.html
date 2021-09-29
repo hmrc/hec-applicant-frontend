@@ -1,0 +1,23 @@
+@import play.api.i18n.Messages
+@import play.twirl.api.Html
+@this()
+
+@(clip: String, screenReaderText: Option[String] = None)(implicit messages: Messages)
+
+<span class="js-visible" aria-live="assertive">
+  <button
+    type="button"
+    data-clip="@clip"
+    data-module="govuk-button"
+    class="govuk-button govuk-button--secondary copy-to-clipboard"
+  >
+    <span class="copy-content">
+      @messages("button.copy")
+    </span>
+    <span class="copied-content">
+      @messages("button.copied")
+    </span>
+    @screenReaderText.map(s => Html(s"""<span class="govuk-visually-hidden">${s} </span>"""))
+    @clip
+  </button>
+</span>
