@@ -38,7 +38,7 @@ class TaxChecksListController @Inject() (
     with I18nSupport
     with Logging {
 
-  implicit val dateOrdering: Ordering[ZonedDateTime] = (x: ZonedDateTime, y: ZonedDateTime) => x compareTo y
+  implicit val dateOrdering: Ordering[ZonedDateTime] = (x: ZonedDateTime, y: ZonedDateTime) => y compareTo x
 
   /**
     * Fetches unexpired tax check codes for applicant
