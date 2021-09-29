@@ -71,10 +71,6 @@ confirmIndividualDetailsExit.title=If these are not your details
 confirmIndividualDetailsExit.p1=You’ll need to check the user ID and password you used to sign in to Government Gateway.
 confirmIndividualDetailsExit.p2=You may need to <a href="{0}" class="govuk-link">sign out</a> and sign in using the correct Government Gateway user ID and password.
 
-# Tax check codes list
-taxChecksList.title = Your tax check codes
-taxChecksList.button = Do a new tax check
-
 # Months
 date.1=January
 date.2=February
@@ -235,6 +231,7 @@ taxCheck.codeKey = Tax check code:
 
 # Tax Checks List
 taxChecksList.title = Your tax check codes
+taxChecksList.button = Do a new tax check
 taxChecksList.p1 = Check if you have a valid tax check code, before you do another tax check.
 taxChecksList.p2 = If your tax check code expires before your application is likely to be processed, you should do another tax check.
 taxChecksList.link = Print or save this page as a PDF
