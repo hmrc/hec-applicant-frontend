@@ -29,8 +29,6 @@ object CTStatus {
 
   case object NoticeToFileIssued extends CTStatus
 
-  case object NoAccountingPeriodFound extends CTStatus
-
   case object NoReturnFound extends CTStatus
 
   @SuppressWarnings(Array("org.wartremover.warts.All"))
