@@ -47,6 +47,7 @@ GET        /company-registration-number    uk.gov.hmrc.hecapplicantfrontend.cont
 POST       /company-registration-number    uk.gov.hmrc.hecapplicantfrontend.controllers.CRNController.companyRegistrationNumberSubmit
 
 GET        /confirm-company-details        uk.gov.hmrc.hecapplicantfrontend.controllers.CompanyDetailsController.confirmCompanyDetails
+POST       /confirm-company-details        uk.gov.hmrc.hecapplicantfrontend.controllers.CompanyDetailsController.confirmCompanyDetailsSubmit
 
 GET        /company-not-found              uk.gov.hmrc.hecapplicantfrontend.controllers.CompanyDetailsNotFoundController.companyNotFound
 
