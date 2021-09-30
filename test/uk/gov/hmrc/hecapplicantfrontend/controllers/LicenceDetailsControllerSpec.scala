@@ -127,15 +127,13 @@ class LicenceDetailsControllerSpec
         inSequence {
           mockAuthWithNoRetrievals()
           mockGetSession(session)
-          mockJourneyServiceGetPrevious(routes.LicenceDetailsController.licenceType(), session)(
-            routes.StartController.start()
-          )
+          mockJourneyServiceGetPrevious(routes.LicenceDetailsController.licenceType(), session)(mockPreviousCall)
         }
 
         checkPageIsDisplayed(
           performAction(),
           messageFromMessageKey("licenceType.title"),
-          _.select("#back").isEmpty shouldBe true
+          _.select("#back").attr("href") shouldBe mockPreviousCall.url
         )
       }
       behave like authAndSessionDataBehaviour(performAction)

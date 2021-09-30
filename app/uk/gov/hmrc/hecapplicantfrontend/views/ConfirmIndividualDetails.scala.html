@@ -1,5 +1,5 @@
 @import play.api.i18n.Messages
-@import play.api.mvc.Request
+@import play.api.mvc.{Call, Request}
 @import uk.gov.hmrc.govukfrontend.views.html.components._
 @import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 @import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.IndividualRetrievedData
@@ -7,11 +7,11 @@
 @this(layout: Layout, govukButton: GovukButton, govukSummaryList : GovukSummaryList, formWithCSRF: FormWithCSRF)
 
 
-@(details: IndividualRetrievedData)(implicit request: Request[_], messages: Messages)
+@(back: Call, details: IndividualRetrievedData)(implicit request: Request[_], messages: Messages)
 @title = @{messages("confirmIndividualDetails.title")}
 @dob = @{details.dateOfBirth.value}
 
-@layout(pageTitle = Some(title)) {
+@layout(pageTitle = Some(title), backLocation = Some(back)) {
     <h1 class="govuk-heading-xl">@title</h1>
     <p class="govuk-body">@messages("confirmIndividualDetails.intro")</p>
     @govukSummaryList(SummaryList(

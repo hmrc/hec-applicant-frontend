@@ -82,6 +82,10 @@ class ConfirmIndividualDetailsControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
+            mockJourneyServiceGetPrevious(
+              routes.ConfirmIndividualDetailsController.confirmIndividualDetails(),
+              session
+            )(mockPreviousCall)
           }
 
           checkPageIsDisplayed(
