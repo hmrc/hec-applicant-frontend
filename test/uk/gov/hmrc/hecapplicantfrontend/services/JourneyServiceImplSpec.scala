@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.services
 
-import java.time.{LocalDate, ZonedDateTime}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -33,6 +32,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, GGCredId, NINO, SAUTR}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.http.HeaderCarrier
 
+import java.time.{LocalDate, ZonedDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with SessionSupport {
@@ -148,13 +148,46 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
 
       "try to return the correct next page" when afterWord("the current page is") {
 
-        "the tax check code page" in {
+        "the confirm your details page" when {
+
+          "there are no preexisting tax check codes" in {
+            val session                                     = HECSession(individualRetrievedData, UserAnswers.empty, None)
+            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+
+            val result = journeyService.updateAndNext(
+              routes.ConfirmIndividualDetailsController.confirmIndividualDetails(),
+              session
+            )
+            await(result.value) shouldBe Right(routes.LicenceDetailsController.licenceType())
+          }
+
+          "there are preexisting tax check codes" in {
+            val taxChecks                                   = List(
+              TaxCheckListItem(
+                LicenceType.DriverOfTaxisAndPrivateHires,
+                HECTaxCheckCode("some-code"),
+                LocalDate.now(),
+                ZonedDateTime.now()
+              )
+            )
+            val individualData                              = individualRetrievedData.copy(unexpiredTaxChecks = taxChecks)
+            val session                                     = HECSession(individualData, UserAnswers.empty, None)
+            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+
+            val result = journeyService.updateAndNext(
+              routes.ConfirmIndividualDetailsController.confirmIndividualDetails(),
+              session
+            )
+            await(result.value) shouldBe Right(routes.TaxChecksListController.unexpiredTaxChecks())
+          }
+        }
+
+        "the tax check codes page" in {
           val session                                     = HECSession(individualRetrievedData, UserAnswers.empty, None)
-          implicit val request: RequestWithSessionData[_] =
-            requestWithSessionData(session)
+          implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
 
           val result = journeyService.updateAndNext(
-            routes.ConfirmIndividualDetailsController.confirmIndividualDetails(),
+            routes.TaxChecksListController.unexpiredTaxChecks(),
             session
           )
           await(result.value) shouldBe Right(routes.LicenceDetailsController.licenceType())
@@ -901,30 +934,106 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
           result shouldBe routes.ConfirmIndividualDetailsController.confirmIndividualDetails()
         }
 
-        "the licence type page" when afterWord("the user is") {
-
-          "an individual" in {
-            val session                                     = HECSession(individualRetrievedData, UserAnswers.empty, None)
-            implicit val request: RequestWithSessionData[_] =
-              requestWithSessionData(session)
-
-            val result = journeyService.previous(
-              routes.LicenceDetailsController.licenceType()
+        "the tax check codes page" when {
+          val taxChecks = List(
+            TaxCheckListItem(
+              LicenceType.DriverOfTaxisAndPrivateHires,
+              HECTaxCheckCode("some-code"),
+              LocalDate.now(),
+              ZonedDateTime.now()
             )
+          )
 
+          "applicant is individual" in {
+            val individualData = individualRetrievedData.copy(unexpiredTaxChecks = taxChecks)
+            val session        = HECSession(individualData, UserAnswers.empty, None)
+
+            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+
+            val result = journeyService.previous(routes.TaxChecksListController.unexpiredTaxChecks())
             result shouldBe routes.ConfirmIndividualDetailsController.confirmIndividualDetails()
           }
 
-          "a company" in {
-            val session                                     = HECSession(companyRetrievedData, UserAnswers.empty, None)
-            implicit val request: RequestWithSessionData[_] =
-              requestWithSessionData(session)
+          "applicant is company" in {
+            val companyData = companyRetrievedData.copy(unexpiredTaxChecks = taxChecks)
+            val session     = HECSession(companyData, UserAnswers.empty, None)
 
-            val result = journeyService.previous(
-              routes.LicenceDetailsController.licenceType()
-            )
+            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
 
+            val result = journeyService.previous(routes.TaxChecksListController.unexpiredTaxChecks())
             result shouldBe routes.StartController.start()
+          }
+        }
+
+        "the licence type page" when afterWord("the user is") {
+
+          val taxChecks = List(
+            TaxCheckListItem(
+              LicenceType.DriverOfTaxisAndPrivateHires,
+              HECTaxCheckCode("some-code"),
+              LocalDate.now(),
+              ZonedDateTime.now()
+            )
+          )
+
+          "an individual" when {
+            "there are preexisting tax check codes" in {
+              val session                                     = HECSession(
+                individualRetrievedData.copy(unexpiredTaxChecks = taxChecks),
+                UserAnswers.empty,
+                None
+              )
+              implicit val request: RequestWithSessionData[_] =
+                requestWithSessionData(session)
+
+              val result = journeyService.previous(
+                routes.LicenceDetailsController.licenceType()
+              )
+
+              result shouldBe routes.TaxChecksListController.unexpiredTaxChecks()
+            }
+
+            "there are no preexisting tax check codes" in {
+              val session                                     = HECSession(individualRetrievedData, UserAnswers.empty, None)
+              implicit val request: RequestWithSessionData[_] =
+                requestWithSessionData(session)
+
+              val result = journeyService.previous(
+                routes.LicenceDetailsController.licenceType()
+              )
+
+              result shouldBe routes.ConfirmIndividualDetailsController.confirmIndividualDetails()
+            }
+          }
+
+          "a company" when {
+            "there are preexisting tax check codes" in {
+              val session                                     = HECSession(
+                companyRetrievedData.copy(unexpiredTaxChecks = taxChecks),
+                UserAnswers.empty,
+                None
+              )
+              implicit val request: RequestWithSessionData[_] =
+                requestWithSessionData(session)
+
+              val result = journeyService.previous(
+                routes.LicenceDetailsController.licenceType()
+              )
+
+              result shouldBe routes.TaxChecksListController.unexpiredTaxChecks()
+            }
+
+            "there are no preexisting tax check codes" in {
+              val session                                     = HECSession(companyRetrievedData, UserAnswers.empty, None)
+              implicit val request: RequestWithSessionData[_] =
+                requestWithSessionData(session)
+
+              val result = journeyService.previous(
+                routes.LicenceDetailsController.licenceType()
+              )
+
+              result shouldBe routes.StartController.start()
+            }
           }
 
         }

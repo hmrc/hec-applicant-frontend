@@ -1,0 +1,27 @@
+@import play.api.i18n.Messages
+
+@import uk.gov.hmrc.hecapplicantfrontend.models.TaxCheckListItem
+@import uk.gov.hmrc.hecapplicantfrontend.models.views.LicenceTypeOption
+@import uk.gov.hmrc.hecapplicantfrontend.util.TimeUtils
+
+@this(copyButton: CopyButton)
+
+@(taxCheckDetails: TaxCheckListItem)(implicit messages: Messages)
+
+@licenceType = @{messages(s"licenceType.${LicenceTypeOption.licenceTypeOption(taxCheckDetails.licenceType).messageKey}")}
+
+<div class="existing-code">
+  <h2 class="govuk-heading-m">
+    @licenceType
+  </h2>
+  <span class="govuk-caption-m">
+     @messages("taxCheck.expiryKey") @TimeUtils.govDisplayFormat(taxCheckDetails.expiresAfter)
+  </span>
+  <span class="govuk-caption-m">
+    @messages("taxCheck.codeKey") <strong>@taxCheckDetails.taxCheckCode.value.grouped(3).mkString(" ")</strong>
+  </span>
+  <div class="govuk-!-margin-top-2">
+    @copyButton(taxCheckDetails.taxCheckCode.value, Some(s"$licenceType ${messages("taxCheck.codeKey")}"))
+  </div>
+  <hr>
+</div>

@@ -46,7 +46,8 @@ class ConfirmIndividualDetailsController @Inject() (
 
   val confirmIndividualDetails: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     withIndividualRetrievedData(request.sessionData) { i =>
-      Ok(confirmIndividualDetailsPage(i))
+      val back = journeyService.previous(routes.ConfirmIndividualDetailsController.confirmIndividualDetails())
+      Ok(confirmIndividualDetailsPage(back, i))
     }
   }
 

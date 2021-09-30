@@ -94,4 +94,5 @@ class AppConfig @Inject() (config: Configuration, contactFrontendConfig: Contact
   val contactHmrcSa: String           = config.get[String]("external-url.contact-hmrc-sa")
   val companiesHouseSearchUrl: String = config.get[String]("external-url.companies-house-search")
 
+  val firstPageBackUrl: String = config.get[String]("first-page-back-url")
 }
