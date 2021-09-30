@@ -223,7 +223,7 @@ crn.hint = Companies House sent this to you when you set up your company. This i
 crn.link = Search for a company registration number
 crn.error.required = Enter your Company Registration Number
 crn.error.nonAlphanumericChars = The applicant’s company registration number must only include letters A to Z and numbers 0 to 9
-crn.error.crnInvalid = Enter the applicant's company registration number in the correct format
+crn.error.crnInvalid = Enter the applicant’s company registration number in the correct format
 
 # Tax Check Codes
 taxCheck.expiryKey=Last day this code can be used is:
