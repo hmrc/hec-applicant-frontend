@@ -28,6 +28,18 @@ final case class CTStatusResponse(
   latestAccountingPeriod: Option[CTAccountingPeriod]
 )
 
+final case class CTAccountingPeriod(
+  startDate: LocalDate,
+  endDate: LocalDate,
+  ctStatus: CTStatus
+)
+
+object CTAccountingPeriod {
+
+  implicit val format: OFormat[CTAccountingPeriod] = Json.format
+
+}
+
 object CTStatusResponse {
 
   implicit val format: OFormat[CTStatusResponse] = Json.format

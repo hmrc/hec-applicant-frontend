@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models.ids
 
+import cats.Eq
 import play.api.libs.json.{Format, Json}
 import uk.gov.hmrc.hecapplicantfrontend.util.StringUtils.StringOps
 import uk.gov.hmrc.referencechecker.CorporationTaxReferenceChecker
@@ -28,6 +29,8 @@ final case class CTUTR(value: String) extends AnyVal
 object CTUTR {
 
   implicit val format: Format[CTUTR] = Json.valueFormat[CTUTR]
+
+  implicit val eq: Eq[CTUTR] = Eq.fromUniversalEquals
 
   def fromString(s: String): Option[CTUTR] = {
     val withoutSpaces = s.removeWhitespace

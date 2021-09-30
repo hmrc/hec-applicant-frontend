@@ -31,7 +31,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRe
 import uk.gov.hmrc.hecapplicantfrontend.models.SAStatus.ReturnFound
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.{CompleteUserAnswers, IncompleteUserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
-import uk.gov.hmrc.hecapplicantfrontend.models.{CompanyNameConfirmed, EntityType, Error, HECSession, IncomeDeclared, RetrievedApplicantData, SAStatus, SAStatusResponse, TaxSituation, UserAnswers}
+import uk.gov.hmrc.hecapplicantfrontend.models.{CTStatus, CompanyNameConfirmed, EntityType, Error, HECSession, IncomeDeclared, RetrievedApplicantData, SAStatus, SAStatusResponse, TaxSituation, UserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyServiceImpl._
 import uk.gov.hmrc.http.HeaderCarrier
@@ -250,15 +250,35 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
 
   private def companyRegistrationNumberRoute(session: HECSession) =
     session.retrievedUserData match {
-      case _: IndividualRetrievedData                =>
+      case _: IndividualRetrievedData                      =>
         sys.error("This may never happen, Individual data shouldn't be present  in company journey")
-      case CompanyRetrievedData(_, _, _, Some(_), _) => routes.CompanyDetailsController.confirmCompanyDetails()
-      case _                                         => routes.CompanyDetailsNotFoundController.companyNotFound()
+      case CompanyRetrievedData(_, _, _, Some(_), _, _, _) => routes.CompanyDetailsController.confirmCompanyDetails()
+      case _                                               => routes.CompanyDetailsNotFoundController.companyNotFound()
     }
 
   private def confirmCompanyDetailsRoute(session: HECSession) =
     session.userAnswers.fold(_.companyNameConfirmed, _.companyNameConfirmed) match {
-      case Some(CompanyNameConfirmed.Yes) => routes.CRNController.companyRegistrationNumber() // TODO fix
+      case Some(CompanyNameConfirmed.Yes) =>
+        session.retrievedUserData match {
+          case CompanyRetrievedData(_, Some(ctutr), _, _, Some(desCtutr), Some(ctStatus), _) =>
+            if (ctutr.value === desCtutr.value) {
+              ctStatus.latestAccountingPeriod.map(_.ctStatus) match {
+                case Some(CTStatus.ReturnFound) | Some(CTStatus.NoticeToFileIssued) =>
+                  routes.CompanyDetailsController.chargeableForCorporationTax()
+                case Some(CTStatus.NoAccountingPeriodFound) | None                  =>
+                  routes.CompanyDetailsController.noAccountingPeriod()
+                case Some(CTStatus.NoReturnFound)                                   =>
+                  routes.SAController.noReturnFound() // TODO fine to leave here? or move to common place
+              }
+            } else {
+              routes.SAController.noReturnFound() // TODO replace
+            }
+          case CompanyRetrievedData(_, None, _, _, _, _, _)                                  => routes.CompanyDetailsController.enterCtutr()
+          case CompanyRetrievedData(_, _, _, _, _, _, _)                                     =>
+            sys.error("Company data is missing desCtutr or ct status info")
+          case _: IndividualRetrievedData                                                    =>
+            sys.error("This should never happen, individual data shouldn't be present in company journey")
+        }
       case Some(CompanyNameConfirmed.No)  => routes.CRNController.companyRegistrationNumber()
       case None                           => sys.error("This should never happen, individual data shouldn't be present in company journey")
     }
