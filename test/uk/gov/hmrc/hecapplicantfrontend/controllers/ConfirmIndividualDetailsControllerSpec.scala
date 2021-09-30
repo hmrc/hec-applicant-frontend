@@ -104,6 +104,7 @@ class ConfirmIndividualDetailsControllerSpec
               form
                 .attr("action") shouldBe routes.ConfirmIndividualDetailsController.confirmIndividualDetailsSubmit().url
 
+              doc.select("#back").attr("href") shouldBe mockPreviousCall.url
             }
           )
 
