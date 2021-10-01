@@ -17,9 +17,12 @@
 package uk.gov.hmrc.hecapplicantfrontend.controllers
 
 import cats.data.EitherT
-import cats.instances.future._
-import cats.instances.string._
-import cats.syntax.eq._
+import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.CompanyRetrievedData
+import uk.gov.hmrc.hecapplicantfrontend.models.ids.CTUTR
+//import cats.instances.future._
+//import cats.instances.string._
+//import cats.syntax.eq._
+import cats.implicits._
 import com.google.inject.Inject
 import play.api.data.Form
 import play.api.data.Forms.{mapping, of}
@@ -101,28 +104,38 @@ class CompanyDetailsController @Inject() (
             Redirect
           )
 
+      def fetchCTStatus(
+        desCtutr: CTUTR,
+        companyData: CompanyRetrievedData
+      ): EitherT[Future, Error, Option[CTStatusResponse]] =
+        companyData.ctutr traverse [EitherT[Future, Error, *], CTStatusResponse] { ctutr =>
+          if (desCtutr.value === ctutr.value) {
+            // TODO what dates should we use here
+            taxCheckService
+              .getCTStatus(desCtutr, timeProvider.currentDate.minusDays(2), timeProvider.currentDate)
+          } else {
+            EitherT
+              .fromEither[Future](
+                Left[Error, CTStatusResponse](
+                  Error("CTUTR from DES does not match the retrieved value")
+                )
+              )
+          }
+        }
+
       def fetchDataAndProceed(crn: CRN, updatedUserAnswers: UserAnswers): Future[Result] = {
         val updatedSession = for {
-          desCtutr            <- taxCheckService.getCtutr(crn)
-          companyDataAndCtutr <-
+          desCtutr    <- taxCheckService.getCtutr(crn)
+          companyData <-
             EitherT.fromEither[Future](request.sessionData.retrievedUserData match {
-              case companyData @ RetrievedApplicantData.CompanyRetrievedData(_, Some(ctutr), _, _, _, _, _) =>
-                Right(companyData -> ctutr)
-              case RetrievedApplicantData.CompanyRetrievedData(_, None, _, _, _, _, _)                      =>
-                Left(Error("CTUTR missing in company journey"))
-              case _: RetrievedApplicantData.IndividualRetrievedData                                        =>
+              case companyData: RetrievedApplicantData.CompanyRetrievedData =>
+                Right(companyData)
+              case _: RetrievedApplicantData.IndividualRetrievedData        =>
                 Left(Error("Individual applicant data found in company journey"))
             })
-          (companyData, ctutr) = companyDataAndCtutr
-          ctStatus            <- if (desCtutr.value === ctutr.value) {
-                                   // TODO what dates should we use here
-                                   taxCheckService
-                                     .getCTStatus(desCtutr, timeProvider.currentDate.minusDays(2), timeProvider.currentDate)
-                                 } else {
-                                   EitherT.fromEither[Future](Left(Error("CTUTR from DES does not match the retrieved value")))
-                                 }
+          ctStatusOpt <- fetchCTStatus(desCtutr, companyData)
         } yield {
-          val updatedRetrievedData = companyData.copy(desCtutr = Some(desCtutr), ctStatus = Some(ctStatus))
+          val updatedRetrievedData = companyData.copy(desCtutr = Some(desCtutr), ctStatus = ctStatusOpt)
           request.sessionData.copy(
             retrievedUserData = updatedRetrievedData,
             userAnswers = updatedUserAnswers
