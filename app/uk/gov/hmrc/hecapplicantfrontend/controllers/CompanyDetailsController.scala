@@ -19,9 +19,6 @@ package uk.gov.hmrc.hecapplicantfrontend.controllers
 import cats.data.EitherT
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.CompanyRetrievedData
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.CTUTR
-//import cats.instances.future._
-//import cats.instances.string._
-//import cats.syntax.eq._
 import cats.implicits._
 import com.google.inject.Inject
 import play.api.data.Form
@@ -38,6 +35,7 @@ import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging, TimeProvider}
 import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
+import java.time.LocalDate
 import scala.concurrent.{ExecutionContext, Future}
 
 class CompanyDetailsController @Inject() (
@@ -110,9 +108,8 @@ class CompanyDetailsController @Inject() (
       ): EitherT[Future, Error, Option[CTStatusResponse]] =
         companyData.ctutr traverse [EitherT[Future, Error, *], CTStatusResponse] { ctutr =>
           if (desCtutr.value === ctutr.value) {
-            // TODO what dates should we use here
-            taxCheckService
-              .getCTStatus(desCtutr, timeProvider.currentDate.minusDays(2), timeProvider.currentDate)
+            val (start, end) = CompanyDetailsController.calculateLookbackPeriod(timeProvider.currentDate)
+            taxCheckService.getCTStatus(desCtutr, start, end)
           } else {
             EitherT
               .fromEither[Future](
@@ -205,4 +202,12 @@ object CompanyDetailsController {
         "confirmCompanyName" -> of(FormUtils.radioFormFormatter(options))
       )(identity)(Some(_))
     )
+
+  // TODO ensure you've understood this correctly
+  // TODO add docstring
+  def calculateLookbackPeriod(today: LocalDate): (LocalDate, LocalDate) = {
+    val minus1Year = today.minusYears(1)
+    val minus2Years = today.minusYears(2)
+    (minus2Years, minus1Year)
+  }
 }
