@@ -271,7 +271,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
                   routes.SAController.noReturnFound() // TODO fine to leave here? or move to common place
               }
             } else {
-              routes.SAController.noReturnFound() // TODO replace
+              routes.CompanyDetailsController.ctutrNotMatched()
             }
           case CompanyRetrievedData(_, None, _, _, _, _, _)                                  => routes.CompanyDetailsController.enterCtutr()
           case CompanyRetrievedData(_, _, _, _, _, _, _)                                     =>

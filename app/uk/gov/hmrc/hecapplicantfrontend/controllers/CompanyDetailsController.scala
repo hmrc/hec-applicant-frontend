@@ -175,6 +175,7 @@ class CompanyDetailsController @Inject() (
         .fold(getFuturePage, handleValidAnswer)
     }
 
+  // TODO implement this page - https://hec-applicant-tax-check.herokuapp.com/v6/no-account-period-found
   val noAccountingPeriod: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
     Ok(s"${request.sessionData}")
   }
@@ -183,6 +184,7 @@ class CompanyDetailsController @Inject() (
     Ok(s"${request.sessionData}")
   }
 
+  // TODO implement this page - https://hec-applicant-tax-check.herokuapp.com/v6/exit-pages/ct-utr-cannot-match
   val ctutrNotMatched: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
     Ok(s"${request.sessionData}")
   }
