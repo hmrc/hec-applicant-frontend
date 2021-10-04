@@ -31,7 +31,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRe
 import uk.gov.hmrc.hecapplicantfrontend.models.SAStatus.ReturnFound
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.{CompleteUserAnswers, IncompleteUserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
-import uk.gov.hmrc.hecapplicantfrontend.models.{CTStatus, CompanyNameConfirmed, EntityType, Error, HECSession, IncomeDeclared, RetrievedApplicantData, SAStatus, SAStatusResponse, TaxSituation, UserAnswers}
+import uk.gov.hmrc.hecapplicantfrontend.models.{CompanyNameConfirmed, EntityType, Error, HECSession, IncomeDeclared, RetrievedApplicantData, SAStatus, SAStatusResponse, TaxSituation, UserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyServiceImpl._
 import uk.gov.hmrc.http.HeaderCarrier
@@ -263,14 +263,11 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
           case CompanyRetrievedData(_, Some(ctutr), _, _, Some(desCtutr), Some(ctStatus), _) =>
             if (ctutr.value === desCtutr.value) {
               ctStatus.latestAccountingPeriod.map(_.ctStatus) match {
-                case Some(CTStatus.ReturnFound) | Some(CTStatus.NoticeToFileIssued) =>
-                  routes.CompanyDetailsController.chargeableForCorporationTax()
-                case Some(CTStatus.NoReturnFound)                                   =>
-                  routes.SAController.noReturnFound() // TODO fine to leave here? or move to common place
-                case None                                                           => routes.CompanyDetailsController.noAccountingPeriod()
+                case Some(_) => routes.CompanyDetailsController.chargeableForCorporationTax()
+                case None    => routes.CompanyDetailsController.noAccountingPeriod()
               }
             } else {
-              routes.CompanyDetailsController.ctutrNotMatched()
+              routes.CompanyDetailsController.ctutrNotMatched() // TODO this might change
             }
           case CompanyRetrievedData(_, None, _, _, _, _, _)                                  => routes.CompanyDetailsController.enterCtutr()
           case CompanyRetrievedData(_, _, _, _, _, _, _)                                     =>
