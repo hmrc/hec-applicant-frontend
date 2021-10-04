@@ -265,10 +265,9 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
               ctStatus.latestAccountingPeriod.map(_.ctStatus) match {
                 case Some(CTStatus.ReturnFound) | Some(CTStatus.NoticeToFileIssued) =>
                   routes.CompanyDetailsController.chargeableForCorporationTax()
-                case Some(CTStatus.NoAccountingPeriodFound) | None                  =>
-                  routes.CompanyDetailsController.noAccountingPeriod()
                 case Some(CTStatus.NoReturnFound)                                   =>
                   routes.SAController.noReturnFound() // TODO fine to leave here? or move to common place
+                case None                                                           => routes.CompanyDetailsController.noAccountingPeriod()
               }
             } else {
               routes.CompanyDetailsController.ctutrNotMatched()
