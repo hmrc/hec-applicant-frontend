@@ -63,7 +63,7 @@ class LicenceDetailsControllerSpec
     )
 
   val companyRetrievedData: CompanyRetrievedData =
-    CompanyRetrievedData(GGCredId(""), None, None, None, List.empty)
+    CompanyRetrievedData(GGCredId(""), None, None, None, None, None, List.empty)
 
   "LicenceDetailsController" when {
 
@@ -167,6 +167,7 @@ class LicenceDetailsControllerSpec
                   Some(TaxSituation.SA),
                   Some(IncomeDeclared.Yes),
                   Some(EntityType.Individual),
+                  None,
                   None
                 ),
                 None
@@ -204,6 +205,7 @@ class LicenceDetailsControllerSpec
                   Some(TaxSituation.SAPAYE),
                   Some(IncomeDeclared.Yes),
                   Some(EntityType.Company),
+                  None,
                   None
                 ),
                 None
@@ -334,6 +336,7 @@ class LicenceDetailsControllerSpec
               Some(TaxSituation.SA),
               Some(IncomeDeclared.Yes),
               Some(EntityType.Individual),
+              None,
               None
             )
             val updatedAnswers = UserAnswers.empty.copy(licenceType = Some(LicenceType.ScrapMetalMobileCollector))
@@ -351,6 +354,7 @@ class LicenceDetailsControllerSpec
               Some(TaxSituation.SA),
               Some(IncomeDeclared.Yes),
               Some(EntityType.Individual),
+              None,
               None
             )
             val session = HECSession(individuaRetrievedlData, answers, None)
@@ -382,6 +386,7 @@ class LicenceDetailsControllerSpec
               Some(TaxSituation.SA),
               Some(IncomeDeclared.Yes),
               Some(EntityType.Individual),
+              None,
               None
             )
             val updatedAnswers = UserAnswers.empty.copy(licenceType = Some(LicenceType.ScrapMetalMobileCollector))
@@ -400,6 +405,7 @@ class LicenceDetailsControllerSpec
               Some(TaxSituation.SA),
               Some(IncomeDeclared.Yes),
               Some(EntityType.Individual),
+              None,
               None
             )
             val session = HECSession(companyRetrievedData, answers, None)
@@ -484,6 +490,7 @@ class LicenceDetailsControllerSpec
                 Some(TaxSituation.SA),
                 Some(IncomeDeclared.Yes),
                 Some(EntityType.Company),
+                None,
                 None
               ),
               None
@@ -636,6 +643,7 @@ class LicenceDetailsControllerSpec
               Some(TaxSituation.SA),
               Some(IncomeDeclared.Yes),
               Some(EntityType.Company),
+              None,
               None
             )
             val updatedAnswers = IncompleteUserAnswers(
@@ -645,6 +653,7 @@ class LicenceDetailsControllerSpec
               Some(TaxSituation.SA),
               Some(IncomeDeclared.Yes),
               Some(EntityType.Company),
+              None,
               None
             )
             val session        = HECSession(individuaRetrievedlData, answers, None)
@@ -747,6 +756,7 @@ class LicenceDetailsControllerSpec
                     Some(TaxSituation.SA),
                     Some(IncomeDeclared.Yes),
                     Some(EntityType.Individual),
+                    None,
                     None
                   ),
                   None
@@ -921,6 +931,7 @@ class LicenceDetailsControllerSpec
               Some(TaxSituation.SA),
               Some(IncomeDeclared.Yes),
               Some(EntityType.Individual),
+              None,
               None
             )
             val updatedAnswers = IncompleteUserAnswers(
@@ -930,6 +941,7 @@ class LicenceDetailsControllerSpec
               Some(TaxSituation.SA),
               Some(IncomeDeclared.Yes),
               Some(EntityType.Individual),
+              None,
               None
             )
             val session        = HECSession(individuaRetrievedlData, answers, None)

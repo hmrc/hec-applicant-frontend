@@ -62,7 +62,7 @@ class EntityTypeControllerSpec
     )
 
   val companyRetrievedData =
-    CompanyRetrievedData(GGCredId(""), None, None, None, List.empty)
+    CompanyRetrievedData(GGCredId(""), None, None, None, None, None, List.empty)
 
   "EntityTypeController" when {
 
@@ -111,6 +111,7 @@ class EntityTypeControllerSpec
                 Some(TaxSituation.PAYE),
                 Some(IncomeDeclared.Yes),
                 Some(EntityType.Individual),
+                None,
                 None
               ),
               None
@@ -268,6 +269,7 @@ class EntityTypeControllerSpec
               Some(TaxSituation.PAYE),
               Some(IncomeDeclared.Yes),
               None,
+              None,
               None
             )
             val updatedAnswers = IncompleteUserAnswers
@@ -295,7 +297,8 @@ class EntityTypeControllerSpec
               taxSituation = Some(TaxSituation.SAPAYE),
               saIncomeDeclared = Some(IncomeDeclared.Yes),
               entityType = None,
-              crn = None
+              crn = None,
+              companyNameConfirmed = None
             )
             val updatedAnswers = IncompleteUserAnswers
               .fromCompleteAnswers(answers)

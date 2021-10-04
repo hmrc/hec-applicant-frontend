@@ -59,7 +59,7 @@ class TaxCheckCompleteControllerSpec
     )
 
   val companyRetrievedData =
-    CompanyRetrievedData(GGCredId(""), None, None, None, List.empty)
+    CompanyRetrievedData(GGCredId(""), None, None, None, None, None, List.empty)
 
   "TaxCheckCompleteController" when {
 

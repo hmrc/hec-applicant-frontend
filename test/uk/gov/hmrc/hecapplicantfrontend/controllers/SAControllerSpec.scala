@@ -183,6 +183,7 @@ class SAControllerSpec
                 Some(TaxSituation.PAYE),
                 Some(IncomeDeclared.Yes),
                 Some(EntityType.Individual),
+                None,
                 None
               ),
               None
@@ -318,6 +319,7 @@ class SAControllerSpec
               LicenceValidityPeriod.UpToOneYear,
               Some(TaxSituation.SA),
               Some(IncomeDeclared.Yes),
+              None,
               None,
               None
             )

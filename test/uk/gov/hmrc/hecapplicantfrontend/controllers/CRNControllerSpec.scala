@@ -61,7 +61,7 @@ class CRNControllerSpec
   )
 
   val controller           = instanceOf[CRNController]
-  val companyRetrievedData = CompanyRetrievedData(GGCredId(""), None, None, None, List.empty)
+  val companyRetrievedData = CompanyRetrievedData(GGCredId(""), None, None, None, None, None, List.empty)
 
   def mockFindCompany(crn: CRN)(
     result: Either[Error, Option[CompanyHouseDetails]]
@@ -111,6 +111,7 @@ class CRNControllerSpec
             LicenceType.OperatorOfPrivateHireVehicles,
             LicenceTimeTrading.ZeroToTwoYears,
             LicenceValidityPeriod.UpToOneYear,
+            None,
             None,
             None,
             None,
@@ -271,6 +272,7 @@ class CRNControllerSpec
             None,
             None,
             None,
+            None,
             None
           )
           val session = HECSession(companyRetrievedData, answers, None)
@@ -322,6 +324,7 @@ class CRNControllerSpec
                 LicenceType.OperatorOfPrivateHireVehicles,
                 LicenceTimeTrading.ZeroToTwoYears,
                 LicenceValidityPeriod.UpToOneYear,
+                None,
                 None,
                 None,
                 None,

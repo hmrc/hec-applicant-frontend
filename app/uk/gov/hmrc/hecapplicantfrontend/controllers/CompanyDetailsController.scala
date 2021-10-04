@@ -208,7 +208,7 @@ object CompanyDetailsController {
   // TODO ensure you've understood this correctly
   // TODO add docstring
   def calculateLookbackPeriod(today: LocalDate): (LocalDate, LocalDate) = {
-    val minus1Year = today.minusYears(1)
+    val minus1Year  = today.minusYears(1)
     val minus2Years = today.minusYears(2)
     (minus2Years, minus1Year)
   }

@@ -85,7 +85,7 @@ class TaxSituationControllerSpec
     )
 
   val companyRetrievedData =
-    CompanyRetrievedData(GGCredId(""), None, None, None, List.empty)
+    CompanyRetrievedData(GGCredId(""), None, None, None, None, None, List.empty)
 
   val date = LocalDate.of(2020, 10, 24)
 
@@ -182,6 +182,7 @@ class TaxSituationControllerSpec
                 LicenceValidityPeriod.UpToThreeYears,
                 Some(TaxSituation.PAYE),
                 Some(IncomeDeclared.Yes),
+                None,
                 None,
                 None
               ),
@@ -790,6 +791,7 @@ class TaxSituationControllerSpec
               Some(TaxSituation.PAYE),
               Some(IncomeDeclared.Yes),
               Some(EntityType.Individual),
+              None,
               None
             )
             val session = HECSession(individualRetrievedData.copy(sautr = Some(SAUTR("utr"))), answers, None)
@@ -801,6 +803,7 @@ class TaxSituationControllerSpec
               Some(TaxSituation.PAYE),
               None,
               Some(EntityType.Individual),
+              None,
               None
             )
             val updatedSession = session.copy(userAnswers = updatedAnswers)
