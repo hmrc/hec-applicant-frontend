@@ -240,7 +240,5 @@ taxChecksList.link = Print or save this page as a PDF
 confirmCompanyName.title = Is this the company you want to do the tax check for?
 confirmCompanyName.yes = Yes
 confirmCompanyName.no = No
-# TODO confirm below and update
-confirmCompanyName.error.required = Select whether you included income you earned using this type of licence in your tax return
-confirmCompanyName.error.invalid = Select whether you included income you earned using this type of licence in your tax return
-confirmCompanyName.hint = This is your Self Assessment tax return for tax year 6 April {0} to 5 April {1}.
+confirmCompanyName.error.required = Select yes if this is the company you want to do the tax check for
+confirmCompanyName.error.invalid = Select yes if this is the company you want to do the tax check for
