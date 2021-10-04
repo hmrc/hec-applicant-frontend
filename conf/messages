@@ -226,7 +226,7 @@ crn.error.nonAlphanumericChars = The applicant’s company registration number m
 crn.error.crnInvalid = Enter the applicant’s company registration number in the correct format
 
 # Tax Check Codes
-taxCheck.expiryKey=Last day this code can be used is:
+taxCheck.expiryKey = Last day this code is valid:
 taxCheck.codeKey = Tax check code:
 
 # Tax Checks List
