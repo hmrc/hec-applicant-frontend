@@ -16,15 +16,15 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models.views
 
-import uk.gov.hmrc.hecapplicantfrontend.models.CompanyNameConfirmed
+import uk.gov.hmrc.hecapplicantfrontend.models.YesNoAnswer
 
 final case class CompanyNameConfirmedOption(messageKey: String)
 
 object CompanyNameConfirmedOption {
 
-  def companyNameConfirmedToOption(option: CompanyNameConfirmed): CompanyNameConfirmedOption =
+  def companyNameConfirmedToOption(option: YesNoAnswer): CompanyNameConfirmedOption =
     option match {
-      case CompanyNameConfirmed.Yes => CompanyNameConfirmedOption("yes")
-      case CompanyNameConfirmed.No  => CompanyNameConfirmedOption("no")
+      case YesNoAnswer.Yes => CompanyNameConfirmedOption("yes")
+      case YesNoAnswer.No  => CompanyNameConfirmedOption("no")
     }
 }

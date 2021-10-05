@@ -31,7 +31,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.TaxDetails.IndividualTaxDetails
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.CompleteUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.ids._
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.hecapplicantfrontend.models.{CTAccountingPeriod, CTStatus, CTStatusResponse, DateOfBirth, EmailAddress, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, IncomeDeclared, Name, SAStatus, SAStatusResponse, TaxCheckListItem, TaxSituation, TaxYear}
+import uk.gov.hmrc.hecapplicantfrontend.models.{CTAccountingPeriod, CTStatus, CTStatusResponse, DateOfBirth, EmailAddress, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, Name, SAStatus, SAStatusResponse, TaxCheckListItem, TaxSituation, TaxYear, YesNoAnswer}
 import uk.gov.hmrc.hecapplicantfrontend.services.TaxCheckService._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 
@@ -100,7 +100,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         LicenceTimeTrading.TwoToFourYears,
         LicenceValidityPeriod.UpToOneYear,
         Some(TaxSituation.SA),
-        Some(IncomeDeclared.Yes),
+        Some(YesNoAnswer.Yes),
         None,
         None,
         None

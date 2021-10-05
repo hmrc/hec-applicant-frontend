@@ -22,20 +22,19 @@ import ai.x.play.json.implicits.formatSingleton
 import cats.Eq
 import play.api.libs.json.Format
 
-// TODO should we just rename IncomeDeclared to YesNo and reuse?
-sealed trait CompanyNameConfirmed extends Product with Serializable
+sealed trait YesNoAnswer extends Product with Serializable
 
-object CompanyNameConfirmed {
+object YesNoAnswer {
 
-  case object Yes extends CompanyNameConfirmed
+  case object Yes extends YesNoAnswer
 
-  case object No extends CompanyNameConfirmed
+  case object No extends YesNoAnswer
 
-  implicit val eq: Eq[CompanyNameConfirmed] = Eq.fromUniversalEquals
+  implicit val eq: Eq[YesNoAnswer] = Eq.fromUniversalEquals
 
   @SuppressWarnings(Array("org.wartremover.warts.Throw", "org.wartremover.warts.Equals"))
-  implicit val format: Format[CompanyNameConfirmed] = Jsonx.formatSealed[CompanyNameConfirmed]
+  implicit val format: Format[YesNoAnswer] = Jsonx.formatSealed[YesNoAnswer]
 
-  val values: List[CompanyNameConfirmed] = List(Yes, No)
+  val values: List[YesNoAnswer] = List(Yes, No)
 
 }

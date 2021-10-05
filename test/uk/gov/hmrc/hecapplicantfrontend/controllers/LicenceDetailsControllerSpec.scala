@@ -165,7 +165,7 @@ class LicenceDetailsControllerSpec
                   LicenceTimeTrading.ZeroToTwoYears,
                   LicenceValidityPeriod.UpToTwoYears,
                   Some(TaxSituation.SA),
-                  Some(IncomeDeclared.Yes),
+                  Some(YesNoAnswer.Yes),
                   Some(EntityType.Individual),
                   None,
                   None
@@ -203,7 +203,7 @@ class LicenceDetailsControllerSpec
                   LicenceTimeTrading.ZeroToTwoYears,
                   LicenceValidityPeriod.UpToTwoYears,
                   Some(TaxSituation.SAPAYE),
-                  Some(IncomeDeclared.Yes),
+                  Some(YesNoAnswer.Yes),
                   Some(EntityType.Company),
                   None,
                   None
@@ -334,7 +334,7 @@ class LicenceDetailsControllerSpec
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToOneYear,
               Some(TaxSituation.SA),
-              Some(IncomeDeclared.Yes),
+              Some(YesNoAnswer.Yes),
               Some(EntityType.Individual),
               None,
               None
@@ -352,7 +352,7 @@ class LicenceDetailsControllerSpec
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToOneYear,
               Some(TaxSituation.SA),
-              Some(IncomeDeclared.Yes),
+              Some(YesNoAnswer.Yes),
               Some(EntityType.Individual),
               None,
               None
@@ -384,7 +384,7 @@ class LicenceDetailsControllerSpec
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToOneYear,
               Some(TaxSituation.SA),
-              Some(IncomeDeclared.Yes),
+              Some(YesNoAnswer.Yes),
               Some(EntityType.Individual),
               None,
               None
@@ -403,7 +403,7 @@ class LicenceDetailsControllerSpec
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToOneYear,
               Some(TaxSituation.SA),
-              Some(IncomeDeclared.Yes),
+              Some(YesNoAnswer.Yes),
               Some(EntityType.Individual),
               None,
               None
@@ -488,7 +488,7 @@ class LicenceDetailsControllerSpec
                 LicenceTimeTrading.TwoToFourYears,
                 LicenceValidityPeriod.UpToThreeYears,
                 Some(TaxSituation.SA),
-                Some(IncomeDeclared.Yes),
+                Some(YesNoAnswer.Yes),
                 Some(EntityType.Company),
                 None,
                 None
@@ -641,7 +641,7 @@ class LicenceDetailsControllerSpec
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToFiveYears,
               Some(TaxSituation.SA),
-              Some(IncomeDeclared.Yes),
+              Some(YesNoAnswer.Yes),
               Some(EntityType.Company),
               None,
               None
@@ -651,7 +651,7 @@ class LicenceDetailsControllerSpec
               Some(LicenceTimeTrading.EightYearsOrMore),
               Some(LicenceValidityPeriod.UpToFiveYears),
               Some(TaxSituation.SA),
-              Some(IncomeDeclared.Yes),
+              Some(YesNoAnswer.Yes),
               Some(EntityType.Company),
               None,
               None
@@ -754,7 +754,7 @@ class LicenceDetailsControllerSpec
                     LicenceTimeTrading.TwoToFourYears,
                     LicenceValidityPeriod.UpToThreeYears,
                     Some(TaxSituation.SA),
-                    Some(IncomeDeclared.Yes),
+                    Some(YesNoAnswer.Yes),
                     Some(EntityType.Individual),
                     None,
                     None
@@ -929,7 +929,7 @@ class LicenceDetailsControllerSpec
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToThreeYears,
               Some(TaxSituation.SA),
-              Some(IncomeDeclared.Yes),
+              Some(YesNoAnswer.Yes),
               Some(EntityType.Individual),
               None,
               None
@@ -939,7 +939,7 @@ class LicenceDetailsControllerSpec
               Some(LicenceTimeTrading.ZeroToTwoYears),
               Some(LicenceValidityPeriod.UpToFiveYears),
               Some(TaxSituation.SA),
-              Some(IncomeDeclared.Yes),
+              Some(YesNoAnswer.Yes),
               Some(EntityType.Individual),
               None,
               None

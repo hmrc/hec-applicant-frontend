@@ -181,7 +181,7 @@ class SAControllerSpec
                 LicenceTimeTrading.ZeroToTwoYears,
                 LicenceValidityPeriod.UpToTwoYears,
                 Some(TaxSituation.PAYE),
-                Some(IncomeDeclared.Yes),
+                Some(YesNoAnswer.Yes),
                 Some(EntityType.Individual),
                 None,
                 None
@@ -274,7 +274,7 @@ class SAControllerSpec
 
         "the call to update and next fails" in {
           val answers        = UserAnswers.empty
-          val updatedAnswers = UserAnswers.empty.copy(saIncomeDeclared = Some(IncomeDeclared.Yes))
+          val updatedAnswers = UserAnswers.empty.copy(saIncomeDeclared = Some(YesNoAnswer.Yes))
           val session        = HECSession(individuaRetrievedlData, answers, None)
           val updatedSession = session.copy(userAnswers = updatedAnswers)
 
@@ -297,7 +297,7 @@ class SAControllerSpec
 
           "the user has not previously completed answering questions" in {
             val answers        = UserAnswers.empty
-            val updatedAnswers = UserAnswers.empty.copy(saIncomeDeclared = Some(IncomeDeclared.No))
+            val updatedAnswers = UserAnswers.empty.copy(saIncomeDeclared = Some(YesNoAnswer.No))
             val session        = HECSession(individuaRetrievedlData, answers, None)
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 
@@ -318,14 +318,14 @@ class SAControllerSpec
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToOneYear,
               Some(TaxSituation.SA),
-              Some(IncomeDeclared.Yes),
+              Some(YesNoAnswer.Yes),
               None,
               None,
               None
             )
             val updatedAnswers = IncompleteUserAnswers
               .fromCompleteAnswers(answers)
-              .copy(saIncomeDeclared = Some(IncomeDeclared.No))
+              .copy(saIncomeDeclared = Some(YesNoAnswer.No))
             val session        = HECSession(individuaRetrievedlData, answers, None)
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 

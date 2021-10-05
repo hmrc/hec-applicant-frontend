@@ -27,9 +27,9 @@ import uk.gov.hmrc.hecapplicantfrontend.controllers.{SessionSupport, routes}
 import uk.gov.hmrc.hecapplicantfrontend.models.EntityType.Company
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRetrievedData, IndividualRetrievedData}
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.{CompleteUserAnswers, IncompleteUserAnswers}
+import uk.gov.hmrc.hecapplicantfrontend.models._
 import uk.gov.hmrc.hecapplicantfrontend.models.ids._
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.hecapplicantfrontend.models._
 import uk.gov.hmrc.http.HeaderCarrier
 
 import java.time.{LocalDate, ZonedDateTime}
@@ -644,7 +644,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 companyData,
                 UserAnswers.empty.copy(
                   crn = Some(CRN("1234567")),
-                  companyNameConfirmed = Some(CompanyNameConfirmed.No)
+                  companyNameConfirmed = Some(YesNoAnswer.No)
                 ),
                 None
               )
@@ -666,7 +666,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 companyData,
                 UserAnswers.empty.copy(
                   crn = Some(CRN("1234567")),
-                  companyNameConfirmed = Some(CompanyNameConfirmed.Yes)
+                  companyNameConfirmed = Some(YesNoAnswer.Yes)
                 ),
                 None
               )
@@ -703,7 +703,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 companyData,
                 UserAnswers.empty.copy(
                   crn = Some(CRN("1234567")),
-                  companyNameConfirmed = Some(CompanyNameConfirmed.Yes)
+                  companyNameConfirmed = Some(YesNoAnswer.Yes)
                 ),
                 None
               )
@@ -847,7 +847,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 LicenceTimeTrading.ZeroToTwoYears,
                 LicenceValidityPeriod.UpToOneYear,
                 Some(TaxSituation.PAYE),
-                Some(IncomeDeclared.Yes),
+                Some(YesNoAnswer.Yes),
                 Some(EntityType.Company),
                 None,
                 None
@@ -858,7 +858,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 Some(completeAnswers.licenceTimeTrading),
                 Some(completeAnswers.licenceValidityPeriod),
                 completeAnswers.taxSituation,
-                Some(IncomeDeclared.Yes),
+                Some(YesNoAnswer.Yes),
                 Some(EntityType.Company),
                 None,
                 None
@@ -935,7 +935,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 LicenceTimeTrading.ZeroToTwoYears,
                 LicenceValidityPeriod.UpToOneYear,
                 Some(taxSituation),
-                Some(IncomeDeclared.Yes),
+                Some(YesNoAnswer.Yes),
                 None,
                 None,
                 None
@@ -1024,7 +1024,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             Some(LicenceTimeTrading.ZeroToTwoYears),
             Some(LicenceValidityPeriod.UpToOneYear),
             Some(TaxSituation.PAYE),
-            Some(IncomeDeclared.Yes),
+            Some(YesNoAnswer.Yes),
             Some(EntityType.Company),
             None,
             None
@@ -1367,7 +1367,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToOneYear,
               Some(taxSituation),
-              Some(IncomeDeclared.Yes),
+              Some(YesNoAnswer.Yes),
               entityType,
               None,
               None
@@ -1592,7 +1592,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
               Some(LicenceTimeTrading.ZeroToTwoYears),
               Some(LicenceValidityPeriod.UpToOneYear),
               Some(taxSituation),
-              Some(IncomeDeclared.Yes),
+              Some(YesNoAnswer.Yes),
               None,
               None,
               None
@@ -1611,7 +1611,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             LicenceTimeTrading.ZeroToTwoYears,
             LicenceValidityPeriod.UpToOneYear,
             Some(TaxSituation.PAYE),
-            Some(IncomeDeclared.Yes),
+            Some(YesNoAnswer.Yes),
             Some(EntityType.Individual),
             None,
             None
@@ -1716,7 +1716,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             JourneyServiceImpl.allAnswersComplete(
               incompleteUserAnswers = incompleteAnswersBase.copy(
                 taxSituation = Some(taxSituation),
-                saIncomeDeclared = Some(IncomeDeclared.Yes)
+                saIncomeDeclared = Some(YesNoAnswer.Yes)
               ),
               retrievedUserData = individualRetrievedData
             ) shouldBe true
@@ -1757,7 +1757,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             JourneyServiceImpl.allAnswersComplete(
               incompleteUserAnswers = incompleteAnswersBase.copy(
                 taxSituation = Some(taxSituation),
-                saIncomeDeclared = Some(IncomeDeclared.Yes)
+                saIncomeDeclared = Some(YesNoAnswer.Yes)
               ),
               retrievedUserData = individualData
             ) shouldBe true
@@ -1778,7 +1778,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             JourneyServiceImpl.allAnswersComplete(
               incompleteUserAnswers = incompleteAnswersBase.copy(
                 taxSituation = Some(taxSituation),
-                saIncomeDeclared = Some(IncomeDeclared.Yes)
+                saIncomeDeclared = Some(YesNoAnswer.Yes)
               ),
               retrievedUserData = individualData
             ) shouldBe true

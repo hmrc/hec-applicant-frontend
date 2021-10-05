@@ -16,14 +16,14 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models.views
 
-import uk.gov.hmrc.hecapplicantfrontend.models.IncomeDeclared
+import uk.gov.hmrc.hecapplicantfrontend.models.YesNoAnswer
 
 final case class IncomeDeclaredOption(messageKey: String)
 
 object IncomeDeclaredOption {
 
-  def incomeDeclaredOption(option: IncomeDeclared): IncomeDeclaredOption = option match {
-    case IncomeDeclared.Yes => IncomeDeclaredOption("yes")
-    case IncomeDeclared.No  => IncomeDeclaredOption("no")
+  def incomeDeclaredOption(option: YesNoAnswer): IncomeDeclaredOption = option match {
+    case YesNoAnswer.Yes => IncomeDeclaredOption("yes")
+    case YesNoAnswer.No  => IncomeDeclaredOption("no")
   }
 }

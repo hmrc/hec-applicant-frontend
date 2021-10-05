@@ -31,7 +31,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRe
 import uk.gov.hmrc.hecapplicantfrontend.models.SAStatus.ReturnFound
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.{CompleteUserAnswers, IncompleteUserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
-import uk.gov.hmrc.hecapplicantfrontend.models.{CompanyNameConfirmed, EntityType, Error, HECSession, IncomeDeclared, RetrievedApplicantData, SAStatus, SAStatusResponse, TaxSituation, UserAnswers}
+import uk.gov.hmrc.hecapplicantfrontend.models.{EntityType, Error, HECSession, RetrievedApplicantData, SAStatus, SAStatusResponse, TaxSituation, UserAnswers, YesNoAnswer}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyServiceImpl._
 import uk.gov.hmrc.http.HeaderCarrier
@@ -258,7 +258,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
 
   private def confirmCompanyDetailsRoute(session: HECSession) =
     session.userAnswers.fold(_.companyNameConfirmed, _.companyNameConfirmed) match {
-      case Some(CompanyNameConfirmed.Yes) =>
+      case Some(YesNoAnswer.Yes) =>
         session.retrievedUserData match {
           case CompanyRetrievedData(_, Some(ctutr), _, _, Some(desCtutr), Some(ctStatus), _) =>
             if (ctutr.value === desCtutr.value) {
@@ -275,8 +275,8 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
           case _: IndividualRetrievedData                                                    =>
             sys.error("This should never happen, individual data shouldn't be present in company journey")
         }
-      case Some(CompanyNameConfirmed.No)  => routes.CRNController.companyRegistrationNumber()
-      case None                           => sys.error("This should never happen, individual data shouldn't be present in company journey")
+      case Some(YesNoAnswer.No)  => routes.CRNController.companyRegistrationNumber()
+      case None                  => sys.error("This should never happen, individual data shouldn't be present in company journey")
     }
 
 }
@@ -302,7 +302,7 @@ object JourneyServiceImpl {
     */
   private def checkSAIncomeDeclared(
     taxSituation: TaxSituation,
-    saIncomeDeclared: Option[IncomeDeclared],
+    saIncomeDeclared: Option[YesNoAnswer],
     retrievedUserData: RetrievedApplicantData
   ): Boolean =
     (retrievedUserData, saIncomeDeclared) match {

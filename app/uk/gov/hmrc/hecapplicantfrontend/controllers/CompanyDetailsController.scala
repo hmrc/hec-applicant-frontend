@@ -51,7 +51,7 @@ class CompanyDetailsController @Inject() (
     with I18nSupport
     with Logging {
 
-  private def getPage(form: Form[CompanyNameConfirmed])(implicit request: RequestWithSessionData[_]): Result = {
+  private def getPage(form: Form[YesNoAnswer])(implicit request: RequestWithSessionData[_]): Result = {
     val back = journeyService.previous(routes.CompanyDetailsController.confirmCompanyDetails())
     request.sessionData.retrievedUserData match {
       case RetrievedApplicantData.CompanyRetrievedData(_, _, _, Some(companyHouseName), _, _, _) =>
@@ -75,7 +75,7 @@ class CompanyDetailsController @Inject() (
   val confirmCompanyDetails: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
     val companyNameConfirmed = request.sessionData.userAnswers.fold(_.companyNameConfirmed, _.companyNameConfirmed)
     val form = {
-      val emptyForm = CompanyDetailsController.confirmCompanyNameForm(CompanyNameConfirmed.values)
+      val emptyForm = CompanyDetailsController.confirmCompanyNameForm(YesNoAnswer.values)
       companyNameConfirmed.fold(emptyForm)(emptyForm.fill)
     }
     getPage(form)
@@ -148,9 +148,9 @@ class CompanyDetailsController @Inject() (
         )
       }
 
-      def handleValidAnswer(companyNameConfirmed: CompanyNameConfirmed): Future[Result] =
+      def handleValidAnswer(companyNameConfirmed: YesNoAnswer): Future[Result] =
         companyNameConfirmed match {
-          case CompanyNameConfirmed.Yes =>
+          case YesNoAnswer.Yes =>
             val updatedUserAnswers = request.sessionData.userAnswers
               .unset(_.companyNameConfirmed)
               .copy(companyNameConfirmed = Some(companyNameConfirmed))
@@ -160,17 +160,17 @@ class CompanyDetailsController @Inject() (
               case None      => internalServerError("No CRN found in session")
             }
 
-          case CompanyNameConfirmed.No =>
+          case YesNoAnswer.No =>
             // wipe CRN answer prior to navigating to next page
             val answersWithoutCrn = request.sessionData.userAnswers.unset(_.crn)
             callUpdateAndNext(request.sessionData.copy(userAnswers = answersWithoutCrn))
         }
 
-      def getFuturePage(form: Form[CompanyNameConfirmed])(implicit request: RequestWithSessionData[_]) =
+      def getFuturePage(form: Form[YesNoAnswer])(implicit request: RequestWithSessionData[_]) =
         Future.successful(getPage(form))
 
       CompanyDetailsController
-        .confirmCompanyNameForm(CompanyNameConfirmed.values)
+        .confirmCompanyNameForm(YesNoAnswer.values)
         .bindFromRequest()
         .fold(getFuturePage, handleValidAnswer)
     }
@@ -196,17 +196,21 @@ class CompanyDetailsController @Inject() (
 
 object CompanyDetailsController {
   val companyNameConfirmedOptions: List[CompanyNameConfirmedOption] =
-    CompanyNameConfirmed.values.map(CompanyNameConfirmedOption.companyNameConfirmedToOption)
+    YesNoAnswer.values.map(CompanyNameConfirmedOption.companyNameConfirmedToOption)
 
-  def confirmCompanyNameForm(options: List[CompanyNameConfirmed]): Form[CompanyNameConfirmed] =
+  def confirmCompanyNameForm(options: List[YesNoAnswer]): Form[YesNoAnswer] =
     Form(
       mapping(
         "confirmCompanyName" -> of(FormUtils.radioFormFormatter(options))
       )(identity)(Some(_))
     )
 
-  // TODO ensure you've understood this correctly
-  // TODO add docstring
+  /**
+    * Calculate the lookback period based on today's date.
+    * The lookback period is the the most recent accounting period of the company to have ended 12 months or more
+    * before the day on which the tax check is initiated. (These are the dates used when retrieving the Corporation tax
+    * records for the Applicant's company using the Get Company Accounting Periods API.)
+    */
   def calculateLookbackPeriod(today: LocalDate): (LocalDate, LocalDate) = {
     val minus1Year  = today.minusYears(1)
     val minus2Years = today.minusYears(2)

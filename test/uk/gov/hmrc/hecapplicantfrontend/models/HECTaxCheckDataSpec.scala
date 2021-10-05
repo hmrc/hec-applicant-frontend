@@ -51,7 +51,7 @@ class HECTaxCheckDataSpec extends AnyWordSpec with Matchers {
             NINO("nino"),
             Some(SAUTR("utr")),
             Some(TaxSituation.SA),
-            Some(IncomeDeclared.Yes)
+            Some(YesNoAnswer.Yes)
           )
         )
 

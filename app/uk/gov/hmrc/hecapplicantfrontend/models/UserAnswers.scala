@@ -47,10 +47,10 @@ object UserAnswers {
     licenceTimeTrading: Option[LicenceTimeTrading],
     licenceValidityPeriod: Option[LicenceValidityPeriod],
     taxSituation: Option[TaxSituation],
-    saIncomeDeclared: Option[IncomeDeclared],
+    saIncomeDeclared: Option[YesNoAnswer],
     entityType: Option[EntityType],
     crn: Option[CRN],
-    companyNameConfirmed: Option[CompanyNameConfirmed]
+    companyNameConfirmed: Option[YesNoAnswer]
   ) extends UserAnswers {
     val userAnswersType: UserAnswersType = UserAnswersType.Incomplete
   }
@@ -60,10 +60,10 @@ object UserAnswers {
     licenceTimeTrading: LicenceTimeTrading,
     licenceValidityPeriod: LicenceValidityPeriod,
     taxSituation: Option[TaxSituation],
-    saIncomeDeclared: Option[IncomeDeclared],
+    saIncomeDeclared: Option[YesNoAnswer],
     entityType: Option[EntityType],
     crn: Option[CRN],
-    companyNameConfirmed: Option[CompanyNameConfirmed]
+    companyNameConfirmed: Option[YesNoAnswer]
   ) extends UserAnswers {
     val userAnswersType: UserAnswersType = UserAnswersType.Complete
   }
