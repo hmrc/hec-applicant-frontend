@@ -25,8 +25,6 @@ import uk.gov.hmrc.hecapplicantfrontend.models.HECSession
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging.LoggerOps
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.http.HeaderCarrierConverter
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -44,12 +42,9 @@ class SessionDataAction @Inject() (
 
   override def refine[A](
     request: AuthenticatedRequest[A]
-  ): Future[Either[Result, RequestWithSessionData[A]]] = {
-    implicit val hc: HeaderCarrier =
-      HeaderCarrierConverter.fromRequestAndSession(request, request.session)
-
+  ): Future[Either[Result, RequestWithSessionData[A]]] =
     sessionStore
-      .get()
+      .get()(request)
       .leftMap { e =>
         logger.warn("Could not get session data", e)
         InternalServerError
@@ -59,7 +54,5 @@ class SessionDataAction @Inject() (
           .toRight(Redirect(routes.StartController.start()))
       )
       .value
-
-  }
 
 }

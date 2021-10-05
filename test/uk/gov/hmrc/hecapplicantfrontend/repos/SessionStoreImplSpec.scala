@@ -21,18 +21,17 @@ import org.scalatest.concurrent.Eventually
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
-import play.api.libs.json.{JsNumber, JsObject}
+import play.api.mvc.Request
+import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import uk.gov.hmrc.cache.model.{Cache, Id}
-import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, HECSession, UserAnswers}
+import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthenticatedRequest, RequestWithSessionData}
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.CompanyRetrievedData
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CTUTR, GGCredId}
-import uk.gov.hmrc.http.{HeaderCarrier, SessionId}
-import uk.gov.hmrc.mongo.DatabaseUpdate
+import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, HECSession, UserAnswers}
+import uk.gov.hmrc.http.SessionId
 
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 
 class SessionStoreImplSpec extends AnyWordSpec with Matchers with MongoSupport with Eventually {
 
@@ -44,14 +43,14 @@ class SessionStoreImplSpec extends AnyWordSpec with Matchers with MongoSupport w
     )
   )
 
-  val sessionStore = new SessionStoreImpl(reactiveMongoComponent, config)
+  val sessionStore = new SessionStoreImpl(mongoComponent, config)
 
-  class TestEnvironment {
+  class TestEnvironment(sessionData: HECSession) {
 
-    val sessionId = SessionId(UUID.randomUUID().toString)
-
-    implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(sessionId))
-
+    val sessionId                    = SessionId(UUID.randomUUID().toString)
+    val fakeRequest                  = AuthenticatedRequest(FakeRequest().withSession(("sessionId", sessionId.toString)))
+    implicit val request: Request[_] =
+      RequestWithSessionData(fakeRequest, sessionData)
   }
 
   "SessionStoreImpl" must {
@@ -63,7 +62,7 @@ class SessionStoreImplSpec extends AnyWordSpec with Matchers with MongoSupport w
         None
       )
 
-    "be able to insert SessionData into mongo and read it back" in new TestEnvironment {
+    "be able to insert SessionData into mongo and read it back" in new TestEnvironment(sessionData) {
 
       await(sessionStore.store(sessionData).value) shouldBe Right(())
 
@@ -72,32 +71,10 @@ class SessionStoreImplSpec extends AnyWordSpec with Matchers with MongoSupport w
       }
     }
 
-    "return no SessionData if there is no data in mongo" in new TestEnvironment {
+    "return no SessionData if there is no data in mongo" in new TestEnvironment(sessionData) {
       await(sessionStore.get().value) shouldBe Right(None)
     }
 
-    "return an error" when {
-
-      "the data in mongo cannot be parsed" in new TestEnvironment {
-        val invalidData                           = JsObject(Map("journeyStatus" -> JsNumber(1)))
-        val create: Future[DatabaseUpdate[Cache]] =
-          sessionStore.cacheRepository.createOrUpdate(
-            Id(sessionId.value),
-            sessionStore.sessionKey,
-            invalidData
-          )
-        await(create).writeResult.inError      shouldBe false
-        await(sessionStore.get().value).isLeft shouldBe true
-      }
-
-      "there is no session id in the header carrier" in {
-        implicit val hc: HeaderCarrier = HeaderCarrier()
-
-        await(sessionStore.store(sessionData).value).isLeft shouldBe true
-        await(sessionStore.get().value).isLeft              shouldBe true
-      }
-
-    }
   }
 
 }
