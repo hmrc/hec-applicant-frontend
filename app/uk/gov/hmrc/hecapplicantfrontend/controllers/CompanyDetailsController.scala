@@ -103,17 +103,12 @@ class CompanyDetailsController @Inject() (
         desCtutr: CTUTR,
         companyData: CompanyRetrievedData
       ): EitherT[Future, Error, Option[CTStatusResponse]] =
-        companyData.ctutr traverse [EitherT[Future, Error, *], CTStatusResponse] { ctutr =>
+        companyData.ctutr flatTraverse [EitherT[Future, Error, *], CTStatusResponse] { ctutr =>
           if (desCtutr.value === ctutr.value) {
             val (start, end) = CompanyDetailsController.calculateLookbackPeriod(timeProvider.currentDate)
-            taxCheckService.getCTStatus(desCtutr, start, end)
+            taxCheckService.getCTStatus(desCtutr, start, end).map[Option[CTStatusResponse]](Some(_))
           } else {
-            EitherT
-              .fromEither[Future](
-                Left[Error, CTStatusResponse](
-                  Error("CTUTR from DES does not match the retrieved value")
-                )
-              )
+            EitherT.fromEither[Future](Right[Error, Option[CTStatusResponse]](None))
           }
         }
 

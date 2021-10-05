@@ -252,20 +252,6 @@ class CompanyDetailsControllerSpec
           status(performAction("confirmCompanyName" -> "0")) shouldBe INTERNAL_SERVER_ERROR
         }
 
-        "the enrolment and DES CTUTRs do not match" in {
-          val answers = UserAnswers.empty.copy(crn = Some(CRN("crn")))
-          // session contains CTUTR from enrolments
-          val session = HECSession(companyRetrievedData.copy(ctutr = Some(CTUTR("ctutr"))), answers, None)
-
-          inSequence {
-            mockAuthWithNoRetrievals()
-            mockGetSession(session)
-            mockTaxCheckServiceGetCtutr(CRN("crn"))(Right(CTUTR("des-ctutr")))
-          }
-
-          status(performAction("confirmCompanyName" -> "0")) shouldBe INTERNAL_SERVER_ERROR
-        }
-
         "the call to update and next fails" in {
           val date        = LocalDate.now
           val answers     = UserAnswers.empty.copy(crn = Some(CRN("crn")))
@@ -326,6 +312,33 @@ class CompanyDetailsControllerSpec
             mockTaxCheckServiceGetCtStatus(CTUTR("ctutr"), date.minusYears(2), date.minusYears(1))(
               Right(ctStatusResponse)
             )
+            mockJourneyServiceUpdateAndNext(
+              routes.CompanyDetailsController.confirmCompanyDetails(),
+              session,
+              updatedSession
+            )(Right(mockNextCall))
+          }
+
+          checkIsRedirect(performAction("confirmCompanyName" -> "0"), mockNextCall)
+        }
+
+        "user answers with a Yes and all data fetches are successful but the enrolment and DES CTUTRs do not match" in {
+          val answers     = UserAnswers.empty.copy(crn = Some(CRN("crn")))
+          // session contains CTUTR from enrolments
+          val companyData = companyRetrievedData.copy(ctutr = Some(CTUTR("ctutr")))
+          val session     = HECSession(companyData, answers, None)
+
+          val updatedAnswers = answers.copy(companyDetailsConfirmed = Some(YesNoAnswer.Yes))
+          val desCtutr       = CTUTR("des-ctutr")
+          val updatedSession = session.copy(
+            userAnswers = updatedAnswers,
+            retrievedUserData = companyData.copy(desCtutr = Some(desCtutr))
+          )
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockTaxCheckServiceGetCtutr(CRN("crn"))(Right(desCtutr))
             mockJourneyServiceUpdateAndNext(
               routes.CompanyDetailsController.confirmCompanyDetails(),
               session,
