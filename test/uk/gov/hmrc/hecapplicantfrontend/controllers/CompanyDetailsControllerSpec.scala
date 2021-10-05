@@ -65,7 +65,7 @@ class CompanyDetailsControllerSpec
       .returning(EitherT.fromEither[Future](result))
 
   def mockTaxCheckServiceGetCtStatus(ctutr: CTUTR, startDate: LocalDate, endDate: LocalDate)(
-    result: Either[Error, CTStatusResponse]
+    result: Either[Error, Option[CTStatusResponse]]
   ) =
     (mockTaxCheckService
       .getCTStatus(_: CTUTR, _: LocalDate, _: LocalDate)(_: HeaderCarrier))
@@ -272,7 +272,7 @@ class CompanyDetailsControllerSpec
             mockTaxCheckServiceGetCtutr(CRN("crn"))(Right(CTUTR("ctutr")))
             mockTimeProviderToday(date)
             mockTaxCheckServiceGetCtStatus(CTUTR("ctutr"), date.minusYears(2), date.minusYears(1))(
-              Right(ctStatusResponse)
+              Right(Some(ctStatusResponse))
             )
             mockJourneyServiceUpdateAndNext(
               routes.CompanyDetailsController.confirmCompanyDetails(),
@@ -290,63 +290,65 @@ class CompanyDetailsControllerSpec
 
       "redirect to the next page" when {
 
-        "user answers with a Yes and all data fetches are successful" in {
-          val date        = LocalDate.now
-          val answers     = UserAnswers.empty.copy(crn = Some(CRN("crn")))
-          // session contains CTUTR from enrolments
-          val companyData = companyRetrievedData.copy(ctutr = Some(CTUTR("ctutr")))
-          val session     = HECSession(companyData, answers, None)
+        "user answers with a Yes and all data fetches are successful" when {
+          "the enrolment and DES CTUTRs match" in {
+            val date        = LocalDate.now
+            val answers     = UserAnswers.empty.copy(crn = Some(CRN("crn")))
+            // session contains CTUTR from enrolments
+            val companyData = companyRetrievedData.copy(ctutr = Some(CTUTR("ctutr")))
+            val session     = HECSession(companyData, answers, None)
 
-          val updatedAnswers   = answers.copy(companyDetailsConfirmed = Some(YesNoAnswer.Yes))
-          val ctStatusResponse = CTStatusResponse(CTUTR("ctutr"), date, date, None)
-          val updatedSession   = session.copy(
-            userAnswers = updatedAnswers,
-            retrievedUserData = companyData.copy(desCtutr = companyData.ctutr, ctStatus = Some(ctStatusResponse))
-          )
-
-          inSequence {
-            mockAuthWithNoRetrievals()
-            mockGetSession(session)
-            mockTaxCheckServiceGetCtutr(CRN("crn"))(Right(CTUTR("ctutr")))
-            mockTimeProviderToday(date)
-            mockTaxCheckServiceGetCtStatus(CTUTR("ctutr"), date.minusYears(2), date.minusYears(1))(
-              Right(ctStatusResponse)
+            val updatedAnswers   = answers.copy(companyDetailsConfirmed = Some(YesNoAnswer.Yes))
+            val ctStatusResponse = CTStatusResponse(CTUTR("ctutr"), date, date, None)
+            val updatedSession   = session.copy(
+              userAnswers = updatedAnswers,
+              retrievedUserData = companyData.copy(desCtutr = companyData.ctutr, ctStatus = Some(ctStatusResponse))
             )
-            mockJourneyServiceUpdateAndNext(
-              routes.CompanyDetailsController.confirmCompanyDetails(),
-              session,
-              updatedSession
-            )(Right(mockNextCall))
+
+            inSequence {
+              mockAuthWithNoRetrievals()
+              mockGetSession(session)
+              mockTaxCheckServiceGetCtutr(CRN("crn"))(Right(CTUTR("ctutr")))
+              mockTimeProviderToday(date)
+              mockTaxCheckServiceGetCtStatus(CTUTR("ctutr"), date.minusYears(2), date.minusYears(1))(
+                Right(Some(ctStatusResponse))
+              )
+              mockJourneyServiceUpdateAndNext(
+                routes.CompanyDetailsController.confirmCompanyDetails(),
+                session,
+                updatedSession
+              )(Right(mockNextCall))
+            }
+
+            checkIsRedirect(performAction("confirmCompanyName" -> "0"), mockNextCall)
           }
 
-          checkIsRedirect(performAction("confirmCompanyName" -> "0"), mockNextCall)
-        }
+          "the enrolment and DES CTUTRs do not match" in {
+            val answers     = UserAnswers.empty.copy(crn = Some(CRN("crn")))
+            // session contains CTUTR from enrolments
+            val companyData = companyRetrievedData.copy(ctutr = Some(CTUTR("ctutr")))
+            val session     = HECSession(companyData, answers, None)
 
-        "user answers with a Yes and all data fetches are successful but the enrolment and DES CTUTRs do not match" in {
-          val answers     = UserAnswers.empty.copy(crn = Some(CRN("crn")))
-          // session contains CTUTR from enrolments
-          val companyData = companyRetrievedData.copy(ctutr = Some(CTUTR("ctutr")))
-          val session     = HECSession(companyData, answers, None)
+            val updatedAnswers = answers.copy(companyDetailsConfirmed = Some(YesNoAnswer.Yes))
+            val desCtutr       = CTUTR("des-ctutr")
+            val updatedSession = session.copy(
+              userAnswers = updatedAnswers,
+              retrievedUserData = companyData.copy(desCtutr = Some(desCtutr))
+            )
 
-          val updatedAnswers = answers.copy(companyDetailsConfirmed = Some(YesNoAnswer.Yes))
-          val desCtutr       = CTUTR("des-ctutr")
-          val updatedSession = session.copy(
-            userAnswers = updatedAnswers,
-            retrievedUserData = companyData.copy(desCtutr = Some(desCtutr))
-          )
+            inSequence {
+              mockAuthWithNoRetrievals()
+              mockGetSession(session)
+              mockTaxCheckServiceGetCtutr(CRN("crn"))(Right(desCtutr))
+              mockJourneyServiceUpdateAndNext(
+                routes.CompanyDetailsController.confirmCompanyDetails(),
+                session,
+                updatedSession
+              )(Right(mockNextCall))
+            }
 
-          inSequence {
-            mockAuthWithNoRetrievals()
-            mockGetSession(session)
-            mockTaxCheckServiceGetCtutr(CRN("crn"))(Right(desCtutr))
-            mockJourneyServiceUpdateAndNext(
-              routes.CompanyDetailsController.confirmCompanyDetails(),
-              session,
-              updatedSession
-            )(Right(mockNextCall))
+            checkIsRedirect(performAction("confirmCompanyName" -> "0"), mockNextCall)
           }
-
-          checkIsRedirect(performAction("confirmCompanyName" -> "0"), mockNextCall)
         }
 
         "user answers with a No" in {

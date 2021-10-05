@@ -66,7 +66,7 @@ class CompanyDetailsController @Inject() (
         logger.warn("Missing company name")
         InternalServerError
       case _: RetrievedApplicantData.IndividualRetrievedData                                     =>
-        logger.warn("Confirm company name called for individual applicant")
+        logger.warn("Individual applicant shouldn't call company confirm page")
         InternalServerError
     }
   }
@@ -94,10 +94,6 @@ class CompanyDetailsController @Inject() (
             routes.CompanyDetailsController.confirmCompanyDetails(),
             updatedSession
           )
-          .fold(
-            internalServerError("Could not update session and proceed"),
-            Redirect
-          )
 
       def fetchCTStatus(
         desCtutr: CTUTR,
@@ -106,7 +102,7 @@ class CompanyDetailsController @Inject() (
         companyData.ctutr flatTraverse [EitherT[Future, Error, *], CTStatusResponse] { ctutr =>
           if (desCtutr.value === ctutr.value) {
             val (start, end) = CompanyDetailsController.calculateLookbackPeriod(timeProvider.currentDate)
-            taxCheckService.getCTStatus(desCtutr, start, end).map[Option[CTStatusResponse]](Some(_))
+            taxCheckService.getCTStatus(desCtutr, start, end)
           } else {
             EitherT.fromEither[Future](Right[Error, Option[CTStatusResponse]](None))
           }
@@ -135,12 +131,12 @@ class CompanyDetailsController @Inject() (
                                    retrievedUserData = updatedRetrievedData,
                                    userAnswers = updatedUserAnswers
                                  )
-          result              <- EitherT[Future, Error, Result](callUpdateAndNext(updatedSession).map(Right[Error, Result]))
-        } yield result
+          call                <- callUpdateAndNext(updatedSession)
+        } yield call
 
         result.fold(
           internalServerError("Could not update session and proceed"),
-          identity
+          Redirect
         )
       }
 
@@ -152,7 +148,10 @@ class CompanyDetailsController @Inject() (
           case YesNoAnswer.No =>
             // wipe CRN answer prior to navigating to next page
             val answersWithoutCrn = request.sessionData.userAnswers.unset(_.crn)
-            callUpdateAndNext(request.sessionData.copy(userAnswers = answersWithoutCrn))
+            callUpdateAndNext(request.sessionData.copy(userAnswers = answersWithoutCrn)).fold(
+              internalServerError("Could not update session and proceed"),
+              Redirect
+            )
         }
 
       def getFuturePage(form: Form[YesNoAnswer])(implicit request: RequestWithSessionData[_]) =

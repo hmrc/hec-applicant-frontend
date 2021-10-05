@@ -24,7 +24,7 @@ import cats.syntax.eq._
 import com.google.inject.{ImplementedBy, Inject, Singleton}
 import play.api.http.Status.OK
 import play.api.libs.json.{Json, OFormat}
-import play.mvc.Http.Status.CREATED
+import play.mvc.Http.Status.{CREATED, NOT_FOUND}
 import uk.gov.hmrc.hecapplicantfrontend.connectors.HECConnector
 import uk.gov.hmrc.hecapplicantfrontend.models.ApplicantDetails.IndividualApplicantDetails
 import uk.gov.hmrc.hecapplicantfrontend.models.HECTaxCheckData.IndividualHECTaxCheckData
@@ -53,7 +53,7 @@ trait TaxCheckService {
 
   def getCTStatus(ctutr: CTUTR, startDate: LocalDate, endDate: LocalDate)(implicit
     hc: HeaderCarrier
-  ): EitherT[Future, Error, CTStatusResponse]
+  ): EitherT[Future, Error, Option[CTStatusResponse]]
 
   def getCtutr(crn: CRN)(implicit hc: HeaderCarrier): EitherT[Future, Error, CTUTR]
 
@@ -94,14 +94,18 @@ class TaxCheckServiceImpl @Inject() (hecConnector: HECConnector)(implicit ec: Ex
 
   def getCTStatus(ctutr: CTUTR, startDate: LocalDate, endDate: LocalDate)(implicit
     hc: HeaderCarrier
-  ): EitherT[Future, Error, CTStatusResponse] =
+  ): EitherT[Future, Error, Option[CTStatusResponse]] =
     hecConnector
       .getCTStatus(ctutr, startDate, endDate)
       .subflatMap { response =>
-        if (response.status =!= OK)
-          Left(Error(s"Call to get CT status came back with status ${response.status}. Body is ${response.body}"))
-        else
-          response.parseJSON[CTStatusResponse].leftMap(Error(_))
+        response.status match {
+          case NOT_FOUND               =>
+            Right(None)
+          case status if status =!= OK =>
+            Left(Error(s"Call to get CT status came back with status ${response.status}. Body is ${response.body}"))
+          case _                       =>
+            response.parseJSON[CTStatusResponse].leftMap(Error(_)).map(Some(_))
+        }
       }
 
   def getCtutr(crn: CRN)(implicit hc: HeaderCarrier): EitherT[Future, Error, CTUTR] =

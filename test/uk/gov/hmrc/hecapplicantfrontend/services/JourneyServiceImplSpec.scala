@@ -718,54 +718,56 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             await(result.value) shouldBe Right(routes.CompanyDetailsController.ctutrNotMatched())
           }
 
-          def testForCTStatus(status: CTStatus) = {
-            val companyData               = companyRetrievedData.copy(
-              companyName = Some(CompanyHouseName("Test tech Ltd")),
-              ctutr = Some(CTUTR("ctutr")),
-              desCtutr = Some(CTUTR("ctutr")),
-              ctStatus = Some(ctStatusResponseWithStatus(status))
-            )
-            val (session, updatedSession) = buildSessions(companyData)
+          "enrolments and DES CTUTRs match" when {
+            def testForCTStatus(status: CTStatus) = {
+              val companyData               = companyRetrievedData.copy(
+                companyName = Some(CompanyHouseName("Test tech Ltd")),
+                ctutr = Some(CTUTR("ctutr")),
+                desCtutr = Some(CTUTR("ctutr")),
+                ctStatus = Some(ctStatusResponseWithStatus(status))
+              )
+              val (session, updatedSession) = buildSessions(companyData)
 
-            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
-            mockStoreSession(updatedSession)(Right(()))
+              implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+              mockStoreSession(updatedSession)(Right(()))
 
-            val result = journeyService.updateAndNext(
-              routes.CompanyDetailsController.confirmCompanyDetails(),
-              updatedSession
-            )
-            await(result.value) shouldBe Right(routes.CompanyDetailsController.chargeableForCorporationTax())
-          }
+              val result = journeyService.updateAndNext(
+                routes.CompanyDetailsController.confirmCompanyDetails(),
+                updatedSession
+              )
+              await(result.value) shouldBe Right(routes.CompanyDetailsController.chargeableForCorporationTax())
+            }
 
-          "enrolments and DES CTUTRs match & status = ReturnFound" in {
-            testForCTStatus(CTStatus.ReturnFound)
-          }
+            "status = ReturnFound" in {
+              testForCTStatus(CTStatus.ReturnFound)
+            }
 
-          "enrolments and DES CTUTRs match & status = NoticeToFileIssued" in {
-            testForCTStatus(CTStatus.NoticeToFileIssued)
-          }
+            "status = NoticeToFileIssued" in {
+              testForCTStatus(CTStatus.NoticeToFileIssued)
+            }
 
-          "enrolments and DES CTUTRs match & status = NoReturnFound" in {
-            testForCTStatus(CTStatus.NoReturnFound)
-          }
+            "status = NoReturnFound" in {
+              testForCTStatus(CTStatus.NoReturnFound)
+            }
 
-          "enrolments and DES CTUTRs match but no accounting periods found" in {
-            val companyData               = companyRetrievedData.copy(
-              companyName = Some(CompanyHouseName("Test tech Ltd")),
-              ctutr = Some(CTUTR("ctutr")),
-              desCtutr = Some(CTUTR("ctutr")),
-              ctStatus = Some(anyCTStatusResponse)
-            )
-            val (session, updatedSession) = buildSessions(companyData)
+            "no accounting periods found" in {
+              val companyData               = companyRetrievedData.copy(
+                companyName = Some(CompanyHouseName("Test tech Ltd")),
+                ctutr = Some(CTUTR("ctutr")),
+                desCtutr = Some(CTUTR("ctutr")),
+                ctStatus = Some(anyCTStatusResponse)
+              )
+              val (session, updatedSession) = buildSessions(companyData)
 
-            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
-            mockStoreSession(updatedSession)(Right(()))
+              implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+              mockStoreSession(updatedSession)(Right(()))
 
-            val result = journeyService.updateAndNext(
-              routes.CompanyDetailsController.confirmCompanyDetails(),
-              updatedSession
-            )
-            await(result.value) shouldBe Right(routes.CompanyDetailsController.noAccountingPeriod())
+              val result = journeyService.updateAndNext(
+                routes.CompanyDetailsController.confirmCompanyDetails(),
+                updatedSession
+              )
+              await(result.value) shouldBe Right(routes.CompanyDetailsController.noAccountingPeriod())
+            }
           }
 
           "no CTUTR found in enrolments" in {
