@@ -28,7 +28,7 @@ import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthenticatedReques
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.CompanyRetrievedData
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CTUTR, GGCredId}
 import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, HECSession, UserAnswers}
-import uk.gov.hmrc.http.{HeaderCarrier, SessionId}
+import uk.gov.hmrc.http.SessionId
 
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -49,7 +49,6 @@ class SessionStoreImplSpec extends AnyWordSpec with Matchers with MongoSupport w
 
     val sessionId                    = SessionId(UUID.randomUUID().toString)
     val fakeRequest                  = AuthenticatedRequest(FakeRequest().withSession(("sessionId", sessionId.toString)))
-    implicit val hc: HeaderCarrier   = HeaderCarrier()
     implicit val request: Request[_] =
       RequestWithSessionData(fakeRequest, sessionData)
   }
