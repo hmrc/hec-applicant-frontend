@@ -148,23 +148,23 @@ class CompanyDetailsController @Inject() (
         )
       }
 
-      def handleValidAnswer(companyNameConfirmed: CompanyNameConfirmed): Future[Result] = {
-        val updatedUserAnswers = request.sessionData.userAnswers
-          .unset(_.companyNameConfirmed)
-          .copy(companyNameConfirmed = Some(companyNameConfirmed))
-
+      def handleValidAnswer(companyNameConfirmed: CompanyNameConfirmed): Future[Result] =
         companyNameConfirmed match {
           case CompanyNameConfirmed.Yes =>
-            val crnOpt = request.sessionData.userAnswers.fold(_.crn, _.crn)
+            val updatedUserAnswers = request.sessionData.userAnswers
+              .unset(_.companyNameConfirmed)
+              .copy(companyNameConfirmed = Some(companyNameConfirmed))
+            val crnOpt             = request.sessionData.userAnswers.fold(_.crn, _.crn)
             crnOpt match {
               case Some(crn) => fetchDataAndProceed(crn, updatedUserAnswers)
               case None      => internalServerError("No CRN found in session")
             }
 
           case CompanyNameConfirmed.No =>
-            callUpdateAndNext(request.sessionData.copy(userAnswers = updatedUserAnswers))
+            // wipe CRN answer prior to navigating to next page
+            val answersWithoutCrn = request.sessionData.userAnswers.unset(_.crn)
+            callUpdateAndNext(request.sessionData.copy(userAnswers = answersWithoutCrn))
         }
-      }
 
       def getFuturePage(form: Form[CompanyNameConfirmed])(implicit request: RequestWithSessionData[_]) =
         Future.successful(getPage(form))

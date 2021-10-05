@@ -304,7 +304,7 @@ class CompanyDetailsControllerSpec
 
       "redirect to the next page" when {
 
-        "a valid data is submitted and all data fetches are successful" in {
+        "user answers with a Yes and all data fetches are successful" in {
           val date        = LocalDate.now
           val answers     = UserAnswers.empty.copy(crn = Some(CRN("crn")))
           // session contains CTUTR from enrolments
@@ -334,6 +334,27 @@ class CompanyDetailsControllerSpec
           }
 
           checkIsRedirect(performAction("confirmCompanyName" -> "0"), mockNextCall)
+        }
+
+        "user answers with a No" in {
+          val answers = UserAnswers.empty.copy(crn = Some(CRN("crn")))
+          val session = HECSession(companyRetrievedData, answers, None)
+
+          // should wipe out CRN answer if user says that the company name is incorrect
+          val updatedAnswers = answers.copy(crn = None)
+          val updatedSession = session.copy(userAnswers = updatedAnswers)
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockJourneyServiceUpdateAndNext(
+              routes.CompanyDetailsController.confirmCompanyDetails(),
+              session,
+              updatedSession
+            )(Right(mockNextCall))
+          }
+
+          checkIsRedirect(performAction("confirmCompanyName" -> "1"), mockNextCall)
         }
 
       }
