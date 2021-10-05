@@ -25,7 +25,7 @@ import cats.syntax.eq._
 import cats.syntax.option._
 import cats.syntax.traverse._
 import com.google.inject.{Inject, Singleton}
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Request}
 import uk.gov.hmrc.auth.core.retrieve.Credentials
 import uk.gov.hmrc.auth.core.{AffinityGroup, ConfidenceLevel, Enrolments}
 import uk.gov.hmrc.hecapplicantfrontend.config.{AppConfig, EnrolmentConfig}
@@ -91,7 +91,7 @@ class StartController @Inject() (
 
   private def handleNoSessionData(
     retrievedGGData: RetrievedGGData
-  )(implicit hc: HeaderCarrier): EitherT[Future, StartError, HECSession] =
+  )(implicit request: Request[_]): EitherT[Future, StartError, HECSession] =
     for {
       retrievedUserData <- buildRetrievedUserData(retrievedGGData)
       session            = HECSession(retrievedUserData, UserAnswers.empty, None)
