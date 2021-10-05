@@ -166,7 +166,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
                 saIncomeDeclared,
                 entityType,
                 crn,
-                companyNameConfirmed
+                companyDetailsConfirmed
               ) if allAnswersComplete(incomplete, session.retrievedUserData) =>
             val completeAnswers =
               CompleteUserAnswers(
@@ -177,7 +177,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
                 saIncomeDeclared,
                 entityType,
                 crn,
-                companyNameConfirmed
+                companyDetailsConfirmed
               )
             session.copy(userAnswers = completeAnswers)
 
@@ -257,7 +257,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
     }
 
   private def confirmCompanyDetailsRoute(session: HECSession) =
-    session.userAnswers.fold(_.companyNameConfirmed, _.companyNameConfirmed) match {
+    session.userAnswers.fold(_.companyDetailsConfirmed, _.companyDetailsConfirmed) match {
       case Some(YesNoAnswer.Yes) =>
         session.retrievedUserData match {
           case CompanyRetrievedData(_, Some(ctutr), _, _, Some(desCtutr), Some(ctStatus), _) =>

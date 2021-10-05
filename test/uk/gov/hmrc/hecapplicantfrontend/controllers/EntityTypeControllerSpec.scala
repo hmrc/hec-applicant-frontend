@@ -298,7 +298,7 @@ class EntityTypeControllerSpec
               saIncomeDeclared = Some(YesNoAnswer.Yes),
               entityType = None,
               crn = None,
-              companyNameConfirmed = None
+              companyDetailsConfirmed = None
             )
             val updatedAnswers = IncompleteUserAnswers
               .fromCompleteAnswers(answers)

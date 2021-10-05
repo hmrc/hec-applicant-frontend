@@ -128,7 +128,7 @@ class CompanyDetailsControllerSpec
 
           val updatedAnswers = IncompleteUserAnswers
             .fromCompleteAnswers(answers)
-            .copy(companyNameConfirmed = Some(YesNoAnswer.No))
+            .copy(companyDetailsConfirmed = Some(YesNoAnswer.No))
           val updatedSession = session.copy(userAnswers = updatedAnswers)
 
           inSequence {
@@ -273,7 +273,7 @@ class CompanyDetailsControllerSpec
           val companyData = companyRetrievedData.copy(ctutr = Some(CTUTR("ctutr")))
           val session     = HECSession(companyData, answers, None)
 
-          val updatedAnswers   = answers.copy(companyNameConfirmed = Some(YesNoAnswer.Yes))
+          val updatedAnswers   = answers.copy(companyDetailsConfirmed = Some(YesNoAnswer.Yes))
           val ctStatusResponse = CTStatusResponse(CTUTR("ctutr"), date, date, None)
           val updatedSession   = session.copy(
             userAnswers = updatedAnswers,
@@ -311,7 +311,7 @@ class CompanyDetailsControllerSpec
           val companyData = companyRetrievedData.copy(ctutr = Some(CTUTR("ctutr")))
           val session     = HECSession(companyData, answers, None)
 
-          val updatedAnswers   = answers.copy(companyNameConfirmed = Some(YesNoAnswer.Yes))
+          val updatedAnswers   = answers.copy(companyDetailsConfirmed = Some(YesNoAnswer.Yes))
           val ctStatusResponse = CTStatusResponse(CTUTR("ctutr"), date, date, None)
           val updatedSession   = session.copy(
             userAnswers = updatedAnswers,

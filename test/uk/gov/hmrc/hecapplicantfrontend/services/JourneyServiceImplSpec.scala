@@ -644,7 +644,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 companyData,
                 UserAnswers.empty.copy(
                   crn = Some(CRN("1234567")),
-                  companyNameConfirmed = Some(YesNoAnswer.No)
+                  companyDetailsConfirmed = Some(YesNoAnswer.No)
                 ),
                 None
               )
@@ -666,7 +666,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 companyData,
                 UserAnswers.empty.copy(
                   crn = Some(CRN("1234567")),
-                  companyNameConfirmed = Some(YesNoAnswer.Yes)
+                  companyDetailsConfirmed = Some(YesNoAnswer.Yes)
                 ),
                 None
               )
@@ -703,7 +703,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 companyData,
                 UserAnswers.empty.copy(
                   crn = Some(CRN("1234567")),
-                  companyNameConfirmed = Some(YesNoAnswer.Yes)
+                  companyDetailsConfirmed = Some(YesNoAnswer.Yes)
                 ),
                 None
               )

@@ -73,10 +73,11 @@ class CompanyDetailsController @Inject() (
   }
 
   val confirmCompanyDetails: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
-    val companyNameConfirmed = request.sessionData.userAnswers.fold(_.companyNameConfirmed, _.companyNameConfirmed)
+    val companyDetailsConfirmed =
+      request.sessionData.userAnswers.fold(_.companyDetailsConfirmed, _.companyDetailsConfirmed)
     val form = {
       val emptyForm = CompanyDetailsController.confirmCompanyNameForm(YesNoAnswer.values)
-      companyNameConfirmed.fold(emptyForm)(emptyForm.fill)
+      companyDetailsConfirmed.fold(emptyForm)(emptyForm.fill)
     }
     getPage(form)
   }
@@ -148,12 +149,12 @@ class CompanyDetailsController @Inject() (
         )
       }
 
-      def handleValidAnswer(companyNameConfirmed: YesNoAnswer): Future[Result] =
-        companyNameConfirmed match {
+      def handleValidAnswer(companyDetailsConfirmed: YesNoAnswer): Future[Result] =
+        companyDetailsConfirmed match {
           case YesNoAnswer.Yes =>
             val updatedUserAnswers = request.sessionData.userAnswers
-              .unset(_.companyNameConfirmed)
-              .copy(companyNameConfirmed = Some(companyNameConfirmed))
+              .unset(_.companyDetailsConfirmed)
+              .copy(companyDetailsConfirmed = Some(companyDetailsConfirmed))
             val crnOpt             = request.sessionData.userAnswers.fold(_.crn, _.crn)
             crnOpt match {
               case Some(crn) => fetchDataAndProceed(crn, updatedUserAnswers)

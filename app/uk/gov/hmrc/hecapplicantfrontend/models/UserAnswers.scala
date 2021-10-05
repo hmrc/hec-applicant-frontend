@@ -50,7 +50,7 @@ object UserAnswers {
     saIncomeDeclared: Option[YesNoAnswer],
     entityType: Option[EntityType],
     crn: Option[CRN],
-    companyNameConfirmed: Option[YesNoAnswer]
+    companyDetailsConfirmed: Option[YesNoAnswer]
   ) extends UserAnswers {
     val userAnswersType: UserAnswersType = UserAnswersType.Incomplete
   }
@@ -63,7 +63,7 @@ object UserAnswers {
     saIncomeDeclared: Option[YesNoAnswer],
     entityType: Option[EntityType],
     crn: Option[CRN],
-    companyNameConfirmed: Option[YesNoAnswer]
+    companyDetailsConfirmed: Option[YesNoAnswer]
   ) extends UserAnswers {
     val userAnswersType: UserAnswersType = UserAnswersType.Complete
   }
@@ -79,7 +79,7 @@ object UserAnswers {
         c.saIncomeDeclared,
         c.entityType,
         c.crn,
-        c.companyNameConfirmed
+        c.companyDetailsConfirmed
       )
 
   }
