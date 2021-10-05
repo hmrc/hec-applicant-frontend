@@ -17,8 +17,6 @@
 package uk.gov.hmrc.hecapplicantfrontend.controllers
 
 import cats.data.EitherT
-import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.CompanyRetrievedData
-import uk.gov.hmrc.hecapplicantfrontend.models.ids.CTUTR
 import cats.implicits._
 import com.google.inject.Inject
 import play.api.data.Form
@@ -26,9 +24,10 @@ import play.api.data.Forms.{mapping, of}
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, RequestWithSessionData, SessionDataAction}
-import uk.gov.hmrc.hecapplicantfrontend.models.ids.CRN
-import uk.gov.hmrc.hecapplicantfrontend.models.views.CompanyNameConfirmedOption
+import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.CompanyRetrievedData
 import uk.gov.hmrc.hecapplicantfrontend.models._
+import uk.gov.hmrc.hecapplicantfrontend.models.ids.CTUTR
+import uk.gov.hmrc.hecapplicantfrontend.models.views.CompanyNameConfirmedOption
 import uk.gov.hmrc.hecapplicantfrontend.services.{JourneyService, TaxCheckService}
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging.LoggerOps
 import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging, TimeProvider}
@@ -84,8 +83,8 @@ class CompanyDetailsController @Inject() (
 
   val confirmCompanyDetailsSubmit: Action[AnyContent] =
     authAction.andThen(sessionDataAction).async { implicit request =>
-      def internalServerError(errorMessage: String) = {
-        logger.warn(errorMessage)
+      def internalServerError(errorMessage: String)(e: Error) = {
+        logger.warn(errorMessage, e)
         InternalServerError
       }
 
@@ -96,10 +95,7 @@ class CompanyDetailsController @Inject() (
             updatedSession
           )
           .fold(
-            { e =>
-              logger.warn("Could not update session and proceed", e)
-              InternalServerError
-            },
+            internalServerError("Could not update session and proceed"),
             Redirect
           )
 
@@ -121,45 +117,42 @@ class CompanyDetailsController @Inject() (
           }
         }
 
-      def fetchDataAndProceed(crn: CRN, updatedUserAnswers: UserAnswers): Future[Result] = {
-        val updatedSession = for {
-          desCtutr    <- taxCheckService.getCtutr(crn)
-          companyData <-
+      def fetchDataAndProceed(companyDetailsConfirmed: YesNoAnswer): Future[Result] = {
+        val result = for {
+          crn                 <- EitherT.fromOption[Future](
+                                   request.sessionData.userAnswers.fold(_.crn, _.crn),
+                                   Error("No CRN found in session")
+                                 )
+          desCtutr            <- taxCheckService.getCtutr(crn)
+          companyData         <-
             EitherT.fromEither[Future](request.sessionData.retrievedUserData match {
               case companyData: RetrievedApplicantData.CompanyRetrievedData =>
                 Right(companyData)
               case _: RetrievedApplicantData.IndividualRetrievedData        =>
                 Left(Error("Individual applicant data found in company journey"))
             })
-          ctStatusOpt <- fetchCTStatus(desCtutr, companyData)
-        } yield {
-          val updatedRetrievedData = companyData.copy(desCtutr = Some(desCtutr), ctStatus = ctStatusOpt)
-          request.sessionData.copy(
-            retrievedUserData = updatedRetrievedData,
-            userAnswers = updatedUserAnswers
-          )
-        }
+          ctStatusOpt         <- fetchCTStatus(desCtutr, companyData)
+          updatedRetrievedData = companyData.copy(desCtutr = Some(desCtutr), ctStatus = ctStatusOpt)
+          updatedUserAnswers   = request.sessionData.userAnswers
+                                   .unset(_.companyDetailsConfirmed)
+                                   .copy(companyDetailsConfirmed = Some(companyDetailsConfirmed))
+          updatedSession       = request.sessionData.copy(
+                                   retrievedUserData = updatedRetrievedData,
+                                   userAnswers = updatedUserAnswers
+                                 )
+          result              <- EitherT[Future, Error, Result](callUpdateAndNext(updatedSession).map(Right[Error, Result]))
+        } yield result
 
-        updatedSession.foldF(
-          { e =>
-            logger.warn("Could not update session and proceed", e)
-            Future.successful(InternalServerError)
-          },
-          callUpdateAndNext
+        result.fold(
+          internalServerError("Could not update session and proceed"),
+          identity
         )
       }
 
       def handleValidAnswer(companyDetailsConfirmed: YesNoAnswer): Future[Result] =
         companyDetailsConfirmed match {
           case YesNoAnswer.Yes =>
-            val updatedUserAnswers = request.sessionData.userAnswers
-              .unset(_.companyDetailsConfirmed)
-              .copy(companyDetailsConfirmed = Some(companyDetailsConfirmed))
-            val crnOpt             = request.sessionData.userAnswers.fold(_.crn, _.crn)
-            crnOpt match {
-              case Some(crn) => fetchDataAndProceed(crn, updatedUserAnswers)
-              case None      => internalServerError("No CRN found in session")
-            }
+            fetchDataAndProceed(companyDetailsConfirmed)
 
           case YesNoAnswer.No =>
             // wipe CRN answer prior to navigating to next page

@@ -276,7 +276,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
             sys.error("This should never happen, individual data shouldn't be present in company journey")
         }
       case Some(YesNoAnswer.No)  => routes.CRNController.companyRegistrationNumber()
-      case None                  => sys.error("This should never happen, individual data shouldn't be present in company journey")
+      case None                  => sys.error("Confirm company details answer was not found")
     }
 
 }
