@@ -201,6 +201,10 @@ sautrNotFound.problem.p1 = You’ll need to <a href="{0}" class="govuk-link">con
 noReturnFound.title = You cannot do a tax check at the moment
 noReturnFound.p1 = You will need to <a href="{0}" class="govuk-link">contact HMRC</a> before doing your tax check.
 
+# Cannot do tax check
+cannotDoTaxCheck.title = You cannot do a tax check at the moment
+cannotDoTaxCheck.p1 = You will need to <a href="{0}" class="govuk-link">contact HMRC</a> before doing your tax check.
+
 # SA Income Declared
 saIncomeDeclared.title = Did you include income you earned using this type of licence in your tax return?
 saIncomeDeclared.yes = Yes

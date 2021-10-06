@@ -23,6 +23,7 @@ import play.api.data.Form
 import play.api.data.Forms.{mapping, of}
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
+import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, RequestWithSessionData, SessionDataAction}
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.CompanyRetrievedData
 import uk.gov.hmrc.hecapplicantfrontend.models._
@@ -44,8 +45,9 @@ class CompanyDetailsController @Inject() (
   taxCheckService: TaxCheckService,
   timeProvider: TimeProvider,
   confirmCompanyNamePage: html.ConfirmCompanyName,
+  cannotDoTaxCheckPage: html.CannotDoTaxCheck,
   mcc: MessagesControllerComponents
-)(implicit ec: ExecutionContext)
+)(implicit appConfig: AppConfig, ec: ExecutionContext)
     extends FrontendController(mcc)
     with I18nSupport
     with Logging {
@@ -188,7 +190,8 @@ class CompanyDetailsController @Inject() (
   }
 
   val cannotDoTaxCheck: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
-    Ok(s"${request.sessionData}")
+    val back = journeyService.previous(routes.CompanyDetailsController.cannotDoTaxCheck())
+    Ok(cannotDoTaxCheckPage(back))
   }
 }
 
