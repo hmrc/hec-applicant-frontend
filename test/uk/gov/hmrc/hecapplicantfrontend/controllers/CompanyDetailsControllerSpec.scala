@@ -218,10 +218,12 @@ class CompanyDetailsControllerSpec
         }
       }
 
+      val date                 = LocalDate.now
+      val (startDate, endDate) = (date.minusYears(2).plusDays(1), date.minusYears(1))
+
       "return an internal server error" when {
 
         "the call to fetch CT status fails" in {
-          val date    = LocalDate.now
           val answers = UserAnswers.empty.copy(crn = Some(CRN("crn")))
           // session contains CTUTR from enrolments
           val session = HECSession(companyRetrievedData.copy(ctutr = Some(CTUTR("ctutr"))), answers, None)
@@ -231,7 +233,7 @@ class CompanyDetailsControllerSpec
             mockGetSession(session)
             mockTaxCheckServiceGetCtutr(CRN("crn"))(Right(Some(CTUTR("ctutr"))))
             mockTimeProviderToday(date)
-            mockTaxCheckServiceGetCtStatus(CTUTR("ctutr"), date.minusYears(2), date.minusYears(1))(
+            mockTaxCheckServiceGetCtStatus(CTUTR("ctutr"), startDate, endDate)(
               Left(Error("fetch ct status failed"))
             )
           }
@@ -240,7 +242,6 @@ class CompanyDetailsControllerSpec
         }
 
         "the call to update and next fails" in {
-          val date        = LocalDate.now
           val answers     = UserAnswers.empty.copy(crn = Some(CRN("crn")))
           // session contains CTUTR from enrolments
           val companyData = companyRetrievedData.copy(ctutr = Some(CTUTR("ctutr")))
@@ -258,7 +259,7 @@ class CompanyDetailsControllerSpec
             mockGetSession(session)
             mockTaxCheckServiceGetCtutr(CRN("crn"))(Right(Some(CTUTR("ctutr"))))
             mockTimeProviderToday(date)
-            mockTaxCheckServiceGetCtStatus(CTUTR("ctutr"), date.minusYears(2), date.minusYears(1))(
+            mockTaxCheckServiceGetCtStatus(CTUTR("ctutr"), startDate, endDate)(
               Right(Some(ctStatusResponse))
             )
             mockJourneyServiceUpdateAndNext(
@@ -279,7 +280,6 @@ class CompanyDetailsControllerSpec
 
         "user answers with a Yes and all data fetches are successful" when {
           "the enrolment and DES CTUTRs match" in {
-            val date        = LocalDate.now
             val answers     = UserAnswers.empty.copy(crn = Some(CRN("crn")))
             // session contains CTUTR from enrolments
             val companyData = companyRetrievedData.copy(ctutr = Some(CTUTR("ctutr")))
@@ -297,7 +297,7 @@ class CompanyDetailsControllerSpec
               mockGetSession(session)
               mockTaxCheckServiceGetCtutr(CRN("crn"))(Right(Some(CTUTR("ctutr"))))
               mockTimeProviderToday(date)
-              mockTaxCheckServiceGetCtStatus(CTUTR("ctutr"), date.minusYears(2), date.minusYears(1))(
+              mockTaxCheckServiceGetCtStatus(CTUTR("ctutr"), startDate, endDate)(
                 Right(Some(ctStatusResponse))
               )
               mockJourneyServiceUpdateAndNext(

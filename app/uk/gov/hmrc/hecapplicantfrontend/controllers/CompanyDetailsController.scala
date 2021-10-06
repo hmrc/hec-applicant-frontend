@@ -209,9 +209,6 @@ object CompanyDetailsController {
     * before the day on which the tax check is initiated. (These are the dates used when retrieving the Corporation tax
     * records for the Applicant's company using the Get Company Accounting Periods API.)
     */
-  def calculateLookbackPeriod(today: LocalDate): (LocalDate, LocalDate) = {
-    val minus1Year  = today.minusYears(1)
-    val minus2Years = today.minusYears(2)
-    (minus2Years, minus1Year)
-  }
+  def calculateLookbackPeriod(today: LocalDate): (LocalDate, LocalDate) =
+    today.minusYears(2).plusDays(1) -> today.minusYears(1)
 }
