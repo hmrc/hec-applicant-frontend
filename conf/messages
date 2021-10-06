@@ -1,6 +1,6 @@
 lang.code = en
 gov.uk = GOV.UK
-service.name = Do a tax check when renewing or applying for a licence
+service.name = Do a tax check when applying for a licence
 service.text = This is your new service
 service.phase = beta
 phaseBanner.text = This is a new service – your <a class="govuk-link" href="{0}">feedback</a> will help us to improve it.
