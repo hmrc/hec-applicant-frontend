@@ -87,6 +87,8 @@ class TaxSituationControllerSpec
   val companyRetrievedData =
     CompanyRetrievedData(GGCredId(""), None, None, None, List.empty)
 
+  val date = LocalDate.of(2020, 10, 24)
+
   "TaxSituationController" when {
 
     "handling request to tax situation page " must {
@@ -557,6 +559,7 @@ class TaxSituationControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(updatedSession)
+            mockTimeProviderToday(date)
             mockJourneyServiceGetPrevious(routes.TaxSituationController.taxSituation(), updatedSession)(
               mockPreviousCall
             )
@@ -573,6 +576,7 @@ class TaxSituationControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(updatedSession)
+            mockTimeProviderToday(date)
             mockJourneyServiceGetPrevious(routes.TaxSituationController.taxSituation(), updatedSession)(
               mockPreviousCall
             )
@@ -589,6 +593,7 @@ class TaxSituationControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(updatedSession)
+            mockTimeProviderToday(date)
             mockJourneyServiceGetPrevious(routes.TaxSituationController.taxSituation(), updatedSession)(
               mockPreviousCall
             )
@@ -611,6 +616,7 @@ class TaxSituationControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
+            mockTimeProviderToday(date)
           }
 
           status(performAction()) shouldBe INTERNAL_SERVER_ERROR
@@ -622,6 +628,7 @@ class TaxSituationControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
+            mockTimeProviderToday(date)
           }
 
           status(performAction()) shouldBe INTERNAL_SERVER_ERROR
@@ -642,6 +649,7 @@ class TaxSituationControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
+            mockTimeProviderToday(date)
             mockJourneyServiceUpdateAndNext(
               routes.TaxSituationController.taxSituation(),
               session,
@@ -673,6 +681,7 @@ class TaxSituationControllerSpec
         inSequence {
           mockAuthWithNoRetrievals()
           mockGetSession(session)
+          mockTimeProviderToday(date)
           mockJourneyServiceUpdateAndNext(
             routes.TaxSituationController.taxSituation(),
             session,
@@ -708,6 +717,7 @@ class TaxSituationControllerSpec
         inSequence {
           mockAuthWithNoRetrievals()
           mockGetSession(session)
+          mockTimeProviderToday(date)
           mockGetSAStatus(statusResponse.sautr, statusResponse.taxYear)(Right(statusResponse))
           mockJourneyServiceUpdateAndNext(
             routes.TaxSituationController.taxSituation(),
@@ -738,6 +748,7 @@ class TaxSituationControllerSpec
         inSequence {
           mockAuthWithNoRetrievals()
           mockGetSession(session)
+          mockTimeProviderToday(date)
           mockGetSAStatus(SAUTR("utr"), TaxYear(2020))(Left(Error("")))
         }
 
@@ -758,6 +769,7 @@ class TaxSituationControllerSpec
             inSequence {
               mockAuthWithNoRetrievals()
               mockGetSession(session)
+              mockTimeProviderToday(date)
               mockJourneyServiceUpdateAndNext(
                 routes.TaxSituationController.taxSituation(),
                 session,
@@ -796,6 +808,7 @@ class TaxSituationControllerSpec
             inSequence {
               mockAuthWithNoRetrievals()
               mockGetSession(session)
+              mockTimeProviderToday(date)
               mockJourneyServiceUpdateAndNext(
                 routes.TaxSituationController.taxSituation(),
                 session,

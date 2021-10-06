@@ -34,7 +34,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
 import uk.gov.hmrc.hecapplicantfrontend.models.{SAStatusResponse, TaxSituation, TaxYear}
 import uk.gov.hmrc.hecapplicantfrontend.services.{JourneyService, TaxCheckService}
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging.LoggerOps
-import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging, TimeProvider, TimeUtils}
+import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging, TimeProvider}
 import uk.gov.hmrc.hecapplicantfrontend.models.Error
 import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -79,7 +79,7 @@ class TaxSituationController @Inject() (
   }
 
   val taxSituationSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
-    val taxYear = getTaxYear(TimeUtils.today())
+    val taxYear = getTaxYear(timeProvider.currentDate)
 
     def fetchSAStatus(
       individualRetrievedData: IndividualRetrievedData,
