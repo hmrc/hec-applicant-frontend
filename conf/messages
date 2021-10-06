@@ -246,3 +246,9 @@ confirmCompanyName.yes = Yes
 confirmCompanyName.no = No
 confirmCompanyName.error.required = Select yes if this is the company you want to do the tax check for
 confirmCompanyName.error.invalid = Select yes if this is the company you want to do the tax check for
+
+# CTUTR not matched
+ctutrNotMatched.title = You cannot use this service
+
+# No accounting period found
+noAccountingPeriodFound.title = Your Corporation Tax accounting period

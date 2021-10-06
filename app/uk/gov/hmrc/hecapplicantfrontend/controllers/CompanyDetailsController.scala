@@ -46,6 +46,8 @@ class CompanyDetailsController @Inject() (
   timeProvider: TimeProvider,
   confirmCompanyNamePage: html.ConfirmCompanyName,
   cannotDoTaxCheckPage: html.CannotDoTaxCheck,
+  ctutrNotMatchedPage: html.CtutrNotMatched,
+  noAccountingPeriodFoundPage: html.NoAccountingPeriodFound,
   mcc: MessagesControllerComponents
 )(implicit appConfig: AppConfig, ec: ExecutionContext)
     extends FrontendController(mcc)
@@ -171,18 +173,18 @@ class CompanyDetailsController @Inject() (
         .fold(getFuturePage, handleValidAnswer)
     }
 
-  // TODO implement this page - https://hec-applicant-tax-check.herokuapp.com/v6/no-account-period-found
   val noAccountingPeriod: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
-    Ok(s"${request.sessionData}")
+    val back = journeyService.previous(routes.CompanyDetailsController.noAccountingPeriod())
+    Ok(noAccountingPeriodFoundPage(back))
   }
 
   val chargeableForCorporationTax: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
     Ok(s"${request.sessionData}")
   }
 
-  // TODO implement this page - https://hec-applicant-tax-check.herokuapp.com/v6/exit-pages/ct-utr-cannot-match
   val ctutrNotMatched: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
-    Ok(s"${request.sessionData}")
+    val back = journeyService.previous(routes.CompanyDetailsController.ctutrNotMatched())
+    Ok(ctutrNotMatchedPage(back))
   }
 
   val enterCtutr: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
