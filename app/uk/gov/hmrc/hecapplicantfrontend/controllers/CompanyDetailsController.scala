@@ -25,9 +25,9 @@ import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, RequestWithSessionData, SessionDataAction}
-import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.CompanyRetrievedData
+import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRetrievedData, IndividualRetrievedData}
 import uk.gov.hmrc.hecapplicantfrontend.models._
-import uk.gov.hmrc.hecapplicantfrontend.models.ids.CTUTR
+import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR}
 import uk.gov.hmrc.hecapplicantfrontend.models.views.CompanyNameConfirmedOption
 import uk.gov.hmrc.hecapplicantfrontend.services.{JourneyService, TaxCheckService}
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging.LoggerOps
@@ -54,35 +54,30 @@ class CompanyDetailsController @Inject() (
     with I18nSupport
     with Logging {
 
-  private def getPage(form: Form[YesNoAnswer])(implicit request: RequestWithSessionData[_]): Result = {
+  private def getPage(form: Form[YesNoAnswer], companyName: CompanyHouseName)(implicit
+    request: RequestWithSessionData[_]
+  ): Result = {
     val back = journeyService.previous(routes.CompanyDetailsController.confirmCompanyDetails())
-    request.sessionData.retrievedUserData match {
-      case RetrievedApplicantData.CompanyRetrievedData(_, _, _, Some(companyHouseName), _, _, _) =>
-        Ok(
-          confirmCompanyNamePage(
-            form,
-            back,
-            companyHouseName.name,
-            CompanyDetailsController.companyNameConfirmedOptions
-          )
-        )
-      case RetrievedApplicantData.CompanyRetrievedData(_, _, _, None, _, _, _)                   =>
-        logger.warn("Missing company name")
-        InternalServerError
-      case _: RetrievedApplicantData.IndividualRetrievedData                                     =>
-        logger.warn("Individual applicant shouldn't call company confirm page")
-        InternalServerError
-    }
+    Ok(
+      confirmCompanyNamePage(
+        form,
+        back,
+        companyName.name,
+        CompanyDetailsController.companyNameConfirmedOptions
+      )
+    )
   }
 
-  val confirmCompanyDetails: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
-    val companyDetailsConfirmed =
-      request.sessionData.userAnswers.fold(_.companyDetailsConfirmed, _.companyDetailsConfirmed)
-    val form = {
-      val emptyForm = CompanyDetailsController.confirmCompanyNameForm(YesNoAnswer.values)
-      companyDetailsConfirmed.fold(emptyForm)(emptyForm.fill)
+  val confirmCompanyDetails: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
+    ensureCompanyRetrievedData(request.sessionData) { (_, companyHouseName) =>
+      val companyDetailsConfirmed =
+        request.sessionData.userAnswers.fold(_.companyDetailsConfirmed, _.companyDetailsConfirmed)
+      val form = {
+        val emptyForm = CompanyDetailsController.confirmCompanyNameForm(YesNoAnswer.values)
+        companyDetailsConfirmed.fold(emptyForm)(emptyForm.fill)
+      }
+      Future.successful(getPage(form, companyHouseName))
     }
-    getPage(form)
   }
 
   val confirmCompanyDetailsSubmit: Action[AnyContent] =
@@ -113,20 +108,13 @@ class CompanyDetailsController @Inject() (
           }
         }
 
-      def fetchDataAndProceed(companyDetailsConfirmed: YesNoAnswer): Future[Result] = {
+      def fetchDataAndProceed(
+        companyDetailsConfirmed: YesNoAnswer,
+        companyData: CompanyRetrievedData,
+        crn: CRN
+      ): Future[Result] = {
         val result = for {
-          crn                 <- EitherT.fromOption[Future](
-                                   request.sessionData.userAnswers.fold(_.crn, _.crn),
-                                   Error("No CRN found in session")
-                                 )
           desCtutr            <- taxCheckService.getCtutr(crn)
-          companyData         <-
-            EitherT.fromEither[Future](request.sessionData.retrievedUserData match {
-              case companyData: RetrievedApplicantData.CompanyRetrievedData =>
-                Right(companyData)
-              case _: RetrievedApplicantData.IndividualRetrievedData        =>
-                Left(Error("Individual applicant data found in company journey"))
-            })
           ctStatusOpt         <- fetchCTStatus(desCtutr, companyData)
           updatedRetrievedData = companyData.copy(desCtutr = desCtutr, ctStatus = ctStatusOpt)
           updatedUserAnswers   = request.sessionData.userAnswers
@@ -145,10 +133,12 @@ class CompanyDetailsController @Inject() (
         )
       }
 
-      def handleValidAnswer(companyDetailsConfirmed: YesNoAnswer): Future[Result] =
+      def handleValidAnswer(companyData: CompanyRetrievedData, crn: CRN)(
+        companyDetailsConfirmed: YesNoAnswer
+      ): Future[Result] =
         companyDetailsConfirmed match {
           case YesNoAnswer.Yes =>
-            fetchDataAndProceed(companyDetailsConfirmed)
+            fetchDataAndProceed(companyDetailsConfirmed, companyData, crn)
 
           case YesNoAnswer.No =>
             // wipe CRN answer prior to navigating to next page
@@ -159,13 +149,19 @@ class CompanyDetailsController @Inject() (
             )
         }
 
-      def getFuturePage(form: Form[YesNoAnswer])(implicit request: RequestWithSessionData[_]) =
-        Future.successful(getPage(form))
+      def getFuturePage(companyHouseName: CompanyHouseName)(form: Form[YesNoAnswer])(implicit
+        request: RequestWithSessionData[_]
+      ) =
+        Future.successful(getPage(form, companyHouseName))
 
-      CompanyDetailsController
-        .confirmCompanyNameForm(YesNoAnswer.values)
-        .bindFromRequest()
-        .fold(getFuturePage, handleValidAnswer)
+      ensureCompanyRetrievedData(request.sessionData) { (companyData, companyHouseName) =>
+        ensureCorrectUserAnswersState(request.sessionData) { crn =>
+          CompanyDetailsController
+            .confirmCompanyNameForm(YesNoAnswer.values)
+            .bindFromRequest()
+            .fold(getFuturePage(companyHouseName), handleValidAnswer(companyData, crn))
+        }
+      }
     }
 
   val noAccountingPeriod: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
@@ -190,6 +186,30 @@ class CompanyDetailsController @Inject() (
     val back = journeyService.previous(routes.CompanyDetailsController.cannotDoTaxCheck())
     Ok(cannotDoTaxCheckPage(back))
   }
+
+  private def ensureCompanyRetrievedData(
+    session: HECSession
+  )(f: (CompanyRetrievedData, CompanyHouseName) => Future[Result]): Future[Result] =
+    session.retrievedUserData match {
+      case CompanyRetrievedData(_, _, _, None, _, _, _)                  =>
+        logger.warn("Missing company name")
+        InternalServerError
+      case _: IndividualRetrievedData                                    =>
+        logger.warn("Individual applicant shouldn't call company confirm page")
+        InternalServerError
+      case c @ CompanyRetrievedData(_, _, _, Some(companyName), _, _, _) => f(c, companyName)
+    }
+
+  private def ensureCorrectUserAnswersState(
+    session: HECSession
+  )(f: CRN => Future[Result]): Future[Result] =
+    session.userAnswers match {
+      case UserAnswers.IncompleteUserAnswers(_, _, _, _, _, _, Some(crn), _) => f(crn)
+      case UserAnswers.CompleteUserAnswers(_, _, _, _, _, _, Some(crn), _)   => f(crn)
+      case _                                                                 =>
+        logger.warn("CRN is not populated in user answers")
+        InternalServerError
+    }
 }
 
 object CompanyDetailsController {

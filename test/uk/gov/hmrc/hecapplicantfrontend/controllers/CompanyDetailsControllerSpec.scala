@@ -164,9 +164,6 @@ class CompanyDetailsControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockJourneyServiceGetPrevious(routes.CompanyDetailsController.confirmCompanyDetails(), session)(
-              mockPreviousCall
-            )
           }
 
           status(performAction()) shouldBe INTERNAL_SERVER_ERROR
@@ -188,9 +185,6 @@ class CompanyDetailsControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockJourneyServiceGetPrevious(routes.CompanyDetailsController.confirmCompanyDetails(), session)(
-              mockPreviousCall
-            )
           }
 
           status(performAction()) shouldBe INTERNAL_SERVER_ERROR
@@ -207,7 +201,7 @@ class CompanyDetailsControllerSpec
 
       "show a form error" when {
 
-        val session = HECSession(companyRetrievedData, UserAnswers.empty, None)
+        val session = HECSession(companyRetrievedData, UserAnswers.empty.copy(crn = Some(CRN("crn"))), None)
 
         "nothing has been submitted" in {
           inSequence {
@@ -295,7 +289,6 @@ class CompanyDetailsControllerSpec
             inSequence {
               mockAuthWithNoRetrievals()
               mockGetSession(session)
-              mockTaxCheckServiceGetCtutr(CRN("crn"))(Right(Some(CTUTR("ctutr"))))
             }
 
             status(performAction("confirmCompanyName" -> "0")) shouldBe INTERNAL_SERVER_ERROR
