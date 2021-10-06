@@ -267,8 +267,14 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
                 case None    => routes.CompanyDetailsController.noAccountingPeriod()
               }
             } else {
-              routes.CompanyDetailsController.ctutrNotMatched() // TODO this might change
+              routes.CompanyDetailsController.ctutrNotMatched()
             }
+          // enrolment and DES CTUTRs are present, but CT status couldn't be fetched
+          case CompanyRetrievedData(_, Some(_), _, _, Some(_), None, _)                      =>
+            routes.CompanyDetailsController.cannotDoTaxCheck()
+          // DES CTUTR not fetched
+          case CompanyRetrievedData(_, _, _, _, None, _, _)                                  =>
+            routes.CompanyDetailsController.cannotDoTaxCheck()
           case CompanyRetrievedData(_, None, _, _, _, _, _)                                  => routes.CompanyDetailsController.enterCtutr()
           case CompanyRetrievedData(_, _, _, _, _, _, _)                                     =>
             sys.error("Company data is missing desCtutr or ct status info")

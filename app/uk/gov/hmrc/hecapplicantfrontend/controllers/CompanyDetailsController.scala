@@ -96,15 +96,16 @@ class CompanyDetailsController @Inject() (
           )
 
       def fetchCTStatus(
-        desCtutr: CTUTR,
+        desCtutrOpt: Option[CTUTR],
         companyData: CompanyRetrievedData
       ): EitherT[Future, Error, Option[CTStatusResponse]] =
         companyData.ctutr flatTraverse [EitherT[Future, Error, *], CTStatusResponse] { ctutr =>
-          if (desCtutr.value === ctutr.value) {
-            val (start, end) = CompanyDetailsController.calculateLookbackPeriod(timeProvider.currentDate)
-            taxCheckService.getCTStatus(desCtutr, start, end)
-          } else {
-            EitherT.fromEither[Future](Right[Error, Option[CTStatusResponse]](None))
+          desCtutrOpt match {
+            case Some(desCtutr) if desCtutr.value === ctutr.value =>
+              val (start, end) = CompanyDetailsController.calculateLookbackPeriod(timeProvider.currentDate)
+              taxCheckService.getCTStatus(desCtutr, start, end)
+            case _                                                =>
+              EitherT.fromEither[Future](Right[Error, Option[CTStatusResponse]](None))
           }
         }
 
@@ -114,7 +115,12 @@ class CompanyDetailsController @Inject() (
                                    request.sessionData.userAnswers.fold(_.crn, _.crn),
                                    Error("No CRN found in session")
                                  )
-          desCtutr            <- taxCheckService.getCtutr(crn)
+          desCtutr            <- EitherT[Future, Error, Option[CTUTR]](
+                                   taxCheckService
+                                     .getCtutr(crn)
+                                     .fold(_ => None, Some(_))
+                                     .map(o => Right(o))
+                                 )
           companyData         <-
             EitherT.fromEither[Future](request.sessionData.retrievedUserData match {
               case companyData: RetrievedApplicantData.CompanyRetrievedData =>
@@ -123,7 +129,7 @@ class CompanyDetailsController @Inject() (
                 Left(Error("Individual applicant data found in company journey"))
             })
           ctStatusOpt         <- fetchCTStatus(desCtutr, companyData)
-          updatedRetrievedData = companyData.copy(desCtutr = Some(desCtutr), ctStatus = ctStatusOpt)
+          updatedRetrievedData = companyData.copy(desCtutr = desCtutr, ctStatus = ctStatusOpt)
           updatedUserAnswers   = request.sessionData.userAnswers
                                    .unset(_.companyDetailsConfirmed)
                                    .copy(companyDetailsConfirmed = Some(companyDetailsConfirmed))
@@ -178,6 +184,10 @@ class CompanyDetailsController @Inject() (
   }
 
   val enterCtutr: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
+    Ok(s"${request.sessionData}")
+  }
+
+  val cannotDoTaxCheck: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
     Ok(s"${request.sessionData}")
   }
 }

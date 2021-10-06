@@ -220,19 +220,6 @@ class CompanyDetailsControllerSpec
 
       "return an internal server error" when {
 
-        "the call to fetch CTUTR from CRN fails" in {
-          val answers = UserAnswers.empty.copy(crn = Some(CRN("crn")))
-          val session = HECSession(companyRetrievedData, answers, None)
-
-          inSequence {
-            mockAuthWithNoRetrievals()
-            mockGetSession(session)
-            mockTaxCheckServiceGetCtutr(CRN("crn"))(Left(Error("fetch ctutr failed")))
-          }
-
-          status(performAction("confirmCompanyName" -> "0")) shouldBe INTERNAL_SERVER_ERROR
-        }
-
         "the call to fetch CT status fails" in {
           val date    = LocalDate.now
           val answers = UserAnswers.empty.copy(crn = Some(CRN("crn")))

@@ -718,6 +718,62 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             await(result.value) shouldBe Right(routes.CompanyDetailsController.ctutrNotMatched())
           }
 
+          "DES CTUTR could not be fetched" in {
+            val companyData    = companyRetrievedData.copy(
+              companyName = Some(CompanyHouseName("Test tech Ltd")),
+              ctutr = Some(CTUTR("enrolments-ctutr")),
+              desCtutr = None,
+              ctStatus = None
+            )
+            val session        = HECSession(companyData, UserAnswers.empty, None)
+            val updatedSession =
+              HECSession(
+                companyData,
+                UserAnswers.empty.copy(
+                  crn = Some(CRN("1234567")),
+                  companyDetailsConfirmed = Some(YesNoAnswer.Yes)
+                ),
+                None
+              )
+
+            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+            mockStoreSession(updatedSession)(Right(()))
+
+            val result = journeyService.updateAndNext(
+              routes.CompanyDetailsController.confirmCompanyDetails(),
+              updatedSession
+            )
+            await(result.value) shouldBe Right(routes.CompanyDetailsController.cannotDoTaxCheck())
+          }
+
+          "CT status could not be fetched" in {
+            val companyData    = companyRetrievedData.copy(
+              companyName = Some(CompanyHouseName("Test tech Ltd")),
+              ctutr = Some(CTUTR("enrolments-ctutr")),
+              desCtutr = Some(CTUTR("des-ctutr")),
+              ctStatus = None
+            )
+            val session        = HECSession(companyData, UserAnswers.empty, None)
+            val updatedSession =
+              HECSession(
+                companyData,
+                UserAnswers.empty.copy(
+                  crn = Some(CRN("1234567")),
+                  companyDetailsConfirmed = Some(YesNoAnswer.Yes)
+                ),
+                None
+              )
+
+            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+            mockStoreSession(updatedSession)(Right(()))
+
+            val result = journeyService.updateAndNext(
+              routes.CompanyDetailsController.confirmCompanyDetails(),
+              updatedSession
+            )
+            await(result.value) shouldBe Right(routes.CompanyDetailsController.cannotDoTaxCheck())
+          }
+
           "enrolments and DES CTUTRs match" when {
             def testForCTStatus(status: CTStatus) = {
               val companyData               = companyRetrievedData.copy(
