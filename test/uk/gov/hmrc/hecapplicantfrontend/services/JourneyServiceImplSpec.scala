@@ -743,7 +743,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
               routes.CompanyDetailsController.confirmCompanyDetails(),
               updatedSession
             )
-            await(result.value) shouldBe Right(routes.CompanyDetailsController.cannotDoTaxCheck())
+            await(result.value) shouldBe Right(routes.CompanyDetailsController.ctutrNotMatched())
           }
 
           "CT status could not be fetched" in {

@@ -55,7 +55,7 @@ trait TaxCheckService {
     hc: HeaderCarrier
   ): EitherT[Future, Error, Option[CTStatusResponse]]
 
-  def getCtutr(crn: CRN)(implicit hc: HeaderCarrier): EitherT[Future, Error, CTUTR]
+  def getCtutr(crn: CRN)(implicit hc: HeaderCarrier): EitherT[Future, Error, Option[CTUTR]]
 
   def getUnexpiredTaxCheckCodes()(implicit hc: HeaderCarrier): EitherT[Future, Error, List[TaxCheckListItem]]
 
@@ -108,14 +108,17 @@ class TaxCheckServiceImpl @Inject() (hecConnector: HECConnector)(implicit ec: Ex
         }
       }
 
-  def getCtutr(crn: CRN)(implicit hc: HeaderCarrier): EitherT[Future, Error, CTUTR] =
+  def getCtutr(crn: CRN)(implicit hc: HeaderCarrier): EitherT[Future, Error, Option[CTUTR]] =
     hecConnector
       .getCtutr(crn)
       .subflatMap { response =>
-        if (response.status =!= OK)
-          Left(Error(s"Call to get CTUTR came back with status ${response.status}. Body is ${response.body}"))
-        else {
-          response.parseJSON[CTUTRFromCRNResponse].map(_.ctutr).leftMap(Error(_))
+        response.status match {
+          case NOT_FOUND               =>
+            Right(None)
+          case status if status =!= OK =>
+            Left(Error(s"Call to get CTUTR came back with status ${response.status}. Body is ${response.body}"))
+          case _                       =>
+            response.parseJSON[CTUTRFromCRNResponse].map(r => Some(r.ctutr)).leftMap(Error(_))
         }
       }
 

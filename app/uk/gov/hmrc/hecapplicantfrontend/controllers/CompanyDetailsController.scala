@@ -119,12 +119,7 @@ class CompanyDetailsController @Inject() (
                                    request.sessionData.userAnswers.fold(_.crn, _.crn),
                                    Error("No CRN found in session")
                                  )
-          desCtutr            <- EitherT[Future, Error, Option[CTUTR]](
-                                   taxCheckService
-                                     .getCtutr(crn)
-                                     .fold(_ => None, Some(_))
-                                     .map(o => Right(o))
-                                 )
+          desCtutr            <- taxCheckService.getCtutr(crn)
           companyData         <-
             EitherT.fromEither[Future](request.sessionData.retrievedUserData match {
               case companyData: RetrievedApplicantData.CompanyRetrievedData =>

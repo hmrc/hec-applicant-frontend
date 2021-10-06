@@ -58,7 +58,7 @@ class CompanyDetailsControllerSpec
 
   def mockTimeProviderToday(d: LocalDate) = (mockTimeProvider.currentDate _).expects().returning(d)
 
-  def mockTaxCheckServiceGetCtutr(crn: CRN)(result: Either[Error, CTUTR]) =
+  def mockTaxCheckServiceGetCtutr(crn: CRN)(result: Either[Error, Option[CTUTR]]) =
     (mockTaxCheckService
       .getCtutr(_: CRN)(_: HeaderCarrier))
       .expects(crn, *)
@@ -229,7 +229,7 @@ class CompanyDetailsControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockTaxCheckServiceGetCtutr(CRN("crn"))(Right(CTUTR("ctutr")))
+            mockTaxCheckServiceGetCtutr(CRN("crn"))(Right(Some(CTUTR("ctutr"))))
             mockTimeProviderToday(date)
             mockTaxCheckServiceGetCtStatus(CTUTR("ctutr"), date.minusYears(2), date.minusYears(1))(
               Left(Error("fetch ct status failed"))
@@ -256,7 +256,7 @@ class CompanyDetailsControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockTaxCheckServiceGetCtutr(CRN("crn"))(Right(CTUTR("ctutr")))
+            mockTaxCheckServiceGetCtutr(CRN("crn"))(Right(Some(CTUTR("ctutr"))))
             mockTimeProviderToday(date)
             mockTaxCheckServiceGetCtStatus(CTUTR("ctutr"), date.minusYears(2), date.minusYears(1))(
               Right(Some(ctStatusResponse))
@@ -295,7 +295,7 @@ class CompanyDetailsControllerSpec
             inSequence {
               mockAuthWithNoRetrievals()
               mockGetSession(session)
-              mockTaxCheckServiceGetCtutr(CRN("crn"))(Right(CTUTR("ctutr")))
+              mockTaxCheckServiceGetCtutr(CRN("crn"))(Right(Some(CTUTR("ctutr"))))
               mockTimeProviderToday(date)
               mockTaxCheckServiceGetCtStatus(CTUTR("ctutr"), date.minusYears(2), date.minusYears(1))(
                 Right(Some(ctStatusResponse))
@@ -326,7 +326,7 @@ class CompanyDetailsControllerSpec
             inSequence {
               mockAuthWithNoRetrievals()
               mockGetSession(session)
-              mockTaxCheckServiceGetCtutr(CRN("crn"))(Right(desCtutr))
+              mockTaxCheckServiceGetCtutr(CRN("crn"))(Right(Some(desCtutr)))
               mockJourneyServiceUpdateAndNext(
                 routes.CompanyDetailsController.confirmCompanyDetails(),
                 session,
