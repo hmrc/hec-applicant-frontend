@@ -24,10 +24,10 @@ import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{defaultAwaitTimeout, status}
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.CompanyRetrievedData
+import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRetrievedData, IndividualRetrievedData}
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.{CompleteUserAnswers, IncompleteUserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models._
-import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR, GGCredId}
+import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR, GGCredId, NINO}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.{JourneyService, TaxCheckService}
@@ -156,6 +156,46 @@ class CompanyDetailsControllerSpec
         }
 
       }
+
+      "return internal server error" when {
+        "company name is not populated" in {
+          val session = HECSession(companyRetrievedData.copy(companyName = None), UserAnswers.empty, None)
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockJourneyServiceGetPrevious(routes.CompanyDetailsController.confirmCompanyDetails(), session)(
+              mockPreviousCall
+            )
+          }
+
+          status(performAction()) shouldBe INTERNAL_SERVER_ERROR
+        }
+
+        "applicant is individual" in {
+          val individualData = IndividualRetrievedData(
+            GGCredId(""),
+            NINO(""),
+            None,
+            Name("", ""),
+            DateOfBirth(LocalDate.now()),
+            None,
+            None,
+            List.empty
+          )
+          val session        = HECSession(individualData, UserAnswers.empty, None)
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockJourneyServiceGetPrevious(routes.CompanyDetailsController.confirmCompanyDetails(), session)(
+              mockPreviousCall
+            )
+          }
+
+          status(performAction()) shouldBe INTERNAL_SERVER_ERROR
+        }
+      }
     }
 
     "handling submit on the confirm company name page" must {
@@ -223,55 +263,117 @@ class CompanyDetailsControllerSpec
 
       "return an internal server error" when {
 
-        "the call to fetch CT status fails" in {
-          val answers = UserAnswers.empty.copy(crn = Some(CRN("crn")))
-          // session contains CTUTR from enrolments
-          val session = HECSession(companyRetrievedData.copy(ctutr = Some(CTUTR("ctutr"))), answers, None)
+        "user answers with a Yes" when {
 
-          inSequence {
-            mockAuthWithNoRetrievals()
-            mockGetSession(session)
-            mockTaxCheckServiceGetCtutr(CRN("crn"))(Right(Some(CTUTR("ctutr"))))
-            mockTimeProviderToday(date)
-            mockTaxCheckServiceGetCtStatus(CTUTR("ctutr"), startDate, endDate)(
-              Left(Error("fetch ct status failed"))
-            )
+          "CRN is not populated" in {
+            val answers = UserAnswers.empty
+            // session contains CTUTR from enrolments
+            val session = HECSession(companyRetrievedData.copy(ctutr = Some(CTUTR("ctutr"))), answers, None)
+
+            inSequence {
+              mockAuthWithNoRetrievals()
+              mockGetSession(session)
+            }
+
+            status(performAction("confirmCompanyName" -> "0")) shouldBe INTERNAL_SERVER_ERROR
           }
 
-          status(performAction("confirmCompanyName" -> "0")) shouldBe INTERNAL_SERVER_ERROR
+          "the applicant type is individual" in {
+            val individualData = IndividualRetrievedData(
+              GGCredId(""),
+              NINO(""),
+              None,
+              Name("", ""),
+              DateOfBirth(LocalDate.now()),
+              None,
+              None,
+              List.empty
+            )
+            val answers        = UserAnswers.empty.copy(crn = Some(CRN("crn")))
+            val session        = HECSession(individualData, answers, None)
+
+            inSequence {
+              mockAuthWithNoRetrievals()
+              mockGetSession(session)
+              mockTaxCheckServiceGetCtutr(CRN("crn"))(Right(Some(CTUTR("ctutr"))))
+            }
+
+            status(performAction("confirmCompanyName" -> "0")) shouldBe INTERNAL_SERVER_ERROR
+          }
+
+          "the call to fetch CT status fails" in {
+            val answers = UserAnswers.empty.copy(crn = Some(CRN("crn")))
+            // session contains CTUTR from enrolments
+            val session = HECSession(companyRetrievedData.copy(ctutr = Some(CTUTR("ctutr"))), answers, None)
+
+            inSequence {
+              mockAuthWithNoRetrievals()
+              mockGetSession(session)
+              mockTaxCheckServiceGetCtutr(CRN("crn"))(Right(Some(CTUTR("ctutr"))))
+              mockTimeProviderToday(date)
+              mockTaxCheckServiceGetCtStatus(CTUTR("ctutr"), startDate, endDate)(
+                Left(Error("fetch ct status failed"))
+              )
+            }
+
+            status(performAction("confirmCompanyName" -> "0")) shouldBe INTERNAL_SERVER_ERROR
+          }
+
+          "the call to update and next fails" in {
+            val answers     = UserAnswers.empty.copy(crn = Some(CRN("crn")))
+            // session contains CTUTR from enrolments
+            val companyData = companyRetrievedData.copy(ctutr = Some(CTUTR("ctutr")))
+            val session     = HECSession(companyData, answers, None)
+
+            val updatedAnswers   = answers.copy(companyDetailsConfirmed = Some(YesNoAnswer.Yes))
+            val ctStatusResponse = CTStatusResponse(CTUTR("ctutr"), date, date, None)
+            val updatedSession   = session.copy(
+              userAnswers = updatedAnswers,
+              retrievedUserData = companyData.copy(desCtutr = companyData.ctutr, ctStatus = Some(ctStatusResponse))
+            )
+
+            inSequence {
+              mockAuthWithNoRetrievals()
+              mockGetSession(session)
+              mockTaxCheckServiceGetCtutr(CRN("crn"))(Right(Some(CTUTR("ctutr"))))
+              mockTimeProviderToday(date)
+              mockTaxCheckServiceGetCtStatus(CTUTR("ctutr"), startDate, endDate)(
+                Right(Some(ctStatusResponse))
+              )
+              mockJourneyServiceUpdateAndNext(
+                routes.CompanyDetailsController.confirmCompanyDetails(),
+                session,
+                updatedSession
+              )(
+                Left(Error("update and next failed"))
+              )
+            }
+
+            status(performAction("confirmCompanyName" -> "0")) shouldBe INTERNAL_SERVER_ERROR
+          }
         }
 
-        "the call to update and next fails" in {
-          val answers     = UserAnswers.empty.copy(crn = Some(CRN("crn")))
-          // session contains CTUTR from enrolments
-          val companyData = companyRetrievedData.copy(ctutr = Some(CTUTR("ctutr")))
-          val session     = HECSession(companyData, answers, None)
+        "user answers with a No" when {
+          "the call to update and next fails" in {
+            val answers = UserAnswers.empty.copy(crn = Some(CRN("crn")))
+            val session = HECSession(companyRetrievedData, answers, None)
 
-          val updatedAnswers   = answers.copy(companyDetailsConfirmed = Some(YesNoAnswer.Yes))
-          val ctStatusResponse = CTStatusResponse(CTUTR("ctutr"), date, date, None)
-          val updatedSession   = session.copy(
-            userAnswers = updatedAnswers,
-            retrievedUserData = companyData.copy(desCtutr = companyData.ctutr, ctStatus = Some(ctStatusResponse))
-          )
+            // should wipe out CRN answer if user says that the company name is incorrect
+            val updatedAnswers = answers.copy(crn = None)
+            val updatedSession = session.copy(userAnswers = updatedAnswers)
 
-          inSequence {
-            mockAuthWithNoRetrievals()
-            mockGetSession(session)
-            mockTaxCheckServiceGetCtutr(CRN("crn"))(Right(Some(CTUTR("ctutr"))))
-            mockTimeProviderToday(date)
-            mockTaxCheckServiceGetCtStatus(CTUTR("ctutr"), startDate, endDate)(
-              Right(Some(ctStatusResponse))
-            )
-            mockJourneyServiceUpdateAndNext(
-              routes.CompanyDetailsController.confirmCompanyDetails(),
-              session,
-              updatedSession
-            )(
-              Left(Error("update and next failed"))
-            )
+            inSequence {
+              mockAuthWithNoRetrievals()
+              mockGetSession(session)
+              mockJourneyServiceUpdateAndNext(
+                routes.CompanyDetailsController.confirmCompanyDetails(),
+                session,
+                updatedSession
+              )(Left(Error("some error")))
+            }
+
+            status(performAction("confirmCompanyName" -> "1")) shouldBe INTERNAL_SERVER_ERROR
           }
-
-          status(performAction("confirmCompanyName" -> "0")) shouldBe INTERNAL_SERVER_ERROR
         }
 
       }
