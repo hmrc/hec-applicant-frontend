@@ -276,8 +276,6 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
           case CompanyRetrievedData(_, _, _, _, None, _, _)                                  =>
             routes.CompanyDetailsController.ctutrNotMatched()
           case CompanyRetrievedData(_, None, _, _, _, _, _)                                  => routes.CompanyDetailsController.enterCtutr()
-          case CompanyRetrievedData(_, _, _, _, _, _, _)                                     =>
-            sys.error("Company data is missing desCtutr or ct status info")
           case _: IndividualRetrievedData                                                    =>
             sys.error("This should never happen, individual data shouldn't be present in company journey")
         }
