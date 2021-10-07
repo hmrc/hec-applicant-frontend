@@ -22,7 +22,7 @@ import play.api.inject.bind
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{IndividualJourneyData, IndividualLoginData, IndividualRetrievedData}
+import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.IndividualLoginData
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.IncompleteUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models._
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO}
@@ -49,12 +49,8 @@ class TaxChecksListControllerSpec
 
   val controller = instanceOf[TaxChecksListController]
 
-  val individualRetrievedData =
-    IndividualRetrievedData(
-      IndividualLoginData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None),
-      IndividualJourneyData.empty,
-      List.empty
-    )
+  val individualLoginData =
+    IndividualLoginData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None, List.empty)
 
   "TaxChecksListController" when {
 
@@ -76,7 +72,7 @@ class TaxChecksListControllerSpec
       )
 
       "return an error when no tax checks found" in {
-        val session = HECSession(individualRetrievedData, answers, None)
+        val session = HECSession(individualLoginData, RetrievedJourneyData.empty, answers, None)
         inSequence {
           mockAuthWithNoRetrievals()
           mockGetSession(session)
@@ -109,7 +105,12 @@ class TaxChecksListControllerSpec
           yesterday
         )
         val unsortedTaxChecks = List(dayBeforeTaxCheck, todayTaxCheck, yesterdayTaxCheck)
-        val session           = HECSession(individualRetrievedData.copy(unexpiredTaxChecks = unsortedTaxChecks), answers, None)
+        val session           = HECSession(
+          individualLoginData.copy(unexpiredTaxChecks = unsortedTaxChecks),
+          RetrievedJourneyData.empty,
+          answers,
+          None
+        )
 
         inSequence {
           mockAuthWithNoRetrievals()

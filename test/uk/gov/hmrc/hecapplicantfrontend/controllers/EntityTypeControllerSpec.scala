@@ -22,7 +22,7 @@ import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyJourneyData, CompanyLoginData, CompanyRetrievedData, IndividualJourneyData, IndividualLoginData, IndividualRetrievedData}
+import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.{CompleteUserAnswers, IncompleteUserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
@@ -48,15 +48,11 @@ class EntityTypeControllerSpec
 
   val controller = instanceOf[EntityTypeController]
 
-  val individuaRetrievedlData =
-    IndividualRetrievedData(
-      IndividualLoginData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None),
-      IndividualJourneyData.empty,
-      List.empty
-    )
+  val individualLoginData =
+    IndividualLoginData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None, List.empty)
 
-  val companyRetrievedData =
-    CompanyRetrievedData(CompanyLoginData(GGCredId(""), None, None), CompanyJourneyData.empty, List.empty)
+  val companyLoginData =
+    CompanyLoginData(GGCredId(""), None, None, List.empty)
 
   "EntityTypeController" when {
 
@@ -69,7 +65,7 @@ class EntityTypeControllerSpec
       "display the page" when {
 
         "the user has not previously answered the question" in {
-          val session = HECSession(individuaRetrievedlData, UserAnswers.empty, None)
+          val session = HECSession(individualLoginData, RetrievedJourneyData.empty, UserAnswers.empty, None)
 
           inSequence {
             mockAuthWithNoRetrievals()
@@ -97,7 +93,8 @@ class EntityTypeControllerSpec
         "the user has previously answered the question" in {
           val session =
             HECSession(
-              individuaRetrievedlData,
+              individualLoginData,
+              RetrievedJourneyData.empty,
               CompleteUserAnswers(
                 LicenceType.DriverOfTaxisAndPrivateHires,
                 LicenceTimeTrading.ZeroToTwoYears,
@@ -146,7 +143,7 @@ class EntityTypeControllerSpec
 
       "show a form error" when {
 
-        val session = HECSession(companyRetrievedData, UserAnswers.empty, None)
+        val session = HECSession(companyLoginData, RetrievedJourneyData.empty, UserAnswers.empty, None)
 
         "nothing is submitted" in {
           inSequence {
@@ -197,7 +194,7 @@ class EntityTypeControllerSpec
         "the call to update and next fails" in {
           val answers        = UserAnswers.empty
           val updatedAnswers = UserAnswers.empty.copy(entityType = Some(EntityType.Individual))
-          val session        = HECSession(individuaRetrievedlData, answers, None)
+          val session        = HECSession(individualLoginData, RetrievedJourneyData.empty, answers, None)
           val updatedSession = session.copy(userAnswers = updatedAnswers)
 
           inSequence {
@@ -220,7 +217,7 @@ class EntityTypeControllerSpec
           "the user is Individual has not previously completed answering questions" in {
             val answers        = UserAnswers.empty
             val updatedAnswers = UserAnswers.empty.copy(entityType = Some(EntityType.Company))
-            val session        = HECSession(individuaRetrievedlData, answers, None)
+            val session        = HECSession(individualLoginData, RetrievedJourneyData.empty, answers, None)
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 
             inSequence {
@@ -237,7 +234,7 @@ class EntityTypeControllerSpec
           "the user is Company has not previously completed answering questions" in {
             val answers        = UserAnswers.empty
             val updatedAnswers = UserAnswers.empty.copy(entityType = Some(EntityType.Company))
-            val session        = HECSession(companyRetrievedData, answers, None)
+            val session        = HECSession(companyLoginData, RetrievedJourneyData.empty, answers, None)
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 
             inSequence {
@@ -269,7 +266,7 @@ class EntityTypeControllerSpec
             val updatedAnswers = IncompleteUserAnswers
               .fromCompleteAnswers(answers)
               .copy(entityType = Some(EntityType.Company))
-            val session        = HECSession(individuaRetrievedlData, answers, None)
+            val session        = HECSession(individualLoginData, RetrievedJourneyData.empty, answers, None)
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 
             inSequence {
@@ -297,7 +294,7 @@ class EntityTypeControllerSpec
             val updatedAnswers = IncompleteUserAnswers
               .fromCompleteAnswers(answers)
               .copy(entityType = Some(EntityType.Company))
-            val session        = HECSession(companyRetrievedData, answers, None)
+            val session        = HECSession(companyLoginData, RetrievedJourneyData.empty, answers, None)
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 
             inSequence {
@@ -329,7 +326,7 @@ class EntityTypeControllerSpec
       "return an InternalServerError" when {
 
         "no selected entity type can be found in session" in {
-          val session = HECSession(individuaRetrievedlData, UserAnswers.empty, None)
+          val session = HECSession(individualLoginData, RetrievedJourneyData.empty, UserAnswers.empty, None)
 
           inSequence {
             mockAuthWithNoRetrievals()
@@ -346,7 +343,8 @@ class EntityTypeControllerSpec
 
         def testPage(selectedEntityType: EntityType, expectedP1: String): Unit = {
           val session = HECSession(
-            individuaRetrievedlData,
+            individualLoginData,
+            RetrievedJourneyData.empty,
             UserAnswers.empty.copy(entityType = Some(selectedEntityType)),
             None
           )
@@ -402,7 +400,8 @@ class EntityTypeControllerSpec
       "display the page" in {
 
         val session = HECSession(
-          individuaRetrievedlData,
+          individualLoginData,
+          RetrievedJourneyData.empty,
           UserAnswers.empty,
           None
         )

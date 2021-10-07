@@ -22,7 +22,7 @@ import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyJourneyData, CompanyLoginData, CompanyRetrievedData, IndividualJourneyData, IndividualLoginData, IndividualRetrievedData}
+import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
 import uk.gov.hmrc.hecapplicantfrontend.models._
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
@@ -45,15 +45,11 @@ class TaxCheckCompleteControllerSpec
 
   val controller = instanceOf[TaxCheckCompleteController]
 
-  val individualRetrievedData =
-    IndividualRetrievedData(
-      IndividualLoginData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None),
-      IndividualJourneyData.empty,
-      List.empty
-    )
+  val individualLoginData =
+    IndividualLoginData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None, List.empty)
 
-  val companyRetrievedData =
-    CompanyRetrievedData(CompanyLoginData(GGCredId(""), None, None), CompanyJourneyData.empty, List.empty)
+  val companyLoginData =
+    CompanyLoginData(GGCredId(""), None, None, List.empty)
 
   "TaxCheckCompleteController" when {
 
@@ -66,7 +62,7 @@ class TaxCheckCompleteControllerSpec
       "return an InternalServerError" when {
 
         "a tax check code cannot be found in session" in {
-          val session = HECSession(individualRetrievedData, UserAnswers.empty, None)
+          val session = HECSession(individualLoginData, RetrievedJourneyData.empty, UserAnswers.empty, None)
 
           inSequence {
             mockAuthWithNoRetrievals()
@@ -84,7 +80,8 @@ class TaxCheckCompleteControllerSpec
           val taxCheckCode = "LXB7G6DX7"
           val expiryDate   = LocalDate.of(2020, 1, 8)
           val session      = HECSession(
-            individualRetrievedData,
+            individualLoginData,
+            RetrievedJourneyData.empty,
             UserAnswers.empty.copy(
               licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)
             ),

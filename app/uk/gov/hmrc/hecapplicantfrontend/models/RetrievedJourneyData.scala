@@ -16,19 +16,20 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models
 
-import cats.Eq
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json._
+import uk.gov.hmrc.hecapplicantfrontend.models.ids.CTUTR
 
-final case class HECSession(
-  loginData: LoginData,
-  retrievedJourneyData: RetrievedJourneyData,
-  userAnswers: UserAnswers,
-  completedTaxCheck: Option[HECTaxCheck]
+final case class RetrievedJourneyData(
+  saStatus: Option[SAStatusResponse],
+  companyName: Option[CompanyHouseName],
+  desCtutr: Option[CTUTR],
+  ctStatus: Option[CTStatusResponse]
 )
 
-object HECSession {
+object RetrievedJourneyData {
 
-  implicit val eq: Eq[HECSession]          = Eq.fromUniversalEquals
-  implicit val format: OFormat[HECSession] = Json.format
+  val empty: RetrievedJourneyData = RetrievedJourneyData(None, None, None, None)
+
+  implicit val format: OFormat[RetrievedJourneyData] = Json.format
 
 }

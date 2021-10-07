@@ -30,11 +30,6 @@ object EntityType {
 
   case object Company extends EntityType
 
-  def fromRetrievedApplicantAnswers(r: RetrievedApplicantData): EntityType = r match {
-    case _: RetrievedApplicantData.IndividualRetrievedData => Individual
-    case _: RetrievedApplicantData.CompanyRetrievedData    => Company
-  }
-
   implicit val eq: Eq[EntityType] = Eq.fromUniversalEquals
 
   @SuppressWarnings(Array("org.wartremover.warts.Throw", "org.wartremover.warts.Equals"))

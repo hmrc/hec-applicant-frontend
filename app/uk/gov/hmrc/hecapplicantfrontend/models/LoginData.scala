@@ -1,0 +1,80 @@
+/*
+ * Copyright 2021 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package uk.gov.hmrc.hecapplicantfrontend.models
+
+import play.api.libs.json.{JsObject, JsResult, JsValue, Json, OFormat}
+import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CTUTR, GGCredId, NINO, SAUTR}
+
+sealed trait LoginData extends Product with Serializable {
+  val entityType: EntityType
+  val unexpiredTaxChecks: List[TaxCheckListItem]
+}
+
+object LoginData {
+
+  final case class IndividualLoginData(
+    ggCredId: GGCredId,
+    nino: NINO,
+    sautr: Option[SAUTR],
+    name: Name,
+    dateOfBirth: DateOfBirth,
+    emailAddress: Option[EmailAddress],
+    unexpiredTaxChecks: List[TaxCheckListItem]
+  ) extends LoginData {
+    override val entityType: EntityType = EntityType.Individual
+  }
+
+  object IndividualLoginData {
+
+    implicit val format: OFormat[IndividualLoginData] = Json.format
+
+  }
+
+  final case class CompanyLoginData(
+    ggCredId: GGCredId,
+    ctutr: Option[CTUTR],
+    emailAddress: Option[EmailAddress],
+    unexpiredTaxChecks: List[TaxCheckListItem]
+  ) extends LoginData {
+    override val entityType: EntityType = EntityType.Company
+  }
+
+  object CompanyLoginData {
+
+    implicit val format: OFormat[CompanyLoginData] = Json.format
+
+  }
+
+  implicit val format: OFormat[LoginData] = new OFormat[LoginData] {
+    override def reads(json: JsValue): JsResult[LoginData] =
+      (json \ "type")
+        .validate[EntityType]
+        .flatMap {
+          case EntityType.Individual => Json.reads[IndividualLoginData].reads(json)
+          case EntityType.Company    => Json.reads[CompanyLoginData].reads(json)
+        }
+
+    override def writes(o: LoginData): JsObject = {
+      val json = o match {
+        case i: IndividualLoginData => Json.writes[IndividualLoginData].writes(i)
+        case c: CompanyLoginData    => Json.writes[CompanyLoginData].writes(c)
+      }
+      json ++ Json.obj("type" -> o.entityType)
+    }
+  }
+
+}

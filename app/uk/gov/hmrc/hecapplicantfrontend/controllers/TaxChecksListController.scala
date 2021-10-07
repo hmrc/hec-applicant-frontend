@@ -48,7 +48,7 @@ class TaxChecksListController @Inject() (
     * Fetches unexpired tax check codes for applicant
     */
   val unexpiredTaxChecks: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
-    request.sessionData.retrievedUserData.unexpiredTaxChecks match {
+    request.sessionData.loginData.unexpiredTaxChecks match {
       case Nil       =>
         logger.warn("No tax check codes found")
         InternalServerError

@@ -21,8 +21,8 @@ import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.hecapplicantfrontend.models.{DateOfBirth, Error, HECSession, Name, UserAnswers}
-import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyJourneyData, CompanyLoginData, CompanyRetrievedData, IndividualJourneyData, IndividualLoginData, IndividualRetrievedData}
+import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
+import uk.gov.hmrc.hecapplicantfrontend.models.{DateOfBirth, Error, HECSession, Name, RetrievedJourneyData, UserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
@@ -56,12 +56,12 @@ class ConfirmIndividualDetailsControllerSpec
       "redirect to the start endpoint" when {
 
         "company details are found in session" in {
-          val companyRetrievedData =
-            CompanyRetrievedData(CompanyLoginData(GGCredId(""), None, None), CompanyJourneyData.empty, List.empty)
+          val companyLoginData =
+            CompanyLoginData(GGCredId(""), None, None, List.empty)
 
           inSequence {
             mockAuthWithNoRetrievals()
-            mockGetSession(HECSession(companyRetrievedData, UserAnswers.empty, None))
+            mockGetSession(HECSession(companyLoginData, RetrievedJourneyData.empty, UserAnswers.empty, None))
           }
 
           checkIsRedirect(performAction(), routes.StartController.start())
@@ -75,11 +75,8 @@ class ConfirmIndividualDetailsControllerSpec
           val dateOfBirth = DateOfBirth(LocalDate.of(2000, 12, 3))
 
           val session = HECSession(
-            IndividualRetrievedData(
-              IndividualLoginData(GGCredId(""), NINO(""), None, name, dateOfBirth, None),
-              IndividualJourneyData.empty,
-              List.empty
-            ),
+            IndividualLoginData(GGCredId(""), NINO(""), None, name, dateOfBirth, None, List.empty),
+            RetrievedJourneyData.empty,
             UserAnswers.empty,
             None
           )
@@ -128,12 +125,12 @@ class ConfirmIndividualDetailsControllerSpec
       "redirect to the start endpoint" when {
 
         "company details are found in session" in {
-          val companyRetrievedData =
-            CompanyRetrievedData(CompanyLoginData(GGCredId(""), None, None), CompanyJourneyData.empty, List.empty)
+          val companyLoginData =
+            CompanyLoginData(GGCredId(""), None, None, List.empty)
 
           inSequence {
             mockAuthWithNoRetrievals()
-            mockGetSession(HECSession(companyRetrievedData, UserAnswers.empty, None))
+            mockGetSession(HECSession(companyLoginData, RetrievedJourneyData.empty, UserAnswers.empty, None))
           }
 
           checkIsRedirect(performAction(), routes.StartController.start())
@@ -145,11 +142,16 @@ class ConfirmIndividualDetailsControllerSpec
 
         "there is a problem getting the next page" in {
           val session = HECSession(
-            IndividualRetrievedData(
-              IndividualLoginData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None),
-              IndividualJourneyData.empty,
+            IndividualLoginData(
+              GGCredId(""),
+              NINO(""),
+              None,
+              Name("", ""),
+              DateOfBirth(LocalDate.now()),
+              None,
               List.empty
             ),
+            RetrievedJourneyData.empty,
             UserAnswers.empty,
             None
           )
@@ -173,11 +175,16 @@ class ConfirmIndividualDetailsControllerSpec
 
         "the next page can be found" in {
           val session = HECSession(
-            IndividualRetrievedData(
-              IndividualLoginData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None),
-              IndividualJourneyData.empty,
+            IndividualLoginData(
+              GGCredId(""),
+              NINO(""),
+              None,
+              Name("", ""),
+              DateOfBirth(LocalDate.now()),
+              None,
               List.empty
             ),
+            RetrievedJourneyData.empty,
             UserAnswers.empty,
             None
           )
@@ -208,12 +215,12 @@ class ConfirmIndividualDetailsControllerSpec
       "redirect to the start endpoint" when {
 
         "company details are found in session" in {
-          val companyRetrievedData =
-            CompanyRetrievedData(CompanyLoginData(GGCredId(""), None, None), CompanyJourneyData.empty, List.empty)
+          val companyLoginData =
+            CompanyLoginData(GGCredId(""), None, None, List.empty)
 
           inSequence {
             mockAuthWithNoRetrievals()
-            mockGetSession(HECSession(companyRetrievedData, UserAnswers.empty, None))
+            mockGetSession(HECSession(companyLoginData, RetrievedJourneyData.empty, UserAnswers.empty, None))
           }
 
           checkIsRedirect(performAction(), routes.StartController.start())
@@ -224,11 +231,16 @@ class ConfirmIndividualDetailsControllerSpec
 
         "the user is logged in and individual data can be found" in {
           val session = HECSession(
-            IndividualRetrievedData(
-              IndividualLoginData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None),
-              IndividualJourneyData.empty,
+            IndividualLoginData(
+              GGCredId(""),
+              NINO(""),
+              None,
+              Name("", ""),
+              DateOfBirth(LocalDate.now()),
+              None,
               List.empty
             ),
+            RetrievedJourneyData.empty,
             UserAnswers.empty,
             None
           )

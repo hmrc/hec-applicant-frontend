@@ -61,7 +61,7 @@ class CheckYourAnswersController @Inject() (
     request.sessionData.userAnswers match {
       case c: CompleteUserAnswers =>
         val result = for {
-          taxCheck      <- taxCheckService.saveTaxCheck(request.sessionData.retrievedUserData, c)
+          taxCheck      <- taxCheckService.saveTaxCheck(request.sessionData.loginData, c)
           updatedSession = request.sessionData.copy(
                              userAnswers = UserAnswers.empty,
                              completedTaxCheck = Some(taxCheck)

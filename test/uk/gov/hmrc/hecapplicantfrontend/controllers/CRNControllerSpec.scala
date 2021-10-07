@@ -24,11 +24,11 @@ import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyJourneyData, CompanyLoginData, CompanyRetrievedData}
+import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.CompanyLoginData
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.{CompleteUserAnswers, IncompleteUserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, GGCredId}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.hecapplicantfrontend.models.{CompanyHouseDetails, CompanyHouseName, Error, HECSession, UserAnswers}
+import uk.gov.hmrc.hecapplicantfrontend.models.{CompanyHouseDetails, CompanyHouseName, Error, HECSession, RetrievedJourneyData, UserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.{CompanyDetailsService, JourneyService}
 import uk.gov.hmrc.hecapplicantfrontend.util.StringUtils.StringOps
@@ -60,12 +60,8 @@ class CRNControllerSpec
     bind[CompanyDetailsService].toInstance(mockCompanyDetailsService)
   )
 
-  val controller           = instanceOf[CRNController]
-  val companyRetrievedData = CompanyRetrievedData(
-    CompanyLoginData(GGCredId(""), None, None),
-    CompanyJourneyData.empty,
-    List.empty
-  )
+  val controller       = instanceOf[CRNController]
+  val companyLoginData = CompanyLoginData(GGCredId(""), None, None, List.empty)
 
   def mockFindCompany(crn: CRN)(
     result: Either[Error, Option[CompanyHouseDetails]]
@@ -84,7 +80,7 @@ class CRNControllerSpec
 
         "the user has not previously answered the question " in {
 
-          val session = HECSession(companyRetrievedData, UserAnswers.empty, None)
+          val session = HECSession(companyLoginData, RetrievedJourneyData.empty, UserAnswers.empty, None)
 
           inSequence {
             mockAuthWithNoRetrievals()
@@ -128,7 +124,7 @@ class CRNControllerSpec
               taxSituation = None,
               crn = Some(validCRN(0))
             )
-          val session        = HECSession(companyRetrievedData, answers, None)
+          val session        = HECSession(companyLoginData, RetrievedJourneyData.empty, answers, None)
           val updatedSession = session.copy(userAnswers = updatedAnswers)
 
           inSequence {
@@ -170,7 +166,7 @@ class CRNControllerSpec
 
         "show a form error" when {
 
-          val session = HECSession(companyRetrievedData, UserAnswers.empty, None)
+          val session = HECSession(companyLoginData, RetrievedJourneyData.empty, UserAnswers.empty, None)
 
           "nothing has been submitted" in {
             inSequence {
@@ -279,7 +275,7 @@ class CRNControllerSpec
             None,
             None
           )
-          val session = HECSession(companyRetrievedData, answers, None)
+          val session = HECSession(companyLoginData, RetrievedJourneyData.empty, answers, None)
 
           "there is an error updating and getting the next endpoint" in {
             val updatedAnswers = IncompleteUserAnswers
@@ -287,9 +283,7 @@ class CRNControllerSpec
               .copy(crn = Some(validCRN(0)))
 
             val updatedSession = session.copy(
-              retrievedUserData = companyRetrievedData.copy(
-                journeyData = companyRetrievedData.journeyData.copy(companyName = Some(companyHouseName))
-              ),
+              retrievedJourneyData = session.retrievedJourneyData.copy(companyName = Some(companyHouseName)),
               userAnswers = updatedAnswers
             )
 
@@ -336,7 +330,7 @@ class CRNControllerSpec
                 None,
                 None
               )
-              val session      = HECSession(companyRetrievedData, answers, None)
+              val session      = HECSession(companyLoginData, RetrievedJourneyData.empty, answers, None)
 
               val updatedAnswers = IncompleteUserAnswers
                 .fromCompleteAnswers(answers)
@@ -344,12 +338,10 @@ class CRNControllerSpec
                   crn = Some(formattedCrn)
                 )
 
-              val updatedCompanyRetreiveData =
-                companyRetrievedData.copy(
-                  journeyData = companyRetrievedData.journeyData.copy(companyName = companyDetails.map(_.companyName))
-                )
-              val updatedSession             =
-                session.copy(retrievedUserData = updatedCompanyRetreiveData, userAnswers = updatedAnswers)
+              val updatedRetrievedJourneyData =
+                session.retrievedJourneyData.copy(companyName = companyDetails.map(_.companyName))
+              val updatedSession              =
+                session.copy(retrievedJourneyData = updatedRetrievedJourneyData, userAnswers = updatedAnswers)
 
               inSequence {
                 mockAuthWithNoRetrievals()

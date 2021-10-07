@@ -30,9 +30,9 @@ import uk.gov.hmrc.auth.core.retrieve.Credentials
 import uk.gov.hmrc.auth.core.{AffinityGroup, ConfidenceLevel, Enrolments}
 import uk.gov.hmrc.hecapplicantfrontend.config.{AppConfig, EnrolmentConfig}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.AuthWithRetrievalsAction
-import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyJourneyData, CompanyLoginData, CompanyRetrievedData, IndividualJourneyData, IndividualLoginData, IndividualRetrievedData}
+import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CTUTR, GGCredId, NINO, SAUTR}
-import uk.gov.hmrc.hecapplicantfrontend.models.{CitizenDetails, EmailAddress, Error, HECSession, RetrievedApplicantData, RetrievedGGData, TaxCheckListItem, UserAnswers}
+import uk.gov.hmrc.hecapplicantfrontend.models.{CitizenDetails, EmailAddress, Error, HECSession, LoginData, RetrievedGGData, RetrievedJourneyData, TaxCheckListItem, UserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.{CitizenDetailsService, JourneyService, TaxCheckService}
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
@@ -93,14 +93,15 @@ class StartController @Inject() (
     retrievedGGData: RetrievedGGData
   )(implicit request: Request[_]): EitherT[Future, StartError, HECSession] =
     for {
-      retrievedUserData <- buildRetrievedUserData(retrievedGGData)
-      session            = HECSession(retrievedUserData, UserAnswers.empty, None)
-      _                 <- sessionStore.store(session).leftMap(BackendError(_): StartError)
+
+      loginData <- buildLoginData(retrievedGGData)
+      session    = HECSession(loginData, RetrievedJourneyData.empty, UserAnswers.empty, None)
+      _         <- sessionStore.store(session).leftMap(BackendError(_): StartError)
     } yield session
 
-  private def buildRetrievedUserData(
+  private def buildLoginData(
     retrievedGGData: RetrievedGGData
-  )(implicit hc: HeaderCarrier): EitherT[Future, StartError, RetrievedApplicantData] = {
+  )(implicit hc: HeaderCarrier): EitherT[Future, StartError, LoginData] = {
     val RetrievedGGData(cl, affinityGroup, maybeNino, maybeSautr, maybeEmail, enrolments, creds) =
       retrievedGGData
 
@@ -147,13 +148,13 @@ class StartController @Inject() (
     ggCredId: GGCredId
   )(implicit
     hc: HeaderCarrier
-  ): EitherT[Future, StartError, RetrievedApplicantData] = {
+  ): EitherT[Future, StartError, LoginData] = {
 
     def validateSautrAndBuildIndividualData(
       citizenDetails: CitizenDetails,
       taxChecks: List[TaxCheckListItem],
       nino: String
-    ): EitherT[Future, StartError, RetrievedApplicantData] = {
+    ): EitherT[Future, StartError, LoginData] = {
       val sautrValidation = citizenDetails.sautr match {
         case Some(s) => Valid(Some(s))
         case None    =>
@@ -163,19 +164,16 @@ class StartController @Inject() (
       }
 
       val eitherResult = sautrValidation
-        .bimap[StartError, RetrievedApplicantData](
+        .bimap[StartError, LoginData](
           DataError,
           sautr =>
-            IndividualRetrievedData(
-              IndividualLoginData(
-                GGCredId(ggCredId.value),
-                NINO(nino),
-                sautr,
-                citizenDetails.name,
-                citizenDetails.dateOfBirth,
-                maybeEmail.map(EmailAddress(_))
-              ),
-              IndividualJourneyData.empty,
+            IndividualLoginData(
+              GGCredId(ggCredId.value),
+              NINO(nino),
+              sautr,
+              citizenDetails.name,
+              citizenDetails.dateOfBirth,
+              maybeEmail.map(EmailAddress(_)),
               taxChecks
             )
         )
@@ -213,7 +211,7 @@ class StartController @Inject() (
     ggCredId: GGCredId
   )(implicit
     hc: HeaderCarrier
-  ): EitherT[Future, StartError, RetrievedApplicantData] = {
+  ): EitherT[Future, StartError, LoginData] = {
     val ctutrValidation = enrolments.enrolments
       .find(_.key === EnrolmentConfig.CTEnrolment.key)
       .flatMap(
@@ -227,13 +225,10 @@ class StartController @Inject() (
     for {
       maybeCtutr <- EitherT.fromEither[Future](ctutrValidation).leftMap(DataError)
       taxChecks  <- taxCheckService.getUnexpiredTaxCheckCodes().leftMap(BackendError(_): StartError)
-    } yield CompanyRetrievedData(
-      CompanyLoginData(
-        GGCredId(ggCredId.value),
-        maybeCtutr,
-        maybeEmail.map(EmailAddress(_))
-      ),
-      CompanyJourneyData.empty,
+    } yield CompanyLoginData(
+      GGCredId(ggCredId.value),
+      maybeCtutr,
+      maybeEmail.map(EmailAddress(_)),
       taxChecks
     )
   }

@@ -28,8 +28,8 @@ import play.api.mvc._
 import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 import uk.gov.hmrc.hecapplicantfrontend.controllers.CRNController.crnForm
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, RequestWithSessionData, SessionDataAction}
-import uk.gov.hmrc.hecapplicantfrontend.models.Error
-import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.CompanyRetrievedData
+import uk.gov.hmrc.hecapplicantfrontend.models.{Error, RetrievedJourneyData}
+import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.CompanyLoginData
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.CRN
 import uk.gov.hmrc.hecapplicantfrontend.services.{CompanyDetailsService, JourneyService}
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
@@ -78,9 +78,9 @@ class CRNController @Inject() (
     }
 
   private def handleValidCrn(crn: CRN)(implicit request: RequestWithSessionData[_]): Future[Result] =
-    request.sessionData.retrievedUserData match {
-      case companyRetrievedData: CompanyRetrievedData =>
-        checkCompanyName(crn, companyRetrievedData)
+    request.sessionData.loginData match {
+      case _: CompanyLoginData =>
+        checkCompanyName(crn, request.sessionData.retrievedJourneyData)
           .fold(
             { e =>
               logger.warn(" Couldn't get company Name from the given CRN", e)
@@ -88,12 +88,12 @@ class CRNController @Inject() (
             },
             Redirect
           )
-      case _                                          =>
+      case _                   =>
         logger.error("Individual should not see this page")
         Future.successful(InternalServerError)
     }
 
-  private def checkCompanyName(crn: CRN, companyRetrievedData: CompanyRetrievedData)(implicit
+  private def checkCompanyName(crn: CRN, retrievedJourneyData: RetrievedJourneyData)(implicit
     request: RequestWithSessionData[_]
   ): EitherT[Future, Error, Call] = {
     val sessionCrn = request.sessionData.userAnswers.fold(_.crn, _.crn)
@@ -104,11 +104,11 @@ class CRNController @Inject() (
       case Some(crnSession) if crn.value === crnSession.value =>
         journeyService
           .updateAndNext(routes.CRNController.companyRegistrationNumber(), request.sessionData)
-      case _                                                  => fetchCompanyName(crn, companyRetrievedData)
+      case _                                                  => fetchCompanyName(crn, retrievedJourneyData)
     }
   }
 
-  private def fetchCompanyName(crn: CRN, companyRetrievedData: CompanyRetrievedData)(implicit
+  private def fetchCompanyName(crn: CRN, retrievedJourneyData: RetrievedJourneyData)(implicit
     request: RequestWithSessionData[_]
   ): EitherT[Future, Error, Call] = for {
     companyHouseDetailsOpt <- companyDetailsService.findCompany(crn)
@@ -116,11 +116,11 @@ class CRNController @Inject() (
       request.sessionData.userAnswers
         .unset(_.crn)
         .copy(crn = Some(crn))
-    updatedCompanyData      =
-      companyRetrievedData.copy(
-        journeyData = companyRetrievedData.journeyData.copy(companyName = companyHouseDetailsOpt.map(_.companyName))
+    updatedRetrievedData    =
+      retrievedJourneyData.copy(
+        companyName = companyHouseDetailsOpt.map(_.companyName)
       )
-    updatedSession          = request.sessionData.copy(retrievedUserData = updatedCompanyData, userAnswers = updatedAnswers)
+    updatedSession          = request.sessionData.copy(retrievedJourneyData = updatedRetrievedData, userAnswers = updatedAnswers)
     next                   <- journeyService
                                 .updateAndNext(routes.CRNController.companyRegistrationNumber(), updatedSession)
   } yield next

@@ -30,9 +30,9 @@ import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, ~}
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.hecapplicantfrontend.config.EnrolmentConfig
-import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyJourneyData, CompanyLoginData, CompanyRetrievedData, IndividualJourneyData, IndividualLoginData, IndividualRetrievedData}
+import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CTUTR, GGCredId, NINO, SAUTR}
-import uk.gov.hmrc.hecapplicantfrontend.models.{CitizenDetails, DateOfBirth, EmailAddress, Error, HECSession, Name, TaxCheckListItem, UserAnswers}
+import uk.gov.hmrc.hecapplicantfrontend.models.{CitizenDetails, DateOfBirth, EmailAddress, Error, HECSession, Name, RetrievedJourneyData, TaxCheckListItem, UserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.{CitizenDetailsService, JourneyService, TaxCheckService}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -143,26 +143,21 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
 
       val ctutr = CTUTR("1234567895")
 
-      val completeIndividualRetrievedData = IndividualRetrievedData(
+      val completeIndividualLoginData =
         IndividualLoginData(
           ggCredId,
           NINO("nino"),
           Some(sautr),
           Name("First", "Last"),
           DateOfBirth(LocalDate.now()),
-          Some(emailAddress)
-        ),
-        IndividualJourneyData.empty,
-        List.empty
-      )
+          Some(emailAddress),
+          List.empty
+        )
 
-      val completeCompanyRetrievedData = CompanyRetrievedData(
-        CompanyLoginData(
-          ggCredId,
-          Some(ctutr),
-          Some(emailAddress)
-        ),
-        CompanyJourneyData.empty,
+      val completeCompanyLoginData = CompanyLoginData(
+        ggCredId,
+        Some(ctutr),
+        Some(emailAddress),
         List.empty
       )
 
@@ -171,7 +166,7 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
       "proceed" when {
 
         "existing session data is found" in {
-          val session = HECSession(completeIndividualRetrievedData, UserAnswers.empty, None)
+          val session = HECSession(completeIndividualLoginData, RetrievedJourneyData.empty, UserAnswers.empty, None)
           inSequence {
             mockAuthWithRetrievals(ConfidenceLevel.L50, None, None, None, None, Enrolments(Set.empty), None)
             mockGetSession(session)
@@ -186,33 +181,29 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
           "all the necessary data is retrieved for an individual with affinity group " +
             "'Individaul' and CL250" in {
               List(
-                completeIndividualRetrievedData,
-                completeIndividualRetrievedData.copy(
-                  loginData = completeIndividualRetrievedData.loginData.copy(emailAddress = None)
-                ),
-                completeIndividualRetrievedData.copy(
-                  loginData = completeIndividualRetrievedData.loginData.copy(sautr = None)
-                )
+                completeIndividualLoginData,
+                completeIndividualLoginData.copy(emailAddress = None),
+                completeIndividualLoginData.copy(sautr = None)
               ).foreach { individualRetrievedData =>
                 val citizenDetails = CitizenDetails(
-                  individualRetrievedData.loginData.name,
-                  individualRetrievedData.loginData.dateOfBirth,
-                  individualRetrievedData.loginData.sautr
+                  individualRetrievedData.name,
+                  individualRetrievedData.dateOfBirth,
+                  individualRetrievedData.sautr
                 )
 
-                val session = HECSession(individualRetrievedData, UserAnswers.empty, None)
+                val session = HECSession(individualRetrievedData, RetrievedJourneyData.empty, UserAnswers.empty, None)
                 inSequence {
                   mockAuthWithRetrievals(
                     ConfidenceLevel.L250,
                     Some(AffinityGroup.Individual),
-                    Some(individualRetrievedData.loginData.nino),
+                    Some(individualRetrievedData.nino),
                     None,
-                    individualRetrievedData.loginData.emailAddress,
+                    individualRetrievedData.emailAddress,
                     Enrolments(Set.empty),
-                    Some(retrievedGGCredential(individualRetrievedData.loginData.ggCredId))
+                    Some(retrievedGGCredential(individualRetrievedData.ggCredId))
                   )
                   mockGetSession(Right(None))
-                  mockGetCitizenDetails(individualRetrievedData.loginData.nino)(Right(citizenDetails))
+                  mockGetCitizenDetails(individualRetrievedData.nino)(Right(citizenDetails))
                   mockGetUnexpiredTaxCheckCodes(Right(List.empty))
                   mockStoreSession(session)(Right(()))
                   mockFirstPge(session)(mockNextCall)
@@ -224,25 +215,25 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
 
           "no SAUTR is returned in citizen details but one is retrieved from the GG cred" in {
             val citizenDetails = CitizenDetails(
-              completeIndividualRetrievedData.loginData.name,
-              completeIndividualRetrievedData.loginData.dateOfBirth,
+              completeIndividualLoginData.name,
+              completeIndividualLoginData.dateOfBirth,
               None
             )
 
-            val session = HECSession(completeIndividualRetrievedData, UserAnswers.empty, None)
+            val session = HECSession(completeIndividualLoginData, RetrievedJourneyData.empty, UserAnswers.empty, None)
 
             inSequence {
               mockAuthWithRetrievals(
                 ConfidenceLevel.L250,
                 Some(AffinityGroup.Individual),
-                Some(completeIndividualRetrievedData.loginData.nino),
+                Some(completeIndividualLoginData.nino),
                 Some(sautr),
-                completeIndividualRetrievedData.loginData.emailAddress,
+                completeIndividualLoginData.emailAddress,
                 Enrolments(Set.empty),
-                Some(retrievedGGCredential(completeIndividualRetrievedData.loginData.ggCredId))
+                Some(retrievedGGCredential(completeIndividualLoginData.ggCredId))
               )
               mockGetSession(Right(None))
-              mockGetCitizenDetails(completeIndividualRetrievedData.loginData.nino)(Right(citizenDetails))
+              mockGetCitizenDetails(completeIndividualLoginData.nino)(Right(citizenDetails))
               mockGetUnexpiredTaxCheckCodes(Right(List.empty))
               mockStoreSession(session)(Right(()))
               mockFirstPge(session)(mockNextCall)
@@ -256,16 +247,15 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
             val ggSautr             = SAUTR("gg-sautr")
 
             val citizenDetails = CitizenDetails(
-              completeIndividualRetrievedData.loginData.name,
-              completeIndividualRetrievedData.loginData.dateOfBirth,
+              completeIndividualLoginData.name,
+              completeIndividualLoginData.dateOfBirth,
               Some(citizenDetailsSautr)
             )
 
             val session =
               HECSession(
-                completeIndividualRetrievedData.copy(
-                  loginData = completeIndividualRetrievedData.loginData.copy(sautr = Some(citizenDetailsSautr))
-                ),
+                completeIndividualLoginData.copy(sautr = Some(citizenDetailsSautr)),
+                RetrievedJourneyData.empty,
                 UserAnswers.empty,
                 None
               )
@@ -274,14 +264,14 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
               mockAuthWithRetrievals(
                 ConfidenceLevel.L250,
                 Some(AffinityGroup.Individual),
-                Some(completeIndividualRetrievedData.loginData.nino),
+                Some(completeIndividualLoginData.nino),
                 Some(ggSautr),
-                completeIndividualRetrievedData.loginData.emailAddress,
+                completeIndividualLoginData.emailAddress,
                 Enrolments(Set.empty),
-                Some(retrievedGGCredential(completeIndividualRetrievedData.loginData.ggCredId))
+                Some(retrievedGGCredential(completeIndividualLoginData.ggCredId))
               )
               mockGetSession(Right(None))
-              mockGetCitizenDetails(completeIndividualRetrievedData.loginData.nino)(Right(citizenDetails))
+              mockGetCitizenDetails(completeIndividualLoginData.nino)(Right(citizenDetails))
               mockGetUnexpiredTaxCheckCodes(Right(List.empty))
               mockStoreSession(session)(Right(()))
               mockFirstPge(session)(mockNextCall)
@@ -294,30 +284,30 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
             "'Organisation' where the only enrolment other than the NINO enrolment is an IR-SA one " +
             "and the user has CL250" in {
               val citizenDetails = CitizenDetails(
-                completeIndividualRetrievedData.loginData.name,
-                completeIndividualRetrievedData.loginData.dateOfBirth,
-                completeIndividualRetrievedData.loginData.sautr
+                completeIndividualLoginData.name,
+                completeIndividualLoginData.dateOfBirth,
+                completeIndividualLoginData.sautr
               )
 
-              val session = HECSession(completeIndividualRetrievedData, UserAnswers.empty, None)
+              val session = HECSession(completeIndividualLoginData, RetrievedJourneyData.empty, UserAnswers.empty, None)
 
               inSequence {
                 mockAuthWithRetrievals(
                   ConfidenceLevel.L250,
                   Some(AffinityGroup.Organisation),
-                  Some(completeIndividualRetrievedData.loginData.nino),
+                  Some(completeIndividualLoginData.nino),
                   None,
-                  completeIndividualRetrievedData.loginData.emailAddress,
+                  completeIndividualLoginData.emailAddress,
                   Enrolments(
                     Set(
                       Enrolment(EnrolmentConfig.SAEnrolment.key),
                       Enrolment(EnrolmentConfig.NINOEnrolment.key)
                     )
                   ),
-                  Some(retrievedGGCredential(completeIndividualRetrievedData.loginData.ggCredId))
+                  Some(retrievedGGCredential(completeIndividualLoginData.ggCredId))
                 )
                 mockGetSession(Right(None))
-                mockGetCitizenDetails(completeIndividualRetrievedData.loginData.nino)(Right(citizenDetails))
+                mockGetCitizenDetails(completeIndividualLoginData.nino)(Right(citizenDetails))
                 mockGetUnexpiredTaxCheckCodes(Right(List.empty))
                 mockStoreSession(session)(Right(()))
                 mockFirstPge(session)(mockNextCall)
@@ -328,21 +318,19 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
 
           "all the necessary data is retrieved for a company" in {
             List(
-              completeCompanyRetrievedData,
-              completeCompanyRetrievedData.copy(
-                loginData = completeCompanyRetrievedData.loginData.copy(emailAddress = None)
-              )
+              completeCompanyLoginData,
+              completeCompanyLoginData.copy(emailAddress = None)
             ).foreach { companyRetrievedData =>
-              val session = HECSession(companyRetrievedData, UserAnswers.empty, None)
+              val session = HECSession(companyRetrievedData, RetrievedJourneyData.empty, UserAnswers.empty, None)
               inSequence {
                 mockAuthWithRetrievals(
                   ConfidenceLevel.L50,
                   Some(AffinityGroup.Organisation),
                   None,
                   None,
-                  companyRetrievedData.loginData.emailAddress,
+                  companyRetrievedData.emailAddress,
                   Enrolments(Set(retrievedCtEnrolment(ctutr))),
-                  Some(retrievedGGCredential(companyRetrievedData.loginData.ggCredId))
+                  Some(retrievedGGCredential(companyRetrievedData.ggCredId))
                 )
                 mockGetSession(Right(None))
                 mockGetUnexpiredTaxCheckCodes(Right(List.empty))
@@ -355,19 +343,17 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
           }
 
           "no CTUTR can be found for a company" in {
-            val companyData = completeCompanyRetrievedData.copy(
-              loginData = completeCompanyRetrievedData.loginData.copy(ctutr = None)
-            )
-            val session     = HECSession(companyData, UserAnswers.empty, None)
+            val companyData = completeCompanyLoginData.copy(ctutr = None)
+            val session     = HECSession(companyData, RetrievedJourneyData.empty, UserAnswers.empty, None)
             inSequence {
               mockAuthWithRetrievals(
                 ConfidenceLevel.L50,
                 Some(AffinityGroup.Organisation),
                 None,
                 None,
-                completeCompanyRetrievedData.loginData.emailAddress,
+                completeCompanyLoginData.emailAddress,
                 Enrolments(Set.empty),
-                Some(retrievedGGCredential(completeCompanyRetrievedData.loginData.ggCredId))
+                Some(retrievedGGCredential(completeCompanyLoginData.ggCredId))
               )
               mockGetSession(Right(None))
               mockGetUnexpiredTaxCheckCodes(Right(List.empty))
@@ -412,11 +398,11 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
               mockAuthWithRetrievals(
                 ConfidenceLevel.L250,
                 Some(AffinityGroup.Individual),
-                Some(completeIndividualRetrievedData.loginData.nino),
+                Some(completeIndividualLoginData.nino),
                 Some(sautr),
-                completeIndividualRetrievedData.loginData.emailAddress,
+                completeIndividualLoginData.emailAddress,
                 Enrolments(Set.empty),
-                Some(retrievedGGCredential(completeIndividualRetrievedData.loginData.ggCredId))
+                Some(retrievedGGCredential(completeIndividualLoginData.ggCredId))
               )
               mockGetSession(Left(Error("")))
             }
@@ -429,11 +415,11 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
               mockAuthWithRetrievals(
                 ConfidenceLevel.L50,
                 Some(AffinityGroup.Agent),
-                Some(completeIndividualRetrievedData.loginData.nino),
+                Some(completeIndividualLoginData.nino),
                 Some(sautr),
-                completeIndividualRetrievedData.loginData.emailAddress,
+                completeIndividualLoginData.emailAddress,
                 Enrolments(Set.empty),
-                Some(retrievedGGCredential(completeIndividualRetrievedData.loginData.ggCredId))
+                Some(retrievedGGCredential(completeIndividualLoginData.ggCredId))
               )
               mockGetSession(Right(None))
             }
@@ -446,11 +432,11 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
               mockAuthWithRetrievals(
                 ConfidenceLevel.L50,
                 None,
-                Some(completeIndividualRetrievedData.loginData.nino),
+                Some(completeIndividualLoginData.nino),
                 Some(sautr),
-                completeIndividualRetrievedData.loginData.emailAddress,
+                completeIndividualLoginData.emailAddress,
                 Enrolments(Set.empty),
-                Some(retrievedGGCredential(completeIndividualRetrievedData.loginData.ggCredId))
+                Some(retrievedGGCredential(completeIndividualLoginData.ggCredId))
               )
               mockGetSession(Right(None))
             }
@@ -463,9 +449,9 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
               mockAuthWithRetrievals(
                 ConfidenceLevel.L50,
                 Some(AffinityGroup.Individual),
-                Some(completeIndividualRetrievedData.loginData.nino),
+                Some(completeIndividualLoginData.nino),
                 Some(sautr),
-                completeIndividualRetrievedData.loginData.emailAddress,
+                completeIndividualLoginData.emailAddress,
                 Enrolments(Set.empty),
                 Some(Credentials("id", "OtherProvider"))
               )
@@ -480,9 +466,9 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
               mockAuthWithRetrievals(
                 ConfidenceLevel.L50,
                 Some(AffinityGroup.Individual),
-                Some(completeIndividualRetrievedData.loginData.nino),
+                Some(completeIndividualLoginData.nino),
                 Some(sautr),
-                completeIndividualRetrievedData.loginData.emailAddress,
+                completeIndividualLoginData.emailAddress,
                 Enrolments(Set.empty),
                 None
               )
@@ -499,9 +485,9 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
                 Some(AffinityGroup.Individual),
                 None,
                 Some(sautr),
-                completeIndividualRetrievedData.loginData.emailAddress,
+                completeIndividualLoginData.emailAddress,
                 Enrolments(Set.empty),
-                Some(retrievedGGCredential(completeIndividualRetrievedData.loginData.ggCredId))
+                Some(retrievedGGCredential(completeIndividualLoginData.ggCredId))
               )
               mockGetSession(Right(None))
             }
@@ -514,14 +500,14 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
               mockAuthWithRetrievals(
                 ConfidenceLevel.L250,
                 Some(AffinityGroup.Individual),
-                Some(completeIndividualRetrievedData.loginData.nino),
+                Some(completeIndividualLoginData.nino),
                 Some(sautr),
-                completeIndividualRetrievedData.loginData.emailAddress,
+                completeIndividualLoginData.emailAddress,
                 Enrolments(Set.empty),
-                Some(retrievedGGCredential(completeIndividualRetrievedData.loginData.ggCredId))
+                Some(retrievedGGCredential(completeIndividualLoginData.ggCredId))
               )
               mockGetSession(Right(None))
-              mockGetCitizenDetails(completeIndividualRetrievedData.loginData.nino)(Left(Error("")))
+              mockGetCitizenDetails(completeIndividualLoginData.nino)(Left(Error("")))
               mockGetUnexpiredTaxCheckCodes(Right(List.empty))
             }
           )
@@ -529,8 +515,8 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
 
         "there is an error fetching existing tax check codes for an individual" in {
           val citizenDetails = CitizenDetails(
-            completeIndividualRetrievedData.loginData.name,
-            completeIndividualRetrievedData.loginData.dateOfBirth,
+            completeIndividualLoginData.name,
+            completeIndividualLoginData.dateOfBirth,
             None
           )
 
@@ -539,14 +525,14 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
               mockAuthWithRetrievals(
                 ConfidenceLevel.L250,
                 Some(AffinityGroup.Individual),
-                Some(completeIndividualRetrievedData.loginData.nino),
+                Some(completeIndividualLoginData.nino),
                 Some(sautr),
-                completeIndividualRetrievedData.loginData.emailAddress,
+                completeIndividualLoginData.emailAddress,
                 Enrolments(Set.empty),
-                Some(retrievedGGCredential(completeIndividualRetrievedData.loginData.ggCredId))
+                Some(retrievedGGCredential(completeIndividualLoginData.ggCredId))
               )
               mockGetSession(Right(None))
-              mockGetCitizenDetails(completeIndividualRetrievedData.loginData.nino)(Right(citizenDetails))
+              mockGetCitizenDetails(completeIndividualLoginData.nino)(Right(citizenDetails))
               mockGetUnexpiredTaxCheckCodes(Left(Error("")))
             }
           )
@@ -560,21 +546,23 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
                 Some(AffinityGroup.Organisation),
                 None,
                 None,
-                completeCompanyRetrievedData.loginData.emailAddress,
+                completeCompanyLoginData.emailAddress,
                 Enrolments(Set(retrievedCtEnrolment(ctutr))),
-                Some(retrievedGGCredential(completeCompanyRetrievedData.loginData.ggCredId))
+                Some(retrievedGGCredential(completeCompanyLoginData.ggCredId))
               )
               mockGetSession(Right(None))
               mockGetUnexpiredTaxCheckCodes(Right(List.empty))
-              mockStoreSession(HECSession(completeCompanyRetrievedData, UserAnswers.empty, None))(Left(Error("")))
+              mockStoreSession(
+                HECSession(completeCompanyLoginData, RetrievedJourneyData.empty, UserAnswers.empty, None)
+              )(Left(Error("")))
             }
           )
         }
 
         "there is no SA UTR from citizen details and there is an invalid SA UTR retrieved from GG" in {
           val citizenDetails = CitizenDetails(
-            completeIndividualRetrievedData.loginData.name,
-            completeIndividualRetrievedData.loginData.dateOfBirth,
+            completeIndividualLoginData.name,
+            completeIndividualLoginData.dateOfBirth,
             None
           )
 
@@ -583,14 +571,14 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
               mockAuthWithRetrievals(
                 ConfidenceLevel.L250,
                 Some(AffinityGroup.Individual),
-                Some(completeIndividualRetrievedData.loginData.nino),
+                Some(completeIndividualLoginData.nino),
                 Some(SAUTR("invalid")),
-                completeIndividualRetrievedData.loginData.emailAddress,
+                completeIndividualLoginData.emailAddress,
                 Enrolments(Set.empty),
-                Some(retrievedGGCredential(completeIndividualRetrievedData.loginData.ggCredId))
+                Some(retrievedGGCredential(completeIndividualLoginData.ggCredId))
               )
               mockGetSession(Right(None))
-              mockGetCitizenDetails(completeIndividualRetrievedData.loginData.nino)(Right(citizenDetails))
+              mockGetCitizenDetails(completeIndividualLoginData.nino)(Right(citizenDetails))
               mockGetUnexpiredTaxCheckCodes(Right(List.empty))
             }
           )
@@ -604,9 +592,9 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
                 Some(AffinityGroup.Organisation),
                 None,
                 None,
-                completeCompanyRetrievedData.loginData.emailAddress,
+                completeCompanyLoginData.emailAddress,
                 Enrolments(Set(retrievedCtEnrolment(CTUTR("invalid")))),
-                Some(retrievedGGCredential(completeCompanyRetrievedData.loginData.ggCredId))
+                Some(retrievedGGCredential(completeCompanyLoginData.ggCredId))
               )
               mockGetSession(Right(None))
             }
@@ -621,9 +609,9 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
                 Some(AffinityGroup.Organisation),
                 None,
                 None,
-                completeCompanyRetrievedData.loginData.emailAddress,
+                completeCompanyLoginData.emailAddress,
                 Enrolments(Set(retrievedCtEnrolment(ctutr))),
-                Some(retrievedGGCredential(completeCompanyRetrievedData.loginData.ggCredId))
+                Some(retrievedGGCredential(completeCompanyLoginData.ggCredId))
               )
               mockGetSession(Right(None))
               mockGetUnexpiredTaxCheckCodes(Left(Error("")))
