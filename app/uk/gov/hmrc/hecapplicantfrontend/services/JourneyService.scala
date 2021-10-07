@@ -33,7 +33,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.{CompanyRetr
 import uk.gov.hmrc.hecapplicantfrontend.models.SAStatus.ReturnFound
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.{CompleteUserAnswers, IncompleteUserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
-import uk.gov.hmrc.hecapplicantfrontend.models.{EntityType, Error, HECSession, SAStatus, SAStatusResponse, TaxSituation, YesNoAnswer}
+import uk.gov.hmrc.hecapplicantfrontend.models.{CTStatus, EntityType, Error, HECSession, SAStatus, SAStatusResponse, TaxSituation, YesNoAnswer}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyServiceImpl._
 import uk.gov.hmrc.http.HeaderCarrier
@@ -75,7 +75,8 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
     routes.SAController.saIncomeStatement()                              -> (_ => routes.CheckYourAnswersController.checkYourAnswers()),
     routes.CheckYourAnswersController.checkYourAnswers()                 -> (_ => routes.TaxCheckCompleteController.taxCheckComplete()),
     routes.CRNController.companyRegistrationNumber()                     -> companyRegistrationNumberRoute,
-    routes.CompanyDetailsController.confirmCompanyDetails()              -> confirmCompanyDetailsRoute
+    routes.CompanyDetailsController.confirmCompanyDetails()              -> confirmCompanyDetailsRoute,
+    routes.CompanyDetailsController.chargeableForCorporationTax()        -> chargeableForCTRoute
   )
 
   // map which describes routes from an exit page to their previous page. The keys are the exit page and the values are
@@ -291,6 +292,25 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
         case None                  => sys.error("Confirm company details answer was not found")
       }
 
+    }
+
+  private def chargeableForCTRoute(session: HECSession) =
+    session.mapAsCompany { companySession: CompanyHECSession =>
+      session.userAnswers.fold(_.chargeableForCT, _.chargeableForCT) map {
+        case YesNoAnswer.No => routes.CheckYourAnswersController.checkYourAnswers()
+        case YesNoAnswer.Yes =>
+          companySession.retrievedJourneyData.ctStatus.flatMap(_.latestAccountingPeriod) match {
+            case Some(accountingPeriod) =>
+              accountingPeriod.ctStatus match {
+                case CTStatus.ReturnFound => routes.CompanyDetailsController.ctIncomeStatement()
+                case CTStatus.NoticeToFileIssued => routes.CheckYourAnswersController.checkYourAnswers()
+                case CTStatus.NoReturnFound => routes.CompanyDetailsController.cannotDoTaxCheck()
+              }
+            case None => sys.error("CT status info missing")
+          }
+      } getOrElse {
+        sys.error("Chargeable for CT answer missing")
+      }
     }
 
 }

@@ -193,10 +193,44 @@ class CompanyDetailsController @Inject() (
       }
     }
 
-  val chargeableForCorporationTaxSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction) {
-    implicit request =>
-      Ok(s"${request.sessionData}")
-  }
+  val chargeableForCorporationTaxSubmit: Action[AnyContent] =
+    authAction.andThen(sessionDataAction).async { implicit request =>
+      def handleValidAnswer(chargeableForCT: YesNoAnswer) = {
+        val updatedAnswers =
+          request.sessionData.userAnswers.unset(_.chargeableForCT).copy(chargeableForCT = Some(chargeableForCT))
+
+        journeyService
+          .updateAndNext(
+            routes.CompanyDetailsController.chargeableForCorporationTax(),
+            request.sessionData.copy(userAnswers = updatedAnswers)
+          )
+          .fold(
+            { e =>
+              logger.warn("Could not update session and proceed", e)
+              InternalServerError
+            },
+            Redirect
+          )
+      }
+
+      ensureCompanyRetrievedData(request.sessionData) { (companyRetrievedData, _) =>
+        CompanyDetailsController
+          .chargeableForCTForm(YesNoAnswer.values)
+          .bindFromRequest()
+          .fold(
+            formWithErrors =>
+              Ok(
+                chargeableForCTPage(
+                  form = formWithErrors,
+                  back = journeyService.previous(routes.CompanyDetailsController.chargeableForCorporationTax()),
+                  date = "31 May 2020",
+                  options = CompanyDetailsController.chargeableForCTOptions
+                )
+              ),
+            handleValidAnswer
+          )
+      }
+    }
 
   val ctutrNotMatched: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
     val back = journeyService.previous(routes.CompanyDetailsController.ctutrNotMatched())
@@ -204,6 +238,10 @@ class CompanyDetailsController @Inject() (
   }
 
   val enterCtutr: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
+    Ok(s"${request.sessionData}")
+  }
+
+  val ctIncomeStatement: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
     Ok(s"${request.sessionData}")
   }
 
