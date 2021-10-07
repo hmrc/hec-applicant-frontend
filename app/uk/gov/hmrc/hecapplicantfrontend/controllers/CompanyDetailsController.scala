@@ -37,6 +37,7 @@ import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import scala.concurrent.{ExecutionContext, Future}
 
 class CompanyDetailsController @Inject() (
@@ -71,14 +72,16 @@ class CompanyDetailsController @Inject() (
   }
 
   val confirmCompanyDetails: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
-    ensureCompanyRetrievedData(request.sessionData) { (_, companyHouseName) =>
-      val companyDetailsConfirmed =
-        request.sessionData.userAnswers.fold(_.companyDetailsConfirmed, _.companyDetailsConfirmed)
-      val form = {
-        val emptyForm = CompanyDetailsController.confirmCompanyNameForm(YesNoAnswer.values)
-        companyDetailsConfirmed.fold(emptyForm)(emptyForm.fill)
+    request.sessionData mapAsCompany { companySession =>
+      ensureCompanyDataHasCompanyName(companySession) { companyHouseName =>
+        val companyDetailsConfirmed =
+          request.sessionData.userAnswers.fold(_.companyDetailsConfirmed, _.companyDetailsConfirmed)
+        val form = {
+          val emptyForm = CompanyDetailsController.confirmCompanyNameForm(YesNoAnswer.values)
+          companyDetailsConfirmed.fold(emptyForm)(emptyForm.fill)
+        }
+        Future.successful(getConfirmCompanyDetailsPage(form, companyHouseName))
       }
-      Future.successful(getConfirmCompanyDetailsPage(form, companyHouseName))
     }
   }
 
@@ -156,15 +159,14 @@ class CompanyDetailsController @Inject() (
       ) =
         Future.successful(getConfirmCompanyDetailsPage(form, companyHouseName))
 
-      ensureCompanyRetrievedData(request.sessionData) { (companySession, companyHouseName) =>
-        ensureCorrectUserAnswersState(request.sessionData) { crn =>
-          CompanyDetailsController
-            .confirmCompanyNameForm(YesNoAnswer.values)
-            .bindFromRequest()
-            .fold(
-              getFuturePage(companyHouseName),
-              handleValidAnswer(companySession, crn)
-            )
+      request.sessionData mapAsCompany { companySession =>
+        ensureCompanyDataHasCompanyName(companySession) { companyHouseName =>
+          ensureUserAnswersHasCRN(request.sessionData) { crn =>
+            CompanyDetailsController
+              .confirmCompanyNameForm(YesNoAnswer.values)
+              .bindFromRequest()
+              .fold(getFuturePage(companyHouseName), handleValidAnswer(companySession, crn))
+          }
         }
       }
     }
@@ -174,22 +176,26 @@ class CompanyDetailsController @Inject() (
     Ok(noAccountingPeriodFoundPage(back))
   }
 
+  private def formattedDate(date: LocalDate) = date.format(DateTimeFormatter.ofPattern("d MMMM yyyy"))
+
   val chargeableForCorporationTax: Action[AnyContent] =
     authAction.andThen(sessionDataAction).async { implicit request =>
-      ensureCompanyRetrievedData(request.sessionData) { (_, _) =>
-        val chargeableForCT = request.sessionData.userAnswers.fold(_.chargeableForCT, _.chargeableForCT)
-        val form = {
-          val emptyForm = CompanyDetailsController.chargeableForCTForm(YesNoAnswer.values)
-          chargeableForCT.fold(emptyForm)(emptyForm.fill)
-        }
-        Ok(
-          chargeableForCTPage(
-            form = form,
-            back = journeyService.previous(routes.CompanyDetailsController.chargeableForCorporationTax()),
-            date = "31 May 2020",
-            options = CompanyDetailsController.chargeableForCTOptions
+      request.sessionData mapAsCompany { companySession =>
+        ensureCompanyDataHasCTStatusAccountingPeriod(companySession) { latestAccountingPeriod =>
+          val chargeableForCT = request.sessionData.userAnswers.fold(_.chargeableForCT, _.chargeableForCT)
+          val form = {
+            val emptyForm = CompanyDetailsController.chargeableForCTForm(YesNoAnswer.values)
+            chargeableForCT.fold(emptyForm)(emptyForm.fill)
+          }
+          Ok(
+            chargeableForCTPage(
+              form = form,
+              back = journeyService.previous(routes.CompanyDetailsController.chargeableForCorporationTax()),
+              date = formattedDate(latestAccountingPeriod.endDate),
+              options = CompanyDetailsController.chargeableForCTOptions
+            )
           )
-        )
+        }
       }
     }
 
@@ -202,7 +208,7 @@ class CompanyDetailsController @Inject() (
         journeyService
           .updateAndNext(
             routes.CompanyDetailsController.chargeableForCorporationTax(),
-            request.sessionData.copy(userAnswers = updatedAnswers)
+            request.sessionData.mapAsCompany(_.copy(userAnswers = updatedAnswers))
           )
           .fold(
             { e =>
@@ -213,22 +219,24 @@ class CompanyDetailsController @Inject() (
           )
       }
 
-      ensureCompanyRetrievedData(request.sessionData) { (companyRetrievedData, _) =>
-        CompanyDetailsController
-          .chargeableForCTForm(YesNoAnswer.values)
-          .bindFromRequest()
-          .fold(
-            formWithErrors =>
-              Ok(
-                chargeableForCTPage(
-                  form = formWithErrors,
-                  back = journeyService.previous(routes.CompanyDetailsController.chargeableForCorporationTax()),
-                  date = "31 May 2020",
-                  options = CompanyDetailsController.chargeableForCTOptions
-                )
-              ),
-            handleValidAnswer
-          )
+      request.sessionData mapAsCompany { companySession =>
+        ensureCompanyDataHasCTStatusAccountingPeriod(companySession) { latestAccountingPeriod =>
+          CompanyDetailsController
+            .chargeableForCTForm(YesNoAnswer.values)
+            .bindFromRequest()
+            .fold(
+              formWithErrors =>
+                Ok(
+                  chargeableForCTPage(
+                    form = formWithErrors,
+                    back = journeyService.previous(routes.CompanyDetailsController.chargeableForCorporationTax()),
+                    date = formattedDate(latestAccountingPeriod.endDate),
+                    options = CompanyDetailsController.chargeableForCTOptions
+                  )
+                ),
+              handleValidAnswer
+            )
+        }
       }
     }
 
@@ -250,25 +258,30 @@ class CompanyDetailsController @Inject() (
     Ok(cannotDoTaxCheckPage(back))
   }
 
-  private def ensureCompanyRetrievedData(
-    session: HECSession
-  )(f: (CompanyHECSession, CompanyHouseName) => Future[Result]): Future[Result] =
-    session match {
-      case _: IndividualHECSession =>
-        logger.warn("Individual applicant shouldn't call company confirm page")
+  private def ensureCompanyDataHasCompanyName(
+                                               companySession: CompanyHECSession
+  )(f: CompanyHouseName => Future[Result]): Future[Result] =
+    companySession.retrievedJourneyData.companyName match {
+      case Some(companyName) => f(companyName)
+      case None              =>
+        logger.warn("Missing company name")
         InternalServerError
-
-      case companySession: CompanyHECSession =>
-        companySession.retrievedJourneyData.companyName match {
-          case None              =>
-            logger.warn("Missing company name")
-            InternalServerError
-          case Some(companyName) =>
-            f(companySession, companyName)
-        }
     }
 
-  private def ensureCorrectUserAnswersState(
+  private def ensureCompanyDataHasCTStatusAccountingPeriod(
+                                                            companySession: CompanyHECSession
+  )(f: CTAccountingPeriod => Future[Result]): Future[Result] =
+    companySession.retrievedJourneyData.ctStatus match {
+      case Some(CTStatusResponse(_, _, _, Some(latestAccountingPeriod))) => f(latestAccountingPeriod)
+      case Some(_)                                                       =>
+        logger.warn("Missing CT status latest accounting period")
+        InternalServerError
+      case None                                                          =>
+        logger.warn("Missing CT status")
+        InternalServerError
+    }
+
+  private def ensureUserAnswersHasCRN(
     session: HECSession
   )(f: CRN => Future[Result]): Future[Result] =
     session.userAnswers match {

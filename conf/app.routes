@@ -52,7 +52,7 @@ GET        /no-account-period              uk.gov.hmrc.hecapplicantfrontend.cont
 
 GET        /chargeable-for-ct              uk.gov.hmrc.hecapplicantfrontend.controllers.CompanyDetailsController.chargeableForCorporationTax
 POST       /chargeable-for-ct              uk.gov.hmrc.hecapplicantfrontend.controllers.CompanyDetailsController.chargeableForCorporationTaxSubmit
-POST       /ct-income-statement            uk.gov.hmrc.hecapplicantfrontend.controllers.CompanyDetailsController.ctIncomeStatement
+GET        /ct-income-statement            uk.gov.hmrc.hecapplicantfrontend.controllers.CompanyDetailsController.ctIncomeStatement
 
 GET        /ct-utr-doesnt-match            uk.gov.hmrc.hecapplicantfrontend.controllers.CompanyDetailsController.ctutrNotMatched
 GET        /enter-corpration-utr           uk.gov.hmrc.hecapplicantfrontend.controllers.CompanyDetailsController.enterCtutr

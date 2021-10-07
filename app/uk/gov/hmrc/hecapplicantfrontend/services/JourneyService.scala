@@ -297,16 +297,16 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
   private def chargeableForCTRoute(session: HECSession) =
     session.mapAsCompany { companySession: CompanyHECSession =>
       session.userAnswers.fold(_.chargeableForCT, _.chargeableForCT) map {
-        case YesNoAnswer.No => routes.CheckYourAnswersController.checkYourAnswers()
+        case YesNoAnswer.No  => routes.CheckYourAnswersController.checkYourAnswers()
         case YesNoAnswer.Yes =>
           companySession.retrievedJourneyData.ctStatus.flatMap(_.latestAccountingPeriod) match {
             case Some(accountingPeriod) =>
               accountingPeriod.ctStatus match {
-                case CTStatus.ReturnFound => routes.CompanyDetailsController.ctIncomeStatement()
+                case CTStatus.ReturnFound        => routes.CompanyDetailsController.ctIncomeStatement()
                 case CTStatus.NoticeToFileIssued => routes.CheckYourAnswersController.checkYourAnswers()
-                case CTStatus.NoReturnFound => routes.CompanyDetailsController.cannotDoTaxCheck()
+                case CTStatus.NoReturnFound      => routes.CompanyDetailsController.cannotDoTaxCheck()
               }
-            case None => sys.error("CT status info missing")
+            case None                   => sys.error("CT status info missing")
           }
       } getOrElse {
         sys.error("Chargeable for CT answer missing")
