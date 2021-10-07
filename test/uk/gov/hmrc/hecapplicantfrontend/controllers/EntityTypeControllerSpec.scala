@@ -62,7 +62,7 @@ class EntityTypeControllerSpec
     )
 
   val companyRetrievedData =
-    CompanyRetrievedData(GGCredId(""), None, None, None, List.empty)
+    CompanyRetrievedData(GGCredId(""), None, None, None, None, None, List.empty)
 
   "EntityTypeController" when {
 
@@ -109,8 +109,9 @@ class EntityTypeControllerSpec
                 LicenceTimeTrading.ZeroToTwoYears,
                 LicenceValidityPeriod.UpToTwoYears,
                 Some(TaxSituation.PAYE),
-                Some(IncomeDeclared.Yes),
+                Some(YesNoAnswer.Yes),
                 Some(EntityType.Individual),
+                None,
                 None
               ),
               None
@@ -266,7 +267,8 @@ class EntityTypeControllerSpec
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToOneYear,
               Some(TaxSituation.PAYE),
-              Some(IncomeDeclared.Yes),
+              Some(YesNoAnswer.Yes),
+              None,
               None,
               None
             )
@@ -293,9 +295,10 @@ class EntityTypeControllerSpec
               licenceTimeTrading = LicenceTimeTrading.ZeroToTwoYears,
               licenceValidityPeriod = LicenceValidityPeriod.UpToOneYear,
               taxSituation = Some(TaxSituation.SAPAYE),
-              saIncomeDeclared = Some(IncomeDeclared.Yes),
+              saIncomeDeclared = Some(YesNoAnswer.Yes),
               entityType = None,
-              crn = None
+              crn = None,
+              companyDetailsConfirmed = None
             )
             val updatedAnswers = IncompleteUserAnswers
               .fromCompleteAnswers(answers)

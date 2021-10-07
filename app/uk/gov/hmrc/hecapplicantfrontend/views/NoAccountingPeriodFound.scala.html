@@ -1,4 +1,4 @@
-/*
+@*
  * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,18 +12,17 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */
+ *@
 
-package uk.gov.hmrc.hecapplicantfrontend.models.views
+@import play.api.i18n.Messages
+@import play.api.mvc.{Call, Request}
 
-import uk.gov.hmrc.hecapplicantfrontend.models.YesNoAnswer
+@this(layout: Layout)
 
-final case class IncomeDeclaredOption(messageKey: String)
+@(back: Call)(implicit request: Request[_], messages: Messages)
+@key = @{"noAccountingPeriodFound"}
+@title = @{messages(s"$key.title")}
 
-object IncomeDeclaredOption {
-
-  def incomeDeclaredOption(option: YesNoAnswer): IncomeDeclaredOption = option match {
-    case YesNoAnswer.Yes => IncomeDeclaredOption("yes")
-    case YesNoAnswer.No  => IncomeDeclaredOption("no")
-  }
+@layout(pageTitle = Some(title), backLocation = Some(back)) {
+    <h1 class="govuk-heading-xl">@title</h1>
 }

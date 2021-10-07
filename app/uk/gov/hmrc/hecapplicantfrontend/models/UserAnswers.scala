@@ -47,9 +47,10 @@ object UserAnswers {
     licenceTimeTrading: Option[LicenceTimeTrading],
     licenceValidityPeriod: Option[LicenceValidityPeriod],
     taxSituation: Option[TaxSituation],
-    saIncomeDeclared: Option[IncomeDeclared],
+    saIncomeDeclared: Option[YesNoAnswer],
     entityType: Option[EntityType],
-    crn: Option[CRN]
+    crn: Option[CRN],
+    companyDetailsConfirmed: Option[YesNoAnswer]
   ) extends UserAnswers {
     val userAnswersType: UserAnswersType = UserAnswersType.Incomplete
   }
@@ -59,9 +60,10 @@ object UserAnswers {
     licenceTimeTrading: LicenceTimeTrading,
     licenceValidityPeriod: LicenceValidityPeriod,
     taxSituation: Option[TaxSituation],
-    saIncomeDeclared: Option[IncomeDeclared],
+    saIncomeDeclared: Option[YesNoAnswer],
     entityType: Option[EntityType],
-    crn: Option[CRN]
+    crn: Option[CRN],
+    companyDetailsConfirmed: Option[YesNoAnswer]
   ) extends UserAnswers {
     val userAnswersType: UserAnswersType = UserAnswersType.Complete
   }
@@ -76,7 +78,8 @@ object UserAnswers {
         c.taxSituation,
         c.saIncomeDeclared,
         c.entityType,
-        c.crn
+        c.crn,
+        c.companyDetailsConfirmed
       )
 
   }
@@ -100,7 +103,7 @@ object UserAnswers {
 
   }
 
-  val empty: IncompleteUserAnswers = IncompleteUserAnswers(None, None, None, None, None, None, None)
+  val empty: IncompleteUserAnswers = IncompleteUserAnswers(None, None, None, None, None, None, None, None)
 
   implicit val format: OFormat[UserAnswers] = new OFormat[UserAnswers] {
     override def reads(json: JsValue): JsResult[UserAnswers] =

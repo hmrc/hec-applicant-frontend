@@ -31,7 +31,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRe
 import uk.gov.hmrc.hecapplicantfrontend.models.SAStatus.ReturnFound
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.{CompleteUserAnswers, IncompleteUserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
-import uk.gov.hmrc.hecapplicantfrontend.models.{EntityType, Error, HECSession, IncomeDeclared, RetrievedApplicantData, SAStatus, SAStatusResponse, TaxSituation, UserAnswers}
+import uk.gov.hmrc.hecapplicantfrontend.models.{EntityType, Error, HECSession, RetrievedApplicantData, SAStatus, SAStatusResponse, TaxSituation, UserAnswers, YesNoAnswer}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyServiceImpl._
 import uk.gov.hmrc.http.HeaderCarrier
@@ -72,7 +72,8 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
     routes.TaxSituationController.taxSituation()                         -> taxSituationRoute,
     routes.SAController.saIncomeStatement()                              -> (_ => routes.CheckYourAnswersController.checkYourAnswers()),
     routes.CheckYourAnswersController.checkYourAnswers()                 -> (_ => routes.TaxCheckCompleteController.taxCheckComplete()),
-    routes.CRNController.companyRegistrationNumber()                     -> companyRegistrationNumberRoute
+    routes.CRNController.companyRegistrationNumber()                     -> companyRegistrationNumberRoute,
+    routes.CompanyDetailsController.confirmCompanyDetails()              -> confirmCompanyDetailsRoute
   )
 
   // map which describes routes from an exit page to their previous page. The keys are the exit page and the values are
@@ -164,7 +165,8 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
                 taxSituation,
                 saIncomeDeclared,
                 entityType,
-                crn
+                crn,
+                companyDetailsConfirmed
               ) if allAnswersComplete(incomplete, session.retrievedUserData) =>
             val completeAnswers =
               CompleteUserAnswers(
@@ -174,7 +176,8 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
                 taxSituation,
                 saIncomeDeclared,
                 entityType,
-                crn
+                crn,
+                companyDetailsConfirmed
               )
             session.copy(userAnswers = completeAnswers)
 
@@ -247,10 +250,37 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
 
   private def companyRegistrationNumberRoute(session: HECSession) =
     session.retrievedUserData match {
-      case _: IndividualRetrievedData                =>
+      case _: IndividualRetrievedData                      =>
         sys.error("This may never happen, Individual data shouldn't be present  in company journey")
-      case CompanyRetrievedData(_, _, _, Some(_), _) => routes.CompanyDetailsController.confirmCompanyDetails()
-      case _                                         => routes.CompanyDetailsNotFoundController.companyNotFound()
+      case CompanyRetrievedData(_, _, _, Some(_), _, _, _) => routes.CompanyDetailsController.confirmCompanyDetails()
+      case _                                               => routes.CompanyDetailsNotFoundController.companyNotFound()
+    }
+
+  private def confirmCompanyDetailsRoute(session: HECSession) =
+    session.userAnswers.fold(_.companyDetailsConfirmed, _.companyDetailsConfirmed) match {
+      case Some(YesNoAnswer.Yes) =>
+        session.retrievedUserData match {
+          case CompanyRetrievedData(_, Some(ctutr), _, _, Some(desCtutr), Some(ctStatus), _) =>
+            if (ctutr.value === desCtutr.value) {
+              ctStatus.latestAccountingPeriod.map(_.ctStatus) match {
+                case Some(_) => routes.CompanyDetailsController.chargeableForCorporationTax()
+                case None    => routes.CompanyDetailsController.noAccountingPeriod()
+              }
+            } else {
+              routes.CompanyDetailsController.ctutrNotMatched()
+            }
+          // enrolment and DES CTUTRs are present, but CT status couldn't be fetched
+          case CompanyRetrievedData(_, Some(_), _, _, Some(_), None, _)                      =>
+            routes.CompanyDetailsController.cannotDoTaxCheck()
+          // DES CTUTR not fetched
+          case CompanyRetrievedData(_, _, _, _, None, _, _)                                  =>
+            routes.CompanyDetailsController.ctutrNotMatched()
+          case CompanyRetrievedData(_, None, _, _, _, _, _)                                  => routes.CompanyDetailsController.enterCtutr()
+          case _: IndividualRetrievedData                                                    =>
+            sys.error("This should never happen, individual data shouldn't be present in company journey")
+        }
+      case Some(YesNoAnswer.No)  => routes.CRNController.companyRegistrationNumber()
+      case None                  => sys.error("Confirm company details answer was not found")
     }
 
 }
@@ -276,7 +306,7 @@ object JourneyServiceImpl {
     */
   private def checkSAIncomeDeclared(
     taxSituation: TaxSituation,
-    saIncomeDeclared: Option[IncomeDeclared],
+    saIncomeDeclared: Option[YesNoAnswer],
     retrievedUserData: RetrievedApplicantData
   ): Boolean =
     (retrievedUserData, saIncomeDeclared) match {
@@ -308,6 +338,7 @@ object JourneyServiceImpl {
             Some(taxSituation),
             saIncomeDeclared,
             entityType,
+            _,
             _
           ) if isIndividual =>
         val licenceTypeCheck      = checkEntityTypePresentIfRequired(licenceType, entityType)

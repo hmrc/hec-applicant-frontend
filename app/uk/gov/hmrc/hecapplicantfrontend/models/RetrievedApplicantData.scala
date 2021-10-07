@@ -44,6 +44,8 @@ object RetrievedApplicantData {
     ctutr: Option[CTUTR],
     emailAddress: Option[EmailAddress],
     companyName: Option[CompanyHouseName],
+    desCtutr: Option[CTUTR],
+    ctStatus: Option[CTStatusResponse],
     unexpiredTaxChecks: List[TaxCheckListItem]
   ) extends RetrievedApplicantData {
     val entityType: EntityType = EntityType.Company

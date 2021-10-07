@@ -22,19 +22,19 @@ import ai.x.play.json.implicits.formatSingleton
 import cats.Eq
 import play.api.libs.json.Format
 
-sealed trait IncomeDeclared extends Product with Serializable
+sealed trait YesNoAnswer extends Product with Serializable
 
-object IncomeDeclared {
+object YesNoAnswer {
 
-  case object Yes extends IncomeDeclared
+  case object Yes extends YesNoAnswer
 
-  case object No extends IncomeDeclared
+  case object No extends YesNoAnswer
 
-  implicit val eq: Eq[IncomeDeclared] = Eq.fromUniversalEquals
+  implicit val eq: Eq[YesNoAnswer] = Eq.fromUniversalEquals
 
   @SuppressWarnings(Array("org.wartremover.warts.Throw", "org.wartremover.warts.Equals"))
-  implicit val format: Format[IncomeDeclared] = Jsonx.formatSealed[IncomeDeclared]
+  implicit val format: Format[YesNoAnswer] = Jsonx.formatSealed[YesNoAnswer]
 
-  val values: List[IncomeDeclared] = List(Yes, No)
+  val values: List[YesNoAnswer] = List(Yes, No)
 
 }

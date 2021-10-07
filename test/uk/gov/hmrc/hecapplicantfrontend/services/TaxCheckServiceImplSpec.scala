@@ -31,7 +31,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.TaxDetails.IndividualTaxDetails
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.CompleteUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.ids._
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.hecapplicantfrontend.models.{CTAccountingPeriod, CTStatus, CTStatusResponse, DateOfBirth, EmailAddress, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, IncomeDeclared, Name, SAStatus, SAStatusResponse, TaxCheckListItem, TaxSituation, TaxYear}
+import uk.gov.hmrc.hecapplicantfrontend.models.{CTAccountingPeriod, CTStatus, CTStatusResponse, DateOfBirth, EmailAddress, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, Name, SAStatus, SAStatusResponse, TaxCheckListItem, TaxSituation, TaxYear, YesNoAnswer}
 import uk.gov.hmrc.hecapplicantfrontend.services.TaxCheckService._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 
@@ -100,7 +100,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         LicenceTimeTrading.TwoToFourYears,
         LicenceValidityPeriod.UpToOneYear,
         Some(TaxSituation.SA),
-        Some(IncomeDeclared.Yes),
+        Some(YesNoAnswer.Yes),
+        None,
         None,
         None
       )
@@ -283,7 +284,14 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
           mockGetCTStatus(ctutr, startDate, endDate)(Right(HttpResponse(OK, ctStatusResponseJson, emptyHeaders)))
 
           val result = service.getCTStatus(ctutr, startDate, endDate)
-          await(result.value) shouldBe Right(ctStatusResponse)
+          await(result.value) shouldBe Right(Some(ctStatusResponse))
+        }
+
+        "the http call returns a 404 not found status" in {
+          mockGetCTStatus(ctutr, startDate, endDate)(Right(HttpResponse(NOT_FOUND, Json.obj(), emptyHeaders)))
+
+          val result = service.getCTStatus(ctutr, startDate, endDate)
+          await(result.value) shouldBe Right(None)
         }
 
       }
@@ -336,7 +344,14 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
           mockGetCtutr(crn)(Right(HttpResponse(OK, responseJson, emptyHeaders)))
 
           val result = service.getCtutr(crn)
-          await(result.value) shouldBe Right(response.ctutr)
+          await(result.value) shouldBe Right(Some(response.ctutr))
+        }
+
+        "the http call returns a 404 not found status" in {
+          mockGetCtutr(crn)(Right(HttpResponse(NOT_FOUND, Json.obj(), emptyHeaders)))
+
+          val result = service.getCtutr(crn)
+          await(result.value) shouldBe Right(None)
         }
 
       }

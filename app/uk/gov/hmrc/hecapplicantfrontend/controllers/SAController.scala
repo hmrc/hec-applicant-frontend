@@ -25,7 +25,7 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 import uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.getTaxYear
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
-import uk.gov.hmrc.hecapplicantfrontend.models.IncomeDeclared
+import uk.gov.hmrc.hecapplicantfrontend.models.YesNoAnswer
 import uk.gov.hmrc.hecapplicantfrontend.models.views.IncomeDeclaredOption
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging.LoggerOps
@@ -54,14 +54,14 @@ class SAController @Inject() (
     val back             = journeyService.previous(routes.SAController.saIncomeStatement())
     val saIncomeDeclared = request.sessionData.userAnswers.fold(_.saIncomeDeclared, _.saIncomeDeclared)
     val form = {
-      val emptyForm = SAController.saIncomeDeclarationForm(IncomeDeclared.values)
+      val emptyForm = SAController.saIncomeDeclarationForm(YesNoAnswer.values)
       saIncomeDeclared.fold(emptyForm)(emptyForm.fill)
     }
     Ok(saIncomeStatementPage(form, back, SAController.incomeDeclaredOptions, getTaxYear(timeProvider.currentDate)))
   }
 
   val saIncomeStatementSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
-    def handleValidAnswer(incomeDeclared: IncomeDeclared): Future[Result] = {
+    def handleValidAnswer(incomeDeclared: YesNoAnswer): Future[Result] = {
       val updatedAnswers =
         request.sessionData.userAnswers.unset(_.saIncomeDeclared).copy(saIncomeDeclared = Some(incomeDeclared))
 
@@ -80,7 +80,7 @@ class SAController @Inject() (
     }
 
     SAController
-      .saIncomeDeclarationForm(IncomeDeclared.values)
+      .saIncomeDeclarationForm(YesNoAnswer.values)
       .bindFromRequest()
       .fold(
         formWithErrors =>
@@ -111,9 +111,9 @@ class SAController @Inject() (
 object SAController {
 
   val incomeDeclaredOptions: List[IncomeDeclaredOption] =
-    IncomeDeclared.values.map(IncomeDeclaredOption.incomeDeclaredOption)
+    YesNoAnswer.values.map(IncomeDeclaredOption.incomeDeclaredOption)
 
-  def saIncomeDeclarationForm(options: List[IncomeDeclared]): Form[IncomeDeclared] =
+  def saIncomeDeclarationForm(options: List[YesNoAnswer]): Form[YesNoAnswer] =
     Form(
       mapping(
         "saIncomeDeclared" -> of(FormUtils.radioFormFormatter(options))

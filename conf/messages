@@ -201,6 +201,10 @@ sautrNotFound.problem.p1 = You’ll need to <a href="{0}" class="govuk-link">con
 noReturnFound.title = You cannot do a tax check at the moment
 noReturnFound.p1 = You will need to <a href="{0}" class="govuk-link">contact HMRC</a> before doing your tax check.
 
+# Cannot do tax check
+cannotDoTaxCheck.title = You cannot do a tax check at the moment
+cannotDoTaxCheck.p1 = You will need to <a href="{0}" class="govuk-link">contact HMRC</a> before doing your tax check.
+
 # SA Income Declared
 saIncomeDeclared.title = Did you include income you earned using this type of licence in your tax return?
 saIncomeDeclared.yes = Yes
@@ -235,3 +239,25 @@ taxChecksList.button = Do a new tax check
 taxChecksList.p1 = Check if you have a valid tax check code, before you do another tax check.
 taxChecksList.p2 = If your tax check code expires before your application is likely to be processed, you should do another tax check.
 taxChecksList.link = Print or save this page as a PDF
+
+# Confirm company name
+confirmCompanyName.title = Is this the company you want to do the tax check for?
+confirmCompanyName.yes = Yes
+confirmCompanyName.no = No
+confirmCompanyName.error.required = Select yes if this is the company you want to do the tax check for
+confirmCompanyName.error.invalid = Select yes if this is the company you want to do the tax check for
+
+# CTUTR not matched
+ctutrNotMatched.title = You cannot use this service
+ctutrNotMatched.p1 = This could be because either:
+ctutrNotMatched.bullet1 = We could not match the company details you entered with our records.
+ctutrNotMatched.bullet2 = You have not yet registered for Corporation Tax and do not have a Corporation Tax Unique Taxpayer Reference.
+ctutrNotMatched.wrongDetails.heading = If your company details were wrong
+ctutrNotMatched.wrongDetails.p1 = If you think we may hold the wrong company details, <a class="govuk-link" href="{0}">tell Companies House about any changes</a>.
+ctutrNotMatched.notRegistered.heading = If you have not yet registered for Corporation Tax
+ctutrNotMatched.notRegistered.p1 = You’ll need to <a href="{0}" class="govuk-link">register for Corporation Tax</a>.
+
+
+
+# No accounting period found
+noAccountingPeriodFound.title = Your Corporation Tax accounting period

@@ -159,6 +159,8 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
         Some(ctutr),
         Some(emailAddress),
         None,
+        None,
+        None,
         List.empty
       )
 

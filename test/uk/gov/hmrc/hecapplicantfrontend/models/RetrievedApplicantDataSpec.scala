@@ -64,6 +64,8 @@ class RetrievedApplicantDataSpec extends AnyWordSpec with Matchers {
           Some(CTUTR("utr")),
           Some(EmailAddress("email")),
           Some(CompanyHouseName("Test Tech Ltd")),
+          None,
+          None,
           List.empty
         )
 
@@ -98,7 +100,7 @@ class RetrievedApplicantDataSpec extends AnyWordSpec with Matchers {
             .fromJson[RetrievedApplicantData](
               Json.parse("""{"ggCredId":"ggCredId", "type":"Company", "unexpiredTaxChecks":[]}""")
             )
-            .get shouldBe CompanyRetrievedData(GGCredId("ggCredId"), None, None, None, List.empty)
+            .get shouldBe CompanyRetrievedData(GGCredId("ggCredId"), None, None, None, None, None, List.empty)
         }
       }
     }

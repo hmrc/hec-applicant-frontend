@@ -89,10 +89,12 @@ class AppConfig @Inject() (config: Configuration, contactFrontendConfig: Contact
     )
   }
 
-  val taxCheckGuidanceUrl: String     = config.get[String]("external-url.tax-check-guidance")
-  val registerForSaUrl: String        = config.get[String]("external-url.register-for-sa")
-  val contactHmrcSa: String           = config.get[String]("external-url.contact-hmrc-sa")
-  val companiesHouseSearchUrl: String = config.get[String]("external-url.companies-house-search")
+  val taxCheckGuidanceUrl: String      = config.get[String]("external-url.tax-check-guidance")
+  val registerForSaUrl: String         = config.get[String]("external-url.register-for-sa")
+  val contactHmrcSa: String            = config.get[String]("external-url.contact-hmrc-sa")
+  val companiesHouseSearchUrl: String  = config.get[String]("external-url.companies-house-search")
+  val companiesHouseUpdatesUrl: String = config.get[String]("external-url.companies-house-updates")
+  val registerForCtUrl: String         = config.get[String]("external-url.register-for-ct")
 
   val firstPageBackUrl: String = config.get[String]("first-page-back-url")
 }

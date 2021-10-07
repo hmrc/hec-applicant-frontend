@@ -20,21 +20,18 @@
 @import uk.gov.hmrc.govukfrontend.views.html.components._
 @import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 @import uk.gov.hmrc.hecapplicantfrontend.models.YesNoAnswer
-@import uk.gov.hmrc.hecapplicantfrontend.models.views.IncomeDeclaredOption
-@import uk.gov.hmrc.hecapplicantfrontend.models.TaxYear
+@import uk.gov.hmrc.hecapplicantfrontend.models.views.CompanyNameConfirmedOption
 
 @this(layout: Layout, govukErrorSummary: GovukErrorSummary, govukRadios: GovukRadios, govukButton: GovukButton, formWithCSRF: FormWithCSRF)
 
-@(form: Form[YesNoAnswer], back: Call, options: List[IncomeDeclaredOption], taxDisplayYear: TaxYear)(implicit request: Request[_], messages: Messages)
-@key = @{"saIncomeDeclared"}
+@(form: Form[YesNoAnswer], back: Call, companyName: String, options: List[CompanyNameConfirmedOption])(implicit request: Request[_], messages: Messages)
+@key = @{"confirmCompanyName"}
 @title = @{messages(s"$key.title")}
 @radioOptions = @{options.zipWithIndex.map{ case (option, index) => RadioItem(
   content = Text(messages(s"$key.${option.messageKey}")),
   value = Some(index.toString),
   checked = form.data.values.toList.contains(index.toString)
 )}}
-@startYear = @{taxDisplayYear.startYear.toString}
-@endYear = @{s"${taxDisplayYear.startYear + 1}"}
 
 @layout(pageTitle = Some(title), hasErrors = form.hasErrors, backLocation = Some(back)) {
   @if(form.errors.nonEmpty) {
@@ -43,17 +40,17 @@
       content = Text(s"${messages(s"${e.key}.${e.message}")}")
     )), title = Text(messages("generic.errorSummary"))))
   }
-  @formWithCSRF(action = routes.SAController.saIncomeStatementSubmit()) {
-
+  <h1 class="govuk-heading-xl">@title</h1>
+  <p class="govuk-body" id="company-name">@companyName</p>
+  @formWithCSRF(action = routes.CompanyDetailsController.confirmCompanyDetailsSubmit()) {
     @govukRadios(Radios(
       fieldset = Some(Fieldset(
         legend = Some(Legend(
           content = Text(title),
-          classes = "govuk-fieldset__legend--xl",
-          isPageHeading = true
-        ))
+          classes = "govuk-visually-hidden"
+        )),
+        attributes = Map("aria-describedby" -> "company-name")
       )),
-      hint = Some(Hint(content = Text(messages(s"$key.hint", startYear, endYear)))),
       idPrefix = Some(key),
       name = key,
       items = radioOptions,
