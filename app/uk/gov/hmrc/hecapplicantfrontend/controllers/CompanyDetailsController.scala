@@ -25,7 +25,7 @@ import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, RequestWithSessionData, SessionDataAction}
-import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRetrievedData, IndividualRetrievedData}
+import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyJourneyData, CompanyRetrievedData, IndividualRetrievedData}
 import uk.gov.hmrc.hecapplicantfrontend.models._
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR}
 import uk.gov.hmrc.hecapplicantfrontend.models.views.CompanyNameConfirmedOption
@@ -98,7 +98,7 @@ class CompanyDetailsController @Inject() (
         desCtutrOpt: Option[CTUTR],
         companyData: CompanyRetrievedData
       ): EitherT[Future, Error, Option[CTStatusResponse]] =
-        companyData.ctutr flatTraverse [EitherT[Future, Error, *], CTStatusResponse] { ctutr =>
+        companyData.loginData.ctutr flatTraverse [EitherT[Future, Error, *], CTStatusResponse] { ctutr =>
           desCtutrOpt match {
             case Some(desCtutr) if desCtutr.value === ctutr.value =>
               val (start, end) = CompanyDetailsController.calculateLookbackPeriod(timeProvider.currentDate)
@@ -116,7 +116,10 @@ class CompanyDetailsController @Inject() (
         val result = for {
           desCtutr            <- taxCheckService.getCtutr(crn)
           ctStatusOpt         <- fetchCTStatus(desCtutr, companyData)
-          updatedRetrievedData = companyData.copy(desCtutr = desCtutr, ctStatus = ctStatusOpt)
+          updatedRetrievedData = companyData.copy(
+                                   journeyData =
+                                     companyData.journeyData.copy(desCtutr = desCtutr, ctStatus = ctStatusOpt)
+                                 )
           updatedUserAnswers   = request.sessionData.userAnswers
                                    .unset(_.companyDetailsConfirmed)
                                    .copy(companyDetailsConfirmed = Some(companyDetailsConfirmed))
@@ -191,13 +194,13 @@ class CompanyDetailsController @Inject() (
     session: HECSession
   )(f: (CompanyRetrievedData, CompanyHouseName) => Future[Result]): Future[Result] =
     session.retrievedUserData match {
-      case CompanyRetrievedData(_, _, _, None, _, _, _)                  =>
+      case CompanyRetrievedData(_, CompanyJourneyData(None, _, _), _)                  =>
         logger.warn("Missing company name")
         InternalServerError
-      case _: IndividualRetrievedData                                    =>
+      case _: IndividualRetrievedData                                                  =>
         logger.warn("Individual applicant shouldn't call company confirm page")
         InternalServerError
-      case c @ CompanyRetrievedData(_, _, _, Some(companyName), _, _, _) => f(c, companyName)
+      case c @ CompanyRetrievedData(_, CompanyJourneyData(Some(companyName), _, _), _) => f(c, companyName)
     }
 
   private def ensureCorrectUserAnswersState(

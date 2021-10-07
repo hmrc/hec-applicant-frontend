@@ -21,7 +21,7 @@ import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRetrievedData, IndividualRetrievedData}
+import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyJourneyData, CompanyLoginData, CompanyRetrievedData, IndividualJourneyData, IndividualLoginData, IndividualRetrievedData}
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.{CompleteUserAnswers, IncompleteUserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models._
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO}
@@ -52,18 +52,13 @@ class LicenceDetailsControllerSpec
 
   val individuaRetrievedlData: IndividualRetrievedData =
     IndividualRetrievedData(
-      GGCredId(""),
-      NINO(""),
-      None,
-      Name("", ""),
-      DateOfBirth(LocalDate.now()),
-      None,
-      None,
+      IndividualLoginData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None),
+      IndividualJourneyData.empty,
       List.empty
     )
 
   val companyRetrievedData: CompanyRetrievedData =
-    CompanyRetrievedData(GGCredId(""), None, None, None, None, None, List.empty)
+    CompanyRetrievedData(CompanyLoginData(GGCredId(""), None, None), CompanyJourneyData.empty, List.empty)
 
   "LicenceDetailsController" when {
 

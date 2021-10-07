@@ -24,7 +24,7 @@ import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.CompanyRetrievedData
+import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyJourneyData, CompanyLoginData, CompanyRetrievedData}
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.{CompleteUserAnswers, IncompleteUserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, GGCredId}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
@@ -61,7 +61,11 @@ class CRNControllerSpec
   )
 
   val controller           = instanceOf[CRNController]
-  val companyRetrievedData = CompanyRetrievedData(GGCredId(""), None, None, None, None, None, List.empty)
+  val companyRetrievedData = CompanyRetrievedData(
+    CompanyLoginData(GGCredId(""), None, None),
+    CompanyJourneyData.empty,
+    List.empty
+  )
 
   def mockFindCompany(crn: CRN)(
     result: Either[Error, Option[CompanyHouseDetails]]
@@ -283,7 +287,9 @@ class CRNControllerSpec
               .copy(crn = Some(validCRN(0)))
 
             val updatedSession = session.copy(
-              retrievedUserData = companyRetrievedData.copy(companyName = Some(companyHouseName)),
+              retrievedUserData = companyRetrievedData.copy(
+                journeyData = companyRetrievedData.journeyData.copy(companyName = Some(companyHouseName))
+              ),
               userAnswers = updatedAnswers
             )
 
@@ -339,7 +345,9 @@ class CRNControllerSpec
                 )
 
               val updatedCompanyRetreiveData =
-                companyRetrievedData.copy(companyName = companyDetails.map(_.companyName))
+                companyRetrievedData.copy(
+                  journeyData = companyRetrievedData.journeyData.copy(companyName = companyDetails.map(_.companyName))
+                )
               val updatedSession             =
                 session.copy(retrievedUserData = updatedCompanyRetreiveData, userAnswers = updatedAnswers)
 

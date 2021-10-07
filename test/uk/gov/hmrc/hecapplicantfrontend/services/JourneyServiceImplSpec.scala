@@ -25,7 +25,7 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthenticatedRequest, RequestWithSessionData}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.{SessionSupport, routes}
 import uk.gov.hmrc.hecapplicantfrontend.models.EntityType.Company
-import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRetrievedData, IndividualRetrievedData}
+import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyJourneyData, CompanyLoginData, CompanyRetrievedData, IndividualJourneyData, IndividualLoginData, IndividualRetrievedData}
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.{CompleteUserAnswers, IncompleteUserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models._
 import uk.gov.hmrc.hecapplicantfrontend.models.ids._
@@ -46,18 +46,13 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
 
   val individualRetrievedData: IndividualRetrievedData =
     IndividualRetrievedData(
-      GGCredId(""),
-      NINO(""),
-      None,
-      Name("", ""),
-      DateOfBirth(LocalDate.now()),
-      None,
-      None,
+      IndividualLoginData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None),
+      IndividualJourneyData.empty,
       List.empty
     )
 
   val companyRetrievedData: CompanyRetrievedData =
-    CompanyRetrievedData(GGCredId(""), None, None, None, None, None, List.empty)
+    CompanyRetrievedData(CompanyLoginData(GGCredId(""), None, None), CompanyJourneyData.empty, List.empty)
 
   "JourneyServiceImpl" when {
 
@@ -131,7 +126,11 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
         "there is an error updating the session" in {
           val currentSession                              = HECSession(individualRetrievedData, UserAnswers.empty, None)
           val updatedSession                              =
-            HECSession(individualRetrievedData.copy(sautr = Some(SAUTR(""))), UserAnswers.empty, None)
+            HECSession(
+              individualRetrievedData.copy(loginData = individualRetrievedData.loginData.copy(sautr = Some(SAUTR("")))),
+              UserAnswers.empty,
+              None
+            )
           implicit val request: RequestWithSessionData[_] =
             requestWithSessionData(currentSession)
 
@@ -401,19 +400,23 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
 
           val individualWoStatus =
             IndividualRetrievedData(
-              GGCredId(""),
-              NINO(""),
-              Some(SAUTR("utr")),
-              Name("", ""),
-              DateOfBirth(LocalDate.now()),
-              None,
-              None,
+              IndividualLoginData(
+                GGCredId(""),
+                NINO(""),
+                Some(SAUTR("utr")),
+                Name("", ""),
+                DateOfBirth(LocalDate.now()),
+                None
+              ),
+              IndividualJourneyData.empty,
               List.empty
             )
 
           def individualWithStatus(status: SAStatus = SAStatus.NoticeToFileIssued): IndividualRetrievedData =
             individualWoStatus.copy(
-              saStatus = Some(SAStatusResponse(SAUTR(""), TaxYear(2020), status))
+              journeyData = individualWoStatus.journeyData.copy(
+                saStatus = Some(SAStatusResponse(SAUTR(""), TaxYear(2020), status))
+              )
             )
 
           val answers = UserAnswers.empty.copy(licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires))
@@ -466,7 +469,10 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             "SAUTR is present but there is no SA status response" in {
               val answersWithTaxSituation = answers.copy(taxSituation = Some(taxSituation))
               val session                 = HECSession(
-                individualRetrievedData.copy(saStatus = None, sautr = Some(SAUTR(""))),
+                individualRetrievedData.copy(
+                  loginData = individualRetrievedData.loginData.copy(sautr = Some(SAUTR(""))),
+                  journeyData = individualRetrievedData.journeyData.copy(saStatus = None)
+                ),
                 answersWithTaxSituation,
                 None
               )
@@ -604,7 +610,9 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             val session        = HECSession(companyRetrievedData, UserAnswers.empty, None)
             val updatedSession =
               HECSession(
-                companyRetrievedData.copy(companyName = companyName),
+                companyRetrievedData.copy(
+                  journeyData = companyRetrievedData.journeyData.copy(companyName = companyName)
+                ),
                 UserAnswers.empty.copy(crn = Some(CRN("1234567"))),
                 None
               )
@@ -637,7 +645,11 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
         "the confirm company name page" when {
 
           "the user says company details are wrong" in {
-            val companyData    = companyRetrievedData.copy(companyName = Some(CompanyHouseName("Test tech Ltd")))
+            val companyData    = companyRetrievedData.copy(
+              journeyData = companyRetrievedData.journeyData.copy(
+                companyName = Some(CompanyHouseName("Test tech Ltd"))
+              )
+            )
             val session        = HECSession(companyData, UserAnswers.empty, None)
             val updatedSession =
               HECSession(
@@ -660,7 +672,9 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
           }
 
           "the user answer for confirmation of company details is missing" in {
-            val companyData    = companyRetrievedData.copy(companyName = Some(CompanyHouseName("Test tech Ltd")))
+            val companyData    = companyRetrievedData.copy(
+              journeyData = companyRetrievedData.journeyData.copy(companyName = Some(CompanyHouseName("Test tech Ltd")))
+            )
             val session        = HECSession(companyData, UserAnswers.empty, None)
             val updatedSession =
               HECSession(
@@ -737,10 +751,14 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
 
           "enrolments and DES CTUTRs do not match" in {
             val companyData    = companyRetrievedData.copy(
-              companyName = Some(CompanyHouseName("Test tech Ltd")),
-              ctutr = Some(CTUTR("enrolments-ctutr")),
-              desCtutr = Some(CTUTR("des-ctutr")),
-              ctStatus = Some(anyCTStatusResponse)
+              loginData = companyRetrievedData.loginData.copy(
+                ctutr = Some(CTUTR("enrolments-ctutr"))
+              ),
+              journeyData = companyRetrievedData.journeyData.copy(
+                companyName = Some(CompanyHouseName("Test tech Ltd")),
+                desCtutr = Some(CTUTR("des-ctutr")),
+                ctStatus = Some(anyCTStatusResponse)
+              )
             )
             val session        = HECSession(companyData, UserAnswers.empty, None)
             val updatedSession =
@@ -765,10 +783,14 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
 
           "DES CTUTR could not be fetched" in {
             val companyData    = companyRetrievedData.copy(
-              companyName = Some(CompanyHouseName("Test tech Ltd")),
-              ctutr = Some(CTUTR("enrolments-ctutr")),
-              desCtutr = None,
-              ctStatus = None
+              loginData = companyRetrievedData.loginData.copy(
+                ctutr = Some(CTUTR("enrolments-ctutr"))
+              ),
+              journeyData = companyRetrievedData.journeyData.copy(
+                companyName = Some(CompanyHouseName("Test tech Ltd")),
+                desCtutr = None,
+                ctStatus = None
+              )
             )
             val session        = HECSession(companyData, UserAnswers.empty, None)
             val updatedSession =
@@ -793,10 +815,14 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
 
           "CT status could not be fetched" in {
             val companyData    = companyRetrievedData.copy(
-              companyName = Some(CompanyHouseName("Test tech Ltd")),
-              ctutr = Some(CTUTR("enrolments-ctutr")),
-              desCtutr = Some(CTUTR("des-ctutr")),
-              ctStatus = None
+              loginData = companyRetrievedData.loginData.copy(
+                ctutr = Some(CTUTR("enrolments-ctutr"))
+              ),
+              journeyData = companyRetrievedData.journeyData.copy(
+                companyName = Some(CompanyHouseName("Test tech Ltd")),
+                desCtutr = Some(CTUTR("des-ctutr")),
+                ctStatus = None
+              )
             )
             val session        = HECSession(companyData, UserAnswers.empty, None)
             val updatedSession =
@@ -822,10 +848,14 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
           "enrolments and DES CTUTRs match" when {
             def testForCTStatus(status: CTStatus) = {
               val companyData               = companyRetrievedData.copy(
-                companyName = Some(CompanyHouseName("Test tech Ltd")),
-                ctutr = Some(CTUTR("ctutr")),
-                desCtutr = Some(CTUTR("ctutr")),
-                ctStatus = Some(ctStatusResponseWithStatus(status))
+                loginData = companyRetrievedData.loginData.copy(
+                  ctutr = Some(CTUTR("ctutr"))
+                ),
+                journeyData = companyRetrievedData.journeyData.copy(
+                  companyName = Some(CompanyHouseName("Test tech Ltd")),
+                  desCtutr = Some(CTUTR("ctutr")),
+                  ctStatus = Some(ctStatusResponseWithStatus(status))
+                )
               )
               val (session, updatedSession) = buildSessions(companyData)
 
@@ -853,10 +883,14 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
 
             "no accounting periods found" in {
               val companyData               = companyRetrievedData.copy(
-                companyName = Some(CompanyHouseName("Test tech Ltd")),
-                ctutr = Some(CTUTR("ctutr")),
-                desCtutr = Some(CTUTR("ctutr")),
-                ctStatus = Some(anyCTStatusResponse)
+                loginData = companyRetrievedData.loginData.copy(
+                  ctutr = Some(CTUTR("ctutr"))
+                ),
+                journeyData = companyRetrievedData.journeyData.copy(
+                  companyName = Some(CompanyHouseName("Test tech Ltd")),
+                  desCtutr = Some(CTUTR("ctutr")),
+                  ctStatus = Some(anyCTStatusResponse)
+                )
               )
               val (session, updatedSession) = buildSessions(companyData)
 
@@ -873,10 +907,14 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
 
           "no CTUTR found in enrolments" in {
             val companyData               = companyRetrievedData.copy(
-              companyName = Some(CompanyHouseName("Test tech Ltd")),
-              ctutr = None,
-              desCtutr = Some(CTUTR("ctutr")),
-              ctStatus = Some(anyCTStatusResponse)
+              loginData = companyRetrievedData.loginData.copy(
+                ctutr = None
+              ),
+              journeyData = companyRetrievedData.journeyData.copy(
+                companyName = Some(CompanyHouseName("Test tech Ltd")),
+                desCtutr = Some(CTUTR("ctutr")),
+                ctStatus = Some(anyCTStatusResponse)
+              )
             )
             val (session, updatedSession) = buildSessions(companyData)
 
@@ -920,8 +958,10 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
           )
 
           val individualData = individualRetrievedData.copy(
-            sautr = Some(SAUTR("utr")),
-            saStatus = Some(SAStatusResponse(SAUTR("utr"), TaxYear(2020), SAStatus.NoticeToFileIssued))
+            loginData = individualRetrievedData.loginData.copy(sautr = Some(SAUTR("utr"))),
+            journeyData = individualRetrievedData.journeyData.copy(saStatus =
+              Some(SAStatusResponse(SAUTR("utr"), TaxYear(2020), SAStatus.NoticeToFileIssued))
+            )
           )
 
           val session = HECSession(individualData, incompleteAnswers, None)
@@ -1055,8 +1095,10 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 None
               )
 
-              val individualData = individualRetrievedData.copy(saStatus =
-                Some(SAStatusResponse(SAUTR("utr"), TaxYear(2020), SAStatus.ReturnFound))
+              val individualData = individualRetrievedData.copy(
+                journeyData = individualRetrievedData.journeyData.copy(
+                  saStatus = Some(SAStatusResponse(SAUTR("utr"), TaxYear(2020), SAStatus.ReturnFound))
+                )
               )
               val session        = HECSession(individualData, incompleteAnswers, None)
 
@@ -1100,8 +1142,10 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 None
               )
 
-              val individualData = individualRetrievedData.copy(saStatus =
-                Some(SAStatusResponse(SAUTR("utr"), TaxYear(2020), SAStatus.NoReturnFound))
+              val individualData = individualRetrievedData.copy(
+                journeyData = individualRetrievedData.journeyData.copy(
+                  saStatus = Some(SAStatusResponse(SAUTR("utr"), TaxYear(2020), SAStatus.NoReturnFound))
+                )
               )
               val session        = HECSession(individualData, incompleteAnswers, None)
 
@@ -1460,8 +1504,10 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
           }
 
           val individualDataWithStatus = individualRetrievedData.copy(
-            sautr = Some(SAUTR("utr")),
-            saStatus = Some(SAStatusResponse(SAUTR(""), TaxYear(2020), SAStatus.NoticeToFileIssued))
+            loginData = individualRetrievedData.loginData.copy(sautr = Some(SAUTR("utr"))),
+            journeyData = individualRetrievedData.journeyData.copy(saStatus =
+              Some(SAStatusResponse(SAUTR(""), TaxYear(2020), SAStatus.NoticeToFileIssued))
+            )
           )
 
           def userAnswers(licenceType: LicenceType, taxSituation: TaxSituation, entityType: Option[EntityType]) =
@@ -1617,7 +1663,9 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
 
         "the company registration number page" in {
           val session                                     = HECSession(
-            companyRetrievedData.copy(companyName = Some(CompanyHouseName("Test Tech Ltd"))),
+            companyRetrievedData.copy(
+              journeyData = companyRetrievedData.journeyData.copy(companyName = Some(CompanyHouseName("Test Tech Ltd")))
+            ),
             UserAnswers.empty.copy(
               licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles),
               entityType = Some(Company),
@@ -1637,7 +1685,9 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
 
         "the confirm company details page" in {
           val session                                     = HECSession(
-            companyRetrievedData.copy(companyName = Some(CompanyHouseName("Test Tech Ltd"))),
+            companyRetrievedData.copy(
+              journeyData = companyRetrievedData.journeyData.copy(companyName = Some(CompanyHouseName("Test Tech Ltd")))
+            ),
             UserAnswers.empty.copy(
               licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles),
               entityType = Some(Company),
@@ -1679,13 +1729,15 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
 
         def buildIndividualSession(taxSituation: TaxSituation, saStatus: SAStatus): HECSession = {
           val individualData = IndividualRetrievedData(
-            GGCredId(""),
-            NINO(""),
-            Some(SAUTR("utr")),
-            Name("", ""),
-            DateOfBirth(LocalDate.now()),
-            None,
-            Some(SAStatusResponse(SAUTR(""), TaxYear(2020), saStatus)),
+            IndividualLoginData(
+              GGCredId(""),
+              NINO(""),
+              Some(SAUTR("utr")),
+              Name("", ""),
+              DateOfBirth(LocalDate.now()),
+              None
+            ),
+            IndividualJourneyData(Some(SAStatusResponse(SAUTR(""), TaxYear(2020), saStatus))),
             List.empty
           )
           HECSession(
@@ -1845,7 +1897,11 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
         permutations foreach { case (taxSituation, saStatus) =>
           withClue(s"for $taxSituation & $saStatus") {
             val individualData =
-              individualRetrievedData.copy(saStatus = Some(SAStatusResponse(SAUTR("utr"), TaxYear(2020), saStatus)))
+              individualRetrievedData.copy(
+                journeyData = individualRetrievedData.journeyData.copy(
+                  saStatus = Some(SAStatusResponse(SAUTR("utr"), TaxYear(2020), saStatus))
+                )
+              )
 
             // income declared is missing
             JourneyServiceImpl.allAnswersComplete(
@@ -1874,8 +1930,10 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
           TaxSituation.SAPAYE
         ) foreach { taxSituation =>
           withClue(s"for $taxSituation") {
-            val individualData = individualRetrievedData.copy(saStatus =
-              Some(SAStatusResponse(SAUTR("utr"), TaxYear(2020), SAStatus.ReturnFound))
+            val individualData = individualRetrievedData.copy(
+              journeyData = individualRetrievedData.journeyData.copy(
+                saStatus = Some(SAStatusResponse(SAUTR("utr"), TaxYear(2020), SAStatus.ReturnFound))
+              )
             )
 
             JourneyServiceImpl.allAnswersComplete(
@@ -1895,8 +1953,10 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
           TaxSituation.SAPAYE
         ) foreach { taxSituation =>
           withClue(s"for $taxSituation") {
-            val individualData = individualRetrievedData.copy(saStatus =
-              Some(SAStatusResponse(SAUTR("utr"), TaxYear(2020), SAStatus.ReturnFound))
+            val individualData = individualRetrievedData.copy(
+              journeyData = individualRetrievedData.journeyData.copy(
+                saStatus = Some(SAStatusResponse(SAUTR("utr"), TaxYear(2020), SAStatus.ReturnFound))
+              )
             )
 
             JourneyServiceImpl.allAnswersComplete(

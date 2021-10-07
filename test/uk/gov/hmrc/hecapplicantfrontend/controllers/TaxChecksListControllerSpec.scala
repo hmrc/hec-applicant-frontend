@@ -22,7 +22,7 @@ import play.api.inject.bind
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.IndividualRetrievedData
+import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{IndividualJourneyData, IndividualLoginData, IndividualRetrievedData}
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.IncompleteUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models._
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO}
@@ -51,13 +51,8 @@ class TaxChecksListControllerSpec
 
   val individualRetrievedData =
     IndividualRetrievedData(
-      GGCredId(""),
-      NINO(""),
-      None,
-      Name("", ""),
-      DateOfBirth(LocalDate.now()),
-      None,
-      None,
+      IndividualLoginData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None),
+      IndividualJourneyData.empty,
       List.empty
     )
 

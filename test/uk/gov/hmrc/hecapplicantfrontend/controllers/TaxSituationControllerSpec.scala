@@ -21,7 +21,7 @@ import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRetrievedData, IndividualRetrievedData}
+import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyJourneyData, CompanyLoginData, CompanyRetrievedData, IndividualJourneyData, IndividualLoginData, IndividualRetrievedData}
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.{CompleteUserAnswers, IncompleteUserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models._
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO, SAUTR}
@@ -30,8 +30,8 @@ import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, Lice
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.{JourneyService, TaxCheckService}
 import uk.gov.hmrc.hecapplicantfrontend.util.{TimeProvider, TimeUtils}
-import java.time.LocalDate
 
+import java.time.LocalDate
 import org.jsoup.nodes.Document
 import cats.data.EitherT
 import cats.instances.future._
@@ -74,18 +74,13 @@ class TaxSituationControllerSpec
 
   val individualRetrievedData =
     IndividualRetrievedData(
-      GGCredId(""),
-      NINO(""),
-      None,
-      Name("", ""),
-      DateOfBirth(LocalDate.now()),
-      None,
-      None,
+      IndividualLoginData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None),
+      IndividualJourneyData.empty,
       List.empty
     )
 
   val companyRetrievedData =
-    CompanyRetrievedData(GGCredId(""), None, None, None, None, None, List.empty)
+    CompanyRetrievedData(CompanyLoginData(GGCredId(""), None, None), CompanyJourneyData.empty, List.empty)
 
   val date = LocalDate.of(2020, 10, 24)
 
@@ -637,7 +632,13 @@ class TaxSituationControllerSpec
 
         "the call to update and next fails" in {
           val answers = UserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
-          val session = HECSession(individualRetrievedData.copy(sautr = Some(SAUTR("utr"))), answers, None)
+          val session = HECSession(
+            individualRetrievedData.copy(loginData =
+              individualRetrievedData.loginData.copy(sautr = Some(SAUTR("utr")))
+            ),
+            answers,
+            None
+          )
 
           val updatedAnswers = UserAnswers.empty
             .copy(
@@ -673,7 +674,8 @@ class TaxSituationControllerSpec
       )
       def testNonSA(taxSituation: TaxSituation) = {
         val answers        = UserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
-        val individualData = individualRetrievedData.copy(sautr = Some(SAUTR("utr")))
+        val individualData =
+          individualRetrievedData.copy(loginData = individualRetrievedData.loginData.copy(sautr = Some(SAUTR("utr"))))
         val session        = HECSession(individualData, answers, None)
 
         val updatedAnswers = answers.copy(taxSituation = Some(taxSituation))
@@ -706,13 +708,15 @@ class TaxSituationControllerSpec
 
       def testSA(taxSituation: TaxSituation, statusResponse: SAStatusResponse) = {
         val answers        = UserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
-        val individualData = individualRetrievedData.copy(sautr = Some(SAUTR("utr")))
+        val individualData =
+          individualRetrievedData.copy(loginData = individualRetrievedData.loginData.copy(sautr = Some(SAUTR("utr"))))
         val session        = HECSession(individualData, answers, None)
 
         val updatedAnswers = answers.copy(taxSituation = Some(taxSituation))
         val updatedSession = session.copy(
           userAnswers = updatedAnswers,
-          retrievedUserData = individualData.copy(saStatus = Some(statusResponse))
+          retrievedUserData =
+            individualData.copy(journeyData = individualData.journeyData.copy(saStatus = Some(statusResponse)))
         )
 
         inSequence {
@@ -743,7 +747,8 @@ class TaxSituationControllerSpec
 
       "throw internal server error if call to fetch SA status fails" in {
         val answers        = UserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
-        val individualData = individualRetrievedData.copy(sautr = Some(SAUTR("utr")))
+        val individualData =
+          individualRetrievedData.copy(loginData = individualRetrievedData.loginData.copy(sautr = Some(SAUTR("utr"))))
         val session        = HECSession(individualData, answers, None)
 
         inSequence {
@@ -762,7 +767,13 @@ class TaxSituationControllerSpec
 
           "the user has not previously completed answering questions" in {
             val answers = UserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
-            val session = HECSession(individualRetrievedData.copy(sautr = Some(SAUTR("utr"))), answers, None)
+            val session = HECSession(
+              individualRetrievedData.copy(loginData =
+                individualRetrievedData.loginData.copy(sautr = Some(SAUTR("utr")))
+              ),
+              answers,
+              None
+            )
 
             val updatedAnswers = answers.copy(taxSituation = Some(TaxSituation.PAYE))
             val updatedSession = session.copy(userAnswers = updatedAnswers)
@@ -794,7 +805,14 @@ class TaxSituationControllerSpec
               None,
               None
             )
-            val session = HECSession(individualRetrievedData.copy(sautr = Some(SAUTR("utr"))), answers, None)
+
+            val session = HECSession(
+              individualRetrievedData.copy(loginData =
+                individualRetrievedData.loginData.copy(sautr = Some(SAUTR("utr")))
+              ),
+              answers,
+              None
+            )
 
             val updatedAnswers = IncompleteUserAnswers(
               Some(LicenceType.DriverOfTaxisAndPrivateHires),
