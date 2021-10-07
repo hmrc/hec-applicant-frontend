@@ -261,8 +261,9 @@ ctutrNotMatched.notRegistered.p1 = You’ll need to <a href="{0}" class="govuk-l
 noAccountingPeriodFound.title = Your Corporation Tax accounting period
 
 # Chargeable for corporation tax
-chargeableForCT.title = Was your company chargeable for Corporation Tax for the accounting period ending {1}?
+chargeableForCT.title = Was your company chargeable for Corporation Tax for the accounting period ending {0}?
 chargeableForCT.yes = Yes
 chargeableForCT.no = No
 chargeableForCT.error.required = Select yes if your company was chargeable for Corporation Tax for the accounting period ending {1}
 chargeableForCT.error.invalid = Select yes if your company was chargeable for Corporation Tax for the accounting period ending {1}
+chargeableForCT.link = Find out about accounting periods for Corporation Tax (opens in new tab)
