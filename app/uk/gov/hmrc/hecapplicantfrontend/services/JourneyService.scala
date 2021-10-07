@@ -168,7 +168,8 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
                 saIncomeDeclared,
                 entityType,
                 crn,
-                companyDetailsConfirmed
+                companyDetailsConfirmed,
+                chargeableForCT
               ) if allAnswersComplete(incomplete, session) =>
             val completeAnswers =
               CompleteUserAnswers(
@@ -179,7 +180,8 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
                 saIncomeDeclared,
                 entityType,
                 crn,
-                companyDetailsConfirmed
+                companyDetailsConfirmed,
+                chargeableForCT
               )
             session.fold(
               _.copy(userAnswers = completeAnswers),
@@ -344,6 +346,7 @@ object JourneyServiceImpl {
                 Some(taxSituation),
                 saIncomeDeclared,
                 entityType,
+                _,
                 _,
                 _
               ) =>

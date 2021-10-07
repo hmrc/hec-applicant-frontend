@@ -49,13 +49,14 @@ class CompanyDetailsController @Inject() (
   cannotDoTaxCheckPage: html.CannotDoTaxCheck,
   ctutrNotMatchedPage: html.CtutrNotMatched,
   noAccountingPeriodFoundPage: html.NoAccountingPeriodFound,
+  chargeableForCTPage: html.ChargeableForCT,
   mcc: MessagesControllerComponents
 )(implicit appConfig: AppConfig, ec: ExecutionContext)
     extends FrontendController(mcc)
     with I18nSupport
     with Logging {
 
-  private def getPage(form: Form[YesNoAnswer], companyName: CompanyHouseName)(implicit
+  private def getConfirmCompanyDetailsPage(form: Form[YesNoAnswer], companyName: CompanyHouseName)(implicit
     request: RequestWithSessionData[_]
   ): Result = {
     val back = journeyService.previous(routes.CompanyDetailsController.confirmCompanyDetails())
@@ -77,7 +78,7 @@ class CompanyDetailsController @Inject() (
         val emptyForm = CompanyDetailsController.confirmCompanyNameForm(YesNoAnswer.values)
         companyDetailsConfirmed.fold(emptyForm)(emptyForm.fill)
       }
-      Future.successful(getPage(form, companyHouseName))
+      Future.successful(getConfirmCompanyDetailsPage(form, companyHouseName))
     }
   }
 
@@ -153,7 +154,7 @@ class CompanyDetailsController @Inject() (
       def getFuturePage(companyHouseName: CompanyHouseName)(form: Form[YesNoAnswer])(implicit
         request: RequestWithSessionData[_]
       ) =
-        Future.successful(getPage(form, companyHouseName))
+        Future.successful(getConfirmCompanyDetailsPage(form, companyHouseName))
 
       ensureCompanyRetrievedData(request.sessionData) { (companySession, companyHouseName) =>
         ensureCorrectUserAnswersState(request.sessionData) { crn =>
@@ -173,8 +174,28 @@ class CompanyDetailsController @Inject() (
     Ok(noAccountingPeriodFoundPage(back))
   }
 
-  val chargeableForCorporationTax: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
-    Ok(s"${request.sessionData}")
+  val chargeableForCorporationTax: Action[AnyContent] =
+    authAction.andThen(sessionDataAction).async { implicit request =>
+      ensureCompanyRetrievedData(request.sessionData) { (_, _) =>
+        val chargeableForCT = request.sessionData.userAnswers.fold(_.chargeableForCT, _.chargeableForCT)
+        val form = {
+          val emptyForm = CompanyDetailsController.chargeableForCTForm(YesNoAnswer.values)
+          chargeableForCT.fold(emptyForm)(emptyForm.fill)
+        }
+        Ok(
+          chargeableForCTPage(
+            form = form,
+            back = journeyService.previous(routes.CompanyDetailsController.chargeableForCorporationTax()),
+            date = "31 May 2020",
+            options = CompanyDetailsController.chargeableForCTOptions
+          )
+        )
+      }
+    }
+
+  val chargeableForCorporationTaxSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction) {
+    implicit request =>
+      Ok(s"${request.sessionData}")
   }
 
   val ctutrNotMatched: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
@@ -213,9 +234,9 @@ class CompanyDetailsController @Inject() (
     session: HECSession
   )(f: CRN => Future[Result]): Future[Result] =
     session.userAnswers match {
-      case UserAnswers.IncompleteUserAnswers(_, _, _, _, _, _, Some(crn), _) => f(crn)
-      case UserAnswers.CompleteUserAnswers(_, _, _, _, _, _, Some(crn), _)   => f(crn)
-      case _                                                                 =>
+      case UserAnswers.IncompleteUserAnswers(_, _, _, _, _, _, Some(crn), _, _) => f(crn)
+      case UserAnswers.CompleteUserAnswers(_, _, _, _, _, _, Some(crn), _, _)   => f(crn)
+      case _                                                                    =>
         logger.warn("CRN is not populated in user answers")
         InternalServerError
     }
@@ -223,6 +244,7 @@ class CompanyDetailsController @Inject() (
 
 object CompanyDetailsController {
   val companyNameConfirmedOptions: List[YesNoOption] = YesNoAnswer.values.map(YesNoOption.yesNoOption)
+  val chargeableForCTOptions: List[YesNoOption]      = YesNoAnswer.values.map(YesNoOption.yesNoOption)
 
   def confirmCompanyNameForm(options: List[YesNoAnswer]): Form[YesNoAnswer] =
     Form(
@@ -239,4 +261,11 @@ object CompanyDetailsController {
     */
   def calculateLookbackPeriod(today: LocalDate): (LocalDate, LocalDate) =
     today.minusYears(2).plusDays(1) -> today.minusYears(1)
+
+  def chargeableForCTForm(options: List[YesNoAnswer]): Form[YesNoAnswer] =
+    Form(
+      mapping(
+        "chargeableForCT" -> of(FormUtils.radioFormFormatter(options))
+      )(identity)(Some(_))
+    )
 }
