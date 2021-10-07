@@ -135,14 +135,14 @@ class TaxCheckServiceImpl @Inject() (hecConnector: HECConnector)(implicit ec: Ex
     retrievedApplicantData match {
       case individual: IndividualRetrievedData =>
         val applicantDetails = IndividualApplicantDetails(
-          individual.ggCredId,
-          individual.name,
-          individual.dateOfBirth
+          individual.loginData.ggCredId,
+          individual.loginData.name,
+          individual.loginData.dateOfBirth
         )
 
         val taxDetails = IndividualTaxDetails(
-          individual.nino,
-          individual.sautr,
+          individual.loginData.nino,
+          individual.loginData.sautr,
           answers.taxSituation,
           answers.saIncomeDeclared
         )

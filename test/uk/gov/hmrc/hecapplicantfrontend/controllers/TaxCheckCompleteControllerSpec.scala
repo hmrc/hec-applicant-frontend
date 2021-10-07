@@ -17,13 +17,12 @@
 package uk.gov.hmrc.hecapplicantfrontend.controllers
 
 import java.time.LocalDate
-
 import play.api.inject.bind
 import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRetrievedData, IndividualRetrievedData}
+import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyJourneyData, CompanyLoginData, CompanyRetrievedData, IndividualJourneyData, IndividualLoginData, IndividualRetrievedData}
 import uk.gov.hmrc.hecapplicantfrontend.models._
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
@@ -48,18 +47,13 @@ class TaxCheckCompleteControllerSpec
 
   val individualRetrievedData =
     IndividualRetrievedData(
-      GGCredId(""),
-      NINO(""),
-      None,
-      Name("", ""),
-      DateOfBirth(LocalDate.now()),
-      None,
-      None,
+      IndividualLoginData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None),
+      IndividualJourneyData.empty,
       List.empty
     )
 
   val companyRetrievedData =
-    CompanyRetrievedData(GGCredId(""), None, None, None, None, None, List.empty)
+    CompanyRetrievedData(CompanyLoginData(GGCredId(""), None, None), CompanyJourneyData.empty, List.empty)
 
   "TaxCheckCompleteController" when {
 

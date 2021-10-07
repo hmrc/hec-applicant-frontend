@@ -17,11 +17,10 @@
 package uk.gov.hmrc.hecapplicantfrontend.models
 
 import java.time.LocalDate
-
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.Json
-import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRetrievedData, IndividualRetrievedData}
+import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyJourneyData, CompanyLoginData, CompanyRetrievedData, IndividualJourneyData, IndividualLoginData, IndividualRetrievedData}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CTUTR, GGCredId, NINO, SAUTR}
 
 class RetrievedApplicantDataSpec extends AnyWordSpec with Matchers {
@@ -34,47 +33,60 @@ class RetrievedApplicantDataSpec extends AnyWordSpec with Matchers {
 
       val individualRetrievedData: RetrievedApplicantData =
         IndividualRetrievedData(
-          GGCredId("ggCredId"),
-          NINO("nino"),
-          Some(SAUTR("utr")),
-          Name("first", "last"),
-          DateOfBirth(dateOfBirth),
-          Some(EmailAddress("email")),
-          None,
+          IndividualLoginData(
+            GGCredId("ggCredId"),
+            NINO("nino"),
+            Some(SAUTR("utr")),
+            Name("first", "last"),
+            DateOfBirth(dateOfBirth),
+            Some(EmailAddress("email"))
+          ),
+          IndividualJourneyData.empty,
           List.empty
         )
 
       val individualJson = Json.parse(s"""{
-          |"ggCredId":"ggCredId",
-          |"nino":"nino",
-          |"sautr":"utr",
-          |"name":{
-          |   "firstName":"first",
-          |   "lastName":"last"
-          |},
-          |"dateOfBirth":"$dateOfBirthStr",
-          |"emailAddress":"email",
+          |"loginData" : {
+          |  "ggCredId":"ggCredId",
+          |  "nino":"nino",
+          |  "sautr":"utr",
+          |  "name":{
+          |     "firstName":"first",
+          |     "lastName":"last"
+          |  },
+          |  "dateOfBirth":"$dateOfBirthStr",
+          |  "emailAddress":"email"
+          |},  
+          |"journeyData" : {},
           |"type":"Individual",
           |"unexpiredTaxChecks":[]
           |}""".stripMargin)
 
       val companyRetrievedData: RetrievedApplicantData =
         CompanyRetrievedData(
-          GGCredId("ggCredId"),
-          Some(CTUTR("utr")),
-          Some(EmailAddress("email")),
-          Some(CompanyHouseName("Test Tech Ltd")),
-          None,
-          None,
+          CompanyLoginData(
+            GGCredId("ggCredId"),
+            Some(CTUTR("utr")),
+            Some(EmailAddress("email"))
+          ),
+          CompanyJourneyData(
+            Some(CompanyHouseName("Test Tech Ltd")),
+            None,
+            None
+          ),
           List.empty
         )
 
       val companyJson = Json.parse("""{
-          |"ggCredId":"ggCredId",
-          |"ctutr":"utr",
-          |"emailAddress":"email",
+          |"loginData": {
+          |  "ggCredId":"ggCredId",
+          |  "ctutr":"utr",
+          |  "emailAddress":"email"
+          |},
+          |"journeyData" : { 
+          |  "companyName" : "Test Tech Ltd"
+          |},
           |"type":"Company",
-          |"companyName":"Test Tech Ltd",
           |"unexpiredTaxChecks":[]
           |}""".stripMargin)
 
@@ -98,9 +110,15 @@ class RetrievedApplicantDataSpec extends AnyWordSpec with Matchers {
         "only mandatory fields are present" in {
           Json
             .fromJson[RetrievedApplicantData](
-              Json.parse("""{"ggCredId":"ggCredId", "type":"Company", "unexpiredTaxChecks":[]}""")
+              Json.parse(
+                """{"loginData" : { "ggCredId":"ggCredId" }, "journeyData" : { }, "type":"Company", "unexpiredTaxChecks":[]}"""
+              )
             )
-            .get shouldBe CompanyRetrievedData(GGCredId("ggCredId"), None, None, None, None, None, List.empty)
+            .get shouldBe CompanyRetrievedData(
+            CompanyLoginData(GGCredId("ggCredId"), None, None),
+            CompanyJourneyData.empty,
+            List.empty
+          )
         }
       }
     }

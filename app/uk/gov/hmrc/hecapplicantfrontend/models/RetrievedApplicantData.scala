@@ -27,28 +27,71 @@ sealed trait RetrievedApplicantData extends Product with Serializable {
 object RetrievedApplicantData {
 
   final case class IndividualRetrievedData(
-    ggCredId: GGCredId,
-    nino: NINO,
-    sautr: Option[SAUTR],
-    name: Name,
-    dateOfBirth: DateOfBirth,
-    emailAddress: Option[EmailAddress],
-    saStatus: Option[SAStatusResponse],
+    loginData: IndividualLoginData,
+    journeyData: IndividualJourneyData,
     unexpiredTaxChecks: List[TaxCheckListItem]
   ) extends RetrievedApplicantData {
     val entityType: EntityType = EntityType.Individual
   }
 
   final case class CompanyRetrievedData(
-    ggCredId: GGCredId,
-    ctutr: Option[CTUTR],
-    emailAddress: Option[EmailAddress],
-    companyName: Option[CompanyHouseName],
-    desCtutr: Option[CTUTR],
-    ctStatus: Option[CTStatusResponse],
+    loginData: CompanyLoginData,
+    journeyData: CompanyJourneyData,
     unexpiredTaxChecks: List[TaxCheckListItem]
   ) extends RetrievedApplicantData {
     val entityType: EntityType = EntityType.Company
+  }
+
+  final case class IndividualLoginData(
+    ggCredId: GGCredId,
+    nino: NINO,
+    sautr: Option[SAUTR],
+    name: Name,
+    dateOfBirth: DateOfBirth,
+    emailAddress: Option[EmailAddress]
+  )
+
+  object IndividualLoginData {
+
+    implicit val format: OFormat[IndividualLoginData] = Json.format
+
+  }
+
+  final case class IndividualJourneyData(
+    saStatus: Option[SAStatusResponse]
+  )
+
+  object IndividualJourneyData {
+
+    implicit val format: OFormat[IndividualJourneyData] = Json.format
+
+    val empty: IndividualJourneyData = IndividualJourneyData(None)
+
+  }
+
+  final case class CompanyLoginData(
+    ggCredId: GGCredId,
+    ctutr: Option[CTUTR],
+    emailAddress: Option[EmailAddress]
+  )
+
+  object CompanyLoginData {
+
+    implicit val format: OFormat[CompanyLoginData] = Json.format
+
+  }
+
+  final case class CompanyJourneyData(
+    companyName: Option[CompanyHouseName],
+    desCtutr: Option[CTUTR],
+    ctStatus: Option[CTStatusResponse]
+  )
+
+  object CompanyJourneyData {
+
+    implicit val format: OFormat[CompanyJourneyData] = Json.format
+
+    val empty: CompanyJourneyData = CompanyJourneyData(None, None, None)
   }
 
   implicit val format: OFormat[RetrievedApplicantData] = new OFormat[RetrievedApplicantData] {

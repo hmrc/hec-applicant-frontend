@@ -25,7 +25,7 @@ import play.api.mvc.Request
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthenticatedRequest, RequestWithSessionData}
-import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.CompanyRetrievedData
+import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyJourneyData, CompanyLoginData, CompanyRetrievedData}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CTUTR, GGCredId}
 import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, HECSession, UserAnswers}
 import uk.gov.hmrc.http.SessionId
@@ -58,12 +58,12 @@ class SessionStoreImplSpec extends AnyWordSpec with Matchers with MongoSupport w
     val sessionData =
       HECSession(
         CompanyRetrievedData(
-          GGCredId("id"),
-          Some(CTUTR("utr")),
-          Some(EmailAddress("email")),
-          None,
-          None,
-          None,
+          CompanyLoginData(
+            GGCredId("id"),
+            Some(CTUTR("utr")),
+            Some(EmailAddress("email"))
+          ),
+          CompanyJourneyData.empty,
           List.empty
         ),
         UserAnswers.empty,

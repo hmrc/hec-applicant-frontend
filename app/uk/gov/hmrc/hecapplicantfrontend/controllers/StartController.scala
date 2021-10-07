@@ -30,7 +30,7 @@ import uk.gov.hmrc.auth.core.retrieve.Credentials
 import uk.gov.hmrc.auth.core.{AffinityGroup, ConfidenceLevel, Enrolments}
 import uk.gov.hmrc.hecapplicantfrontend.config.{AppConfig, EnrolmentConfig}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.AuthWithRetrievalsAction
-import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRetrievedData, IndividualRetrievedData}
+import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyJourneyData, CompanyLoginData, CompanyRetrievedData, IndividualJourneyData, IndividualLoginData, IndividualRetrievedData}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CTUTR, GGCredId, NINO, SAUTR}
 import uk.gov.hmrc.hecapplicantfrontend.models.{CitizenDetails, EmailAddress, Error, HECSession, RetrievedApplicantData, RetrievedGGData, TaxCheckListItem, UserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
@@ -167,13 +167,15 @@ class StartController @Inject() (
           DataError,
           sautr =>
             IndividualRetrievedData(
-              GGCredId(ggCredId.value),
-              NINO(nino),
-              sautr,
-              citizenDetails.name,
-              citizenDetails.dateOfBirth,
-              maybeEmail.map(EmailAddress(_)),
-              None,
+              IndividualLoginData(
+                GGCredId(ggCredId.value),
+                NINO(nino),
+                sautr,
+                citizenDetails.name,
+                citizenDetails.dateOfBirth,
+                maybeEmail.map(EmailAddress(_))
+              ),
+              IndividualJourneyData.empty,
               taxChecks
             )
         )
@@ -226,12 +228,12 @@ class StartController @Inject() (
       maybeCtutr <- EitherT.fromEither[Future](ctutrValidation).leftMap(DataError)
       taxChecks  <- taxCheckService.getUnexpiredTaxCheckCodes().leftMap(BackendError(_): StartError)
     } yield CompanyRetrievedData(
-      GGCredId(ggCredId.value),
-      maybeCtutr,
-      maybeEmail.map(EmailAddress(_)),
-      None,
-      None,
-      None,
+      CompanyLoginData(
+        GGCredId(ggCredId.value),
+        maybeCtutr,
+        maybeEmail.map(EmailAddress(_))
+      ),
+      CompanyJourneyData.empty,
       taxChecks
     )
   }

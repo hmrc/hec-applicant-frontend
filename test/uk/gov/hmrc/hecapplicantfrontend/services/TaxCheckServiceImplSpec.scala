@@ -26,7 +26,7 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.hecapplicantfrontend.connectors.HECConnector
 import uk.gov.hmrc.hecapplicantfrontend.models.ApplicantDetails.IndividualApplicantDetails
 import uk.gov.hmrc.hecapplicantfrontend.models.HECTaxCheckData.IndividualHECTaxCheckData
-import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.IndividualRetrievedData
+import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{IndividualJourneyData, IndividualLoginData, IndividualRetrievedData}
 import uk.gov.hmrc.hecapplicantfrontend.models.TaxDetails.IndividualTaxDetails
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.CompleteUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.ids._
@@ -85,13 +85,15 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
       val sautr                   = SAUTR("sautr")
       val email                   = EmailAddress("email")
       val individualRetrievedData = IndividualRetrievedData(
-        GGCredId("cred"),
-        NINO("nino"),
-        Some(sautr),
-        Name("first", "last"),
-        DateOfBirth(LocalDate.now()),
-        Some(email),
-        None,
+        IndividualLoginData(
+          GGCredId("cred"),
+          NINO("nino"),
+          Some(sautr),
+          Name("first", "last"),
+          DateOfBirth(LocalDate.now()),
+          Some(email)
+        ),
+        IndividualJourneyData.empty,
         List.empty
       )
 
@@ -108,9 +110,9 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
 
       val individualTaxCheckData = IndividualHECTaxCheckData(
         IndividualApplicantDetails(
-          individualRetrievedData.ggCredId,
-          individualRetrievedData.name,
-          individualRetrievedData.dateOfBirth
+          individualRetrievedData.loginData.ggCredId,
+          individualRetrievedData.loginData.name,
+          individualRetrievedData.loginData.dateOfBirth
         ),
         LicenceDetails(
           completeAnswers.licenceType,
@@ -118,7 +120,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
           completeAnswers.licenceValidityPeriod
         ),
         IndividualTaxDetails(
-          individualRetrievedData.nino,
+          individualRetrievedData.loginData.nino,
           Some(sautr),
           completeAnswers.taxSituation,
           completeAnswers.saIncomeDeclared

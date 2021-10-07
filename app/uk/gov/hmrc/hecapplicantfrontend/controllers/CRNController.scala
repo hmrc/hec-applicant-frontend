@@ -116,7 +116,10 @@ class CRNController @Inject() (
       request.sessionData.userAnswers
         .unset(_.crn)
         .copy(crn = Some(crn))
-    updatedCompanyData      = companyRetrievedData.copy(companyName = companyHouseDetailsOpt.map(_.companyName))
+    updatedCompanyData      =
+      companyRetrievedData.copy(
+        journeyData = companyRetrievedData.journeyData.copy(companyName = companyHouseDetailsOpt.map(_.companyName))
+      )
     updatedSession          = request.sessionData.copy(retrievedUserData = updatedCompanyData, userAnswers = updatedAnswers)
     next                   <- journeyService
                                 .updateAndNext(routes.CRNController.companyRegistrationNumber(), updatedSession)

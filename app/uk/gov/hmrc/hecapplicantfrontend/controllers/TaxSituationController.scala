@@ -86,7 +86,7 @@ class TaxSituationController @Inject() (
       taxSituation: TaxSituation
     ): EitherT[Future, models.Error, Option[SAStatusResponse]] =
       if (saTaxSituations.contains(taxSituation)) {
-        individualRetrievedData.sautr
+        individualRetrievedData.loginData.sautr
           .traverse[EitherT[Future, Error, *], SAStatusResponse](taxCheckService.getSAStatus(_, taxYear))
       } else {
         EitherT.pure[Future, models.Error](None)
@@ -98,7 +98,9 @@ class TaxSituationController @Inject() (
           val result = for {
             maybeSaStatus <- fetchSAStatus(individualRetrievedData, taxSituation)
 
-            updatedRetrievedData = individualRetrievedData.copy(saStatus = maybeSaStatus)
+            updatedRetrievedData = individualRetrievedData.copy(
+                                     journeyData = individualRetrievedData.journeyData.copy(saStatus = maybeSaStatus)
+                                   )
             // wipe the SA income declared answer since it is dependent on the tax situation answer
             updatedAnswers       = request.sessionData.userAnswers
                                      .unset(_.taxSituation)
