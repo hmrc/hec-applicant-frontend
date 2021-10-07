@@ -26,7 +26,7 @@ import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 import uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.getTaxYear
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
 import uk.gov.hmrc.hecapplicantfrontend.models.YesNoAnswer
-import uk.gov.hmrc.hecapplicantfrontend.models.views.IncomeDeclaredOption
+import uk.gov.hmrc.hecapplicantfrontend.models.views.YesNoOption
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging.LoggerOps
 import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging, TimeProvider}
@@ -110,8 +110,7 @@ class SAController @Inject() (
 
 object SAController {
 
-  val incomeDeclaredOptions: List[IncomeDeclaredOption] =
-    YesNoAnswer.values.map(IncomeDeclaredOption.incomeDeclaredOption)
+  val incomeDeclaredOptions: List[YesNoOption] = YesNoAnswer.values.map(YesNoOption.yesNoOption)
 
   def saIncomeDeclarationForm(options: List[YesNoAnswer]): Form[YesNoAnswer] =
     Form(

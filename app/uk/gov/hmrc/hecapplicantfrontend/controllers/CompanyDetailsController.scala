@@ -28,7 +28,7 @@ import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, Request
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRetrievedData, IndividualRetrievedData}
 import uk.gov.hmrc.hecapplicantfrontend.models._
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR}
-import uk.gov.hmrc.hecapplicantfrontend.models.views.CompanyNameConfirmedOption
+import uk.gov.hmrc.hecapplicantfrontend.models.views.YesNoOption
 import uk.gov.hmrc.hecapplicantfrontend.services.{JourneyService, TaxCheckService}
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging.LoggerOps
 import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging, TimeProvider}
@@ -213,8 +213,7 @@ class CompanyDetailsController @Inject() (
 }
 
 object CompanyDetailsController {
-  val companyNameConfirmedOptions: List[CompanyNameConfirmedOption] =
-    YesNoAnswer.values.map(CompanyNameConfirmedOption.companyNameConfirmedToOption)
+  val companyNameConfirmedOptions: List[YesNoOption] = YesNoAnswer.values.map(YesNoOption.yesNoOption)
 
   def confirmCompanyNameForm(options: List[YesNoAnswer]): Form[YesNoAnswer] =
     Form(
