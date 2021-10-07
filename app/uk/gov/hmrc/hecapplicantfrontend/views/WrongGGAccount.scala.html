@@ -28,9 +28,9 @@
 @p1 = @{
     selectedEntityType match {
         case models.EntityType.Individual =>
-            messages(s"$key.p1", messages(s"$key.individual"), messages(s"$key.company"))
-        case models.EntityType.Company    =>
             messages(s"$key.p1", messages(s"$key.company"), messages(s"$key.individual"))
+        case models.EntityType.Company    =>
+            messages(s"$key.p1", messages(s"$key.individual"), messages(s"$key.company"))
     }
 }
 

@@ -350,10 +350,10 @@ class EntityTypeControllerSpec
 
       "display the page" when {
 
-        "a selected entity type can be found in session" in {
+        def testPage(selectedEntityType: EntityType, expectedP1: String): Unit = {
           val session = HECSession(
             individuaRetrievedlData,
-            UserAnswers.empty.copy(entityType = Some(EntityType.Company)),
+            UserAnswers.empty.copy(entityType = Some(selectedEntityType)),
             None
           )
 
@@ -366,9 +366,33 @@ class EntityTypeControllerSpec
           checkPageIsDisplayed(
             performAction(),
             messageFromMessageKey("wrongGGAccount.title"),
-            doc => doc.select("#back").attr("href") shouldBe mockPreviousCall.url
+            { doc =>
+              doc.select("#back").attr("href")          shouldBe mockPreviousCall.url
+              doc.select("p.govuk-body").first().text() shouldBe expectedP1
+            }
           )
+        }
 
+        "the selected entity type is individual" in {
+          testPage(
+            EntityType.Individual,
+            messageFromMessageKey(
+              "wrongGGAccount.p1",
+              messages("wrongGGAccount.company"),
+              messages("wrongGGAccount.individual")
+            )
+          )
+        }
+
+        "the selected entity type is company" in {
+          testPage(
+            EntityType.Company,
+            messageFromMessageKey(
+              "wrongGGAccount.p1",
+              messages("wrongGGAccount.individual"),
+              messages("wrongGGAccount.company")
+            )
+          )
         }
 
       }
