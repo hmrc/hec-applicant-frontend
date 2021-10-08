@@ -79,6 +79,18 @@ object HECSession {
       case c: CompanyHECSession    => ifCompany(c)
     }
 
+    def mapAsIndividual[A](f: IndividualHECSession => A): A =
+      s.fold(
+        f,
+        _ => sys.error("Expected individual session data but got company session data")
+      )
+
+    def mapAsCompany[A](f: CompanyHECSession => A): A =
+      s.fold(
+        _ => sys.error("Expected company session data but got individual session data"),
+        f
+      )
+
   }
 
   implicit val eq: Eq[HECSession] = Eq.fromUniversalEquals

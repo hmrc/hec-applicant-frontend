@@ -54,7 +54,7 @@ class ConfirmIndividualDetailsControllerSpec
 
       behave like (authAndSessionDataBehaviour(performAction))
 
-      "redirect to the start endpoint" when {
+      "throw an exception" when {
 
         "company details are found in session" in {
           val companyLoginData =
@@ -65,7 +65,7 @@ class ConfirmIndividualDetailsControllerSpec
             mockGetSession(CompanyHECSession.newSession(companyLoginData))
           }
 
-          checkIsRedirect(performAction(), routes.StartController.start())
+          assertThrows[RuntimeException](await(performAction()))
         }
       }
 
@@ -120,7 +120,7 @@ class ConfirmIndividualDetailsControllerSpec
 
       behave like (authAndSessionDataBehaviour(performAction))
 
-      "redirect to the start endpoint" when {
+      "throw an exception" when {
 
         "company details are found in session" in {
           val companyLoginData =
@@ -131,7 +131,7 @@ class ConfirmIndividualDetailsControllerSpec
             mockGetSession(CompanyHECSession.newSession(companyLoginData))
           }
 
-          checkIsRedirect(performAction(), routes.StartController.start())
+          assertThrows[RuntimeException](await(performAction()))
         }
 
       }
@@ -204,7 +204,7 @@ class ConfirmIndividualDetailsControllerSpec
 
       behave like (authAndSessionDataBehaviour(performAction))
 
-      "redirect to the start endpoint" when {
+      "throw an exception" when {
 
         "company details are found in session" in {
           val companyLoginData =
@@ -215,7 +215,7 @@ class ConfirmIndividualDetailsControllerSpec
             mockGetSession(CompanyHECSession.newSession(companyLoginData))
           }
 
-          checkIsRedirect(performAction(), routes.StartController.start())
+          assertThrows[RuntimeException](await(performAction()))
         }
       }
 

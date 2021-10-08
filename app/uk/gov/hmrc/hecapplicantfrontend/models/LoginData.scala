@@ -20,7 +20,6 @@ import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CTUTR, GGCredId, NINO, SAUTR}
 
 sealed trait LoginData extends Product with Serializable {
-  val entityType: EntityType
   val unexpiredTaxChecks: List[TaxCheckListItem]
 }
 
@@ -34,9 +33,7 @@ object LoginData {
     dateOfBirth: DateOfBirth,
     emailAddress: Option[EmailAddress],
     unexpiredTaxChecks: List[TaxCheckListItem]
-  ) extends LoginData {
-    override val entityType: EntityType = EntityType.Individual
-  }
+  ) extends LoginData
 
   object IndividualLoginData {
 
@@ -49,9 +46,7 @@ object LoginData {
     ctutr: Option[CTUTR],
     emailAddress: Option[EmailAddress],
     unexpiredTaxChecks: List[TaxCheckListItem]
-  ) extends LoginData {
-    override val entityType: EntityType = EntityType.Company
-  }
+  ) extends LoginData
 
   object CompanyLoginData {
 
