@@ -51,10 +51,10 @@ class EntityTypeControllerSpec
   val controller = instanceOf[EntityTypeController]
 
   val individualLoginData =
-    IndividualLoginData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None, List.empty)
+    IndividualLoginData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None)
 
   val companyLoginData =
-    CompanyLoginData(GGCredId(""), None, None, List.empty)
+    CompanyLoginData(GGCredId(""), None, None)
 
   "EntityTypeController" when {
 
@@ -108,7 +108,8 @@ class EntityTypeControllerSpec
                 None
               ),
               None,
-              None
+              None,
+              List.empty
             )
 
           inSequence {
@@ -198,7 +199,14 @@ class EntityTypeControllerSpec
           val answers        = UserAnswers.empty
           val updatedAnswers = UserAnswers.empty.copy(entityType = Some(EntityType.Individual))
           val session        =
-            IndividualHECSession(individualLoginData, IndividualRetrievedJourneyData.empty, answers, None, None)
+            IndividualHECSession(
+              individualLoginData,
+              IndividualRetrievedJourneyData.empty,
+              answers,
+              None,
+              None,
+              List.empty
+            )
           val updatedSession = session.copy(userAnswers = updatedAnswers)
 
           inSequence {
@@ -222,7 +230,14 @@ class EntityTypeControllerSpec
             val answers        = UserAnswers.empty
             val updatedAnswers = UserAnswers.empty.copy(entityType = Some(EntityType.Company))
             val session        =
-              IndividualHECSession(individualLoginData, IndividualRetrievedJourneyData.empty, answers, None, None)
+              IndividualHECSession(
+                individualLoginData,
+                IndividualRetrievedJourneyData.empty,
+                answers,
+                None,
+                None,
+                List.empty
+              )
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 
             inSequence {
@@ -239,7 +254,8 @@ class EntityTypeControllerSpec
           "the user is Company has not previously completed answering questions" in {
             val answers        = UserAnswers.empty
             val updatedAnswers = UserAnswers.empty.copy(entityType = Some(EntityType.Company))
-            val session        = CompanyHECSession(companyLoginData, CompanyRetrievedJourneyData.empty, answers, None, None)
+            val session        =
+              CompanyHECSession(companyLoginData, CompanyRetrievedJourneyData.empty, answers, None, None, List.empty)
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 
             inSequence {
@@ -272,7 +288,14 @@ class EntityTypeControllerSpec
               .fromCompleteAnswers(answers)
               .copy(entityType = Some(EntityType.Company))
             val session        =
-              IndividualHECSession(individualLoginData, IndividualRetrievedJourneyData.empty, answers, None, None)
+              IndividualHECSession(
+                individualLoginData,
+                IndividualRetrievedJourneyData.empty,
+                answers,
+                None,
+                None,
+                List.empty
+              )
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 
             inSequence {
@@ -300,7 +323,8 @@ class EntityTypeControllerSpec
             val updatedAnswers = IncompleteUserAnswers
               .fromCompleteAnswers(answers)
               .copy(entityType = Some(EntityType.Company))
-            val session        = CompanyHECSession(companyLoginData, CompanyRetrievedJourneyData.empty, answers, None, None)
+            val session        =
+              CompanyHECSession(companyLoginData, CompanyRetrievedJourneyData.empty, answers, None, None, List.empty)
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 
             inSequence {
@@ -337,7 +361,8 @@ class EntityTypeControllerSpec
             IndividualRetrievedJourneyData.empty,
             UserAnswers.empty,
             None,
-            None
+            None,
+            List.empty
           )
 
           inSequence {
@@ -359,7 +384,8 @@ class EntityTypeControllerSpec
             IndividualRetrievedJourneyData.empty,
             UserAnswers.empty.copy(entityType = Some(selectedEntityType)),
             None,
-            None
+            None,
+            List.empty
           )
 
           inSequence {

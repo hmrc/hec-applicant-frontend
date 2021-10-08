@@ -29,6 +29,8 @@ trait HECSession extends Product with Serializable {
   val loginData: LoginData
   val completedTaxCheck: Option[HECTaxCheck]
   val taxCheckStartDateTime: Option[ZonedDateTime]
+  val unexpiredTaxChecks: List[TaxCheckListItem]
+
 }
 
 object HECSession {
@@ -38,7 +40,8 @@ object HECSession {
     retrievedJourneyData: IndividualRetrievedJourneyData,
     userAnswers: UserAnswers,
     completedTaxCheck: Option[HECTaxCheck],
-    taxCheckStartDateTime: Option[ZonedDateTime]
+    taxCheckStartDateTime: Option[ZonedDateTime],
+    unexpiredTaxChecks: List[TaxCheckListItem]
   ) extends HECSession {
     override val entityType: EntityType = EntityType.Individual
   }
@@ -46,7 +49,7 @@ object HECSession {
   object IndividualHECSession {
 
     def newSession(loginData: IndividualLoginData): IndividualHECSession =
-      IndividualHECSession(loginData, IndividualRetrievedJourneyData.empty, UserAnswers.empty, None, None)
+      IndividualHECSession(loginData, IndividualRetrievedJourneyData.empty, UserAnswers.empty, None, None, List.empty)
 
   }
 
@@ -55,7 +58,8 @@ object HECSession {
     retrievedJourneyData: CompanyRetrievedJourneyData,
     userAnswers: UserAnswers,
     completedTaxCheck: Option[HECTaxCheck],
-    taxCheckStartDateTime: Option[ZonedDateTime]
+    taxCheckStartDateTime: Option[ZonedDateTime],
+    unexpiredTaxChecks: List[TaxCheckListItem]
   ) extends HECSession {
     override val entityType: EntityType = EntityType.Company
   }
@@ -63,7 +67,7 @@ object HECSession {
   object CompanyHECSession {
 
     def newSession(loginData: CompanyLoginData): CompanyHECSession =
-      CompanyHECSession(loginData, CompanyRetrievedJourneyData.empty, UserAnswers.empty, None, None)
+      CompanyHECSession(loginData, CompanyRetrievedJourneyData.empty, UserAnswers.empty, None, None, List.empty)
 
   }
 

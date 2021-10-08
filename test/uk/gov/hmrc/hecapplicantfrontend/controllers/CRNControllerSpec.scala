@@ -63,7 +63,7 @@ class CRNControllerSpec
   )
 
   val controller       = instanceOf[CRNController]
-  val companyLoginData = CompanyLoginData(GGCredId(""), None, None, List.empty)
+  val companyLoginData = CompanyLoginData(GGCredId(""), None, None)
 
   def mockFindCompany(crn: CRN)(
     result: Either[Error, Option[CompanyHouseDetails]]
@@ -126,7 +126,8 @@ class CRNControllerSpec
               taxSituation = None,
               crn = Some(validCRN(0))
             )
-          val session        = CompanyHECSession(companyLoginData, CompanyRetrievedJourneyData.empty, answers, None, None)
+          val session        =
+            CompanyHECSession(companyLoginData, CompanyRetrievedJourneyData.empty, answers, None, None, List.empty)
           val updatedSession = session.copy(userAnswers = updatedAnswers)
 
           inSequence {
@@ -277,7 +278,8 @@ class CRNControllerSpec
             None,
             None
           )
-          val session = CompanyHECSession(companyLoginData, CompanyRetrievedJourneyData.empty, answers, None, None)
+          val session =
+            CompanyHECSession(companyLoginData, CompanyRetrievedJourneyData.empty, answers, None, None, List.empty)
 
           "there is an error updating and getting the next endpoint" in {
             val updatedAnswers = IncompleteUserAnswers
@@ -332,7 +334,8 @@ class CRNControllerSpec
                 None,
                 None
               )
-              val session      = CompanyHECSession(companyLoginData, CompanyRetrievedJourneyData.empty, answers, None, None)
+              val session      =
+                CompanyHECSession(companyLoginData, CompanyRetrievedJourneyData.empty, answers, None, None, List.empty)
 
               val updatedAnswers = IncompleteUserAnswers
                 .fromCompleteAnswers(answers)

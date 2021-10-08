@@ -57,10 +57,10 @@ class CheckYourAnswersControllerSpec
   val controller = instanceOf[CheckYourAnswersController]
 
   val individualLoginData =
-    IndividualLoginData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None, List.empty)
+    IndividualLoginData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None)
 
   val companyLoginData =
-    CompanyLoginData(GGCredId(""), None, None, List.empty)
+    CompanyLoginData(GGCredId(""), None, None)
 
   def mockSaveTaxCheck(loginData: LoginData, completeAnswers: CompleteUserAnswers)(
     result: Either[Error, HECTaxCheck]
@@ -106,7 +106,14 @@ class CheckYourAnswersControllerSpec
         )
 
         val session =
-          IndividualHECSession(individualLoginData, IndividualRetrievedJourneyData.empty, answers, None, None)
+          IndividualHECSession(
+            individualLoginData,
+            IndividualRetrievedJourneyData.empty,
+            answers,
+            None,
+            None,
+            List.empty
+          )
 
         val expectedRows =
           List(
@@ -188,7 +195,14 @@ class CheckYourAnswersControllerSpec
       )
 
       val session =
-        IndividualHECSession(individualLoginData, IndividualRetrievedJourneyData.empty, completeAnswers, None, None)
+        IndividualHECSession(
+          individualLoginData,
+          IndividualRetrievedJourneyData.empty,
+          completeAnswers,
+          None,
+          None,
+          List.empty
+        )
 
       val hecTaxCheck = HECTaxCheck(HECTaxCheckCode(""), LocalDate.now())
 
@@ -198,7 +212,8 @@ class CheckYourAnswersControllerSpec
           IndividualRetrievedJourneyData.empty,
           UserAnswers.empty,
           Some(hecTaxCheck),
-          None
+          None,
+          List.empty
         )
 
       "return an InternalServerError" when {
@@ -209,7 +224,8 @@ class CheckYourAnswersControllerSpec
             IndividualRetrievedJourneyData.empty,
             UserAnswers.empty,
             None,
-            None
+            None,
+            List.empty
           )
 
           inSequence {

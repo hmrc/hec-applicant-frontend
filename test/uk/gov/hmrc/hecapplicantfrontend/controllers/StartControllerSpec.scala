@@ -151,15 +151,13 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
           Some(sautr),
           Name("First", "Last"),
           DateOfBirth(LocalDate.now()),
-          Some(emailAddress),
-          List.empty
+          Some(emailAddress)
         )
 
       val completeCompanyLoginData = CompanyLoginData(
         ggCredId,
         Some(ctutr),
-        Some(emailAddress),
-        List.empty
+        Some(emailAddress)
       )
 
       def performAction(): Future[Result] = controller.start(FakeRequest())

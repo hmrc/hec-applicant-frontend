@@ -39,8 +39,7 @@ class HECSessionDataSpec extends AnyWordSpec with Matchers {
           Some(SAUTR("utr")),
           Name("first", "last"),
           DateOfBirth(dateOfBirth),
-          Some(EmailAddress("email")),
-          List.empty
+          Some(EmailAddress("email"))
         )
 
       val individualSession: HECSession = IndividualHECSession.newSession(individualLoginData)
@@ -55,11 +54,11 @@ class HECSessionDataSpec extends AnyWordSpec with Matchers {
           |       "lastName":"last"
           |    },
           |    "dateOfBirth":"$dateOfBirthStr",
-          |    "emailAddress":"email",
-          |    "unexpiredTaxChecks" : []
+          |    "emailAddress":"email"
           |  },
           |  "retrievedJourneyData" : { },
           |  "userAnswers" : { "type" : "Incomplete"  },
+          |  "unexpiredTaxChecks" : [],
           |  "type":"Individual"
           |}""".stripMargin)
 
@@ -67,8 +66,7 @@ class HECSessionDataSpec extends AnyWordSpec with Matchers {
         CompanyLoginData(
           GGCredId("ggCredId"),
           Some(CTUTR("utr")),
-          Some(EmailAddress("email")),
-          List.empty
+          Some(EmailAddress("email"))
         )
 
       val companySession: HECSession = CompanyHECSession.newSession(companyLoginData)
@@ -77,11 +75,11 @@ class HECSessionDataSpec extends AnyWordSpec with Matchers {
           |  "loginData" : {
           |    "ggCredId":"ggCredId",
           |    "ctutr":"utr",
-          |    "emailAddress":"email",
-          |    "unexpiredTaxChecks" : []
+          |    "emailAddress":"email"
           |    },
           |  "retrievedJourneyData" : { },
           |  "userAnswers" : { "type" : "Incomplete" },
+          |  "unexpiredTaxChecks" : [],
           |  "type":"Company"
           |}""".stripMargin)
 

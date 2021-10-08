@@ -19,9 +19,7 @@ package uk.gov.hmrc.hecapplicantfrontend.models
 import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CTUTR, GGCredId, NINO, SAUTR}
 
-sealed trait LoginData extends Product with Serializable {
-  val unexpiredTaxChecks: List[TaxCheckListItem]
-}
+sealed trait LoginData extends Product with Serializable
 
 object LoginData {
 
@@ -31,8 +29,7 @@ object LoginData {
     sautr: Option[SAUTR],
     name: Name,
     dateOfBirth: DateOfBirth,
-    emailAddress: Option[EmailAddress],
-    unexpiredTaxChecks: List[TaxCheckListItem]
+    emailAddress: Option[EmailAddress]
   ) extends LoginData
 
   object IndividualLoginData {
@@ -44,8 +41,7 @@ object LoginData {
   final case class CompanyLoginData(
     ggCredId: GGCredId,
     ctutr: Option[CTUTR],
-    emailAddress: Option[EmailAddress],
-    unexpiredTaxChecks: List[TaxCheckListItem]
+    emailAddress: Option[EmailAddress]
   ) extends LoginData
 
   object CompanyLoginData {

@@ -58,8 +58,7 @@ class SAControllerSpec
       None,
       Name("", ""),
       DateOfBirth(LocalDate.now()),
-      None,
-      List.empty
+      None
     )
 
   "SAController" when {
@@ -180,7 +179,8 @@ class SAControllerSpec
                 None
               ),
               None,
-              None
+              None,
+              List.empty
             )
 
           inSequence {
@@ -270,7 +270,14 @@ class SAControllerSpec
           val answers        = UserAnswers.empty
           val updatedAnswers = UserAnswers.empty.copy(saIncomeDeclared = Some(YesNoAnswer.Yes))
           val session        =
-            IndividualHECSession(individualLoginData, IndividualRetrievedJourneyData.empty, answers, None, None)
+            IndividualHECSession(
+              individualLoginData,
+              IndividualRetrievedJourneyData.empty,
+              answers,
+              None,
+              None,
+              List.empty
+            )
           val updatedSession = session.copy(userAnswers = updatedAnswers)
 
           inSequence {
@@ -294,7 +301,14 @@ class SAControllerSpec
             val answers        = UserAnswers.empty
             val updatedAnswers = UserAnswers.empty.copy(saIncomeDeclared = Some(YesNoAnswer.No))
             val session        =
-              IndividualHECSession(individualLoginData, IndividualRetrievedJourneyData.empty, answers, None, None)
+              IndividualHECSession(
+                individualLoginData,
+                IndividualRetrievedJourneyData.empty,
+                answers,
+                None,
+                None,
+                List.empty
+              )
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 
             inSequence {
@@ -323,7 +337,14 @@ class SAControllerSpec
               .fromCompleteAnswers(answers)
               .copy(saIncomeDeclared = Some(YesNoAnswer.No))
             val session        =
-              IndividualHECSession(individualLoginData, IndividualRetrievedJourneyData.empty, answers, None, None)
+              IndividualHECSession(
+                individualLoginData,
+                IndividualRetrievedJourneyData.empty,
+                answers,
+                None,
+                None,
+                List.empty
+              )
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 
             inSequence {

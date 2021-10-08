@@ -61,8 +61,7 @@ class SessionStoreImplSpec extends AnyWordSpec with Matchers with MongoSupport w
         CompanyLoginData(
           GGCredId("id"),
           Some(CTUTR("utr")),
-          Some(EmailAddress("email")),
-          List.empty
+          Some(EmailAddress("email"))
         )
       )
 

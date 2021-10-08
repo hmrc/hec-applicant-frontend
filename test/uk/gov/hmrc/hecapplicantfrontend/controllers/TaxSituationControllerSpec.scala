@@ -75,10 +75,10 @@ class TaxSituationControllerSpec
   val controller = instanceOf[TaxSituationController]
 
   val individualLoginData =
-    IndividualLoginData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None, List.empty)
+    IndividualLoginData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None)
 
   val companyRetrievedData =
-    CompanyLoginData(GGCredId(""), None, None, List.empty)
+    CompanyLoginData(GGCredId(""), None, None)
 
   val date = LocalDate.of(2020, 10, 24)
 
@@ -134,7 +134,8 @@ class TaxSituationControllerSpec
                 licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)
               ),
               None,
-              None
+              None,
+              List.empty
             )
 
             inSequence {
@@ -183,7 +184,8 @@ class TaxSituationControllerSpec
                 None
               ),
               None,
-              None
+              None,
+              List.empty
             )
 
           inSequence {
@@ -221,7 +223,8 @@ class TaxSituationControllerSpec
                 licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)
               ),
               None,
-              None
+              None,
+              List.empty
             )
 
             inSequence {
@@ -262,7 +265,8 @@ class TaxSituationControllerSpec
                 licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)
               ),
               None,
-              None
+              None,
+              List.empty
             )
 
             inSequence {
@@ -303,7 +307,8 @@ class TaxSituationControllerSpec
                 licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)
               ),
               None,
-              None
+              None,
+              List.empty
             )
 
             inSequence {
@@ -348,7 +353,8 @@ class TaxSituationControllerSpec
                 licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)
               ),
               None,
-              None
+              None,
+              List.empty
             )
 
             inSequence {
@@ -389,7 +395,8 @@ class TaxSituationControllerSpec
                 licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)
               ),
               None,
-              None
+              None,
+              List.empty
             )
 
             inSequence {
@@ -430,7 +437,8 @@ class TaxSituationControllerSpec
                 licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)
               ),
               None,
-              None
+              None,
+              List.empty
             )
 
             inSequence {
@@ -477,7 +485,8 @@ class TaxSituationControllerSpec
               licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)
             ),
             None,
-            None
+            None,
+            List.empty
           )
 
           inSequence {
@@ -521,7 +530,8 @@ class TaxSituationControllerSpec
                   licenceType = Some(licenceType)
                 ),
                 None,
-                None
+                None,
+                List.empty
               )
 
               inSequence {
@@ -567,7 +577,14 @@ class TaxSituationControllerSpec
         val answers        = UserAnswers.empty
         val updatedAnswers = UserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
         val session        =
-          IndividualHECSession(individualLoginData, IndividualRetrievedJourneyData.empty, answers, None, None)
+          IndividualHECSession(
+            individualLoginData,
+            IndividualRetrievedJourneyData.empty,
+            answers,
+            None,
+            None,
+            List.empty
+          )
         val updatedSession = session.copy(userAnswers = updatedAnswers)
 
         "nothing is submitted" in {
@@ -656,7 +673,8 @@ class TaxSituationControllerSpec
             IndividualRetrievedJourneyData.empty,
             answers,
             None,
-            None
+            None,
+            List.empty
           )
 
           val updatedAnswers = UserAnswers.empty
@@ -695,7 +713,8 @@ class TaxSituationControllerSpec
         val answers        = UserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
         val individualData =
           individualLoginData.copy(sautr = Some(SAUTR("utr")))
-        val session        = IndividualHECSession(individualData, IndividualRetrievedJourneyData.empty, answers, None, None)
+        val session        =
+          IndividualHECSession(individualData, IndividualRetrievedJourneyData.empty, answers, None, None, List.empty)
 
         val updatedAnswers = answers.copy(taxSituation = Some(taxSituation))
         val updatedSession = session.copy(userAnswers = updatedAnswers)
@@ -729,7 +748,8 @@ class TaxSituationControllerSpec
         val answers        = UserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
         val individualData =
           individualLoginData.copy(sautr = Some(SAUTR("utr")))
-        val session        = IndividualHECSession(individualData, IndividualRetrievedJourneyData.empty, answers, None, None)
+        val session        =
+          IndividualHECSession(individualData, IndividualRetrievedJourneyData.empty, answers, None, None, List.empty)
 
         val updatedAnswers = answers.copy(taxSituation = Some(taxSituation))
         val updatedSession = session.copy(
@@ -767,7 +787,8 @@ class TaxSituationControllerSpec
         val answers        = UserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
         val individualData =
           individualLoginData.copy(sautr = Some(SAUTR("utr")))
-        val session        = IndividualHECSession(individualData, IndividualRetrievedJourneyData.empty, answers, None, None)
+        val session        =
+          IndividualHECSession(individualData, IndividualRetrievedJourneyData.empty, answers, None, None, List.empty)
 
         inSequence {
           mockAuthWithNoRetrievals()
@@ -790,7 +811,8 @@ class TaxSituationControllerSpec
               IndividualRetrievedJourneyData.empty,
               answers,
               None,
-              None
+              None,
+              List.empty
             )
 
             val updatedAnswers = answers.copy(taxSituation = Some(TaxSituation.PAYE))
@@ -829,7 +851,8 @@ class TaxSituationControllerSpec
               IndividualRetrievedJourneyData.empty,
               answers,
               None,
-              None
+              None,
+              List.empty
             )
 
             val updatedAnswers = IncompleteUserAnswers(

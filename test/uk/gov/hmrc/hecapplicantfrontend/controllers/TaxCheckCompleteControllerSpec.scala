@@ -48,10 +48,10 @@ class TaxCheckCompleteControllerSpec
   val controller = instanceOf[TaxCheckCompleteController]
 
   val individualLoginData =
-    IndividualLoginData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None, List.empty)
+    IndividualLoginData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None)
 
   val companyLoginData =
-    CompanyLoginData(GGCredId(""), None, None, List.empty)
+    CompanyLoginData(GGCredId(""), None, None)
 
   "TaxCheckCompleteController" when {
 
@@ -88,7 +88,8 @@ class TaxCheckCompleteControllerSpec
               licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)
             ),
             Some(HECTaxCheck(HECTaxCheckCode(taxCheckCode), expiryDate)),
-            None
+            None,
+            List.empty
           )
 
           inSequence {

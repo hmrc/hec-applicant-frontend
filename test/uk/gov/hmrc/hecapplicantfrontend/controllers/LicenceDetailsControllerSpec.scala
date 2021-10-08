@@ -53,10 +53,10 @@ class LicenceDetailsControllerSpec
   val controller: LicenceDetailsController = instanceOf[LicenceDetailsController]
 
   val individualLoginData: IndividualLoginData =
-    IndividualLoginData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None, List.empty)
+    IndividualLoginData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None)
 
   val companyLoginData: CompanyLoginData =
-    CompanyLoginData(GGCredId(""), None, None, List.empty)
+    CompanyLoginData(GGCredId(""), None, None)
 
   "LicenceDetailsController" when {
 
@@ -165,7 +165,8 @@ class LicenceDetailsControllerSpec
                   None
                 ),
                 None,
-                None
+                None,
+                List.empty
               )
 
             checkPageDetailsWithPreviousAns(session, "0")
@@ -204,7 +205,8 @@ class LicenceDetailsControllerSpec
                   None
                 ),
                 None,
-                None
+                None,
+                List.empty
               )
 
             checkPageDetailsWithPreviousAns(session, "2")
@@ -282,7 +284,14 @@ class LicenceDetailsControllerSpec
           val answers        = UserAnswers.empty
           val updatedAnswers = UserAnswers.empty.copy(licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires))
           val session        =
-            IndividualHECSession(individualLoginData, IndividualRetrievedJourneyData.empty, answers, None, None)
+            IndividualHECSession(
+              individualLoginData,
+              IndividualRetrievedJourneyData.empty,
+              answers,
+              None,
+              None,
+              List.empty
+            )
           val updatedSession = session.copy(userAnswers = updatedAnswers)
 
           inSequence {
@@ -320,7 +329,14 @@ class LicenceDetailsControllerSpec
             )
             val updatedAnswers = UserAnswers.empty.copy(licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles))
             val session        =
-              IndividualHECSession(individualLoginData, IndividualRetrievedJourneyData.empty, answers, None, None)
+              IndividualHECSession(
+                individualLoginData,
+                IndividualRetrievedJourneyData.empty,
+                answers,
+                None,
+                None,
+                List.empty
+              )
             val updatedSession = session.copy(userAnswers = updatedAnswers)
             nextpageRedirectTest(session, updatedSession, "1")
 
@@ -339,7 +355,14 @@ class LicenceDetailsControllerSpec
             )
             val updatedAnswers = UserAnswers.empty.copy(licenceType = Some(LicenceType.ScrapMetalMobileCollector))
             val session        =
-              IndividualHECSession(individualLoginData, IndividualRetrievedJourneyData.empty, answers, None, None)
+              IndividualHECSession(
+                individualLoginData,
+                IndividualRetrievedJourneyData.empty,
+                answers,
+                None,
+                None,
+                List.empty
+              )
             val updatedSession = session.copy(userAnswers = updatedAnswers)
             nextpageRedirectTest(session, updatedSession, "2")
 
@@ -357,7 +380,14 @@ class LicenceDetailsControllerSpec
               None
             )
             val session =
-              IndividualHECSession(individualLoginData, IndividualRetrievedJourneyData.empty, answers, None, None)
+              IndividualHECSession(
+                individualLoginData,
+                IndividualRetrievedJourneyData.empty,
+                answers,
+                None,
+                None,
+                List.empty
+              )
 
             nextpageRedirectTest(session, session, "0")
 
@@ -372,7 +402,8 @@ class LicenceDetailsControllerSpec
               licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles)
             )
             val updatedAnswers = UserAnswers.empty.copy(licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles))
-            val session        = CompanyHECSession(companyLoginData, CompanyRetrievedJourneyData.empty, answers, None, None)
+            val session        =
+              CompanyHECSession(companyLoginData, CompanyRetrievedJourneyData.empty, answers, None, None, List.empty)
             val updatedSession = session.copy(userAnswers = updatedAnswers)
             nextpageRedirectTest(session, updatedSession, "0")
 
@@ -390,7 +421,8 @@ class LicenceDetailsControllerSpec
               None
             )
             val updatedAnswers = UserAnswers.empty.copy(licenceType = Some(LicenceType.ScrapMetalMobileCollector))
-            val session        = CompanyHECSession(companyLoginData, CompanyRetrievedJourneyData.empty, answers, None, None)
+            val session        =
+              CompanyHECSession(companyLoginData, CompanyRetrievedJourneyData.empty, answers, None, None, List.empty)
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 
             nextpageRedirectTest(session, updatedSession, "1")
@@ -408,7 +440,8 @@ class LicenceDetailsControllerSpec
               None,
               None
             )
-            val session = CompanyHECSession(companyLoginData, CompanyRetrievedJourneyData.empty, answers, None, None)
+            val session =
+              CompanyHECSession(companyLoginData, CompanyRetrievedJourneyData.empty, answers, None, None, List.empty)
             nextpageRedirectTest(session, session, "0")
 
           }
@@ -495,7 +528,8 @@ class LicenceDetailsControllerSpec
                 None
               ),
               None,
-              None
+              None,
+              List.empty
             )
 
           inSequence {
@@ -593,7 +627,14 @@ class LicenceDetailsControllerSpec
           val answers        = UserAnswers.empty
           val updatedAnswers = UserAnswers.empty.copy(licenceTimeTrading = Some(LicenceTimeTrading.ZeroToTwoYears))
           val session        =
-            IndividualHECSession(individualLoginData, IndividualRetrievedJourneyData.empty, answers, None, None)
+            IndividualHECSession(
+              individualLoginData,
+              IndividualRetrievedJourneyData.empty,
+              answers,
+              None,
+              None,
+              List.empty
+            )
           val updatedSession = session.copy(userAnswers = updatedAnswers)
 
           inSequence {
@@ -621,7 +662,14 @@ class LicenceDetailsControllerSpec
             val answers        = UserAnswers.empty
             val updatedAnswers = UserAnswers.empty.copy(licenceTimeTrading = Some(LicenceTimeTrading.FourToEightYears))
             val session        =
-              IndividualHECSession(individualLoginData, IndividualRetrievedJourneyData.empty, answers, None, None)
+              IndividualHECSession(
+                individualLoginData,
+                IndividualRetrievedJourneyData.empty,
+                answers,
+                None,
+                None,
+                List.empty
+              )
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 
             inSequence {
@@ -661,7 +709,14 @@ class LicenceDetailsControllerSpec
               None
             )
             val session        =
-              IndividualHECSession(individualLoginData, IndividualRetrievedJourneyData.empty, answers, None, None)
+              IndividualHECSession(
+                individualLoginData,
+                IndividualRetrievedJourneyData.empty,
+                answers,
+                None,
+                None,
+                List.empty
+              )
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 
             inSequence {
@@ -715,7 +770,8 @@ class LicenceDetailsControllerSpec
               licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles)
             ),
             None,
-            None
+            None,
+            List.empty
           )
 
           inSequence {
@@ -768,7 +824,8 @@ class LicenceDetailsControllerSpec
                     None
                   ),
                   None,
-                  None
+                  None,
+                  List.empty
                 )
 
               inSequence {
@@ -830,7 +887,14 @@ class LicenceDetailsControllerSpec
           val updatedAnswers = UserAnswers.empty
             .copy(licenceType = Some(DriverOfTaxisAndPrivateHires), licenceValidityPeriod = Some(UpToOneYear))
           val session        =
-            IndividualHECSession(individualLoginData, IndividualRetrievedJourneyData.empty, answers, None, None)
+            IndividualHECSession(
+              individualLoginData,
+              IndividualRetrievedJourneyData.empty,
+              answers,
+              None,
+              None,
+              List.empty
+            )
           val updatedSession = session.copy(userAnswers = updatedAnswers)
 
           inSequence {
@@ -855,7 +919,14 @@ class LicenceDetailsControllerSpec
         val answers        = UserAnswers.empty
         val updatedAnswers = UserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
         val session        =
-          IndividualHECSession(individualLoginData, IndividualRetrievedJourneyData.empty, answers, None, None)
+          IndividualHECSession(
+            individualLoginData,
+            IndividualRetrievedJourneyData.empty,
+            answers,
+            None,
+            None,
+            List.empty
+          )
         val updatedSession = session.copy(userAnswers = updatedAnswers)
 
         "nothing is submitted" in {
@@ -916,7 +987,14 @@ class LicenceDetailsControllerSpec
             val answers        = UserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
             val updatedAnswers = answers.copy(licenceValidityPeriod = Some(UpToOneYear))
             val session        =
-              IndividualHECSession(individualLoginData, IndividualRetrievedJourneyData.empty, answers, None, None)
+              IndividualHECSession(
+                individualLoginData,
+                IndividualRetrievedJourneyData.empty,
+                answers,
+                None,
+                None,
+                List.empty
+              )
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 
             inSequence {
@@ -957,7 +1035,14 @@ class LicenceDetailsControllerSpec
               None
             )
             val session        =
-              IndividualHECSession(individualLoginData, IndividualRetrievedJourneyData.empty, answers, None, None)
+              IndividualHECSession(
+                individualLoginData,
+                IndividualRetrievedJourneyData.empty,
+                answers,
+                None,
+                None,
+                List.empty
+              )
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 
             inSequence {

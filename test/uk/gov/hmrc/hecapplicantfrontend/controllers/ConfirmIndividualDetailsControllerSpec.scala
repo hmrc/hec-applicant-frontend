@@ -58,7 +58,7 @@ class ConfirmIndividualDetailsControllerSpec
 
         "company details are found in session" in {
           val companyLoginData =
-            CompanyLoginData(GGCredId(""), None, None, List.empty)
+            CompanyLoginData(GGCredId(""), None, None)
 
           inSequence {
             mockAuthWithNoRetrievals()
@@ -76,7 +76,7 @@ class ConfirmIndividualDetailsControllerSpec
           val dateOfBirth = DateOfBirth(LocalDate.of(2000, 12, 3))
 
           val session = IndividualHECSession.newSession(
-            IndividualLoginData(GGCredId(""), NINO(""), None, name, dateOfBirth, None, List.empty)
+            IndividualLoginData(GGCredId(""), NINO(""), None, name, dateOfBirth, None)
           )
 
           inSequence {
@@ -124,7 +124,7 @@ class ConfirmIndividualDetailsControllerSpec
 
         "company details are found in session" in {
           val companyLoginData =
-            CompanyLoginData(GGCredId(""), None, None, List.empty)
+            CompanyLoginData(GGCredId(""), None, None)
 
           inSequence {
             mockAuthWithNoRetrievals()
@@ -146,8 +146,7 @@ class ConfirmIndividualDetailsControllerSpec
               None,
               Name("", ""),
               DateOfBirth(LocalDate.now()),
-              None,
-              List.empty
+              None
             )
           )
 
@@ -176,8 +175,7 @@ class ConfirmIndividualDetailsControllerSpec
               None,
               Name("", ""),
               DateOfBirth(LocalDate.now()),
-              None,
-              List.empty
+              None
             )
           )
 
@@ -208,7 +206,7 @@ class ConfirmIndividualDetailsControllerSpec
 
         "company details are found in session" in {
           val companyLoginData =
-            CompanyLoginData(GGCredId(""), None, None, List.empty)
+            CompanyLoginData(GGCredId(""), None, None)
 
           inSequence {
             mockAuthWithNoRetrievals()
@@ -229,8 +227,7 @@ class ConfirmIndividualDetailsControllerSpec
               None,
               Name("", ""),
               DateOfBirth(LocalDate.now()),
-              None,
-              List.empty
+              None
             )
           )
 

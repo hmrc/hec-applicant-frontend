@@ -52,7 +52,7 @@ class TaxChecksListControllerSpec
   val controller = instanceOf[TaxChecksListController]
 
   val individualLoginData =
-    IndividualLoginData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None, List.empty)
+    IndividualLoginData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None)
 
   "TaxChecksListController" when {
 
@@ -75,7 +75,14 @@ class TaxChecksListControllerSpec
 
       "return an error when no tax checks found" in {
         val session =
-          IndividualHECSession(individualLoginData, IndividualRetrievedJourneyData.empty, answers, None, None)
+          IndividualHECSession(
+            individualLoginData,
+            IndividualRetrievedJourneyData.empty,
+            answers,
+            None,
+            None,
+            List.empty
+          )
         inSequence {
           mockAuthWithNoRetrievals()
           mockGetSession(session)
@@ -109,11 +116,12 @@ class TaxChecksListControllerSpec
         )
         val unsortedTaxChecks = List(dayBeforeTaxCheck, todayTaxCheck, yesterdayTaxCheck)
         val session           = IndividualHECSession(
-          individualLoginData.copy(unexpiredTaxChecks = unsortedTaxChecks),
+          individualLoginData,
           IndividualRetrievedJourneyData.empty,
           answers,
           None,
-          None
+          None,
+          unsortedTaxChecks
         )
 
         inSequence {

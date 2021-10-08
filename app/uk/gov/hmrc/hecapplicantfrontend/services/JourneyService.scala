@@ -92,7 +92,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
     )
 
   override def firstPage(session: HECSession): Call = {
-    val hasTaxCheckCodes = session.loginData.unexpiredTaxChecks.nonEmpty
+    val hasTaxCheckCodes = session.unexpiredTaxChecks.nonEmpty
     session.loginData match {
       case _: IndividualLoginData                  => routes.ConfirmIndividualDetailsController.confirmIndividualDetails()
       case _: CompanyLoginData if hasTaxCheckCodes => routes.TaxChecksListController.unexpiredTaxChecks()
@@ -193,7 +193,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
     }
 
   private def confirmIndividualDetailsRoute(session: HECSession): Call =
-    if (session.loginData.unexpiredTaxChecks.nonEmpty) {
+    if (session.unexpiredTaxChecks.nonEmpty) {
       routes.TaxChecksListController.unexpiredTaxChecks()
     } else {
       routes.LicenceDetailsController.licenceType()
