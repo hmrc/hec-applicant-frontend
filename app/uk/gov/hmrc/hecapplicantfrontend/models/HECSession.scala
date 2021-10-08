@@ -17,18 +17,88 @@
 package uk.gov.hmrc.hecapplicantfrontend.models
 
 import cats.Eq
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json.{JsObject, JsResult, JsValue, Json, OFormat}
+import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
+import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.{CompanyRetrievedJourneyData, IndividualRetrievedJourneyData}
 
-final case class HECSession(
-  loginData: LoginData,
-  retrievedJourneyData: RetrievedJourneyData,
-  userAnswers: UserAnswers,
-  completedTaxCheck: Option[HECTaxCheck]
-)
+import java.time.ZonedDateTime
+
+trait HECSession extends Product with Serializable {
+  val entityType: EntityType
+  val userAnswers: UserAnswers
+  val loginData: LoginData
+  val completedTaxCheck: Option[HECTaxCheck]
+  val taxCheckStartDateTime: Option[ZonedDateTime]
+}
 
 object HECSession {
 
-  implicit val eq: Eq[HECSession]          = Eq.fromUniversalEquals
-  implicit val format: OFormat[HECSession] = Json.format
+  final case class IndividualHECSession(
+    loginData: IndividualLoginData,
+    retrievedJourneyData: IndividualRetrievedJourneyData,
+    userAnswers: UserAnswers,
+    completedTaxCheck: Option[HECTaxCheck],
+    taxCheckStartDateTime: Option[ZonedDateTime]
+  ) extends HECSession {
+    override val entityType: EntityType = EntityType.Individual
+  }
+
+  object IndividualHECSession {
+
+    def newSession(loginData: IndividualLoginData): IndividualHECSession =
+      IndividualHECSession(loginData, IndividualRetrievedJourneyData.empty, UserAnswers.empty, None, None)
+
+  }
+
+  final case class CompanyHECSession(
+    loginData: CompanyLoginData,
+    retrievedJourneyData: CompanyRetrievedJourneyData,
+    userAnswers: UserAnswers,
+    completedTaxCheck: Option[HECTaxCheck],
+    taxCheckStartDateTime: Option[ZonedDateTime]
+  ) extends HECSession {
+    override val entityType: EntityType = EntityType.Company
+  }
+
+  object CompanyHECSession {
+
+    def newSession(loginData: CompanyLoginData): CompanyHECSession =
+      CompanyHECSession(loginData, CompanyRetrievedJourneyData.empty, UserAnswers.empty, None, None)
+
+  }
+
+  def newSession(loginData: LoginData): HECSession = loginData match {
+    case i: IndividualLoginData => IndividualHECSession.newSession(i)
+    case c: CompanyLoginData    => CompanyHECSession.newSession(c)
+  }
+
+  implicit class HECSessionOps(private val s: HECSession) extends AnyVal {
+
+    def fold[A](ifIndividual: IndividualHECSession => A, ifCompany: CompanyHECSession => A): A = s match {
+      case i: IndividualHECSession => ifIndividual(i)
+      case c: CompanyHECSession    => ifCompany(c)
+    }
+
+  }
+
+  implicit val eq: Eq[HECSession] = Eq.fromUniversalEquals
+
+  implicit val format: OFormat[HECSession] = new OFormat[HECSession] {
+    override def reads(json: JsValue): JsResult[HECSession] =
+      (json \ "type")
+        .validate[EntityType]
+        .flatMap {
+          case EntityType.Individual => Json.reads[IndividualHECSession].reads(json)
+          case EntityType.Company    => Json.reads[CompanyHECSession].reads(json)
+        }
+
+    override def writes(o: HECSession): JsObject = {
+      val json = o match {
+        case i: IndividualHECSession => Json.writes[IndividualHECSession].writes(i)
+        case c: CompanyHECSession    => Json.writes[CompanyHECSession].writes(c)
+      }
+      json ++ Json.obj("type" -> o.entityType)
+    }
+  }
 
 }

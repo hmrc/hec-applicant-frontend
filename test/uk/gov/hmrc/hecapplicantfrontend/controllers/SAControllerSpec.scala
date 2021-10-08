@@ -23,7 +23,9 @@ import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
+import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.IndividualHECSession
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.IndividualLoginData
+import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.IndividualRetrievedJourneyData
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.{CompleteUserAnswers, IncompleteUserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models._
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO}
@@ -75,12 +77,7 @@ class SAControllerSpec
 
       "display the page" in {
 
-        val session = HECSession(
-          individualLoginData,
-          RetrievedJourneyData.empty,
-          UserAnswers.empty,
-          None
-        )
+        val session = IndividualHECSession.newSession(individualLoginData)
 
         inSequence {
           mockAuthWithNoRetrievals()
@@ -112,12 +109,7 @@ class SAControllerSpec
 
       "display the page" in {
 
-        val session = HECSession(
-          individualLoginData,
-          RetrievedJourneyData.empty,
-          UserAnswers.empty,
-          None
-        )
+        val session = IndividualHECSession.newSession(individualLoginData)
 
         inSequence {
           mockAuthWithNoRetrievals()
@@ -147,7 +139,7 @@ class SAControllerSpec
       "display the page" when {
 
         "the user has not previously answered the question" in {
-          val session = HECSession(individualLoginData, RetrievedJourneyData.empty, UserAnswers.empty, None)
+          val session = IndividualHECSession.newSession(individualLoginData)
 
           inSequence {
             mockAuthWithNoRetrievals()
@@ -174,9 +166,9 @@ class SAControllerSpec
 
         "the user has previously answered the question" in {
           val session =
-            HECSession(
+            IndividualHECSession(
               individualLoginData,
-              RetrievedJourneyData.empty,
+              IndividualRetrievedJourneyData.empty,
               CompleteUserAnswers(
                 LicenceType.DriverOfTaxisAndPrivateHires,
                 LicenceTimeTrading.ZeroToTwoYears,
@@ -187,6 +179,7 @@ class SAControllerSpec
                 None,
                 None
               ),
+              None,
               None
             )
 
@@ -225,7 +218,7 @@ class SAControllerSpec
 
       "show a form error" when {
 
-        val session = HECSession(individualLoginData, RetrievedJourneyData.empty, UserAnswers.empty, None)
+        val session = IndividualHECSession.newSession(individualLoginData)
 
         "nothing is submitted" in {
           inSequence {
@@ -276,7 +269,8 @@ class SAControllerSpec
         "the call to update and next fails" in {
           val answers        = UserAnswers.empty
           val updatedAnswers = UserAnswers.empty.copy(saIncomeDeclared = Some(YesNoAnswer.Yes))
-          val session        = HECSession(individualLoginData, RetrievedJourneyData.empty, answers, None)
+          val session        =
+            IndividualHECSession(individualLoginData, IndividualRetrievedJourneyData.empty, answers, None, None)
           val updatedSession = session.copy(userAnswers = updatedAnswers)
 
           inSequence {
@@ -299,7 +293,8 @@ class SAControllerSpec
           "the user has not previously completed answering questions" in {
             val answers        = UserAnswers.empty
             val updatedAnswers = UserAnswers.empty.copy(saIncomeDeclared = Some(YesNoAnswer.No))
-            val session        = HECSession(individualLoginData, RetrievedJourneyData.empty, answers, None)
+            val session        =
+              IndividualHECSession(individualLoginData, IndividualRetrievedJourneyData.empty, answers, None, None)
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 
             inSequence {
@@ -327,7 +322,8 @@ class SAControllerSpec
             val updatedAnswers = IncompleteUserAnswers
               .fromCompleteAnswers(answers)
               .copy(saIncomeDeclared = Some(YesNoAnswer.No))
-            val session        = HECSession(individualLoginData, RetrievedJourneyData.empty, answers, None)
+            val session        =
+              IndividualHECSession(individualLoginData, IndividualRetrievedJourneyData.empty, answers, None, None)
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 
             inSequence {

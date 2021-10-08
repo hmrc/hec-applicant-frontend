@@ -22,7 +22,9 @@ import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
+import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.IndividualHECSession
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
+import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.IndividualRetrievedJourneyData
 import uk.gov.hmrc.hecapplicantfrontend.models._
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
@@ -62,7 +64,7 @@ class TaxCheckCompleteControllerSpec
       "return an InternalServerError" when {
 
         "a tax check code cannot be found in session" in {
-          val session = HECSession(individualLoginData, RetrievedJourneyData.empty, UserAnswers.empty, None)
+          val session = IndividualHECSession.newSession(individualLoginData)
 
           inSequence {
             mockAuthWithNoRetrievals()
@@ -79,13 +81,14 @@ class TaxCheckCompleteControllerSpec
         "tax check code has been generated for the user " in {
           val taxCheckCode = "LXB7G6DX7"
           val expiryDate   = LocalDate.of(2020, 1, 8)
-          val session      = HECSession(
+          val session      = IndividualHECSession(
             individualLoginData,
-            RetrievedJourneyData.empty,
+            IndividualRetrievedJourneyData.empty,
             UserAnswers.empty.copy(
               licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)
             ),
-            Some(HECTaxCheck(HECTaxCheckCode(taxCheckCode), expiryDate))
+            Some(HECTaxCheck(HECTaxCheckCode(taxCheckCode), expiryDate)),
+            None
           )
 
           inSequence {

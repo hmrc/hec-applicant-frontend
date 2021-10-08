@@ -32,6 +32,7 @@ class CompanyDetailsNotFoundController @Inject() (
 ) extends FrontendController(mcc)
     with I18nSupport
     with Logging {
+
   val companyNotFound: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
     Ok(
       s" The session is ${request.sessionData} and back Url is : ${journeyService

@@ -21,7 +21,9 @@ import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
+import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, IndividualHECSession}
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
+import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.{CompanyRetrievedJourneyData, IndividualRetrievedJourneyData}
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.{CompleteUserAnswers, IncompleteUserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models._
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO}
@@ -142,16 +144,16 @@ class LicenceDetailsControllerSpec
         "user is Individual" when {
 
           "the user has not previously answered the question" in {
-            val session = HECSession(individualLoginData, RetrievedJourneyData.empty, UserAnswers.empty, None)
+            val session = IndividualHECSession.newSession(individualLoginData)
             checkPageDetailsWithNoPreviousAns(session, allLicenceRadioTexts)
 
           }
 
           "the user has previously answered the question" in {
             val session =
-              HECSession(
+              IndividualHECSession(
                 individualLoginData,
-                RetrievedJourneyData.empty,
+                IndividualRetrievedJourneyData.empty,
                 CompleteUserAnswers(
                   LicenceType.DriverOfTaxisAndPrivateHires,
                   LicenceTimeTrading.ZeroToTwoYears,
@@ -162,6 +164,7 @@ class LicenceDetailsControllerSpec
                   None,
                   None
                 ),
+                None,
                 None
               )
 
@@ -170,7 +173,7 @@ class LicenceDetailsControllerSpec
 
           "the back location is the start endpoint" in {
 
-            val session = HECSession(individualLoginData, RetrievedJourneyData.empty, UserAnswers.empty, None)
+            val session = IndividualHECSession.newSession(individualLoginData)
             backUrlTest(session)
 
           }
@@ -180,17 +183,16 @@ class LicenceDetailsControllerSpec
         "user is Company" when {
 
           "the user has not previously answered the question" in {
-
-            val session = HECSession(companyLoginData, RetrievedJourneyData.empty, UserAnswers.empty, None)
+            val session = CompanyHECSession.newSession(companyLoginData)
             checkPageDetailsWithNoPreviousAns(session, allLicenceRadioTexts.takeRight(3))
 
           }
 
           "the user has previously answered the question" in {
             val session =
-              HECSession(
+              CompanyHECSession(
                 companyLoginData,
-                RetrievedJourneyData.empty,
+                CompanyRetrievedJourneyData.empty,
                 CompleteUserAnswers(
                   LicenceType.ScrapMetalDealerSite,
                   LicenceTimeTrading.ZeroToTwoYears,
@@ -201,6 +203,7 @@ class LicenceDetailsControllerSpec
                   None,
                   None
                 ),
+                None,
                 None
               )
 
@@ -208,7 +211,7 @@ class LicenceDetailsControllerSpec
           }
 
           "the back location is the start endpoint" in {
-            val session = HECSession(individualLoginData, RetrievedJourneyData.empty, UserAnswers.empty, None)
+            val session = IndividualHECSession.newSession(individualLoginData)
             backUrlTest(session)
           }
 
@@ -227,7 +230,7 @@ class LicenceDetailsControllerSpec
 
       "show a form error" when {
 
-        val session = HECSession(individualLoginData, RetrievedJourneyData.empty, UserAnswers.empty, None)
+        val session = IndividualHECSession.newSession(individualLoginData)
 
         "nothing is submitted" in {
           inSequence {
@@ -278,7 +281,8 @@ class LicenceDetailsControllerSpec
         "the call to update and next fails" in {
           val answers        = UserAnswers.empty
           val updatedAnswers = UserAnswers.empty.copy(licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires))
-          val session        = HECSession(individualLoginData, RetrievedJourneyData.empty, answers, None)
+          val session        =
+            IndividualHECSession(individualLoginData, IndividualRetrievedJourneyData.empty, answers, None, None)
           val updatedSession = session.copy(userAnswers = updatedAnswers)
 
           inSequence {
@@ -315,7 +319,8 @@ class LicenceDetailsControllerSpec
               licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)
             )
             val updatedAnswers = UserAnswers.empty.copy(licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles))
-            val session        = HECSession(individualLoginData, RetrievedJourneyData.empty, answers, None)
+            val session        =
+              IndividualHECSession(individualLoginData, IndividualRetrievedJourneyData.empty, answers, None, None)
             val updatedSession = session.copy(userAnswers = updatedAnswers)
             nextpageRedirectTest(session, updatedSession, "1")
 
@@ -333,7 +338,8 @@ class LicenceDetailsControllerSpec
               None
             )
             val updatedAnswers = UserAnswers.empty.copy(licenceType = Some(LicenceType.ScrapMetalMobileCollector))
-            val session        = HECSession(individualLoginData, RetrievedJourneyData.empty, answers, None)
+            val session        =
+              IndividualHECSession(individualLoginData, IndividualRetrievedJourneyData.empty, answers, None, None)
             val updatedSession = session.copy(userAnswers = updatedAnswers)
             nextpageRedirectTest(session, updatedSession, "2")
 
@@ -350,7 +356,8 @@ class LicenceDetailsControllerSpec
               None,
               None
             )
-            val session = HECSession(individualLoginData, RetrievedJourneyData.empty, answers, None)
+            val session =
+              IndividualHECSession(individualLoginData, IndividualRetrievedJourneyData.empty, answers, None, None)
 
             nextpageRedirectTest(session, session, "0")
 
@@ -365,7 +372,7 @@ class LicenceDetailsControllerSpec
               licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles)
             )
             val updatedAnswers = UserAnswers.empty.copy(licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles))
-            val session        = HECSession(companyLoginData, RetrievedJourneyData.empty, answers, None)
+            val session        = CompanyHECSession(companyLoginData, CompanyRetrievedJourneyData.empty, answers, None, None)
             val updatedSession = session.copy(userAnswers = updatedAnswers)
             nextpageRedirectTest(session, updatedSession, "0")
 
@@ -383,7 +390,7 @@ class LicenceDetailsControllerSpec
               None
             )
             val updatedAnswers = UserAnswers.empty.copy(licenceType = Some(LicenceType.ScrapMetalMobileCollector))
-            val session        = HECSession(companyLoginData, RetrievedJourneyData.empty, answers, None)
+            val session        = CompanyHECSession(companyLoginData, CompanyRetrievedJourneyData.empty, answers, None, None)
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 
             nextpageRedirectTest(session, updatedSession, "1")
@@ -401,7 +408,7 @@ class LicenceDetailsControllerSpec
               None,
               None
             )
-            val session = HECSession(companyLoginData, RetrievedJourneyData.empty, answers, None)
+            val session = CompanyHECSession(companyLoginData, CompanyRetrievedJourneyData.empty, answers, None, None)
             nextpageRedirectTest(session, session, "0")
 
           }
@@ -419,7 +426,7 @@ class LicenceDetailsControllerSpec
       behave like authAndSessionDataBehaviour(performAction)
 
       "display the page" in {
-        val session = HECSession(individualLoginData, RetrievedJourneyData.empty, UserAnswers.empty, None)
+        val session = IndividualHECSession.newSession(individualLoginData)
         inSequence {
           mockAuthWithNoRetrievals()
           mockGetSession(session)
@@ -445,7 +452,7 @@ class LicenceDetailsControllerSpec
       "display the page" when {
 
         "the user has not previously answered the question" in {
-          val session = HECSession(individualLoginData, RetrievedJourneyData.empty, UserAnswers.empty, None)
+          val session = IndividualHECSession.newSession(individualLoginData)
 
           inSequence {
             mockAuthWithNoRetrievals()
@@ -474,9 +481,9 @@ class LicenceDetailsControllerSpec
 
         "the user has previously answered the question" in {
           val session =
-            HECSession(
+            IndividualHECSession(
               individualLoginData,
-              RetrievedJourneyData.empty,
+              IndividualRetrievedJourneyData.empty,
               CompleteUserAnswers(
                 LicenceType.DriverOfTaxisAndPrivateHires,
                 LicenceTimeTrading.TwoToFourYears,
@@ -487,6 +494,7 @@ class LicenceDetailsControllerSpec
                 None,
                 None
               ),
+              None,
               None
             )
 
@@ -527,7 +535,7 @@ class LicenceDetailsControllerSpec
 
       "show a form error" when {
 
-        val session = HECSession(individualLoginData, RetrievedJourneyData.empty, UserAnswers.empty, None)
+        val session = IndividualHECSession.newSession(individualLoginData)
 
         "nothing is submitted" in {
           inSequence {
@@ -584,7 +592,8 @@ class LicenceDetailsControllerSpec
         "the call to update and next fails" in {
           val answers        = UserAnswers.empty
           val updatedAnswers = UserAnswers.empty.copy(licenceTimeTrading = Some(LicenceTimeTrading.ZeroToTwoYears))
-          val session        = HECSession(individualLoginData, RetrievedJourneyData.empty, answers, None)
+          val session        =
+            IndividualHECSession(individualLoginData, IndividualRetrievedJourneyData.empty, answers, None, None)
           val updatedSession = session.copy(userAnswers = updatedAnswers)
 
           inSequence {
@@ -611,7 +620,8 @@ class LicenceDetailsControllerSpec
           "the user has not previously completed answering questions" in {
             val answers        = UserAnswers.empty
             val updatedAnswers = UserAnswers.empty.copy(licenceTimeTrading = Some(LicenceTimeTrading.FourToEightYears))
-            val session        = HECSession(individualLoginData, RetrievedJourneyData.empty, answers, None)
+            val session        =
+              IndividualHECSession(individualLoginData, IndividualRetrievedJourneyData.empty, answers, None, None)
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 
             inSequence {
@@ -650,7 +660,8 @@ class LicenceDetailsControllerSpec
               None,
               None
             )
-            val session        = HECSession(individualLoginData, RetrievedJourneyData.empty, answers, None)
+            val session        =
+              IndividualHECSession(individualLoginData, IndividualRetrievedJourneyData.empty, answers, None, None)
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 
             inSequence {
@@ -682,7 +693,7 @@ class LicenceDetailsControllerSpec
       "return an InternalServerError" when {
 
         "a licence type cannot be found in session" in {
-          val session = HECSession(individualLoginData, RetrievedJourneyData.empty, UserAnswers.empty, None)
+          val session = IndividualHECSession.newSession(individualLoginData)
 
           inSequence {
             mockAuthWithNoRetrievals()
@@ -697,12 +708,13 @@ class LicenceDetailsControllerSpec
       "display the page" when {
 
         "the user has selected a licence type of 'operator of private hire vehicles'" in {
-          val session = HECSession(
+          val session = IndividualHECSession(
             individualLoginData,
-            RetrievedJourneyData.empty,
+            IndividualRetrievedJourneyData.empty,
             UserAnswers.empty.copy(
               licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles)
             ),
+            None,
             None
           )
 
@@ -742,9 +754,9 @@ class LicenceDetailsControllerSpec
           ).foreach { licenceType =>
             withClue(s"For licence type $licenceType: ") {
               val session =
-                HECSession(
+                IndividualHECSession(
                   individualLoginData,
-                  RetrievedJourneyData.empty,
+                  IndividualRetrievedJourneyData.empty,
                   CompleteUserAnswers(
                     licenceType,
                     LicenceTimeTrading.TwoToFourYears,
@@ -755,6 +767,7 @@ class LicenceDetailsControllerSpec
                     None,
                     None
                   ),
+                  None,
                   None
                 )
 
@@ -802,7 +815,7 @@ class LicenceDetailsControllerSpec
       "return an InternalServerError" when {
 
         "a licence type cannot be found in session" in {
-          val session = HECSession(individualLoginData, RetrievedJourneyData.empty, UserAnswers.empty, None)
+          val session = IndividualHECSession.newSession(individualLoginData)
 
           inSequence {
             mockAuthWithNoRetrievals()
@@ -816,7 +829,8 @@ class LicenceDetailsControllerSpec
           val answers        = UserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
           val updatedAnswers = UserAnswers.empty
             .copy(licenceType = Some(DriverOfTaxisAndPrivateHires), licenceValidityPeriod = Some(UpToOneYear))
-          val session        = HECSession(individualLoginData, RetrievedJourneyData.empty, answers, None)
+          val session        =
+            IndividualHECSession(individualLoginData, IndividualRetrievedJourneyData.empty, answers, None, None)
           val updatedSession = session.copy(userAnswers = updatedAnswers)
 
           inSequence {
@@ -840,7 +854,8 @@ class LicenceDetailsControllerSpec
 
         val answers        = UserAnswers.empty
         val updatedAnswers = UserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
-        val session        = HECSession(individualLoginData, RetrievedJourneyData.empty, answers, None)
+        val session        =
+          IndividualHECSession(individualLoginData, IndividualRetrievedJourneyData.empty, answers, None, None)
         val updatedSession = session.copy(userAnswers = updatedAnswers)
 
         "nothing is submitted" in {
@@ -900,7 +915,8 @@ class LicenceDetailsControllerSpec
           "the user has not previously completed answering questions" in {
             val answers        = UserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
             val updatedAnswers = answers.copy(licenceValidityPeriod = Some(UpToOneYear))
-            val session        = HECSession(individualLoginData, RetrievedJourneyData.empty, answers, None)
+            val session        =
+              IndividualHECSession(individualLoginData, IndividualRetrievedJourneyData.empty, answers, None, None)
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 
             inSequence {
@@ -940,7 +956,8 @@ class LicenceDetailsControllerSpec
               None,
               None
             )
-            val session        = HECSession(individualLoginData, RetrievedJourneyData.empty, answers, None)
+            val session        =
+              IndividualHECSession(individualLoginData, IndividualRetrievedJourneyData.empty, answers, None, None)
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 
             inSequence {

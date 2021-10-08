@@ -20,18 +20,19 @@ import java.time.LocalDate
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.Json
+import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, IndividualHECSession}
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CTUTR, GGCredId, NINO, SAUTR}
 
-class LoginDataSpec extends AnyWordSpec with Matchers {
+class HECSessionDataSpec extends AnyWordSpec with Matchers {
 
-  "RetrievedApplicantData" must {
+  "HECSessionData" must {
 
     "perform JSON de/serialisation correctly" must {
       val dateOfBirthStr = "20001010"
       val dateOfBirth    = LocalDate.of(2000, 10, 10)
 
-      val individualLoginData: LoginData =
+      val individualLoginData =
         IndividualLoginData(
           GGCredId("ggCredId"),
           NINO("nino"),
@@ -42,21 +43,27 @@ class LoginDataSpec extends AnyWordSpec with Matchers {
           List.empty
         )
 
+      val individualSession: HECSession = IndividualHECSession.newSession(individualLoginData)
+
       val individualJson = Json.parse(s"""{
-          |  "ggCredId":"ggCredId",
-          |  "nino":"nino",
-          |  "sautr":"utr",
-          |  "name":{
-          |     "firstName":"first",
-          |     "lastName":"last"
+          |  "loginData" : {
+          |    "ggCredId":"ggCredId",
+          |    "nino":"nino",
+          |    "sautr":"utr",
+          |    "name":{
+          |       "firstName":"first",
+          |       "lastName":"last"
+          |    },
+          |    "dateOfBirth":"$dateOfBirthStr",
+          |    "emailAddress":"email",
+          |    "unexpiredTaxChecks" : []
           |  },
-          |  "dateOfBirth":"$dateOfBirthStr",
-          |  "emailAddress":"email",
-          |  "type":"Individual",
-          |  "unexpiredTaxChecks":[]
+          |  "retrievedJourneyData" : { },
+          |  "userAnswers" : { "type" : "Incomplete"  },
+          |  "type":"Individual"
           |}""".stripMargin)
 
-      val companyLoginData: LoginData =
+      val companyLoginData =
         CompanyLoginData(
           GGCredId("ggCredId"),
           Some(CTUTR("utr")),
@@ -64,40 +71,34 @@ class LoginDataSpec extends AnyWordSpec with Matchers {
           List.empty
         )
 
+      val companySession: HECSession = CompanyHECSession.newSession(companyLoginData)
+
       val companyJson = Json.parse("""{
-          |  "ggCredId":"ggCredId",
-          |  "ctutr":"utr",
-          |  "emailAddress":"email",
-          |  "type":"Company",
-          |  "unexpiredTaxChecks":[]
+          |  "loginData" : {
+          |    "ggCredId":"ggCredId",
+          |    "ctutr":"utr",
+          |    "emailAddress":"email",
+          |    "unexpiredTaxChecks" : []
+          |    },
+          |  "retrievedJourneyData" : { },
+          |  "userAnswers" : { "type" : "Incomplete" },
+          |  "type":"Company"
           |}""".stripMargin)
 
-      "serialize Individual login data" in {
-        Json.toJson(individualLoginData) shouldBe individualJson
+      "serialize Individual session data" in {
+        Json.toJson(individualSession) shouldBe individualJson
       }
 
-      "serialize Company login data" in {
-        Json.toJson(companyLoginData) shouldBe companyJson
+      "serialize Company session data" in {
+        Json.toJson(companySession) shouldBe companyJson
       }
 
-      "deserialize Individual login data" in {
-        Json.fromJson[IndividualLoginData](individualJson).get shouldBe individualLoginData
+      "deserialize Individual session data" in {
+        Json.fromJson[HECSession](individualJson).get shouldBe individualSession
       }
 
-      "deserialize Company login data" when {
-        "all fields are present" in {
-          Json.fromJson[CompanyLoginData](companyJson).get shouldBe companyLoginData
-        }
-
-        "only mandatory fields are present" in {
-          Json
-            .fromJson[CompanyLoginData](
-              Json.parse(
-                """{"ggCredId":"ggCredId", "type":"Company", "unexpiredTaxChecks":[]}"""
-              )
-            )
-            .get shouldBe CompanyLoginData(GGCredId("ggCredId"), None, None, List.empty)
-        }
+      "deserialize Company session data" in {
+        Json.fromJson[HECSession](companyJson).get shouldBe companySession
       }
     }
   }

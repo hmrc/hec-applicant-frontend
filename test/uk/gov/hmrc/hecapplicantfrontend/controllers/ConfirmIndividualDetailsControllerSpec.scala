@@ -21,8 +21,9 @@ import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
+import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, IndividualHECSession}
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
-import uk.gov.hmrc.hecapplicantfrontend.models.{DateOfBirth, Error, HECSession, Name, RetrievedJourneyData, UserAnswers}
+import uk.gov.hmrc.hecapplicantfrontend.models.{DateOfBirth, Error, Name}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
@@ -61,7 +62,7 @@ class ConfirmIndividualDetailsControllerSpec
 
           inSequence {
             mockAuthWithNoRetrievals()
-            mockGetSession(HECSession(companyLoginData, RetrievedJourneyData.empty, UserAnswers.empty, None))
+            mockGetSession(CompanyHECSession.newSession(companyLoginData))
           }
 
           checkIsRedirect(performAction(), routes.StartController.start())
@@ -74,11 +75,8 @@ class ConfirmIndividualDetailsControllerSpec
           val name        = Name("First", "Last")
           val dateOfBirth = DateOfBirth(LocalDate.of(2000, 12, 3))
 
-          val session = HECSession(
-            IndividualLoginData(GGCredId(""), NINO(""), None, name, dateOfBirth, None, List.empty),
-            RetrievedJourneyData.empty,
-            UserAnswers.empty,
-            None
+          val session = IndividualHECSession.newSession(
+            IndividualLoginData(GGCredId(""), NINO(""), None, name, dateOfBirth, None, List.empty)
           )
 
           inSequence {
@@ -130,7 +128,7 @@ class ConfirmIndividualDetailsControllerSpec
 
           inSequence {
             mockAuthWithNoRetrievals()
-            mockGetSession(HECSession(companyLoginData, RetrievedJourneyData.empty, UserAnswers.empty, None))
+            mockGetSession(CompanyHECSession.newSession(companyLoginData))
           }
 
           checkIsRedirect(performAction(), routes.StartController.start())
@@ -141,7 +139,7 @@ class ConfirmIndividualDetailsControllerSpec
       "return an InternalServerError" when {
 
         "there is a problem getting the next page" in {
-          val session = HECSession(
+          val session = IndividualHECSession.newSession(
             IndividualLoginData(
               GGCredId(""),
               NINO(""),
@@ -150,10 +148,7 @@ class ConfirmIndividualDetailsControllerSpec
               DateOfBirth(LocalDate.now()),
               None,
               List.empty
-            ),
-            RetrievedJourneyData.empty,
-            UserAnswers.empty,
-            None
+            )
           )
 
           inSequence {
@@ -174,7 +169,7 @@ class ConfirmIndividualDetailsControllerSpec
       "proceed to the next page" when {
 
         "the next page can be found" in {
-          val session = HECSession(
+          val session = IndividualHECSession.newSession(
             IndividualLoginData(
               GGCredId(""),
               NINO(""),
@@ -183,10 +178,7 @@ class ConfirmIndividualDetailsControllerSpec
               DateOfBirth(LocalDate.now()),
               None,
               List.empty
-            ),
-            RetrievedJourneyData.empty,
-            UserAnswers.empty,
-            None
+            )
           )
 
           inSequence {
@@ -220,7 +212,7 @@ class ConfirmIndividualDetailsControllerSpec
 
           inSequence {
             mockAuthWithNoRetrievals()
-            mockGetSession(HECSession(companyLoginData, RetrievedJourneyData.empty, UserAnswers.empty, None))
+            mockGetSession(CompanyHECSession.newSession(companyLoginData))
           }
 
           checkIsRedirect(performAction(), routes.StartController.start())
@@ -230,7 +222,7 @@ class ConfirmIndividualDetailsControllerSpec
       "display the page" when {
 
         "the user is logged in and individual data can be found" in {
-          val session = HECSession(
+          val session = IndividualHECSession.newSession(
             IndividualLoginData(
               GGCredId(""),
               NINO(""),
@@ -239,10 +231,7 @@ class ConfirmIndividualDetailsControllerSpec
               DateOfBirth(LocalDate.now()),
               None,
               List.empty
-            ),
-            RetrievedJourneyData.empty,
-            UserAnswers.empty,
-            None
+            )
           )
 
           inSequence {

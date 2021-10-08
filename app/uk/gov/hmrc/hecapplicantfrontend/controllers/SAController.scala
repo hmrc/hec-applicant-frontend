@@ -24,7 +24,8 @@ import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 import uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.getTaxYear
-import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
+import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, RequestWithSessionData, SessionDataAction}
+import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, IndividualHECSession}
 import uk.gov.hmrc.hecapplicantfrontend.models.YesNoAnswer
 import uk.gov.hmrc.hecapplicantfrontend.models.views.YesNoOption
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
@@ -61,39 +62,41 @@ class SAController @Inject() (
   }
 
   val saIncomeStatementSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
-    def handleValidAnswer(incomeDeclared: YesNoAnswer): Future[Result] = {
-      val updatedAnswers =
-        request.sessionData.userAnswers.unset(_.saIncomeDeclared).copy(saIncomeDeclared = Some(incomeDeclared))
+    withIndividualSession { individualSession =>
+      def handleValidAnswer(incomeDeclared: YesNoAnswer): Future[Result] = {
+        val updatedAnswers =
+          individualSession.userAnswers.unset(_.saIncomeDeclared).copy(saIncomeDeclared = Some(incomeDeclared))
 
-      journeyService
-        .updateAndNext(
-          routes.SAController.saIncomeStatement(),
-          request.sessionData.copy(userAnswers = updatedAnswers)
-        )
+        journeyService
+          .updateAndNext(
+            routes.SAController.saIncomeStatement(),
+            individualSession.copy(userAnswers = updatedAnswers)
+          )
+          .fold(
+            { e =>
+              logger.warn("Could not update session and proceed", e)
+              InternalServerError
+            },
+            Redirect
+          )
+      }
+
+      SAController
+        .saIncomeDeclarationForm(YesNoAnswer.values)
+        .bindFromRequest()
         .fold(
-          { e =>
-            logger.warn("Could not update session and proceed", e)
-            InternalServerError
-          },
-          Redirect
+          formWithErrors =>
+            Ok(
+              saIncomeStatementPage(
+                formWithErrors,
+                journeyService.previous(routes.SAController.saIncomeStatement()),
+                SAController.incomeDeclaredOptions,
+                getTaxYear(timeProvider.currentDate)
+              )
+            ),
+          handleValidAnswer
         )
     }
-
-    SAController
-      .saIncomeDeclarationForm(YesNoAnswer.values)
-      .bindFromRequest()
-      .fold(
-        formWithErrors =>
-          Ok(
-            saIncomeStatementPage(
-              formWithErrors,
-              journeyService.previous(routes.SAController.saIncomeStatement()),
-              SAController.incomeDeclaredOptions,
-              getTaxYear(timeProvider.currentDate)
-            )
-          ),
-        handleValidAnswer
-      )
   }
 
   val noReturnFound: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
@@ -105,6 +108,12 @@ class SAController @Inject() (
     val back = journeyService.previous(routes.SAController.sautrNotFound())
     Ok(sautrNotFoundPage(back))
   }
+
+  private def withIndividualSession[A](f: IndividualHECSession => A)(implicit r: RequestWithSessionData[_]): A =
+    r.sessionData match {
+      case i: IndividualHECSession => f(i)
+      case _: CompanyHECSession    => sys.error("Found company session but expected individual session")
+    }
 
 }
 

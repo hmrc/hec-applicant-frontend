@@ -23,7 +23,9 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.hecapplicantfrontend.controllers.CheckYourAnswersControllerSpec.CheckYourAnswersRow
+import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.IndividualHECSession
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
+import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.IndividualRetrievedJourneyData
 import uk.gov.hmrc.hecapplicantfrontend.models._
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.CompleteUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO}
@@ -79,7 +81,7 @@ class CheckYourAnswersControllerSpec
       "show an error page" when {
 
         "there are no complete answers in session" in {
-          val session = HECSession(individualLoginData, RetrievedJourneyData.empty, UserAnswers.empty, None)
+          val session = IndividualHECSession.newSession(individualLoginData)
 
           inSequence {
             mockAuthWithNoRetrievals()
@@ -103,7 +105,8 @@ class CheckYourAnswersControllerSpec
           None
         )
 
-        val session = HECSession(individualLoginData, RetrievedJourneyData.empty, answers, None)
+        val session =
+          IndividualHECSession(individualLoginData, IndividualRetrievedJourneyData.empty, answers, None, None)
 
         val expectedRows =
           List(
@@ -184,17 +187,30 @@ class CheckYourAnswersControllerSpec
         None
       )
 
-      val session = HECSession(individualLoginData, RetrievedJourneyData.empty, completeAnswers, None)
+      val session =
+        IndividualHECSession(individualLoginData, IndividualRetrievedJourneyData.empty, completeAnswers, None, None)
 
       val hecTaxCheck = HECTaxCheck(HECTaxCheckCode(""), LocalDate.now())
 
       val updatedSession =
-        HECSession(individualLoginData, RetrievedJourneyData.empty, UserAnswers.empty, Some(hecTaxCheck))
+        IndividualHECSession(
+          individualLoginData,
+          IndividualRetrievedJourneyData.empty,
+          UserAnswers.empty,
+          Some(hecTaxCheck),
+          None
+        )
 
       "return an InternalServerError" when {
 
         "there are no complete answers in session" in {
-          val session = HECSession(individualLoginData, RetrievedJourneyData.empty, UserAnswers.empty, None)
+          val session = IndividualHECSession(
+            individualLoginData,
+            IndividualRetrievedJourneyData.empty,
+            UserAnswers.empty,
+            None,
+            None
+          )
 
           inSequence {
             mockAuthWithNoRetrievals()

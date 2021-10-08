@@ -24,7 +24,9 @@ import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{defaultAwaitTimeout, status}
 import uk.gov.hmrc.auth.core.AuthConnector
+import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, IndividualHECSession}
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
+import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.{CompanyRetrievedJourneyData, IndividualRetrievedJourneyData}
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.{CompleteUserAnswers, IncompleteUserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models._
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR, GGCredId, NINO}
@@ -75,7 +77,7 @@ class CompanyDetailsControllerSpec
   val controller                          = instanceOf[CompanyDetailsController]
   val companyLoginData                    = CompanyLoginData(GGCredId(""), None, None, List.empty)
   val retrievedJourneyDataWithCompanyName =
-    RetrievedJourneyData.empty.copy(companyName = Some(CompanyHouseName("some-company")))
+    CompanyRetrievedJourneyData.empty.copy(companyName = Some(CompanyHouseName("some-company")))
 
   "CompanyDetailsControllerSpec" when {
 
@@ -87,7 +89,8 @@ class CompanyDetailsControllerSpec
 
         "the user has not previously answered the question " in {
 
-          val session = HECSession(companyLoginData, retrievedJourneyDataWithCompanyName, UserAnswers.empty, None)
+          val session =
+            CompanyHECSession(companyLoginData, retrievedJourneyDataWithCompanyName, UserAnswers.empty, None, None)
 
           inSequence {
             mockAuthWithNoRetrievals()
@@ -125,7 +128,7 @@ class CompanyDetailsControllerSpec
             None,
             Some(YesNoAnswer.Yes)
           )
-          val session = HECSession(companyLoginData, retrievedJourneyDataWithCompanyName, answers, None)
+          val session = CompanyHECSession(companyLoginData, retrievedJourneyDataWithCompanyName, answers, None, None)
 
           val updatedAnswers = IncompleteUserAnswers
             .fromCompleteAnswers(answers)
@@ -160,12 +163,7 @@ class CompanyDetailsControllerSpec
 
       "return internal server error" when {
         "company name is not populated" in {
-          val session = HECSession(
-            companyLoginData,
-            RetrievedJourneyData.empty,
-            UserAnswers.empty,
-            None
-          )
+          val session = CompanyHECSession.newSession(companyLoginData)
 
           inSequence {
             mockAuthWithNoRetrievals()
@@ -186,7 +184,7 @@ class CompanyDetailsControllerSpec
               None,
               List.empty
             )
-          val session        = HECSession(individualData, retrievedJourneyDataWithCompanyName, UserAnswers.empty, None)
+          val session        = IndividualHECSession.newSession(individualData)
 
           inSequence {
             mockAuthWithNoRetrievals()
@@ -207,10 +205,11 @@ class CompanyDetailsControllerSpec
 
       "show a form error" when {
 
-        val session = HECSession(
+        val session = CompanyHECSession(
           companyLoginData,
           retrievedJourneyDataWithCompanyName,
           UserAnswers.empty.copy(crn = Some(CRN("crn"))),
+          None,
           None
         )
 
@@ -273,12 +272,13 @@ class CompanyDetailsControllerSpec
           "CRN is not populated" in {
             val answers = UserAnswers.empty
             // session contains CTUTR from enrolments
-            val session = HECSession(
+            val session = CompanyHECSession(
               companyLoginData.copy(
                 ctutr = Some(CTUTR("ctutr"))
               ),
               retrievedJourneyDataWithCompanyName,
               answers,
+              None,
               None
             )
 
@@ -302,7 +302,8 @@ class CompanyDetailsControllerSpec
                 List.empty
               )
             val answers        = UserAnswers.empty.copy(crn = Some(CRN("crn")))
-            val session        = HECSession(individualData, retrievedJourneyDataWithCompanyName, answers, None)
+            val session        =
+              IndividualHECSession(individualData, IndividualRetrievedJourneyData.empty, answers, None, None)
 
             inSequence {
               mockAuthWithNoRetrievals()
@@ -315,10 +316,11 @@ class CompanyDetailsControllerSpec
           "the call to fetch CT status fails" in {
             val answers = UserAnswers.empty.copy(crn = Some(CRN("crn")))
             // session contains CTUTR from enrolments
-            val session = HECSession(
+            val session = CompanyHECSession(
               companyLoginData.copy(ctutr = Some(CTUTR("ctutr"))),
               retrievedJourneyDataWithCompanyName,
               answers,
+              None,
               None
             )
 
@@ -340,7 +342,7 @@ class CompanyDetailsControllerSpec
             // session contains CTUTR from enrolments
             val companyData =
               companyLoginData.copy(ctutr = Some(CTUTR("ctutr")))
-            val session     = HECSession(companyData, retrievedJourneyDataWithCompanyName, answers, None)
+            val session     = CompanyHECSession(companyData, retrievedJourneyDataWithCompanyName, answers, None, None)
 
             val updatedAnswers   = answers.copy(companyDetailsConfirmed = Some(YesNoAnswer.Yes))
             val ctStatusResponse = CTStatusResponse(CTUTR("ctutr"), date, date, None)
@@ -376,7 +378,7 @@ class CompanyDetailsControllerSpec
         "user answers with a No" when {
           "the call to update and next fails" in {
             val answers = UserAnswers.empty.copy(crn = Some(CRN("crn")))
-            val session = HECSession(companyLoginData, retrievedJourneyDataWithCompanyName, answers, None)
+            val session = CompanyHECSession(companyLoginData, retrievedJourneyDataWithCompanyName, answers, None, None)
 
             // should wipe out CRN answer if user says that the company name is incorrect
             val updatedAnswers = answers.copy(crn = None)
@@ -405,7 +407,7 @@ class CompanyDetailsControllerSpec
             val answers     = UserAnswers.empty.copy(crn = Some(CRN("crn")))
             // session contains CTUTR from enrolments
             val companyData = companyLoginData.copy(ctutr = Some(CTUTR("ctutr")))
-            val session     = HECSession(companyData, retrievedJourneyDataWithCompanyName, answers, None)
+            val session     = CompanyHECSession(companyData, retrievedJourneyDataWithCompanyName, answers, None, None)
 
             val updatedAnswers   = answers.copy(companyDetailsConfirmed = Some(YesNoAnswer.Yes))
             val ctStatusResponse = CTStatusResponse(CTUTR("ctutr"), date, date, None)
@@ -439,7 +441,7 @@ class CompanyDetailsControllerSpec
             val answers     = UserAnswers.empty.copy(crn = Some(CRN("crn")))
             // session contains CTUTR from enrolments
             val companyData = companyLoginData.copy(ctutr = Some(CTUTR("ctutr")))
-            val session     = HECSession(companyData, retrievedJourneyDataWithCompanyName, answers, None)
+            val session     = CompanyHECSession(companyData, retrievedJourneyDataWithCompanyName, answers, None, None)
 
             val updatedAnswers = answers.copy(companyDetailsConfirmed = Some(YesNoAnswer.Yes))
             val desCtutr       = CTUTR("des-ctutr")
@@ -465,7 +467,7 @@ class CompanyDetailsControllerSpec
 
         "user answers with a No" in {
           val answers = UserAnswers.empty.copy(crn = Some(CRN("crn")))
-          val session = HECSession(companyLoginData, retrievedJourneyDataWithCompanyName, answers, None)
+          val session = CompanyHECSession(companyLoginData, retrievedJourneyDataWithCompanyName, answers, None, None)
 
           // should wipe out CRN answer if user says that the company name is incorrect
           val updatedAnswers = answers.copy(crn = None)

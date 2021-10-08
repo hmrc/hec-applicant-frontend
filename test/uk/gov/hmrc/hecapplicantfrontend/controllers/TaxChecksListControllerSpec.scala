@@ -22,7 +22,9 @@ import play.api.inject.bind
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
+import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.IndividualHECSession
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.IndividualLoginData
+import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.IndividualRetrievedJourneyData
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.IncompleteUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models._
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO}
@@ -72,7 +74,8 @@ class TaxChecksListControllerSpec
       )
 
       "return an error when no tax checks found" in {
-        val session = HECSession(individualLoginData, RetrievedJourneyData.empty, answers, None)
+        val session =
+          IndividualHECSession(individualLoginData, IndividualRetrievedJourneyData.empty, answers, None, None)
         inSequence {
           mockAuthWithNoRetrievals()
           mockGetSession(session)
@@ -105,10 +108,11 @@ class TaxChecksListControllerSpec
           yesterday
         )
         val unsortedTaxChecks = List(dayBeforeTaxCheck, todayTaxCheck, yesterdayTaxCheck)
-        val session           = HECSession(
+        val session           = IndividualHECSession(
           individualLoginData.copy(unexpiredTaxChecks = unsortedTaxChecks),
-          RetrievedJourneyData.empty,
+          IndividualRetrievedJourneyData.empty,
           answers,
+          None,
           None
         )
 

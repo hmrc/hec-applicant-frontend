@@ -30,9 +30,10 @@ import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, ~}
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.hecapplicantfrontend.config.EnrolmentConfig
+import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, IndividualHECSession}
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CTUTR, GGCredId, NINO, SAUTR}
-import uk.gov.hmrc.hecapplicantfrontend.models.{CitizenDetails, DateOfBirth, EmailAddress, Error, HECSession, Name, RetrievedJourneyData, TaxCheckListItem, UserAnswers}
+import uk.gov.hmrc.hecapplicantfrontend.models.{CitizenDetails, DateOfBirth, EmailAddress, Error, Name, TaxCheckListItem}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.{CitizenDetailsService, JourneyService, TaxCheckService}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -166,7 +167,7 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
       "proceed" when {
 
         "existing session data is found" in {
-          val session = HECSession(completeIndividualLoginData, RetrievedJourneyData.empty, UserAnswers.empty, None)
+          val session = IndividualHECSession.newSession(completeIndividualLoginData)
           inSequence {
             mockAuthWithRetrievals(ConfidenceLevel.L50, None, None, None, None, Enrolments(Set.empty), None)
             mockGetSession(session)
@@ -191,7 +192,7 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
                   individualRetrievedData.sautr
                 )
 
-                val session = HECSession(individualRetrievedData, RetrievedJourneyData.empty, UserAnswers.empty, None)
+                val session = IndividualHECSession.newSession(individualRetrievedData)
                 inSequence {
                   mockAuthWithRetrievals(
                     ConfidenceLevel.L250,
@@ -220,7 +221,7 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
               None
             )
 
-            val session = HECSession(completeIndividualLoginData, RetrievedJourneyData.empty, UserAnswers.empty, None)
+            val session = IndividualHECSession.newSession(completeIndividualLoginData)
 
             inSequence {
               mockAuthWithRetrievals(
@@ -253,12 +254,7 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
             )
 
             val session =
-              HECSession(
-                completeIndividualLoginData.copy(sautr = Some(citizenDetailsSautr)),
-                RetrievedJourneyData.empty,
-                UserAnswers.empty,
-                None
-              )
+              IndividualHECSession.newSession(completeIndividualLoginData.copy(sautr = Some(citizenDetailsSautr)))
 
             inSequence {
               mockAuthWithRetrievals(
@@ -289,7 +285,7 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
                 completeIndividualLoginData.sautr
               )
 
-              val session = HECSession(completeIndividualLoginData, RetrievedJourneyData.empty, UserAnswers.empty, None)
+              val session = IndividualHECSession.newSession(completeIndividualLoginData)
 
               inSequence {
                 mockAuthWithRetrievals(
@@ -321,7 +317,7 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
               completeCompanyLoginData,
               completeCompanyLoginData.copy(emailAddress = None)
             ).foreach { companyRetrievedData =>
-              val session = HECSession(companyRetrievedData, RetrievedJourneyData.empty, UserAnswers.empty, None)
+              val session = CompanyHECSession.newSession(companyRetrievedData)
               inSequence {
                 mockAuthWithRetrievals(
                   ConfidenceLevel.L50,
@@ -344,7 +340,7 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
 
           "no CTUTR can be found for a company" in {
             val companyData = completeCompanyLoginData.copy(ctutr = None)
-            val session     = HECSession(companyData, RetrievedJourneyData.empty, UserAnswers.empty, None)
+            val session     = CompanyHECSession.newSession(companyData)
             inSequence {
               mockAuthWithRetrievals(
                 ConfidenceLevel.L50,
@@ -553,7 +549,7 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
               mockGetSession(Right(None))
               mockGetUnexpiredTaxCheckCodes(Right(List.empty))
               mockStoreSession(
-                HECSession(completeCompanyLoginData, RetrievedJourneyData.empty, UserAnswers.empty, None)
+                CompanyHECSession.newSession(completeCompanyLoginData)
               )(Left(Error("")))
             }
           )

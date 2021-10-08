@@ -39,6 +39,7 @@ import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
 import scala.concurrent.{ExecutionContext, Future}
 import TaxSituationController.saTaxSituations
+import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.IndividualHECSession
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.IndividualLoginData
 
 @Singleton
@@ -91,18 +92,18 @@ class TaxSituationController @Inject() (
       }
 
     def handleValidTaxSituation(taxSituation: TaxSituation): Future[Result] =
-      request.sessionData.loginData match {
-        case individualLoginData: IndividualLoginData =>
+      request.sessionData match {
+        case individualSession: IndividualHECSession =>
           val result = for {
-            maybeSaStatus <- fetchSAStatus(individualLoginData, taxSituation)
+            maybeSaStatus <- fetchSAStatus(individualSession.loginData, taxSituation)
 
-            updatedRetrievedData = request.sessionData.retrievedJourneyData.copy(saStatus = maybeSaStatus)
+            updatedRetrievedData = individualSession.retrievedJourneyData.copy(saStatus = maybeSaStatus)
             // wipe the SA income declared answer since it is dependent on the tax situation answer
-            updatedAnswers       = request.sessionData.userAnswers
+            updatedAnswers       = individualSession.userAnswers
                                      .unset(_.taxSituation)
                                      .unset(_.saIncomeDeclared)
                                      .copy(taxSituation = Some(taxSituation))
-            updatedRequest       = request.sessionData.copy(
+            updatedRequest       = individualSession.copy(
                                      userAnswers = updatedAnswers,
                                      retrievedJourneyData = updatedRetrievedData
                                    )

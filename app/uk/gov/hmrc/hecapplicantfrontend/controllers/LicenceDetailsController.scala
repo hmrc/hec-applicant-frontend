@@ -79,7 +79,10 @@ class LicenceDetailsController @Inject() (
       journeyService
         .updateAndNext(
           routes.LicenceDetailsController.licenceType(),
-          request.sessionData.copy(userAnswers = updatedAnswers)
+          request.sessionData.fold(
+            _.copy(userAnswers = updatedAnswers),
+            _.copy(userAnswers = updatedAnswers)
+          )
         )
         .fold(
           { e =>
@@ -132,7 +135,10 @@ class LicenceDetailsController @Inject() (
       journeyService
         .updateAndNext(
           routes.LicenceDetailsController.licenceTimeTrading(),
-          request.sessionData.copy(userAnswers = updatedAnswers)
+          request.sessionData.fold(
+            _.copy(userAnswers = updatedAnswers),
+            _.copy(userAnswers = updatedAnswers)
+          )
         )
         .fold(
           { e =>
@@ -187,7 +193,10 @@ class LicenceDetailsController @Inject() (
       journeyService
         .updateAndNext(
           routes.LicenceDetailsController.recentLicenceLength(),
-          request.sessionData.copy(userAnswers = updatedAnswers)
+          request.sessionData.fold(
+            _.copy(userAnswers = updatedAnswers),
+            _.copy(userAnswers = updatedAnswers)
+          )
         )
         .fold(
           { e =>

@@ -28,8 +28,8 @@ import play.api.mvc._
 import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 import uk.gov.hmrc.hecapplicantfrontend.controllers.CRNController.crnForm
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, RequestWithSessionData, SessionDataAction}
-import uk.gov.hmrc.hecapplicantfrontend.models.{Error, RetrievedJourneyData}
-import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.CompanyLoginData
+import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.CompanyHECSession
+import uk.gov.hmrc.hecapplicantfrontend.models.Error
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.CRN
 import uk.gov.hmrc.hecapplicantfrontend.services.{CompanyDetailsService, JourneyService}
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
@@ -78,9 +78,9 @@ class CRNController @Inject() (
     }
 
   private def handleValidCrn(crn: CRN)(implicit request: RequestWithSessionData[_]): Future[Result] =
-    request.sessionData.loginData match {
-      case _: CompanyLoginData =>
-        checkCompanyName(crn, request.sessionData.retrievedJourneyData)
+    request.sessionData match {
+      case companySession: CompanyHECSession =>
+        checkCompanyName(crn, companySession)
           .fold(
             { e =>
               logger.warn(" Couldn't get company Name from the given CRN", e)
@@ -88,39 +88,39 @@ class CRNController @Inject() (
             },
             Redirect
           )
-      case _                   =>
+      case _                                 =>
         logger.error("Individual should not see this page")
         Future.successful(InternalServerError)
     }
 
-  private def checkCompanyName(crn: CRN, retrievedJourneyData: RetrievedJourneyData)(implicit
+  private def checkCompanyName(crn: CRN, companySession: CompanyHECSession)(implicit
     request: RequestWithSessionData[_]
   ): EitherT[Future, Error, Call] = {
-    val sessionCrn = request.sessionData.userAnswers.fold(_.crn, _.crn)
+    val sessionCrn = companySession.userAnswers.fold(_.crn, _.crn)
     sessionCrn match {
       //check if the submitted crn is equal to the crn in session
       //then no need to call the companyDetailsService, pick company name from the sessiongit
       //else fetch company name using the service
       case Some(crnSession) if crn.value === crnSession.value =>
         journeyService
-          .updateAndNext(routes.CRNController.companyRegistrationNumber(), request.sessionData)
-      case _                                                  => fetchCompanyName(crn, retrievedJourneyData)
+          .updateAndNext(routes.CRNController.companyRegistrationNumber(), companySession)
+      case _                                                  => fetchCompanyName(crn, companySession)
     }
   }
 
-  private def fetchCompanyName(crn: CRN, retrievedJourneyData: RetrievedJourneyData)(implicit
+  private def fetchCompanyName(crn: CRN, companySession: CompanyHECSession)(implicit
     request: RequestWithSessionData[_]
   ): EitherT[Future, Error, Call] = for {
     companyHouseDetailsOpt <- companyDetailsService.findCompany(crn)
     updatedAnswers          =
-      request.sessionData.userAnswers
+      companySession.userAnswers
         .unset(_.crn)
         .copy(crn = Some(crn))
     updatedRetrievedData    =
-      retrievedJourneyData.copy(
+      companySession.retrievedJourneyData.copy(
         companyName = companyHouseDetailsOpt.map(_.companyName)
       )
-    updatedSession          = request.sessionData.copy(retrievedJourneyData = updatedRetrievedData, userAnswers = updatedAnswers)
+    updatedSession          = companySession.copy(retrievedJourneyData = updatedRetrievedData, userAnswers = updatedAnswers)
     next                   <- journeyService
                                 .updateAndNext(routes.CRNController.companyRegistrationNumber(), updatedSession)
   } yield next

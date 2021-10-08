@@ -123,10 +123,4 @@ object UserAnswers {
     }
   }
 
-  def taxSituation(userAnswers: UserAnswers): Option[TaxSituation] =
-    userAnswers match {
-      case i: IncompleteUserAnswers => i.taxSituation
-      case c: CompleteUserAnswers   => c.taxSituation
-    }
-
 }

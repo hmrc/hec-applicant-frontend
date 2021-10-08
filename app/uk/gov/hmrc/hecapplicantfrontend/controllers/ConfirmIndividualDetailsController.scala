@@ -23,7 +23,7 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession
-import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
+import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, IndividualHECSession}
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging.LoggerOps
@@ -46,15 +46,15 @@ class ConfirmIndividualDetailsController @Inject() (
     with Logging {
 
   val confirmIndividualDetails: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
-    withIndividualLoginData(request.sessionData) { i =>
+    withIndividualSesion(request.sessionData) { i =>
       val back = journeyService.previous(routes.ConfirmIndividualDetailsController.confirmIndividualDetails())
-      Ok(confirmIndividualDetailsPage(back, i))
+      Ok(confirmIndividualDetailsPage(back, i.loginData))
     }
   }
 
   val confirmIndividualDetailsSubmit: Action[AnyContent] =
     authAction.andThen(sessionDataAction).async { implicit request =>
-      withIndividualLoginData(request.sessionData) { _ =>
+      withIndividualSesion(request.sessionData) { _ =>
         journeyService
           .updateAndNext(routes.ConfirmIndividualDetailsController.confirmIndividualDetails(), request.sessionData)
           .fold(
@@ -69,17 +69,17 @@ class ConfirmIndividualDetailsController @Inject() (
 
   val confirmIndividualDetailsExit: Action[AnyContent] =
     authAction.andThen(sessionDataAction).async { implicit request =>
-      withIndividualLoginData(request.sessionData) { _ =>
+      withIndividualSesion(request.sessionData) { _ =>
         val back = journeyService.previous(routes.ConfirmIndividualDetailsController.confirmIndividualDetailsExit())
         Ok(confirmIndividualDetailsExitPage(back))
       }
     }
 
-  private def withIndividualLoginData(
+  private def withIndividualSesion(
     session: HECSession
-  )(f: IndividualLoginData => Future[Result]): Future[Result] =
-    session.loginData match {
-      case i: IndividualLoginData => f(i)
-      case _: CompanyLoginData    => Redirect(routes.StartController.start())
+  )(f: IndividualHECSession => Future[Result]): Future[Result] =
+    session match {
+      case i: IndividualHECSession => f(i)
+      case _: CompanyHECSession    => Redirect(routes.StartController.start())
     }
 }

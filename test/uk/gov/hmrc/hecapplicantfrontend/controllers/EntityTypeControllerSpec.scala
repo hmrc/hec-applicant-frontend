@@ -22,7 +22,9 @@ import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
+import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, IndividualHECSession}
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
+import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.{CompanyRetrievedJourneyData, IndividualRetrievedJourneyData}
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.{CompleteUserAnswers, IncompleteUserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
@@ -65,7 +67,7 @@ class EntityTypeControllerSpec
       "display the page" when {
 
         "the user has not previously answered the question" in {
-          val session = HECSession(individualLoginData, RetrievedJourneyData.empty, UserAnswers.empty, None)
+          val session = IndividualHECSession.newSession(individualLoginData)
 
           inSequence {
             mockAuthWithNoRetrievals()
@@ -92,9 +94,9 @@ class EntityTypeControllerSpec
 
         "the user has previously answered the question" in {
           val session =
-            HECSession(
+            IndividualHECSession(
               individualLoginData,
-              RetrievedJourneyData.empty,
+              IndividualRetrievedJourneyData.empty,
               CompleteUserAnswers(
                 LicenceType.DriverOfTaxisAndPrivateHires,
                 LicenceTimeTrading.ZeroToTwoYears,
@@ -105,6 +107,7 @@ class EntityTypeControllerSpec
                 None,
                 None
               ),
+              None,
               None
             )
 
@@ -143,7 +146,7 @@ class EntityTypeControllerSpec
 
       "show a form error" when {
 
-        val session = HECSession(companyLoginData, RetrievedJourneyData.empty, UserAnswers.empty, None)
+        val session = CompanyHECSession.newSession(companyLoginData)
 
         "nothing is submitted" in {
           inSequence {
@@ -194,7 +197,8 @@ class EntityTypeControllerSpec
         "the call to update and next fails" in {
           val answers        = UserAnswers.empty
           val updatedAnswers = UserAnswers.empty.copy(entityType = Some(EntityType.Individual))
-          val session        = HECSession(individualLoginData, RetrievedJourneyData.empty, answers, None)
+          val session        =
+            IndividualHECSession(individualLoginData, IndividualRetrievedJourneyData.empty, answers, None, None)
           val updatedSession = session.copy(userAnswers = updatedAnswers)
 
           inSequence {
@@ -217,7 +221,8 @@ class EntityTypeControllerSpec
           "the user is Individual has not previously completed answering questions" in {
             val answers        = UserAnswers.empty
             val updatedAnswers = UserAnswers.empty.copy(entityType = Some(EntityType.Company))
-            val session        = HECSession(individualLoginData, RetrievedJourneyData.empty, answers, None)
+            val session        =
+              IndividualHECSession(individualLoginData, IndividualRetrievedJourneyData.empty, answers, None, None)
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 
             inSequence {
@@ -234,7 +239,7 @@ class EntityTypeControllerSpec
           "the user is Company has not previously completed answering questions" in {
             val answers        = UserAnswers.empty
             val updatedAnswers = UserAnswers.empty.copy(entityType = Some(EntityType.Company))
-            val session        = HECSession(companyLoginData, RetrievedJourneyData.empty, answers, None)
+            val session        = CompanyHECSession(companyLoginData, CompanyRetrievedJourneyData.empty, answers, None, None)
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 
             inSequence {
@@ -266,7 +271,8 @@ class EntityTypeControllerSpec
             val updatedAnswers = IncompleteUserAnswers
               .fromCompleteAnswers(answers)
               .copy(entityType = Some(EntityType.Company))
-            val session        = HECSession(individualLoginData, RetrievedJourneyData.empty, answers, None)
+            val session        =
+              IndividualHECSession(individualLoginData, IndividualRetrievedJourneyData.empty, answers, None, None)
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 
             inSequence {
@@ -294,7 +300,7 @@ class EntityTypeControllerSpec
             val updatedAnswers = IncompleteUserAnswers
               .fromCompleteAnswers(answers)
               .copy(entityType = Some(EntityType.Company))
-            val session        = HECSession(companyLoginData, RetrievedJourneyData.empty, answers, None)
+            val session        = CompanyHECSession(companyLoginData, CompanyRetrievedJourneyData.empty, answers, None, None)
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 
             inSequence {
@@ -326,7 +332,13 @@ class EntityTypeControllerSpec
       "return an InternalServerError" when {
 
         "no selected entity type can be found in session" in {
-          val session = HECSession(individualLoginData, RetrievedJourneyData.empty, UserAnswers.empty, None)
+          val session = IndividualHECSession(
+            individualLoginData,
+            IndividualRetrievedJourneyData.empty,
+            UserAnswers.empty,
+            None,
+            None
+          )
 
           inSequence {
             mockAuthWithNoRetrievals()
@@ -342,10 +354,11 @@ class EntityTypeControllerSpec
       "display the page" when {
 
         def testPage(selectedEntityType: EntityType, expectedP1: String): Unit = {
-          val session = HECSession(
+          val session = IndividualHECSession(
             individualLoginData,
-            RetrievedJourneyData.empty,
+            IndividualRetrievedJourneyData.empty,
             UserAnswers.empty.copy(entityType = Some(selectedEntityType)),
+            None,
             None
           )
 
@@ -399,12 +412,7 @@ class EntityTypeControllerSpec
 
       "display the page" in {
 
-        val session = HECSession(
-          individualLoginData,
-          RetrievedJourneyData.empty,
-          UserAnswers.empty,
-          None
-        )
+        val session = IndividualHECSession.newSession(individualLoginData)
 
         inSequence {
           mockAuthWithNoRetrievals()

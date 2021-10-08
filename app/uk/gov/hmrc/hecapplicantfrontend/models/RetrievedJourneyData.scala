@@ -19,17 +19,32 @@ package uk.gov.hmrc.hecapplicantfrontend.models
 import play.api.libs.json._
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.CTUTR
 
-final case class RetrievedJourneyData(
-  saStatus: Option[SAStatusResponse],
-  companyName: Option[CompanyHouseName],
-  desCtutr: Option[CTUTR],
-  ctStatus: Option[CTStatusResponse]
-)
+sealed trait RetrievedJourneyData extends Product with Serializable
 
 object RetrievedJourneyData {
 
-  val empty: RetrievedJourneyData = RetrievedJourneyData(None, None, None, None)
+  final case class IndividualRetrievedJourneyData(saStatus: Option[SAStatusResponse]) extends RetrievedJourneyData
 
-  implicit val format: OFormat[RetrievedJourneyData] = Json.format
+  object IndividualRetrievedJourneyData {
+
+    val empty: IndividualRetrievedJourneyData = IndividualRetrievedJourneyData(None)
+
+    implicit val format: OFormat[IndividualRetrievedJourneyData] = Json.format
+
+  }
+
+  final case class CompanyRetrievedJourneyData(
+    companyName: Option[CompanyHouseName],
+    desCtutr: Option[CTUTR],
+    ctStatus: Option[CTStatusResponse]
+  ) extends RetrievedJourneyData
+
+  object CompanyRetrievedJourneyData {
+
+    val empty: CompanyRetrievedJourneyData = CompanyRetrievedJourneyData(None, None, None)
+
+    implicit val format: OFormat[CompanyRetrievedJourneyData] = Json.format
+
+  }
 
 }

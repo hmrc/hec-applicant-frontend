@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models
 
-import play.api.libs.json.{JsObject, JsResult, JsValue, Json, OFormat}
+import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CTUTR, GGCredId, NINO, SAUTR}
 
 sealed trait LoginData extends Product with Serializable {
@@ -57,24 +57,6 @@ object LoginData {
 
     implicit val format: OFormat[CompanyLoginData] = Json.format
 
-  }
-
-  implicit val format: OFormat[LoginData] = new OFormat[LoginData] {
-    override def reads(json: JsValue): JsResult[LoginData] =
-      (json \ "type")
-        .validate[EntityType]
-        .flatMap {
-          case EntityType.Individual => Json.reads[IndividualLoginData].reads(json)
-          case EntityType.Company    => Json.reads[CompanyLoginData].reads(json)
-        }
-
-    override def writes(o: LoginData): JsObject = {
-      val json = o match {
-        case i: IndividualLoginData => Json.writes[IndividualLoginData].writes(i)
-        case c: CompanyLoginData    => Json.writes[CompanyLoginData].writes(c)
-      }
-      json ++ Json.obj("type" -> o.entityType)
-    }
   }
 
 }

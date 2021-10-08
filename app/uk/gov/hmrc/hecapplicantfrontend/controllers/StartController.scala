@@ -32,7 +32,7 @@ import uk.gov.hmrc.hecapplicantfrontend.config.{AppConfig, EnrolmentConfig}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.AuthWithRetrievalsAction
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CTUTR, GGCredId, NINO, SAUTR}
-import uk.gov.hmrc.hecapplicantfrontend.models.{CitizenDetails, EmailAddress, Error, HECSession, LoginData, RetrievedGGData, RetrievedJourneyData, TaxCheckListItem, UserAnswers}
+import uk.gov.hmrc.hecapplicantfrontend.models.{CitizenDetails, EmailAddress, Error, HECSession, LoginData, RetrievedGGData, TaxCheckListItem}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.{CitizenDetailsService, JourneyService, TaxCheckService}
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
@@ -95,7 +95,7 @@ class StartController @Inject() (
     for {
 
       loginData <- buildLoginData(retrievedGGData)
-      session    = HECSession(loginData, RetrievedJourneyData.empty, UserAnswers.empty, None)
+      session    = HECSession.newSession(loginData)
       _         <- sessionStore.store(session).leftMap(BackendError(_): StartError)
     } yield session
 

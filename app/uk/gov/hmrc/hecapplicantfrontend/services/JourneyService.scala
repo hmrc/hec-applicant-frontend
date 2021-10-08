@@ -27,11 +27,13 @@ import uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.saTax
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.RequestWithSessionData
 import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 import uk.gov.hmrc.hecapplicantfrontend.models.EntityType.{Company, Individual}
+import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, IndividualHECSession}
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
+import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.{CompanyRetrievedJourneyData, IndividualRetrievedJourneyData}
 import uk.gov.hmrc.hecapplicantfrontend.models.SAStatus.ReturnFound
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.{CompleteUserAnswers, IncompleteUserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
-import uk.gov.hmrc.hecapplicantfrontend.models.{EntityType, Error, HECSession, LoginData, RetrievedJourneyData, SAStatus, SAStatusResponse, TaxSituation, UserAnswers, YesNoAnswer}
+import uk.gov.hmrc.hecapplicantfrontend.models.{EntityType, Error, HECSession, SAStatus, SAStatusResponse, TaxSituation, YesNoAnswer}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyServiceImpl._
 import uk.gov.hmrc.http.HeaderCarrier
@@ -167,7 +169,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
                 entityType,
                 crn,
                 companyDetailsConfirmed
-              ) if allAnswersComplete(incomplete, session.retrievedJourneyData, session.loginData) =>
+              ) if allAnswersComplete(incomplete, session) =>
             val completeAnswers =
               CompleteUserAnswers(
                 licenceType,
@@ -179,7 +181,10 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
                 crn,
                 companyDetailsConfirmed
               )
-            session.copy(userAnswers = completeAnswers)
+            session.fold(
+              _.copy(userAnswers = completeAnswers),
+              _.copy(userAnswers = completeAnswers)
+            )
 
           case _ => session
         }
@@ -221,79 +226,81 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
   }
 
   private def taxSituationRoute(session: HECSession): Call =
-    UserAnswers.taxSituation(session.userAnswers) match {
-      case None               =>
-        sys.error("Could not find tax situation for tax situation route")
-      case Some(taxSituation) =>
-        if (saTaxSituations.contains(taxSituation)) {
-          (session.loginData, session.retrievedJourneyData) match {
-            case (
-                  IndividualLoginData(_, _, Some(_), _, _, _, _),
-                  RetrievedJourneyData(Some(saStatus), _, _, _)
-                ) =>
-              saStatus.status match {
-                case SAStatus.ReturnFound        => routes.SAController.saIncomeStatement()
-                case SAStatus.NoticeToFileIssued => routes.CheckYourAnswersController.checkYourAnswers()
-                case SAStatus.NoReturnFound      => routes.SAController.noReturnFound()
+    session match {
+      case _: CompanyHECSession =>
+        sys.error("Found company session data but expected individual session data")
+
+      case individualSession: IndividualHECSession =>
+        individualSession.userAnswers.fold(_.taxSituation, _.taxSituation) match {
+          case None =>
+            sys.error("Could not find tax situation for tax situation route")
+
+          case Some(taxSituation) =>
+            if (saTaxSituations.contains(taxSituation)) {
+              (individualSession.loginData.sautr, individualSession.retrievedJourneyData) match {
+                case (Some(_), IndividualRetrievedJourneyData(Some(saStatus))) =>
+                  saStatus.status match {
+                    case SAStatus.ReturnFound        => routes.SAController.saIncomeStatement()
+                    case SAStatus.NoticeToFileIssued => routes.CheckYourAnswersController.checkYourAnswers()
+                    case SAStatus.NoReturnFound      => routes.SAController.noReturnFound()
+                  }
+
+                case (Some(_), IndividualRetrievedJourneyData(None)) =>
+                  sys.error("Found SA UTR for tax situation route but no SA status response")
+
+                case (None, _) =>
+                  routes.SAController.sautrNotFound()
               }
-
-            case (
-                  IndividualLoginData(_, _, Some(_), _, _, _, _),
-                  RetrievedJourneyData(None, _, _, _)
-                ) =>
-              sys.error("Found SA UTR for tax situation route but no SA status response")
-
-            case (i: IndividualLoginData, _) if i.sautr.isEmpty =>
-              routes.SAController.sautrNotFound()
-
-            case (_: CompanyLoginData, _) =>
-              sys.error("Retrieved data for company found for tax situation route")
-          }
-        } else {
-          routes.CheckYourAnswersController.checkYourAnswers()
+            } else {
+              routes.CheckYourAnswersController.checkYourAnswers()
+            }
         }
     }
 
-  private def companyRegistrationNumberRoute(session: HECSession) =
-    session.retrievedJourneyData.companyName.fold(
-      routes.CompanyDetailsNotFoundController.companyNotFound()
-    )(_ => routes.CompanyDetailsController.confirmCompanyDetails())
+  private def companyRegistrationNumberRoute(session: HECSession) = session match {
+    case companySession: CompanyHECSession =>
+      companySession.retrievedJourneyData.companyName.fold(
+        routes.CompanyDetailsNotFoundController.companyNotFound()
+      )(_ => routes.CompanyDetailsController.confirmCompanyDetails())
+
+    case _: IndividualHECSession =>
+      sys.error("This should never happen, individual data shouldn't be present in company journey")
+
+  }
 
   private def confirmCompanyDetailsRoute(session: HECSession) =
-    session.userAnswers.fold(_.companyDetailsConfirmed, _.companyDetailsConfirmed) match {
-      case Some(YesNoAnswer.Yes) =>
-        (session.loginData, session.retrievedJourneyData) match {
-          case (_: IndividualLoginData, _) =>
-            sys.error("This should never happen, individual data shouldn't be present in company journey")
+    session match {
+      case _: IndividualHECSession =>
+        sys.error("This should never happen, individual data shouldn't be present in company journey")
 
-          case (
-                CompanyLoginData(_, Some(ctutr), _, _),
-                RetrievedJourneyData(_, _, Some(desCtutr), Some(ctStatus))
-              ) =>
-            if (ctutr.value === desCtutr.value) {
-              ctStatus.latestAccountingPeriod.map(_.ctStatus) match {
-                case Some(_) => routes.CompanyDetailsController.chargeableForCorporationTax()
-                case None    => routes.CompanyDetailsController.noAccountingPeriod()
-              }
-            } else {
-              routes.CompanyDetailsController.ctutrNotMatched()
+      case companySession: CompanyHECSession =>
+        companySession.userAnswers.fold(_.companyDetailsConfirmed, _.companyDetailsConfirmed) match {
+          case Some(YesNoAnswer.Yes) =>
+            (companySession.loginData.ctutr, companySession.retrievedJourneyData) match {
+              case (None, _) =>
+                routes.CompanyDetailsController.enterCtutr()
+
+              case (Some(ctutr), CompanyRetrievedJourneyData(_, Some(desCtutr), Some(ctStatus))) =>
+                if (ctutr.value === desCtutr.value)
+                  ctStatus.latestAccountingPeriod.map(_.ctStatus) match {
+                    case Some(_) => routes.CompanyDetailsController.chargeableForCorporationTax()
+                    case None    => routes.CompanyDetailsController.noAccountingPeriod()
+                  }
+                else
+                  routes.CompanyDetailsController.ctutrNotMatched()
+
+              // enrolment and DES CTUTRs are present, but CT status couldn't be fetched
+              case (Some(_), CompanyRetrievedJourneyData(_, Some(_), None))                      =>
+                routes.CompanyDetailsController.cannotDoTaxCheck()
+
+              // DES CTUTR not fetched
+              case (_, CompanyRetrievedJourneyData(_, None, _))                                  =>
+                routes.CompanyDetailsController.ctutrNotMatched()
             }
-          // enrolment and DES CTUTRs are present, but CT status couldn't be fetched
-          case (
-                CompanyLoginData(_, Some(_), _, _),
-                RetrievedJourneyData(_, _, Some(_), None)
-              ) =>
-            routes.CompanyDetailsController.cannotDoTaxCheck()
-
-          // DES CTUTR not fetched
-          case (_, RetrievedJourneyData(_, _, None, _)) =>
-            routes.CompanyDetailsController.ctutrNotMatched()
-
-          case (CompanyLoginData(_, None, _, _), _) =>
-            routes.CompanyDetailsController.enterCtutr()
+          case Some(YesNoAnswer.No)  => routes.CRNController.companyRegistrationNumber()
+          case None                  => sys.error("Confirm company details answer was not found")
         }
-      case Some(YesNoAnswer.No)  => routes.CRNController.companyRegistrationNumber()
-      case None                  => sys.error("Confirm company details answer was not found")
+
     }
 
 }
@@ -320,10 +327,10 @@ object JourneyServiceImpl {
   private def checkSAIncomeDeclared(
     taxSituation: TaxSituation,
     saIncomeDeclared: Option[YesNoAnswer],
-    retrievedJourneyData: RetrievedJourneyData
+    retrievedJourneyData: IndividualRetrievedJourneyData
   ): Boolean =
     (retrievedJourneyData, saIncomeDeclared) match {
-      case (RetrievedJourneyData(Some(SAStatusResponse(_, _, ReturnFound)), _, _, _), None)
+      case (IndividualRetrievedJourneyData(Some(SAStatusResponse(_, _, ReturnFound))), None)
           if saTaxSituations.contains(taxSituation) =>
         false
       case _ => true
@@ -332,35 +339,35 @@ object JourneyServiceImpl {
   /**
     * Process the incomplete answers and retrieved user data to determine if all answers have been given by the user
     * @param incompleteUserAnswers The incomplete answers
-    * @param retrievedUserData The retrieved user data
+    * @param retrievedUsessionserData The current session data
     * @return A boolean representing whether or not the user has completed answering all relevant questions
     */
   def allAnswersComplete(
     incompleteUserAnswers: IncompleteUserAnswers,
-    retrievedUserData: RetrievedJourneyData,
-    loginData: LoginData
-  ): Boolean = {
-    val isIndividual = loginData match {
-      case _: IndividualLoginData => true
-      case _: CompanyLoginData    => false
-    }
-    incompleteUserAnswers match {
-      case IncompleteUserAnswers(
-            Some(licenceType),
-            Some(_),
-            Some(_),
-            Some(taxSituation),
-            saIncomeDeclared,
-            entityType,
-            _,
-            _
-          ) if isIndividual =>
-        val licenceTypeCheck      = checkEntityTypePresentIfRequired(licenceType, entityType)
-        val saIncomeDeclaredCheck = checkSAIncomeDeclared(taxSituation, saIncomeDeclared, retrievedUserData)
-        licenceTypeCheck && saIncomeDeclaredCheck
+    session: HECSession
+  ): Boolean =
+    session match {
+      case individualSession: IndividualHECSession =>
+        incompleteUserAnswers match {
+          case IncompleteUserAnswers(
+                Some(licenceType),
+                Some(_),
+                Some(_),
+                Some(taxSituation),
+                saIncomeDeclared,
+                entityType,
+                _,
+                _
+              ) =>
+            val licenceTypeCheck      = checkEntityTypePresentIfRequired(licenceType, entityType)
+            val saIncomeDeclaredCheck =
+              checkSAIncomeDeclared(taxSituation, saIncomeDeclared, individualSession.retrievedJourneyData)
+            licenceTypeCheck && saIncomeDeclaredCheck
+
+          case _ => false
+        }
 
       //TODO add company scenario later when it reaches the check your answer page
-      case _ => false
+      case _: CompanyHECSession                    => false
     }
-  }
 }
