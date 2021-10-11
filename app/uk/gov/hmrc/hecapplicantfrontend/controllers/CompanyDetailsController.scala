@@ -140,7 +140,10 @@ class CompanyDetailsController @Inject() (
 
           case YesNoAnswer.No =>
             // wipe CRN answer prior to navigating to next page
-            val answersWithoutCrn = request.sessionData.userAnswers.unset(_.crn)
+            val answersWithoutCrn = request.sessionData.userAnswers
+              .unset(_.crn)
+              .unset(_.companyDetailsConfirmed)
+              .copy(companyDetailsConfirmed = Some(companyDetailsConfirmed))
             callUpdateAndNext(session.copy(userAnswers = answersWithoutCrn)).fold(
               internalServerError("Could not update session and proceed"),
               Redirect

@@ -356,8 +356,7 @@ class CompanyDetailsControllerSpec
           "the call to update and next fails" in {
             val answers     = UserAnswers.empty.copy(crn = Some(CRN("crn")))
             // session contains CTUTR from enrolments
-            val companyData =
-              companyLoginData.copy(ctutr = Some(CTUTR("ctutr")))
+            val companyData = companyLoginData.copy(ctutr = Some(CTUTR("ctutr")))
             val session     =
               CompanyHECSession(companyData, retrievedJourneyDataWithCompanyName, answers, None, None, List.empty)
 
@@ -399,7 +398,7 @@ class CompanyDetailsControllerSpec
               CompanyHECSession(companyLoginData, retrievedJourneyDataWithCompanyName, answers, None, None, List.empty)
 
             // should wipe out CRN answer if user says that the company name is incorrect
-            val updatedAnswers = answers.copy(crn = None)
+            val updatedAnswers = answers.copy(crn = None, companyDetailsConfirmed = Some(YesNoAnswer.No))
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 
             inSequence {
@@ -491,7 +490,7 @@ class CompanyDetailsControllerSpec
             CompanyHECSession(companyLoginData, retrievedJourneyDataWithCompanyName, answers, None, None, List.empty)
 
           // should wipe out CRN answer if user says that the company name is incorrect
-          val updatedAnswers = answers.copy(crn = None)
+          val updatedAnswers = answers.copy(crn = None, companyDetailsConfirmed = Some(YesNoAnswer.No))
           val updatedSession = session.copy(userAnswers = updatedAnswers)
 
           inSequence {
