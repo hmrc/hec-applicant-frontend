@@ -32,8 +32,9 @@ import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceValidityPeriod.UpT
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
+import uk.gov.hmrc.hecapplicantfrontend.util.TimeProvider
 
-import java.time.LocalDate
+import java.time.{LocalDate, ZonedDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -44,10 +45,13 @@ class LicenceDetailsControllerSpec
     with AuthAndSessionDataBehaviour
     with JourneyServiceSupport {
 
+  val mockTimeProvider = mock[TimeProvider]
+
   override def overrideBindings = List(
     bind[AuthConnector].toInstance(mockAuthConnector),
     bind[SessionStore].toInstance(mockSessionStore),
-    bind[JourneyService].toInstance(mockJourneyService)
+    bind[JourneyService].toInstance(mockJourneyService),
+    bind[TimeProvider].toInstance(mockTimeProvider)
   )
 
   val controller: LicenceDetailsController = instanceOf[LicenceDetailsController]
@@ -57,6 +61,9 @@ class LicenceDetailsControllerSpec
 
   val companyLoginData: CompanyLoginData =
     CompanyLoginData(GGCredId(""), None, None)
+
+  def mockTimeProviderNow(now: ZonedDateTime) =
+    (mockTimeProvider.now _).expects().returning(now)
 
   "LicenceDetailsController" when {
 
@@ -129,6 +136,7 @@ class LicenceDetailsControllerSpec
           _.select("#back").attr("href") shouldBe mockPreviousCall.url
         )
       }
+
       behave like authAndSessionDataBehaviour(performAction)
 
       "display the page" when {
@@ -230,6 +238,8 @@ class LicenceDetailsControllerSpec
       def performAction(data: (String, String)*): Future[Result] =
         controller.licenceTypeSubmit(FakeRequest().withFormUrlEncodedBody(data: _*))
 
+      val now = ZonedDateTime.now()
+
       behave like authAndSessionDataBehaviour(() => performAction())
 
       "show a form error" when {
@@ -291,7 +301,7 @@ class LicenceDetailsControllerSpec
               IndividualRetrievedJourneyData.empty,
               answers,
               None,
-              None,
+              Some(now),
               List.empty
             )
           val updatedSession = session.copy(userAnswers = updatedAnswers)
@@ -311,10 +321,16 @@ class LicenceDetailsControllerSpec
 
       "redirect to the next page" when {
 
-        def nextpageRedirectTest(session: HECSession, updatedSession: HECSession, radioIndex: String) = {
+        def nextpageRedirectTest(
+          session: HECSession,
+          updatedSession: HECSession,
+          radioIndex: String,
+          mockNow: Option[() => Unit]
+        ) = {
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
+            mockNow.foreach(_())
             mockJourneyServiceUpdateAndNext(routes.LicenceDetailsController.licenceType(), session, updatedSession)(
               Right(mockNextCall)
             )
@@ -336,11 +352,11 @@ class LicenceDetailsControllerSpec
                 IndividualRetrievedJourneyData.empty,
                 answers,
                 None,
-                None,
+                Some(now),
                 List.empty
               )
             val updatedSession = session.copy(userAnswers = updatedAnswers)
-            nextpageRedirectTest(session, updatedSession, "1")
+            nextpageRedirectTest(session, updatedSession, "1", None)
 
           }
 
@@ -366,9 +382,32 @@ class LicenceDetailsControllerSpec
                 None,
                 List.empty
               )
-            val updatedSession = session.copy(userAnswers = updatedAnswers)
-            nextpageRedirectTest(session, updatedSession, "2")
+            val updatedSession = session.copy(userAnswers = updatedAnswers, taxCheckStartDateTime = Some(now))
+            nextpageRedirectTest(session, updatedSession, "2", Some(() => mockTimeProviderNow(now)))
+          }
 
+          "a tax check start date time is already in session" in {
+            val answers        = CompleteUserAnswers(
+              LicenceType.DriverOfTaxisAndPrivateHires,
+              LicenceTimeTrading.ZeroToTwoYears,
+              LicenceValidityPeriod.UpToOneYear,
+              Some(TaxSituation.SA),
+              Some(YesNoAnswer.Yes),
+              Some(EntityType.Individual),
+              None,
+              None
+            )
+            val updatedAnswers = UserAnswers.empty.copy(licenceType = Some(LicenceType.ScrapMetalMobileCollector))
+            val session        = IndividualHECSession(
+              individualLoginData,
+              IndividualRetrievedJourneyData.empty,
+              answers,
+              None,
+              Some(now),
+              List.empty
+            )
+            val updatedSession = session.copy(userAnswers = updatedAnswers, taxCheckStartDateTime = Some(now))
+            nextpageRedirectTest(session, updatedSession, "2", None)
           }
 
           "the user has not changed the licence type they have already submitted previously" in {
@@ -389,11 +428,11 @@ class LicenceDetailsControllerSpec
                 IndividualRetrievedJourneyData.empty,
                 answers,
                 None,
-                None,
+                Some(now),
                 List.empty
               )
 
-            nextpageRedirectTest(session, session, "0")
+            nextpageRedirectTest(session, session, "0", None)
 
           }
 
@@ -407,9 +446,16 @@ class LicenceDetailsControllerSpec
             )
             val updatedAnswers = UserAnswers.empty.copy(licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles))
             val session        =
-              CompanyHECSession(companyLoginData, CompanyRetrievedJourneyData.empty, answers, None, None, List.empty)
-            val updatedSession = session.copy(userAnswers = updatedAnswers)
-            nextpageRedirectTest(session, updatedSession, "0")
+              CompanyHECSession(
+                companyLoginData,
+                CompanyRetrievedJourneyData.empty,
+                answers,
+                None,
+                None,
+                List.empty
+              )
+            val updatedSession = session.copy(userAnswers = updatedAnswers, taxCheckStartDateTime = Some(now))
+            nextpageRedirectTest(session, updatedSession, "0", Some(() => mockTimeProviderNow(now)))
 
           }
 
@@ -428,10 +474,35 @@ class LicenceDetailsControllerSpec
             val updatedAnswers = UserAnswers.empty.copy(licenceType = Some(LicenceType.ScrapMetalMobileCollector))
             val session        =
               CompanyHECSession(companyLoginData, CompanyRetrievedJourneyData.empty, answers, None, None, List.empty)
-            val updatedSession = session.copy(userAnswers = updatedAnswers)
+            val updatedSession = session.copy(userAnswers = updatedAnswers, taxCheckStartDateTime = Some(now))
 
-            nextpageRedirectTest(session, updatedSession, "1")
+            nextpageRedirectTest(session, updatedSession, "1", Some(() => mockTimeProviderNow(now)))
+          }
 
+          "a tax check start date time is already in session" in {
+            val answers        = CompleteUserAnswers(
+              LicenceType.DriverOfTaxisAndPrivateHires,
+              LicenceTimeTrading.ZeroToTwoYears,
+              LicenceValidityPeriod.UpToOneYear,
+              Some(TaxSituation.SA),
+              Some(YesNoAnswer.Yes),
+              Some(EntityType.Individual),
+              None,
+              None
+            )
+            val updatedAnswers = UserAnswers.empty.copy(licenceType = Some(LicenceType.ScrapMetalMobileCollector))
+            val session        =
+              CompanyHECSession(
+                companyLoginData,
+                CompanyRetrievedJourneyData.empty,
+                answers,
+                None,
+                Some(now),
+                List.empty
+              )
+            val updatedSession = session.copy(userAnswers = updatedAnswers, taxCheckStartDateTime = Some(now))
+
+            nextpageRedirectTest(session, updatedSession, "1", None)
           }
 
           "the user has not changed the licence type they have already submitted previously" in {
@@ -447,8 +518,15 @@ class LicenceDetailsControllerSpec
               None
             )
             val session =
-              CompanyHECSession(companyLoginData, CompanyRetrievedJourneyData.empty, answers, None, None, List.empty)
-            nextpageRedirectTest(session, session, "0")
+              CompanyHECSession(
+                companyLoginData,
+                CompanyRetrievedJourneyData.empty,
+                answers,
+                None,
+                Some(now),
+                List.empty
+              )
+            nextpageRedirectTest(session, session, "0", None)
 
           }
 

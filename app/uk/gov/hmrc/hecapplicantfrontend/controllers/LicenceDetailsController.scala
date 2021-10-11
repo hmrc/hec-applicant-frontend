@@ -34,7 +34,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceValidityPeriod._
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging.LoggerOps
-import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging}
+import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging, TimeProvider}
 import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
@@ -45,6 +45,7 @@ class LicenceDetailsController @Inject() (
   authAction: AuthAction,
   sessionDataAction: SessionDataAction,
   journeyService: JourneyService,
+  timeProvider: TimeProvider,
   mcc: MessagesControllerComponents,
   licenceTypePage: html.LicenceType,
   licenceTypeExitPage: html.LicenceTypeExit,
@@ -70,7 +71,8 @@ class LicenceDetailsController @Inject() (
   val licenceTypeSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     val licenceOptions = licenceTypeOptions(request.sessionData)
     def handleValidLicenceType(licenceType: LicenceType): Future[Result] = {
-      val updatedAnswers =
+      val taxCheckStartDateTime = request.sessionData.taxCheckStartDateTime.getOrElse(timeProvider.now)
+      val updatedAnswers        =
         if (request.sessionData.userAnswers.fold(_.licenceType, c => Some(c.licenceType)).contains(licenceType))
           request.sessionData.userAnswers
         else
@@ -80,8 +82,8 @@ class LicenceDetailsController @Inject() (
         .updateAndNext(
           routes.LicenceDetailsController.licenceType(),
           request.sessionData.fold(
-            _.copy(userAnswers = updatedAnswers),
-            _.copy(userAnswers = updatedAnswers)
+            _.copy(userAnswers = updatedAnswers, taxCheckStartDateTime = Some(taxCheckStartDateTime)),
+            _.copy(userAnswers = updatedAnswers, taxCheckStartDateTime = Some(taxCheckStartDateTime))
           )
         )
         .fold(

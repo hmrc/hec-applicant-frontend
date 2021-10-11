@@ -18,13 +18,15 @@ package uk.gov.hmrc.hecapplicantfrontend.util
 
 import play.api.i18n.Messages
 
-import java.time.{Clock, LocalDate}
+import java.time.{Clock, LocalDate, ZoneId, ZonedDateTime}
 
 object TimeUtils {
 
   val clock: Clock = Clock.systemUTC()
 
   def today(): LocalDate = LocalDate.now(clock)
+
+  def now(): ZonedDateTime = ZonedDateTime.now(ZoneId.of("Europe/London"))
 
   def govDisplayFormat(date: LocalDate)(implicit messages: Messages): String =
     s"""${date.getDayOfMonth()} ${messages(

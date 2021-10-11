@@ -61,7 +61,14 @@ class StartController @Inject() (
   val start: Action[AnyContent] = authWithRetrievalsAction.async { implicit request =>
     val result = for {
       maybeStoredSession <- sessionStore.get().leftMap(BackendError)
-      session            <- maybeStoredSession.fold(handleNoSessionData(request.retrievedGGUserData))(EitherT.pure(_))
+      session            <- maybeStoredSession.fold(handleNoSessionData(request.retrievedGGUserData))(storedSession =>
+                              EitherT.pure(
+                                storedSession.fold(
+                                  individualSession => IndividualHECSession.newSession(individualSession.loginData),
+                                  companySession => CompanyHECSession.newSession(companySession.loginData)
+                                )
+                              )
+                            )
     } yield session
 
     result.fold(
