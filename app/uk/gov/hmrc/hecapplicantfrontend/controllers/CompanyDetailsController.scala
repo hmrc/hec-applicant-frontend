@@ -32,12 +32,11 @@ import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR}
 import uk.gov.hmrc.hecapplicantfrontend.models.views.YesNoOption
 import uk.gov.hmrc.hecapplicantfrontend.services.{JourneyService, TaxCheckService}
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging.LoggerOps
-import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging, TimeProvider}
+import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging, TimeProvider, TimeUtils}
 import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import scala.concurrent.{ExecutionContext, Future}
 
 class CompanyDetailsController @Inject() (
@@ -176,8 +175,6 @@ class CompanyDetailsController @Inject() (
     Ok(noAccountingPeriodFoundPage(back))
   }
 
-  private def formattedDate(date: LocalDate) = date.format(DateTimeFormatter.ofPattern("d MMMM yyyy"))
-
   val chargeableForCorporationTax: Action[AnyContent] =
     authAction.andThen(sessionDataAction).async { implicit request =>
       request.sessionData mapAsCompany { companySession =>
@@ -191,7 +188,7 @@ class CompanyDetailsController @Inject() (
             chargeableForCTPage(
               form = form,
               back = journeyService.previous(routes.CompanyDetailsController.chargeableForCorporationTax()),
-              date = formattedDate(latestAccountingPeriod.endDate),
+              date = TimeUtils.govDisplayFormat(latestAccountingPeriod.endDate),
               options = YesNoOption.yesNoOptions
             )
           )
@@ -230,7 +227,7 @@ class CompanyDetailsController @Inject() (
                   chargeableForCTPage(
                     form = formWithErrors,
                     back = journeyService.previous(routes.CompanyDetailsController.chargeableForCorporationTax()),
-                    date = formattedDate(latestAccountingPeriod.endDate),
+                    date = TimeUtils.govDisplayFormat(latestAccountingPeriod.endDate),
                     options = YesNoOption.yesNoOptions
                   )
                 ),

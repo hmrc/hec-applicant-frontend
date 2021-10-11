@@ -346,7 +346,7 @@ object JourneyServiceImpl {
       case _ => true
     }
 
-  private def checkCompanyData(
+  private def checkCompanyDataComplete(
     chargeableForCT: YesNoAnswer,
     companySession: CompanyHECSession
   ): Boolean =
@@ -400,7 +400,7 @@ object JourneyServiceImpl {
                 Some(chargeableForCT)
               ) =>
             val licenceTypeCheck = checkEntityTypePresentIfRequired(licenceType, entityType)
-            val companyDataCheck = checkCompanyData(chargeableForCT, companySession)
+            val companyDataCheck = checkCompanyDataComplete(chargeableForCT, companySession)
             licenceTypeCheck && companyDataCheck
 
           case _ => false
