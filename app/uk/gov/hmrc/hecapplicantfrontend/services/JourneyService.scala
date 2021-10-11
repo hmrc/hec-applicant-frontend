@@ -159,8 +159,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
         val updatedSession = session.userAnswers match {
           case _ if isExitPageNext =>
             session
-          //will add a case for when company when it reaches the complete answers page
-          //if it's  added now, the code thinks the company's answers are all complete and take it to check your answers page
+
           case incomplete @ IncompleteUserAnswers(
                 Some(licenceType),
                 Some(licenceTimeTrading),
@@ -322,7 +321,7 @@ object JourneyServiceImpl {
   }
 
   /**
-    * Expect the entity type to be specified only for individual or company licence types
+    * Expect the entity type to be specified when licence type is suitable for both individual and company
     */
   private def checkEntityTypePresentIfRequired(licenceType: LicenceType, entityType: Option[EntityType]): Boolean =
     entityType match {
@@ -349,9 +348,12 @@ object JourneyServiceImpl {
   private def checkCompanyDataComplete(
     chargeableForCT: YesNoAnswer,
     companySession: CompanyHECSession
-  ): Boolean =
-    (chargeableForCT === YesNoAnswer.No) || (chargeableForCT === YesNoAnswer.Yes && companySession.retrievedJourneyData.ctStatus
-      .exists(_.latestAccountingPeriod.exists(_.ctStatus === CTStatus.NoticeToFileIssued)))
+  ): Boolean = {
+    val ctStatusIsNoticeToFileIssued = companySession.retrievedJourneyData.ctStatus
+      .exists(_.latestAccountingPeriod.exists(_.ctStatus === CTStatus.NoticeToFileIssued))
+
+    (chargeableForCT === YesNoAnswer.No) || (chargeableForCT === YesNoAnswer.Yes && ctStatusIsNoticeToFileIssued)
+  }
 
   /**
     * Process the incomplete answers and retrieved user data to determine if all answers have been given by the user
