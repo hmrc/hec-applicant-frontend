@@ -346,8 +346,16 @@ object JourneyServiceImpl {
       case _ => true
     }
 
+  private def checkCompanyData(
+    chargeableForCT: YesNoAnswer,
+    companySession: CompanyHECSession
+  ): Boolean =
+    (chargeableForCT === YesNoAnswer.No) || (chargeableForCT === YesNoAnswer.Yes && companySession.retrievedJourneyData.ctStatus
+      .exists(_.latestAccountingPeriod.exists(_.ctStatus === CTStatus.NoticeToFileIssued)))
+
   /**
     * Process the incomplete answers and retrieved user data to determine if all answers have been given by the user
+    *
     * @param incompleteUserAnswers The incomplete answers
     * @param session The current session data
     * @return A boolean representing whether or not the user has completed answering all relevant questions
@@ -378,7 +386,24 @@ object JourneyServiceImpl {
           case _ => false
         }
 
-      //TODO add company scenario later when it reaches the check your answer page
-      case _: CompanyHECSession                    => false
+      case companySession: CompanyHECSession =>
+        incompleteUserAnswers match {
+          case IncompleteUserAnswers(
+                Some(licenceType),
+                Some(_),
+                Some(_),
+                _,
+                _,
+                entityType,
+                Some(_),
+                Some(_),
+                Some(chargeableForCT)
+              ) =>
+            val licenceTypeCheck = checkEntityTypePresentIfRequired(licenceType, entityType)
+            val companyDataCheck = checkCompanyData(chargeableForCT, companySession)
+            licenceTypeCheck && companyDataCheck
+
+          case _ => false
+        }
     }
 }

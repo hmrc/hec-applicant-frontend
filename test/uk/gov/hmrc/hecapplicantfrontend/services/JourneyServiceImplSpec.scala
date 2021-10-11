@@ -1072,6 +1072,135 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
 
         }
 
+        "chargeable for CT page" should {
+          val chargeableForCorporationTaxRoute = routes.CompanyDetailsController.chargeableForCorporationTax()
+          val date                             = LocalDate.now
+
+          "throw" when {
+            "the applicant is an individual" in {
+              val session        = IndividualHECSession.newSession(individualLoginData)
+              val updatedSession = session.copy(userAnswers = UserAnswers.empty.copy(crn = Some(CRN("1234567"))))
+
+              implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+
+              assertThrows[RuntimeException] {
+                journeyService.updateAndNext(chargeableForCorporationTaxRoute, updatedSession)
+              }
+            }
+
+            "applicant is company but chargeable for CT answer is missing" in {
+              val session        = CompanyHECSession.newSession(companyLoginData)
+              val updatedSession = session.copy(userAnswers = UserAnswers.empty.copy(crn = Some(CRN("1234567"))))
+
+              implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+
+              assertThrows[RuntimeException] {
+                journeyService.updateAndNext(chargeableForCorporationTaxRoute, updatedSession)
+              }
+            }
+
+            "CT status latest accounting period is missing when user has said they are chargeable for CT" in {
+              val date           = LocalDate.now
+              val journeyData    = CompanyRetrievedJourneyData.empty.copy(
+                ctStatus = Some(CTStatusResponse(CTUTR("utr"), date, date, None))
+              )
+              val session        = CompanyHECSession(companyLoginData, journeyData, UserAnswers.empty, None, None, List.empty)
+              val updatedSession = session.copy(
+                userAnswers =
+                  UserAnswers.empty.copy(crn = Some(CRN("1234567")), chargeableForCT = Some(YesNoAnswer.Yes))
+              )
+
+              implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+
+              assertThrows[RuntimeException] {
+                journeyService.updateAndNext(chargeableForCorporationTaxRoute, updatedSession)
+              }
+            }
+          }
+
+          "chargeable for CT answer is No" in {
+            List(
+              CTStatus.ReturnFound,
+              CTStatus.NoReturnFound,
+              CTStatus.NoticeToFileIssued
+            ).foreach { status =>
+              withClue(s"for $status") {
+                val journeyData    = CompanyRetrievedJourneyData.empty.copy(
+                  ctStatus =
+                    Some(CTStatusResponse(CTUTR("utr"), date, date, Some(CTAccountingPeriod(date, date, status))))
+                )
+                val session        =
+                  CompanyHECSession(companyLoginData, journeyData, UserAnswers.empty, None, None, List.empty)
+                val updatedSession = session.copy(
+                  userAnswers =
+                    UserAnswers.empty.copy(crn = Some(CRN("1234567")), chargeableForCT = Some(YesNoAnswer.No))
+                )
+
+                implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+                mockStoreSession(updatedSession)(Right(()))
+
+                val result = journeyService.updateAndNext(chargeableForCorporationTaxRoute, updatedSession)
+                await(result.value) shouldBe Right(routes.CheckYourAnswersController.checkYourAnswers())
+              }
+            }
+          }
+
+          "chargeable for CT answer is Yes" when {
+
+            def companyData(status: CTStatus) = CompanyRetrievedJourneyData(
+              None,
+              None,
+              Some(
+                CTStatusResponse(
+                  CTUTR("utr"),
+                  date,
+                  date,
+                  Some(CTAccountingPeriod(date, date, status))
+                )
+              )
+            )
+
+            val yesUserAnswers = UserAnswers.empty.copy(
+              crn = Some(CRN("1234567")),
+              chargeableForCT = Some(YesNoAnswer.Yes)
+            )
+
+            def test(status: CTStatus, destination: Call) = {
+              val session        =
+                CompanyHECSession(companyLoginData, companyData(status), UserAnswers.empty, None, None, List.empty)
+              val updatedSession = session.copy(userAnswers = yesUserAnswers)
+
+              implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+              mockStoreSession(updatedSession)(Right(()))
+
+              val result = journeyService.updateAndNext(chargeableForCorporationTaxRoute, updatedSession)
+              await(result.value) shouldBe Right(destination)
+            }
+
+            "status = NoticeToFileIssued" in {
+              test(
+                status = CTStatus.NoticeToFileIssued,
+                destination = routes.CheckYourAnswersController.checkYourAnswers()
+              )
+            }
+
+            "status = ReturnFound" in {
+              test(
+                status = CTStatus.ReturnFound,
+                destination = routes.CompanyDetailsController.ctIncomeStatement()
+              )
+            }
+
+            "status = NoReturnFound" in {
+              test(
+                status = CTStatus.NoReturnFound,
+                destination = routes.CompanyDetailsController.cannotDoTaxCheck()
+              )
+            }
+          }
+
+        }
+
       }
 
       "convert incomplete answers to complete answers when all questions have been answered and" when {
@@ -1085,6 +1214,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             None,
             None,
             None,
+            None,
             None
           )
 
@@ -1094,6 +1224,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             Some(completeAnswers.licenceValidityPeriod),
             completeAnswers.taxSituation,
             completeAnswers.saIncomeDeclared,
+            None,
             None,
             None,
             None
@@ -1134,6 +1265,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 Some(YesNoAnswer.Yes),
                 Some(EntityType.Company),
                 None,
+                None,
                 None
               )
 
@@ -1144,6 +1276,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 completeAnswers.taxSituation,
                 Some(YesNoAnswer.Yes),
                 Some(EntityType.Company),
+                None,
                 None,
                 None
               )
@@ -1188,6 +1321,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 None,
                 None,
                 None,
+                None,
                 None
               )
 
@@ -1198,6 +1332,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 completeAnswers.taxSituation,
                 completeAnswers.saIncomeDeclared,
                 completeAnswers.entityType,
+                None,
                 None,
                 None
               )
@@ -1237,6 +1372,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 Some(YesNoAnswer.Yes),
                 None,
                 None,
+                None,
                 None
               )
 
@@ -1247,6 +1383,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 completeAnswers.taxSituation,
                 completeAnswers.saIncomeDeclared,
                 completeAnswers.entityType,
+                None,
                 None,
                 None
               )
@@ -1283,6 +1420,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 None,
                 None,
                 None,
+                None,
                 None
               )
 
@@ -1293,6 +1431,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 completeAnswers.taxSituation,
                 completeAnswers.saIncomeDeclared,
                 completeAnswers.entityType,
+                None,
                 None,
                 None
               )
@@ -1327,6 +1466,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             Some(TaxSituation.PAYE),
             Some(YesNoAnswer.Yes),
             Some(EntityType.Company),
+            None,
             None,
             None
           )
@@ -1703,6 +1843,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
               Some(YesNoAnswer.Yes),
               entityType,
               None,
+              None,
               None
             )
 
@@ -1953,6 +2094,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
               Some(YesNoAnswer.Yes),
               None,
               None,
+              None,
               None
             ),
             None,
@@ -1973,6 +2115,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             Some(TaxSituation.PAYE),
             Some(YesNoAnswer.Yes),
             Some(EntityType.Individual),
+            None,
             None,
             None
           )
@@ -2007,6 +2150,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
         taxSituation = Some(TaxSituation.PAYE),
         saIncomeDeclared = None,
         entityType = None,
+        None,
         None,
         None
       )

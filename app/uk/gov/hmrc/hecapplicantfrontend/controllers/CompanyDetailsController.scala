@@ -25,7 +25,7 @@ import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, RequestWithSessionData, SessionDataAction}
-import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, IndividualHECSession}
+import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.CompanyHECSession
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.CompanyLoginData
 import uk.gov.hmrc.hecapplicantfrontend.models._
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR}
@@ -259,7 +259,7 @@ class CompanyDetailsController @Inject() (
   }
 
   private def ensureCompanyDataHasCompanyName(
-                                               companySession: CompanyHECSession
+    companySession: CompanyHECSession
   )(f: CompanyHouseName => Future[Result]): Future[Result] =
     companySession.retrievedJourneyData.companyName match {
       case Some(companyName) => f(companyName)
@@ -269,7 +269,7 @@ class CompanyDetailsController @Inject() (
     }
 
   private def ensureCompanyDataHasCTStatusAccountingPeriod(
-                                                            companySession: CompanyHECSession
+    companySession: CompanyHECSession
   )(f: CTAccountingPeriod => Future[Result]): Future[Result] =
     companySession.retrievedJourneyData.ctStatus match {
       case Some(CTStatusResponse(_, _, _, Some(latestAccountingPeriod))) => f(latestAccountingPeriod)

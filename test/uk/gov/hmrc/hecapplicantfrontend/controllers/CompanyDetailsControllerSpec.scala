@@ -22,7 +22,7 @@ import play.api.http.Status.INTERNAL_SERVER_ERROR
 import play.api.inject.bind
 import play.api.mvc.Result
 import play.api.test.FakeRequest
-import play.api.test.Helpers.{defaultAwaitTimeout, status}
+import play.api.test.Helpers.{await, defaultAwaitTimeout, status}
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, IndividualHECSession}
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
@@ -78,6 +78,11 @@ class CompanyDetailsControllerSpec
   val companyLoginData                    = CompanyLoginData(GGCredId(""), None, None)
   val retrievedJourneyDataWithCompanyName =
     CompanyRetrievedJourneyData.empty.copy(companyName = Some(CompanyHouseName("some-company")))
+  val individualLoginData                 =
+    IndividualLoginData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None)
+  val individualRetrievedData             = IndividualRetrievedJourneyData.empty
+  val individualSession                   =
+    IndividualHECSession(individualLoginData, individualRetrievedData, UserAnswers.empty, None, None, List.empty)
 
   "CompanyDetailsControllerSpec" when {
 
@@ -133,7 +138,8 @@ class CompanyDetailsControllerSpec
             None,
             None,
             None,
-            Some(YesNoAnswer.Yes)
+            Some(YesNoAnswer.Yes),
+            None
           )
           val session =
             CompanyHECSession(companyLoginData, retrievedJourneyDataWithCompanyName, answers, None, None, List.empty)
@@ -182,23 +188,14 @@ class CompanyDetailsControllerSpec
         }
 
         "applicant is individual" in {
-          val individualData =
-            IndividualLoginData(
-              GGCredId(""),
-              NINO(""),
-              None,
-              Name("", ""),
-              DateOfBirth(LocalDate.now()),
-              None
-            )
-          val session        = IndividualHECSession.newSession(individualData)
+          val session = IndividualHECSession.newSession(individualLoginData)
 
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
           }
 
-          status(performAction()) shouldBe INTERNAL_SERVER_ERROR
+          assertThrows[RuntimeException](await(performAction()))
         }
       }
     }
@@ -300,32 +297,14 @@ class CompanyDetailsControllerSpec
           }
 
           "the applicant type is individual" in {
-            val individualData =
-              IndividualLoginData(
-                GGCredId(""),
-                NINO(""),
-                None,
-                Name("", ""),
-                DateOfBirth(LocalDate.now()),
-                None
-              )
-            val answers        = UserAnswers.empty.copy(crn = Some(CRN("crn")))
-            val session        =
-              IndividualHECSession(
-                individualData,
-                IndividualRetrievedJourneyData.empty,
-                answers,
-                None,
-                None,
-                List.empty
-              )
+            val session = IndividualHECSession.newSession(individualLoginData)
 
             inSequence {
               mockAuthWithNoRetrievals()
               mockGetSession(session)
             }
 
-            status(performAction("confirmCompanyName" -> "0")) shouldBe INTERNAL_SERVER_ERROR
+            assertThrows[RuntimeException](await(performAction("confirmCompanyName" -> "0")))
           }
 
           "the call to fetch CT status fails" in {
@@ -504,6 +483,272 @@ class CompanyDetailsControllerSpec
           }
 
           checkIsRedirect(performAction("confirmCompanyName" -> "1"), mockNextCall)
+        }
+
+      }
+
+    }
+
+    "handling requests to the chargeable for CT page " must {
+
+      val date = LocalDate.of(2020, 10, 5)
+
+      def performAction(): Future[Result] = controller.chargeableForCorporationTax(FakeRequest())
+
+      "display the page" when {
+        val companyData = retrievedJourneyDataWithCompanyName.copy(
+          ctStatus = Some(
+            CTStatusResponse(
+              CTUTR("utr"),
+              date,
+              date,
+              Some(CTAccountingPeriod(date, date, CTStatus.ReturnFound))
+            )
+          )
+        )
+
+        "the user has not previously answered the question " in {
+
+          val session = CompanyHECSession(companyLoginData, companyData, UserAnswers.empty, None, None, List.empty)
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockJourneyServiceGetPrevious(routes.CompanyDetailsController.chargeableForCorporationTax(), session)(
+              mockPreviousCall
+            )
+          }
+
+          checkPageIsDisplayed(
+            performAction(),
+            messageFromMessageKey("chargeableForCT.title", "5 October 2020"),
+            { doc =>
+              doc.select("#back").attr("href") shouldBe mockPreviousCall.url
+
+              val selectedOptions = doc.select(".govuk-radios__input[checked]")
+              selectedOptions.isEmpty shouldBe true
+
+              val button = doc.select("form")
+              button.attr("action") shouldBe routes.CompanyDetailsController.chargeableForCorporationTaxSubmit().url
+            }
+          )
+
+        }
+
+        "the user has previously answered the question" in {
+
+          val answers = CompleteUserAnswers(
+            LicenceType.OperatorOfPrivateHireVehicles,
+            LicenceTimeTrading.ZeroToTwoYears,
+            LicenceValidityPeriod.UpToOneYear,
+            None,
+            None,
+            None,
+            None,
+            Some(YesNoAnswer.Yes),
+            Some(YesNoAnswer.No)
+          )
+          val session = CompanyHECSession(companyLoginData, companyData, answers, None, None, List.empty)
+
+          val updatedAnswers = IncompleteUserAnswers
+            .fromCompleteAnswers(answers)
+            .copy(chargeableForCT = Some(YesNoAnswer.Yes))
+          val updatedSession = session.copy(userAnswers = updatedAnswers)
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(updatedSession)
+            mockJourneyServiceGetPrevious(
+              routes.CompanyDetailsController.chargeableForCorporationTax(),
+              updatedSession
+            )(mockPreviousCall)
+          }
+          checkPageIsDisplayed(
+            performAction(),
+            messageFromMessageKey("chargeableForCT.title", "5 October 2020"),
+            { doc =>
+              doc.select("#back").attr("href") shouldBe mockPreviousCall.url
+
+              val selectedOptions = doc.select(".govuk-radios__input[checked]")
+              selectedOptions.attr("value") shouldBe "0"
+
+              val button = doc.select("form")
+              button.attr("action") shouldBe routes.CompanyDetailsController.chargeableForCorporationTaxSubmit().url
+            }
+          )
+
+        }
+
+      }
+
+      "return internal server error" when {
+        "applicant is individual" in {
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(individualSession)
+          }
+
+          assertThrows[RuntimeException](await(performAction()))
+        }
+
+        "CT status accounting period is not populated" in {
+          val session = CompanyHECSession(
+            companyLoginData,
+            retrievedJourneyDataWithCompanyName.copy(
+              ctStatus = Some(CTStatusResponse(CTUTR("utr"), date, date, None))
+            ),
+            UserAnswers.empty,
+            None,
+            None,
+            List.empty
+          )
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+          }
+
+          status(performAction()) shouldBe INTERNAL_SERVER_ERROR
+        }
+      }
+    }
+
+    "handling submit on the chargeable for CT page" must {
+
+      val chargeableForCTRoute = routes.CompanyDetailsController.chargeableForCorporationTax()
+      val date                 = LocalDate.of(2020, 10, 5)
+      val validJourneyData     = retrievedJourneyDataWithCompanyName.copy(
+        ctStatus = Some(
+          CTStatusResponse(CTUTR("utr"), date, date, Some(CTAccountingPeriod(date, date, CTStatus.ReturnFound)))
+        )
+      )
+
+      def performAction(data: (String, String)*): Future[Result] =
+        controller.chargeableForCorporationTaxSubmit(FakeRequest().withFormUrlEncodedBody(data: _*))
+
+      behave like authAndSessionDataBehaviour(() => performAction())
+
+      "show a form error" when {
+        val session = CompanyHECSession(
+          companyLoginData,
+          validJourneyData,
+          UserAnswers.empty.copy(crn = Some(CRN("crn"))),
+          None,
+          None,
+          List.empty
+        )
+
+        def test(formAnswer: (String, String)*) = {
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockJourneyServiceGetPrevious(chargeableForCTRoute, session)(mockPreviousCall)
+          }
+
+          checkFormErrorIsDisplayed(
+            performAction(formAnswer: _*),
+            messageFromMessageKey("chargeableForCT.title", "5 October 2020"),
+            messageFromMessageKey("chargeableForCT.error.required")
+          )
+        }
+
+        "nothing has been submitted" in {
+          test()
+        }
+
+        "an invalid index value is submitted" in {
+          test("chargeableForCT" -> Int.MaxValue.toString)
+        }
+
+        "a non-numeric value is submitted" in {
+          test("chargeableForCT" -> "xyz")
+        }
+      }
+
+      "return an internal server error" when {
+
+        "the applicant type is individual" in {
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(individualSession)
+          }
+
+          assertThrows[RuntimeException](await(performAction()))
+        }
+
+        "CT status accounting period is not populated" in {
+          val session = CompanyHECSession(
+            companyLoginData,
+            retrievedJourneyDataWithCompanyName.copy(ctStatus = Some(CTStatusResponse(CTUTR("utr"), date, date, None))),
+            UserAnswers.empty,
+            None,
+            None,
+            List.empty
+          )
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+          }
+
+          status(performAction()) shouldBe INTERNAL_SERVER_ERROR
+        }
+
+        "the call to update and next fails" in {
+          val answers = UserAnswers.empty.copy(crn = Some(CRN("crn")))
+          val session = CompanyHECSession(
+            companyLoginData,
+            retrievedJourneyDataWithCompanyName.copy(
+              ctStatus = Some(
+                CTStatusResponse(CTUTR("utr"), date, date, Some(CTAccountingPeriod(date, date, CTStatus.ReturnFound)))
+              )
+            ),
+            answers,
+            None,
+            None,
+            List.empty
+          )
+
+          val updatedAnswers = answers.copy(chargeableForCT = Some(YesNoAnswer.Yes))
+          val updatedSession = session.copy(userAnswers = updatedAnswers)
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockJourneyServiceUpdateAndNext(
+              routes.CompanyDetailsController.chargeableForCorporationTax(),
+              session,
+              updatedSession
+            )(
+              Left(Error("update and next failed"))
+            )
+          }
+
+          status(performAction("chargeableForCT" -> "0")) shouldBe INTERNAL_SERVER_ERROR
+        }
+
+      }
+
+      "redirect to the next page" when {
+
+        "user gives a valid answer" in {
+          val answers = UserAnswers.empty.copy(crn = Some(CRN("crn")))
+          val session = CompanyHECSession(companyLoginData, validJourneyData, answers, None, None, List.empty)
+
+          val updatedAnswers = answers.copy(chargeableForCT = Some(YesNoAnswer.No))
+          val updatedSession = session.copy(userAnswers = updatedAnswers)
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockJourneyServiceUpdateAndNext(
+              routes.CompanyDetailsController.chargeableForCorporationTax(),
+              session,
+              updatedSession
+            )(Right(mockNextCall))
+          }
+
+          checkIsRedirect(performAction("chargeableForCT" -> "1"), mockNextCall)
         }
 
       }
