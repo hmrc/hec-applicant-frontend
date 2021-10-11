@@ -26,4 +26,6 @@ object YesNoOption {
     case YesNoAnswer.Yes => YesNoOption("yes")
     case YesNoAnswer.No  => YesNoOption("no")
   }
+
+  val yesNoOptions: List[YesNoOption] = YesNoAnswer.values.map(YesNoOption.yesNoOption)
 }

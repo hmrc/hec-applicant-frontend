@@ -66,7 +66,7 @@ class CompanyDetailsController @Inject() (
         form,
         back,
         companyName.name,
-        CompanyDetailsController.companyNameConfirmedOptions
+        YesNoOption.yesNoOptions
       )
     )
   }
@@ -192,7 +192,7 @@ class CompanyDetailsController @Inject() (
               form = form,
               back = journeyService.previous(routes.CompanyDetailsController.chargeableForCorporationTax()),
               date = formattedDate(latestAccountingPeriod.endDate),
-              options = CompanyDetailsController.chargeableForCTOptions
+              options = YesNoOption.yesNoOptions
             )
           )
         }
@@ -231,7 +231,7 @@ class CompanyDetailsController @Inject() (
                     form = formWithErrors,
                     back = journeyService.previous(routes.CompanyDetailsController.chargeableForCorporationTax()),
                     date = formattedDate(latestAccountingPeriod.endDate),
-                    options = CompanyDetailsController.chargeableForCTOptions
+                    options = YesNoOption.yesNoOptions
                   )
                 ),
               handleValidAnswer
@@ -294,9 +294,6 @@ class CompanyDetailsController @Inject() (
 }
 
 object CompanyDetailsController {
-  val companyNameConfirmedOptions: List[YesNoOption] = YesNoAnswer.values.map(YesNoOption.yesNoOption)
-  val chargeableForCTOptions: List[YesNoOption]      = YesNoAnswer.values.map(YesNoOption.yesNoOption)
-
   def confirmCompanyNameForm(options: List[YesNoAnswer]): Form[YesNoAnswer] =
     Form(
       mapping(
