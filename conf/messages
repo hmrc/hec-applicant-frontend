@@ -266,4 +266,4 @@ chargeableForCT.yes = Yes
 chargeableForCT.no = No
 chargeableForCT.error.required = Select yes if your company was chargeable for Corporation Tax for the accounting period ending {1}
 chargeableForCT.error.invalid = Select yes if your company was chargeable for Corporation Tax for the accounting period ending {1}
-chargeableForCT.link = Find out about accounting periods for Corporation Tax (opens in new tab)
+chargeableForCT.link = Find out about accounting periods for Corporation Tax

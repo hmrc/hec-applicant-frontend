@@ -22,8 +22,10 @@
 @import uk.gov.hmrc.hecapplicantfrontend.models.YesNoAnswer
 @import uk.gov.hmrc.hecapplicantfrontend.models.views.YesNoOption
 @import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
+@import uk.gov.hmrc.hmrcfrontend.views.html.components.HmrcNewTabLink
+@import uk.gov.hmrc.hmrcfrontend.views.viewmodels.newtablink.NewTabLink
 
-@this(layout: Layout, govukErrorSummary: GovukErrorSummary, govukRadios: GovukRadios, govukButton: GovukButton, formWithCSRF: FormWithCSRF)
+@this(layout: Layout, govukErrorSummary: GovukErrorSummary, govukRadios: GovukRadios, govukButton: GovukButton, formWithCSRF: FormWithCSRF, hmrcNewTabLink: HmrcNewTabLink)
 
 @(form: Form[YesNoAnswer], back: Call, date: String, options: List[YesNoOption])(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
 @key = @{"chargeableForCT"}
@@ -58,7 +60,13 @@
         content = Text(messages(s"$key.${e.message}"))
       ))
     ))
-    <p class="govuk-body"><a class="govuk-link" href="@{appConfig.accountingPeriodsGuidanceUrl}">@{messages(s"$key.link")}</a></p>
+    <p class="govuk-body">
+      @hmrcNewTabLink(params = NewTabLink(
+        href = Some(appConfig.accountingPeriodsGuidanceUrl),
+        text = messages(s"$key.link"),
+        language = Some(messages("lang.code"))
+      ))
+    </p>
     @govukButton(Button(content = Text(messages("button.continue"))))
   }
 }
