@@ -61,39 +61,41 @@ class SAController @Inject() (
   }
 
   val saIncomeStatementSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
-    def handleValidAnswer(incomeDeclared: YesNoAnswer): Future[Result] = {
-      val updatedAnswers =
-        request.sessionData.userAnswers.unset(_.saIncomeDeclared).copy(saIncomeDeclared = Some(incomeDeclared))
+    request.sessionData.mapAsIndividual { individualSession =>
+      def handleValidAnswer(incomeDeclared: YesNoAnswer): Future[Result] = {
+        val updatedAnswers =
+          individualSession.userAnswers.unset(_.saIncomeDeclared).copy(saIncomeDeclared = Some(incomeDeclared))
 
-      journeyService
-        .updateAndNext(
-          routes.SAController.saIncomeStatement(),
-          request.sessionData.copy(userAnswers = updatedAnswers)
-        )
+        journeyService
+          .updateAndNext(
+            routes.SAController.saIncomeStatement(),
+            individualSession.copy(userAnswers = updatedAnswers)
+          )
+          .fold(
+            { e =>
+              logger.warn("Could not update session and proceed", e)
+              InternalServerError
+            },
+            Redirect
+          )
+      }
+
+      SAController
+        .saIncomeDeclarationForm(YesNoAnswer.values)
+        .bindFromRequest()
         .fold(
-          { e =>
-            logger.warn("Could not update session and proceed", e)
-            InternalServerError
-          },
-          Redirect
+          formWithErrors =>
+            Ok(
+              saIncomeStatementPage(
+                formWithErrors,
+                journeyService.previous(routes.SAController.saIncomeStatement()),
+                SAController.incomeDeclaredOptions,
+                getTaxYear(timeProvider.currentDate)
+              )
+            ),
+          handleValidAnswer
         )
     }
-
-    SAController
-      .saIncomeDeclarationForm(YesNoAnswer.values)
-      .bindFromRequest()
-      .fold(
-        formWithErrors =>
-          Ok(
-            saIncomeStatementPage(
-              formWithErrors,
-              journeyService.previous(routes.SAController.saIncomeStatement()),
-              SAController.incomeDeclaredOptions,
-              getTaxYear(timeProvider.currentDate)
-            )
-          ),
-        handleValidAnswer
-      )
   }
 
   val noReturnFound: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>

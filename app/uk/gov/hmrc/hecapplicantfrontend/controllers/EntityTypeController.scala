@@ -67,7 +67,10 @@ class EntityTypeController @Inject() (
       journeyService
         .updateAndNext(
           routes.EntityTypeController.entityType(),
-          request.sessionData.copy(userAnswers = updatedAnswers)
+          request.sessionData.fold(
+            _.copy(userAnswers = updatedAnswers),
+            _.copy(userAnswers = updatedAnswers)
+          )
         )
         .fold(
           { e =>

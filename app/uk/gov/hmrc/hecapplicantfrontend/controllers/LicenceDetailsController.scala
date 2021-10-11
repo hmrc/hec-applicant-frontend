@@ -26,7 +26,7 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 import uk.gov.hmrc.hecapplicantfrontend.controllers.LicenceDetailsController._
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
-import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRetrievedData, IndividualRetrievedData}
+import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
 import uk.gov.hmrc.hecapplicantfrontend.models.{HECSession, UserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceTimeTrading._
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType._
@@ -79,7 +79,10 @@ class LicenceDetailsController @Inject() (
       journeyService
         .updateAndNext(
           routes.LicenceDetailsController.licenceType(),
-          request.sessionData.copy(userAnswers = updatedAnswers)
+          request.sessionData.fold(
+            _.copy(userAnswers = updatedAnswers),
+            _.copy(userAnswers = updatedAnswers)
+          )
         )
         .fold(
           { e =>
@@ -132,7 +135,10 @@ class LicenceDetailsController @Inject() (
       journeyService
         .updateAndNext(
           routes.LicenceDetailsController.licenceTimeTrading(),
-          request.sessionData.copy(userAnswers = updatedAnswers)
+          request.sessionData.fold(
+            _.copy(userAnswers = updatedAnswers),
+            _.copy(userAnswers = updatedAnswers)
+          )
         )
         .fold(
           { e =>
@@ -187,7 +193,10 @@ class LicenceDetailsController @Inject() (
       journeyService
         .updateAndNext(
           routes.LicenceDetailsController.recentLicenceLength(),
-          request.sessionData.copy(userAnswers = updatedAnswers)
+          request.sessionData.fold(
+            _.copy(userAnswers = updatedAnswers),
+            _.copy(userAnswers = updatedAnswers)
+          )
         )
         .fold(
           { e =>
@@ -243,9 +252,9 @@ object LicenceDetailsController {
 
   private val validityPeriodList = List(UpToOneYear, UpToTwoYears, UpToThreeYears, UpToFourYears, UpToFiveYears)
 
-  def licenceTypeOptions(session: HECSession): List[LicenceType] = session.retrievedUserData match {
-    case _: IndividualRetrievedData => individualLicenceTypeOptions
-    case _: CompanyRetrievedData    => companyLicenceTypeOptions
+  def licenceTypeOptions(session: HECSession): List[LicenceType] = session.loginData match {
+    case _: IndividualLoginData => individualLicenceTypeOptions
+    case _: CompanyLoginData    => companyLicenceTypeOptions
   }
 
   def licenceValidityPeriodOptions(licenceType: LicenceType): List[LicenceValidityPeriod] =

@@ -23,8 +23,10 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.hecapplicantfrontend.controllers.CheckYourAnswersControllerSpec.CheckYourAnswersRow
+import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.IndividualHECSession
+import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
+import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.IndividualRetrievedJourneyData
 import uk.gov.hmrc.hecapplicantfrontend.models._
-import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyJourneyData, CompanyLoginData, CompanyRetrievedData, IndividualJourneyData, IndividualLoginData, IndividualRetrievedData}
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.CompleteUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
@@ -54,25 +56,18 @@ class CheckYourAnswersControllerSpec
 
   val controller = instanceOf[CheckYourAnswersController]
 
-  val individualRetrievedData =
-    IndividualRetrievedData(
-      IndividualLoginData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None),
-      IndividualJourneyData.empty,
-      List.empty
-    )
+  val individualLoginData =
+    IndividualLoginData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None)
 
-  val companyRetrievedData = CompanyRetrievedData(
-    CompanyLoginData(GGCredId(""), None, None),
-    CompanyJourneyData.empty,
-    List.empty
-  )
+  val companyLoginData =
+    CompanyLoginData(GGCredId(""), None, None)
 
-  def mockSaveTaxCheck(applicantData: RetrievedApplicantData, completeAnswers: CompleteUserAnswers)(
+  def mockSaveTaxCheck(loginData: LoginData, completeAnswers: CompleteUserAnswers)(
     result: Either[Error, HECTaxCheck]
   ) =
     (mockTaxCheckService
-      .saveTaxCheck(_: RetrievedApplicantData, _: CompleteUserAnswers)(_: HeaderCarrier))
-      .expects(applicantData, completeAnswers, *)
+      .saveTaxCheck(_: LoginData, _: CompleteUserAnswers)(_: HeaderCarrier))
+      .expects(loginData, completeAnswers, *)
       .returning(EitherT.fromEither(result))
 
   "CheckYourAnswersController" when {
@@ -86,7 +81,7 @@ class CheckYourAnswersControllerSpec
       "show an error page" when {
 
         "there are no complete answers in session" in {
-          val session = HECSession(individualRetrievedData, UserAnswers.empty, None)
+          val session = IndividualHECSession.newSession(individualLoginData)
 
           inSequence {
             mockAuthWithNoRetrievals()
@@ -110,7 +105,15 @@ class CheckYourAnswersControllerSpec
           None
         )
 
-        val session = HECSession(individualRetrievedData, answers, None)
+        val session =
+          IndividualHECSession(
+            individualLoginData,
+            IndividualRetrievedJourneyData.empty,
+            answers,
+            None,
+            None,
+            List.empty
+          )
 
         val expectedRows =
           List(
@@ -191,16 +194,39 @@ class CheckYourAnswersControllerSpec
         None
       )
 
-      val session = HECSession(individualRetrievedData, completeAnswers, None)
+      val session =
+        IndividualHECSession(
+          individualLoginData,
+          IndividualRetrievedJourneyData.empty,
+          completeAnswers,
+          None,
+          None,
+          List.empty
+        )
 
       val hecTaxCheck = HECTaxCheck(HECTaxCheckCode(""), LocalDate.now())
 
-      val updatedSession = HECSession(individualRetrievedData, UserAnswers.empty, Some(hecTaxCheck))
+      val updatedSession =
+        IndividualHECSession(
+          individualLoginData,
+          IndividualRetrievedJourneyData.empty,
+          UserAnswers.empty,
+          Some(hecTaxCheck),
+          None,
+          List.empty
+        )
 
       "return an InternalServerError" when {
 
         "there are no complete answers in session" in {
-          val session = HECSession(individualRetrievedData, UserAnswers.empty, None)
+          val session = IndividualHECSession(
+            individualLoginData,
+            IndividualRetrievedJourneyData.empty,
+            UserAnswers.empty,
+            None,
+            None,
+            List.empty
+          )
 
           inSequence {
             mockAuthWithNoRetrievals()
@@ -214,7 +240,7 @@ class CheckYourAnswersControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockSaveTaxCheck(session.retrievedUserData, completeAnswers)(Left(Error(new Exception("Oh no!"))))
+            mockSaveTaxCheck(session.loginData, completeAnswers)(Left(Error(new Exception("Oh no!"))))
           }
 
           status(performAction()) shouldBe INTERNAL_SERVER_ERROR
@@ -225,7 +251,7 @@ class CheckYourAnswersControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockSaveTaxCheck(session.retrievedUserData, completeAnswers)(Right(hecTaxCheck))
+            mockSaveTaxCheck(session.loginData, completeAnswers)(Right(hecTaxCheck))
             mockJourneyServiceUpdateAndNext(
               routes.CheckYourAnswersController.checkYourAnswers(),
               session,
@@ -244,7 +270,7 @@ class CheckYourAnswersControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockSaveTaxCheck(session.retrievedUserData, completeAnswers)(Right(hecTaxCheck))
+            mockSaveTaxCheck(session.loginData, completeAnswers)(Right(hecTaxCheck))
             mockJourneyServiceUpdateAndNext(
               routes.CheckYourAnswersController.checkYourAnswers(),
               session,

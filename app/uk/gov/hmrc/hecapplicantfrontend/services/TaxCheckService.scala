@@ -28,12 +28,12 @@ import play.mvc.Http.Status.{CREATED, NOT_FOUND}
 import uk.gov.hmrc.hecapplicantfrontend.connectors.HECConnector
 import uk.gov.hmrc.hecapplicantfrontend.models.ApplicantDetails.IndividualApplicantDetails
 import uk.gov.hmrc.hecapplicantfrontend.models.HECTaxCheckData.IndividualHECTaxCheckData
-import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRetrievedData, IndividualRetrievedData}
+import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
 import uk.gov.hmrc.hecapplicantfrontend.models.TaxDetails.IndividualTaxDetails
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.CompleteUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR, SAUTR}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceDetails
-import uk.gov.hmrc.hecapplicantfrontend.models.{CTStatusResponse, Error, HECTaxCheck, HECTaxCheckData, RetrievedApplicantData, SAStatusResponse, TaxCheckListItem, TaxYear}
+import uk.gov.hmrc.hecapplicantfrontend.models.{CTStatusResponse, Error, HECTaxCheck, HECTaxCheckData, LoginData, SAStatusResponse, TaxCheckListItem, TaxYear}
 import uk.gov.hmrc.hecapplicantfrontend.services.TaxCheckService._
 import uk.gov.hmrc.hecapplicantfrontend.util.HttpResponseOps._
 import uk.gov.hmrc.http.HeaderCarrier
@@ -45,7 +45,7 @@ import scala.concurrent.{ExecutionContext, Future}
 trait TaxCheckService {
 
   def saveTaxCheck(
-    retrievedApplicantData: RetrievedApplicantData,
+    loginData: LoginData,
     answers: CompleteUserAnswers
   )(implicit hc: HeaderCarrier): EitherT[Future, Error, HECTaxCheck]
 
@@ -66,10 +66,10 @@ class TaxCheckServiceImpl @Inject() (hecConnector: HECConnector)(implicit ec: Ex
     extends TaxCheckService {
 
   def saveTaxCheck(
-    retrievedApplicantData: RetrievedApplicantData,
+    loginData: LoginData,
     answers: CompleteUserAnswers
   )(implicit hc: HeaderCarrier): EitherT[Future, Error, HECTaxCheck] = {
-    val taxCheckData = toHECTaxCheckData(retrievedApplicantData, answers)
+    val taxCheckData = toHECTaxCheckData(loginData, answers)
     hecConnector
       .saveTaxCheck(taxCheckData)
       .subflatMap { response =>
@@ -123,7 +123,7 @@ class TaxCheckServiceImpl @Inject() (hecConnector: HECConnector)(implicit ec: Ex
       }
 
   private def toHECTaxCheckData(
-    retrievedApplicantData: RetrievedApplicantData,
+    loginData: LoginData,
     answers: CompleteUserAnswers
   ): HECTaxCheckData = {
     val licenceDetails = LicenceDetails(
@@ -132,23 +132,23 @@ class TaxCheckServiceImpl @Inject() (hecConnector: HECConnector)(implicit ec: Ex
       answers.licenceValidityPeriod
     )
 
-    retrievedApplicantData match {
-      case individual: IndividualRetrievedData =>
+    loginData match {
+      case individual: IndividualLoginData =>
         val applicantDetails = IndividualApplicantDetails(
-          individual.loginData.ggCredId,
-          individual.loginData.name,
-          individual.loginData.dateOfBirth
+          individual.ggCredId,
+          individual.name,
+          individual.dateOfBirth
         )
 
         val taxDetails = IndividualTaxDetails(
-          individual.loginData.nino,
-          individual.loginData.sautr,
+          individual.nino,
+          individual.sautr,
           answers.taxSituation,
           answers.saIncomeDeclared
         )
         IndividualHECTaxCheckData(applicantDetails, licenceDetails, taxDetails)
 
-      case _: CompanyRetrievedData =>
+      case _: CompanyLoginData =>
         sys.error("Not handled yet")
     }
 

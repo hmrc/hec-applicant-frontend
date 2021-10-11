@@ -23,7 +23,9 @@ import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{IndividualJourneyData, IndividualLoginData, IndividualRetrievedData}
+import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.IndividualHECSession
+import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.IndividualLoginData
+import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.IndividualRetrievedJourneyData
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.{CompleteUserAnswers, IncompleteUserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models._
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO}
@@ -49,18 +51,14 @@ class SAControllerSpec
 
   private val controller = instanceOf[SAController]
 
-  val individuaRetrievedlData: IndividualRetrievedData =
-    IndividualRetrievedData(
-      IndividualLoginData(
-        GGCredId(""),
-        NINO(""),
-        None,
-        Name("", ""),
-        DateOfBirth(LocalDate.now()),
-        None
-      ),
-      IndividualJourneyData.empty,
-      List.empty
+  val individualLoginData: IndividualLoginData =
+    IndividualLoginData(
+      GGCredId(""),
+      NINO(""),
+      None,
+      Name("", ""),
+      DateOfBirth(LocalDate.now()),
+      None
     )
 
   "SAController" when {
@@ -78,11 +76,7 @@ class SAControllerSpec
 
       "display the page" in {
 
-        val session = HECSession(
-          individuaRetrievedlData,
-          UserAnswers.empty,
-          None
-        )
+        val session = IndividualHECSession.newSession(individualLoginData)
 
         inSequence {
           mockAuthWithNoRetrievals()
@@ -114,11 +108,7 @@ class SAControllerSpec
 
       "display the page" in {
 
-        val session = HECSession(
-          individuaRetrievedlData,
-          UserAnswers.empty,
-          None
-        )
+        val session = IndividualHECSession.newSession(individualLoginData)
 
         inSequence {
           mockAuthWithNoRetrievals()
@@ -148,7 +138,7 @@ class SAControllerSpec
       "display the page" when {
 
         "the user has not previously answered the question" in {
-          val session = HECSession(individuaRetrievedlData, UserAnswers.empty, None)
+          val session = IndividualHECSession.newSession(individualLoginData)
 
           inSequence {
             mockAuthWithNoRetrievals()
@@ -175,8 +165,9 @@ class SAControllerSpec
 
         "the user has previously answered the question" in {
           val session =
-            HECSession(
-              individuaRetrievedlData,
+            IndividualHECSession(
+              individualLoginData,
+              IndividualRetrievedJourneyData.empty,
               CompleteUserAnswers(
                 LicenceType.DriverOfTaxisAndPrivateHires,
                 LicenceTimeTrading.ZeroToTwoYears,
@@ -187,7 +178,9 @@ class SAControllerSpec
                 None,
                 None
               ),
-              None
+              None,
+              None,
+              List.empty
             )
 
           inSequence {
@@ -225,7 +218,7 @@ class SAControllerSpec
 
       "show a form error" when {
 
-        val session = HECSession(individuaRetrievedlData, UserAnswers.empty, None)
+        val session = IndividualHECSession.newSession(individualLoginData)
 
         "nothing is submitted" in {
           inSequence {
@@ -276,7 +269,15 @@ class SAControllerSpec
         "the call to update and next fails" in {
           val answers        = UserAnswers.empty
           val updatedAnswers = UserAnswers.empty.copy(saIncomeDeclared = Some(YesNoAnswer.Yes))
-          val session        = HECSession(individuaRetrievedlData, answers, None)
+          val session        =
+            IndividualHECSession(
+              individualLoginData,
+              IndividualRetrievedJourneyData.empty,
+              answers,
+              None,
+              None,
+              List.empty
+            )
           val updatedSession = session.copy(userAnswers = updatedAnswers)
 
           inSequence {
@@ -299,7 +300,15 @@ class SAControllerSpec
           "the user has not previously completed answering questions" in {
             val answers        = UserAnswers.empty
             val updatedAnswers = UserAnswers.empty.copy(saIncomeDeclared = Some(YesNoAnswer.No))
-            val session        = HECSession(individuaRetrievedlData, answers, None)
+            val session        =
+              IndividualHECSession(
+                individualLoginData,
+                IndividualRetrievedJourneyData.empty,
+                answers,
+                None,
+                None,
+                List.empty
+              )
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 
             inSequence {
@@ -327,7 +336,15 @@ class SAControllerSpec
             val updatedAnswers = IncompleteUserAnswers
               .fromCompleteAnswers(answers)
               .copy(saIncomeDeclared = Some(YesNoAnswer.No))
-            val session        = HECSession(individuaRetrievedlData, answers, None)
+            val session        =
+              IndividualHECSession(
+                individualLoginData,
+                IndividualRetrievedJourneyData.empty,
+                answers,
+                None,
+                None,
+                List.empty
+              )
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 
             inSequence {

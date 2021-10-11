@@ -18,14 +18,14 @@
 @import play.api.mvc.{Call, Request}
 @import uk.gov.hmrc.govukfrontend.views.html.components._
 @import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
-@import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.IndividualRetrievedData
+@import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.IndividualLoginData
 
 @this(layout: Layout, govukButton: GovukButton, govukSummaryList : GovukSummaryList, formWithCSRF: FormWithCSRF)
 
 
-@(back: Call, details: IndividualRetrievedData)(implicit request: Request[_], messages: Messages)
+@(back: Call, details: IndividualLoginData)(implicit request: Request[_], messages: Messages)
 @title = @{messages("confirmIndividualDetails.title")}
-@dob = @{details.loginData.dateOfBirth.value}
+@dob = @{details.dateOfBirth.value}
 
 @layout(pageTitle = Some(title), backLocation = Some(back)) {
     <h1 class="govuk-heading-xl">@title</h1>
@@ -37,7 +37,7 @@
                     content = Text(messages("confirmIndividualDetails.firstName"))
                 ),
                 value = Value(
-                    content = Text(details.loginData.name.firstName)
+                    content = Text(details.name.firstName)
                 )
             ),
             SummaryListRow(
@@ -45,7 +45,7 @@
                     content = Text(messages("confirmIndividualDetails.lastName"))
                 ),
                 value = Value(
-                    content = Text(details.loginData.name.lastName)
+                    content = Text(details.name.lastName)
                 )
             ),
             SummaryListRow(

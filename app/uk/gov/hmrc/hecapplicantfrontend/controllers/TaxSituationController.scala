@@ -17,7 +17,6 @@
 package uk.gov.hmrc.hecapplicantfrontend.controllers
 
 import java.time.LocalDate
-
 import cats.data.EitherT
 import cats.implicits._
 import com.google.inject.{Inject, Singleton}
@@ -28,7 +27,6 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.{getTaxYear, taxSituationForm, taxSituationOptions}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
 import uk.gov.hmrc.hecapplicantfrontend.models
-import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.IndividualRetrievedData
 import uk.gov.hmrc.hecapplicantfrontend.models.TaxSituation._
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
 import uk.gov.hmrc.hecapplicantfrontend.models.{SAStatusResponse, TaxSituation, TaxYear}
@@ -40,8 +38,9 @@ import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
 import scala.concurrent.{ExecutionContext, Future}
-
 import TaxSituationController.saTaxSituations
+import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.IndividualHECSession
+import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.IndividualLoginData
 
 @Singleton
 class TaxSituationController @Inject() (
@@ -82,33 +81,31 @@ class TaxSituationController @Inject() (
     val taxYear = getTaxYear(timeProvider.currentDate)
 
     def fetchSAStatus(
-      individualRetrievedData: IndividualRetrievedData,
+      individualLoginData: IndividualLoginData,
       taxSituation: TaxSituation
     ): EitherT[Future, models.Error, Option[SAStatusResponse]] =
       if (saTaxSituations.contains(taxSituation)) {
-        individualRetrievedData.loginData.sautr
+        individualLoginData.sautr
           .traverse[EitherT[Future, Error, *], SAStatusResponse](taxCheckService.getSAStatus(_, taxYear))
       } else {
         EitherT.pure[Future, models.Error](None)
       }
 
     def handleValidTaxSituation(taxSituation: TaxSituation): Future[Result] =
-      request.sessionData.retrievedUserData match {
-        case individualRetrievedData: IndividualRetrievedData =>
+      request.sessionData match {
+        case individualSession: IndividualHECSession =>
           val result = for {
-            maybeSaStatus <- fetchSAStatus(individualRetrievedData, taxSituation)
+            maybeSaStatus <- fetchSAStatus(individualSession.loginData, taxSituation)
 
-            updatedRetrievedData = individualRetrievedData.copy(
-                                     journeyData = individualRetrievedData.journeyData.copy(saStatus = maybeSaStatus)
-                                   )
+            updatedRetrievedData = individualSession.retrievedJourneyData.copy(saStatus = maybeSaStatus)
             // wipe the SA income declared answer since it is dependent on the tax situation answer
-            updatedAnswers       = request.sessionData.userAnswers
+            updatedAnswers       = individualSession.userAnswers
                                      .unset(_.taxSituation)
                                      .unset(_.saIncomeDeclared)
                                      .copy(taxSituation = Some(taxSituation))
-            updatedRequest       = request.sessionData.copy(
+            updatedRequest       = individualSession.copy(
                                      userAnswers = updatedAnswers,
-                                     retrievedUserData = updatedRetrievedData
+                                     retrievedJourneyData = updatedRetrievedData
                                    )
 
             next <- journeyService.updateAndNext(routes.TaxSituationController.taxSituation(), updatedRequest)
@@ -121,7 +118,8 @@ class TaxSituationController @Inject() (
             },
             Redirect
           )
-        case _                                                =>
+
+        case _ =>
           logger.error("Companies should not see this page")
           Future.successful(InternalServerError)
       }

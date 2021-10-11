@@ -25,7 +25,8 @@ import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, RequestWithSessionData, SessionDataAction}
-import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyJourneyData, CompanyRetrievedData, IndividualRetrievedData}
+import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, IndividualHECSession}
+import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.CompanyLoginData
 import uk.gov.hmrc.hecapplicantfrontend.models._
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR}
 import uk.gov.hmrc.hecapplicantfrontend.models.views.YesNoOption
@@ -96,9 +97,9 @@ class CompanyDetailsController @Inject() (
 
       def fetchCTStatus(
         desCtutrOpt: Option[CTUTR],
-        companyData: CompanyRetrievedData
+        companyLoginData: CompanyLoginData
       ): EitherT[Future, Error, Option[CTStatusResponse]] =
-        companyData.loginData.ctutr flatTraverse [EitherT[Future, Error, *], CTStatusResponse] { ctutr =>
+        companyLoginData.ctutr flatTraverse [EitherT[Future, Error, *], CTStatusResponse] { ctutr =>
           desCtutrOpt match {
             case Some(desCtutr) if desCtutr.value === ctutr.value =>
               val (start, end) = CompanyDetailsController.calculateLookbackPeriod(timeProvider.currentDate)
@@ -110,23 +111,17 @@ class CompanyDetailsController @Inject() (
 
       def fetchDataAndProceed(
         companyDetailsConfirmed: YesNoAnswer,
-        companyData: CompanyRetrievedData,
+        session: CompanyHECSession,
         crn: CRN
       ): Future[Result] = {
         val result = for {
           desCtutr            <- taxCheckService.getCtutr(crn)
-          ctStatusOpt         <- fetchCTStatus(desCtutr, companyData)
-          updatedRetrievedData = companyData.copy(
-                                   journeyData =
-                                     companyData.journeyData.copy(desCtutr = desCtutr, ctStatus = ctStatusOpt)
-                                 )
-          updatedUserAnswers   = request.sessionData.userAnswers
+          ctStatusOpt         <- fetchCTStatus(desCtutr, session.loginData)
+          updatedRetrievedData = session.retrievedJourneyData.copy(desCtutr = desCtutr, ctStatus = ctStatusOpt)
+          updatedUserAnswers   = session.userAnswers
                                    .unset(_.companyDetailsConfirmed)
                                    .copy(companyDetailsConfirmed = Some(companyDetailsConfirmed))
-          updatedSession       = request.sessionData.copy(
-                                   retrievedUserData = updatedRetrievedData,
-                                   userAnswers = updatedUserAnswers
-                                 )
+          updatedSession       = session.copy(retrievedJourneyData = updatedRetrievedData, userAnswers = updatedUserAnswers)
           call                <- callUpdateAndNext(updatedSession)
         } yield call
 
@@ -136,17 +131,17 @@ class CompanyDetailsController @Inject() (
         )
       }
 
-      def handleValidAnswer(companyData: CompanyRetrievedData, crn: CRN)(
+      def handleValidAnswer(session: CompanyHECSession, crn: CRN)(
         companyDetailsConfirmed: YesNoAnswer
       ): Future[Result] =
         companyDetailsConfirmed match {
           case YesNoAnswer.Yes =>
-            fetchDataAndProceed(companyDetailsConfirmed, companyData, crn)
+            fetchDataAndProceed(companyDetailsConfirmed, session, crn)
 
           case YesNoAnswer.No =>
             // wipe CRN answer prior to navigating to next page
             val answersWithoutCrn = request.sessionData.userAnswers.unset(_.crn)
-            callUpdateAndNext(request.sessionData.copy(userAnswers = answersWithoutCrn)).fold(
+            callUpdateAndNext(session.copy(userAnswers = answersWithoutCrn)).fold(
               internalServerError("Could not update session and proceed"),
               Redirect
             )
@@ -157,12 +152,15 @@ class CompanyDetailsController @Inject() (
       ) =
         Future.successful(getPage(form, companyHouseName))
 
-      ensureCompanyRetrievedData(request.sessionData) { (companyData, companyHouseName) =>
+      ensureCompanyRetrievedData(request.sessionData) { (companySession, companyHouseName) =>
         ensureCorrectUserAnswersState(request.sessionData) { crn =>
           CompanyDetailsController
             .confirmCompanyNameForm(YesNoAnswer.values)
             .bindFromRequest()
-            .fold(getFuturePage(companyHouseName), handleValidAnswer(companyData, crn))
+            .fold(
+              getFuturePage(companyHouseName),
+              handleValidAnswer(companySession, crn)
+            )
         }
       }
     }
@@ -192,15 +190,20 @@ class CompanyDetailsController @Inject() (
 
   private def ensureCompanyRetrievedData(
     session: HECSession
-  )(f: (CompanyRetrievedData, CompanyHouseName) => Future[Result]): Future[Result] =
-    session.retrievedUserData match {
-      case CompanyRetrievedData(_, CompanyJourneyData(None, _, _), _)                  =>
-        logger.warn("Missing company name")
-        InternalServerError
-      case _: IndividualRetrievedData                                                  =>
+  )(f: (CompanyHECSession, CompanyHouseName) => Future[Result]): Future[Result] =
+    session match {
+      case _: IndividualHECSession =>
         logger.warn("Individual applicant shouldn't call company confirm page")
         InternalServerError
-      case c @ CompanyRetrievedData(_, CompanyJourneyData(Some(companyName), _, _), _) => f(c, companyName)
+
+      case companySession: CompanyHECSession =>
+        companySession.retrievedJourneyData.companyName match {
+          case None              =>
+            logger.warn("Missing company name")
+            InternalServerError
+          case Some(companyName) =>
+            f(companySession, companyName)
+        }
     }
 
   private def ensureCorrectUserAnswersState(

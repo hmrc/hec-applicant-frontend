@@ -19,17 +19,16 @@ package uk.gov.hmrc.hecapplicantfrontend.controllers
 import cats.instances.future._
 import com.google.inject.{Inject, Singleton}
 import play.api.i18n.I18nSupport
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
-import uk.gov.hmrc.hecapplicantfrontend.models.HECSession
-import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedApplicantData.{CompanyRetrievedData, IndividualRetrievedData}
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging.LoggerOps
 import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import scala.concurrent.{ExecutionContext, Future}
+
+import scala.concurrent.ExecutionContext
 
 @Singleton
 class ConfirmIndividualDetailsController @Inject() (
@@ -45,15 +44,15 @@ class ConfirmIndividualDetailsController @Inject() (
     with Logging {
 
   val confirmIndividualDetails: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
-    withIndividualRetrievedData(request.sessionData) { i =>
+    request.sessionData.mapAsIndividual { i =>
       val back = journeyService.previous(routes.ConfirmIndividualDetailsController.confirmIndividualDetails())
-      Ok(confirmIndividualDetailsPage(back, i))
+      Ok(confirmIndividualDetailsPage(back, i.loginData))
     }
   }
 
   val confirmIndividualDetailsSubmit: Action[AnyContent] =
     authAction.andThen(sessionDataAction).async { implicit request =>
-      withIndividualRetrievedData(request.sessionData) { _ =>
+      request.sessionData.mapAsIndividual { _ =>
         journeyService
           .updateAndNext(routes.ConfirmIndividualDetailsController.confirmIndividualDetails(), request.sessionData)
           .fold(
@@ -68,17 +67,10 @@ class ConfirmIndividualDetailsController @Inject() (
 
   val confirmIndividualDetailsExit: Action[AnyContent] =
     authAction.andThen(sessionDataAction).async { implicit request =>
-      withIndividualRetrievedData(request.sessionData) { _ =>
+      request.sessionData.mapAsIndividual { _ =>
         val back = journeyService.previous(routes.ConfirmIndividualDetailsController.confirmIndividualDetailsExit())
         Ok(confirmIndividualDetailsExitPage(back))
       }
     }
 
-  private def withIndividualRetrievedData(
-    session: HECSession
-  )(f: IndividualRetrievedData => Future[Result]): Future[Result] =
-    session.retrievedUserData match {
-      case i: IndividualRetrievedData => f(i)
-      case _: CompanyRetrievedData    => Redirect(routes.StartController.start())
-    }
 }
