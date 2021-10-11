@@ -208,15 +208,15 @@ class CheckYourAnswersControllerSpec
 
       val hecTaxCheck = HECTaxCheck(HECTaxCheckCode(""), LocalDate.now())
 
-      val updatedSession =
-        IndividualHECSession(
-          individualLoginData,
-          IndividualRetrievedJourneyData.empty,
-          UserAnswers.empty,
-          Some(hecTaxCheck),
-          None,
-          List.empty
-        )
+//      val updatedSession =
+//        IndividualHECSession(
+//          individualLoginData,
+//          IndividualRetrievedJourneyData.empty,
+//          UserAnswers.empty,
+//          Some(hecTaxCheck),
+//          None,
+//          List.empty
+//        )
 
       "return an InternalServerError" when {
 
@@ -250,6 +250,8 @@ class CheckYourAnswersControllerSpec
         }
 
         "there is an error updating the session" in {
+
+          val updatedSession = session.copy(completedTaxCheck = Some(hecTaxCheck))
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
@@ -269,6 +271,8 @@ class CheckYourAnswersControllerSpec
       "redirect to the next page" when {
 
         "the tax check has successfully been saved" in {
+
+          val updatedSession = session.copy(completedTaxCheck = Some(hecTaxCheck))
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
