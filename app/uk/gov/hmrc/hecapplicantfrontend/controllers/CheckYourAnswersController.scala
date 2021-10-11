@@ -63,8 +63,8 @@ class CheckYourAnswersController @Inject() (
         val result = for {
           taxCheck      <- taxCheckService.saveTaxCheck(request.sessionData.loginData, c)
           updatedSession = request.sessionData.fold(
-                             _.copy(userAnswers = UserAnswers.empty, completedTaxCheck = Some(taxCheck)),
-                             _.copy(userAnswers = UserAnswers.empty, completedTaxCheck = Some(taxCheck))
+                             _.copy(completedTaxCheck = Some(taxCheck)),
+                             _.copy(completedTaxCheck = Some(taxCheck))
                            )
           next          <- journeyService.updateAndNext(routes.CheckYourAnswersController.checkYourAnswers(), updatedSession)
         } yield next
