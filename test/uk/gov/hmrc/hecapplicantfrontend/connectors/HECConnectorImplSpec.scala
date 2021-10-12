@@ -30,7 +30,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceDetails, LicenceT
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
-import java.time.LocalDate
+import java.time.{LocalDate, ZoneId, ZonedDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class HECConnectorImplSpec extends AnyWordSpec with Matchers with MockFactory with HttpSupport with ConnectorSpec {
@@ -55,6 +55,8 @@ class HECConnectorImplSpec extends AnyWordSpec with Matchers with MockFactory wi
 
       implicit val hc: HeaderCarrier = HeaderCarrier()
 
+      val zonedDateTimeNow = ZonedDateTime.of(2021, 10, 9, 9, 12, 34, 0, ZoneId.of("Europe/London"))
+
       val individualTaxCheckData: HECTaxCheckData =
         IndividualHECTaxCheckData(
           IndividualApplicantDetails(
@@ -71,8 +73,10 @@ class HECConnectorImplSpec extends AnyWordSpec with Matchers with MockFactory wi
             NINO(""),
             Some(SAUTR("")),
             Some(TaxSituation.SA),
-            Some(YesNoAnswer.Yes)
-          )
+            Some(YesNoAnswer.Yes),
+            None
+          ),
+          Some(zonedDateTimeNow)
         )
 
       val expectedUrl = s"$protocol://$host:$port/hec/tax-check"

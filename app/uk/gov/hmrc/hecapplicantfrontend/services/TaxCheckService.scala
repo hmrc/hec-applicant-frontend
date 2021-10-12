@@ -27,13 +27,13 @@ import play.api.libs.json.{Json, OFormat}
 import play.mvc.Http.Status.{CREATED, NOT_FOUND}
 import uk.gov.hmrc.hecapplicantfrontend.connectors.HECConnector
 import uk.gov.hmrc.hecapplicantfrontend.models.ApplicantDetails.IndividualApplicantDetails
+import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, IndividualHECSession}
 import uk.gov.hmrc.hecapplicantfrontend.models.HECTaxCheckData.IndividualHECTaxCheckData
-import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
 import uk.gov.hmrc.hecapplicantfrontend.models.TaxDetails.IndividualTaxDetails
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.CompleteUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR, SAUTR}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceDetails
-import uk.gov.hmrc.hecapplicantfrontend.models.{CTStatusResponse, Error, HECTaxCheck, HECTaxCheckData, LoginData, SAStatusResponse, TaxCheckListItem, TaxYear}
+import uk.gov.hmrc.hecapplicantfrontend.models.{CTStatusResponse, Error, HECSession, HECTaxCheck, HECTaxCheckData, SAStatusResponse, TaxCheckListItem, TaxYear}
 import uk.gov.hmrc.hecapplicantfrontend.services.TaxCheckService._
 import uk.gov.hmrc.hecapplicantfrontend.util.HttpResponseOps._
 import uk.gov.hmrc.http.HeaderCarrier
@@ -45,7 +45,7 @@ import scala.concurrent.{ExecutionContext, Future}
 trait TaxCheckService {
 
   def saveTaxCheck(
-    loginData: LoginData,
+    session: HECSession,
     answers: CompleteUserAnswers
   )(implicit hc: HeaderCarrier): EitherT[Future, Error, HECTaxCheck]
 
@@ -66,10 +66,10 @@ class TaxCheckServiceImpl @Inject() (hecConnector: HECConnector)(implicit ec: Ex
     extends TaxCheckService {
 
   def saveTaxCheck(
-    loginData: LoginData,
+    session: HECSession,
     answers: CompleteUserAnswers
   )(implicit hc: HeaderCarrier): EitherT[Future, Error, HECTaxCheck] = {
-    val taxCheckData = toHECTaxCheckData(loginData, answers)
+    val taxCheckData = toHECTaxCheckData(session, answers)
     hecConnector
       .saveTaxCheck(taxCheckData)
       .subflatMap { response =>
@@ -123,34 +123,38 @@ class TaxCheckServiceImpl @Inject() (hecConnector: HECConnector)(implicit ec: Ex
       }
 
   private def toHECTaxCheckData(
-    loginData: LoginData,
-    answers: CompleteUserAnswers
-  ): HECTaxCheckData = {
-    val licenceDetails = LicenceDetails(
-      answers.licenceType,
-      answers.licenceTimeTrading,
-      answers.licenceValidityPeriod
-    )
+    session: HECSession,
+    completeUserAnswers: CompleteUserAnswers
+  ): HECTaxCheckData = session match {
+    case IndividualHECSession(
+          loginData,
+          retrievedJourneyData,
+          _,
+          _,
+          taxCheckStartDateTime,
+          _
+        ) =>
+      val licenceDetails   = LicenceDetails(
+        completeUserAnswers.licenceType,
+        completeUserAnswers.licenceTimeTrading,
+        completeUserAnswers.licenceValidityPeriod
+      )
+      val applicantDetails = IndividualApplicantDetails(
+        loginData.ggCredId,
+        loginData.name,
+        loginData.dateOfBirth
+      )
 
-    loginData match {
-      case individual: IndividualLoginData =>
-        val applicantDetails = IndividualApplicantDetails(
-          individual.ggCredId,
-          individual.name,
-          individual.dateOfBirth
-        )
+      val taxDetails = IndividualTaxDetails(
+        loginData.nino,
+        loginData.sautr,
+        completeUserAnswers.taxSituation,
+        completeUserAnswers.saIncomeDeclared,
+        retrievedJourneyData.saStatus
+      )
+      IndividualHECTaxCheckData(applicantDetails, licenceDetails, taxDetails, taxCheckStartDateTime)
 
-        val taxDetails = IndividualTaxDetails(
-          individual.nino,
-          individual.sautr,
-          answers.taxSituation,
-          answers.saIncomeDeclared
-        )
-        IndividualHECTaxCheckData(applicantDetails, licenceDetails, taxDetails)
-
-      case _: CompanyLoginData =>
-        sys.error("Not handled yet")
-    }
+    case _: CompanyHECSession => sys.error("Not handled yet")
 
   }
 
