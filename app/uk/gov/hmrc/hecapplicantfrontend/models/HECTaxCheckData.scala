@@ -25,7 +25,7 @@ import java.time.ZonedDateTime
 
 sealed trait HECTaxCheckData extends Product with Serializable {
   val entityType: EntityType
-  val taxCheckStartDateTime: Option[ZonedDateTime]
+  val taxCheckStartDateTime: ZonedDateTime
 }
 
 object HECTaxCheckData {
@@ -34,7 +34,7 @@ object HECTaxCheckData {
     applicantDetails: IndividualApplicantDetails,
     licenceDetails: LicenceDetails,
     taxDetails: IndividualTaxDetails,
-    taxCheckStartDateTime: Option[ZonedDateTime]
+    taxCheckStartDateTime: ZonedDateTime
   ) extends HECTaxCheckData {
     val entityType: EntityType = EntityType.Individual
   }
@@ -43,7 +43,7 @@ object HECTaxCheckData {
     applicantDetails: CompanyApplicantDetails,
     licenceDetails: LicenceDetails,
     taxDetails: CompanyTaxDetails,
-    taxCheckStartDateTime: Option[ZonedDateTime]
+    taxCheckStartDateTime: ZonedDateTime
   ) extends HECTaxCheckData {
     val entityType: EntityType = EntityType.Company
   }

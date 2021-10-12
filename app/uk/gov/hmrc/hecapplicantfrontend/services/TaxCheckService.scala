@@ -131,7 +131,7 @@ class TaxCheckServiceImpl @Inject() (hecConnector: HECConnector)(implicit ec: Ex
           retrievedJourneyData,
           _,
           _,
-          taxCheckStartDateTime,
+          Some(taxCheckStartDateTime),
           _
         ) =>
       val licenceDetails   = LicenceDetails(
@@ -155,6 +155,7 @@ class TaxCheckServiceImpl @Inject() (hecConnector: HECConnector)(implicit ec: Ex
       IndividualHECTaxCheckData(applicantDetails, licenceDetails, taxDetails, taxCheckStartDateTime)
 
     case _: CompanyHECSession => sys.error("Not handled yet")
+    case _                    => sys.error("taxCheckStartDateTime is not present")
 
   }
 

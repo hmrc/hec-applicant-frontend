@@ -30,7 +30,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceDetails, LicenceT
 class HECTaxCheckDataSpec extends AnyWordSpec with Matchers {
 
   "HECTaxCheckData" must {
-    val zonedDateTimeNow = ZonedDateTime.of(2021, 10, 9, 9, 12, 34, 0, ZoneId.of("Europe/London"))
+    val taxCheckStartDateTime = ZonedDateTime.of(2021, 10, 9, 9, 12, 34, 0, ZoneId.of("Europe/London"))
     "perform JSON de/serialisation correctly" must {
       val dateOfBirthStr = "20001010"
       val dateOfBirth    = LocalDate.of(2000, 10, 10)
@@ -54,7 +54,7 @@ class HECTaxCheckDataSpec extends AnyWordSpec with Matchers {
             Some(YesNoAnswer.Yes),
             Some(SAStatusResponse(SAUTR("12345"), TaxYear(2021), ReturnFound))
           ),
-          Some(zonedDateTimeNow)
+          taxCheckStartDateTime
         )
 
       val individualJson = Json.parse(s"""{
@@ -99,7 +99,7 @@ class HECTaxCheckDataSpec extends AnyWordSpec with Matchers {
           CompanyTaxDetails(
             CTUTR("utr")
           ),
-          Some(zonedDateTimeNow)
+          taxCheckStartDateTime
         )
 
       val companyJson = Json.parse("""{

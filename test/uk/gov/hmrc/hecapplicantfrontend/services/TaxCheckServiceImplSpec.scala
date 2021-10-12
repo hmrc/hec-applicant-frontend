@@ -127,19 +127,27 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
           completeAnswers.saIncomeDeclared,
           None
         ),
-        Some(zonedDateTimeNow)
+        zonedDateTimeNow
       )
 
       val taxCheckCode = HECTaxCheckCode("code")
       val taxCheck     = HECTaxCheck(taxCheckCode, LocalDate.now().plusDays(2L))
       val taxCheckJson = Json.toJson(taxCheck)
 
-      val individualSession = IndividualHECSession(
+      val individualSession  = IndividualHECSession(
         individualLoginData,
         retrievedJourneyData,
         completeAnswers,
         None,
         Some(zonedDateTimeNow),
+        List.empty
+      )
+      val individualSession2 = IndividualHECSession(
+        individualLoginData,
+        retrievedJourneyData,
+        completeAnswers,
+        None,
+        None,
         List.empty
       )
 
@@ -172,6 +180,12 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
 
           val result = service.saveTaxCheck(individualSession, completeAnswers)
           await(result.value) shouldBe a[Left[_, _]]
+        }
+
+        "there is no taxCheckStartDateTime in the session" in {
+
+          assertThrows[RuntimeException](await(service.saveTaxCheck(individualSession2, completeAnswers).value))
+
         }
 
       }

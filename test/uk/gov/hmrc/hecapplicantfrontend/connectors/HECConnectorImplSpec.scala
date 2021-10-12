@@ -55,7 +55,7 @@ class HECConnectorImplSpec extends AnyWordSpec with Matchers with MockFactory wi
 
       implicit val hc: HeaderCarrier = HeaderCarrier()
 
-      val zonedDateTimeNow = ZonedDateTime.of(2021, 10, 9, 9, 12, 34, 0, ZoneId.of("Europe/London"))
+      val taxCheckStartDateTime = ZonedDateTime.of(2021, 10, 9, 9, 12, 34, 0, ZoneId.of("Europe/London"))
 
       val individualTaxCheckData: HECTaxCheckData =
         IndividualHECTaxCheckData(
@@ -76,7 +76,7 @@ class HECConnectorImplSpec extends AnyWordSpec with Matchers with MockFactory wi
             Some(YesNoAnswer.Yes),
             None
           ),
-          Some(zonedDateTimeNow)
+          taxCheckStartDateTime
         )
 
       val expectedUrl = s"$protocol://$host:$port/hec/tax-check"

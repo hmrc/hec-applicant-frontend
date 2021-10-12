@@ -105,12 +105,14 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
     r: RequestWithSessionData[_],
     hc: HeaderCarrier
   ): EitherT[Future, Error, Call] = {
-    val currentPageIsCYA: Boolean = current.url.contains("check-your-answers")
+    val currentPageIsCYA: Boolean = current === routes.CheckYourAnswersController.checkYourAnswers()
     for {
       upliftedSession <- EitherT.fromEither[Future](upliftToCompleteAnswersIfComplete(updatedSession, current))
       next            <- EitherT.fromOption[Future](
                            upliftedSession.userAnswers.fold(
-                             _ => paths.get(current).map(_(upliftedSession)),
+                             _ =>
+                               if (currentPageIsCYA) sys.error("All user answers are not complete")
+                               else paths.get(current).map(_(upliftedSession)),
                              _ =>
                                if (currentPageIsCYA) paths.get(current).map(_(upliftedSession))
                                else Some(routes.CheckYourAnswersController.checkYourAnswers())
