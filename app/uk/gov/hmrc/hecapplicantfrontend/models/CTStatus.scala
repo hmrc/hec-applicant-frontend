@@ -19,9 +19,10 @@ package uk.gov.hmrc.hecapplicantfrontend.models
 import ai.x.play.json.Jsonx
 import ai.x.play.json.SingletonEncoder.simpleName
 import ai.x.play.json.implicits.formatSingleton
+import cats.Eq
 import play.api.libs.json.Format
 
-sealed trait CTStatus
+sealed trait CTStatus extends Product with Serializable
 
 object CTStatus {
 
@@ -30,6 +31,8 @@ object CTStatus {
   case object NoticeToFileIssued extends CTStatus
 
   case object NoReturnFound extends CTStatus
+
+  implicit val eq: Eq[CTStatus] = Eq.fromUniversalEquals
 
   @SuppressWarnings(Array("org.wartremover.warts.All"))
   implicit val format: Format[CTStatus] = Jsonx.formatSealed[CTStatus]

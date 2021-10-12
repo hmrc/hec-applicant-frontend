@@ -101,6 +101,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         Some(YesNoAnswer.Yes),
         None,
         None,
+        None,
         None
       )
 

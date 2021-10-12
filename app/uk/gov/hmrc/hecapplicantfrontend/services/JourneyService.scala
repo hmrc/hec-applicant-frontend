@@ -33,7 +33,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.{CompanyRetr
 import uk.gov.hmrc.hecapplicantfrontend.models.SAStatus.ReturnFound
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.{CompleteUserAnswers, IncompleteUserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
-import uk.gov.hmrc.hecapplicantfrontend.models.{EntityType, Error, HECSession, SAStatus, SAStatusResponse, TaxSituation, YesNoAnswer}
+import uk.gov.hmrc.hecapplicantfrontend.models.{CTStatus, EntityType, Error, HECSession, SAStatus, SAStatusResponse, TaxSituation, YesNoAnswer}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyServiceImpl._
 import uk.gov.hmrc.http.HeaderCarrier
@@ -75,7 +75,8 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
     routes.SAController.saIncomeStatement()                              -> (_ => routes.CheckYourAnswersController.checkYourAnswers()),
     routes.CheckYourAnswersController.checkYourAnswers()                 -> (_ => routes.TaxCheckCompleteController.taxCheckComplete()),
     routes.CRNController.companyRegistrationNumber()                     -> companyRegistrationNumberRoute,
-    routes.CompanyDetailsController.confirmCompanyDetails()              -> confirmCompanyDetailsRoute
+    routes.CompanyDetailsController.confirmCompanyDetails()              -> confirmCompanyDetailsRoute,
+    routes.CompanyDetailsController.chargeableForCorporationTax()        -> chargeableForCTRoute
   )
 
   // map which describes routes from an exit page to their previous page. The keys are the exit page and the values are
@@ -158,8 +159,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
         val updatedSession = session.userAnswers match {
           case _ if isExitPageNext =>
             session
-          //will add a case for when company when it reaches the complete answers page
-          //if it's  added now, the code thinks the company's answers are all complete and take it to check your answers page
+
           case incomplete @ IncompleteUserAnswers(
                 Some(licenceType),
                 Some(licenceTimeTrading),
@@ -168,7 +168,8 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
                 saIncomeDeclared,
                 entityType,
                 crn,
-                companyDetailsConfirmed
+                companyDetailsConfirmed,
+                chargeableForCT
               ) if allAnswersComplete(incomplete, session) =>
             val completeAnswers =
               CompleteUserAnswers(
@@ -179,7 +180,8 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
                 saIncomeDeclared,
                 entityType,
                 crn,
-                companyDetailsConfirmed
+                companyDetailsConfirmed,
+                chargeableForCT
               )
             session.fold(
               _.copy(userAnswers = completeAnswers),
@@ -291,6 +293,25 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
 
     }
 
+  private def chargeableForCTRoute(session: HECSession) =
+    session.mapAsCompany { companySession: CompanyHECSession =>
+      session.userAnswers.fold(_.chargeableForCT, _.chargeableForCT) map {
+        case YesNoAnswer.No  => routes.CheckYourAnswersController.checkYourAnswers()
+        case YesNoAnswer.Yes =>
+          companySession.retrievedJourneyData.ctStatus.flatMap(_.latestAccountingPeriod) match {
+            case Some(accountingPeriod) =>
+              accountingPeriod.ctStatus match {
+                case CTStatus.ReturnFound        => routes.CompanyDetailsController.ctIncomeStatement()
+                case CTStatus.NoticeToFileIssued => routes.CheckYourAnswersController.checkYourAnswers()
+                case CTStatus.NoReturnFound      => routes.CompanyDetailsController.cannotDoTaxCheck()
+              }
+            case None                   => sys.error("CT status info missing")
+          }
+      } getOrElse {
+        sys.error("Chargeable for CT answer missing")
+      }
+    }
+
 }
 
 object JourneyServiceImpl {
@@ -300,7 +321,7 @@ object JourneyServiceImpl {
   }
 
   /**
-    * Expect the entity type to be specified only for individual or company licence types
+    * Expect the entity type to be specified when licence type is suitable for both individual and company
     */
   private def checkEntityTypePresentIfRequired(licenceType: LicenceType, entityType: Option[EntityType]): Boolean =
     entityType match {
@@ -324,8 +345,19 @@ object JourneyServiceImpl {
       case _ => true
     }
 
+  private def checkCompanyDataComplete(
+    chargeableForCT: YesNoAnswer,
+    companySession: CompanyHECSession
+  ): Boolean = {
+    val ctStatusIsNoticeToFileIssued = companySession.retrievedJourneyData.ctStatus
+      .exists(_.latestAccountingPeriod.exists(_.ctStatus === CTStatus.NoticeToFileIssued))
+
+    (chargeableForCT === YesNoAnswer.No) || (chargeableForCT === YesNoAnswer.Yes && ctStatusIsNoticeToFileIssued)
+  }
+
   /**
     * Process the incomplete answers and retrieved user data to determine if all answers have been given by the user
+    *
     * @param incompleteUserAnswers The incomplete answers
     * @param session The current session data
     * @return A boolean representing whether or not the user has completed answering all relevant questions
@@ -345,6 +377,7 @@ object JourneyServiceImpl {
                 saIncomeDeclared,
                 entityType,
                 _,
+                _,
                 _
               ) =>
             val licenceTypeCheck      = checkEntityTypePresentIfRequired(licenceType, entityType)
@@ -355,7 +388,24 @@ object JourneyServiceImpl {
           case _ => false
         }
 
-      //TODO add company scenario later when it reaches the check your answer page
-      case _: CompanyHECSession                    => false
+      case companySession: CompanyHECSession =>
+        incompleteUserAnswers match {
+          case IncompleteUserAnswers(
+                Some(licenceType),
+                Some(_),
+                Some(_),
+                _,
+                _,
+                entityType,
+                Some(_),
+                Some(_),
+                Some(chargeableForCT)
+              ) =>
+            val licenceTypeCheck = checkEntityTypePresentIfRequired(licenceType, entityType)
+            val companyDataCheck = checkCompanyDataComplete(chargeableForCT, companySession)
+            licenceTypeCheck && companyDataCheck
+
+          case _ => false
+        }
     }
 }
