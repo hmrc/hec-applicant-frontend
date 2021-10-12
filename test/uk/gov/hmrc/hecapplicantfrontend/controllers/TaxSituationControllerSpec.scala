@@ -16,12 +16,17 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.controllers
 
+import cats.data.EitherT
+import cats.instances.future._
+import org.jsoup.nodes.Document
 import play.api.inject.bind
 import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.{CompleteUserAnswers, IncompleteUserAnswers}
+import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, IndividualHECSession}
+import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
+import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.IndividualRetrievedJourneyData
 import uk.gov.hmrc.hecapplicantfrontend.models._
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO, SAUTR}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType.DriverOfTaxisAndPrivateHires
@@ -29,16 +34,10 @@ import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, Lice
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.{JourneyService, TaxCheckService}
 import uk.gov.hmrc.hecapplicantfrontend.util.{TimeProvider, TimeUtils}
-
-import java.time.LocalDate
-import org.jsoup.nodes.Document
-import cats.data.EitherT
-import cats.instances.future._
-import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, IndividualHECSession}
-import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
-import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.IndividualRetrievedJourneyData
+import uk.gov.hmrc.hecapplicantfrontend.utils.Fixtures
 import uk.gov.hmrc.http.HeaderCarrier
 
+import java.time.LocalDate
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -173,17 +172,12 @@ class TaxSituationControllerSpec
             IndividualHECSession(
               individualLoginData,
               IndividualRetrievedJourneyData.empty,
-              CompleteUserAnswers(
+              Fixtures.completeUserAnswers(
                 LicenceType.DriverOfTaxisAndPrivateHires,
                 LicenceTimeTrading.TwoToFourYears,
                 LicenceValidityPeriod.UpToThreeYears,
                 Some(TaxSituation.PAYE),
-                Some(YesNoAnswer.Yes),
-                None,
-                None,
-                None,
-                None,
-                None
+                Some(YesNoAnswer.Yes)
               ),
               None,
               None,
@@ -837,17 +831,13 @@ class TaxSituationControllerSpec
           }
 
           "the user has previously completed answering questions" in {
-            val answers = CompleteUserAnswers(
+            val answers = Fixtures.completeUserAnswers(
               LicenceType.DriverOfTaxisAndPrivateHires,
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToThreeYears,
               Some(TaxSituation.PAYE),
               Some(YesNoAnswer.Yes),
-              Some(EntityType.Individual),
-              None,
-              None,
-              None,
-              None
+              Some(EntityType.Individual)
             )
 
             val session = IndividualHECSession(
@@ -859,17 +849,13 @@ class TaxSituationControllerSpec
               List.empty
             )
 
-            val updatedAnswers = IncompleteUserAnswers(
+            val updatedAnswers = Fixtures.incompleteUserAnswers(
               Some(LicenceType.DriverOfTaxisAndPrivateHires),
               Some(LicenceTimeTrading.ZeroToTwoYears),
               Some(LicenceValidityPeriod.UpToThreeYears),
               Some(TaxSituation.PAYE),
               None,
-              Some(EntityType.Individual),
-              None,
-              None,
-              None,
-              None
+              Some(EntityType.Individual)
             )
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 

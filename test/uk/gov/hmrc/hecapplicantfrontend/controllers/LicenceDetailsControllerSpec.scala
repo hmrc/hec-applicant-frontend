@@ -24,7 +24,6 @@ import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, IndividualHECSession}
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.{CompanyRetrievedJourneyData, IndividualRetrievedJourneyData}
-import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.{CompleteUserAnswers, IncompleteUserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models._
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType.DriverOfTaxisAndPrivateHires
@@ -33,6 +32,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, Lice
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
 import uk.gov.hmrc.hecapplicantfrontend.util.TimeProvider
+import uk.gov.hmrc.hecapplicantfrontend.utils.Fixtures
 
 import java.time.{LocalDate, ZonedDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -162,17 +162,13 @@ class LicenceDetailsControllerSpec
               IndividualHECSession(
                 individualLoginData,
                 IndividualRetrievedJourneyData.empty,
-                CompleteUserAnswers(
+                Fixtures.completeUserAnswers(
                   LicenceType.DriverOfTaxisAndPrivateHires,
                   LicenceTimeTrading.ZeroToTwoYears,
                   LicenceValidityPeriod.UpToTwoYears,
                   Some(TaxSituation.SA),
                   Some(YesNoAnswer.Yes),
-                  Some(EntityType.Individual),
-                  None,
-                  None,
-                  None,
-                  None
+                  Some(EntityType.Individual)
                 ),
                 None,
                 None,
@@ -204,17 +200,13 @@ class LicenceDetailsControllerSpec
               CompanyHECSession(
                 companyLoginData,
                 CompanyRetrievedJourneyData.empty,
-                CompleteUserAnswers(
+                Fixtures.completeUserAnswers(
                   LicenceType.ScrapMetalDealerSite,
                   LicenceTimeTrading.ZeroToTwoYears,
                   LicenceValidityPeriod.UpToTwoYears,
                   Some(TaxSituation.SAPAYE),
                   Some(YesNoAnswer.Yes),
-                  Some(EntityType.Company),
-                  None,
-                  None,
-                  None,
-                  None
+                  Some(EntityType.Company)
                 ),
                 None,
                 None,
@@ -363,17 +355,13 @@ class LicenceDetailsControllerSpec
           }
 
           "the user has previously completed answering questions" in {
-            val answers        = CompleteUserAnswers(
+            val answers        = Fixtures.completeUserAnswers(
               LicenceType.DriverOfTaxisAndPrivateHires,
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToOneYear,
               Some(TaxSituation.SA),
               Some(YesNoAnswer.Yes),
-              Some(EntityType.Individual),
-              None,
-              None,
-              None,
-              None
+              Some(EntityType.Individual)
             )
             val updatedAnswers = UserAnswers.empty.copy(licenceType = Some(LicenceType.ScrapMetalMobileCollector))
             val session        =
@@ -390,17 +378,13 @@ class LicenceDetailsControllerSpec
           }
 
           "a tax check start date time is already in session" in {
-            val answers        = CompleteUserAnswers(
+            val answers        = Fixtures.completeUserAnswers(
               LicenceType.DriverOfTaxisAndPrivateHires,
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToOneYear,
               Some(TaxSituation.SA),
               Some(YesNoAnswer.Yes),
-              Some(EntityType.Individual),
-              None,
-              None,
-              None,
-              None
+              Some(EntityType.Individual)
             )
             val updatedAnswers = UserAnswers.empty.copy(licenceType = Some(LicenceType.ScrapMetalMobileCollector))
             val session        = IndividualHECSession(
@@ -416,17 +400,13 @@ class LicenceDetailsControllerSpec
           }
 
           "the user has not changed the licence type they have already submitted previously" in {
-            val answers = CompleteUserAnswers(
+            val answers = Fixtures.completeUserAnswers(
               LicenceType.DriverOfTaxisAndPrivateHires,
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToOneYear,
               Some(TaxSituation.SA),
               Some(YesNoAnswer.Yes),
-              Some(EntityType.Individual),
-              None,
-              None,
-              None,
-              None
+              Some(EntityType.Individual)
             )
             val session =
               IndividualHECSession(
@@ -466,17 +446,13 @@ class LicenceDetailsControllerSpec
           }
 
           "the user has previously completed answering questions" in {
-            val answers        = CompleteUserAnswers(
+            val answers        = Fixtures.completeUserAnswers(
               LicenceType.DriverOfTaxisAndPrivateHires,
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToOneYear,
               Some(TaxSituation.SA),
               Some(YesNoAnswer.Yes),
-              Some(EntityType.Individual),
-              None,
-              None,
-              None,
-              None
+              Some(EntityType.Individual)
             )
             val updatedAnswers = UserAnswers.empty.copy(licenceType = Some(LicenceType.ScrapMetalMobileCollector))
             val session        =
@@ -487,17 +463,13 @@ class LicenceDetailsControllerSpec
           }
 
           "a tax check start date time is already in session" in {
-            val answers        = CompleteUserAnswers(
+            val answers        = Fixtures.completeUserAnswers(
               LicenceType.DriverOfTaxisAndPrivateHires,
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToOneYear,
               Some(TaxSituation.SA),
               Some(YesNoAnswer.Yes),
-              Some(EntityType.Individual),
-              None,
-              None,
-              None,
-              None
+              Some(EntityType.Individual)
             )
             val updatedAnswers = UserAnswers.empty.copy(licenceType = Some(LicenceType.ScrapMetalMobileCollector))
             val session        =
@@ -515,17 +487,13 @@ class LicenceDetailsControllerSpec
           }
 
           "the user has not changed the licence type they have already submitted previously" in {
-            val answers = CompleteUserAnswers(
+            val answers = Fixtures.completeUserAnswers(
               LicenceType.OperatorOfPrivateHireVehicles,
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToOneYear,
               Some(TaxSituation.SA),
               Some(YesNoAnswer.Yes),
-              Some(EntityType.Individual),
-              None,
-              None,
-              None,
-              None
+              Some(EntityType.Individual)
             )
             val session =
               CompanyHECSession(
@@ -611,17 +579,13 @@ class LicenceDetailsControllerSpec
             IndividualHECSession(
               individualLoginData,
               IndividualRetrievedJourneyData.empty,
-              CompleteUserAnswers(
+              Fixtures.completeUserAnswers(
                 LicenceType.DriverOfTaxisAndPrivateHires,
                 LicenceTimeTrading.TwoToFourYears,
                 LicenceValidityPeriod.UpToThreeYears,
                 Some(TaxSituation.SA),
                 Some(YesNoAnswer.Yes),
-                Some(EntityType.Company),
-                None,
-                None,
-                None,
-                None
+                Some(EntityType.Company)
               ),
               None,
               None,
@@ -784,29 +748,21 @@ class LicenceDetailsControllerSpec
           }
 
           "the user has previously completed answering questions" in {
-            val answers        = CompleteUserAnswers(
+            val answers        = Fixtures.completeUserAnswers(
               LicenceType.DriverOfTaxisAndPrivateHires,
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToFiveYears,
               Some(TaxSituation.SA),
               Some(YesNoAnswer.Yes),
-              Some(EntityType.Company),
-              None,
-              None,
-              None,
-              None
+              Some(EntityType.Company)
             )
-            val updatedAnswers = IncompleteUserAnswers(
+            val updatedAnswers = Fixtures.incompleteUserAnswers(
               Some(LicenceType.DriverOfTaxisAndPrivateHires),
               Some(LicenceTimeTrading.EightYearsOrMore),
               Some(LicenceValidityPeriod.UpToFiveYears),
               Some(TaxSituation.SA),
               Some(YesNoAnswer.Yes),
-              Some(EntityType.Company),
-              None,
-              None,
-              None,
-              None
+              Some(EntityType.Company)
             )
             val session        =
               IndividualHECSession(
@@ -913,17 +869,13 @@ class LicenceDetailsControllerSpec
                 IndividualHECSession(
                   individualLoginData,
                   IndividualRetrievedJourneyData.empty,
-                  CompleteUserAnswers(
+                  Fixtures.completeUserAnswers(
                     licenceType,
                     LicenceTimeTrading.TwoToFourYears,
                     LicenceValidityPeriod.UpToThreeYears,
                     Some(TaxSituation.SA),
                     Some(YesNoAnswer.Yes),
-                    Some(EntityType.Individual),
-                    None,
-                    None,
-                    None,
-                    None
+                    Some(EntityType.Individual)
                   ),
                   None,
                   None,
@@ -1116,29 +1068,21 @@ class LicenceDetailsControllerSpec
           }
 
           "the user has previously completed answering questions" in {
-            val answers        = CompleteUserAnswers(
+            val answers        = Fixtures.completeUserAnswers(
               LicenceType.OperatorOfPrivateHireVehicles,
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToThreeYears,
               Some(TaxSituation.SA),
               Some(YesNoAnswer.Yes),
-              Some(EntityType.Individual),
-              None,
-              None,
-              None,
-              None
+              Some(EntityType.Individual)
             )
-            val updatedAnswers = IncompleteUserAnswers(
+            val updatedAnswers = Fixtures.incompleteUserAnswers(
               Some(LicenceType.OperatorOfPrivateHireVehicles),
               Some(LicenceTimeTrading.ZeroToTwoYears),
               Some(LicenceValidityPeriod.UpToFiveYears),
               Some(TaxSituation.SA),
               Some(YesNoAnswer.Yes),
-              Some(EntityType.Individual),
-              None,
-              None,
-              None,
-              None
+              Some(EntityType.Individual)
             )
             val session        =
               IndividualHECSession(

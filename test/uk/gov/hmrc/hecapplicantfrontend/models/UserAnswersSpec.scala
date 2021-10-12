@@ -21,6 +21,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.Json
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.{CompleteUserAnswers, IncompleteUserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
+import uk.gov.hmrc.hecapplicantfrontend.utils.Fixtures
 
 class UserAnswersSpec extends AnyWordSpec with Matchers {
 
@@ -41,17 +42,13 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
       }
 
       "works with complete answers" in {
-        val completeAnswers = CompleteUserAnswers(
+        val completeAnswers = Fixtures.completeUserAnswers(
           LicenceType.DriverOfTaxisAndPrivateHires,
           LicenceTimeTrading.TwoToFourYears,
           LicenceValidityPeriod.UpToFiveYears,
           Some(TaxSituation.PAYE),
           None,
-          Some(EntityType.Individual),
-          None,
-          None,
-          None,
-          None
+          Some(EntityType.Individual)
         )
         completeAnswers.fold(
           _ => fail(),
@@ -62,17 +59,13 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
     }
 
     "have a method which converts complete answers to incomplete" in {
-      val completeAnswers = CompleteUserAnswers(
+      val completeAnswers = Fixtures.completeUserAnswers(
         LicenceType.DriverOfTaxisAndPrivateHires,
         LicenceTimeTrading.TwoToFourYears,
         LicenceValidityPeriod.UpToTwoYears,
         Some(TaxSituation.PAYE),
         None,
-        Some(EntityType.Individual),
-        None,
-        None,
-        None,
-        None
+        Some(EntityType.Individual)
       )
       IncompleteUserAnswers.fromCompleteAnswers(completeAnswers) shouldBe IncompleteUserAnswers(
         Some(LicenceType.DriverOfTaxisAndPrivateHires),
@@ -92,17 +85,13 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
     "have an unset method" which {
 
       val incompleteAnswers =
-        IncompleteUserAnswers(
+        Fixtures.incompleteUserAnswers(
           Some(LicenceType.DriverOfTaxisAndPrivateHires),
           Some(LicenceTimeTrading.ZeroToTwoYears),
           Some(LicenceValidityPeriod.UpToThreeYears),
           Some(TaxSituation.PAYE),
           None,
-          Some(EntityType.Company),
-          None,
-          None,
-          None,
-          None
+          Some(EntityType.Company)
         )
 
       val completeAnswers =
@@ -143,17 +132,13 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
 
     "perform JSON de/serialisation correctly" must {
       val incompleteAnswers: UserAnswers =
-        IncompleteUserAnswers(
+        Fixtures.incompleteUserAnswers(
           Some(LicenceType.DriverOfTaxisAndPrivateHires),
           Some(LicenceTimeTrading.ZeroToTwoYears),
           Some(LicenceValidityPeriod.UpToThreeYears),
           Some(TaxSituation.PAYE),
           None,
-          Some(EntityType.Company),
-          None,
-          None,
-          None,
-          None
+          Some(EntityType.Company)
         )
 
       val incompleteJson = Json.parse("""{
@@ -166,17 +151,13 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
                                         |}""".stripMargin)
 
       val completeAnswers: UserAnswers =
-        CompleteUserAnswers(
+        Fixtures.completeUserAnswers(
           LicenceType.DriverOfTaxisAndPrivateHires,
           LicenceTimeTrading.ZeroToTwoYears,
           LicenceValidityPeriod.UpToThreeYears,
           Some(TaxSituation.PAYE),
           None,
-          Some(EntityType.Company),
-          None,
-          None,
-          None,
-          None
+          Some(EntityType.Company)
         )
 
       val completeJson = Json.parse("""{

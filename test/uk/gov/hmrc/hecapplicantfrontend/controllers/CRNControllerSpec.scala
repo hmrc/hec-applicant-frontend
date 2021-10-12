@@ -34,6 +34,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.{CompanyHouseDetails, CompanyHous
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.{CompanyDetailsService, JourneyService}
 import uk.gov.hmrc.hecapplicantfrontend.util.StringUtils.StringOps
+import uk.gov.hmrc.hecapplicantfrontend.utils.Fixtures
 import uk.gov.hmrc.http.HeaderCarrier
 
 import java.util.Locale
@@ -109,17 +110,10 @@ class CRNControllerSpec
 
         "the user has previously answered the question" in {
 
-          val answers = CompleteUserAnswers(
+          val answers = Fixtures.completeUserAnswers(
             LicenceType.OperatorOfPrivateHireVehicles,
             LicenceTimeTrading.ZeroToTwoYears,
-            LicenceValidityPeriod.UpToOneYear,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None
+            LicenceValidityPeriod.UpToOneYear
           )
 
           val updatedAnswers = IncompleteUserAnswers
@@ -270,17 +264,10 @@ class CRNControllerSpec
 
         "return an InternalServerError" when {
 
-          val answers = CompleteUserAnswers(
+          val answers = Fixtures.completeUserAnswers(
             LicenceType.OperatorOfPrivateHireVehicles,
             LicenceTimeTrading.ZeroToTwoYears,
-            LicenceValidityPeriod.UpToOneYear,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None
+            LicenceValidityPeriod.UpToOneYear
           )
           val session =
             CompanyHECSession(companyLoginData, CompanyRetrievedJourneyData.empty, answers, None, None, List.empty)
