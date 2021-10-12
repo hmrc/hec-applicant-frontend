@@ -171,6 +171,7 @@ class LicenceDetailsControllerSpec
                   Some(EntityType.Individual),
                   None,
                   None,
+                  None,
                   None
                 ),
                 None,
@@ -210,6 +211,7 @@ class LicenceDetailsControllerSpec
                   Some(TaxSituation.SAPAYE),
                   Some(YesNoAnswer.Yes),
                   Some(EntityType.Company),
+                  None,
                   None,
                   None,
                   None
@@ -370,6 +372,7 @@ class LicenceDetailsControllerSpec
               Some(EntityType.Individual),
               None,
               None,
+              None,
               None
             )
             val updatedAnswers = UserAnswers.empty.copy(licenceType = Some(LicenceType.ScrapMetalMobileCollector))
@@ -396,6 +399,7 @@ class LicenceDetailsControllerSpec
               Some(EntityType.Individual),
               None,
               None,
+              None,
               None
             )
             val updatedAnswers = UserAnswers.empty.copy(licenceType = Some(LicenceType.ScrapMetalMobileCollector))
@@ -419,6 +423,7 @@ class LicenceDetailsControllerSpec
               Some(TaxSituation.SA),
               Some(YesNoAnswer.Yes),
               Some(EntityType.Individual),
+              None,
               None,
               None,
               None
@@ -517,6 +522,7 @@ class LicenceDetailsControllerSpec
               Some(EntityType.Individual),
               None,
               None,
+              None,
               None
             )
             val session =
@@ -610,6 +616,7 @@ class LicenceDetailsControllerSpec
                 Some(TaxSituation.SA),
                 Some(YesNoAnswer.Yes),
                 Some(EntityType.Company),
+                None,
                 None,
                 None,
                 None
@@ -784,6 +791,7 @@ class LicenceDetailsControllerSpec
               Some(EntityType.Company),
               None,
               None,
+              None,
               None
             )
             val updatedAnswers = IncompleteUserAnswers(
@@ -793,6 +801,7 @@ class LicenceDetailsControllerSpec
               Some(TaxSituation.SA),
               Some(YesNoAnswer.Yes),
               Some(EntityType.Company),
+              None,
               None,
               None,
               None
@@ -909,6 +918,7 @@ class LicenceDetailsControllerSpec
                     Some(TaxSituation.SA),
                     Some(YesNoAnswer.Yes),
                     Some(EntityType.Individual),
+                    None,
                     None,
                     None,
                     None
@@ -1113,6 +1123,7 @@ class LicenceDetailsControllerSpec
               Some(EntityType.Individual),
               None,
               None,
+              None,
               None
             )
             val updatedAnswers = IncompleteUserAnswers(
@@ -1122,6 +1133,7 @@ class LicenceDetailsControllerSpec
               Some(TaxSituation.SA),
               Some(YesNoAnswer.Yes),
               Some(EntityType.Individual),
+              None,
               None,
               None,
               None

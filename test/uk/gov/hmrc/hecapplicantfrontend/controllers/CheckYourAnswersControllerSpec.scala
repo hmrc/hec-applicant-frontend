@@ -108,6 +108,7 @@ class CheckYourAnswersControllerSpec
           Some(EntityType.Individual),
           None,
           None,
+          None,
           None
         )
 
@@ -196,6 +197,7 @@ class CheckYourAnswersControllerSpec
         Some(TaxSituation.SA),
         Some(YesNoAnswer.Yes),
         Some(EntityType.Individual),
+        None,
         None,
         None,
         None

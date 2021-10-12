@@ -76,7 +76,8 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
     routes.CheckYourAnswersController.checkYourAnswers()                 -> (_ => routes.TaxCheckCompleteController.taxCheckComplete()),
     routes.CRNController.companyRegistrationNumber()                     -> companyRegistrationNumberRoute,
     routes.CompanyDetailsController.confirmCompanyDetails()              -> confirmCompanyDetailsRoute,
-    routes.CompanyDetailsController.chargeableForCorporationTax()        -> chargeableForCTRoute
+    routes.CompanyDetailsController.chargeableForCorporationTax()        -> chargeableForCTRoute,
+    routes.CompanyDetailsController.ctIncomeStatement()                  -> (_ => routes.CheckYourAnswersController.checkYourAnswers())
   )
 
   // map which describes routes from an exit page to their previous page. The keys are the exit page and the values are
@@ -175,7 +176,8 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
                 entityType,
                 crn,
                 companyDetailsConfirmed,
-                chargeableForCT
+                chargeableForCT,
+                ctIncomeDeclared
               ) if allAnswersComplete(incomplete, session) =>
             val completeAnswers =
               CompleteUserAnswers(
@@ -187,7 +189,8 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
                 entityType,
                 crn,
                 companyDetailsConfirmed,
-                chargeableForCT
+                chargeableForCT,
+                ctIncomeDeclared
               )
             session.fold(
               _.copy(userAnswers = completeAnswers),
@@ -353,12 +356,21 @@ object JourneyServiceImpl {
 
   private def checkCompanyDataComplete(
     chargeableForCT: YesNoAnswer,
+    ctIncomeDeclared: Option[YesNoAnswer],
     companySession: CompanyHECSession
   ): Boolean = {
-    val ctStatusIsNoticeToFileIssued = companySession.retrievedJourneyData.ctStatus
-      .exists(_.latestAccountingPeriod.exists(_.ctStatus === CTStatus.NoticeToFileIssued))
+    val ctStatus = companySession.retrievedJourneyData.ctStatus
+      .flatMap(_.latestAccountingPeriod.map(_.ctStatus))
 
-    (chargeableForCT === YesNoAnswer.No) || (chargeableForCT === YesNoAnswer.Yes && ctStatusIsNoticeToFileIssued)
+    chargeableForCT match {
+      case YesNoAnswer.Yes =>
+        ctStatus match {
+          case Some(CTStatus.NoticeToFileIssued) => true
+          case Some(_)                           => ctIncomeDeclared.nonEmpty
+          case None                              => false
+        }
+      case YesNoAnswer.No  => true
+    }
   }
 
   /**
@@ -384,6 +396,7 @@ object JourneyServiceImpl {
                 entityType,
                 _,
                 _,
+                _,
                 _
               ) =>
             val licenceTypeCheck      = checkEntityTypePresentIfRequired(licenceType, entityType)
@@ -402,13 +415,14 @@ object JourneyServiceImpl {
                 Some(_),
                 _,
                 _,
-                entityType,
+                Some(entityType),
                 Some(_),
                 Some(_),
-                Some(chargeableForCT)
+                Some(chargeableForCT),
+                ctIncomeDeclared
               ) =>
-            val licenceTypeCheck = checkEntityTypePresentIfRequired(licenceType, entityType)
-            val companyDataCheck = checkCompanyDataComplete(chargeableForCT, companySession)
+            val licenceTypeCheck = checkEntityTypePresentIfRequired(licenceType, Some(entityType))
+            val companyDataCheck = checkCompanyDataComplete(chargeableForCT, ctIncomeDeclared, companySession)
             licenceTypeCheck && companyDataCheck
 
           case _ => false

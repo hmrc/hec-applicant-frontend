@@ -1284,6 +1284,17 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
 
         }
 
+        "CT income statement page" in {
+          val session                                     = CompanyHECSession.newSession(companyLoginData)
+          implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+
+          val result = journeyService.updateAndNext(
+            routes.CompanyDetailsController.ctIncomeStatement(),
+            session
+          )
+          await(result.value) shouldBe Right(routes.CheckYourAnswersController.checkYourAnswers())
+        }
+
       }
 
       "convert incomplete answers to complete answers when all questions have been answered and" when {
@@ -1298,6 +1309,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             None,
             None,
             None,
+            None,
             None
           )
 
@@ -1307,6 +1319,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             Some(completeAnswers.licenceValidityPeriod),
             completeAnswers.taxSituation,
             completeAnswers.saIncomeDeclared,
+            None,
             None,
             None,
             None,
@@ -1349,6 +1362,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 Some(EntityType.Company),
                 None,
                 None,
+                None,
                 None
               )
 
@@ -1359,6 +1373,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 completeAnswers.taxSituation,
                 Some(YesNoAnswer.Yes),
                 Some(EntityType.Company),
+                None,
                 None,
                 None,
                 None
@@ -1405,6 +1420,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 None,
                 None,
                 None,
+                None,
                 None
               )
 
@@ -1415,6 +1431,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 completeAnswers.taxSituation,
                 completeAnswers.saIncomeDeclared,
                 completeAnswers.entityType,
+                None,
                 None,
                 None,
                 None
@@ -1456,6 +1473,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 None,
                 None,
                 None,
+                None,
                 None
               )
 
@@ -1466,6 +1484,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 completeAnswers.taxSituation,
                 completeAnswers.saIncomeDeclared,
                 completeAnswers.entityType,
+                None,
                 None,
                 None,
                 None
@@ -1504,6 +1523,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 None,
                 None,
                 None,
+                None,
                 None
               )
 
@@ -1514,6 +1534,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 completeAnswers.taxSituation,
                 completeAnswers.saIncomeDeclared,
                 completeAnswers.entityType,
+                None,
                 None,
                 None,
                 None
@@ -1549,6 +1570,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             Some(TaxSituation.PAYE),
             Some(YesNoAnswer.Yes),
             Some(EntityType.Company),
+            None,
             None,
             None,
             None
@@ -1927,6 +1949,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
               entityType,
               None,
               None,
+              None,
               None
             )
 
@@ -2178,6 +2201,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
               None,
               None,
               None,
+              None,
               None
             ),
             None,
@@ -2198,6 +2222,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             Some(TaxSituation.PAYE),
             Some(YesNoAnswer.Yes),
             Some(EntityType.Individual),
+            None,
             None,
             None,
             None
@@ -2234,6 +2259,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
           taxSituation = Some(TaxSituation.PAYE),
           saIncomeDeclared = None,
           entityType = None,
+          None,
           None,
           None,
           None
@@ -2406,6 +2432,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
           entityType = None,
           None,
           None,
+          None,
           None
         )
 
@@ -2493,45 +2520,60 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
           ) shouldBe true
         }
 
-        def testForChargeableForCtIsYes(status: CTStatus) = {
-          val date = LocalDate.now()
-          JourneyServiceImpl.allAnswersComplete(
-            incompleteUserAnswers = incompleteAnswersBase.copy(
-              entityType = Some(EntityType.Company),
-              taxSituation = None,
-              saIncomeDeclared = None,
-              crn = Some(CRN("1234567")),
-              companyDetailsConfirmed = Some(YesNoAnswer.Yes),
-              chargeableForCT = Some(YesNoAnswer.Yes)
-            ),
-            CompanyHECSession(
-              companyLoginData,
-              CompanyRetrievedJourneyData(
-                None,
-                None,
-                Some(
-                  CTStatusResponse(
-                    CTUTR("utr"),
-                    date,
-                    date,
-                    Some(CTAccountingPeriod(date, date, status))
-                  )
-                )
+        "chargeable for CT answer is Yes" must {
+          def testForChargeableForCtIsYes(
+            status: CTStatus,
+            ctIncomeDeclared: Option[YesNoAnswer],
+            expected: Boolean
+          ) = {
+            val date = LocalDate.now()
+            JourneyServiceImpl.allAnswersComplete(
+              incompleteUserAnswers = incompleteAnswersBase.copy(
+                entityType = Some(EntityType.Company),
+                taxSituation = None,
+                saIncomeDeclared = None,
+                crn = Some(CRN("1234567")),
+                companyDetailsConfirmed = Some(YesNoAnswer.Yes),
+                chargeableForCT = Some(YesNoAnswer.Yes),
+                ctIncomeDeclared = ctIncomeDeclared
               ),
-              UserAnswers.empty,
-              None,
-              None,
-              List.empty
-            )
-          ) shouldBe false
-        }
+              CompanyHECSession(
+                companyLoginData,
+                CompanyRetrievedJourneyData(
+                  None,
+                  None,
+                  Some(
+                    CTStatusResponse(
+                      CTUTR("utr"),
+                      date,
+                      date,
+                      Some(CTAccountingPeriod(date, date, status))
+                    )
+                  )
+                ),
+                UserAnswers.empty,
+                None,
+                None,
+                List.empty
+              )
+            ) shouldBe expected
+          }
 
-        "return true when chargeable for CT answer is Yes and CT status = ReturnFound" in {
-          testForChargeableForCtIsYes(CTStatus.ReturnFound)
-        }
+          "return false when CT status = ReturnFound & CT income declared answer is missing" in {
+            testForChargeableForCtIsYes(CTStatus.ReturnFound, None, false)
+          }
 
-        "return true when chargeable for CT answer is Yes and CT status = NoReturnFound" in {
-          testForChargeableForCtIsYes(CTStatus.NoReturnFound)
+          "return true when CT status = ReturnFound & CT income declared answer is present" in {
+            testForChargeableForCtIsYes(CTStatus.ReturnFound, Some(YesNoAnswer.Yes), true)
+          }
+
+          "return false when CT status = NoReturnFound & CT income declared answer is missing" in {
+            testForChargeableForCtIsYes(CTStatus.NoReturnFound, None, false)
+          }
+
+          "return false when CT status = NoReturnFound & CT income declared answer is present" in {
+            testForChargeableForCtIsYes(CTStatus.NoReturnFound, Some(YesNoAnswer.Yes), true)
+          }
         }
       }
 

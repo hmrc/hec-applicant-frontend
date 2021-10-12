@@ -182,6 +182,7 @@ class TaxSituationControllerSpec
                 None,
                 None,
                 None,
+                None,
                 None
               ),
               None,
@@ -845,6 +846,7 @@ class TaxSituationControllerSpec
               Some(EntityType.Individual),
               None,
               None,
+              None,
               None
             )
 
@@ -864,6 +866,7 @@ class TaxSituationControllerSpec
               Some(TaxSituation.PAYE),
               None,
               Some(EntityType.Individual),
+              None,
               None,
               None,
               None

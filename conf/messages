@@ -267,3 +267,11 @@ chargeableForCT.no = No
 chargeableForCT.error.required = Select yes if your company was chargeable for corporation tax for the accounting period ending {1}
 chargeableForCT.error.invalid = Select yes if your company was chargeable for corporation tax for the accounting period ending {1}
 chargeableForCT.link = Find out about accounting periods for Corporation Tax
+
+# CT Income Declared
+ctIncomeDeclared.title = Did you include all income your company earned using this type of licence in your tax return?
+ctIncomeDeclared.yes = Yes
+ctIncomeDeclared.no = No
+ctIncomeDeclared.error.required = Select whether you included income you earned using this type of licence in your tax return
+ctIncomeDeclared.error.invalid = Select whether you included income you earned using this type of licence in your tax return
+ctIncomeDeclared.hint = This is your Company Tax Return for the accounting period ending {0}.
