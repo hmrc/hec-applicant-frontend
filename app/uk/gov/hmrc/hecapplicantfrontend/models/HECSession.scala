@@ -27,6 +27,7 @@ trait HECSession extends Product with Serializable {
   val entityType: EntityType
   val userAnswers: UserAnswers
   val loginData: LoginData
+  val retrievedJourneyData: RetrievedJourneyData
   val completedTaxCheck: Option[HECTaxCheck]
   val taxCheckStartDateTime: Option[ZonedDateTime]
   val unexpiredTaxChecks: List[TaxCheckListItem]

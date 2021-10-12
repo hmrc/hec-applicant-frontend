@@ -104,13 +104,18 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
   override def updateAndNext(current: Call, updatedSession: HECSession)(implicit
     r: RequestWithSessionData[_],
     hc: HeaderCarrier
-  ): EitherT[Future, Error, Call] =
+  ): EitherT[Future, Error, Call] = {
+    val currentPageIsCYA: Boolean = current === routes.CheckYourAnswersController.checkYourAnswers()
     for {
       upliftedSession <- EitherT.fromEither[Future](upliftToCompleteAnswersIfComplete(updatedSession, current))
       next            <- EitherT.fromOption[Future](
                            upliftedSession.userAnswers.fold(
-                             _ => paths.get(current).map(_(upliftedSession)),
-                             _ => Some(routes.CheckYourAnswersController.checkYourAnswers())
+                             _ =>
+                               if (currentPageIsCYA) sys.error("All user answers are not complete")
+                               else paths.get(current).map(_(upliftedSession)),
+                             _ =>
+                               if (currentPageIsCYA) paths.get(current).map(_(upliftedSession))
+                               else Some(routes.CheckYourAnswersController.checkYourAnswers())
                            ),
                            Error(s"Could not find next for $current")
                          )
@@ -119,6 +124,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
                          else
                            sessionStore.store(upliftedSession).map(_ => next)
     } yield next
+  }
 
   override def previous(current: Call)(implicit
     r: RequestWithSessionData[_]

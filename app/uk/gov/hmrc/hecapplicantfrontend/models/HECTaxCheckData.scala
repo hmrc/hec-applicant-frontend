@@ -21,8 +21,11 @@ import uk.gov.hmrc.hecapplicantfrontend.models.ApplicantDetails.{CompanyApplican
 import uk.gov.hmrc.hecapplicantfrontend.models.TaxDetails.{CompanyTaxDetails, IndividualTaxDetails}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceDetails
 
+import java.time.ZonedDateTime
+
 sealed trait HECTaxCheckData extends Product with Serializable {
   val entityType: EntityType
+  val taxCheckStartDateTime: ZonedDateTime
 }
 
 object HECTaxCheckData {
@@ -30,7 +33,8 @@ object HECTaxCheckData {
   final case class IndividualHECTaxCheckData(
     applicantDetails: IndividualApplicantDetails,
     licenceDetails: LicenceDetails,
-    taxDetails: IndividualTaxDetails
+    taxDetails: IndividualTaxDetails,
+    taxCheckStartDateTime: ZonedDateTime
   ) extends HECTaxCheckData {
     val entityType: EntityType = EntityType.Individual
   }
@@ -38,7 +42,8 @@ object HECTaxCheckData {
   final case class CompanyHECTaxCheckData(
     applicantDetails: CompanyApplicantDetails,
     licenceDetails: LicenceDetails,
-    taxDetails: CompanyTaxDetails
+    taxDetails: CompanyTaxDetails,
+    taxCheckStartDateTime: ZonedDateTime
   ) extends HECTaxCheckData {
     val entityType: EntityType = EntityType.Company
   }

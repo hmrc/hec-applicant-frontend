@@ -21,7 +21,6 @@ import com.google.inject.{Inject, Singleton}
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
-import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.CompleteUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.services.{JourneyService, TaxCheckService}
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
@@ -61,10 +60,10 @@ class CheckYourAnswersController @Inject() (
     request.sessionData.userAnswers match {
       case c: CompleteUserAnswers =>
         val result = for {
-          taxCheck      <- taxCheckService.saveTaxCheck(request.sessionData.loginData, c)
+          taxCheck      <- taxCheckService.saveTaxCheck(request.sessionData, c)
           updatedSession = request.sessionData.fold(
-                             _.copy(userAnswers = UserAnswers.empty, completedTaxCheck = Some(taxCheck)),
-                             _.copy(userAnswers = UserAnswers.empty, completedTaxCheck = Some(taxCheck))
+                             _.copy(completedTaxCheck = Some(taxCheck)),
+                             _.copy(completedTaxCheck = Some(taxCheck))
                            )
           next          <- journeyService.updateAndNext(routes.CheckYourAnswersController.checkYourAnswers(), updatedSession)
         } yield next

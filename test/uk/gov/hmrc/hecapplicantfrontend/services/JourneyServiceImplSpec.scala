@@ -24,22 +24,27 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthenticatedRequest, RequestWithSessionData}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.{SessionSupport, routes}
-import uk.gov.hmrc.hecapplicantfrontend.models.EntityType.Company
+import uk.gov.hmrc.hecapplicantfrontend.models.EntityType.{Company, Individual}
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, IndividualHECSession}
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.{CompanyRetrievedJourneyData, IndividualRetrievedJourneyData}
+import uk.gov.hmrc.hecapplicantfrontend.models.TaxSituation.PAYE
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.{CompleteUserAnswers, IncompleteUserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models._
 import uk.gov.hmrc.hecapplicantfrontend.models.ids._
+import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType.DriverOfTaxisAndPrivateHires
+import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceValidityPeriod.UpToOneYear
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.http.HeaderCarrier
 
-import java.time.{LocalDate, ZonedDateTime}
+import java.time.{LocalDate, ZoneId, ZonedDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with SessionSupport {
 
   val journeyService: JourneyServiceImpl = new JourneyServiceImpl(mockSessionStore)
+
+  val taxCheckStartDateTime = ZonedDateTime.of(2021, 10, 9, 9, 12, 34, 0, ZoneId.of("Europe/London"))
 
   def requestWithSessionData(s: HECSession): RequestWithSessionData[_] =
     RequestWithSessionData(AuthenticatedRequest(FakeRequest()), s)
@@ -231,28 +236,66 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
 
         }
 
-        "the licence time trading page" in {
-          val session        = IndividualHECSession.newSession(individualLoginData)
-          val updatedSession =
-            IndividualHECSession(
-              individualLoginData,
-              IndividualRetrievedJourneyData.empty,
-              UserAnswers.empty.copy(licenceTimeTrading = Some(LicenceTimeTrading.TwoToFourYears)),
-              None,
-              None,
-              List.empty
+        "the licence time trading page" when {
+
+          "when all user answers are not complete" in {
+            val session        = IndividualHECSession.newSession(individualLoginData)
+            val updatedSession =
+              IndividualHECSession(
+                individualLoginData,
+                IndividualRetrievedJourneyData.empty,
+                UserAnswers.empty.copy(licenceTimeTrading = Some(LicenceTimeTrading.TwoToFourYears)),
+                None,
+                None,
+                List.empty
+              )
+
+            implicit val request: RequestWithSessionData[_] =
+              requestWithSessionData(session)
+
+            mockStoreSession(updatedSession)(Right(()))
+
+            val result = journeyService.updateAndNext(
+              routes.LicenceDetailsController.licenceTimeTrading(),
+              updatedSession
             )
+            await(result.value) shouldBe Right(routes.LicenceDetailsController.recentLicenceLength())
+          }
 
-          implicit val request: RequestWithSessionData[_] =
-            requestWithSessionData(session)
+          "when all user answers are complete" in {
+            val session        = IndividualHECSession.newSession(individualLoginData)
+            val updatedSession =
+              IndividualHECSession(
+                individualLoginData,
+                IndividualRetrievedJourneyData.empty,
+                CompleteUserAnswers(
+                  licenceType = DriverOfTaxisAndPrivateHires,
+                  licenceTimeTrading = LicenceTimeTrading.TwoToFourYears,
+                  licenceValidityPeriod = UpToOneYear,
+                  taxSituation = Some(PAYE),
+                  saIncomeDeclared = Some(YesNoAnswer.Yes),
+                  entityType = Some(Individual),
+                  crn = None,
+                  companyDetailsConfirmed = None,
+                  chargeableForCT = None
+                ),
+                None,
+                Some(taxCheckStartDateTime),
+                List.empty
+              )
 
-          mockStoreSession(updatedSession)(Right(()))
+            implicit val request: RequestWithSessionData[_] =
+              requestWithSessionData(session)
 
-          val result = journeyService.updateAndNext(
-            routes.LicenceDetailsController.licenceTimeTrading(),
-            updatedSession
-          )
-          await(result.value) shouldBe Right(routes.LicenceDetailsController.recentLicenceLength())
+            mockStoreSession(updatedSession)(Right(()))
+
+            val result = journeyService.updateAndNext(
+              routes.LicenceDetailsController.licenceTimeTrading(),
+              updatedSession
+            )
+            await(result.value) shouldBe Right(routes.CheckYourAnswersController.checkYourAnswers())
+          }
+
         }
 
         "the licence validity period page and" when {
@@ -709,16 +752,56 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
           await(result.value) shouldBe Right(routes.CheckYourAnswersController.checkYourAnswers())
         }
 
-        "the check your answers page" in {
-          val session                                     = IndividualHECSession.newSession(individualLoginData)
-          implicit val request: RequestWithSessionData[_] =
-            requestWithSessionData(session)
+        "the check your answers page" when {
 
-          val result = journeyService.updateAndNext(
-            routes.CheckYourAnswersController.checkYourAnswers(),
-            session
-          )
-          await(result.value) shouldBe Right(routes.TaxCheckCompleteController.taxCheckComplete())
+          "all user answers are not complete" in {
+            val session                                     = IndividualHECSession.newSession(individualLoginData)
+            implicit val request: RequestWithSessionData[_] =
+              requestWithSessionData(session)
+
+            assertThrows[RuntimeException](
+              await(
+                journeyService
+                  .updateAndNext(
+                    routes.CheckYourAnswersController.checkYourAnswers(),
+                    session
+                  )
+                  .value
+              )
+            )
+
+          }
+
+          "all user answers are complete" in {
+            val session                                     = IndividualHECSession(
+              individualLoginData,
+              IndividualRetrievedJourneyData.empty,
+              CompleteUserAnswers(
+                licenceType = DriverOfTaxisAndPrivateHires,
+                licenceTimeTrading = LicenceTimeTrading.TwoToFourYears,
+                licenceValidityPeriod = UpToOneYear,
+                taxSituation = Some(PAYE),
+                saIncomeDeclared = Some(YesNoAnswer.Yes),
+                entityType = Some(Individual),
+                crn = None,
+                companyDetailsConfirmed = None,
+                chargeableForCT = None
+              ),
+              None,
+              Some(taxCheckStartDateTime),
+              List.empty
+            )
+            implicit val request: RequestWithSessionData[_] =
+              requestWithSessionData(session)
+
+            val result = journeyService.updateAndNext(
+              routes.CheckYourAnswersController.checkYourAnswers(),
+              session
+            )
+            await(result.value) shouldBe Right(routes.TaxCheckCompleteController.taxCheckComplete())
+
+          }
+
         }
 
         "the company registration number page" when {

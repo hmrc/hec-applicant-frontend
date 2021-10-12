@@ -16,13 +16,13 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models
 
-import java.time.LocalDate
-
+import java.time.{LocalDate, ZoneId, ZonedDateTime}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.Json
 import uk.gov.hmrc.hecapplicantfrontend.models.ApplicantDetails.{CompanyApplicantDetails, IndividualApplicantDetails}
 import uk.gov.hmrc.hecapplicantfrontend.models.HECTaxCheckData.{CompanyHECTaxCheckData, IndividualHECTaxCheckData}
+import uk.gov.hmrc.hecapplicantfrontend.models.SAStatus.ReturnFound
 import uk.gov.hmrc.hecapplicantfrontend.models.TaxDetails.{CompanyTaxDetails, IndividualTaxDetails}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CTUTR, GGCredId, NINO, SAUTR}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
@@ -30,7 +30,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceDetails, LicenceT
 class HECTaxCheckDataSpec extends AnyWordSpec with Matchers {
 
   "HECTaxCheckData" must {
-
+    val taxCheckStartDateTime = ZonedDateTime.of(2021, 10, 9, 9, 12, 34, 0, ZoneId.of("Europe/London"))
     "perform JSON de/serialisation correctly" must {
       val dateOfBirthStr = "20001010"
       val dateOfBirth    = LocalDate.of(2000, 10, 10)
@@ -51,8 +51,10 @@ class HECTaxCheckDataSpec extends AnyWordSpec with Matchers {
             NINO("nino"),
             Some(SAUTR("utr")),
             Some(TaxSituation.SA),
-            Some(YesNoAnswer.Yes)
-          )
+            Some(YesNoAnswer.Yes),
+            Some(SAStatusResponse(SAUTR("12345"), TaxYear(2021), ReturnFound))
+          ),
+          taxCheckStartDateTime
         )
 
       val individualJson = Json.parse(s"""{
@@ -73,8 +75,14 @@ class HECTaxCheckDataSpec extends AnyWordSpec with Matchers {
           |    "nino":"nino",
           |    "sautr":"utr",
           |    "taxSituation":"SA",
-          |    "saIncomeDeclared":"Yes"
+          |    "saIncomeDeclared":"Yes",
+          |    "saStatusResponse" : {
+          |    "sautr": "12345",
+          |    "taxYear": 2021,
+          |    "status":"ReturnFound"
+          |    }
           | },
+          | "taxCheckStartDateTime" : "2021-10-09T09:12:34+01:00[Europe/London]",
           | "type":"Individual"
           |}""".stripMargin)
 
@@ -90,7 +98,8 @@ class HECTaxCheckDataSpec extends AnyWordSpec with Matchers {
           ),
           CompanyTaxDetails(
             CTUTR("utr")
-          )
+          ),
+          taxCheckStartDateTime
         )
 
       val companyJson = Json.parse("""{
@@ -105,6 +114,7 @@ class HECTaxCheckDataSpec extends AnyWordSpec with Matchers {
           | "taxDetails":{
           |   "ctutr":"utr"
           | },
+          | "taxCheckStartDateTime" : "2021-10-09T09:12:34+01:00[Europe/London]",
           | "type":"Company"
           |}""".stripMargin)
 

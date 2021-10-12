@@ -169,6 +169,8 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
           inSequence {
             mockAuthWithRetrievals(ConfidenceLevel.L50, None, None, None, None, Enrolments(Set.empty), None)
             mockGetSession(session)
+            mockGetUnexpiredTaxCheckCodes(Right(List.empty))
+            mockStoreSession(session)(Right(()))
             mockFirstPge(session)(mockNextCall)
           }
 
@@ -502,7 +504,6 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
               )
               mockGetSession(Right(None))
               mockGetCitizenDetails(completeIndividualLoginData.nino)(Left(Error("")))
-              mockGetUnexpiredTaxCheckCodes(Right(List.empty))
             }
           )
         }
@@ -573,7 +574,6 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
               )
               mockGetSession(Right(None))
               mockGetCitizenDetails(completeIndividualLoginData.nino)(Right(citizenDetails))
-              mockGetUnexpiredTaxCheckCodes(Right(List.empty))
             }
           )
         }

@@ -25,8 +25,10 @@ import play.api.libs.json.Json
 import play.api.test.Helpers._
 import uk.gov.hmrc.hecapplicantfrontend.connectors.HECConnector
 import uk.gov.hmrc.hecapplicantfrontend.models.ApplicantDetails.IndividualApplicantDetails
+import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.IndividualHECSession
 import uk.gov.hmrc.hecapplicantfrontend.models.HECTaxCheckData.IndividualHECTaxCheckData
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.IndividualLoginData
+import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.IndividualRetrievedJourneyData
 import uk.gov.hmrc.hecapplicantfrontend.models.TaxDetails.IndividualTaxDetails
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.CompleteUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.ids._
@@ -35,14 +37,14 @@ import uk.gov.hmrc.hecapplicantfrontend.models.{CTAccountingPeriod, CTStatus, CT
 import uk.gov.hmrc.hecapplicantfrontend.services.TaxCheckService._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 
-import java.time.{LocalDate, ZonedDateTime}
+import java.time.{LocalDate, ZoneId, ZonedDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory {
 
   val mockHECConnector = mock[HECConnector]
-
-  val service = new TaxCheckServiceImpl(mockHECConnector)
+  val zonedDateTimeNow = ZonedDateTime.of(2021, 10, 9, 9, 12, 34, 0, ZoneId.of("Europe/London"))
+  val service          = new TaxCheckServiceImpl(mockHECConnector)
 
   def mockSaveTaxCheck(taxCheckData: HECTaxCheckData)(result: Either[Error, HttpResponse]) =
     (mockHECConnector
@@ -105,6 +107,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         None
       )
 
+      val retrievedJourneyData = IndividualRetrievedJourneyData(None)
+
       val individualTaxCheckData = IndividualHECTaxCheckData(
         IndividualApplicantDetails(
           individualLoginData.ggCredId,
@@ -120,34 +124,53 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
           individualLoginData.nino,
           Some(sautr),
           completeAnswers.taxSituation,
-          completeAnswers.saIncomeDeclared
-        )
+          completeAnswers.saIncomeDeclared,
+          None
+        ),
+        zonedDateTimeNow
       )
 
       val taxCheckCode = HECTaxCheckCode("code")
       val taxCheck     = HECTaxCheck(taxCheckCode, LocalDate.now().plusDays(2L))
       val taxCheckJson = Json.toJson(taxCheck)
 
+      val individualSession  = IndividualHECSession(
+        individualLoginData,
+        retrievedJourneyData,
+        completeAnswers,
+        None,
+        Some(zonedDateTimeNow),
+        List.empty
+      )
+      val individualSession2 = IndividualHECSession(
+        individualLoginData,
+        retrievedJourneyData,
+        completeAnswers,
+        None,
+        None,
+        List.empty
+      )
+
       "return an error" when {
 
         "the http call fails" in {
           mockSaveTaxCheck(individualTaxCheckData)(Left(Error("")))
 
-          val result = service.saveTaxCheck(individualLoginData, completeAnswers)
+          val result = service.saveTaxCheck(individualSession, completeAnswers)
           await(result.value) shouldBe a[Left[_, _]]
         }
 
         "the http response does not come back with status 201 (created)" in {
           mockSaveTaxCheck(individualTaxCheckData)(Right(HttpResponse(OK, taxCheckJson, emptyHeaders)))
 
-          val result = service.saveTaxCheck(individualLoginData, completeAnswers)
+          val result = service.saveTaxCheck(individualSession, completeAnswers)
           await(result.value) shouldBe a[Left[_, _]]
         }
 
         "there is no json in the response" in {
           mockSaveTaxCheck(individualTaxCheckData)(Right(HttpResponse(CREATED, "hi")))
 
-          val result = service.saveTaxCheck(individualLoginData, completeAnswers)
+          val result = service.saveTaxCheck(individualSession, completeAnswers)
           await(result.value) shouldBe a[Left[_, _]]
         }
 
@@ -155,8 +178,14 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
           val json = Json.parse("""{ "a" : 1 }""")
           mockSaveTaxCheck(individualTaxCheckData)(Right(HttpResponse(CREATED, json, emptyHeaders)))
 
-          val result = service.saveTaxCheck(individualLoginData, completeAnswers)
+          val result = service.saveTaxCheck(individualSession, completeAnswers)
           await(result.value) shouldBe a[Left[_, _]]
+        }
+
+        "there is no taxCheckStartDateTime in the session" in {
+
+          assertThrows[RuntimeException](await(service.saveTaxCheck(individualSession2, completeAnswers).value))
+
         }
 
       }
@@ -166,7 +195,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         "the tax check has been saved and the json response can be parsed" in {
           mockSaveTaxCheck(individualTaxCheckData)(Right(HttpResponse(CREATED, taxCheckJson, emptyHeaders)))
 
-          val result = service.saveTaxCheck(individualLoginData, completeAnswers)
+          val result = service.saveTaxCheck(individualSession, completeAnswers)
           await(result.value) shouldBe Right(taxCheck)
         }
 

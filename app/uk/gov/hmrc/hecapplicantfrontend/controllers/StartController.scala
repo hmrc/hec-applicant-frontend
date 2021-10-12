@@ -33,7 +33,7 @@ import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.AuthWithRetrievalsAc
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, IndividualHECSession}
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CTUTR, GGCredId, NINO, SAUTR}
-import uk.gov.hmrc.hecapplicantfrontend.models.{CitizenDetails, EmailAddress, Error, HECSession, RetrievedGGData, TaxCheckListItem}
+import uk.gov.hmrc.hecapplicantfrontend.models.{CitizenDetails, EmailAddress, Error, LoginData, RetrievedGGData}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.{CitizenDetailsService, JourneyService, TaxCheckService}
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
@@ -61,8 +61,21 @@ class StartController @Inject() (
   val start: Action[AnyContent] = authWithRetrievalsAction.async { implicit request =>
     val result = for {
       maybeStoredSession <- sessionStore.get().leftMap(BackendError)
-      session            <- maybeStoredSession.fold(handleNoSessionData(request.retrievedGGUserData))(EitherT.pure(_))
-    } yield session
+      loginData          <- maybeStoredSession.fold(handleNoSessionData(request.retrievedGGUserData))(storedSession =>
+                              EitherT.pure(storedSession.fold(_.loginData, _.loginData))
+                            )
+      existingTaxChecks  <- taxCheckService
+                              .getUnexpiredTaxCheckCodes()
+                              .leftMap(BackendError(_): StartError)
+      newSession          = loginData match {
+                              case i: IndividualLoginData =>
+                                IndividualHECSession.newSession(i).copy(unexpiredTaxChecks = existingTaxChecks)
+                              case c: CompanyLoginData    =>
+                                CompanyHECSession.newSession(c).copy(unexpiredTaxChecks = existingTaxChecks)
+
+                            }
+      _                  <- sessionStore.store(newSession).leftMap(BackendError(_): StartError)
+    } yield newSession
 
     result.fold(
       {
@@ -92,16 +105,7 @@ class StartController @Inject() (
 
   private def handleNoSessionData(
     retrievedGGData: RetrievedGGData
-  )(implicit request: Request[_]): EitherT[Future, StartError, HECSession] =
-    for {
-
-      session <- buildNewSession(retrievedGGData)
-      _       <- sessionStore.store(session).leftMap(BackendError(_): StartError)
-    } yield session
-
-  private def buildNewSession(
-    retrievedGGData: RetrievedGGData
-  )(implicit hc: HeaderCarrier): EitherT[Future, StartError, HECSession] = {
+  )(implicit request: Request[_]): EitherT[Future, StartError, LoginData] = {
     val RetrievedGGData(cl, affinityGroup, maybeNino, maybeSautr, maybeEmail, enrolments, creds) =
       retrievedGGData
 
@@ -148,13 +152,12 @@ class StartController @Inject() (
     ggCredId: GGCredId
   )(implicit
     hc: HeaderCarrier
-  ): EitherT[Future, StartError, HECSession] = {
+  ): EitherT[Future, StartError, LoginData] = {
 
     def validateSautrAndBuildIndividualData(
       citizenDetails: CitizenDetails,
-      taxChecks: List[TaxCheckListItem],
       nino: String
-    ): EitherT[Future, StartError, IndividualHECSession] = {
+    ): EitherT[Future, StartError, LoginData] = {
       val sautrValidation = citizenDetails.sautr match {
         case Some(s) => Valid(Some(s))
         case None    =>
@@ -163,11 +166,11 @@ class StartController @Inject() (
             .sequence[Validated[String, *], SAUTR]
       }
 
-      val eitherResult = sautrValidation
-        .bimap[StartError, IndividualHECSession](
+      val eitherResult: Either[StartError, LoginData] = sautrValidation
+        .bimap[StartError, LoginData](
           DataError,
-          { sautr =>
-            val loginData = IndividualLoginData(
+          sautr =>
+            IndividualLoginData(
               GGCredId(ggCredId.value),
               NINO(nino),
               sautr,
@@ -175,9 +178,6 @@ class StartController @Inject() (
               citizenDetails.dateOfBirth,
               maybeEmail.map(EmailAddress(_))
             )
-            IndividualHECSession.newSession(loginData).copy(unexpiredTaxChecks = taxChecks)
-
-          }
         )
         .toEither
       EitherT.fromEither[Future](eitherResult)
@@ -194,14 +194,10 @@ class StartController @Inject() (
           val citizenDetailsFut = citizenDetailsService
             .getCitizenDetails(NINO(nino))
             .leftMap(BackendError(_): StartError)
-          val taxChecksFut      = taxCheckService
-            .getUnexpiredTaxCheckCodes()
-            .leftMap(BackendError(_): StartError)
 
           for {
             citizenDetails <- citizenDetailsFut
-            taxChecks      <- taxChecksFut
-            result         <- validateSautrAndBuildIndividualData(citizenDetails, taxChecks, nino)
+            result         <- validateSautrAndBuildIndividualData(citizenDetails, nino)
           } yield result
       }
     }
@@ -211,9 +207,7 @@ class StartController @Inject() (
     maybeEmail: Option[String],
     enrolments: Enrolments,
     ggCredId: GGCredId
-  )(implicit
-    hc: HeaderCarrier
-  ): EitherT[Future, StartError, HECSession] = {
+  ): EitherT[Future, StartError, LoginData] = {
     val ctutrValidation = enrolments.enrolments
       .find(_.key === EnrolmentConfig.CTEnrolment.key)
       .flatMap(
@@ -222,19 +216,15 @@ class StartController @Inject() (
         )
       )
       .sequence[Validated[String, *], CTUTR]
+
+    val eitherResult = ctutrValidation
+      .bimap[StartError, LoginData](
+        DataError,
+        ctutrOpt => CompanyLoginData(GGCredId(ggCredId.value), ctutrOpt, maybeEmail.map(EmailAddress(_)))
+      )
       .toEither
 
-    for {
-      maybeCtutr <- EitherT.fromEither[Future](ctutrValidation).leftMap(DataError)
-      taxChecks  <- taxCheckService.getUnexpiredTaxCheckCodes().leftMap(BackendError(_): StartError)
-    } yield {
-      val loginData = CompanyLoginData(
-        GGCredId(ggCredId.value),
-        maybeCtutr,
-        maybeEmail.map(EmailAddress(_))
-      )
-      CompanyHECSession.newSession(loginData).copy(unexpiredTaxChecks = taxChecks)
-    }
+    EitherT.fromEither[Future](eitherResult)
   }
 
   private def withGGCredentials[A](

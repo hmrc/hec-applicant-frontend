@@ -35,7 +35,7 @@ import uk.gov.hmrc.hecapplicantfrontend.services.{JourneyService, TaxCheckServic
 import uk.gov.hmrc.http.HeaderCarrier
 
 import collection.JavaConverters._
-import java.time.LocalDate
+import java.time.{LocalDate, ZoneId, ZonedDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class CheckYourAnswersControllerSpec
@@ -46,6 +46,8 @@ class CheckYourAnswersControllerSpec
     with AuthAndSessionDataBehaviour {
 
   val mockTaxCheckService = mock[TaxCheckService]
+
+  val zonedDateTimeNow = ZonedDateTime.of(2021, 10, 9, 9, 12, 34, 0, ZoneId.of("Europe/London"))
 
   override def overrideBindings = List(
     bind[AuthConnector].toInstance(mockAuthConnector),
@@ -62,12 +64,15 @@ class CheckYourAnswersControllerSpec
   val companyLoginData =
     CompanyLoginData(GGCredId(""), None, None)
 
-  def mockSaveTaxCheck(loginData: LoginData, completeAnswers: CompleteUserAnswers)(
+  def mockSaveTaxCheck(
+    HECSession: HECSession,
+    completeAnswers: CompleteUserAnswers
+  )(
     result: Either[Error, HECTaxCheck]
   ) =
     (mockTaxCheckService
-      .saveTaxCheck(_: LoginData, _: CompleteUserAnswers)(_: HeaderCarrier))
-      .expects(loginData, completeAnswers, *)
+      .saveTaxCheck(_: HECSession, _: CompleteUserAnswers)(_: HeaderCarrier))
+      .expects(HECSession, completeAnswers, *)
       .returning(EitherT.fromEither(result))
 
   "CheckYourAnswersController" when {
@@ -202,21 +207,11 @@ class CheckYourAnswersControllerSpec
           IndividualRetrievedJourneyData.empty,
           completeAnswers,
           None,
-          None,
+          Some(zonedDateTimeNow),
           List.empty
         )
 
       val hecTaxCheck = HECTaxCheck(HECTaxCheckCode(""), LocalDate.now())
-
-      val updatedSession =
-        IndividualHECSession(
-          individualLoginData,
-          IndividualRetrievedJourneyData.empty,
-          UserAnswers.empty,
-          Some(hecTaxCheck),
-          None,
-          List.empty
-        )
 
       "return an InternalServerError" when {
 
@@ -242,7 +237,9 @@ class CheckYourAnswersControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockSaveTaxCheck(session.loginData, completeAnswers)(Left(Error(new Exception("Oh no!"))))
+            mockSaveTaxCheck(session, completeAnswers)(
+              Left(Error(new Exception("Oh no!")))
+            )
           }
 
           status(performAction()) shouldBe INTERNAL_SERVER_ERROR
@@ -250,10 +247,12 @@ class CheckYourAnswersControllerSpec
         }
 
         "there is an error updating the session" in {
+
+          val updatedSession = session.copy(completedTaxCheck = Some(hecTaxCheck))
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockSaveTaxCheck(session.loginData, completeAnswers)(Right(hecTaxCheck))
+            mockSaveTaxCheck(session, completeAnswers)(Right(hecTaxCheck))
             mockJourneyServiceUpdateAndNext(
               routes.CheckYourAnswersController.checkYourAnswers(),
               session,
@@ -269,10 +268,12 @@ class CheckYourAnswersControllerSpec
       "redirect to the next page" when {
 
         "the tax check has successfully been saved" in {
+
+          val updatedSession = session.copy(completedTaxCheck = Some(hecTaxCheck))
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockSaveTaxCheck(session.loginData, completeAnswers)(Right(hecTaxCheck))
+            mockSaveTaxCheck(session, completeAnswers)(Right(hecTaxCheck))
             mockJourneyServiceUpdateAndNext(
               routes.CheckYourAnswersController.checkYourAnswers(),
               session,
