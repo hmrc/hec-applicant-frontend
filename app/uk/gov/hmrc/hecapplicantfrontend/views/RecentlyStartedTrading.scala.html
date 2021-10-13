@@ -45,9 +45,9 @@
       fieldset = Some(Fieldset(
         legend = Some(Legend(
           content = Text(title),
-          classes = "govuk-visually-hidden"
-        )),
-        attributes = Map("aria-describedby" -> "company-name")
+          classes = "govuk-fieldset__legend--xl",
+          isPageHeading = true
+        ))
       )),
       idPrefix = Some(key),
       name = key,
