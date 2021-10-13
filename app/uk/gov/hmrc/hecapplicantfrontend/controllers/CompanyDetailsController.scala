@@ -232,7 +232,7 @@ class CompanyDetailsController @Inject() (
           val chargeableForCT = request.sessionData.userAnswers.fold(_.chargeableForCT, _.chargeableForCT)
           val endDateStr      = TimeUtils.govDisplayFormat(latestAccountingPeriod.endDate)
           val form = {
-            val emptyForm = CompanyDetailsController.chargeableForCTForm(YesNoAnswer.values, List(endDateStr))
+            val emptyForm = CompanyDetailsController.yesNoForm("chargeableForCT", YesNoAnswer.values, List(endDateStr))
             chargeableForCT.fold(emptyForm)(emptyForm.fill)
           }
           Ok(
@@ -271,7 +271,7 @@ class CompanyDetailsController @Inject() (
         ensureCompanyDataHasCTStatusAccountingPeriod(companySession) { latestAccountingPeriod =>
           val endDateStr = TimeUtils.govDisplayFormat(latestAccountingPeriod.endDate)
           CompanyDetailsController
-            .chargeableForCTForm(YesNoAnswer.values, List(endDateStr))
+            .yesNoForm("chargeableForCT", YesNoAnswer.values, List(endDateStr))
             .bindFromRequest()
             .fold(
               formWithErrors =>
@@ -400,10 +400,10 @@ class CompanyDetailsController @Inject() (
 
 object CompanyDetailsController {
 
-  def yesNoForm(mappingName: String, options: List[YesNoAnswer]): Form[YesNoAnswer] =
+  def yesNoForm(mappingName: String, options: List[YesNoAnswer], errorMsgArgs: List[String] = Nil): Form[YesNoAnswer] =
     Form(
       mapping(
-        mappingName -> of(FormUtils.radioFormFormatter(options))
+        mappingName -> of(FormUtils.radioFormFormatter(options, errorMsgArgs))
       )(identity)(Some(_))
     )
 
@@ -415,19 +415,5 @@ object CompanyDetailsController {
     */
   def calculateLookbackPeriod(today: LocalDate): (LocalDate, LocalDate) =
     today.minusYears(2).plusDays(1) -> today.minusYears(1)
-
-  def chargeableForCTForm(options: List[YesNoAnswer], errorMsgArgs: List[String]): Form[YesNoAnswer] =
-    Form(
-      mapping(
-        "chargeableForCT" -> of(FormUtils.radioFormFormatter(options, errorMsgArgs))
-      )(identity)(Some(_))
-    )
-
-  def ctIncomeStatementForm(options: List[YesNoAnswer]): Form[YesNoAnswer] =
-    Form(
-      mapping(
-        "ctIncomeDeclared" -> of(FormUtils.radioFormFormatter(options))
-      )(identity)(Some(_))
-    )
 
 }

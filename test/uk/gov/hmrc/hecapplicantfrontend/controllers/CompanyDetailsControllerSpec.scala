@@ -970,6 +970,234 @@ class CompanyDetailsControllerSpec
       }
 
     }
+
+    "handling requests to recently started trading page " must {
+
+      val date                              = LocalDate.of(2020, 10, 5)
+      val recentlyStartedTradingRoute       = routes.CompanyDetailsController.recentlyStartedTrading()
+      val recentlyStartedTradingSubmitRoute = routes.CompanyDetailsController.recentlyStartedTradingSubmit()
+
+      def performAction(): Future[Result] = controller.recentlyStartedTrading(FakeRequest())
+
+      "display the page" when {
+        val companyData = retrievedJourneyDataWithCompanyName.copy(
+          ctStatus = Some(
+            CTStatusResponse(
+              CTUTR("utr"),
+              date,
+              date,
+              None
+            )
+          )
+        )
+
+        "the user has not previously answered the question " in {
+
+          val session = CompanyHECSession(companyLoginData, companyData, UserAnswers.empty, None, None, List.empty)
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockJourneyServiceGetPrevious(recentlyStartedTradingRoute, session)(mockPreviousCall)
+          }
+
+          checkPageIsDisplayed(
+            performAction(),
+            messageFromMessageKey("recentlyStartedTrading.title"),
+            { doc =>
+              doc.select("#back").attr("href") shouldBe mockPreviousCall.url
+
+              val selectedOptions = doc.select(".govuk-radios__input[checked]")
+              selectedOptions.isEmpty shouldBe true
+
+              val button = doc.select("form")
+              button.attr("action") shouldBe recentlyStartedTradingSubmitRoute.url
+            }
+          )
+
+        }
+
+        "the user has previously answered the question" in {
+
+          val answers = CompleteUserAnswers(
+            licenceType = LicenceType.OperatorOfPrivateHireVehicles,
+            licenceTimeTrading = LicenceTimeTrading.ZeroToTwoYears,
+            licenceValidityPeriod = LicenceValidityPeriod.UpToOneYear,
+            taxSituation = None,
+            saIncomeDeclared = None,
+            entityType = None,
+            crn = None,
+            companyDetailsConfirmed = Some(YesNoAnswer.Yes),
+            chargeableForCT = None,
+            ctIncomeDeclared = None,
+            recentlyStartedTrading = Some(YesNoAnswer.Yes)
+          )
+          val session = CompanyHECSession(companyLoginData, companyData, answers, None, None, List.empty)
+
+          val updatedAnswers = IncompleteUserAnswers
+            .fromCompleteAnswers(answers)
+            .copy(recentlyStartedTrading = Some(YesNoAnswer.No))
+          val updatedSession = session.copy(userAnswers = updatedAnswers)
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(updatedSession)
+            mockJourneyServiceGetPrevious(recentlyStartedTradingRoute, updatedSession)(mockPreviousCall)
+          }
+          checkPageIsDisplayed(
+            performAction(),
+            messageFromMessageKey("recentlyStartedTrading.title"),
+            { doc =>
+              doc.select("#back").attr("href") shouldBe mockPreviousCall.url
+              val selectedOptions = doc.select(".govuk-radios__input[checked]")
+              selectedOptions.attr("value") shouldBe "1"
+
+              val button = doc.select("form")
+              button.attr("action") shouldBe recentlyStartedTradingRoute.url
+            }
+          )
+
+        }
+
+      }
+
+      "return internal server error" when {
+
+        "applicant is individual" in {
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(individualSession)
+          }
+
+          assertThrows[RuntimeException](await(performAction()))
+        }
+
+      }
+    }
+
+    "handling submit on the recently started trading page" must {
+
+      val date                        = LocalDate.of(2020, 10, 5)
+      val recentlyStartedTradingRoute = routes.CompanyDetailsController.recentlyStartedTrading()
+      val validJourneyData            = retrievedJourneyDataWithCompanyName.copy(
+        ctStatus = Some(
+          CTStatusResponse(CTUTR("utr"), date, date, None)
+        )
+      )
+
+      def performAction(data: (String, String)*): Future[Result] =
+        controller.recentlyStartedTradingSubmit(FakeRequest().withFormUrlEncodedBody(data: _*))
+
+      behave like authAndSessionDataBehaviour(() => performAction())
+
+      "show a form error" when {
+        val session = CompanyHECSession(
+          companyLoginData,
+          validJourneyData,
+          UserAnswers.empty.copy(crn = Some(CRN("crn"))),
+          None,
+          None,
+          List.empty
+        )
+
+        def test(formAnswer: (String, String)*) = {
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockJourneyServiceGetPrevious(recentlyStartedTradingRoute, session)(mockPreviousCall)
+          }
+
+          checkFormErrorIsDisplayed(
+            performAction(formAnswer: _*),
+            messageFromMessageKey("recentlyStartedTrading.title"),
+            messageFromMessageKey("recentlyStartedTrading.error.required")
+          )
+        }
+
+        "nothing has been submitted" in {
+          test()
+        }
+
+        "an invalid index value is submitted" in {
+          test("recentlyStartedTrading" -> Int.MaxValue.toString)
+        }
+
+        "a non-numeric value is submitted" in {
+          test("recentlyStartedTrading" -> "xyz")
+        }
+      }
+
+      "return an internal server error" when {
+
+        "the applicant type is individual" in {
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(individualSession)
+          }
+
+          assertThrows[RuntimeException](await(performAction()))
+        }
+
+        "the call to update and next fails" in {
+          val answers = UserAnswers.empty.copy(crn = Some(CRN("crn")))
+          val session = CompanyHECSession(
+            companyLoginData,
+            retrievedJourneyDataWithCompanyName.copy(
+              ctStatus = Some(
+                CTStatusResponse(CTUTR("utr"), date, date, Some(CTAccountingPeriod(date, date, CTStatus.ReturnFound)))
+              )
+            ),
+            answers,
+            None,
+            None,
+            List.empty
+          )
+
+          val updatedAnswers = answers.copy(recentlyStartedTrading = Some(YesNoAnswer.Yes))
+          val updatedSession = session.copy(userAnswers = updatedAnswers)
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockJourneyServiceUpdateAndNext(
+              recentlyStartedTradingRoute,
+              session,
+              updatedSession
+            )(
+              Left(Error("update and next failed"))
+            )
+          }
+
+          status(performAction("recentlyStartedTrading" -> "0")) shouldBe INTERNAL_SERVER_ERROR
+        }
+
+      }
+
+      "redirect to the next page" when {
+
+        "user gives a valid answer" in {
+          val answers = UserAnswers.empty.copy(crn = Some(CRN("crn")))
+          val session = CompanyHECSession(companyLoginData, validJourneyData, answers, None, None, List.empty)
+
+          val updatedAnswers = answers.copy(recentlyStartedTrading = Some(YesNoAnswer.No))
+          val updatedSession = session.copy(userAnswers = updatedAnswers)
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockJourneyServiceUpdateAndNext(
+              recentlyStartedTradingRoute,
+              session,
+              updatedSession
+            )(Right(mockNextCall))
+          }
+
+          checkIsRedirect(performAction("recentlyStartedTrading" -> "1"), mockNextCall)
+        }
+
+      }
+
+    }
   }
 
 }
