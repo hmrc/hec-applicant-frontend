@@ -24,16 +24,15 @@ import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{await, defaultAwaitTimeout, status}
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, IndividualHECSession}
-import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
-import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.{CompanyRetrievedJourneyData, IndividualRetrievedJourneyData}
+import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.CompanyHECSession
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.{CompleteUserAnswers, IncompleteUserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models._
-import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR, GGCredId, NINO}
+import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.{JourneyService, TaxCheckService}
 import uk.gov.hmrc.hecapplicantfrontend.util.TimeProvider
+import uk.gov.hmrc.hecapplicantfrontend.utils.Fixtures
 import uk.gov.hmrc.http.HeaderCarrier
 
 import java.time.LocalDate
@@ -75,14 +74,9 @@ class CompanyDetailsControllerSpec
       .returning(EitherT.fromEither[Future](result))
 
   val controller                          = instanceOf[CompanyDetailsController]
-  val companyLoginData                    = CompanyLoginData(GGCredId(""), None, None)
+  val companyLoginData                    = Fixtures.companyLoginData()
   val retrievedJourneyDataWithCompanyName =
-    CompanyRetrievedJourneyData.empty.copy(companyName = Some(CompanyHouseName("some-company")))
-  val individualLoginData                 =
-    IndividualLoginData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None)
-  val individualRetrievedData             = IndividualRetrievedJourneyData.empty
-  val individualSession                   =
-    IndividualHECSession(individualLoginData, individualRetrievedData, UserAnswers.empty, None, None, List.empty)
+    Fixtures.companyRetrievedJourneyData(companyName = Some(CompanyHouseName("some-company")))
 
   "CompanyDetailsControllerSpec" when {
 
@@ -94,15 +88,10 @@ class CompanyDetailsControllerSpec
 
         "the user has not previously answered the question " in {
 
-          val session =
-            CompanyHECSession(
-              companyLoginData,
-              retrievedJourneyDataWithCompanyName,
-              UserAnswers.empty,
-              None,
-              None,
-              List.empty
-            )
+          val session = Fixtures.companyHECSession(
+            companyLoginData,
+            retrievedJourneyDataWithCompanyName
+          )
 
           inSequence {
             mockAuthWithNoRetrievals()
@@ -130,20 +119,13 @@ class CompanyDetailsControllerSpec
 
         "the user has previously answered the question" in {
 
-          val answers = CompleteUserAnswers(
-            LicenceType.OperatorOfPrivateHireVehicles,
-            LicenceTimeTrading.ZeroToTwoYears,
-            LicenceValidityPeriod.UpToOneYear,
-            None,
-            None,
-            None,
-            None,
-            Some(YesNoAnswer.Yes),
-            None,
-            None
+          val answers = Fixtures.completeUserAnswers(
+            licenceType = LicenceType.OperatorOfPrivateHireVehicles,
+            licenceTimeTrading = LicenceTimeTrading.ZeroToTwoYears,
+            licenceValidityPeriod = LicenceValidityPeriod.UpToOneYear,
+            companyDetailsConfirmed = Some(YesNoAnswer.Yes)
           )
-          val session =
-            CompanyHECSession(companyLoginData, retrievedJourneyDataWithCompanyName, answers, None, None, List.empty)
+          val session = Fixtures.companyHECSession(companyLoginData, retrievedJourneyDataWithCompanyName, answers)
 
           val updatedAnswers = IncompleteUserAnswers
             .fromCompleteAnswers(answers)
@@ -178,7 +160,7 @@ class CompanyDetailsControllerSpec
 
       "return internal server error" when {
         "company name is not populated" in {
-          val session = CompanyHECSession.newSession(companyLoginData)
+          val session = Fixtures.companyHECSession()
 
           inSequence {
             mockAuthWithNoRetrievals()
@@ -189,7 +171,7 @@ class CompanyDetailsControllerSpec
         }
 
         "applicant is individual" in {
-          val session = IndividualHECSession.newSession(individualLoginData)
+          val session = Fixtures.individualHECSession()
 
           inSequence {
             mockAuthWithNoRetrievals()
@@ -210,13 +192,10 @@ class CompanyDetailsControllerSpec
 
       "show a form error" when {
 
-        val session = CompanyHECSession(
+        val session = Fixtures.companyHECSession(
           companyLoginData,
           retrievedJourneyDataWithCompanyName,
-          UserAnswers.empty.copy(crn = Some(CRN("crn"))),
-          None,
-          None,
-          List.empty
+          Fixtures.incompleteUserAnswers(crn = Some(CRN("crn")))
         )
 
         "nothing has been submitted" in {
@@ -276,17 +255,10 @@ class CompanyDetailsControllerSpec
         "user answers with a Yes" when {
 
           "CRN is not populated" in {
-            val answers = UserAnswers.empty
             // session contains CTUTR from enrolments
-            val session = CompanyHECSession(
-              companyLoginData.copy(
-                ctutr = Some(CTUTR("ctutr"))
-              ),
-              retrievedJourneyDataWithCompanyName,
-              answers,
-              None,
-              None,
-              List.empty
+            val session = Fixtures.companyHECSession(
+              Fixtures.companyLoginData(ctutr = Some(CTUTR("ctutr"))),
+              retrievedJourneyDataWithCompanyName
             )
 
             inSequence {
@@ -298,7 +270,7 @@ class CompanyDetailsControllerSpec
           }
 
           "the applicant type is individual" in {
-            val session = IndividualHECSession.newSession(individualLoginData)
+            val session = Fixtures.individualHECSession()
 
             inSequence {
               mockAuthWithNoRetrievals()
@@ -309,15 +281,12 @@ class CompanyDetailsControllerSpec
           }
 
           "the call to fetch CT status fails" in {
-            val answers = UserAnswers.empty.copy(crn = Some(CRN("crn")))
+            val answers = Fixtures.incompleteUserAnswers(crn = Some(CRN("crn")))
             // session contains CTUTR from enrolments
-            val session = CompanyHECSession(
-              companyLoginData.copy(ctutr = Some(CTUTR("ctutr"))),
+            val session = Fixtures.companyHECSession(
+              Fixtures.companyLoginData(ctutr = Some(CTUTR("ctutr"))),
               retrievedJourneyDataWithCompanyName,
-              answers,
-              None,
-              None,
-              List.empty
+              answers
             )
 
             inSequence {
@@ -334,18 +303,21 @@ class CompanyDetailsControllerSpec
           }
 
           "the call to update and next fails" in {
-            val answers     = UserAnswers.empty.copy(crn = Some(CRN("crn")))
+            val answers = Fixtures.incompleteUserAnswers(crn = Some(CRN("crn")))
             // session contains CTUTR from enrolments
-            val companyData = companyLoginData.copy(ctutr = Some(CTUTR("ctutr")))
-            val session     =
-              CompanyHECSession(companyData, retrievedJourneyDataWithCompanyName, answers, None, None, List.empty)
+            val ctutr   = CTUTR("ctutr")
+            val session = Fixtures.companyHECSession(
+              Fixtures.companyLoginData(ctutr = Some(ctutr)),
+              retrievedJourneyDataWithCompanyName,
+              answers
+            )
 
             val updatedAnswers   = answers.copy(companyDetailsConfirmed = Some(YesNoAnswer.Yes))
-            val ctStatusResponse = CTStatusResponse(CTUTR("ctutr"), date, date, None)
+            val ctStatusResponse = CTStatusResponse(ctutr, date, date, None)
             val updatedSession   = session.copy(
               userAnswers = updatedAnswers,
               retrievedJourneyData = retrievedJourneyDataWithCompanyName.copy(
-                desCtutr = companyData.ctutr,
+                desCtutr = Some(ctutr),
                 ctStatus = Some(ctStatusResponse)
               )
             )
@@ -353,9 +325,9 @@ class CompanyDetailsControllerSpec
             inSequence {
               mockAuthWithNoRetrievals()
               mockGetSession(session)
-              mockTaxCheckServiceGetCtutr(CRN("crn"))(Right(Some(CTUTR("ctutr"))))
+              mockTaxCheckServiceGetCtutr(CRN("crn"))(Right(Some(ctutr)))
               mockTimeProviderToday(date)
-              mockTaxCheckServiceGetCtStatus(CTUTR("ctutr"), startDate, endDate)(
+              mockTaxCheckServiceGetCtStatus(ctutr, startDate, endDate)(
                 Right(Some(ctStatusResponse))
               )
               mockJourneyServiceUpdateAndNext(
@@ -373,9 +345,8 @@ class CompanyDetailsControllerSpec
 
         "user answers with a No" when {
           "the call to update and next fails" in {
-            val answers = UserAnswers.empty.copy(crn = Some(CRN("crn")))
-            val session =
-              CompanyHECSession(companyLoginData, retrievedJourneyDataWithCompanyName, answers, None, None, List.empty)
+            val answers = Fixtures.incompleteUserAnswers(crn = Some(CRN("crn")))
+            val session = Fixtures.companyHECSession(companyLoginData, retrievedJourneyDataWithCompanyName, answers)
 
             // should wipe out CRN answer if user says that the company name is incorrect
             val updatedAnswers = answers.copy(crn = None, companyDetailsConfirmed = Some(YesNoAnswer.No))
@@ -401,18 +372,21 @@ class CompanyDetailsControllerSpec
 
         "user answers with a Yes and all data fetches are successful" when {
           "the enrolment and DES CTUTRs match" in {
-            val answers     = UserAnswers.empty.copy(crn = Some(CRN("crn")))
+            val answers = Fixtures.incompleteUserAnswers(crn = Some(CRN("crn")))
             // session contains CTUTR from enrolments
-            val companyData = companyLoginData.copy(ctutr = Some(CTUTR("ctutr")))
-            val session     =
-              CompanyHECSession(companyData, retrievedJourneyDataWithCompanyName, answers, None, None, List.empty)
+            val ctutr   = CTUTR("ctutr")
+            val session = Fixtures.companyHECSession(
+              Fixtures.companyLoginData(ctutr = Some(ctutr)),
+              retrievedJourneyDataWithCompanyName,
+              answers
+            )
 
             val updatedAnswers   = answers.copy(companyDetailsConfirmed = Some(YesNoAnswer.Yes))
-            val ctStatusResponse = CTStatusResponse(CTUTR("ctutr"), date, date, None)
+            val ctStatusResponse = CTStatusResponse(ctutr, date, date, None)
             val updatedSession   = session.copy(
               userAnswers = updatedAnswers,
               retrievedJourneyData = retrievedJourneyDataWithCompanyName.copy(
-                desCtutr = companyData.ctutr,
+                desCtutr = Some(ctutr),
                 ctStatus = Some(ctStatusResponse)
               )
             )
@@ -420,9 +394,9 @@ class CompanyDetailsControllerSpec
             inSequence {
               mockAuthWithNoRetrievals()
               mockGetSession(session)
-              mockTaxCheckServiceGetCtutr(CRN("crn"))(Right(Some(CTUTR("ctutr"))))
+              mockTaxCheckServiceGetCtutr(CRN("crn"))(Right(Some(ctutr)))
               mockTimeProviderToday(date)
-              mockTaxCheckServiceGetCtStatus(CTUTR("ctutr"), startDate, endDate)(
+              mockTaxCheckServiceGetCtStatus(ctutr, startDate, endDate)(
                 Right(Some(ctStatusResponse))
               )
               mockJourneyServiceUpdateAndNext(
@@ -436,7 +410,7 @@ class CompanyDetailsControllerSpec
           }
 
           "the enrolment and DES CTUTRs do not match" in {
-            val answers     = UserAnswers.empty.copy(crn = Some(CRN("crn")))
+            val answers     = Fixtures.incompleteUserAnswers(crn = Some(CRN("crn")))
             // session contains CTUTR from enrolments
             val companyData = companyLoginData.copy(ctutr = Some(CTUTR("ctutr")))
             val session     =
@@ -465,9 +439,8 @@ class CompanyDetailsControllerSpec
         }
 
         "user answers with a No" in {
-          val answers = UserAnswers.empty.copy(crn = Some(CRN("crn")))
-          val session =
-            CompanyHECSession(companyLoginData, retrievedJourneyDataWithCompanyName, answers, None, None, List.empty)
+          val answers = Fixtures.incompleteUserAnswers(crn = Some(CRN("crn")))
+          val session = Fixtures.companyHECSession(companyLoginData, retrievedJourneyDataWithCompanyName, answers)
 
           // should wipe out CRN answer if user says that the company name is incorrect
           val updatedAnswers = answers.copy(crn = None, companyDetailsConfirmed = Some(YesNoAnswer.No))
@@ -587,7 +560,7 @@ class CompanyDetailsControllerSpec
         "applicant is individual" in {
           inSequence {
             mockAuthWithNoRetrievals()
-            mockGetSession(individualSession)
+            mockGetSession(Fixtures.individualHECSession())
           }
 
           assertThrows[RuntimeException](await(performAction()))
@@ -631,13 +604,10 @@ class CompanyDetailsControllerSpec
       behave like authAndSessionDataBehaviour(() => performAction())
 
       "show a form error" when {
-        val session = CompanyHECSession(
+        val session = Fixtures.companyHECSession(
           companyLoginData,
           validJourneyData,
-          UserAnswers.empty.copy(crn = Some(CRN("crn"))),
-          None,
-          None,
-          List.empty
+          Fixtures.incompleteUserAnswers(crn = Some(CRN("crn")))
         )
 
         def test(formAnswer: (String, String)*) = {
@@ -672,20 +642,16 @@ class CompanyDetailsControllerSpec
         "the applicant type is individual" in {
           inSequence {
             mockAuthWithNoRetrievals()
-            mockGetSession(individualSession)
+            mockGetSession(Fixtures.individualHECSession())
           }
 
           assertThrows[RuntimeException](await(performAction()))
         }
 
         "CT status accounting period is not populated" in {
-          val session = CompanyHECSession(
+          val session = Fixtures.companyHECSession(
             companyLoginData,
-            retrievedJourneyDataWithCompanyName.copy(ctStatus = Some(CTStatusResponse(CTUTR("utr"), date, date, None))),
-            UserAnswers.empty,
-            None,
-            None,
-            List.empty
+            retrievedJourneyDataWithCompanyName.copy(ctStatus = Some(CTStatusResponse(CTUTR("utr"), date, date, None)))
           )
 
           inSequence {
@@ -697,18 +663,13 @@ class CompanyDetailsControllerSpec
         }
 
         "the call to update and next fails" in {
-          val answers = UserAnswers.empty.copy(crn = Some(CRN("crn")))
-          val session = CompanyHECSession(
+          val answers = Fixtures.incompleteUserAnswers(crn = Some(CRN("crn")))
+          val session = Fixtures.companyHECSession(
             companyLoginData,
             retrievedJourneyDataWithCompanyName.copy(
-              ctStatus = Some(
-                CTStatusResponse(CTUTR("utr"), date, date, Some(CTAccountingPeriod(date, date, CTStatus.ReturnFound)))
-              )
+              ctStatus = Some(Fixtures.ctStatusResponse(latestAccountingPeriod = Some(Fixtures.ctAccountingPeriod())))
             ),
-            answers,
-            None,
-            None,
-            List.empty
+            answers
           )
 
           val updatedAnswers = answers.copy(chargeableForCT = Some(YesNoAnswer.Yes))
@@ -734,8 +695,8 @@ class CompanyDetailsControllerSpec
       "redirect to the next page" when {
 
         "user gives a valid answer" in {
-          val answers = UserAnswers.empty.copy(crn = Some(CRN("crn")))
-          val session = CompanyHECSession(companyLoginData, validJourneyData, answers, None, None, List.empty)
+          val answers = Fixtures.incompleteUserAnswers(crn = Some(CRN("crn")))
+          val session = Fixtures.companyHECSession(companyLoginData, validJourneyData, answers)
 
           val updatedAnswers = answers.copy(chargeableForCT = Some(YesNoAnswer.No))
           val updatedSession = session.copy(userAnswers = updatedAnswers)
@@ -779,7 +740,7 @@ class CompanyDetailsControllerSpec
 
         "the user has not previously answered the question " in {
 
-          val session = CompanyHECSession(companyLoginData, companyData, UserAnswers.empty, None, None, List.empty)
+          val session = Fixtures.companyHECSession(companyLoginData, companyData)
 
           inSequence {
             mockAuthWithNoRetrievals()
@@ -808,19 +769,15 @@ class CompanyDetailsControllerSpec
 
         "the user has previously answered the question" in {
 
-          val answers = CompleteUserAnswers(
-            LicenceType.OperatorOfPrivateHireVehicles,
-            LicenceTimeTrading.ZeroToTwoYears,
-            LicenceValidityPeriod.UpToOneYear,
-            None,
-            None,
-            None,
-            None,
-            Some(YesNoAnswer.Yes),
-            Some(YesNoAnswer.No),
-            Some(YesNoAnswer.Yes)
+          val answers = Fixtures.completeUserAnswers(
+            licenceType = LicenceType.OperatorOfPrivateHireVehicles,
+            licenceTimeTrading = LicenceTimeTrading.ZeroToTwoYears,
+            licenceValidityPeriod = LicenceValidityPeriod.UpToOneYear,
+            companyDetailsConfirmed = Some(YesNoAnswer.Yes),
+            chargeableForCT = Some(YesNoAnswer.No),
+            ctIncomeDeclared = Some(YesNoAnswer.Yes)
           )
-          val session = CompanyHECSession(companyLoginData, companyData, answers, None, None, List.empty)
+          val session = Fixtures.companyHECSession(companyLoginData, companyData, answers)
 
           val updatedAnswers = IncompleteUserAnswers
             .fromCompleteAnswers(answers)
@@ -857,22 +814,18 @@ class CompanyDetailsControllerSpec
         "applicant is individual" in {
           inSequence {
             mockAuthWithNoRetrievals()
-            mockGetSession(individualSession)
+            mockGetSession(Fixtures.individualHECSession())
           }
 
           assertThrows[RuntimeException](await(performAction()))
         }
 
         "CT status accounting period is not populated" in {
-          val session = CompanyHECSession(
+          val session = Fixtures.companyHECSession(
             companyLoginData,
             retrievedJourneyDataWithCompanyName.copy(
-              ctStatus = Some(CTStatusResponse(CTUTR("utr"), date, date, None))
-            ),
-            UserAnswers.empty,
-            None,
-            None,
-            List.empty
+              ctStatus = Some(Fixtures.ctStatusResponse(latestAccountingPeriod = None))
+            )
           )
 
           inSequence {
@@ -890,9 +843,7 @@ class CompanyDetailsControllerSpec
       val date                   = LocalDate.of(2020, 10, 5)
       val ctIncomeStatementRoute = routes.CompanyDetailsController.ctIncomeStatement()
       val validJourneyData       = retrievedJourneyDataWithCompanyName.copy(
-        ctStatus = Some(
-          CTStatusResponse(CTUTR("utr"), date, date, Some(CTAccountingPeriod(date, date, CTStatus.ReturnFound)))
-        )
+        ctStatus = Some(Fixtures.ctStatusResponse(latestAccountingPeriod = Some(Fixtures.ctAccountingPeriod())))
       )
 
       def performAction(data: (String, String)*): Future[Result] =
@@ -901,13 +852,10 @@ class CompanyDetailsControllerSpec
       behave like authAndSessionDataBehaviour(() => performAction())
 
       "show a form error" when {
-        val session = CompanyHECSession(
+        val session = Fixtures.companyHECSession(
           companyLoginData,
           validJourneyData,
-          UserAnswers.empty.copy(crn = Some(CRN("crn"))),
-          None,
-          None,
-          List.empty
+          Fixtures.incompleteUserAnswers(crn = Some(CRN("crn")))
         )
 
         def test(formAnswer: (String, String)*) = {
@@ -942,20 +890,16 @@ class CompanyDetailsControllerSpec
         "the applicant type is individual" in {
           inSequence {
             mockAuthWithNoRetrievals()
-            mockGetSession(individualSession)
+            mockGetSession(Fixtures.individualHECSession())
           }
 
           assertThrows[RuntimeException](await(performAction()))
         }
 
         "CT status accounting period is not populated" in {
-          val session = CompanyHECSession(
+          val session = Fixtures.companyHECSession(
             companyLoginData,
-            retrievedJourneyDataWithCompanyName.copy(ctStatus = Some(CTStatusResponse(CTUTR("utr"), date, date, None))),
-            UserAnswers.empty,
-            None,
-            None,
-            List.empty
+            retrievedJourneyDataWithCompanyName.copy(ctStatus = Some(CTStatusResponse(CTUTR("utr"), date, date, None)))
           )
 
           inSequence {
@@ -967,18 +911,17 @@ class CompanyDetailsControllerSpec
         }
 
         "the call to update and next fails" in {
-          val answers = UserAnswers.empty.copy(crn = Some(CRN("crn")))
-          val session = CompanyHECSession(
+          val answers = Fixtures.incompleteUserAnswers(crn = Some(CRN("crn")))
+          val session = Fixtures.companyHECSession(
             companyLoginData,
             retrievedJourneyDataWithCompanyName.copy(
               ctStatus = Some(
-                CTStatusResponse(CTUTR("utr"), date, date, Some(CTAccountingPeriod(date, date, CTStatus.ReturnFound)))
+                Fixtures.ctStatusResponse(latestAccountingPeriod =
+                  Some(CTAccountingPeriod(date, date, CTStatus.ReturnFound))
+                )
               )
             ),
-            answers,
-            None,
-            None,
-            List.empty
+            answers
           )
 
           val updatedAnswers = answers.copy(ctIncomeDeclared = Some(YesNoAnswer.Yes))
@@ -1004,8 +947,8 @@ class CompanyDetailsControllerSpec
       "redirect to the next page" when {
 
         "user gives a valid answer" in {
-          val answers = UserAnswers.empty.copy(crn = Some(CRN("crn")))
-          val session = CompanyHECSession(companyLoginData, validJourneyData, answers, None, None, List.empty)
+          val answers = Fixtures.incompleteUserAnswers(crn = Some(CRN("crn")))
+          val session = Fixtures.companyHECSession(companyLoginData, validJourneyData, answers)
 
           val updatedAnswers = answers.copy(ctIncomeDeclared = Some(YesNoAnswer.No))
           val updatedSession = session.copy(userAnswers = updatedAnswers)
