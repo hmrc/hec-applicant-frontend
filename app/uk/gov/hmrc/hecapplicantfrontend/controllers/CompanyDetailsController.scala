@@ -50,6 +50,7 @@ class CompanyDetailsController @Inject() (
   ctutrNotMatchedPage: html.CtutrNotMatched,
   noAccountingPeriodFoundPage: html.NoAccountingPeriodFound,
   chargeableForCTPage: html.ChargeableForCT,
+  ctIncomeStatementPage: html.CTIncomeStatement,
   mcc: MessagesControllerComponents
 )(implicit appConfig: AppConfig, ec: ExecutionContext)
     extends FrontendController(mcc)
@@ -246,8 +247,65 @@ class CompanyDetailsController @Inject() (
     Ok(s"${request.sessionData}")
   }
 
-  val ctIncomeStatement: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
-    Ok(s"${request.sessionData}")
+  val ctIncomeStatement: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
+    request.sessionData mapAsCompany { companySession =>
+      ensureCompanyDataHasCTStatusAccountingPeriod(companySession) { latestAccountingPeriod =>
+        val back             = journeyService.previous(routes.CompanyDetailsController.ctIncomeStatement())
+        val ctIncomeDeclared = request.sessionData.userAnswers.fold(_.ctIncomeDeclared, _.ctIncomeDeclared)
+        val form = {
+          val emptyForm = CompanyDetailsController.ctIncomeStatementForm(YesNoAnswer.values)
+          ctIncomeDeclared.fold(emptyForm)(emptyForm.fill)
+        }
+        Ok(
+          ctIncomeStatementPage(
+            form,
+            back,
+            YesNoOption.yesNoOptions,
+            TimeUtils.govDisplayFormat(latestAccountingPeriod.endDate)
+          )
+        )
+      }
+    }
+  }
+
+  val ctIncomeStatementSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
+    request.sessionData.mapAsCompany { companySession =>
+      ensureCompanyDataHasCTStatusAccountingPeriod(companySession) { latestAccountingPeriod =>
+        def handleValidAnswer(incomeDeclared: YesNoAnswer): Future[Result] = {
+          val updatedAnswers =
+            companySession.userAnswers.unset(_.ctIncomeDeclared).copy(ctIncomeDeclared = Some(incomeDeclared))
+
+          journeyService
+            .updateAndNext(
+              routes.CompanyDetailsController.ctIncomeStatement(),
+              companySession.copy(userAnswers = updatedAnswers)
+            )
+            .fold(
+              { e =>
+                logger.warn("Could not update session and proceed", e)
+                InternalServerError
+              },
+              Redirect
+            )
+        }
+
+        CompanyDetailsController
+          .ctIncomeStatementForm(YesNoAnswer.values)
+          .bindFromRequest()
+          .fold(
+            formWithErrors =>
+              Ok(
+                ctIncomeStatementPage(
+                  formWithErrors,
+                  journeyService.previous(routes.CompanyDetailsController.ctIncomeStatement()),
+                  YesNoOption.yesNoOptions,
+                  TimeUtils.govDisplayFormat(latestAccountingPeriod.endDate)
+                )
+              ),
+            handleValidAnswer
+          )
+      }
+    }
   }
 
   val cannotDoTaxCheck: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
@@ -281,10 +339,9 @@ class CompanyDetailsController @Inject() (
   private def ensureUserAnswersHasCRN(
     session: HECSession
   )(f: CRN => Future[Result]): Future[Result] =
-    session.userAnswers match {
-      case UserAnswers.IncompleteUserAnswers(_, _, _, _, _, _, Some(crn), _, _) => f(crn)
-      case UserAnswers.CompleteUserAnswers(_, _, _, _, _, _, Some(crn), _, _)   => f(crn)
-      case _                                                                    =>
+    session.userAnswers.fold(_.crn, _.crn) match {
+      case Some(crn) => f(crn)
+      case None      =>
         logger.warn("CRN is not populated in user answers")
         InternalServerError
     }
@@ -311,6 +368,13 @@ object CompanyDetailsController {
     Form(
       mapping(
         "chargeableForCT" -> of(FormUtils.radioFormFormatter(options))
+      )(identity)(Some(_))
+    )
+
+  def ctIncomeStatementForm(options: List[YesNoAnswer]): Form[YesNoAnswer] =
+    Form(
+      mapping(
+        "ctIncomeDeclared" -> of(FormUtils.radioFormFormatter(options))
       )(identity)(Some(_))
     )
 }

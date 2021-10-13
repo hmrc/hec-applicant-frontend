@@ -139,6 +139,7 @@ class CompanyDetailsControllerSpec
             None,
             None,
             Some(YesNoAnswer.Yes),
+            None,
             None
           )
           val session =
@@ -546,7 +547,8 @@ class CompanyDetailsControllerSpec
             None,
             None,
             Some(YesNoAnswer.Yes),
-            Some(YesNoAnswer.No)
+            Some(YesNoAnswer.No),
+            None
           )
           val session = CompanyHECSession(companyLoginData, companyData, answers, None, None, List.empty)
 
@@ -755,6 +757,275 @@ class CompanyDetailsControllerSpec
 
     }
 
+    "handling requests to the CT income statement page " must {
+
+      val date                         = LocalDate.of(2020, 10, 5)
+      val ctIncomeStatementRoute       = routes.CompanyDetailsController.ctIncomeStatement()
+      val ctIncomeStatementSubmitRoute = routes.CompanyDetailsController.ctIncomeStatementSubmit()
+
+      def performAction(): Future[Result] = controller.ctIncomeStatement(FakeRequest())
+
+      "display the page" when {
+        val companyData = retrievedJourneyDataWithCompanyName.copy(
+          ctStatus = Some(
+            CTStatusResponse(
+              CTUTR("utr"),
+              date,
+              date,
+              Some(CTAccountingPeriod(date, date, CTStatus.ReturnFound))
+            )
+          )
+        )
+
+        "the user has not previously answered the question " in {
+
+          val session = CompanyHECSession(companyLoginData, companyData, UserAnswers.empty, None, None, List.empty)
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockJourneyServiceGetPrevious(ctIncomeStatementRoute, session)(mockPreviousCall)
+          }
+
+          checkPageIsDisplayed(
+            performAction(),
+            messageFromMessageKey("ctIncomeDeclared.title"),
+            { doc =>
+              doc.select("#back").attr("href") shouldBe mockPreviousCall.url
+              doc
+                .select("#ctIncomeDeclared-hint")
+                .text()                        shouldBe "This is your Company Tax Return for the accounting period ending 5 October 2020."
+
+              val selectedOptions = doc.select(".govuk-radios__input[checked]")
+              selectedOptions.isEmpty shouldBe true
+
+              val button = doc.select("form")
+              button.attr("action") shouldBe ctIncomeStatementSubmitRoute.url
+            }
+          )
+
+        }
+
+        "the user has previously answered the question" in {
+
+          val answers = CompleteUserAnswers(
+            LicenceType.OperatorOfPrivateHireVehicles,
+            LicenceTimeTrading.ZeroToTwoYears,
+            LicenceValidityPeriod.UpToOneYear,
+            None,
+            None,
+            None,
+            None,
+            Some(YesNoAnswer.Yes),
+            Some(YesNoAnswer.No),
+            Some(YesNoAnswer.Yes)
+          )
+          val session = CompanyHECSession(companyLoginData, companyData, answers, None, None, List.empty)
+
+          val updatedAnswers = IncompleteUserAnswers
+            .fromCompleteAnswers(answers)
+            .copy(ctIncomeDeclared = Some(YesNoAnswer.No))
+          val updatedSession = session.copy(userAnswers = updatedAnswers)
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(updatedSession)
+            mockJourneyServiceGetPrevious(ctIncomeStatementRoute, updatedSession)(mockPreviousCall)
+          }
+          checkPageIsDisplayed(
+            performAction(),
+            messageFromMessageKey("ctIncomeDeclared.title"),
+            { doc =>
+              doc.select("#back").attr("href") shouldBe mockPreviousCall.url
+              doc
+                .select("#ctIncomeDeclared-hint")
+                .text()                        shouldBe "This is your Company Tax Return for the accounting period ending 5 October 2020."
+
+              val selectedOptions = doc.select(".govuk-radios__input[checked]")
+              selectedOptions.attr("value") shouldBe "1"
+
+              val button = doc.select("form")
+              button.attr("action") shouldBe ctIncomeStatementSubmitRoute.url
+            }
+          )
+
+        }
+
+      }
+
+      "return internal server error" when {
+        "applicant is individual" in {
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(individualSession)
+          }
+
+          assertThrows[RuntimeException](await(performAction()))
+        }
+
+        "CT status accounting period is not populated" in {
+          val session = CompanyHECSession(
+            companyLoginData,
+            retrievedJourneyDataWithCompanyName.copy(
+              ctStatus = Some(CTStatusResponse(CTUTR("utr"), date, date, None))
+            ),
+            UserAnswers.empty,
+            None,
+            None,
+            List.empty
+          )
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+          }
+
+          status(performAction()) shouldBe INTERNAL_SERVER_ERROR
+        }
+      }
+    }
+
+    "handling submit on the CT income statement page" must {
+
+      val date                   = LocalDate.of(2020, 10, 5)
+      val ctIncomeStatementRoute = routes.CompanyDetailsController.ctIncomeStatement()
+      val validJourneyData       = retrievedJourneyDataWithCompanyName.copy(
+        ctStatus = Some(
+          CTStatusResponse(CTUTR("utr"), date, date, Some(CTAccountingPeriod(date, date, CTStatus.ReturnFound)))
+        )
+      )
+
+      def performAction(data: (String, String)*): Future[Result] =
+        controller.ctIncomeStatementSubmit(FakeRequest().withFormUrlEncodedBody(data: _*))
+
+      behave like authAndSessionDataBehaviour(() => performAction())
+
+      "show a form error" when {
+        val session = CompanyHECSession(
+          companyLoginData,
+          validJourneyData,
+          UserAnswers.empty.copy(crn = Some(CRN("crn"))),
+          None,
+          None,
+          List.empty
+        )
+
+        def test(formAnswer: (String, String)*) = {
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockJourneyServiceGetPrevious(ctIncomeStatementRoute, session)(mockPreviousCall)
+          }
+
+          checkFormErrorIsDisplayed(
+            performAction(formAnswer: _*),
+            messageFromMessageKey("ctIncomeDeclared.title"),
+            messageFromMessageKey("ctIncomeDeclared.error.required")
+          )
+        }
+
+        "nothing has been submitted" in {
+          test()
+        }
+
+        "an invalid index value is submitted" in {
+          test("ctIncomeDeclared" -> Int.MaxValue.toString)
+        }
+
+        "a non-numeric value is submitted" in {
+          test("ctIncomeDeclared" -> "xyz")
+        }
+      }
+
+      "return an internal server error" when {
+
+        "the applicant type is individual" in {
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(individualSession)
+          }
+
+          assertThrows[RuntimeException](await(performAction()))
+        }
+
+        "CT status accounting period is not populated" in {
+          val session = CompanyHECSession(
+            companyLoginData,
+            retrievedJourneyDataWithCompanyName.copy(ctStatus = Some(CTStatusResponse(CTUTR("utr"), date, date, None))),
+            UserAnswers.empty,
+            None,
+            None,
+            List.empty
+          )
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+          }
+
+          status(performAction()) shouldBe INTERNAL_SERVER_ERROR
+        }
+
+        "the call to update and next fails" in {
+          val answers = UserAnswers.empty.copy(crn = Some(CRN("crn")))
+          val session = CompanyHECSession(
+            companyLoginData,
+            retrievedJourneyDataWithCompanyName.copy(
+              ctStatus = Some(
+                CTStatusResponse(CTUTR("utr"), date, date, Some(CTAccountingPeriod(date, date, CTStatus.ReturnFound)))
+              )
+            ),
+            answers,
+            None,
+            None,
+            List.empty
+          )
+
+          val updatedAnswers = answers.copy(ctIncomeDeclared = Some(YesNoAnswer.Yes))
+          val updatedSession = session.copy(userAnswers = updatedAnswers)
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockJourneyServiceUpdateAndNext(
+              ctIncomeStatementRoute,
+              session,
+              updatedSession
+            )(
+              Left(Error("update and next failed"))
+            )
+          }
+
+          status(performAction("ctIncomeDeclared" -> "0")) shouldBe INTERNAL_SERVER_ERROR
+        }
+
+      }
+
+      "redirect to the next page" when {
+
+        "user gives a valid answer" in {
+          val answers = UserAnswers.empty.copy(crn = Some(CRN("crn")))
+          val session = CompanyHECSession(companyLoginData, validJourneyData, answers, None, None, List.empty)
+
+          val updatedAnswers = answers.copy(ctIncomeDeclared = Some(YesNoAnswer.No))
+          val updatedSession = session.copy(userAnswers = updatedAnswers)
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockJourneyServiceUpdateAndNext(
+              ctIncomeStatementRoute,
+              session,
+              updatedSession
+            )(Right(mockNextCall))
+          }
+
+          checkIsRedirect(performAction("ctIncomeDeclared" -> "1"), mockNextCall)
+        }
+
+      }
+
+    }
   }
 
 }

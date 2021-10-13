@@ -277,7 +277,8 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                   entityType = Some(Individual),
                   crn = None,
                   companyDetailsConfirmed = None,
-                  chargeableForCT = None
+                  chargeableForCT = None,
+                  ctIncomeDeclared = None
                 ),
                 None,
                 Some(taxCheckStartDateTime),
@@ -785,7 +786,8 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 entityType = Some(Individual),
                 crn = None,
                 companyDetailsConfirmed = None,
-                chargeableForCT = None
+                chargeableForCT = None,
+                ctIncomeDeclared = None
               ),
               None,
               Some(taxCheckStartDateTime),
@@ -1284,6 +1286,17 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
 
         }
 
+        "CT income statement page" in {
+          val session                                     = CompanyHECSession.newSession(companyLoginData)
+          implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+
+          val result = journeyService.updateAndNext(
+            routes.CompanyDetailsController.ctIncomeStatement(),
+            session
+          )
+          await(result.value) shouldBe Right(routes.CheckYourAnswersController.checkYourAnswers())
+        }
+
       }
 
       "convert incomplete answers to complete answers when all questions have been answered and" when {
@@ -1298,6 +1311,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             None,
             None,
             None,
+            None,
             None
           )
 
@@ -1307,6 +1321,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             Some(completeAnswers.licenceValidityPeriod),
             completeAnswers.taxSituation,
             completeAnswers.saIncomeDeclared,
+            None,
             None,
             None,
             None,
@@ -1349,6 +1364,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 Some(EntityType.Company),
                 None,
                 None,
+                None,
                 None
               )
 
@@ -1359,6 +1375,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 completeAnswers.taxSituation,
                 Some(YesNoAnswer.Yes),
                 Some(EntityType.Company),
+                None,
                 None,
                 None,
                 None
@@ -1405,6 +1422,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 None,
                 None,
                 None,
+                None,
                 None
               )
 
@@ -1415,6 +1433,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 completeAnswers.taxSituation,
                 completeAnswers.saIncomeDeclared,
                 completeAnswers.entityType,
+                None,
                 None,
                 None,
                 None
@@ -1456,6 +1475,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 None,
                 None,
                 None,
+                None,
                 None
               )
 
@@ -1466,6 +1486,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 completeAnswers.taxSituation,
                 completeAnswers.saIncomeDeclared,
                 completeAnswers.entityType,
+                None,
                 None,
                 None,
                 None
@@ -1504,6 +1525,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 None,
                 None,
                 None,
+                None,
                 None
               )
 
@@ -1514,6 +1536,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 completeAnswers.taxSituation,
                 completeAnswers.saIncomeDeclared,
                 completeAnswers.entityType,
+                None,
                 None,
                 None,
                 None
@@ -1549,6 +1572,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             Some(TaxSituation.PAYE),
             Some(YesNoAnswer.Yes),
             Some(EntityType.Company),
+            None,
             None,
             None,
             None
@@ -1927,6 +1951,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
               entityType,
               None,
               None,
+              None,
               None
             )
 
@@ -2178,6 +2203,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
               None,
               None,
               None,
+              None,
               None
             ),
             None,
@@ -2198,6 +2224,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             Some(TaxSituation.PAYE),
             Some(YesNoAnswer.Yes),
             Some(EntityType.Individual),
+            None,
             None,
             None,
             None
@@ -2236,163 +2263,171 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
           entityType = None,
           None,
           None,
+          None,
           None
         )
 
-        "return false when licence type is missing" in {
-          JourneyServiceImpl.allAnswersComplete(
-            incompleteAnswersBase.copy(licenceType = None),
-            IndividualHECSession.newSession(individualLoginData)
-          ) shouldBe false
-        }
+        "return false" when {
 
-        "return false when licence time trading is missing" in {
-          JourneyServiceImpl.allAnswersComplete(
-            incompleteAnswersBase.copy(licenceTimeTrading = None),
-            IndividualHECSession.newSession(individualLoginData)
-          ) shouldBe false
-        }
-
-        "return false when licence validity period is missing" in {
-          JourneyServiceImpl.allAnswersComplete(
-            incompleteAnswersBase.copy(licenceValidityPeriod = None),
-            IndividualHECSession.newSession(individualLoginData)
-          ) shouldBe false
-        }
-
-        "return false when entity type is present" in {
-          JourneyServiceImpl.allAnswersComplete(
-            incompleteUserAnswers = incompleteAnswersBase.copy(entityType = Some(EntityType.Individual)),
-            IndividualHECSession.newSession(individualLoginData)
-          ) shouldBe false
-        }
-
-        "return true when entity type is missing" in {
-          JourneyServiceImpl.allAnswersComplete(
-            incompleteAnswersBase,
-            IndividualHECSession.newSession(individualLoginData)
-          ) shouldBe true
-        }
-
-        "return true for tax situation = non-SA (irrespective of whether income declared is missing or present)" in {
-          List(
-            TaxSituation.PAYE,
-            TaxSituation.NotChargeable
-          ) foreach { taxSituation =>
-            withClue(s"for $taxSituation") {
-              // income declared is missing
-              JourneyServiceImpl.allAnswersComplete(
-                incompleteUserAnswers = incompleteAnswersBase.copy(
-                  taxSituation = Some(taxSituation),
-                  saIncomeDeclared = None
-                ),
-                IndividualHECSession.newSession(individualLoginData)
-              ) shouldBe true
-
-              // income declared is present
-              JourneyServiceImpl.allAnswersComplete(
-                incompleteUserAnswers = incompleteAnswersBase.copy(
-                  taxSituation = Some(taxSituation),
-                  saIncomeDeclared = Some(YesNoAnswer.Yes)
-                ),
-                IndividualHECSession.newSession(individualLoginData)
-              ) shouldBe true
-            }
+          "licence type is missing" in {
+            JourneyServiceImpl.allAnswersComplete(
+              incompleteAnswersBase.copy(licenceType = None),
+              IndividualHECSession.newSession(individualLoginData)
+            ) shouldBe false
           }
-        }
 
-        "return true for tax situation = SA & status != ReturnFound (irrespective of whether income declared is missing or present)" in {
-          val saTaxSituations = List(
-            TaxSituation.SA,
-            TaxSituation.SAPAYE
-          )
-          val saStatuses      = List[SAStatus](
-            SAStatus.NoticeToFileIssued,
-            SAStatus.NoReturnFound
-          )
+          "licence time trading is missing" in {
+            JourneyServiceImpl.allAnswersComplete(
+              incompleteAnswersBase.copy(licenceTimeTrading = None),
+              IndividualHECSession.newSession(individualLoginData)
+            ) shouldBe false
+          }
 
-          val permutations = for {
-            ts     <- saTaxSituations
-            status <- saStatuses
-          } yield ts -> status
+          "licence validity period is missing" in {
+            JourneyServiceImpl.allAnswersComplete(
+              incompleteAnswersBase.copy(licenceValidityPeriod = None),
+              IndividualHECSession.newSession(individualLoginData)
+            ) shouldBe false
+          }
 
-          permutations foreach { case (taxSituation, saStatus) =>
-            withClue(s"for $taxSituation & $saStatus") {
-              val journeyData =
-                IndividualRetrievedJourneyData(
-                  saStatus = Some(SAStatusResponse(SAUTR("utr"), TaxYear(2020), saStatus))
+          "entity type is present" in {
+            JourneyServiceImpl.allAnswersComplete(
+              incompleteUserAnswers = incompleteAnswersBase.copy(entityType = Some(EntityType.Individual)),
+              IndividualHECSession.newSession(individualLoginData)
+            ) shouldBe false
+          }
+
+          "tax situation = SA & status = ReturnFound & income declared is missing)" in {
+            List(
+              TaxSituation.SA,
+              TaxSituation.SAPAYE
+            ) foreach { taxSituation =>
+              withClue(s"for $taxSituation") {
+                val journeyData = IndividualRetrievedJourneyData(
+                  saStatus = Some(SAStatusResponse(SAUTR("utr"), TaxYear(2020), SAStatus.ReturnFound))
                 )
 
-              val session =
-                IndividualHECSession.newSession(individualLoginData).copy(retrievedJourneyData = journeyData)
+                val session =
+                  IndividualHECSession.newSession(individualLoginData).copy(retrievedJourneyData = journeyData)
 
-              // income declared is missing
-              JourneyServiceImpl.allAnswersComplete(
-                incompleteUserAnswers = incompleteAnswersBase.copy(
-                  taxSituation = Some(taxSituation),
-                  saIncomeDeclared = None
-                ),
-                session
-              ) shouldBe true
-
-              // income declared is present
-              JourneyServiceImpl.allAnswersComplete(
-                incompleteUserAnswers = incompleteAnswersBase.copy(
-                  taxSituation = Some(taxSituation),
-                  saIncomeDeclared = Some(YesNoAnswer.Yes)
-                ),
-                session
-              ) shouldBe true
+                JourneyServiceImpl.allAnswersComplete(
+                  incompleteUserAnswers = incompleteAnswersBase.copy(
+                    taxSituation = Some(taxSituation),
+                    saIncomeDeclared = None
+                  ),
+                  session
+                ) shouldBe false
+              }
             }
           }
         }
 
-        "return true for tax situation = SA & status = ReturnFound & income declared is present)" in {
-          List(
-            TaxSituation.SA,
-            TaxSituation.SAPAYE
-          ) foreach { taxSituation =>
-            withClue(s"for $taxSituation") {
-              val journeyData = IndividualRetrievedJourneyData(
-                saStatus = Some(SAStatusResponse(SAUTR("utr"), TaxYear(2020), SAStatus.ReturnFound))
-              )
+        "return true" when {
 
-              val session =
-                IndividualHECSession.newSession(individualLoginData).copy(retrievedJourneyData = journeyData)
+          "entity type is missing" in {
+            JourneyServiceImpl.allAnswersComplete(
+              incompleteAnswersBase,
+              IndividualHECSession.newSession(individualLoginData)
+            ) shouldBe true
+          }
 
-              JourneyServiceImpl.allAnswersComplete(
-                incompleteUserAnswers = incompleteAnswersBase.copy(
-                  taxSituation = Some(taxSituation),
-                  saIncomeDeclared = Some(YesNoAnswer.Yes)
-                ),
-                session
-              ) shouldBe true
+          "tax situation = non-SA (irrespective of whether income declared is missing or present)" in {
+            List(
+              TaxSituation.PAYE,
+              TaxSituation.NotChargeable
+            ) foreach { taxSituation =>
+              withClue(s"for $taxSituation") {
+                // income declared is missing
+                JourneyServiceImpl.allAnswersComplete(
+                  incompleteUserAnswers = incompleteAnswersBase.copy(
+                    taxSituation = Some(taxSituation),
+                    saIncomeDeclared = None
+                  ),
+                  IndividualHECSession.newSession(individualLoginData)
+                ) shouldBe true
+
+                // income declared is present
+                JourneyServiceImpl.allAnswersComplete(
+                  incompleteUserAnswers = incompleteAnswersBase.copy(
+                    taxSituation = Some(taxSituation),
+                    saIncomeDeclared = Some(YesNoAnswer.Yes)
+                  ),
+                  IndividualHECSession.newSession(individualLoginData)
+                ) shouldBe true
+              }
             }
           }
-        }
 
-        "return false for tax situation = SA & status = ReturnFound & income declared is missing)" in {
-          List(
-            TaxSituation.SA,
-            TaxSituation.SAPAYE
-          ) foreach { taxSituation =>
-            withClue(s"for $taxSituation") {
-              val journeyData = IndividualRetrievedJourneyData(
-                saStatus = Some(SAStatusResponse(SAUTR("utr"), TaxYear(2020), SAStatus.ReturnFound))
-              )
+          "tax situation = SA & status != ReturnFound (irrespective of whether income declared is missing or present)" in {
+            val saTaxSituations = List(
+              TaxSituation.SA,
+              TaxSituation.SAPAYE
+            )
+            val saStatuses      = List[SAStatus](
+              SAStatus.NoticeToFileIssued,
+              SAStatus.NoReturnFound
+            )
 
-              val session =
-                IndividualHECSession.newSession(individualLoginData).copy(retrievedJourneyData = journeyData)
+            val permutations = for {
+              ts     <- saTaxSituations
+              status <- saStatuses
+            } yield ts -> status
 
-              JourneyServiceImpl.allAnswersComplete(
-                incompleteUserAnswers = incompleteAnswersBase.copy(
-                  taxSituation = Some(taxSituation),
-                  saIncomeDeclared = None
-                ),
-                session
-              ) shouldBe false
+            permutations foreach { case (taxSituation, saStatus) =>
+              withClue(s"for $taxSituation & $saStatus") {
+                val journeyData =
+                  IndividualRetrievedJourneyData(
+                    saStatus = Some(SAStatusResponse(SAUTR("utr"), TaxYear(2020), saStatus))
+                  )
+
+                val session =
+                  IndividualHECSession.newSession(individualLoginData).copy(retrievedJourneyData = journeyData)
+
+                // income declared is missing
+                JourneyServiceImpl.allAnswersComplete(
+                  incompleteUserAnswers = incompleteAnswersBase.copy(
+                    taxSituation = Some(taxSituation),
+                    saIncomeDeclared = None
+                  ),
+                  session
+                ) shouldBe true
+
+                // income declared is present
+                JourneyServiceImpl.allAnswersComplete(
+                  incompleteUserAnswers = incompleteAnswersBase.copy(
+                    taxSituation = Some(taxSituation),
+                    saIncomeDeclared = Some(YesNoAnswer.Yes)
+                  ),
+                  session
+                ) shouldBe true
+              }
             }
           }
+
+          "tax situation = SA & status = ReturnFound & income declared is present)" in {
+            List(
+              TaxSituation.SA,
+              TaxSituation.SAPAYE
+            ) foreach { taxSituation =>
+              withClue(s"for $taxSituation") {
+                val journeyData = IndividualRetrievedJourneyData(
+                  saStatus = Some(SAStatusResponse(SAUTR("utr"), TaxYear(2020), SAStatus.ReturnFound))
+                )
+
+                val session =
+                  IndividualHECSession.newSession(individualLoginData).copy(retrievedJourneyData = journeyData)
+
+                JourneyServiceImpl.allAnswersComplete(
+                  incompleteUserAnswers = incompleteAnswersBase.copy(
+                    taxSituation = Some(taxSituation),
+                    saIncomeDeclared = Some(YesNoAnswer.Yes)
+                  ),
+                  session
+                ) shouldBe true
+              }
+            }
+          }
+
         }
       }
 
@@ -2406,61 +2441,15 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
           entityType = None,
           None,
           None,
+          None,
           None
         )
 
-        "return false when licence type is missing" in {
-          JourneyServiceImpl.allAnswersComplete(
-            incompleteAnswersBase.copy(licenceType = None),
-            CompanyHECSession.newSession(companyLoginData)
-          ) shouldBe false
-        }
-
-        "return false when licence time trading is missing" in {
-          JourneyServiceImpl.allAnswersComplete(
-            incompleteAnswersBase.copy(licenceTimeTrading = None),
-            CompanyHECSession.newSession(companyLoginData)
-          ) shouldBe false
-        }
-
-        "return false when licence validity period is missing" in {
-          JourneyServiceImpl.allAnswersComplete(
-            incompleteAnswersBase.copy(licenceValidityPeriod = None),
-            CompanyHECSession.newSession(companyLoginData)
-          ) shouldBe false
-        }
-
-        "entity type is missing" in {
-          JourneyServiceImpl.allAnswersComplete(
-            incompleteUserAnswers = incompleteAnswersBase,
-            CompanyHECSession.newSession(companyLoginData)
-          ) shouldBe false
-        }
-
-        "return true when chargeable for CT answer is No" in {
-          List(
-            LicenceType.OperatorOfPrivateHireVehicles,
-            LicenceType.ScrapMetalDealerSite,
-            LicenceType.ScrapMetalMobileCollector
-          ) foreach { licenceType =>
-            withClue(s"for $licenceType") {
-              JourneyServiceImpl.allAnswersComplete(
-                incompleteUserAnswers = incompleteAnswersBase.copy(
-                  licenceType = Some(licenceType),
-                  entityType = Some(EntityType.Company),
-                  taxSituation = None,
-                  saIncomeDeclared = None,
-                  crn = Some(CRN("1234567")),
-                  companyDetailsConfirmed = Some(YesNoAnswer.Yes),
-                  chargeableForCT = Some(YesNoAnswer.No)
-                ),
-                CompanyHECSession.newSession(companyLoginData)
-              ) shouldBe true
-            }
-          }
-        }
-
-        "return true when chargeable for CT answer is Yes and CT status = NoticeToFileIssued" in {
+        def testForChargeableForCtIsYes(
+          status: CTStatus,
+          ctIncomeDeclared: Option[YesNoAnswer],
+          expected: Boolean
+        ) = {
           val date = LocalDate.now()
           JourneyServiceImpl.allAnswersComplete(
             incompleteUserAnswers = incompleteAnswersBase.copy(
@@ -2469,40 +2458,8 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
               saIncomeDeclared = None,
               crn = Some(CRN("1234567")),
               companyDetailsConfirmed = Some(YesNoAnswer.Yes),
-              chargeableForCT = Some(YesNoAnswer.Yes)
-            ),
-            CompanyHECSession(
-              companyLoginData,
-              CompanyRetrievedJourneyData(
-                None,
-                None,
-                Some(
-                  CTStatusResponse(
-                    CTUTR("utr"),
-                    date,
-                    date,
-                    Some(CTAccountingPeriod(date, date, CTStatus.NoticeToFileIssued))
-                  )
-                )
-              ),
-              UserAnswers.empty,
-              None,
-              None,
-              List.empty
-            )
-          ) shouldBe true
-        }
-
-        def testForChargeableForCtIsYes(status: CTStatus) = {
-          val date = LocalDate.now()
-          JourneyServiceImpl.allAnswersComplete(
-            incompleteUserAnswers = incompleteAnswersBase.copy(
-              entityType = Some(EntityType.Company),
-              taxSituation = None,
-              saIncomeDeclared = None,
-              crn = Some(CRN("1234567")),
-              companyDetailsConfirmed = Some(YesNoAnswer.Yes),
-              chargeableForCT = Some(YesNoAnswer.Yes)
+              chargeableForCT = Some(YesNoAnswer.Yes),
+              ctIncomeDeclared = ctIncomeDeclared
             ),
             CompanyHECSession(
               companyLoginData,
@@ -2523,15 +2480,136 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
               None,
               List.empty
             )
-          ) shouldBe false
+          ) shouldBe expected
         }
 
-        "return true when chargeable for CT answer is Yes and CT status = ReturnFound" in {
-          testForChargeableForCtIsYes(CTStatus.ReturnFound)
+        "return false" when {
+          "licence type is missing" in {
+            JourneyServiceImpl.allAnswersComplete(
+              incompleteAnswersBase.copy(licenceType = None),
+              CompanyHECSession.newSession(companyLoginData)
+            ) shouldBe false
+          }
+
+          "licence time trading is missing" in {
+            JourneyServiceImpl.allAnswersComplete(
+              incompleteAnswersBase.copy(licenceTimeTrading = None),
+              CompanyHECSession.newSession(companyLoginData)
+            ) shouldBe false
+          }
+
+          "licence validity period is missing" in {
+            JourneyServiceImpl.allAnswersComplete(
+              incompleteAnswersBase.copy(licenceValidityPeriod = None),
+              CompanyHECSession.newSession(companyLoginData)
+            ) shouldBe false
+          }
+
+          "entity type is missing" in {
+            JourneyServiceImpl.allAnswersComplete(
+              incompleteUserAnswers = incompleteAnswersBase,
+              CompanyHECSession.newSession(companyLoginData)
+            ) shouldBe false
+          }
+
+          "chargeable for CT answer is Yes, CT status = ReturnFound & CT income declared answer is missing" in {
+            testForChargeableForCtIsYes(CTStatus.ReturnFound, None, false)
+          }
+
+          "chargeable for CT answer is Yes & CT status = NoReturnFound" in {
+            testForChargeableForCtIsYes(CTStatus.NoReturnFound, None, false)
+          }
         }
 
-        "return true when chargeable for CT answer is Yes and CT status = NoReturnFound" in {
-          testForChargeableForCtIsYes(CTStatus.NoReturnFound)
+        "return true" when {
+          "CT status is present & chargeable for CT answer is No" in {
+            val date                                        = LocalDate.now
+            val licenceTypes                                = List(
+              LicenceType.OperatorOfPrivateHireVehicles,
+              LicenceType.ScrapMetalDealerSite,
+              LicenceType.ScrapMetalMobileCollector
+            )
+            val ctStatuses                                  = List(
+              CTStatus.ReturnFound,
+              CTStatus.NoReturnFound,
+              CTStatus.NoticeToFileIssued
+            )
+            val permutations: List[(LicenceType, CTStatus)] = for {
+              licenceType <- licenceTypes
+              ctStatus    <- ctStatuses
+            } yield (licenceType, ctStatus)
+            permutations foreach { case (licenceType, ctStatus) =>
+              withClue(s"for licenceType = $licenceType & CT status = $ctStatus") {
+                JourneyServiceImpl.allAnswersComplete(
+                  incompleteUserAnswers = incompleteAnswersBase.copy(
+                    licenceType = Some(licenceType),
+                    entityType = Some(EntityType.Company),
+                    taxSituation = None,
+                    saIncomeDeclared = None,
+                    crn = Some(CRN("1234567")),
+                    companyDetailsConfirmed = Some(YesNoAnswer.Yes),
+                    chargeableForCT = Some(YesNoAnswer.No)
+                  ),
+                  CompanyHECSession(
+                    companyLoginData,
+                    CompanyRetrievedJourneyData(
+                      None,
+                      None,
+                      Some(
+                        CTStatusResponse(
+                          CTUTR("utr"),
+                          date,
+                          date,
+                          Some(CTAccountingPeriod(date, date, ctStatus))
+                        )
+                      )
+                    ),
+                    UserAnswers.empty,
+                    None,
+                    None,
+                    List.empty
+                  )
+                ) shouldBe true
+              }
+            }
+          }
+
+          "chargeable for CT answer is Yes and CT status = NoticeToFileIssued" in {
+            val date = LocalDate.now()
+            JourneyServiceImpl.allAnswersComplete(
+              incompleteUserAnswers = incompleteAnswersBase.copy(
+                entityType = Some(EntityType.Company),
+                taxSituation = None,
+                saIncomeDeclared = None,
+                crn = Some(CRN("1234567")),
+                companyDetailsConfirmed = Some(YesNoAnswer.Yes),
+                chargeableForCT = Some(YesNoAnswer.Yes)
+              ),
+              CompanyHECSession(
+                companyLoginData,
+                CompanyRetrievedJourneyData(
+                  None,
+                  None,
+                  Some(
+                    CTStatusResponse(
+                      CTUTR("utr"),
+                      date,
+                      date,
+                      Some(CTAccountingPeriod(date, date, CTStatus.NoticeToFileIssued))
+                    )
+                  )
+                ),
+                UserAnswers.empty,
+                None,
+                None,
+                List.empty
+              )
+            ) shouldBe true
+          }
+
+          "chargeable for CT answer is Yes, CT status = ReturnFound & CT income declared answer is present" in {
+            testForChargeableForCtIsYes(CTStatus.ReturnFound, Some(YesNoAnswer.Yes), true)
+          }
         }
       }
 

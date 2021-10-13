@@ -106,6 +106,7 @@ class EntityTypeControllerSpec
                 Some(EntityType.Individual),
                 None,
                 None,
+                None,
                 None
               ),
               None,
@@ -284,6 +285,7 @@ class EntityTypeControllerSpec
               None,
               None,
               None,
+              None,
               None
             )
             val updatedAnswers = IncompleteUserAnswers
@@ -321,7 +323,8 @@ class EntityTypeControllerSpec
               entityType = None,
               crn = None,
               companyDetailsConfirmed = None,
-              chargeableForCT = None
+              chargeableForCT = None,
+              ctIncomeDeclared = None
             )
             val updatedAnswers = IncompleteUserAnswers
               .fromCompleteAnswers(answers)

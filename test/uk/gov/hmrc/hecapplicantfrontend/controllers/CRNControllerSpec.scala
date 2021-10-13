@@ -118,6 +118,7 @@ class CRNControllerSpec
             None,
             None,
             None,
+            None,
             None
           )
 
@@ -278,6 +279,7 @@ class CRNControllerSpec
             None,
             None,
             None,
+            None,
             None
           )
           val session =
@@ -330,6 +332,7 @@ class CRNControllerSpec
                 LicenceType.OperatorOfPrivateHireVehicles,
                 LicenceTimeTrading.ZeroToTwoYears,
                 LicenceValidityPeriod.UpToOneYear,
+                None,
                 None,
                 None,
                 None,

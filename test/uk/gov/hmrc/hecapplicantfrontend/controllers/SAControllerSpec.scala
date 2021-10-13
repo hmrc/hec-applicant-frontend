@@ -177,6 +177,7 @@ class SAControllerSpec
                 Some(EntityType.Individual),
                 None,
                 None,
+                None,
                 None
               ),
               None,
@@ -330,6 +331,7 @@ class SAControllerSpec
               LicenceValidityPeriod.UpToOneYear,
               Some(TaxSituation.SA),
               Some(YesNoAnswer.Yes),
+              None,
               None,
               None,
               None,
