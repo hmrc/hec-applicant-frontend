@@ -58,6 +58,9 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
   val companyLoginData: CompanyLoginData =
     CompanyLoginData(GGCredId(""), None, None)
 
+  val companyLoginData1: CompanyLoginData =
+    CompanyLoginData(GGCredId(""), Some(CTUTR("4444444444")), None)
+
   "JourneyServiceImpl" when {
 
     "handling calls to 'firstPage'" when {
@@ -1300,6 +1303,74 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
           await(result.value) shouldBe Right(routes.CheckYourAnswersController.checkYourAnswers())
         }
 
+        "Recently started Trading page" when {
+
+          "the applicant is an individual" in {
+            val session        = IndividualHECSession.newSession(individualLoginData)
+            val updatedSession =
+              IndividualHECSession(
+                individualLoginData,
+                IndividualRetrievedJourneyData.empty,
+                UserAnswers.empty.copy(
+                  crn = Some(CRN("1234567")),
+                  companyDetailsConfirmed = Some(YesNoAnswer.Yes)
+                ),
+                None,
+                None,
+                List.empty
+              )
+
+            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+
+            assertThrows[RuntimeException] {
+              journeyService.updateAndNext(
+                routes.CompanyDetailsController.recentlyStartedTrading(),
+                updatedSession
+              )
+            }
+          }
+
+          def testStartTrading(answer: YesNoAnswer, nextCall: Call) = {
+            val companyRetrievedJourneyData = CompanyRetrievedJourneyData(
+              Some(CompanyHouseName("Test Tech Ltd")),
+              Some(CTUTR("4444444444")),
+              None
+            )
+
+            val updatedUserAnswer = UserAnswers.empty.copy(
+              crn = Some(CRN("1412345")),
+              recentlyStartedTrading = Some(answer)
+            )
+
+            val session        =
+              CompanyHECSession(
+                companyLoginData,
+                companyRetrievedJourneyData,
+                UserAnswers.empty,
+                None,
+                None,
+                List.empty
+              )
+            val updatedSession = session.copy(userAnswers = updatedUserAnswer)
+
+            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+            mockStoreSession(updatedSession)(Right(()))
+
+            val result =
+              journeyService.updateAndNext(routes.CompanyDetailsController.recentlyStartedTrading(), updatedSession)
+            await(result.value) shouldBe Right(nextCall)
+          }
+
+          "applicant select yes" in {
+            testStartTrading(YesNoAnswer.Yes, routes.CheckYourAnswersController.checkYourAnswers())
+          }
+
+          "applicant select no" in {
+            testStartTrading(YesNoAnswer.No, routes.SAController.noReturnFound())
+          }
+
+        }
+
       }
 
       "convert incomplete answers to complete answers when all questions have been answered and" when {
@@ -2122,6 +2193,48 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
 
           result shouldBe routes.CRNController.companyRegistrationNumber()
 
+        }
+
+        "the recently started trading page" in {
+
+          val companyData         = companyLoginData.copy(
+            ctutr = Some(CTUTR("ctutr"))
+          )
+          val anyCTStatusResponse = CTStatusResponse(
+            ctutr = CTUTR("utr"),
+            startDate = LocalDate.now(),
+            endDate = LocalDate.now(),
+            latestAccountingPeriod = None
+          )
+          val journeyData         = CompanyRetrievedJourneyData(
+            companyName = Some(CompanyHouseName("Test tech Ltd")),
+            desCtutr = Some(CTUTR("ctutr")),
+            ctStatus = Some(anyCTStatusResponse)
+          )
+
+          val updatedSession =
+            CompanyHECSession(
+              companyData,
+              journeyData,
+              UserAnswers.empty.copy(
+                licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles),
+                licenceTimeTrading = Some(LicenceTimeTrading.TwoToFourYears),
+                licenceValidityPeriod = Some(LicenceValidityPeriod.UpToOneYear),
+                entityType = Some(Company),
+                crn = Some(CRN("1234567")),
+                companyDetailsConfirmed = Some(YesNoAnswer.Yes)
+              ),
+              None,
+              None,
+              List.empty
+            )
+
+          implicit val request: RequestWithSessionData[_] = requestWithSessionData(updatedSession)
+          val result                                      = journeyService.previous(
+            routes.CompanyDetailsController.recentlyStartedTrading()
+          )
+
+          result shouldBe routes.CompanyDetailsController.confirmCompanyDetails()
         }
 
         def buildIndividualSession(taxSituation: TaxSituation, saStatus: SAStatus): HECSession = {
