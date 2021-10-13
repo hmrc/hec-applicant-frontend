@@ -194,7 +194,7 @@ class CompanyDetailsController @Inject() (
         val updatedAnswers =
           request.sessionData.userAnswers
             .unset(_.recentlyStartedTrading)
-            .copy(chargeableForCT = Some(recentlyStartedTrading))
+            .copy(recentlyStartedTrading = Some(recentlyStartedTrading))
 
         journeyService
           .updateAndNext(
@@ -304,7 +304,7 @@ class CompanyDetailsController @Inject() (
         val back             = journeyService.previous(routes.CompanyDetailsController.ctIncomeStatement())
         val ctIncomeDeclared = request.sessionData.userAnswers.fold(_.ctIncomeDeclared, _.ctIncomeDeclared)
         val form = {
-          val emptyForm = CompanyDetailsController.ctIncomeStatementForm(YesNoAnswer.values)
+          val emptyForm = CompanyDetailsController.yesNoForm("ctIncomeDeclared", YesNoAnswer.values)
           ctIncomeDeclared.fold(emptyForm)(emptyForm.fill)
         }
         Ok(
@@ -341,7 +341,7 @@ class CompanyDetailsController @Inject() (
         }
 
         CompanyDetailsController
-          .ctIncomeStatementForm(YesNoAnswer.values)
+          .yesNoForm("ctIncomeDeclared", YesNoAnswer.values)
           .bindFromRequest()
           .fold(
             formWithErrors =>

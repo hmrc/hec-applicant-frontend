@@ -366,19 +366,25 @@ object JourneyServiceImpl {
     }
 
   private def checkCompanyDataComplete(
-    chargeableForCT: YesNoAnswer,
-    ctIncomeDeclared: Option[YesNoAnswer],
+    chargeableForCTOpt: Option[YesNoAnswer],
+    ctIncomeDeclaredOpt: Option[YesNoAnswer],
+    recentlyStartedTradingOpt: Option[YesNoAnswer],
     companySession: CompanyHECSession
   ): Boolean = {
     val ctStatus = companySession.retrievedJourneyData.ctStatus
       .flatMap(_.latestAccountingPeriod.map(_.ctStatus))
-
-    (ctStatus, chargeableForCT) match {
-      case (Some(_), YesNoAnswer.No)                            => true
-      case (Some(CTStatus.NoticeToFileIssued), YesNoAnswer.Yes) => true
-      case (Some(CTStatus.ReturnFound), YesNoAnswer.Yes)        => ctIncomeDeclared.nonEmpty
-      case _                                                    => false
+    (recentlyStartedTradingOpt, chargeableForCTOpt) match {
+      case (Some(YesNoAnswer.Yes), None) => true
+      case (None, Some(chargeableForCT)) =>
+        (ctStatus, chargeableForCT) match {
+          case (Some(_), YesNoAnswer.No)                            => true
+          case (Some(CTStatus.NoticeToFileIssued), YesNoAnswer.Yes) => true
+          case (Some(CTStatus.ReturnFound), YesNoAnswer.Yes)        => ctIncomeDeclaredOpt.nonEmpty
+          case _                                                    => false
+        }
+      case _                             => false
     }
+
   }
 
   /**
@@ -427,12 +433,13 @@ object JourneyServiceImpl {
                 entityType,
                 Some(_),
                 Some(_),
-                Some(chargeableForCT),
+                chargeableForCT,
                 ctIncomeDeclared,
-                _
+                recentlyStartedTrading
               ) =>
             val licenceTypeCheck = checkEntityTypePresentIfRequired(licenceType, entityType)
-            val companyDataCheck = checkCompanyDataComplete(chargeableForCT, ctIncomeDeclared, companySession)
+            val companyDataCheck =
+              checkCompanyDataComplete(chargeableForCT, ctIncomeDeclared, recentlyStartedTrading, companySession)
             licenceTypeCheck && companyDataCheck
 
           case _ => false

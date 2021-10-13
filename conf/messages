@@ -282,4 +282,4 @@ recentlyStartedTrading.yes = Yes
 recentlyStartedTrading.no = No
 recentlyStartedTrading.error.required = Select yes if your company started or restarted trading in the last 12 months
 recentlyStartedTrading.error.invalid = Select yes if your company started or restarted trading in the last 12 months
->>>>>>> HEC-1165 start trading page
+
