@@ -77,7 +77,8 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
     routes.CRNController.companyRegistrationNumber()                     -> companyRegistrationNumberRoute,
     routes.CompanyDetailsController.confirmCompanyDetails()              -> confirmCompanyDetailsRoute,
     routes.CompanyDetailsController.chargeableForCorporationTax()        -> chargeableForCTRoute,
-    routes.CompanyDetailsController.ctIncomeStatement()                  -> (_ => routes.CheckYourAnswersController.checkYourAnswers())
+    routes.CompanyDetailsController.ctIncomeStatement()                  -> (_ => routes.CheckYourAnswersController.checkYourAnswers()),
+    routes.CompanyDetailsController.recentlyStartedTrading()             -> recentlyStartedTradingRoute
   )
 
   // map which describes routes from an exit page to their previous page. The keys are the exit page and the values are
@@ -177,7 +178,8 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
                 crn,
                 companyDetailsConfirmed,
                 chargeableForCT,
-                ctIncomeDeclared
+                ctIncomeDeclared,
+                recentlyStartedTrading
               ) if allAnswersComplete(incomplete, session) =>
             val completeAnswers =
               CompleteUserAnswers(
@@ -190,7 +192,8 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
                 crn,
                 companyDetailsConfirmed,
                 chargeableForCT,
-                ctIncomeDeclared
+                ctIncomeDeclared,
+                recentlyStartedTrading
               )
             session.fold(
               _.copy(userAnswers = completeAnswers),
@@ -283,7 +286,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
               if (ctutr.value === desCtutr.value)
                 ctStatus.latestAccountingPeriod.map(_.ctStatus) match {
                   case Some(_) => routes.CompanyDetailsController.chargeableForCorporationTax()
-                  case None    => routes.CompanyDetailsController.noAccountingPeriod()
+                  case None    => routes.CompanyDetailsController.recentlyStartedTrading()
                 }
               else
                 routes.CompanyDetailsController.ctutrNotMatched()
@@ -319,6 +322,14 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
       } getOrElse {
         sys.error("Chargeable for CT answer missing")
       }
+    }
+
+  private def recentlyStartedTradingRoute(session: HECSession) =
+    session.userAnswers.fold(_.recentlyStartedTrading, _.recentlyStartedTrading) map {
+      case YesNoAnswer.Yes => routes.CheckYourAnswersController.checkYourAnswers()
+      case YesNoAnswer.No  => routes.SAController.noReturnFound
+    } getOrElse {
+      sys.error("Answer missing for if company has recently started trading")
     }
 
 }
@@ -394,6 +405,7 @@ object JourneyServiceImpl {
                 _,
                 _,
                 _,
+                _,
                 _
               ) =>
             val licenceTypeCheck      = checkEntityTypePresentIfRequired(licenceType, entityType)
@@ -416,7 +428,8 @@ object JourneyServiceImpl {
                 Some(_),
                 Some(_),
                 Some(chargeableForCT),
-                ctIncomeDeclared
+                ctIncomeDeclared,
+                _
               ) =>
             val licenceTypeCheck = checkEntityTypePresentIfRequired(licenceType, entityType)
             val companyDataCheck = checkCompanyDataComplete(chargeableForCT, ctIncomeDeclared, companySession)

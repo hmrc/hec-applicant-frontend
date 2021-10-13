@@ -275,3 +275,11 @@ ctIncomeDeclared.no = No
 ctIncomeDeclared.error.required = Select whether you included income you earned using this type of licence in your tax return
 ctIncomeDeclared.error.invalid = Select whether you included income you earned using this type of licence in your tax return
 ctIncomeDeclared.hint = This is your Company Tax Return for the accounting period ending {0}.
+
+# Recently started trading
+recentlyStartedTrading.title = Did your company start or restart trading in the last 12 months?
+recentlyStartedTrading.yes = Yes
+recentlyStartedTrading.no = No
+recentlyStartedTrading.error.required = Select yes if your company started or restarted trading in the last 12 months
+recentlyStartedTrading.error.invalid = Select yes if your company started or restarted trading in the last 12 months
+>>>>>>> HEC-1165 start trading page
