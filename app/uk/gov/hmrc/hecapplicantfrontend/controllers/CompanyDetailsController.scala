@@ -181,15 +181,16 @@ class CompanyDetailsController @Inject() (
       request.sessionData mapAsCompany { companySession =>
         ensureCompanyDataHasCTStatusAccountingPeriod(companySession) { latestAccountingPeriod =>
           val chargeableForCT = request.sessionData.userAnswers.fold(_.chargeableForCT, _.chargeableForCT)
+          val endDateStr      = TimeUtils.govDisplayFormat(latestAccountingPeriod.endDate)
           val form = {
-            val emptyForm = CompanyDetailsController.chargeableForCTForm(YesNoAnswer.values)
+            val emptyForm = CompanyDetailsController.chargeableForCTForm(YesNoAnswer.values, List(endDateStr))
             chargeableForCT.fold(emptyForm)(emptyForm.fill)
           }
           Ok(
             chargeableForCTPage(
               form = form,
               back = journeyService.previous(routes.CompanyDetailsController.chargeableForCorporationTax()),
-              date = TimeUtils.govDisplayFormat(latestAccountingPeriod.endDate),
+              date = endDateStr,
               options = YesNoOption.yesNoOptions
             )
           )
@@ -219,8 +220,9 @@ class CompanyDetailsController @Inject() (
 
       request.sessionData mapAsCompany { companySession =>
         ensureCompanyDataHasCTStatusAccountingPeriod(companySession) { latestAccountingPeriod =>
+          val endDateStr = TimeUtils.govDisplayFormat(latestAccountingPeriod.endDate)
           CompanyDetailsController
-            .chargeableForCTForm(YesNoAnswer.values)
+            .chargeableForCTForm(YesNoAnswer.values, List(endDateStr))
             .bindFromRequest()
             .fold(
               formWithErrors =>
@@ -228,7 +230,7 @@ class CompanyDetailsController @Inject() (
                   chargeableForCTPage(
                     form = formWithErrors,
                     back = journeyService.previous(routes.CompanyDetailsController.chargeableForCorporationTax()),
-                    date = TimeUtils.govDisplayFormat(latestAccountingPeriod.endDate),
+                    date = endDateStr,
                     options = YesNoOption.yesNoOptions
                   )
                 ),
@@ -364,10 +366,10 @@ object CompanyDetailsController {
   def calculateLookbackPeriod(today: LocalDate): (LocalDate, LocalDate) =
     today.minusYears(2).plusDays(1) -> today.minusYears(1)
 
-  def chargeableForCTForm(options: List[YesNoAnswer]): Form[YesNoAnswer] =
+  def chargeableForCTForm(options: List[YesNoAnswer], errorMsgArgs: List[String]): Form[YesNoAnswer] =
     Form(
       mapping(
-        "chargeableForCT" -> of(FormUtils.radioFormFormatter(options))
+        "chargeableForCT" -> of(FormUtils.radioFormFormatter(options, errorMsgArgs))
       )(identity)(Some(_))
     )
 
