@@ -521,6 +521,7 @@ class CompanyDetailsControllerSpec
             None,
             Some(YesNoAnswer.Yes),
             Some(YesNoAnswer.No),
+            None,
             None
           )
           val session = CompanyHECSession(companyLoginData, companyData, answers, None, None, List.empty)

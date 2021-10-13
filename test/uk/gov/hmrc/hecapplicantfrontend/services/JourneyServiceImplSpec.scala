@@ -279,7 +279,8 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                   crn = None,
                   companyDetailsConfirmed = None,
                   chargeableForCT = None,
-                  ctIncomeDeclared = None
+                  ctIncomeDeclared = None,
+                  recentlyStartedTrading = None
                 ),
                 None,
                 Some(taxCheckStartDateTime),
@@ -788,7 +789,8 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 crn = None,
                 companyDetailsConfirmed = None,
                 chargeableForCT = None,
-                ctIncomeDeclared = None
+                ctIncomeDeclared = None,
+                recentlyStartedTrading = None
               ),
               None,
               Some(taxCheckStartDateTime),
@@ -1130,7 +1132,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
                 routes.CompanyDetailsController.confirmCompanyDetails(),
                 updatedSession
               )
-              await(result.value) shouldBe Right(routes.CompanyDetailsController.noAccountingPeriod())
+              await(result.value) shouldBe Right(routes.CompanyDetailsController.recentlyStartedTrading())
             }
           }
 

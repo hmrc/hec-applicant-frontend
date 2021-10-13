@@ -42,9 +42,9 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory {
 
-  val mockHECConnector = mock[HECConnector]
-  val zonedDateTimeNow = ZonedDateTime.of(2021, 10, 9, 9, 12, 34, 0, ZoneId.of("Europe/London"))
-  val service          = new TaxCheckServiceImpl(mockHECConnector)
+  val mockHECConnector: HECConnector  = mock[HECConnector]
+  val zonedDateTimeNow: ZonedDateTime = ZonedDateTime.of(2021, 10, 9, 9, 12, 34, 0, ZoneId.of("Europe/London"))
+  val service: TaxCheckServiceImpl    = new TaxCheckServiceImpl(mockHECConnector)
 
   def mockSaveTaxCheck(taxCheckData: HECTaxCheckData)(result: Either[Error, HttpResponse]) =
     (mockHECConnector
