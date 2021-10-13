@@ -339,10 +339,9 @@ class CompanyDetailsController @Inject() (
   private def ensureUserAnswersHasCRN(
     session: HECSession
   )(f: CRN => Future[Result]): Future[Result] =
-    session.userAnswers match {
-      case UserAnswers.IncompleteUserAnswers(_, _, _, _, _, _, Some(crn), _, _, _) => f(crn)
-      case UserAnswers.CompleteUserAnswers(_, _, _, _, _, _, Some(crn), _, _, _)   => f(crn)
-      case _                                                                       =>
+    session.userAnswers.fold(_.crn, _.crn) match {
+      case Some(crn) => f(crn)
+      case None      =>
         logger.warn("CRN is not populated in user answers")
         InternalServerError
     }

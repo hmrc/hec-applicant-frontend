@@ -362,14 +362,11 @@ object JourneyServiceImpl {
     val ctStatus = companySession.retrievedJourneyData.ctStatus
       .flatMap(_.latestAccountingPeriod.map(_.ctStatus))
 
-    chargeableForCT match {
-      case YesNoAnswer.Yes =>
-        ctStatus match {
-          case Some(CTStatus.NoticeToFileIssued) => true
-          case Some(_)                           => ctIncomeDeclared.nonEmpty
-          case None                              => false
-        }
-      case YesNoAnswer.No  => true
+    (ctStatus, chargeableForCT) match {
+      case (Some(_), YesNoAnswer.No)                            => true
+      case (Some(CTStatus.NoticeToFileIssued), YesNoAnswer.Yes) => true
+      case (Some(CTStatus.ReturnFound), YesNoAnswer.Yes)        => ctIncomeDeclared.nonEmpty
+      case _                                                    => false
     }
   }
 
@@ -415,13 +412,13 @@ object JourneyServiceImpl {
                 Some(_),
                 _,
                 _,
-                Some(entityType),
+                entityType,
                 Some(_),
                 Some(_),
                 Some(chargeableForCT),
                 ctIncomeDeclared
               ) =>
-            val licenceTypeCheck = checkEntityTypePresentIfRequired(licenceType, Some(entityType))
+            val licenceTypeCheck = checkEntityTypePresentIfRequired(licenceType, entityType)
             val companyDataCheck = checkCompanyDataComplete(chargeableForCT, ctIncomeDeclared, companySession)
             licenceTypeCheck && companyDataCheck
 

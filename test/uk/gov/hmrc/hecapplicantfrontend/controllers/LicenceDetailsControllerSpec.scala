@@ -475,6 +475,7 @@ class LicenceDetailsControllerSpec
               Some(EntityType.Individual),
               None,
               None,
+              None,
               None
             )
             val updatedAnswers = UserAnswers.empty.copy(licenceType = Some(LicenceType.ScrapMetalMobileCollector))
@@ -493,6 +494,7 @@ class LicenceDetailsControllerSpec
               Some(TaxSituation.SA),
               Some(YesNoAnswer.Yes),
               Some(EntityType.Individual),
+              None,
               None,
               None,
               None
