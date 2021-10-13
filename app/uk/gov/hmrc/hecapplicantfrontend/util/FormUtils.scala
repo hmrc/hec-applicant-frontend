@@ -28,7 +28,8 @@ import scala.util.Try
 object FormUtils {
 
   def radioFormFormatter[A : Eq](
-    orderedOptions: List[A]
+    orderedOptions: List[A],
+    errorMsgArgs: List[String] = Nil
   ): Formatter[A] =
     new Formatter[A] {
       val optionsZippedWithIndex: List[(A, Int)] = orderedOptions.zipWithIndex
@@ -37,13 +38,13 @@ object FormUtils {
         key: String,
         data: Map[String, String]
       ): Either[Seq[FormError], A] = {
-        lazy val invalidError = FormError(key, "error.invalid")
+        lazy val invalidError = FormError(key, "error.invalid", errorMsgArgs)
         data
           .get(key)
           .map(_.trim())
           .filter(_.nonEmpty)
           .fold[Either[Seq[FormError], A]](
-            Left(Seq(FormError(key, "error.required")))
+            Left(Seq(FormError(key, "error.required", errorMsgArgs)))
           ) { stringValue =>
             Either
               .fromTry(Try(stringValue.toInt))

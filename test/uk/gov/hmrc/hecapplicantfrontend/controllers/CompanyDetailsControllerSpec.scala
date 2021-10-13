@@ -650,7 +650,7 @@ class CompanyDetailsControllerSpec
           checkFormErrorIsDisplayed(
             performAction(formAnswer: _*),
             messageFromMessageKey("chargeableForCT.title", "5 October 2020"),
-            messageFromMessageKey("chargeableForCT.error.required")
+            messageFromMessageKey("chargeableForCT.error.required", "5 October 2020")
           )
         }
 
