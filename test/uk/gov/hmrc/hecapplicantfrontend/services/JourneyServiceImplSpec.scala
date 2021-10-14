@@ -29,12 +29,13 @@ import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, In
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.{CompanyRetrievedJourneyData, IndividualRetrievedJourneyData}
 import uk.gov.hmrc.hecapplicantfrontend.models.TaxSituation.PAYE
-import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.{CompleteUserAnswers, IncompleteUserAnswers}
+import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.CompleteUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models._
 import uk.gov.hmrc.hecapplicantfrontend.models.ids._
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType.DriverOfTaxisAndPrivateHires
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceValidityPeriod.UpToOneYear
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
+import uk.gov.hmrc.hecapplicantfrontend.utils.Fixtures
 import uk.gov.hmrc.http.HeaderCarrier
 
 import java.time.{LocalDate, ZoneId, ZonedDateTime}
@@ -1302,30 +1303,19 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
       "convert incomplete answers to complete answers when all questions have been answered and" when {
 
         "the user has selected an individual only licence type" in {
-          val completeAnswers = CompleteUserAnswers(
+          val completeAnswers = Fixtures.completeUserAnswers(
             LicenceType.DriverOfTaxisAndPrivateHires,
             LicenceTimeTrading.ZeroToTwoYears,
             LicenceValidityPeriod.UpToOneYear,
-            Some(TaxSituation.PAYE),
-            None,
-            None,
-            None,
-            None,
-            None,
-            None
+            Some(TaxSituation.PAYE)
           )
 
-          val incompleteAnswers = IncompleteUserAnswers(
+          val incompleteAnswers = Fixtures.incompleteUserAnswers(
             Some(completeAnswers.licenceType),
             Some(completeAnswers.licenceTimeTrading),
             Some(completeAnswers.licenceValidityPeriod),
             completeAnswers.taxSituation,
-            completeAnswers.saIncomeDeclared,
-            None,
-            None,
-            None,
-            None,
-            None
+            completeAnswers.saIncomeDeclared
           )
 
           val individualData = individualLoginData.copy(sautr = Some(SAUTR("utr")))
@@ -1355,30 +1345,22 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             LicenceType.OperatorOfPrivateHireVehicles
           ).foreach { licenceType =>
             withClue(s"For licence type $licenceType: ") {
-              val completeAnswers = CompleteUserAnswers(
+              val completeAnswers = Fixtures.completeUserAnswers(
                 licenceType,
                 LicenceTimeTrading.ZeroToTwoYears,
                 LicenceValidityPeriod.UpToOneYear,
                 Some(TaxSituation.PAYE),
                 Some(YesNoAnswer.Yes),
-                Some(EntityType.Company),
-                None,
-                None,
-                None,
-                None
+                Some(EntityType.Company)
               )
 
-              val incompleteAnswers = IncompleteUserAnswers(
+              val incompleteAnswers = Fixtures.incompleteUserAnswers(
                 Some(completeAnswers.licenceType),
                 Some(completeAnswers.licenceTimeTrading),
                 Some(completeAnswers.licenceValidityPeriod),
                 completeAnswers.taxSituation,
                 Some(YesNoAnswer.Yes),
-                Some(EntityType.Company),
-                None,
-                None,
-                None,
-                None
+                Some(EntityType.Company)
               )
 
               val session                                     =
@@ -1413,30 +1395,20 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             TaxSituation.NotChargeable
           ).foreach { taxSituation =>
             withClue(s"For tax situation $taxSituation: ") {
-              val completeAnswers = CompleteUserAnswers(
+              val completeAnswers = Fixtures.completeUserAnswers(
                 LicenceType.DriverOfTaxisAndPrivateHires,
                 LicenceTimeTrading.ZeroToTwoYears,
                 LicenceValidityPeriod.UpToOneYear,
-                Some(taxSituation),
-                None,
-                None,
-                None,
-                None,
-                None,
-                None
+                Some(taxSituation)
               )
 
-              val incompleteAnswers = IncompleteUserAnswers(
+              val incompleteAnswers = Fixtures.incompleteUserAnswers(
                 Some(completeAnswers.licenceType),
                 Some(completeAnswers.licenceTimeTrading),
                 Some(completeAnswers.licenceValidityPeriod),
                 completeAnswers.taxSituation,
                 completeAnswers.saIncomeDeclared,
-                completeAnswers.entityType,
-                None,
-                None,
-                None,
-                None
+                completeAnswers.entityType
               )
 
               val session = IndividualHECSession(
@@ -1466,30 +1438,21 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             TaxSituation.SAPAYE
           ).foreach { taxSituation =>
             withClue(s"For tax situation $taxSituation: ") {
-              val completeAnswers = CompleteUserAnswers(
+              val completeAnswers = Fixtures.completeUserAnswers(
                 LicenceType.DriverOfTaxisAndPrivateHires,
                 LicenceTimeTrading.ZeroToTwoYears,
                 LicenceValidityPeriod.UpToOneYear,
                 Some(taxSituation),
-                Some(YesNoAnswer.Yes),
-                None,
-                None,
-                None,
-                None,
-                None
+                Some(YesNoAnswer.Yes)
               )
 
-              val incompleteAnswers = IncompleteUserAnswers(
+              val incompleteAnswers = Fixtures.incompleteUserAnswers(
                 Some(completeAnswers.licenceType),
                 Some(completeAnswers.licenceTimeTrading),
                 Some(completeAnswers.licenceValidityPeriod),
                 completeAnswers.taxSituation,
                 completeAnswers.saIncomeDeclared,
-                completeAnswers.entityType,
-                None,
-                None,
-                None,
-                None
+                completeAnswers.entityType
               )
 
               val journeyData = IndividualRetrievedJourneyData(
@@ -1516,30 +1479,20 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             TaxSituation.SAPAYE
           ).foreach { taxSituation =>
             withClue(s"For tax situation $taxSituation: ") {
-              val completeAnswers = CompleteUserAnswers(
+              val completeAnswers = Fixtures.completeUserAnswers(
                 LicenceType.DriverOfTaxisAndPrivateHires,
                 LicenceTimeTrading.ZeroToTwoYears,
                 LicenceValidityPeriod.UpToOneYear,
-                Some(taxSituation),
-                None,
-                None,
-                None,
-                None,
-                None,
-                None
+                Some(taxSituation)
               )
 
-              val incompleteAnswers = IncompleteUserAnswers(
+              val incompleteAnswers = Fixtures.incompleteUserAnswers(
                 Some(completeAnswers.licenceType),
                 Some(completeAnswers.licenceTimeTrading),
                 Some(completeAnswers.licenceValidityPeriod),
                 completeAnswers.taxSituation,
                 completeAnswers.saIncomeDeclared,
-                completeAnswers.entityType,
-                None,
-                None,
-                None,
-                None
+                completeAnswers.entityType
               )
 
               val journeyData = IndividualRetrievedJourneyData(
@@ -1565,17 +1518,13 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
       "not convert incomplete answers to complete answers when all questions have been answered and" when {
 
         "the selected entity type is not consistent with the entity type retrieved from the GG creds" in {
-          val incompleteAnswers = IncompleteUserAnswers(
+          val incompleteAnswers = Fixtures.incompleteUserAnswers(
             Some(LicenceType.OperatorOfPrivateHireVehicles),
             Some(LicenceTimeTrading.ZeroToTwoYears),
             Some(LicenceValidityPeriod.UpToOneYear),
             Some(TaxSituation.PAYE),
             Some(YesNoAnswer.Yes),
-            Some(EntityType.Company),
-            None,
-            None,
-            None,
-            None
+            Some(EntityType.Company)
           )
 
           val session                                     =
@@ -1942,17 +1891,13 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
           )
 
           def userAnswers(licenceType: LicenceType, taxSituation: TaxSituation, entityType: Option[EntityType]) =
-            CompleteUserAnswers(
+            Fixtures.completeUserAnswers(
               licenceType,
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToOneYear,
               Some(taxSituation),
               Some(YesNoAnswer.Yes),
-              entityType,
-              None,
-              None,
-              None,
-              None
+              entityType
             )
 
           "tax situation = SA & SA status = NoticeToFileIssued" in {
@@ -2194,17 +2139,12 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
           IndividualHECSession(
             individualLoginData,
             journeyData,
-            IncompleteUserAnswers(
+            Fixtures.incompleteUserAnswers(
               Some(LicenceType.DriverOfTaxisAndPrivateHires),
               Some(LicenceTimeTrading.ZeroToTwoYears),
               Some(LicenceValidityPeriod.UpToOneYear),
               Some(taxSituation),
-              Some(YesNoAnswer.Yes),
-              None,
-              None,
-              None,
-              None,
-              None
+              Some(YesNoAnswer.Yes)
             ),
             None,
             None,
@@ -2217,17 +2157,13 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
       "return the check your answers page" when {
 
         "the answers in the session are complete and the current page is not the check your answers page" in {
-          val completeAnswers                             = CompleteUserAnswers(
+          val completeAnswers                             = Fixtures.completeUserAnswers(
             LicenceType.DriverOfTaxisAndPrivateHires,
             LicenceTimeTrading.ZeroToTwoYears,
             LicenceValidityPeriod.UpToOneYear,
             Some(TaxSituation.PAYE),
             Some(YesNoAnswer.Yes),
-            Some(EntityType.Individual),
-            None,
-            None,
-            None,
-            None
+            Some(EntityType.Individual)
           )
           implicit val request: RequestWithSessionData[_] =
             requestWithSessionData(
@@ -2254,17 +2190,11 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
 
     "JourneyServiceImpl.allAnswersComplete" when {
       "session is individual" must {
-        val incompleteAnswersBase = IncompleteUserAnswers(
+        val incompleteAnswersBase = Fixtures.incompleteUserAnswers(
           licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires),
           licenceTimeTrading = Some(LicenceTimeTrading.ZeroToTwoYears),
           licenceValidityPeriod = Some(LicenceValidityPeriod.UpToOneYear),
-          taxSituation = Some(TaxSituation.PAYE),
-          saIncomeDeclared = None,
-          entityType = None,
-          None,
-          None,
-          None,
-          None
+          taxSituation = Some(TaxSituation.PAYE)
         )
 
         "return false" when {
@@ -2432,17 +2362,10 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
       }
 
       "session is company" must {
-        val incompleteAnswersBase = IncompleteUserAnswers(
+        val incompleteAnswersBase = Fixtures.incompleteUserAnswers(
           licenceType = Some(LicenceType.ScrapMetalDealerSite),
           licenceTimeTrading = Some(LicenceTimeTrading.ZeroToTwoYears),
-          licenceValidityPeriod = Some(LicenceValidityPeriod.UpToOneYear),
-          taxSituation = None,
-          saIncomeDeclared = None,
-          entityType = None,
-          None,
-          None,
-          None,
-          None
+          licenceValidityPeriod = Some(LicenceValidityPeriod.UpToOneYear)
         )
 
         def testForChargeableForCtIsYes(

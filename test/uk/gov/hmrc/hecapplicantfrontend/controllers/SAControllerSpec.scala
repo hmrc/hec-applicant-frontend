@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.controllers
 
-import java.time.LocalDate
 import org.jsoup.nodes.Document
 import play.api.inject.bind
 import play.api.mvc.Result
@@ -26,13 +25,15 @@ import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.IndividualHECSession
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.IndividualLoginData
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.IndividualRetrievedJourneyData
-import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.{CompleteUserAnswers, IncompleteUserAnswers}
+import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.IncompleteUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models._
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
+import uk.gov.hmrc.hecapplicantfrontend.utils.Fixtures
 
+import java.time.LocalDate
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -168,17 +169,13 @@ class SAControllerSpec
             IndividualHECSession(
               individualLoginData,
               IndividualRetrievedJourneyData.empty,
-              CompleteUserAnswers(
+              Fixtures.completeUserAnswers(
                 LicenceType.DriverOfTaxisAndPrivateHires,
                 LicenceTimeTrading.ZeroToTwoYears,
                 LicenceValidityPeriod.UpToTwoYears,
                 Some(TaxSituation.PAYE),
                 Some(YesNoAnswer.Yes),
-                Some(EntityType.Individual),
-                None,
-                None,
-                None,
-                None
+                Some(EntityType.Individual)
               ),
               None,
               None,
@@ -325,17 +322,12 @@ class SAControllerSpec
           }
 
           "the user has previously completed answering questions" in {
-            val answers        = CompleteUserAnswers(
+            val answers        = Fixtures.completeUserAnswers(
               LicenceType.DriverOfTaxisAndPrivateHires,
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToOneYear,
               Some(TaxSituation.SA),
-              Some(YesNoAnswer.Yes),
-              None,
-              None,
-              None,
-              None,
-              None
+              Some(YesNoAnswer.Yes)
             )
             val updatedAnswers = IncompleteUserAnswers
               .fromCompleteAnswers(answers)

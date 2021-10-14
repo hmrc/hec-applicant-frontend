@@ -30,11 +30,11 @@ import uk.gov.hmrc.hecapplicantfrontend.models.HECTaxCheckData.IndividualHECTaxC
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.IndividualLoginData
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.IndividualRetrievedJourneyData
 import uk.gov.hmrc.hecapplicantfrontend.models.TaxDetails.IndividualTaxDetails
-import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.CompleteUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.ids._
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hecapplicantfrontend.models.{CTAccountingPeriod, CTStatus, CTStatusResponse, DateOfBirth, EmailAddress, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, Name, SAStatus, SAStatusResponse, TaxCheckListItem, TaxSituation, TaxYear, YesNoAnswer}
 import uk.gov.hmrc.hecapplicantfrontend.services.TaxCheckService._
+import uk.gov.hmrc.hecapplicantfrontend.utils.Fixtures
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 
 import java.time.{LocalDate, ZoneId, ZonedDateTime}
@@ -95,17 +95,12 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         Some(email)
       )
 
-      val completeAnswers = CompleteUserAnswers(
+      val completeAnswers = Fixtures.completeUserAnswers(
         LicenceType.OperatorOfPrivateHireVehicles,
         LicenceTimeTrading.TwoToFourYears,
         LicenceValidityPeriod.UpToOneYear,
         Some(TaxSituation.SA),
-        Some(YesNoAnswer.Yes),
-        None,
-        None,
-        None,
-        None,
-        None
+        Some(YesNoAnswer.Yes)
       )
 
       val retrievedJourneyData = IndividualRetrievedJourneyData(None)

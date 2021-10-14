@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.controllers
 
-import java.time.LocalDate
 import play.api.inject.bind
 import play.api.mvc.Result
 import play.api.test.FakeRequest
@@ -25,13 +24,15 @@ import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, IndividualHECSession}
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.{CompanyRetrievedJourneyData, IndividualRetrievedJourneyData}
-import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.{CompleteUserAnswers, IncompleteUserAnswers}
+import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.IncompleteUserAnswers
+import uk.gov.hmrc.hecapplicantfrontend.models._
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.hecapplicantfrontend.models._
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
+import uk.gov.hmrc.hecapplicantfrontend.utils.Fixtures
 
+import java.time.LocalDate
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -97,17 +98,13 @@ class EntityTypeControllerSpec
             IndividualHECSession(
               individualLoginData,
               IndividualRetrievedJourneyData.empty,
-              CompleteUserAnswers(
+              Fixtures.completeUserAnswers(
                 LicenceType.DriverOfTaxisAndPrivateHires,
                 LicenceTimeTrading.ZeroToTwoYears,
                 LicenceValidityPeriod.UpToTwoYears,
                 Some(TaxSituation.PAYE),
                 Some(YesNoAnswer.Yes),
-                Some(EntityType.Individual),
-                None,
-                None,
-                None,
-                None
+                Some(EntityType.Individual)
               ),
               None,
               None,
@@ -276,17 +273,12 @@ class EntityTypeControllerSpec
           }
 
           "the user has previously completed answering questions" in {
-            val answers        = CompleteUserAnswers(
+            val answers        = Fixtures.completeUserAnswers(
               LicenceType.DriverOfTaxisAndPrivateHires,
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToOneYear,
               Some(TaxSituation.PAYE),
-              Some(YesNoAnswer.Yes),
-              None,
-              None,
-              None,
-              None,
-              None
+              Some(YesNoAnswer.Yes)
             )
             val updatedAnswers = IncompleteUserAnswers
               .fromCompleteAnswers(answers)
@@ -314,17 +306,12 @@ class EntityTypeControllerSpec
           }
 
           "the user is a company and  has previously completed answering questions" in {
-            val answers        = CompleteUserAnswers(
+            val answers        = Fixtures.completeUserAnswers(
               licenceType = LicenceType.OperatorOfPrivateHireVehicles,
               licenceTimeTrading = LicenceTimeTrading.ZeroToTwoYears,
               licenceValidityPeriod = LicenceValidityPeriod.UpToOneYear,
               taxSituation = Some(TaxSituation.SAPAYE),
-              saIncomeDeclared = Some(YesNoAnswer.Yes),
-              entityType = None,
-              crn = None,
-              companyDetailsConfirmed = None,
-              chargeableForCT = None,
-              ctIncomeDeclared = None
+              saIncomeDeclared = Some(YesNoAnswer.Yes)
             )
             val updatedAnswers = IncompleteUserAnswers
               .fromCompleteAnswers(answers)

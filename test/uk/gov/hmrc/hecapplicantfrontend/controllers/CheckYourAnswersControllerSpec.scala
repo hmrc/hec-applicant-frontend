@@ -32,6 +32,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.{JourneyService, TaxCheckService}
+import uk.gov.hmrc.hecapplicantfrontend.utils.Fixtures
 import uk.gov.hmrc.http.HeaderCarrier
 
 import collection.JavaConverters._
@@ -99,17 +100,13 @@ class CheckYourAnswersControllerSpec
       }
 
       "display the page" in {
-        val answers = CompleteUserAnswers(
+        val answers = Fixtures.completeUserAnswers(
           LicenceType.ScrapMetalMobileCollector,
           LicenceTimeTrading.ZeroToTwoYears,
           LicenceValidityPeriod.UpToTwoYears,
           Some(TaxSituation.PAYE),
           Some(YesNoAnswer.Yes),
-          Some(EntityType.Individual),
-          None,
-          None,
-          None,
-          None
+          Some(EntityType.Individual)
         )
 
         val session =
@@ -190,17 +187,13 @@ class CheckYourAnswersControllerSpec
 
       behave like authAndSessionDataBehaviour(performAction)
 
-      val completeAnswers = CompleteUserAnswers(
+      val completeAnswers = Fixtures.completeUserAnswers(
         LicenceType.OperatorOfPrivateHireVehicles,
         LicenceTimeTrading.TwoToFourYears,
         LicenceValidityPeriod.UpToOneYear,
         Some(TaxSituation.SA),
         Some(YesNoAnswer.Yes),
-        Some(EntityType.Individual),
-        None,
-        None,
-        None,
-        None
+        Some(EntityType.Individual)
       )
 
       val session =
