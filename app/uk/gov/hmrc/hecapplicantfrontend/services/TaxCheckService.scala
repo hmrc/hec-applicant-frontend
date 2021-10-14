@@ -33,7 +33,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.TaxDetails.IndividualTaxDetails
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.CompleteUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR, SAUTR}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceDetails
-import uk.gov.hmrc.hecapplicantfrontend.models.{CTStatusResponse, Error, HECSession, HECTaxCheck, HECTaxCheckData, SAStatusResponse, TaxCheckListItem, TaxYear}
+import uk.gov.hmrc.hecapplicantfrontend.models.{CTStatusResponse, Error, HECSession, HECTaxCheck, HECTaxCheckData, HECTaxCheckSource, SAStatusResponse, TaxCheckListItem, TaxYear}
 import uk.gov.hmrc.hecapplicantfrontend.services.TaxCheckService._
 import uk.gov.hmrc.hecapplicantfrontend.util.HttpResponseOps._
 import uk.gov.hmrc.http.HeaderCarrier
@@ -158,7 +158,8 @@ class TaxCheckServiceImpl @Inject() (hecConnector: HECConnector)(implicit ec: Ex
         taxDetails,
         taxCheckStartDateTime.getOrElse(
           sys.error("taxCheckStartDateTime is not present")
-        )
+        ),
+        HECTaxCheckSource.Digital
       )
 
     case _: CompanyHECSession => sys.error("Not handled yet")

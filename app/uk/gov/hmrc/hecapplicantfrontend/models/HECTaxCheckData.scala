@@ -34,7 +34,8 @@ object HECTaxCheckData {
     applicantDetails: IndividualApplicantDetails,
     licenceDetails: LicenceDetails,
     taxDetails: IndividualTaxDetails,
-    taxCheckStartDateTime: ZonedDateTime
+    taxCheckStartDateTime: ZonedDateTime,
+    source: HECTaxCheckSource
   ) extends HECTaxCheckData {
     val entityType: EntityType = EntityType.Individual
   }
@@ -43,7 +44,8 @@ object HECTaxCheckData {
     applicantDetails: CompanyApplicantDetails,
     licenceDetails: LicenceDetails,
     taxDetails: CompanyTaxDetails,
-    taxCheckStartDateTime: ZonedDateTime
+    taxCheckStartDateTime: ZonedDateTime,
+    source: HECTaxCheckSource
   ) extends HECTaxCheckData {
     val entityType: EntityType = EntityType.Company
   }

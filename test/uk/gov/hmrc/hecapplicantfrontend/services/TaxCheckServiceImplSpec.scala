@@ -32,7 +32,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.IndividualRe
 import uk.gov.hmrc.hecapplicantfrontend.models.TaxDetails.IndividualTaxDetails
 import uk.gov.hmrc.hecapplicantfrontend.models.ids._
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.hecapplicantfrontend.models.{CTAccountingPeriod, CTStatus, CTStatusResponse, DateOfBirth, EmailAddress, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, Name, SAStatus, SAStatusResponse, TaxCheckListItem, TaxSituation, TaxYear, YesNoAnswer}
+import uk.gov.hmrc.hecapplicantfrontend.models.{CTAccountingPeriod, CTStatus, CTStatusResponse, DateOfBirth, EmailAddress, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, HECTaxCheckSource, Name, SAStatus, SAStatusResponse, TaxCheckListItem, TaxSituation, TaxYear, YesNoAnswer}
 import uk.gov.hmrc.hecapplicantfrontend.services.TaxCheckService._
 import uk.gov.hmrc.hecapplicantfrontend.utils.Fixtures
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
@@ -123,7 +123,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
           completeAnswers.saIncomeDeclared,
           None
         ),
-        zonedDateTimeNow
+        zonedDateTimeNow,
+        HECTaxCheckSource.Digital
       )
 
       val taxCheckCode = HECTaxCheckCode("code")
