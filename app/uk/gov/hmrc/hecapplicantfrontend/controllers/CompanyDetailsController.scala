@@ -301,11 +301,14 @@ class CompanyDetailsController @Inject() (
   }
 
   val enterCtutr: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
-    request.sessionData mapAsCompany { _ =>
-      val ctutr = request.sessionData.userAnswers.fold(_.ctutr, _.ctutr)
-      val back  = journeyService.previous(routes.CompanyDetailsController.enterCtutr())
-      val form  = ctutr.fold(enterCtutrForm)(enterCtutrForm.fill)
-      Ok(enterCtutrPage(form, back))
+    request.sessionData mapAsCompany { companySession =>
+      ensureCompanyDataHasDesCtutr(companySession) { desCtutr =>
+        val ctutr     = request.sessionData.userAnswers.fold(_.ctutr, _.ctutr)
+        val back      = journeyService.previous(routes.CompanyDetailsController.enterCtutr())
+        val ctutrForm = enterCtutrForm(desCtutr)
+        val form      = ctutr.fold(ctutrForm)(ctutrForm.fill)
+        Ok(enterCtutrPage(form, back))
+      }
     }
   }
 
@@ -339,7 +342,7 @@ class CompanyDetailsController @Inject() (
           )
         }
 
-        enterCtutrForm
+        enterCtutrForm(desCtutr)
           .bindFromRequest()
           .fold(
             formWithErrors =>
@@ -487,15 +490,15 @@ object CompanyDetailsController {
   def calculateLookbackPeriod(today: LocalDate): (LocalDate, LocalDate) =
     today.minusYears(2).plusDays(1) -> today.minusYears(1)
 
-  private val validCtutr: Constraint[CTUTR] =
-    Constraint(ctutr =>
-      CTUTR.fromString(ctutr.value) match {
-        case Some(_) => Valid
-        case None    => Invalid("error.ctutrInvalid")
-      }
-    )
+  def enterCtutrForm(desCtrutr: CTUTR): Form[CTUTR] = {
+    val validCtutr: Constraint[CTUTR] =
+      Constraint(ctutr =>
+        CTUTR.fromString(ctutr.value) match {
+          case Some(ctutr) => if (ctutr.value === desCtrutr.value) Valid else Invalid("error.ctutrsDoNotMatch")
+          case None        => Invalid("error.ctutrInvalid")
+        }
+      )
 
-  val enterCtutrForm: Form[CTUTR] =
     Form(
       mapping(
         "enterCtutr" -> nonEmptyText
@@ -506,4 +509,5 @@ object CompanyDetailsController {
           .verifying(validCtutr)
       )(identity)(Some(_))
     )
+  }
 }
