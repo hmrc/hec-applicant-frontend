@@ -29,7 +29,6 @@ import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, In
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.{CompanyRetrievedJourneyData, IndividualRetrievedJourneyData}
 import uk.gov.hmrc.hecapplicantfrontend.models.TaxSituation.PAYE
-import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.CompleteUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models._
 import uk.gov.hmrc.hecapplicantfrontend.models.ids._
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType.DriverOfTaxisAndPrivateHires
@@ -272,18 +271,13 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
               IndividualHECSession(
                 individualLoginData,
                 IndividualRetrievedJourneyData.empty,
-                CompleteUserAnswers(
+                Fixtures.completeUserAnswers(
                   licenceType = DriverOfTaxisAndPrivateHires,
                   licenceTimeTrading = LicenceTimeTrading.TwoToFourYears,
                   licenceValidityPeriod = UpToOneYear,
                   taxSituation = Some(PAYE),
                   saIncomeDeclared = Some(YesNoAnswer.Yes),
-                  entityType = Some(Individual),
-                  crn = None,
-                  companyDetailsConfirmed = None,
-                  chargeableForCT = None,
-                  ctIncomeDeclared = None,
-                  recentlyStartedTrading = None
+                  entityType = Some(Individual)
                 ),
                 None,
                 Some(taxCheckStartDateTime),
@@ -782,25 +776,19 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             val session                                     = IndividualHECSession(
               individualLoginData,
               IndividualRetrievedJourneyData.empty,
-              CompleteUserAnswers(
+              Fixtures.completeUserAnswers(
                 licenceType = DriverOfTaxisAndPrivateHires,
                 licenceTimeTrading = LicenceTimeTrading.TwoToFourYears,
                 licenceValidityPeriod = UpToOneYear,
                 taxSituation = Some(PAYE),
                 saIncomeDeclared = Some(YesNoAnswer.Yes),
-                entityType = Some(Individual),
-                crn = None,
-                companyDetailsConfirmed = None,
-                chargeableForCT = None,
-                ctIncomeDeclared = None,
-                recentlyStartedTrading = None
+                entityType = Some(Individual)
               ),
               None,
               Some(taxCheckStartDateTime),
               List.empty
             )
-            implicit val request: RequestWithSessionData[_] =
-              requestWithSessionData(session)
+            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
 
             val result = journeyService.updateAndNext(
               routes.CheckYourAnswersController.checkYourAnswers(),

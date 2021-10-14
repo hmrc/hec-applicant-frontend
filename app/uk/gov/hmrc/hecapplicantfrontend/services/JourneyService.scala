@@ -179,7 +179,8 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
                 companyDetailsConfirmed,
                 chargeableForCT,
                 ctIncomeDeclared,
-                recentlyStartedTrading
+                recentlyStartedTrading,
+                ctutr
               ) if allAnswersComplete(incomplete, session) =>
             val completeAnswers =
               CompleteUserAnswers(
@@ -193,7 +194,8 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
                 companyDetailsConfirmed,
                 chargeableForCT,
                 ctIncomeDeclared,
-                recentlyStartedTrading
+                recentlyStartedTrading,
+                ctutr
               )
             session.fold(
               _.copy(userAnswers = completeAnswers),
@@ -410,6 +412,7 @@ object JourneyServiceImpl {
                 _,
                 _,
                 _,
+                _,
                 _
               ) =>
             val licenceTypeCheck      = checkEntityTypePresentIfRequired(licenceType, entityType)
@@ -433,7 +436,8 @@ object JourneyServiceImpl {
                 Some(_),
                 chargeableForCT,
                 ctIncomeDeclared,
-                recentlyStartedTrading
+                recentlyStartedTrading,
+                _
               ) =>
             val licenceTypeCheck = checkEntityTypePresentIfRequired(licenceType, entityType)
             val companyDataCheck =

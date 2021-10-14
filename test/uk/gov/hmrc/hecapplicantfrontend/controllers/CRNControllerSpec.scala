@@ -27,7 +27,7 @@ import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.CompanyHECSession
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.CompanyLoginData
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.CompanyRetrievedJourneyData
-import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.{CompleteUserAnswers, IncompleteUserAnswers}
+import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.IncompleteUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, GGCredId}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hecapplicantfrontend.models.{CompanyHouseDetails, CompanyHouseName, Error}
@@ -315,18 +315,10 @@ class CRNControllerSpec
             withClue(s" For CRN : $crn") {
 
               val formattedCrn = CRN(crn.value.removeWhitespace.toUpperCase(Locale.UK))
-              val answers      = CompleteUserAnswers(
+              val answers      = Fixtures.completeUserAnswers(
                 LicenceType.OperatorOfPrivateHireVehicles,
                 LicenceTimeTrading.ZeroToTwoYears,
-                LicenceValidityPeriod.UpToOneYear,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None
+                LicenceValidityPeriod.UpToOneYear
               )
               val session      =
                 CompanyHECSession(companyLoginData, CompanyRetrievedJourneyData.empty, answers, None, None, List.empty)

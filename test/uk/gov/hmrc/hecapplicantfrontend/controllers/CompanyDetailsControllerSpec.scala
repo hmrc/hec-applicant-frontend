@@ -25,7 +25,7 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers.{await, defaultAwaitTimeout, status}
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.CompanyHECSession
-import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.{CompleteUserAnswers, IncompleteUserAnswers}
+import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.IncompleteUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models._
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
@@ -511,18 +511,12 @@ class CompanyDetailsControllerSpec
 
         "the user has previously answered the question" in {
 
-          val answers = CompleteUserAnswers(
+          val answers = Fixtures.completeUserAnswers(
             LicenceType.OperatorOfPrivateHireVehicles,
             LicenceTimeTrading.ZeroToTwoYears,
             LicenceValidityPeriod.UpToOneYear,
-            None,
-            None,
-            None,
-            None,
-            Some(YesNoAnswer.Yes),
-            Some(YesNoAnswer.No),
-            None,
-            None
+            chargeableForCT = Some(YesNoAnswer.Yes),
+            ctIncomeDeclared = Some(YesNoAnswer.No)
           )
           val session = CompanyHECSession(companyLoginData, companyData, answers, None, None, List.empty)
 
@@ -1019,17 +1013,11 @@ class CompanyDetailsControllerSpec
 
         "the user has previously answered the question" in {
 
-          val answers = CompleteUserAnswers(
+          val answers = Fixtures.completeUserAnswers(
             licenceType = LicenceType.OperatorOfPrivateHireVehicles,
             licenceTimeTrading = LicenceTimeTrading.ZeroToTwoYears,
             licenceValidityPeriod = LicenceValidityPeriod.UpToOneYear,
-            taxSituation = None,
-            saIncomeDeclared = None,
-            entityType = None,
-            crn = None,
             companyDetailsConfirmed = Some(YesNoAnswer.Yes),
-            chargeableForCT = None,
-            ctIncomeDeclared = None,
             recentlyStartedTrading = Some(YesNoAnswer.Yes)
           )
           val session = CompanyHECSession(companyLoginData, companyData, answers, None, None, List.empty)
