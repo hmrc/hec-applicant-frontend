@@ -78,7 +78,8 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
     routes.CompanyDetailsController.confirmCompanyDetails()              -> confirmCompanyDetailsRoute,
     routes.CompanyDetailsController.chargeableForCorporationTax()        -> chargeableForCTRoute,
     routes.CompanyDetailsController.ctIncomeStatement()                  -> (_ => routes.CheckYourAnswersController.checkYourAnswers()),
-    routes.CompanyDetailsController.recentlyStartedTrading()             -> recentlyStartedTradingRoute
+    routes.CompanyDetailsController.recentlyStartedTrading()             -> recentlyStartedTradingRoute,
+    routes.CompanyDetailsController.enterCtutr()                         -> enterCtutrRoute
   )
 
   // map which describes routes from an exit page to their previous page. The keys are the exit page and the values are
@@ -332,6 +333,29 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
       case YesNoAnswer.No  => routes.CompanyDetailsController.cannotDoTaxCheck()
     } getOrElse {
       sys.error("Answer missing for if company has recently started trading")
+    }
+
+  private def enterCtutrRoute(session: HECSession) =
+    session.mapAsCompany { companySession =>
+      session.userAnswers.fold(_.ctutr, _.ctutr) map { ctutr =>
+        companySession.retrievedJourneyData match {
+          case CompanyRetrievedJourneyData(_, Some(desCtutr), Some(ctStatus)) =>
+            if (ctutr.value === desCtutr.value)
+              ctStatus.latestAccountingPeriod.map(_.ctStatus) match {
+                case Some(_) => routes.CompanyDetailsController.chargeableForCorporationTax()
+                case None    => routes.CompanyDetailsController.recentlyStartedTrading()
+              }
+            else
+              routes.CompanyDetailsController.ctutrNotMatched() // TODO redirect according to number of attempts
+
+          case CompanyRetrievedJourneyData(_, Some(_), None) =>
+            routes.CompanyDetailsController.cannotDoTaxCheck()
+
+          case _ => sys.error("DES CTUTR missing in journey data")
+        }
+      } getOrElse {
+        sys.error("CTUTR answer missing")
+      }
     }
 
 }

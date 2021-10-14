@@ -309,8 +309,50 @@ class CompanyDetailsController @Inject() (
     }
   }
 
-  val enterCtutrSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
-    Ok(s"${request.sessionData}")
+  val enterCtutrSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
+    request.sessionData mapAsCompany { companySession =>
+      ensureCompanyDataHasDesCtutr(companySession) { desCtutr =>
+        def handleValidAnswer(ctutr: CTUTR) = {
+          val updatedAnswers = companySession.userAnswers.unset(_.ctutr).copy(ctutr = Some(ctutr))
+          // TODO increment number of attempts in session
+
+          val result = for {
+            ctStatus            <- if (desCtutr.value === ctutr.value) {
+                                     val (start, end) = CompanyDetailsController.calculateLookbackPeriod(timeProvider.currentDate)
+                                     taxCheckService.getCTStatus(ctutr, start, end)
+                                   } else {
+                                     EitherT[Future, Error, Option[CTStatusResponse]](Future.successful(Right(None)))
+                                   }
+            updatedRetrievedData = companySession.retrievedJourneyData.copy(ctStatus = ctStatus)
+            next                <- journeyService.updateAndNext(
+                                     routes.CompanyDetailsController.enterCtutr(),
+                                     companySession.copy(userAnswers = updatedAnswers, retrievedJourneyData = updatedRetrievedData)
+                                   )
+          } yield next
+
+          result.fold(
+            { e =>
+              logger.warn("Could not update session and proceed", e)
+              InternalServerError
+            },
+            Redirect
+          )
+        }
+
+        enterCtutrForm
+          .bindFromRequest()
+          .fold(
+            formWithErrors =>
+              Ok(
+                enterCtutrPage(
+                  formWithErrors,
+                  journeyService.previous(routes.CompanyDetailsController.enterCtutr())
+                )
+              ),
+            handleValidAnswer
+          )
+      }
+    }
   }
 
   val dontHaveUtr: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
@@ -393,6 +435,16 @@ class CompanyDetailsController @Inject() (
         InternalServerError
     }
 
+  private def ensureCompanyDataHasDesCtutr(
+    companySession: CompanyHECSession
+  )(f: CTUTR => Future[Result]): Future[Result] =
+    companySession.retrievedJourneyData.desCtutr match {
+      case Some(ctutr) => f(ctutr)
+      case None        =>
+        logger.warn("Missing DES CTUTR")
+        InternalServerError
+    }
+
   private def ensureCompanyDataHasCTStatusAccountingPeriod(
     companySession: CompanyHECSession
   )(f: CTAccountingPeriod => Future[Result]): Future[Result] =
@@ -446,7 +498,7 @@ object CompanyDetailsController {
   val enterCtutrForm: Form[CTUTR] =
     Form(
       mapping(
-        "ctutr" -> nonEmptyText
+        "enterCtutr" -> nonEmptyText
           .transform[CTUTR](
             s => CTUTR(s.removeWhitespace),
             _.value
