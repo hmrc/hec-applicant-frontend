@@ -327,7 +327,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
   private def recentlyStartedTradingRoute(session: HECSession) =
     session.userAnswers.fold(_.recentlyStartedTrading, _.recentlyStartedTrading) map {
       case YesNoAnswer.Yes => routes.CheckYourAnswersController.checkYourAnswers()
-      case YesNoAnswer.No  => routes.SAController.noReturnFound
+      case YesNoAnswer.No  => routes.CompanyDetailsController.cannotDoTaxCheck()
     } getOrElse {
       sys.error("Answer missing for if company has recently started trading")
     }
@@ -370,22 +370,20 @@ object JourneyServiceImpl {
     ctIncomeDeclaredOpt: Option[YesNoAnswer],
     recentlyStartedTradingOpt: Option[YesNoAnswer],
     companySession: CompanyHECSession
-  ): Boolean = {
-    val ctStatus = companySession.retrievedJourneyData.ctStatus
-      .flatMap(_.latestAccountingPeriod.map(_.ctStatus))
-    (recentlyStartedTradingOpt, chargeableForCTOpt) match {
-      case (Some(YesNoAnswer.Yes), None) => true
-      case (None, Some(chargeableForCT)) =>
-        (ctStatus, chargeableForCT) match {
-          case (Some(_), YesNoAnswer.No)                            => true
-          case (Some(CTStatus.NoticeToFileIssued), YesNoAnswer.Yes) => true
-          case (Some(CTStatus.ReturnFound), YesNoAnswer.Yes)        => ctIncomeDeclaredOpt.nonEmpty
-          case _                                                    => false
+  ): Boolean =
+    companySession.retrievedJourneyData.ctStatus match {
+      case None                   => false
+      case Some(ctStatusResponse) =>
+        ctStatusResponse.latestAccountingPeriod.map(_.ctStatus) match {
+          case None                              => recentlyStartedTradingOpt.contains(YesNoAnswer.Yes)
+          case Some(CTStatus.NoticeToFileIssued) => chargeableForCTOpt.isDefined
+          case Some(CTStatus.NoReturnFound)      => chargeableForCTOpt.contains(YesNoAnswer.No)
+          case Some(CTStatus.ReturnFound)        =>
+            chargeableForCTOpt.contains(YesNoAnswer.No) || (chargeableForCTOpt.contains(
+              YesNoAnswer.Yes
+            ) && ctIncomeDeclaredOpt.nonEmpty)
         }
-      case _                             => false
     }
-
-  }
 
   /**
     * Process the incomplete answers and retrieved user data to determine if all answers have been given by the user

@@ -1366,7 +1366,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
           }
 
           "applicant select no" in {
-            testStartTrading(YesNoAnswer.No, routes.SAController.noReturnFound())
+            testStartTrading(YesNoAnswer.No, routes.CompanyDetailsController.cannotDoTaxCheck())
           }
 
         }
