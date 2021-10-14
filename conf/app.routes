@@ -57,7 +57,11 @@ GET        /ct-income-statement            uk.gov.hmrc.hecapplicantfrontend.cont
 POST       /ct-income-statement            uk.gov.hmrc.hecapplicantfrontend.controllers.CompanyDetailsController.ctIncomeStatementSubmit
 
 GET        /ct-utr-doesnt-match            uk.gov.hmrc.hecapplicantfrontend.controllers.CompanyDetailsController.ctutrNotMatched
-GET        /enter-corpration-utr           uk.gov.hmrc.hecapplicantfrontend.controllers.CompanyDetailsController.enterCtutr
+
+GET        /enter-corpration-tax-utr       uk.gov.hmrc.hecapplicantfrontend.controllers.CompanyDetailsController.enterCtutr
+POST       /enter-corpration-tax-utr       uk.gov.hmrc.hecapplicantfrontend.controllers.CompanyDetailsController.enterCtutrSubmit
+
+GET        /dont-have-ctutr                uk.gov.hmrc.hecapplicantfrontend.controllers.CompanyDetailsController.dontHaveUtr
 GET        /cannot-do-tax-check            uk.gov.hmrc.hecapplicantfrontend.controllers.CompanyDetailsController.cannotDoTaxCheck
 
 GET        /company-not-found              uk.gov.hmrc.hecapplicantfrontend.controllers.CompanyDetailsNotFoundController.companyNotFound

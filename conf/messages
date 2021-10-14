@@ -283,3 +283,10 @@ recentlyStartedTrading.no = No
 recentlyStartedTrading.error.required = Select yes if your company started or restarted trading in the last 12 months
 recentlyStartedTrading.error.invalid = Select yes if your company started or restarted trading in the last 12 months
 
+# Enter CTUTR
+enterCtutr.title = What is your Corporation Tax Unique Taxpayer Reference (UTR)?
+enterCtutr.hint = This is 10 numbers, for example 1234567890. It will be on tax returns and other letters about Corporation Tax. It may be called ‘reference’, ‘UTR’ or ‘official use’.
+enterCtutr.link1 = Find a lost UTR
+enterCtutr.link2 = If you do not have a UTR
+enterCtutr.error.required = Enter your Corporation Tax UTR
+enterCtutr.error.invalid = Corporation Tax UTR should be 10 digits long and contain only numbers

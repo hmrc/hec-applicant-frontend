@@ -20,10 +20,12 @@ import cats.data.EitherT
 import cats.implicits._
 import com.google.inject.Inject
 import play.api.data.Form
-import play.api.data.Forms.{mapping, of}
+import play.api.data.Forms.{mapping, nonEmptyText, of}
+import play.api.data.validation.{Constraint, Invalid, Valid}
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
+import uk.gov.hmrc.hecapplicantfrontend.controllers.CompanyDetailsController.enterCtutrForm
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, RequestWithSessionData, SessionDataAction}
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.CompanyHECSession
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.CompanyLoginData
@@ -32,6 +34,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR}
 import uk.gov.hmrc.hecapplicantfrontend.models.views.YesNoOption
 import uk.gov.hmrc.hecapplicantfrontend.services.{JourneyService, TaxCheckService}
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging.LoggerOps
+import uk.gov.hmrc.hecapplicantfrontend.util.StringUtils.StringOps
 import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging, TimeProvider, TimeUtils}
 import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -51,6 +54,7 @@ class CompanyDetailsController @Inject() (
   recentlyStartedTradingPage: html.RecentlyStartedTrading,
   chargeableForCTPage: html.ChargeableForCT,
   ctIncomeStatementPage: html.CTIncomeStatement,
+  enterCtutrPage: html.EnterCtutr,
   mcc: MessagesControllerComponents
 )(implicit appConfig: AppConfig, ec: ExecutionContext)
     extends FrontendController(mcc)
@@ -296,7 +300,20 @@ class CompanyDetailsController @Inject() (
     Ok(ctutrNotMatchedPage(back))
   }
 
-  val enterCtutr: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
+  val enterCtutr: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
+    request.sessionData mapAsCompany { _ =>
+      val ctutr = request.sessionData.userAnswers.fold(_.ctutr, _.ctutr)
+      val back  = journeyService.previous(routes.CompanyDetailsController.enterCtutr())
+      val form  = ctutr.fold(enterCtutrForm)(enterCtutrForm.fill)
+      Ok(enterCtutrPage(form, back))
+    }
+  }
+
+  val enterCtutrSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
+    Ok(s"${request.sessionData}")
+  }
+
+  val dontHaveUtr: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
     Ok(s"${request.sessionData}")
   }
 
@@ -418,4 +435,23 @@ object CompanyDetailsController {
   def calculateLookbackPeriod(today: LocalDate): (LocalDate, LocalDate) =
     today.minusYears(2).plusDays(1) -> today.minusYears(1)
 
+  private val validCtutr: Constraint[CTUTR] =
+    Constraint(ctutr =>
+      CTUTR.fromString(ctutr.value) match {
+        case Some(_) => Valid
+        case None    => Invalid("error.ctutrInvalid")
+      }
+    )
+
+  val enterCtutrForm: Form[CTUTR] =
+    Form(
+      mapping(
+        "ctutr" -> nonEmptyText
+          .transform[CTUTR](
+            s => CTUTR(s.removeWhitespace),
+            _.value
+          )
+          .verifying(validCtutr)
+      )(identity)(Some(_))
+    )
 }

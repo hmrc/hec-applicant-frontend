@@ -96,6 +96,7 @@ class AppConfig @Inject() (config: Configuration, contactFrontendConfig: Contact
   val companiesHouseUpdatesUrl: String     = config.get[String]("external-url.companies-house-updates")
   val registerForCtUrl: String             = config.get[String]("external-url.register-for-ct")
   val accountingPeriodsGuidanceUrl: String = config.get[String]("external-url.accounting-periods-guidance")
+  val findLostUtrUrl: String               = config.get[String]("external-url.find-lost-utr")
 
   val firstPageBackUrl: String = config.get[String]("first-page-back-url")
 }
