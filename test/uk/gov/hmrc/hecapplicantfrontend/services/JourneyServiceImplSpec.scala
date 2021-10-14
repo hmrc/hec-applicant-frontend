@@ -2480,46 +2480,55 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
         val incompleteAnswersBase = Fixtures.incompleteUserAnswers(
           licenceType = Some(LicenceType.ScrapMetalDealerSite),
           licenceTimeTrading = Some(LicenceTimeTrading.ZeroToTwoYears),
-          licenceValidityPeriod = Some(LicenceValidityPeriod.UpToOneYear)
+          licenceValidityPeriod = Some(LicenceValidityPeriod.UpToOneYear),
+          entityType = Some(Company)
         )
 
-        def testForChargeableForCtIsYes(
-          status: CTStatus,
-          ctIncomeDeclared: Option[YesNoAnswer],
-          expected: Boolean
+        def checkCompanyDataComplete(
+          chargeableForCTOpt: Option[YesNoAnswer],
+          ctIncomeDeclaredOpt: Option[YesNoAnswer],
+          recentlyStartedTradingOpt: Option[YesNoAnswer],
+          latestAccountingPeriod: Option[CTAccountingPeriod],
+          licenceType: Some[LicenceType] = Some(LicenceType.ScrapMetalDealerSite)
         ) = {
-          val date = LocalDate.now()
-          JourneyServiceImpl.allAnswersComplete(
-            incompleteUserAnswers = incompleteAnswersBase.copy(
-              entityType = Some(EntityType.Company),
-              taxSituation = None,
-              saIncomeDeclared = None,
-              crn = Some(CRN("1234567")),
-              companyDetailsConfirmed = Some(YesNoAnswer.Yes),
-              chargeableForCT = Some(YesNoAnswer.Yes),
-              ctIncomeDeclared = ctIncomeDeclared
-            ),
+          val date                = LocalDate.now()
+          val companyData         = companyLoginData.copy(
+            ctutr = Some(CTUTR("ctutr"))
+          )
+          val anyCTStatusResponse = CTStatusResponse(
+            ctutr = CTUTR("utr"),
+            startDate = date,
+            endDate = date,
+            latestAccountingPeriod = latestAccountingPeriod
+          )
+          val journeyData         = CompanyRetrievedJourneyData(
+            companyName = Some(CompanyHouseName("Test tech Ltd")),
+            desCtutr = Some(CTUTR("ctutr")),
+            ctStatus = Some(anyCTStatusResponse)
+          )
+
+          val incompleteAnswers = incompleteAnswersBase.copy(
+            licenceType = licenceType,
+            taxSituation = None,
+            entityType = Some(Company),
+            crn = Some(CRN("1234567")),
+            companyDetailsConfirmed = Some(YesNoAnswer.Yes),
+            chargeableForCT = chargeableForCTOpt,
+            ctIncomeDeclared = ctIncomeDeclaredOpt,
+            recentlyStartedTrading = recentlyStartedTradingOpt
+          )
+          val session           =
             CompanyHECSession(
-              companyLoginData,
-              CompanyRetrievedJourneyData(
-                None,
-                None,
-                Some(
-                  CTStatusResponse(
-                    CTUTR("utr"),
-                    date,
-                    date,
-                    Some(CTAccountingPeriod(date, date, status))
-                  )
-                )
-              ),
+              companyData,
+              journeyData,
               UserAnswers.empty,
               None,
               None,
               List.empty
             )
-          ) shouldBe expected
+          JourneyServiceImpl.allAnswersComplete(incompleteAnswers, session)
         }
+        val date                  = LocalDate.now()
 
         "return false" when {
           "licence type is missing" in {
@@ -2550,104 +2559,138 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             ) shouldBe false
           }
 
-          "chargeable for CT answer is Yes, CT status = ReturnFound & CT income declared answer is missing" in {
-            testForChargeableForCtIsYes(CTStatus.ReturnFound, None, false)
+          "recently started trading is not present " when {
+
+            "chargeable for CT answer is Yes, CT status = ReturnFound & CT income declared answer is missing" in {
+              checkCompanyDataComplete(
+                Some(YesNoAnswer.Yes),
+                None,
+                None,
+                Some(CTAccountingPeriod(date, date, CTStatus.ReturnFound))
+              ) shouldBe false
+            }
+
+            "chargeable for CT answer is Yes & CT status = NoReturnFound" in {
+              checkCompanyDataComplete(
+                Some(YesNoAnswer.Yes),
+                None,
+                None,
+                Some(CTAccountingPeriod(date, date, CTStatus.NoReturnFound))
+              ) shouldBe false
+            }
+
+            "chargeable for CT answer is not present" in {
+              checkCompanyDataComplete(
+                None,
+                None,
+                None,
+                Some(CTAccountingPeriod(date, date, CTStatus.NoReturnFound))
+              ) shouldBe false
+            }
+
           }
 
-          "chargeable for CT answer is Yes & CT status = NoReturnFound" in {
-            testForChargeableForCtIsYes(CTStatus.NoReturnFound, None, false)
+          "recently started trading is  present and is NO " when {
+
+            "chargeable for CT answer is Yes, CT status = ReturnFound & CT income declared answer is missing" in {
+              checkCompanyDataComplete(
+                Some(YesNoAnswer.Yes),
+                None,
+                Some(YesNoAnswer.No),
+                Some(CTAccountingPeriod(date, date, CTStatus.ReturnFound))
+              ) shouldBe false
+            }
+
+            "chargeable for CT answer is Yes & CT status = NoReturnFound" in {
+              checkCompanyDataComplete(
+                Some(YesNoAnswer.Yes),
+                None,
+                Some(YesNoAnswer.No),
+                Some(CTAccountingPeriod(date, date, CTStatus.NoReturnFound))
+              ) shouldBe false
+            }
+
+            "chargeable for CT answer is not present" in {
+              checkCompanyDataComplete(
+                None,
+                None,
+                Some(YesNoAnswer.No),
+                Some(CTAccountingPeriod(date, date, CTStatus.NoReturnFound))
+              ) shouldBe false
+            }
+
           }
+
         }
 
         "return true" when {
-          "CT status is present & chargeable for CT answer is No" in {
-            val date                                        = LocalDate.now
-            val licenceTypes                                = List(
-              LicenceType.OperatorOfPrivateHireVehicles,
-              LicenceType.ScrapMetalDealerSite,
-              LicenceType.ScrapMetalMobileCollector
-            )
-            val ctStatuses                                  = List(
-              CTStatus.ReturnFound,
-              CTStatus.NoReturnFound,
-              CTStatus.NoticeToFileIssued
-            )
-            val permutations: List[(LicenceType, CTStatus)] = for {
-              licenceType <- licenceTypes
-              ctStatus    <- ctStatuses
-            } yield (licenceType, ctStatus)
-            permutations foreach { case (licenceType, ctStatus) =>
-              withClue(s"for licenceType = $licenceType & CT status = $ctStatus") {
-                JourneyServiceImpl.allAnswersComplete(
-                  incompleteUserAnswers = incompleteAnswersBase.copy(
-                    licenceType = Some(licenceType),
-                    entityType = Some(EntityType.Company),
-                    taxSituation = None,
-                    saIncomeDeclared = None,
-                    crn = Some(CRN("1234567")),
-                    companyDetailsConfirmed = Some(YesNoAnswer.Yes),
-                    chargeableForCT = Some(YesNoAnswer.No)
-                  ),
-                  CompanyHECSession(
-                    companyLoginData,
-                    CompanyRetrievedJourneyData(
-                      None,
-                      None,
-                      Some(
-                        CTStatusResponse(
-                          CTUTR("utr"),
-                          date,
-                          date,
-                          Some(CTAccountingPeriod(date, date, ctStatus))
-                        )
-                      )
-                    ),
-                    UserAnswers.empty,
+
+          "recently started trading is not present" when {
+
+            "CT status is present & chargeable for CT answer is No" in {
+              val date                                        = LocalDate.now
+              val licenceTypes                                = List(
+                LicenceType.OperatorOfPrivateHireVehicles,
+                LicenceType.ScrapMetalDealerSite,
+                LicenceType.ScrapMetalMobileCollector
+              )
+              val ctStatuses                                  = List(
+                CTStatus.ReturnFound,
+                CTStatus.NoReturnFound,
+                CTStatus.NoticeToFileIssued
+              )
+              val permutations: List[(LicenceType, CTStatus)] = for {
+                licenceType <- licenceTypes
+                ctStatus    <- ctStatuses
+              } yield (licenceType, ctStatus)
+              permutations foreach { case (licenceType, ctStatus) =>
+                withClue(s"for licenceType = $licenceType & CT status = $ctStatus") {
+                  checkCompanyDataComplete(
+                    Some(YesNoAnswer.No),
                     None,
                     None,
-                    List.empty
-                  )
-                ) shouldBe true
+                    Some(CTAccountingPeriod(date, date, ctStatus)),
+                    Some(licenceType)
+                  ) shouldBe true
+                }
               }
             }
-          }
 
-          "chargeable for CT answer is Yes and CT status = NoticeToFileIssued" in {
-            val date = LocalDate.now()
-            JourneyServiceImpl.allAnswersComplete(
-              incompleteUserAnswers = incompleteAnswersBase.copy(
-                entityType = Some(EntityType.Company),
-                taxSituation = None,
-                saIncomeDeclared = None,
-                crn = Some(CRN("1234567")),
-                companyDetailsConfirmed = Some(YesNoAnswer.Yes),
-                chargeableForCT = Some(YesNoAnswer.Yes)
-              ),
-              CompanyHECSession(
-                companyLoginData,
-                CompanyRetrievedJourneyData(
-                  None,
-                  None,
-                  Some(
-                    CTStatusResponse(
-                      CTUTR("utr"),
-                      date,
-                      date,
-                      Some(CTAccountingPeriod(date, date, CTStatus.NoticeToFileIssued))
-                    )
-                  )
-                ),
-                UserAnswers.empty,
+            "chargeable for CT answer is Yes and CT status = NoticeToFileIssued" in {
+              checkCompanyDataComplete(
+                Some(YesNoAnswer.Yes),
                 None,
                 None,
-                List.empty
-              )
-            ) shouldBe true
+                Some(CTAccountingPeriod(date, date, CTStatus.NoticeToFileIssued))
+              ) shouldBe true
+            }
+
+            "chargeable for CT answer is Yes, CT status = ReturnFound & CT income declared answer is present" in {
+
+              checkCompanyDataComplete(
+                Some(YesNoAnswer.Yes),
+                Some(YesNoAnswer.Yes),
+                None,
+                Some(CTAccountingPeriod(date, date, CTStatus.ReturnFound))
+              ) shouldBe true
+
+            }
+
           }
 
-          "chargeable for CT answer is Yes, CT status = ReturnFound & CT income declared answer is present" in {
-            testForChargeableForCtIsYes(CTStatus.ReturnFound, Some(YesNoAnswer.Yes), true)
+          "recently started trading is present and  is yes" when {
+
+            "chargeable for CT answer is not present, CT income declared answer is no present" in {
+              checkCompanyDataComplete(
+                None,
+                None,
+                Some(YesNoAnswer.Yes),
+                None
+              ) shouldBe true
+            }
+
           }
+
         }
       }
 
