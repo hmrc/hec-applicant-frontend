@@ -2304,6 +2304,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
     }
 
     "JourneyServiceImpl.allAnswersComplete" when {
+
       "session is individual" must {
         val incompleteAnswersBase = Fixtures.incompleteUserAnswers(
           licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires),

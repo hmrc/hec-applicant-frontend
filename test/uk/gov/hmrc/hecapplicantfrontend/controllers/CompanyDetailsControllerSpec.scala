@@ -1066,7 +1066,7 @@ class CompanyDetailsControllerSpec
         "applicant is individual" in {
           inSequence {
             mockAuthWithNoRetrievals()
-            mockGetSession(individualSession)
+            mockGetSession(Fixtures.individualHECSession())
           }
 
           assertThrows[RuntimeException](await(performAction()))
@@ -1132,7 +1132,7 @@ class CompanyDetailsControllerSpec
         "the applicant type is individual" in {
           inSequence {
             mockAuthWithNoRetrievals()
-            mockGetSession(individualSession)
+            mockGetSession(Fixtures.individualHECSession())
           }
 
           assertThrows[RuntimeException](await(performAction()))
