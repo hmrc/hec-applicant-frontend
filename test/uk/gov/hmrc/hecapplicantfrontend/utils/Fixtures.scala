@@ -19,10 +19,10 @@ package uk.gov.hmrc.hecapplicantfrontend.utils
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, IndividualHECSession}
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.{CompanyRetrievedJourneyData, IndividualRetrievedJourneyData}
-import uk.gov.hmrc.hecapplicantfrontend.models.{CTAccountingPeriod, CTStatus, CTStatusResponse, CompanyHouseName, DateOfBirth, EmailAddress, EntityType, HECTaxCheck, Name, SAStatusResponse, TaxCheckListItem, TaxSituation, UserAnswers, YesNoAnswer}
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.{CompleteUserAnswers, IncompleteUserAnswers}
-import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR, GGCredId, NINO, SAUTR}
+import uk.gov.hmrc.hecapplicantfrontend.models.ids._
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
+import uk.gov.hmrc.hecapplicantfrontend.models._
 
 import java.time.{LocalDate, ZonedDateTime}
 
@@ -38,7 +38,8 @@ object Fixtures {
     crn: Option[CRN] = None,
     companyDetailsConfirmed: Option[YesNoAnswer] = None,
     chargeableForCT: Option[YesNoAnswer] = None,
-    ctIncomeDeclared: Option[YesNoAnswer] = None
+    ctIncomeDeclared: Option[YesNoAnswer] = None,
+    recentlyStartedTrading: Option[YesNoAnswer] = None
   ): IncompleteUserAnswers = IncompleteUserAnswers(
     licenceType = licenceType,
     licenceTimeTrading = licenceTimeTrading,
@@ -49,7 +50,8 @@ object Fixtures {
     crn = crn,
     companyDetailsConfirmed = companyDetailsConfirmed,
     chargeableForCT = chargeableForCT,
-    ctIncomeDeclared = ctIncomeDeclared
+    ctIncomeDeclared = ctIncomeDeclared,
+    recentlyStartedTrading = recentlyStartedTrading
   )
 
   def completeUserAnswers(
@@ -62,7 +64,8 @@ object Fixtures {
     crn: Option[CRN] = None,
     companyDetailsConfirmed: Option[YesNoAnswer] = None,
     chargeableForCT: Option[YesNoAnswer] = None,
-    ctIncomeDeclared: Option[YesNoAnswer] = None
+    ctIncomeDeclared: Option[YesNoAnswer] = None,
+    recentlyStartedTrading: Option[YesNoAnswer] = None
   ): CompleteUserAnswers = CompleteUserAnswers(
     licenceType = licenceType,
     licenceTimeTrading = licenceTimeTrading,
@@ -73,7 +76,8 @@ object Fixtures {
     crn = crn,
     companyDetailsConfirmed = companyDetailsConfirmed,
     chargeableForCT = chargeableForCT,
-    ctIncomeDeclared = ctIncomeDeclared
+    ctIncomeDeclared = ctIncomeDeclared,
+    recentlyStartedTrading = recentlyStartedTrading
   )
 
   def individualLoginData(

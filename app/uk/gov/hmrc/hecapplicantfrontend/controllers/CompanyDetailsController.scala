@@ -48,7 +48,7 @@ class CompanyDetailsController @Inject() (
   confirmCompanyNamePage: html.ConfirmCompanyName,
   cannotDoTaxCheckPage: html.CannotDoTaxCheck,
   ctutrNotMatchedPage: html.CtutrNotMatched,
-  noAccountingPeriodFoundPage: html.NoAccountingPeriodFound,
+  recentlyStartedTradingPage: html.RecentlyStartedTrading,
   chargeableForCTPage: html.ChargeableForCT,
   ctIncomeStatementPage: html.CTIncomeStatement,
   mcc: MessagesControllerComponents
@@ -77,7 +77,7 @@ class CompanyDetailsController @Inject() (
         val companyDetailsConfirmed =
           request.sessionData.userAnswers.fold(_.companyDetailsConfirmed, _.companyDetailsConfirmed)
         val form = {
-          val emptyForm = CompanyDetailsController.confirmCompanyNameForm(YesNoAnswer.values)
+          val emptyForm = CompanyDetailsController.yesNoForm("confirmCompanyName", YesNoAnswer.values)
           companyDetailsConfirmed.fold(emptyForm)(emptyForm.fill)
         }
         Future.successful(getConfirmCompanyDetailsPage(form, companyHouseName))
@@ -163,7 +163,7 @@ class CompanyDetailsController @Inject() (
         ensureCompanyDataHasCompanyName(companySession) { companyHouseName =>
           ensureUserAnswersHasCRN(request.sessionData) { crn =>
             CompanyDetailsController
-              .confirmCompanyNameForm(YesNoAnswer.values)
+              .yesNoForm("confirmCompanyName", YesNoAnswer.values)
               .bindFromRequest()
               .fold(getFuturePage(companyHouseName), handleValidAnswer(companySession, crn))
           }
@@ -171,10 +171,61 @@ class CompanyDetailsController @Inject() (
       }
     }
 
-  val noAccountingPeriod: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
-    val back = journeyService.previous(routes.CompanyDetailsController.noAccountingPeriod())
-    Ok(noAccountingPeriodFoundPage(back))
-  }
+  val recentlyStartedTrading: Action[AnyContent] =
+    authAction.andThen(sessionDataAction).async { implicit request =>
+      request.sessionData mapAsCompany { _ =>
+        val recentlyStartedTrading =
+          request.sessionData.userAnswers.fold(_.recentlyStartedTrading, _.recentlyStartedTrading)
+        val form = {
+          val emptyForm = CompanyDetailsController.yesNoForm("recentlyStartedTrading", YesNoAnswer.values)
+          recentlyStartedTrading.fold(emptyForm)(emptyForm.fill)
+        }
+        Ok(
+          recentlyStartedTradingPage(
+            form = form,
+            back = journeyService.previous(routes.CompanyDetailsController.recentlyStartedTrading()),
+            options = YesNoOption.yesNoOptions
+          )
+        )
+      }
+    }
+
+  val recentlyStartedTradingSubmit: Action[AnyContent] =
+    authAction.andThen(sessionDataAction).async { implicit request =>
+      def handleValidAnswer(recentlyStartedTrading: YesNoAnswer) = {
+        val updatedAnswers =
+          request.sessionData.userAnswers
+            .unset(_.recentlyStartedTrading)
+            .copy(recentlyStartedTrading = Some(recentlyStartedTrading))
+
+        journeyService
+          .updateAndNext(
+            routes.CompanyDetailsController.recentlyStartedTrading(),
+            request.sessionData.mapAsCompany(_.copy(userAnswers = updatedAnswers))
+          )
+          .fold(
+            { e =>
+              logger.warn("Could not update session and proceed", e)
+              InternalServerError
+            },
+            Redirect
+          )
+      }
+      CompanyDetailsController
+        .yesNoForm("recentlyStartedTrading", YesNoAnswer.values)
+        .bindFromRequest()
+        .fold(
+          formWithErrors =>
+            Ok(
+              recentlyStartedTradingPage(
+                form = formWithErrors,
+                back = journeyService.previous(routes.CompanyDetailsController.recentlyStartedTrading()),
+                options = YesNoOption.yesNoOptions
+              )
+            ),
+          handleValidAnswer
+        )
+    }
 
   val chargeableForCorporationTax: Action[AnyContent] =
     authAction.andThen(sessionDataAction).async { implicit request =>
@@ -183,7 +234,7 @@ class CompanyDetailsController @Inject() (
           val chargeableForCT = request.sessionData.userAnswers.fold(_.chargeableForCT, _.chargeableForCT)
           val endDateStr      = TimeUtils.govDisplayFormat(latestAccountingPeriod.endDate)
           val form = {
-            val emptyForm = CompanyDetailsController.chargeableForCTForm(YesNoAnswer.values, List(endDateStr))
+            val emptyForm = CompanyDetailsController.yesNoForm("chargeableForCT", YesNoAnswer.values, List(endDateStr))
             chargeableForCT.fold(emptyForm)(emptyForm.fill)
           }
           Ok(
@@ -222,7 +273,7 @@ class CompanyDetailsController @Inject() (
         ensureCompanyDataHasCTStatusAccountingPeriod(companySession) { latestAccountingPeriod =>
           val endDateStr = TimeUtils.govDisplayFormat(latestAccountingPeriod.endDate)
           CompanyDetailsController
-            .chargeableForCTForm(YesNoAnswer.values, List(endDateStr))
+            .yesNoForm("chargeableForCT", YesNoAnswer.values, List(endDateStr))
             .bindFromRequest()
             .fold(
               formWithErrors =>
@@ -255,7 +306,7 @@ class CompanyDetailsController @Inject() (
         val back             = journeyService.previous(routes.CompanyDetailsController.ctIncomeStatement())
         val ctIncomeDeclared = request.sessionData.userAnswers.fold(_.ctIncomeDeclared, _.ctIncomeDeclared)
         val form = {
-          val emptyForm = CompanyDetailsController.ctIncomeStatementForm(YesNoAnswer.values)
+          val emptyForm = CompanyDetailsController.yesNoForm("ctIncomeDeclared", YesNoAnswer.values)
           ctIncomeDeclared.fold(emptyForm)(emptyForm.fill)
         }
         Ok(
@@ -292,7 +343,7 @@ class CompanyDetailsController @Inject() (
         }
 
         CompanyDetailsController
-          .ctIncomeStatementForm(YesNoAnswer.values)
+          .yesNoForm("ctIncomeDeclared", YesNoAnswer.values)
           .bindFromRequest()
           .fold(
             formWithErrors =>
@@ -350,10 +401,11 @@ class CompanyDetailsController @Inject() (
 }
 
 object CompanyDetailsController {
-  def confirmCompanyNameForm(options: List[YesNoAnswer]): Form[YesNoAnswer] =
+
+  def yesNoForm(mappingName: String, options: List[YesNoAnswer], errorMsgArgs: List[String] = Nil): Form[YesNoAnswer] =
     Form(
       mapping(
-        "confirmCompanyName" -> of(FormUtils.radioFormFormatter(options))
+        mappingName -> of(FormUtils.radioFormFormatter(options, errorMsgArgs))
       )(identity)(Some(_))
     )
 
@@ -366,17 +418,4 @@ object CompanyDetailsController {
   def calculateLookbackPeriod(today: LocalDate): (LocalDate, LocalDate) =
     today.minusYears(2).plusDays(1) -> today.minusYears(1)
 
-  def chargeableForCTForm(options: List[YesNoAnswer], errorMsgArgs: List[String]): Form[YesNoAnswer] =
-    Form(
-      mapping(
-        "chargeableForCT" -> of(FormUtils.radioFormFormatter(options, errorMsgArgs))
-      )(identity)(Some(_))
-    )
-
-  def ctIncomeStatementForm(options: List[YesNoAnswer]): Form[YesNoAnswer] =
-    Form(
-      mapping(
-        "ctIncomeDeclared" -> of(FormUtils.radioFormFormatter(options))
-      )(identity)(Some(_))
-    )
 }

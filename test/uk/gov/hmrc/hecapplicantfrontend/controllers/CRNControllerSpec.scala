@@ -325,6 +325,7 @@ class CRNControllerSpec
                 None,
                 None,
                 None,
+                None,
                 None
               )
               val session      =

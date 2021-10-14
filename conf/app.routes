@@ -48,7 +48,8 @@ POST       /company-registration-number    uk.gov.hmrc.hecapplicantfrontend.cont
 
 GET        /confirm-company-details        uk.gov.hmrc.hecapplicantfrontend.controllers.CompanyDetailsController.confirmCompanyDetails
 POST       /confirm-company-details        uk.gov.hmrc.hecapplicantfrontend.controllers.CompanyDetailsController.confirmCompanyDetailsSubmit
-GET        /no-account-period              uk.gov.hmrc.hecapplicantfrontend.controllers.CompanyDetailsController.noAccountingPeriod
+GET        /start-trading                  uk.gov.hmrc.hecapplicantfrontend.controllers.CompanyDetailsController.recentlyStartedTrading
+POST       /start-trading                  uk.gov.hmrc.hecapplicantfrontend.controllers.CompanyDetailsController.recentlyStartedTradingSubmit
 
 GET        /chargeable-for-ct              uk.gov.hmrc.hecapplicantfrontend.controllers.CompanyDetailsController.chargeableForCorporationTax
 POST       /chargeable-for-ct              uk.gov.hmrc.hecapplicantfrontend.controllers.CompanyDetailsController.chargeableForCorporationTaxSubmit

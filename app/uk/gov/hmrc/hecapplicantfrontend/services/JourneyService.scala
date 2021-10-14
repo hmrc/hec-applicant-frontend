@@ -77,7 +77,8 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
     routes.CRNController.companyRegistrationNumber()                     -> companyRegistrationNumberRoute,
     routes.CompanyDetailsController.confirmCompanyDetails()              -> confirmCompanyDetailsRoute,
     routes.CompanyDetailsController.chargeableForCorporationTax()        -> chargeableForCTRoute,
-    routes.CompanyDetailsController.ctIncomeStatement()                  -> (_ => routes.CheckYourAnswersController.checkYourAnswers())
+    routes.CompanyDetailsController.ctIncomeStatement()                  -> (_ => routes.CheckYourAnswersController.checkYourAnswers()),
+    routes.CompanyDetailsController.recentlyStartedTrading()             -> recentlyStartedTradingRoute
   )
 
   // map which describes routes from an exit page to their previous page. The keys are the exit page and the values are
@@ -177,7 +178,8 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
                 crn,
                 companyDetailsConfirmed,
                 chargeableForCT,
-                ctIncomeDeclared
+                ctIncomeDeclared,
+                recentlyStartedTrading
               ) if allAnswersComplete(incomplete, session) =>
             val completeAnswers =
               CompleteUserAnswers(
@@ -190,7 +192,8 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
                 crn,
                 companyDetailsConfirmed,
                 chargeableForCT,
-                ctIncomeDeclared
+                ctIncomeDeclared,
+                recentlyStartedTrading
               )
             session.fold(
               _.copy(userAnswers = completeAnswers),
@@ -283,7 +286,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
               if (ctutr.value === desCtutr.value)
                 ctStatus.latestAccountingPeriod.map(_.ctStatus) match {
                   case Some(_) => routes.CompanyDetailsController.chargeableForCorporationTax()
-                  case None    => routes.CompanyDetailsController.noAccountingPeriod()
+                  case None    => routes.CompanyDetailsController.recentlyStartedTrading()
                 }
               else
                 routes.CompanyDetailsController.ctutrNotMatched()
@@ -321,6 +324,14 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
       }
     }
 
+  private def recentlyStartedTradingRoute(session: HECSession) =
+    session.userAnswers.fold(_.recentlyStartedTrading, _.recentlyStartedTrading) map {
+      case YesNoAnswer.Yes => routes.CheckYourAnswersController.checkYourAnswers()
+      case YesNoAnswer.No  => routes.CompanyDetailsController.cannotDoTaxCheck()
+    } getOrElse {
+      sys.error("Answer missing for if company has recently started trading")
+    }
+
 }
 
 object JourneyServiceImpl {
@@ -355,20 +366,24 @@ object JourneyServiceImpl {
     }
 
   private def checkCompanyDataComplete(
-    chargeableForCT: YesNoAnswer,
-    ctIncomeDeclared: Option[YesNoAnswer],
+    chargeableForCTOpt: Option[YesNoAnswer],
+    ctIncomeDeclaredOpt: Option[YesNoAnswer],
+    recentlyStartedTradingOpt: Option[YesNoAnswer],
     companySession: CompanyHECSession
-  ): Boolean = {
-    val ctStatus = companySession.retrievedJourneyData.ctStatus
-      .flatMap(_.latestAccountingPeriod.map(_.ctStatus))
-
-    (ctStatus, chargeableForCT) match {
-      case (Some(_), YesNoAnswer.No)                            => true
-      case (Some(CTStatus.NoticeToFileIssued), YesNoAnswer.Yes) => true
-      case (Some(CTStatus.ReturnFound), YesNoAnswer.Yes)        => ctIncomeDeclared.nonEmpty
-      case _                                                    => false
+  ): Boolean =
+    companySession.retrievedJourneyData.ctStatus match {
+      case None                   => false
+      case Some(ctStatusResponse) =>
+        ctStatusResponse.latestAccountingPeriod.map(_.ctStatus) match {
+          case None                              => recentlyStartedTradingOpt.contains(YesNoAnswer.Yes)
+          case Some(CTStatus.NoticeToFileIssued) => chargeableForCTOpt.isDefined
+          case Some(CTStatus.NoReturnFound)      => chargeableForCTOpt.contains(YesNoAnswer.No)
+          case Some(CTStatus.ReturnFound)        =>
+            chargeableForCTOpt.contains(YesNoAnswer.No) || (chargeableForCTOpt.contains(
+              YesNoAnswer.Yes
+            ) && ctIncomeDeclaredOpt.nonEmpty)
+        }
     }
-  }
 
   /**
     * Process the incomplete answers and retrieved user data to determine if all answers have been given by the user
@@ -394,6 +409,7 @@ object JourneyServiceImpl {
                 _,
                 _,
                 _,
+                _,
                 _
               ) =>
             val licenceTypeCheck      = checkEntityTypePresentIfRequired(licenceType, entityType)
@@ -415,11 +431,13 @@ object JourneyServiceImpl {
                 entityType,
                 Some(_),
                 Some(_),
-                Some(chargeableForCT),
-                ctIncomeDeclared
+                chargeableForCT,
+                ctIncomeDeclared,
+                recentlyStartedTrading
               ) =>
             val licenceTypeCheck = checkEntityTypePresentIfRequired(licenceType, entityType)
-            val companyDataCheck = checkCompanyDataComplete(chargeableForCT, ctIncomeDeclared, companySession)
+            val companyDataCheck =
+              checkCompanyDataComplete(chargeableForCT, ctIncomeDeclared, recentlyStartedTrading, companySession)
             licenceTypeCheck && companyDataCheck
 
           case _ => false
