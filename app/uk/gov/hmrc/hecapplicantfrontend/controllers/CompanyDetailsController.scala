@@ -173,19 +173,21 @@ class CompanyDetailsController @Inject() (
 
   val recentlyStartedTrading: Action[AnyContent] =
     authAction.andThen(sessionDataAction).async { implicit request =>
-      val recentlyStartedTrading =
-        request.sessionData.userAnswers.fold(_.recentlyStartedTrading, _.recentlyStartedTrading)
-      val form = {
-        val emptyForm = CompanyDetailsController.yesNoForm("recentlyStartedTrading", YesNoAnswer.values)
-        recentlyStartedTrading.fold(emptyForm)(emptyForm.fill)
-      }
-      Ok(
-        recentlyStartedTradingPage(
-          form = form,
-          back = journeyService.previous(routes.CompanyDetailsController.recentlyStartedTrading()),
-          options = YesNoOption.yesNoOptions
+      request.sessionData mapAsCompany { _ =>
+        val recentlyStartedTrading =
+          request.sessionData.userAnswers.fold(_.recentlyStartedTrading, _.recentlyStartedTrading)
+        val form = {
+          val emptyForm = CompanyDetailsController.yesNoForm("recentlyStartedTrading", YesNoAnswer.values)
+          recentlyStartedTrading.fold(emptyForm)(emptyForm.fill)
+        }
+        Ok(
+          recentlyStartedTradingPage(
+            form = form,
+            back = journeyService.previous(routes.CompanyDetailsController.recentlyStartedTrading()),
+            options = YesNoOption.yesNoOptions
+          )
         )
-      )
+      }
     }
 
   val recentlyStartedTradingSubmit: Action[AnyContent] =
