@@ -62,6 +62,7 @@ GET        /enter-corpration-tax-utr       uk.gov.hmrc.hecapplicantfrontend.cont
 POST       /enter-corpration-tax-utr       uk.gov.hmrc.hecapplicantfrontend.controllers.CompanyDetailsController.enterCtutrSubmit
 
 GET        /dont-have-ctutr                uk.gov.hmrc.hecapplicantfrontend.controllers.CompanyDetailsController.dontHaveUtr
+GET        /too-many-ctutr-attempts        uk.gov.hmrc.hecapplicantfrontend.controllers.CompanyDetailsController.tooManyCtutrAttempts
 GET        /cannot-do-tax-check            uk.gov.hmrc.hecapplicantfrontend.controllers.CompanyDetailsController.cannotDoTaxCheck
 
 GET        /company-not-found              uk.gov.hmrc.hecapplicantfrontend.controllers.CompanyDetailsNotFoundController.companyNotFound

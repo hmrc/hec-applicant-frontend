@@ -32,6 +32,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.CompanyLoginData
 import uk.gov.hmrc.hecapplicantfrontend.models._
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR}
 import uk.gov.hmrc.hecapplicantfrontend.models.views.YesNoOption
+import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.{JourneyService, TaxCheckService}
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging.LoggerOps
 import uk.gov.hmrc.hecapplicantfrontend.util.StringUtils.StringOps
@@ -55,6 +56,7 @@ class CompanyDetailsController @Inject() (
   chargeableForCTPage: html.ChargeableForCT,
   ctIncomeStatementPage: html.CTIncomeStatement,
   enterCtutrPage: html.EnterCtutr,
+  sessionStore: SessionStore,
   mcc: MessagesControllerComponents
 )(implicit appConfig: AppConfig, ec: ExecutionContext)
     extends FrontendController(mcc)
@@ -317,15 +319,10 @@ class CompanyDetailsController @Inject() (
       ensureCompanyDataHasDesCtutr(companySession) { desCtutr =>
         def handleValidAnswer(ctutr: CTUTR) = {
           val updatedAnswers = companySession.userAnswers.unset(_.ctutr).copy(ctutr = Some(ctutr))
-          // TODO increment number of attempts in session
+          val (start, end)   = CompanyDetailsController.calculateLookbackPeriod(timeProvider.currentDate)
 
           val result = for {
-            ctStatus            <- if (desCtutr.value === ctutr.value) {
-                                     val (start, end) = CompanyDetailsController.calculateLookbackPeriod(timeProvider.currentDate)
-                                     taxCheckService.getCTStatus(ctutr, start, end)
-                                   } else {
-                                     EitherT[Future, Error, Option[CTStatusResponse]](Future.successful(Right(None)))
-                                   }
+            ctStatus            <- taxCheckService.getCTStatus(ctutr, start, end)
             updatedRetrievedData = companySession.retrievedJourneyData.copy(ctStatus = ctStatus)
             next                <- journeyService.updateAndNext(
                                      routes.CompanyDetailsController.enterCtutr(),
@@ -342,23 +339,59 @@ class CompanyDetailsController @Inject() (
           )
         }
 
-        enterCtutrForm(desCtutr)
-          .bindFromRequest()
-          .fold(
-            formWithErrors =>
+        def handleFormWithErrors(formWithErrors: Form[CTUTR]) =
+          if (formWithErrors.errors.exists(_.message === "error.ctutrsDoNotMatch")) {
+            if (companySession.ctutrAnswerAttempts < appConfig.ctutrAnswerAttemptsAllowed) {
+              sessionStore
+                .store(companySession.copy(ctutrAnswerAttempts = companySession.ctutrAnswerAttempts + 1)) map { _ =>
+                Ok(
+                  enterCtutrPage(
+                    formWithErrors,
+                    journeyService.previous(routes.CompanyDetailsController.enterCtutr())
+                  )
+                )
+              } fold ({ e =>
+                logger.warn("Could not update ctutr answer attempts", e)
+                InternalServerError
+              },
+              identity)
+            } else {
+              journeyService
+                .updateAndNext(
+                  routes.CompanyDetailsController.enterCtutr(),
+                  companySession
+                )
+                .fold(
+                  { e =>
+                    logger.warn("Could not update session and proceed", e)
+                    InternalServerError
+                  },
+                  Redirect
+                )
+            }
+          } else {
+            Future.successful(
               Ok(
                 enterCtutrPage(
                   formWithErrors,
                   journeyService.previous(routes.CompanyDetailsController.enterCtutr())
                 )
-              ),
-            handleValidAnswer
-          )
+              )
+            )
+          }
+
+        enterCtutrForm(desCtutr)
+          .bindFromRequest()
+          .fold(handleFormWithErrors, handleValidAnswer)
       }
     }
   }
 
   val dontHaveUtr: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
+    Ok(s"${request.sessionData}")
+  }
+
+  val tooManyCtutrAttempts: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
     Ok(s"${request.sessionData}")
   }
 

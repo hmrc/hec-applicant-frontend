@@ -99,4 +99,6 @@ class AppConfig @Inject() (config: Configuration, contactFrontendConfig: Contact
   val findLostUtrUrl: String               = config.get[String]("external-url.find-lost-utr")
 
   val firstPageBackUrl: String = config.get[String]("first-page-back-url")
+
+  val ctutrAnswerAttemptsAllowed: Int = config.get[Int]("ctutr-answer-attempts-allowed")
 }

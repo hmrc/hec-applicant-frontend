@@ -23,6 +23,7 @@ import cats.instances.string._
 import cats.syntax.eq._
 import com.google.inject.{ImplementedBy, Inject, Singleton}
 import play.api.mvc.Call
+import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 import uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.saTaxSituations
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.RequestWithSessionData
 import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
@@ -56,7 +57,8 @@ trait JourneyService {
 }
 
 @Singleton
-class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: ExecutionContext) extends JourneyService {
+class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: ExecutionContext, appConfig: AppConfig)
+    extends JourneyService {
 
   implicit val callEq: Eq[Call] = Eq.instance(_.url === _.url)
 
@@ -337,24 +339,25 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
 
   private def enterCtutrRoute(session: HECSession) =
     session.mapAsCompany { companySession =>
-      session.userAnswers.fold(_.ctutr, _.ctutr) map { ctutr =>
-        companySession.retrievedJourneyData match {
-          case CompanyRetrievedJourneyData(_, Some(desCtutr), Some(ctStatus)) =>
-            if (ctutr.value === desCtutr.value)
+      val attemptsExceeded = companySession.ctutrAnswerAttempts >= appConfig.ctutrAnswerAttemptsAllowed
+      val ctutrOpt         = session.userAnswers.fold(_.ctutr, _.ctutr)
+      if (attemptsExceeded && ctutrOpt.isEmpty) {
+        routes.CompanyDetailsController.tooManyCtutrAttempts()
+      } else {
+        session.userAnswers.fold(_.ctutr, _.ctutr) map { _ =>
+          companySession.retrievedJourneyData match {
+            case CompanyRetrievedJourneyData(_, Some(_), Some(ctStatus)) =>
               ctStatus.latestAccountingPeriod.map(_.ctStatus) match {
                 case Some(_) => routes.CompanyDetailsController.chargeableForCorporationTax()
                 case None    => routes.CompanyDetailsController.recentlyStartedTrading()
               }
-            else
-              routes.CompanyDetailsController.ctutrNotMatched() // TODO redirect according to number of attempts
-
-          case CompanyRetrievedJourneyData(_, Some(_), None) =>
-            routes.CompanyDetailsController.cannotDoTaxCheck()
-
-          case _ => sys.error("DES CTUTR missing in journey data")
+            case CompanyRetrievedJourneyData(_, Some(_), None) =>
+              routes.CompanyDetailsController.cannotDoTaxCheck()
+            case _ => sys.error("DES CTUTR missing in journey data")
+          }
+        } getOrElse {
+          sys.error("CTUTR answer missing")
         }
-      } getOrElse {
-        sys.error("CTUTR answer missing")
       }
     }
 
