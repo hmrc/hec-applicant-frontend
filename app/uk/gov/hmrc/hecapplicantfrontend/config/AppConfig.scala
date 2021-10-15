@@ -100,5 +100,5 @@ class AppConfig @Inject() (config: Configuration, contactFrontendConfig: Contact
 
   val firstPageBackUrl: String = config.get[String]("first-page-back-url")
 
-  val ctutrAnswerAttemptsAllowed: Int = config.get[Int]("ctutr-answer-attempts-allowed")
+  val maxCtutrAnswerAttempts: Int = config.get[Int]("maximum-ctutr-answer-attempts")
 }

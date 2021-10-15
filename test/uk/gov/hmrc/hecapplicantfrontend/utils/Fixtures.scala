@@ -146,14 +146,16 @@ object Fixtures {
     userAnswers: UserAnswers = incompleteUserAnswers(),
     completedTaxCheck: Option[HECTaxCheck] = None,
     taxCheckStartDateTime: Option[ZonedDateTime] = None,
-    unexpiredTaxChecks: List[TaxCheckListItem] = List.empty
+    unexpiredTaxChecks: List[TaxCheckListItem] = List.empty,
+    ctutrAnswerAttempts: Int = 0
   ): CompanyHECSession = CompanyHECSession(
     loginData = loginData,
     retrievedJourneyData = retrievedJourneyData,
     userAnswers = userAnswers,
     completedTaxCheck = completedTaxCheck,
     taxCheckStartDateTime = taxCheckStartDateTime,
-    unexpiredTaxChecks = unexpiredTaxChecks
+    unexpiredTaxChecks = unexpiredTaxChecks,
+    ctutrAnswerAttempts = ctutrAnswerAttempts
   )
 
   def ctStatusResponse(

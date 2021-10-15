@@ -341,7 +341,7 @@ class CompanyDetailsController @Inject() (
 
         def handleFormWithErrors(formWithErrors: Form[CTUTR]) =
           if (formWithErrors.errors.exists(_.message === "error.ctutrsDoNotMatch")) {
-            if (companySession.ctutrAnswerAttempts < appConfig.ctutrAnswerAttemptsAllowed) {
+            if (companySession.ctutrAnswerAttempts < appConfig.maxCtutrAnswerAttempts) {
               sessionStore
                 .store(companySession.copy(ctutrAnswerAttempts = companySession.ctutrAnswerAttempts + 1)) map { _ =>
                 Ok(
@@ -527,8 +527,11 @@ object CompanyDetailsController {
     val validCtutr: Constraint[CTUTR] =
       Constraint(ctutr =>
         CTUTR.fromString(ctutr.value) match {
-          case Some(ctutr) => if (ctutr.value === desCtrutr.value) Valid else Invalid("error.ctutrsDoNotMatch")
-          case None        => Invalid("error.ctutrInvalid")
+          case Some(ctutr) => if (ctutr.stripped === desCtrutr.value) Valid else Invalid("error.ctutrsDoNotMatch")
+          case None        =>
+            // if user input was already 10 digits, then checksum validation failed, otherwise the format was wrong
+            if (ctutr.value.matches("\\d{10}")) Invalid("error.ctutrChecksumFailed")
+            else Invalid("error.ctutrInvalidFormat")
         }
       )
 

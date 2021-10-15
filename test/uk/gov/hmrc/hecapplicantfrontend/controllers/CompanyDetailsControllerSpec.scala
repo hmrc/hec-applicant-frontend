@@ -18,6 +18,8 @@ package uk.gov.hmrc.hecapplicantfrontend.controllers
 
 import cats.data.EitherT
 import cats.instances.future._
+import com.typesafe.config.ConfigFactory
+import play.api.Configuration
 import play.api.http.Status.INTERNAL_SERVER_ERROR
 import play.api.inject.bind
 import play.api.mvc.Result
@@ -77,6 +79,25 @@ class CompanyDetailsControllerSpec
   val companyLoginData                    = Fixtures.companyLoginData()
   val retrievedJourneyDataWithCompanyName =
     Fixtures.companyRetrievedJourneyData(companyName = Some(CompanyHouseName("some-company")))
+
+  private lazy val maxCtutrAttempts = 3
+
+  // TODO this has been copy pasted from AuthAndSessionDataBehaviour and the
+  //      maximum-ctutr-answer-attempts has been added to this, find a better way to do this
+  //      (using super didn't work)
+  override lazy val additionalConfig: Configuration =
+    Configuration(
+      ConfigFactory.parseString(
+        s"""
+         | self.url = "$selfUrl"
+         | auth {
+         |   bas-gateway.url = "$basGatewayUrl"
+         |   gg.origin = "$ggOrigin"
+         | }
+         | maximum-ctutr-answer-attempts = $maxCtutrAttempts
+         |""".stripMargin
+      )
+    )
 
   "CompanyDetailsControllerSpec" when {
 
@@ -1181,6 +1202,363 @@ class CompanyDetailsControllerSpec
           }
 
           checkIsRedirect(performAction("recentlyStartedTrading" -> "1"), mockNextCall)
+        }
+
+      }
+
+    }
+
+    "handling requests to the enter CTUTR page " must {
+
+      val enterCtutrRoute       = routes.CompanyDetailsController.enterCtutr()
+      val enterCtutrSubmitRoute = routes.CompanyDetailsController.enterCtutrSubmit()
+
+      def performAction(): Future[Result] = controller.enterCtutr(FakeRequest())
+
+      "display the page" when {
+        val companyData = retrievedJourneyDataWithCompanyName.copy(
+          desCtutr = Some(CTUTR("utr"))
+        )
+
+        "the user has not previously answered the question " in {
+          val session = Fixtures.companyHECSession(companyLoginData, companyData)
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockJourneyServiceGetPrevious(enterCtutrRoute, session)(mockPreviousCall)
+          }
+
+          checkPageIsDisplayed(
+            performAction(),
+            messageFromMessageKey("enterCtutr.title"),
+            { doc =>
+              doc.select("#back").attr("href") shouldBe mockPreviousCall.url
+              doc
+                .select("#enterCtutr-hint")
+                .text()                        shouldBe messageFromMessageKey("enterCtutr.hint")
+
+              val input = doc.select("#ct-utr")
+              input.text() shouldBe ""
+
+              val button = doc.select("form")
+              button.attr("action") shouldBe enterCtutrSubmitRoute.url
+            }
+          )
+
+        }
+
+        // TODO fix
+        "the user has previously answered the question" in {
+          val ctutr   = "old-utr"
+          val answers = Fixtures.completeUserAnswers(
+            ctutr = Some(CTUTR(ctutr))
+          )
+          val session = Fixtures.companyHECSession(companyLoginData, companyData, answers)
+
+          val updatedAnswers = IncompleteUserAnswers
+            .fromCompleteAnswers(answers)
+            .copy(ctutr = Some(CTUTR("new-utr")))
+          val updatedSession = session.copy(userAnswers = updatedAnswers)
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(updatedSession)
+            mockJourneyServiceGetPrevious(enterCtutrRoute, updatedSession)(mockPreviousCall)
+          }
+          checkPageIsDisplayed(
+            performAction(),
+            messageFromMessageKey("enterCtutr.title"),
+            { doc =>
+              doc.select("#back").attr("href") shouldBe mockPreviousCall.url
+              doc
+                .select("#enterCtutr-hint")
+                .text()                        shouldBe messageFromMessageKey("enterCtutr.hint")
+
+              val input = doc.select("#ct-utr")
+              input.text() shouldBe ctutr
+
+              val button = doc.select("form")
+              button.attr("action") shouldBe enterCtutrSubmitRoute.url
+            }
+          )
+
+        }
+
+      }
+
+      "return internal server error" when {
+        "applicant is individual" in {
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(Fixtures.individualHECSession())
+          }
+
+          assertThrows[RuntimeException](await(performAction()))
+        }
+
+        "DES CTUTR is not populated" in {
+          val session = Fixtures.companyHECSession(
+            companyLoginData,
+            retrievedJourneyDataWithCompanyName.copy(desCtutr = None)
+          )
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+          }
+
+          status(performAction()) shouldBe INTERNAL_SERVER_ERROR
+        }
+      }
+    }
+
+    "handling submit on enter ctutr page" must {
+
+      val ctutr1          = "1111111111"
+      val ctutr2          = "2222222222"
+      val enterCtutrRoute = routes.CompanyDetailsController.enterCtutr()
+
+      def performAction(data: (String, String)*): Future[Result] =
+        controller.enterCtutrSubmit(FakeRequest().withFormUrlEncodedBody(data: _*))
+
+      behave like authAndSessionDataBehaviour(() => performAction())
+
+      "show a form error" when {
+        val session = Fixtures.companyHECSession(
+          companyLoginData,
+          retrievedJourneyData = Fixtures.companyRetrievedJourneyData(desCtutr = Some(CTUTR(ctutr1)))
+        )
+
+        def test(errorMessageKey: String, formAnswer: (String, String)*) = {
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockJourneyServiceGetPrevious(enterCtutrRoute, session)(mockPreviousCall)
+          }
+
+          checkFormErrorIsDisplayed(
+            performAction(formAnswer: _*),
+            messageFromMessageKey("enterCtutr.title"),
+            messageFromMessageKey(errorMessageKey)
+          )
+        }
+
+        "nothing has been submitted" in {
+          test("enterCtutr.error.required")
+        }
+
+        "CTUTR length is less than 10 digits long" in {
+          test("enterCtutr.error.ctutrInvalidFormat", "enterCtutr" -> "111")
+          test("enterCtutr.error.ctutrInvalidFormat", "enterCtutr" -> "111111111")
+        }
+
+        "CTUTR length is more than 10 digits long" in {
+          test("enterCtutr.error.ctutrInvalidFormat", "enterCtutr" -> "11111111111")
+        }
+
+        "CTUTR contains letters" in {
+          test("enterCtutr.error.ctutrInvalidFormat", "enterCtutr" -> "111111111a")
+        }
+
+        "CTUTR fails checksum validation" in {
+          test("enterCtutr.error.ctutrChecksumFailed", "enterCtutr" -> "1234567890")
+        }
+
+        "input CTUTR does not match DES CTUTR" in {
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockStoreSession(session.copy(ctutrAnswerAttempts = session.ctutrAnswerAttempts + 1))(Right(()))
+            mockJourneyServiceGetPrevious(enterCtutrRoute, session)(mockPreviousCall)
+          }
+
+          checkFormErrorIsDisplayed(
+            performAction("enterCtutr" -> "2222222222"),
+            messageFromMessageKey("enterCtutr.title"),
+            messageFromMessageKey("enterCtutr.error.ctutrsDoNotMatch")
+          )
+        }
+      }
+
+      "return an internal server error" when {
+
+        "the applicant type is individual" in {
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(Fixtures.individualHECSession())
+          }
+
+          assertThrows[RuntimeException](await(performAction()))
+        }
+
+        "DES CTUTR is not in the session" in {
+          val session = Fixtures.companyHECSession(
+            companyLoginData,
+            Fixtures.companyRetrievedJourneyData(desCtutr = None)
+          )
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+          }
+
+          status(performAction("enterCtutr" -> "some-utr")) shouldBe INTERNAL_SERVER_ERROR
+        }
+
+        "the call to fetch CT status fails" in {
+          val session = Fixtures.companyHECSession(
+            companyLoginData,
+            Fixtures.companyRetrievedJourneyData(desCtutr = Some(CTUTR(ctutr1)))
+          )
+
+          val today                   = LocalDate.now
+          val lookbackPeriodStartDate = today.minusYears(2).plusDays(1)
+          val lookbackPeriodEndDate   = today.minusYears(1)
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockTimeProviderToday(LocalDate.now)
+            mockTaxCheckServiceGetCtStatus(CTUTR(ctutr1), lookbackPeriodStartDate, lookbackPeriodEndDate)(
+              Left(Error("fetch CT status failed"))
+            )
+          }
+
+          status(performAction("enterCtutr" -> ctutr1)) shouldBe INTERNAL_SERVER_ERROR
+        }
+
+        "the call to update and next fails" when {
+          "user answer is valid" in {
+            val answers = Fixtures.incompleteUserAnswers()
+            val session = Fixtures.companyHECSession(
+              companyLoginData,
+              Fixtures.companyRetrievedJourneyData(desCtutr = Some(CTUTR(ctutr1)))
+            )
+
+            val today                   = LocalDate.now
+            val lookbackPeriodStartDate = today.minusYears(2).plusDays(1)
+            val lookbackPeriodEndDate   = today.minusYears(1)
+            val ctStatusResponse        = CTStatusResponse(CTUTR(ctutr1), today, today, None)
+
+            val updatedAnswers       = answers.copy(ctutr = Some(CTUTR(ctutr1)))
+            val updatedRetrievedData = session.retrievedJourneyData.copy(ctStatus = Some(ctStatusResponse))
+            val updatedSession       = session.copy(userAnswers = updatedAnswers, retrievedJourneyData = updatedRetrievedData)
+
+            inSequence {
+              mockAuthWithNoRetrievals()
+              mockGetSession(session)
+              mockTimeProviderToday(LocalDate.now)
+              mockTaxCheckServiceGetCtStatus(CTUTR(ctutr1), lookbackPeriodStartDate, lookbackPeriodEndDate)(
+                Right(Some(ctStatusResponse))
+              )
+              mockJourneyServiceUpdateAndNext(
+                enterCtutrRoute,
+                session,
+                updatedSession
+              )(
+                Left(Error("update and next failed"))
+              )
+            }
+
+            status(performAction("enterCtutr" -> ctutr1)) shouldBe INTERNAL_SERVER_ERROR
+          }
+
+          "user answer does not match DES CTUTR & maximum CTUTR attempts has been reached" in {
+            val session = Fixtures.companyHECSession(
+              companyLoginData,
+              Fixtures.companyRetrievedJourneyData(desCtutr = Some(CTUTR(ctutr1))),
+              ctutrAnswerAttempts = maxCtutrAttempts
+            )
+
+            inSequence {
+              mockAuthWithNoRetrievals()
+              mockGetSession(session)
+              mockJourneyServiceUpdateAndNext(
+                enterCtutrRoute,
+                session,
+                session
+              )(
+                Left(Error("update and next failed"))
+              )
+            }
+
+            status(performAction("enterCtutr" -> ctutr2)) shouldBe INTERNAL_SERVER_ERROR
+          }
+        }
+
+      }
+
+      "redirect to the next page" when {
+
+        "user gives a valid answer" in {
+          //val _13DigitCtutr = s"111$ctutr1"
+          List(
+            ctutr1 -> ctutr1
+//            s"k$ctutr1" -> ctutr1
+//            s"${ctutr1}k"        -> ctutr1,
+//            _13DigitCtutr        -> ctutr1,
+//            s"k${_13DigitCtutr}" -> ctutr1,
+//            s"${_13DigitCtutr}k" -> ctutr1
+          ).foreach { case (ctutrAnswer, strippedCtutrAnswer) =>
+            withClue(s"for CTUTR = $ctutrAnswer") {
+              val answers = Fixtures.incompleteUserAnswers()
+              val session = Fixtures.companyHECSession(
+                companyLoginData,
+                Fixtures.companyRetrievedJourneyData(desCtutr = Some(CTUTR(strippedCtutrAnswer)))
+              )
+
+              val today                   = LocalDate.now
+              val lookbackPeriodStartDate = today.minusYears(2).plusDays(1)
+              val lookbackPeriodEndDate   = today.minusYears(1)
+              val ctStatusResponse        = CTStatusResponse(CTUTR(strippedCtutrAnswer), today, today, None)
+
+              val updatedAnswers       = answers.copy(ctutr = Some(CTUTR(ctutrAnswer)))
+              val updatedRetrievedData = session.retrievedJourneyData.copy(ctStatus = Some(ctStatusResponse))
+              val updatedSession       =
+                session.copy(userAnswers = updatedAnswers, retrievedJourneyData = updatedRetrievedData)
+
+              inSequence {
+                mockAuthWithNoRetrievals()
+                mockGetSession(session)
+                mockTimeProviderToday(LocalDate.now)
+                mockTaxCheckServiceGetCtStatus(
+                  CTUTR(strippedCtutrAnswer),
+                  lookbackPeriodStartDate,
+                  lookbackPeriodEndDate
+                )(
+                  Right(Some(ctStatusResponse))
+                )
+                mockJourneyServiceUpdateAndNext(
+                  enterCtutrRoute,
+                  session,
+                  updatedSession
+                )(Right(mockNextCall))
+              }
+
+              checkIsRedirect(performAction("enterCtutr" -> ctutrAnswer), mockNextCall)
+            }
+          }
+        }
+
+        "user's answer and DES CTUTR do not match & maximum number of ctutr attempts has been reached" in {
+          val session = Fixtures.companyHECSession(
+            companyLoginData,
+            Fixtures.companyRetrievedJourneyData(desCtutr = Some(CTUTR(ctutr1))),
+            ctutrAnswerAttempts = maxCtutrAttempts
+          )
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockJourneyServiceUpdateAndNext(
+              enterCtutrRoute,
+              session,
+              session
+            )(Right(mockNextCall))
+          }
+
+          checkIsRedirect(performAction("enterCtutr" -> ctutr2), mockNextCall)
         }
 
       }

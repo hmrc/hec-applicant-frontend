@@ -16,14 +16,13 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.services
 
-import org.scalamock.scalatest.MockFactory
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpec
+import com.typesafe.config.ConfigFactory
+import play.api.Configuration
 import play.api.mvc.Call
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthenticatedRequest, RequestWithSessionData}
-import uk.gov.hmrc.hecapplicantfrontend.controllers.{SessionSupport, routes}
+import uk.gov.hmrc.hecapplicantfrontend.controllers.{ControllerSpec, SessionSupport, routes}
 import uk.gov.hmrc.hecapplicantfrontend.models.EntityType.{Company, Individual}
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, IndividualHECSession}
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
@@ -40,8 +39,14 @@ import uk.gov.hmrc.http.HeaderCarrier
 import java.time.{LocalDate, ZoneId, ZonedDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with SessionSupport {
+class JourneyServiceSpec extends ControllerSpec with SessionSupport {
 
+  private val maxCtutrAttempts                      = 3
+  override lazy val additionalConfig: Configuration = Configuration(
+    ConfigFactory.parseString(s"maximum-ctutr-answer-attempts = $maxCtutrAttempts")
+  )
+
+  implicit val config                    = appConfig
   val journeyService: JourneyServiceImpl = new JourneyServiceImpl(mockSessionStore)
 
   val taxCheckStartDateTime = ZonedDateTime.of(2021, 10, 9, 9, 12, 34, 0, ZoneId.of("Europe/London"))
@@ -1357,6 +1362,140 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockFactory with
             testStartTrading(YesNoAnswer.No, routes.CompanyDetailsController.cannotDoTaxCheck())
           }
 
+        }
+
+        "enter CTUTR page" when {
+          "number of attempts has reached the maximum & no valid CTUTR was found" in {
+            val session = Fixtures.companyHECSession(ctutrAnswerAttempts = maxCtutrAttempts)
+
+            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+
+            val result = journeyService.updateAndNext(
+              routes.CompanyDetailsController.enterCtutr(),
+              session
+            )
+            await(result.value) shouldBe Right(routes.CompanyDetailsController.tooManyCtutrAttempts())
+          }
+//          "number of attempts has reached the maximum & valid CTUTR was found" in {
+//            val session = Fixtures.companyHECSession(
+//              retrievedJourneyData = Fixtures.companyRetrievedJourneyData(),
+//              ctutrAnswerAttempts = maxCtutrAttempts
+//            )
+//
+//            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+//
+//            val result = journeyService.updateAndNext(
+//              routes.CompanyDetailsController.enterCtutr(),
+//              session
+//            )
+//            await(result.value) shouldBe Right(routes.CompanyDetailsController.tooManyCtutrAttempts())
+//          }
+          "number of attempts has not reached the maximum" must {
+            "throw if CTUTR is missing" in {
+              val session = Fixtures.companyHECSession()
+
+              implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+
+              assertThrows[RuntimeException] {
+                journeyService.updateAndNext(
+                  routes.CompanyDetailsController.enterCtutr(),
+                  session
+                )
+              }
+            }
+
+            "throw if DES CTUTR is missing" in {
+              val session = Fixtures.companyHECSession(
+                retrievedJourneyData = Fixtures.companyRetrievedJourneyData(
+                  ctStatus = Some(Fixtures.ctStatusResponse()),
+                  desCtutr = None
+                )
+              )
+
+              implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+
+              assertThrows[RuntimeException] {
+                journeyService.updateAndNext(
+                  routes.CompanyDetailsController.enterCtutr(),
+                  session
+                )
+              }
+            }
+
+            "throw if CTUTR answer is not found" in {
+              val session = Fixtures.companyHECSession(
+                retrievedJourneyData = Fixtures.companyRetrievedJourneyData(
+                  ctStatus = None,
+                  desCtutr = Some(CTUTR("utr"))
+                ),
+                userAnswers = Fixtures.incompleteUserAnswers(ctutr = None)
+              )
+
+              implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+
+              assertThrows[RuntimeException] {
+                journeyService.updateAndNext(
+                  routes.CompanyDetailsController.enterCtutr(),
+                  session
+                )
+              }
+            }
+
+            "go to cannot do tax check page when CT status is not found" in {
+              val session = Fixtures.companyHECSession(
+                retrievedJourneyData = Fixtures.companyRetrievedJourneyData(
+                  ctStatus = None,
+                  desCtutr = Some(CTUTR("utr"))
+                ),
+                userAnswers = Fixtures.incompleteUserAnswers(ctutr = Some(CTUTR("utr")))
+              )
+
+              implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+
+              val result = journeyService.updateAndNext(
+                routes.CompanyDetailsController.enterCtutr(),
+                session
+              )
+              await(result.value) shouldBe Right(routes.CompanyDetailsController.cannotDoTaxCheck())
+            }
+
+            "go to recently started trading page when no latest accounting period found" in {
+              val session = Fixtures.companyHECSession(
+                retrievedJourneyData = Fixtures.companyRetrievedJourneyData(
+                  ctStatus = Some(Fixtures.ctStatusResponse(latestAccountingPeriod = None)),
+                  desCtutr = Some(CTUTR("utr"))
+                ),
+                userAnswers = Fixtures.incompleteUserAnswers(ctutr = Some(CTUTR("utr")))
+              )
+
+              implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+
+              val result = journeyService.updateAndNext(
+                routes.CompanyDetailsController.enterCtutr(),
+                session
+              )
+              await(result.value) shouldBe Right(routes.CompanyDetailsController.recentlyStartedTrading())
+            }
+
+            "go to chargeable for CT page when latest accounting period found" in {
+              val session = Fixtures.companyHECSession(
+                retrievedJourneyData = Fixtures.companyRetrievedJourneyData(
+                  ctStatus =
+                    Some(Fixtures.ctStatusResponse(latestAccountingPeriod = Some(Fixtures.ctAccountingPeriod()))),
+                  desCtutr = Some(CTUTR("utr"))
+                ),
+                userAnswers = Fixtures.incompleteUserAnswers(ctutr = Some(CTUTR("utr")))
+              )
+
+              implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+
+              val result = journeyService.updateAndNext(
+                routes.CompanyDetailsController.enterCtutr(),
+                session
+              )
+              await(result.value) shouldBe Right(routes.CompanyDetailsController.chargeableForCorporationTax())
+            }
+          }
         }
 
       }

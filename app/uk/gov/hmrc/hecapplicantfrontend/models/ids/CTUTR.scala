@@ -24,7 +24,9 @@ import uk.gov.hmrc.referencechecker.CorporationTaxReferenceChecker
 /**
   * Corporation Tax Unique Taxpayer Reference number
   */
-final case class CTUTR(value: String) extends AnyVal
+final case class CTUTR(value: String) extends AnyVal {
+  def stripped: String = CTUTR.strip(value)
+}
 
 object CTUTR {
 
@@ -35,6 +37,22 @@ object CTUTR {
   def fromString(s: String): Option[CTUTR] = {
     val withoutSpaces = s.removeWhitespace
     if (CorporationTaxReferenceChecker.isValid(withoutSpaces)) Some(CTUTR(withoutSpaces)) else None
+  }
+
+  def strip(validCtutr: String): String = {
+    val len         = validCtutr.length
+    val startsWithK = validCtutr.startsWith("k")
+    val endsWithK   = validCtutr.endsWith("k")
+
+    len match {
+      case 10                => validCtutr
+      case 13                => validCtutr.substring(3)
+      case 11 if startsWithK => validCtutr.tail
+      case 11 if endsWithK   => validCtutr.init
+      case 14 if startsWithK => validCtutr.substring(4)
+      case 14 if endsWithK   => validCtutr.init.substring(3)
+      case _                 => sys.error("Invalid CTUTR")
+    }
   }
 
 }

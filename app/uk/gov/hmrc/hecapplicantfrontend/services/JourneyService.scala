@@ -339,7 +339,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
 
   private def enterCtutrRoute(session: HECSession) =
     session.mapAsCompany { companySession =>
-      val attemptsExceeded = companySession.ctutrAnswerAttempts >= appConfig.ctutrAnswerAttemptsAllowed
+      val attemptsExceeded = companySession.ctutrAnswerAttempts >= appConfig.maxCtutrAnswerAttempts
       val ctutrOpt         = session.userAnswers.fold(_.ctutr, _.ctutr)
       if (attemptsExceeded && ctutrOpt.isEmpty) {
         routes.CompanyDetailsController.tooManyCtutrAttempts()
@@ -351,9 +351,9 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
                 case Some(_) => routes.CompanyDetailsController.chargeableForCorporationTax()
                 case None    => routes.CompanyDetailsController.recentlyStartedTrading()
               }
-            case CompanyRetrievedJourneyData(_, Some(_), None) =>
+            case CompanyRetrievedJourneyData(_, Some(_), None)           =>
               routes.CompanyDetailsController.cannotDoTaxCheck()
-            case _ => sys.error("DES CTUTR missing in journey data")
+            case _                                                       => sys.error("DES CTUTR missing in journey data")
           }
         } getOrElse {
           sys.error("CTUTR answer missing")
