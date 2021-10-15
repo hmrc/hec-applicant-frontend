@@ -25,7 +25,8 @@ import uk.gov.hmrc.referencechecker.CorporationTaxReferenceChecker
   * Corporation Tax Unique Taxpayer Reference number
   */
 final case class CTUTR(value: String) extends AnyVal {
-  def stripped: String = CTUTR.strip(value)
+  def stripped: String     = CTUTR.strip(value)
+  def strippedCtutr: CTUTR = CTUTR(stripped)
 }
 
 object CTUTR {
@@ -39,20 +40,27 @@ object CTUTR {
     if (CorporationTaxReferenceChecker.isValid(withoutSpaces)) Some(CTUTR(withoutSpaces)) else None
   }
 
-  def strip(validCtutr: String): String = {
-    val len         = validCtutr.length
-    val startsWithK = validCtutr.startsWith("k")
-    val endsWithK   = validCtutr.endsWith("k")
+  /**
+    * For a correctly formatted CTUTR (10/13 digit string with/out a prefixed/suffixed 'k' or 'K')
+    * - strips first/last character if it is equal to 'k' or 'K'
+    * - if remaining string length = 13, strip the first 3 characters
+    * Note: For an incorrectly formatted CTUTR, the string is returned as is
+    * @param ctutr The CTUTR string
+    * @return The stripped CTUTR if valid, the unchanged string if invalid
+    */
+  def strip(ctutr: String): String = {
+    val k10  = """^[kK]\d{10}$"""
+    val k13  = """^[kK]\d{13}$"""
+    val _10k = """^\d{10}[kK]$"""
+    val _13k = """^\d{13}[kK]$"""
+    val _13  = """^\d{13}$"""
 
-    len match {
-      case 10                => validCtutr
-      case 13                => validCtutr.substring(3)
-      case 11 if startsWithK => validCtutr.tail
-      case 11 if endsWithK   => validCtutr.init
-      case 14 if startsWithK => validCtutr.substring(4)
-      case 14 if endsWithK   => validCtutr.init.substring(3)
-      case _                 => sys.error("Invalid CTUTR")
-    }
+    if (ctutr.matches(k10)) ctutr.tail
+    else if (ctutr.matches(_10k)) ctutr.init
+    else if (ctutr.matches(_13)) ctutr.substring(3)
+    else if (ctutr.matches(k13)) ctutr.substring(4)
+    else if (ctutr.matches(_13k)) ctutr.init.substring(3)
+    else ctutr
   }
 
 }

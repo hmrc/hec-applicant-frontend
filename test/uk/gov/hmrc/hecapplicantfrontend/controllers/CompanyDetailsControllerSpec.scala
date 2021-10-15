@@ -1238,7 +1238,7 @@ class CompanyDetailsControllerSpec
                 .select("#enterCtutr-hint")
                 .text()                        shouldBe messageFromMessageKey("enterCtutr.hint")
 
-              val input = doc.select("#ct-utr")
+              val input = doc.select("#enterCtutr")
               input.text() shouldBe ""
 
               val button = doc.select("form")
@@ -1248,23 +1248,17 @@ class CompanyDetailsControllerSpec
 
         }
 
-        // TODO fix
         "the user has previously answered the question" in {
-          val ctutr   = "old-utr"
+          val ctutr   = "1111111111"
           val answers = Fixtures.completeUserAnswers(
             ctutr = Some(CTUTR(ctutr))
           )
           val session = Fixtures.companyHECSession(companyLoginData, companyData, answers)
 
-          val updatedAnswers = IncompleteUserAnswers
-            .fromCompleteAnswers(answers)
-            .copy(ctutr = Some(CTUTR("new-utr")))
-          val updatedSession = session.copy(userAnswers = updatedAnswers)
-
           inSequence {
             mockAuthWithNoRetrievals()
-            mockGetSession(updatedSession)
-            mockJourneyServiceGetPrevious(enterCtutrRoute, updatedSession)(mockPreviousCall)
+            mockGetSession(session)
+            mockJourneyServiceGetPrevious(enterCtutrRoute, session)(mockPreviousCall)
           }
           checkPageIsDisplayed(
             performAction(),
@@ -1275,8 +1269,8 @@ class CompanyDetailsControllerSpec
                 .select("#enterCtutr-hint")
                 .text()                        shouldBe messageFromMessageKey("enterCtutr.hint")
 
-              val input = doc.select("#ct-utr")
-              input.text() shouldBe ctutr
+              val input = doc.select("#enterCtutr")
+              input.attr("value") shouldBe ctutr
 
               val button = doc.select("form")
               button.attr("action") shouldBe enterCtutrSubmitRoute.url
@@ -1492,14 +1486,14 @@ class CompanyDetailsControllerSpec
       "redirect to the next page" when {
 
         "user gives a valid answer" in {
-          //val _13DigitCtutr = s"111$ctutr1"
+          val _13DigitCtutr = s"111$ctutr1"
           List(
-            ctutr1 -> ctutr1
-//            s"k$ctutr1" -> ctutr1
-//            s"${ctutr1}k"        -> ctutr1,
-//            _13DigitCtutr        -> ctutr1,
-//            s"k${_13DigitCtutr}" -> ctutr1,
-//            s"${_13DigitCtutr}k" -> ctutr1
+            ctutr1               -> ctutr1,
+            s"k$ctutr1"          -> ctutr1,
+            s"${ctutr1}k"        -> ctutr1,
+            _13DigitCtutr        -> ctutr1,
+            s"k${_13DigitCtutr}" -> ctutr1,
+            s"${_13DigitCtutr}k" -> ctutr1
           ).foreach { case (ctutrAnswer, strippedCtutrAnswer) =>
             withClue(s"for CTUTR = $ctutrAnswer") {
               val answers = Fixtures.incompleteUserAnswers()

@@ -317,12 +317,17 @@ class CompanyDetailsController @Inject() (
   val enterCtutrSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     request.sessionData mapAsCompany { companySession =>
       ensureCompanyDataHasDesCtutr(companySession) { desCtutr =>
+        def internalServerError(errorMsg: String)(e: Error) = {
+          logger.warn(errorMsg, e)
+          InternalServerError
+        }
+
         def handleValidAnswer(ctutr: CTUTR) = {
           val updatedAnswers = companySession.userAnswers.unset(_.ctutr).copy(ctutr = Some(ctutr))
           val (start, end)   = CompanyDetailsController.calculateLookbackPeriod(timeProvider.currentDate)
 
           val result = for {
-            ctStatus            <- taxCheckService.getCTStatus(ctutr, start, end)
+            ctStatus            <- taxCheckService.getCTStatus(ctutr.strippedCtutr, start, end)
             updatedRetrievedData = companySession.retrievedJourneyData.copy(ctStatus = ctStatus)
             next                <- journeyService.updateAndNext(
                                      routes.CompanyDetailsController.enterCtutr(),
@@ -331,54 +336,51 @@ class CompanyDetailsController @Inject() (
           } yield next
 
           result.fold(
-            { e =>
-              logger.warn("Could not update session and proceed", e)
-              InternalServerError
-            },
+            internalServerError("Could not update session and proceed"),
             Redirect
           )
         }
 
-        def handleFormWithErrors(formWithErrors: Form[CTUTR]) =
-          if (formWithErrors.errors.exists(_.message === "error.ctutrsDoNotMatch")) {
-            if (companySession.ctutrAnswerAttempts < appConfig.maxCtutrAnswerAttempts) {
-              sessionStore
-                .store(companySession.copy(ctutrAnswerAttempts = companySession.ctutrAnswerAttempts + 1)) map { _ =>
-                Ok(
-                  enterCtutrPage(
-                    formWithErrors,
-                    journeyService.previous(routes.CompanyDetailsController.enterCtutr())
-                  )
-                )
-              } fold ({ e =>
-                logger.warn("Could not update ctutr answer attempts", e)
-                InternalServerError
-              },
-              identity)
-            } else {
-              journeyService
-                .updateAndNext(
-                  routes.CompanyDetailsController.enterCtutr(),
-                  companySession
-                )
-                .fold(
-                  { e =>
-                    logger.warn("Could not update session and proceed", e)
-                    InternalServerError
-                  },
-                  Redirect
-                )
-            }
-          } else {
-            Future.successful(
-              Ok(
-                enterCtutrPage(
-                  formWithErrors,
-                  journeyService.previous(routes.CompanyDetailsController.enterCtutr())
-                )
-              )
+        def ok(formWithErrors: Form[CTUTR]) = Ok(
+          enterCtutrPage(
+            formWithErrors,
+            journeyService.previous(routes.CompanyDetailsController.enterCtutr())
+          )
+        )
+
+        def handleFormWithErrors(formWithErrors: Form[CTUTR]) = {
+          val ctutrsNotMatched = formWithErrors.errors.exists(_.message === "error.ctutrsDoNotMatch")
+
+          def maxCtutrAnswerAttemptsReached = companySession.ctutrAnswerAttempts >= appConfig.maxCtutrAnswerAttempts
+
+          def incrementAttemptsAndDisplayFormError: Future[Result] = {
+            val updatedSession = companySession.copy(ctutrAnswerAttempts = companySession.ctutrAnswerAttempts + 1)
+            sessionStore.store(updatedSession) map { _ =>
+              ok(formWithErrors)
+            } fold (
+              internalServerError("Could not update ctutr answer attempts"),
+              identity
             )
           }
+
+          def goToNextPage: Future[Result] = journeyService
+            .updateAndNext(
+              routes.CompanyDetailsController.enterCtutr(),
+              companySession
+            )
+            .fold(
+              internalServerError("Could not update session and proceed"),
+              Redirect
+            )
+
+          def displayFormError: Future[Result] = Future.successful(ok(formWithErrors))
+
+          (ctutrsNotMatched, maxCtutrAnswerAttemptsReached) match {
+            case (true, false) => incrementAttemptsAndDisplayFormError
+            case (true, true)  => goToNextPage
+            case (false, _)    => displayFormError
+          }
+        }
 
         enterCtutrForm(desCtutr)
           .bindFromRequest()
@@ -525,15 +527,16 @@ object CompanyDetailsController {
 
   def enterCtutrForm(desCtrutr: CTUTR): Form[CTUTR] = {
     val validCtutr: Constraint[CTUTR] =
-      Constraint(ctutr =>
-        CTUTR.fromString(ctutr.value) match {
+      Constraint { ctutr =>
+        // using the stripped value here because the CTUTR validation checker only works with 10 digit UTRs
+        CTUTR.fromString(ctutr.stripped) match {
           case Some(ctutr) => if (ctutr.stripped === desCtrutr.value) Valid else Invalid("error.ctutrsDoNotMatch")
           case None        =>
             // if user input was already 10 digits, then checksum validation failed, otherwise the format was wrong
-            if (ctutr.value.matches("\\d{10}")) Invalid("error.ctutrChecksumFailed")
+            if (ctutr.value.matches("""^\d{10}$""")) Invalid("error.ctutrChecksumFailed")
             else Invalid("error.ctutrInvalidFormat")
         }
-      )
+      }
 
     Form(
       mapping(

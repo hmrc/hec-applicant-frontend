@@ -24,35 +24,43 @@ class CTUTRSpec extends AnyWordSpec with Matchers {
 
   "CTUTR" must {
 
+    def ctutrWithDigits(length: Int) = "1".repeat(length)
+
+    val ctutr10Digits = ctutrWithDigits(10)
+    val ctutr13Digits = ctutrWithDigits(13)
+
     "return as is for 10 digit string" in {
-      CTUTR.strip("1111111111") shouldBe "1111111111"
+      CTUTR.strip(ctutr10Digits) shouldBe ctutr10Digits
     }
 
-    "strip the first char if starts with a k followed by a 10 digit string" in {
-      CTUTR.strip("k1111111111") shouldBe "1111111111"
+    "strip the first char if starts with a k/K followed by a 10 digit string" in {
+      CTUTR.strip(s"k$ctutr10Digits") shouldBe ctutr10Digits
+      CTUTR.strip(s"K$ctutr10Digits") shouldBe ctutr10Digits
     }
 
-    "strip the last char if ends with a k preceeded by a 10 digit string" in {
-      CTUTR.strip("1111111111k") shouldBe "1111111111"
+    "strip the last char if ends with a k/K preceeded by a 10 digit string" in {
+      CTUTR.strip(s"${ctutr10Digits}k") shouldBe ctutr10Digits
+      CTUTR.strip(s"${ctutr10Digits}K") shouldBe ctutr10Digits
     }
 
     "strip the first 3 chars for a 13 digit string" in {
-      CTUTR.strip("1111111111k") shouldBe "1111111111"
+      CTUTR.strip(ctutr13Digits) shouldBe ctutr10Digits
     }
 
-    "strip the first char if starts with a k followed by a 13 digit string" in {
-      CTUTR.strip("k1111111111111") shouldBe "1111111111"
+    "strip the first char if starts with a K followed by a 13 digit string" in {
+      CTUTR.strip(s"k$ctutr13Digits") shouldBe ctutr10Digits
+      CTUTR.strip(s"K$ctutr13Digits") shouldBe ctutr10Digits
     }
 
-    "strip the last char if ends with a k preceeded by a 13 digit string" in {
-      CTUTR.strip("1111111111111k") shouldBe "1111111111"
+    "strip the last char if ends with a k/K preceeded by a 13 digit string" in {
+      CTUTR.strip(s"${ctutr13Digits}k") shouldBe ctutr10Digits
+      CTUTR.strip(s"${ctutr13Digits}K") shouldBe ctutr10Digits
     }
 
-    "throw for everything else" in {
-      assertThrows[RuntimeException](CTUTR.strip("1".repeat(5)))
-      assertThrows[RuntimeException](CTUTR.strip("1".repeat(11)))
-      assertThrows[RuntimeException](CTUTR.strip("1".repeat(14)))
-//      assertThrows[RuntimeException](CTUTR.strip("1".repeat(20)))
+    "return the string as is otherwise" in {
+      CTUTR.strip(ctutrWithDigits(5))  shouldBe ctutrWithDigits(5)
+      CTUTR.strip(ctutrWithDigits(11)) shouldBe ctutrWithDigits(11)
+      CTUTR.strip(ctutrWithDigits(14)) shouldBe ctutrWithDigits(14)
     }
   }
 
