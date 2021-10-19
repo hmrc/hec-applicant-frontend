@@ -80,24 +80,18 @@ class CompanyDetailsControllerSpec
   val retrievedJourneyDataWithCompanyName =
     Fixtures.companyRetrievedJourneyData(companyName = Some(CompanyHouseName("some-company")))
 
-  private lazy val maxCtutrAttempts = 3
+  private lazy val maxCtutrAttempts = 4
 
-  // TODO this has been copy pasted from AuthAndSessionDataBehaviour and the
-  //      maximum-ctutr-answer-attempts has been added to this, find a better way to do this
-  //      (using super didn't work)
-  override lazy val additionalConfig: Configuration =
+  lazy val config: Configuration =
     Configuration(
       ConfigFactory.parseString(
         s"""
-         | self.url = "$selfUrl"
-         | auth {
-         |   bas-gateway.url = "$basGatewayUrl"
-         |   gg.origin = "$ggOrigin"
-         | }
          | maximum-ctutr-answer-attempts = $maxCtutrAttempts
          |""".stripMargin
       )
     )
+
+  override lazy val additionalConfig = ensureConfig(config)
 
   "CompanyDetailsControllerSpec" when {
 
