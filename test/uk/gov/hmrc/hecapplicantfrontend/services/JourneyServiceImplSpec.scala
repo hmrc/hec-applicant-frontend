@@ -1365,6 +1365,7 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
         }
 
         "enter CTUTR page" when {
+
           "number of attempts has reached the maximum & no valid CTUTR was found" in {
             val session = Fixtures.companyHECSession(ctutrAnswerAttempts = maxCtutrAttempts)
 
@@ -1376,22 +1377,10 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
             )
             await(result.value) shouldBe Right(routes.CompanyDetailsController.tooManyCtutrAttempts())
           }
-//          "number of attempts has reached the maximum & valid CTUTR was found" in {
-//            val session = Fixtures.companyHECSession(
-//              retrievedJourneyData = Fixtures.companyRetrievedJourneyData(),
-//              ctutrAnswerAttempts = maxCtutrAttempts
-//            )
-//
-//            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
-//
-//            val result = journeyService.updateAndNext(
-//              routes.CompanyDetailsController.enterCtutr(),
-//              session
-//            )
-//            await(result.value) shouldBe Right(routes.CompanyDetailsController.tooManyCtutrAttempts())
-//          }
+
           "number of attempts has not reached the maximum" must {
-            "throw if CTUTR is missing" in {
+
+            "throw error if CTUTR is missing" in {
               val session = Fixtures.companyHECSession()
 
               implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
@@ -1404,7 +1393,7 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
               }
             }
 
-            "throw if DES CTUTR is missing" in {
+            "throw error if DES CTUTR is missing" in {
               val session = Fixtures.companyHECSession(
                 retrievedJourneyData = Fixtures.companyRetrievedJourneyData(
                   ctStatus = Some(Fixtures.ctStatusResponse()),
@@ -1422,7 +1411,7 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
               }
             }
 
-            "throw if CTUTR answer is not found" in {
+            "throw error if CTUTR answer is not found" in {
               val session = Fixtures.companyHECSession(
                 retrievedJourneyData = Fixtures.companyRetrievedJourneyData(
                   ctStatus = None,
@@ -2362,6 +2351,49 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
           )
 
           result shouldBe routes.CompanyDetailsController.confirmCompanyDetails()
+        }
+
+        "enter CTUTR page" in {
+          val companyData = companyLoginData.copy(
+            ctutr = None
+          )
+
+          val anyCTStatusResponse = CTStatusResponse(
+            ctutr = CTUTR("utr"),
+            startDate = LocalDate.now(),
+            endDate = LocalDate.now(),
+            latestAccountingPeriod = None
+          )
+          val journeyData         = CompanyRetrievedJourneyData(
+            companyName = Some(CompanyHouseName("Test tech Ltd")),
+            desCtutr = Some(CTUTR("ctutr")),
+            ctStatus = Some(anyCTStatusResponse)
+          )
+
+          val updatedSession =
+            CompanyHECSession(
+              companyData,
+              journeyData,
+              UserAnswers.empty.copy(
+                licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles),
+                licenceTimeTrading = Some(LicenceTimeTrading.TwoToFourYears),
+                licenceValidityPeriod = Some(LicenceValidityPeriod.UpToOneYear),
+                entityType = Some(Company),
+                crn = Some(CRN("1234567")),
+                companyDetailsConfirmed = Some(YesNoAnswer.Yes)
+              ),
+              None,
+              None,
+              List.empty
+            )
+
+          implicit val request: RequestWithSessionData[_] = requestWithSessionData(updatedSession)
+          val result                                      = journeyService.previous(
+            routes.CompanyDetailsController.enterCtutr()
+          )
+
+          result shouldBe routes.CompanyDetailsController.confirmCompanyDetails()
+
         }
 
         def buildIndividualSession(taxSituation: TaxSituation, saStatus: SAStatus): HECSession = {
