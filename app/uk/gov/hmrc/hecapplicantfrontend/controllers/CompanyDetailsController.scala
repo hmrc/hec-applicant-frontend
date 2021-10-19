@@ -112,7 +112,7 @@ class CompanyDetailsController @Inject() (
         companyLoginData.ctutr flatTraverse [EitherT[Future, Error, *], CTStatusResponse] { ctutr =>
           desCtutrOpt match {
             case Some(desCtutr) if desCtutr.value === ctutr.value =>
-              val (start, end) = CompanyDetailsController.calculateLookbackPeriod(timeProvider.currentDate)
+              val (start, end) = CompanyDetailsController.calculateLookBackPeriod(timeProvider.currentDate)
               taxCheckService.getCTStatus(desCtutr, start, end)
             case _                                                =>
               EitherT.fromEither[Future](Right[Error, Option[CTStatusResponse]](None))
@@ -324,7 +324,7 @@ class CompanyDetailsController @Inject() (
 
         def handleValidAnswer(ctutr: CTUTR) = {
           val updatedAnswers = companySession.userAnswers.unset(_.ctutr).copy(ctutr = Some(ctutr))
-          val (start, end)   = CompanyDetailsController.calculateLookbackPeriod(timeProvider.currentDate)
+          val (start, end)   = CompanyDetailsController.calculateLookBackPeriod(timeProvider.currentDate)
 
           val result = for {
             ctStatus            <- taxCheckService.getCTStatus(ctutr.strippedCtutr, start, end)
@@ -348,7 +348,7 @@ class CompanyDetailsController @Inject() (
           )
         )
 
-        def handleFormWithErrors(formWithErrors: Form[CTUTR]) = {
+        def handleFormWithErrors(formWithErrors: Form[CTUTR]): Future[Result] = {
           val ctutrsNotMatched = formWithErrors.errors.exists(_.message === "error.ctutrsDoNotMatch")
 
           def maxCtutrAnswerAttemptsReached = companySession.ctutrAnswerAttempts >= appConfig.maxCtutrAnswerAttempts
@@ -479,7 +479,7 @@ class CompanyDetailsController @Inject() (
     companySession.retrievedJourneyData.desCtutr match {
       case Some(ctutr) => f(ctutr)
       case None        =>
-        logger.warn("Missing DES CTUTR")
+        logger.warn("Missing DES-CTUTR")
         InternalServerError
     }
 
@@ -522,7 +522,7 @@ object CompanyDetailsController {
     * before the day on which the tax check is initiated. (These are the dates used when retrieving the Corporation tax
     * records for the Applicant's company using the Get Company Accounting Periods API.)
     */
-  def calculateLookbackPeriod(today: LocalDate): (LocalDate, LocalDate) =
+  def calculateLookBackPeriod(today: LocalDate): (LocalDate, LocalDate) =
     today.minusYears(2).plusDays(1) -> today.minusYears(1)
 
   def enterCtutrForm(desCtrutr: CTUTR): Form[CTUTR] = {
@@ -530,8 +530,9 @@ object CompanyDetailsController {
       Constraint { ctutr =>
         // using the stripped value here because the CTUTR validation checker only works with 10 digit UTRs
         CTUTR.fromString(ctutr.stripped) match {
-          case Some(ctutr) => if (ctutr.stripped === desCtrutr.value) Valid else Invalid("error.ctutrsDoNotMatch")
-          case None        =>
+          case Some(validCtutr) =>
+            if (validCtutr.stripped === desCtrutr.value) Valid else Invalid("error.ctutrsDoNotMatch")
+          case None             =>
             // if user input was already 10 digits, then checksum validation failed, otherwise the format was wrong
             if (ctutr.value.matches("""^\d{10}$""")) Invalid("error.ctutrChecksumFailed")
             else Invalid("error.ctutrInvalidFormat")

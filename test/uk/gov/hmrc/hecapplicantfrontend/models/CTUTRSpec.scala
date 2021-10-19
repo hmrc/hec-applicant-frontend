@@ -24,7 +24,7 @@ class CTUTRSpec extends AnyWordSpec with Matchers {
 
   "CTUTR" must {
 
-    def ctutrWithDigits(length: Int) = "1".repeat(length)
+    def ctutrWithDigits(length: Int) = "1" * length
 
     val ctutr10Digits = ctutrWithDigits(10)
     val ctutr13Digits = ctutrWithDigits(13)
