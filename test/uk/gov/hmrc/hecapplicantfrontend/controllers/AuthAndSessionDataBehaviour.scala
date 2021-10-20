@@ -36,7 +36,7 @@ trait AuthAndSessionDataBehaviour { this: ControllerSpec with AuthSupport with S
 
   val ggOrigin = "ggOrigin"
 
-  lazy val authConfig: Configuration = Configuration(
+  override def additionalConfig = Configuration(
     ConfigFactory.parseString(
       s"""
          | self.url = "$selfUrl"
@@ -47,8 +47,6 @@ trait AuthAndSessionDataBehaviour { this: ControllerSpec with AuthSupport with S
          |""".stripMargin
     )
   )
-
-  override def additionalConfig = authConfig
 
   def authBehaviour(performAction: () => Future[Result]): Unit = {
     "redirect to the login page when the user is not logged in" in {
