@@ -82,16 +82,15 @@ class CompanyDetailsControllerSpec
 
   private lazy val maxCtutrAttempts = 3
 
-  lazy val config: Configuration =
+  override def additionalConfig = super.additionalConfig.withFallback(
     Configuration(
       ConfigFactory.parseString(
         s"""
-         | maximum-ctutr-answer-attempts = $maxCtutrAttempts
-         |""".stripMargin
+           | maximum-ctutr-answer-attempts = $maxCtutrAttempts
+           |""".stripMargin
       )
     )
-
-  override lazy val additionalConfig = ensureConfig(config)
+  )
 
   "CompanyDetailsControllerSpec" when {
 

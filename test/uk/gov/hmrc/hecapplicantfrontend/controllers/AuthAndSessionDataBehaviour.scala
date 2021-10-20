@@ -48,9 +48,7 @@ trait AuthAndSessionDataBehaviour { this: ControllerSpec with AuthSupport with S
     )
   )
 
-  override lazy val additionalConfig = authConfig
-
-  def ensureConfig(config: Configuration) = config.withFallback(authConfig)
+  override def additionalConfig = authConfig
 
   def authBehaviour(performAction: () => Future[Result]): Unit = {
     "redirect to the login page when the user is not logged in" in {
