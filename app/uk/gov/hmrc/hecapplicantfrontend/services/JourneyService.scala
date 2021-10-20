@@ -23,6 +23,7 @@ import cats.instances.string._
 import cats.syntax.eq._
 import com.google.inject.{ImplementedBy, Inject, Singleton}
 import play.api.mvc.Call
+import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 import uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.saTaxSituations
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.RequestWithSessionData
 import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
@@ -56,7 +57,8 @@ trait JourneyService {
 }
 
 @Singleton
-class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: ExecutionContext) extends JourneyService {
+class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: ExecutionContext, appConfig: AppConfig)
+    extends JourneyService {
 
   implicit val callEq: Eq[Call] = Eq.instance(_.url === _.url)
 
@@ -78,7 +80,8 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
     routes.CompanyDetailsController.confirmCompanyDetails()              -> confirmCompanyDetailsRoute,
     routes.CompanyDetailsController.chargeableForCorporationTax()        -> chargeableForCTRoute,
     routes.CompanyDetailsController.ctIncomeStatement()                  -> (_ => routes.CheckYourAnswersController.checkYourAnswers()),
-    routes.CompanyDetailsController.recentlyStartedTrading()             -> recentlyStartedTradingRoute
+    routes.CompanyDetailsController.recentlyStartedTrading()             -> recentlyStartedTradingRoute,
+    routes.CompanyDetailsController.enterCtutr()                         -> enterCtutrRoute
   )
 
   // map which describes routes from an exit page to their previous page. The keys are the exit page and the values are
@@ -179,7 +182,8 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
                 companyDetailsConfirmed,
                 chargeableForCT,
                 ctIncomeDeclared,
-                recentlyStartedTrading
+                recentlyStartedTrading,
+                ctutr
               ) if allAnswersComplete(incomplete, session) =>
             val completeAnswers =
               CompleteUserAnswers(
@@ -193,7 +197,8 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
                 companyDetailsConfirmed,
                 chargeableForCT,
                 ctIncomeDeclared,
-                recentlyStartedTrading
+                recentlyStartedTrading,
+                ctutr
               )
             session.fold(
               _.copy(userAnswers = completeAnswers),
@@ -332,6 +337,30 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
       sys.error("Answer missing for if company has recently started trading")
     }
 
+  private def enterCtutrRoute(session: HECSession) =
+    session.mapAsCompany { companySession =>
+      val attemptsExceeded = companySession.ctutrAnswerAttempts >= appConfig.maxCtutrAnswerAttempts
+      val ctutrOpt         = session.userAnswers.fold(_.ctutr, _.ctutr)
+      if (attemptsExceeded) {
+        routes.CompanyDetailsController.tooManyCtutrAttempts()
+      } else {
+        ctutrOpt map { _ =>
+          companySession.retrievedJourneyData match {
+            case CompanyRetrievedJourneyData(_, Some(_), Some(ctStatus)) =>
+              ctStatus.latestAccountingPeriod.map(_.ctStatus) match {
+                case Some(_) => routes.CompanyDetailsController.chargeableForCorporationTax()
+                case None    => routes.CompanyDetailsController.recentlyStartedTrading()
+              }
+            case CompanyRetrievedJourneyData(_, Some(_), None)           =>
+              routes.CompanyDetailsController.cannotDoTaxCheck()
+            case _                                                       => sys.error("DES CTUTR missing in journey data")
+          }
+        } getOrElse {
+          sys.error("CTUTR answer missing")
+        }
+      }
+    }
+
 }
 
 object JourneyServiceImpl {
@@ -410,6 +439,7 @@ object JourneyServiceImpl {
                 _,
                 _,
                 _,
+                _,
                 _
               ) =>
             val licenceTypeCheck      = checkEntityTypePresentIfRequired(licenceType, entityType)
@@ -433,7 +463,8 @@ object JourneyServiceImpl {
                 Some(_),
                 chargeableForCT,
                 ctIncomeDeclared,
-                recentlyStartedTrading
+                recentlyStartedTrading,
+                _
               ) =>
             val licenceTypeCheck = checkEntityTypePresentIfRequired(licenceType, entityType)
             val companyDataCheck =

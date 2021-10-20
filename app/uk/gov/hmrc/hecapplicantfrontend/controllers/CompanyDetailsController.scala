@@ -20,18 +20,22 @@ import cats.data.EitherT
 import cats.implicits._
 import com.google.inject.Inject
 import play.api.data.Form
-import play.api.data.Forms.{mapping, of}
+import play.api.data.Forms.{mapping, nonEmptyText, of}
+import play.api.data.validation.{Constraint, Invalid, Valid}
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
+import uk.gov.hmrc.hecapplicantfrontend.controllers.CompanyDetailsController.enterCtutrForm
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, RequestWithSessionData, SessionDataAction}
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.CompanyHECSession
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.CompanyLoginData
 import uk.gov.hmrc.hecapplicantfrontend.models._
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR}
 import uk.gov.hmrc.hecapplicantfrontend.models.views.YesNoOption
+import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.{JourneyService, TaxCheckService}
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging.LoggerOps
+import uk.gov.hmrc.hecapplicantfrontend.util.StringUtils.StringOps
 import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging, TimeProvider, TimeUtils}
 import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -51,6 +55,8 @@ class CompanyDetailsController @Inject() (
   recentlyStartedTradingPage: html.RecentlyStartedTrading,
   chargeableForCTPage: html.ChargeableForCT,
   ctIncomeStatementPage: html.CTIncomeStatement,
+  enterCtutrPage: html.EnterCtutr,
+  sessionStore: SessionStore,
   mcc: MessagesControllerComponents
 )(implicit appConfig: AppConfig, ec: ExecutionContext)
     extends FrontendController(mcc)
@@ -106,7 +112,7 @@ class CompanyDetailsController @Inject() (
         companyLoginData.ctutr flatTraverse [EitherT[Future, Error, *], CTStatusResponse] { ctutr =>
           desCtutrOpt match {
             case Some(desCtutr) if desCtutr.value === ctutr.value =>
-              val (start, end) = CompanyDetailsController.calculateLookbackPeriod(timeProvider.currentDate)
+              val (start, end) = CompanyDetailsController.calculateLookBackPeriod(timeProvider.currentDate)
               taxCheckService.getCTStatus(desCtutr, start, end)
             case _                                                =>
               EitherT.fromEither[Future](Right[Error, Option[CTStatusResponse]](None))
@@ -296,7 +302,108 @@ class CompanyDetailsController @Inject() (
     Ok(ctutrNotMatchedPage(back))
   }
 
-  val enterCtutr: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
+  val enterCtutr: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
+    request.sessionData mapAsCompany { companySession =>
+      ensureCompanyDataHasDesCtutr(companySession) { desCtutr =>
+        val ctutr     = request.sessionData.userAnswers.fold(_.ctutr, _.ctutr)
+        val back      = journeyService.previous(routes.CompanyDetailsController.enterCtutr())
+        val ctutrForm = enterCtutrForm(desCtutr)
+        val form      = ctutr.fold(ctutrForm)(ctutrForm.fill)
+        Ok(enterCtutrPage(form, back))
+      }
+    }
+  }
+
+  val enterCtutrSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
+    request.sessionData mapAsCompany { companySession =>
+      ensureCompanyDataHasDesCtutr(companySession) { desCtutr =>
+        def internalServerError(errorMsg: String)(e: Error) = {
+          logger.warn(errorMsg, e)
+          InternalServerError
+        }
+
+        def maxCtutrAnswerAttemptsReached = companySession.ctutrAnswerAttempts >= appConfig.maxCtutrAnswerAttempts
+
+        def goToNextPage: Future[Result] = journeyService
+          .updateAndNext(
+            routes.CompanyDetailsController.enterCtutr(),
+            companySession
+          )
+          .fold(
+            internalServerError("Could not update session and proceed"),
+            Redirect
+          )
+
+        def handleValidAnswer(ctutr: CTUTR) = {
+          val updatedAnswers = companySession.userAnswers.unset(_.ctutr).copy(ctutr = Some(ctutr))
+          val (start, end)   = CompanyDetailsController.calculateLookBackPeriod(timeProvider.currentDate)
+
+          val result = for {
+            ctStatus            <- taxCheckService.getCTStatus(ctutr.strippedCtutr, start, end)
+            updatedRetrievedData = companySession.retrievedJourneyData.copy(ctStatus = ctStatus)
+            next                <-
+              journeyService.updateAndNext(
+                routes.CompanyDetailsController.enterCtutr(),
+                companySession.copy(
+                  userAnswers = updatedAnswers,
+                  retrievedJourneyData = updatedRetrievedData,
+                  ctutrAnswerAttempts = 0
+                )
+              )
+          } yield next
+
+          result.fold(
+            internalServerError("Could not update session and proceed"),
+            Redirect
+          )
+        }
+
+        def ok(formWithErrors: Form[CTUTR]) = Ok(
+          enterCtutrPage(
+            formWithErrors,
+            journeyService.previous(routes.CompanyDetailsController.enterCtutr())
+          )
+        )
+
+        def handleFormWithErrors(formWithErrors: Form[CTUTR]): Future[Result] = {
+
+          val ctutrsNotMatched = formWithErrors.errors.exists(_.message === "error.ctutrsDoNotMatch")
+
+          def incrementAttemptsAndDisplayFormError = {
+            val updatedSession = companySession.copy(ctutrAnswerAttempts = companySession.ctutrAnswerAttempts + 1)
+            sessionStore
+              .store(updatedSession)
+              .fold(
+                internalServerError("Could not update ctutr answer attempts"),
+                _ => ok(formWithErrors)
+              )
+          }
+
+          def displayFormError: Future[Result] = Future.successful(ok(formWithErrors))
+
+          if (ctutrsNotMatched && maxCtutrAnswerAttemptsReached)
+            goToNextPage
+          else if (ctutrsNotMatched) incrementAttemptsAndDisplayFormError
+          else displayFormError
+
+        }
+
+        if (maxCtutrAnswerAttemptsReached) goToNextPage
+        else {
+          enterCtutrForm(desCtutr)
+            .bindFromRequest()
+            .fold(handleFormWithErrors, handleValidAnswer)
+        }
+
+      }
+    }
+  }
+
+  val dontHaveUtr: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
+    Ok(s"${request.sessionData}")
+  }
+
+  val tooManyCtutrAttempts: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
     Ok(s"${request.sessionData}")
   }
 
@@ -376,6 +483,16 @@ class CompanyDetailsController @Inject() (
         InternalServerError
     }
 
+  private def ensureCompanyDataHasDesCtutr(
+    companySession: CompanyHECSession
+  )(f: CTUTR => Future[Result]): Future[Result] =
+    companySession.retrievedJourneyData.desCtutr match {
+      case Some(ctutr) => f(ctutr)
+      case None        =>
+        logger.warn("Missing DES-CTUTR")
+        InternalServerError
+    }
+
   private def ensureCompanyDataHasCTStatusAccountingPeriod(
     companySession: CompanyHECSession
   )(f: CTAccountingPeriod => Future[Result]): Future[Result] =
@@ -415,7 +532,32 @@ object CompanyDetailsController {
     * before the day on which the tax check is initiated. (These are the dates used when retrieving the Corporation tax
     * records for the Applicant's company using the Get Company Accounting Periods API.)
     */
-  def calculateLookbackPeriod(today: LocalDate): (LocalDate, LocalDate) =
+  def calculateLookBackPeriod(today: LocalDate): (LocalDate, LocalDate) =
     today.minusYears(2).plusDays(1) -> today.minusYears(1)
 
+  def enterCtutrForm(desCtrutr: CTUTR): Form[CTUTR] = {
+    val validCtutr: Constraint[CTUTR] =
+      Constraint { ctutr =>
+        // using the stripped value here because the CTUTR validation checker only works with 10 digit UTRs
+        CTUTR.fromString(ctutr.stripped) match {
+          case Some(validCtutr) =>
+            if (validCtutr.stripped === desCtrutr.value) Valid else Invalid("error.ctutrsDoNotMatch")
+          case None             =>
+            // if user input was already 10 digits, then checksum validation failed, otherwise the format was wrong
+            if (ctutr.value.matches("""^\d{10}$""")) Invalid("error.ctutrChecksumFailed")
+            else Invalid("error.ctutrInvalidFormat")
+        }
+      }
+
+    Form(
+      mapping(
+        "enterCtutr" -> nonEmptyText
+          .transform[CTUTR](
+            s => CTUTR(s.removeWhitespace),
+            _.value
+          )
+          .verifying(validCtutr)
+      )(identity)(Some(_))
+    )
+  }
 }

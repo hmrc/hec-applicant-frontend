@@ -36,7 +36,7 @@ trait AuthAndSessionDataBehaviour { this: ControllerSpec with AuthSupport with S
 
   val ggOrigin = "ggOrigin"
 
-  override lazy val additionalConfig: Configuration = Configuration(
+  override def additionalConfig = Configuration(
     ConfigFactory.parseString(
       s"""
          | self.url = "$selfUrl"

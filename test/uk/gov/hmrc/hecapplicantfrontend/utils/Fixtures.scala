@@ -39,7 +39,8 @@ object Fixtures {
     companyDetailsConfirmed: Option[YesNoAnswer] = None,
     chargeableForCT: Option[YesNoAnswer] = None,
     ctIncomeDeclared: Option[YesNoAnswer] = None,
-    recentlyStartedTrading: Option[YesNoAnswer] = None
+    recentlyStartedTrading: Option[YesNoAnswer] = None,
+    ctutr: Option[CTUTR] = None
   ): IncompleteUserAnswers = IncompleteUserAnswers(
     licenceType = licenceType,
     licenceTimeTrading = licenceTimeTrading,
@@ -51,7 +52,8 @@ object Fixtures {
     companyDetailsConfirmed = companyDetailsConfirmed,
     chargeableForCT = chargeableForCT,
     ctIncomeDeclared = ctIncomeDeclared,
-    recentlyStartedTrading = recentlyStartedTrading
+    recentlyStartedTrading = recentlyStartedTrading,
+    ctutr = ctutr
   )
 
   def completeUserAnswers(
@@ -65,7 +67,8 @@ object Fixtures {
     companyDetailsConfirmed: Option[YesNoAnswer] = None,
     chargeableForCT: Option[YesNoAnswer] = None,
     ctIncomeDeclared: Option[YesNoAnswer] = None,
-    recentlyStartedTrading: Option[YesNoAnswer] = None
+    recentlyStartedTrading: Option[YesNoAnswer] = None,
+    ctutr: Option[CTUTR] = None
   ): CompleteUserAnswers = CompleteUserAnswers(
     licenceType = licenceType,
     licenceTimeTrading = licenceTimeTrading,
@@ -77,7 +80,8 @@ object Fixtures {
     companyDetailsConfirmed = companyDetailsConfirmed,
     chargeableForCT = chargeableForCT,
     ctIncomeDeclared = ctIncomeDeclared,
-    recentlyStartedTrading = recentlyStartedTrading
+    recentlyStartedTrading = recentlyStartedTrading,
+    ctutr = ctutr
   )
 
   def individualLoginData(
@@ -142,14 +146,16 @@ object Fixtures {
     userAnswers: UserAnswers = incompleteUserAnswers(),
     completedTaxCheck: Option[HECTaxCheck] = None,
     taxCheckStartDateTime: Option[ZonedDateTime] = None,
-    unexpiredTaxChecks: List[TaxCheckListItem] = List.empty
+    unexpiredTaxChecks: List[TaxCheckListItem] = List.empty,
+    ctutrAnswerAttempts: Int = 0
   ): CompanyHECSession = CompanyHECSession(
     loginData = loginData,
     retrievedJourneyData = retrievedJourneyData,
     userAnswers = userAnswers,
     completedTaxCheck = completedTaxCheck,
     taxCheckStartDateTime = taxCheckStartDateTime,
-    unexpiredTaxChecks = unexpiredTaxChecks
+    unexpiredTaxChecks = unexpiredTaxChecks,
+    ctutrAnswerAttempts = ctutrAnswerAttempts
   )
 
   def ctStatusResponse(

@@ -60,7 +60,8 @@ object HECSession {
     userAnswers: UserAnswers,
     completedTaxCheck: Option[HECTaxCheck],
     taxCheckStartDateTime: Option[ZonedDateTime],
-    unexpiredTaxChecks: List[TaxCheckListItem]
+    unexpiredTaxChecks: List[TaxCheckListItem],
+    ctutrAnswerAttempts: Int = 0
   ) extends HECSession {
     override val entityType: EntityType = EntityType.Company
   }

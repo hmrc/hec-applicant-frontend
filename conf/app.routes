@@ -56,8 +56,13 @@ POST       /chargeable-for-ct              uk.gov.hmrc.hecapplicantfrontend.cont
 GET        /ct-income-statement            uk.gov.hmrc.hecapplicantfrontend.controllers.CompanyDetailsController.ctIncomeStatement
 POST       /ct-income-statement            uk.gov.hmrc.hecapplicantfrontend.controllers.CompanyDetailsController.ctIncomeStatementSubmit
 
-GET        /ct-utr-doesnt-match            uk.gov.hmrc.hecapplicantfrontend.controllers.CompanyDetailsController.ctutrNotMatched
-GET        /enter-corpration-utr           uk.gov.hmrc.hecapplicantfrontend.controllers.CompanyDetailsController.enterCtutr
+GET        /ctutr-not-match            uk.gov.hmrc.hecapplicantfrontend.controllers.CompanyDetailsController.ctutrNotMatched
+
+GET        /enter-corporation-tax-utr       uk.gov.hmrc.hecapplicantfrontend.controllers.CompanyDetailsController.enterCtutr
+POST       /enter-corporation-tax-utr       uk.gov.hmrc.hecapplicantfrontend.controllers.CompanyDetailsController.enterCtutrSubmit
+
+GET        /dont-have-ctutr                uk.gov.hmrc.hecapplicantfrontend.controllers.CompanyDetailsController.dontHaveUtr
+GET        /too-many-ctutr-attempts        uk.gov.hmrc.hecapplicantfrontend.controllers.CompanyDetailsController.tooManyCtutrAttempts
 GET        /cannot-do-tax-check            uk.gov.hmrc.hecapplicantfrontend.controllers.CompanyDetailsController.cannotDoTaxCheck
 
 GET        /company-not-found              uk.gov.hmrc.hecapplicantfrontend.controllers.CompanyDetailsNotFoundController.companyNotFound

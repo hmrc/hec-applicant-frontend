@@ -20,7 +20,7 @@ import ai.x.play.json.Jsonx
 import monocle.Lens
 import monocle.macros.Lenses
 import play.api.libs.json._
-import uk.gov.hmrc.hecapplicantfrontend.models.ids.CRN
+import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 
 sealed trait UserAnswersType
@@ -53,7 +53,8 @@ object UserAnswers {
     companyDetailsConfirmed: Option[YesNoAnswer],
     chargeableForCT: Option[YesNoAnswer],
     ctIncomeDeclared: Option[YesNoAnswer],
-    recentlyStartedTrading: Option[YesNoAnswer]
+    recentlyStartedTrading: Option[YesNoAnswer],
+    ctutr: Option[CTUTR]
   ) extends UserAnswers {
     val userAnswersType: UserAnswersType = UserAnswersType.Incomplete
   }
@@ -69,7 +70,8 @@ object UserAnswers {
     companyDetailsConfirmed: Option[YesNoAnswer],
     chargeableForCT: Option[YesNoAnswer],
     ctIncomeDeclared: Option[YesNoAnswer],
-    recentlyStartedTrading: Option[YesNoAnswer]
+    recentlyStartedTrading: Option[YesNoAnswer],
+    ctutr: Option[CTUTR]
   ) extends UserAnswers {
     val userAnswersType: UserAnswersType = UserAnswersType.Complete
   }
@@ -88,7 +90,8 @@ object UserAnswers {
         c.companyDetailsConfirmed,
         c.chargeableForCT,
         c.ctIncomeDeclared,
-        c.recentlyStartedTrading
+        c.recentlyStartedTrading,
+        c.ctutr
       )
 
   }
@@ -112,8 +115,20 @@ object UserAnswers {
 
   }
 
-  val empty: IncompleteUserAnswers =
-    IncompleteUserAnswers(None, None, None, None, None, None, None, None, None, None, None)
+  val empty: IncompleteUserAnswers = IncompleteUserAnswers(
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None
+  )
 
   implicit val format: OFormat[UserAnswers] = new OFormat[UserAnswers] {
     override def reads(json: JsValue): JsResult[UserAnswers] =

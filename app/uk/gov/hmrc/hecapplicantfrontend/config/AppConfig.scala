@@ -98,4 +98,6 @@ class AppConfig @Inject() (config: Configuration, contactFrontendConfig: Contact
   val accountingPeriodsGuidanceUrl: String = config.get[String]("external-url.accounting-periods-guidance")
 
   val firstPageBackUrl: String = config.get[String]("first-page-back-url")
+
+  val maxCtutrAnswerAttempts: Int = config.get[Int]("maximum-ctutr-answer-attempts")
 }

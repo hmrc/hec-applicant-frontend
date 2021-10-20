@@ -19,7 +19,7 @@ package uk.gov.hmrc.hecapplicantfrontend.models
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.Json
-import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.{CompleteUserAnswers, IncompleteUserAnswers}
+import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.IncompleteUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hecapplicantfrontend.utils.Fixtures
 
@@ -28,7 +28,7 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
   "UserAnswers" must {
 
     "have an empty val" in {
-      UserAnswers.empty shouldBe IncompleteUserAnswers(None, None, None, None, None, None, None, None, None, None, None)
+      UserAnswers.empty shouldBe Fixtures.incompleteUserAnswers()
     }
 
     "have a fold method" which {
@@ -67,18 +67,13 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
         None,
         Some(EntityType.Individual)
       )
-      IncompleteUserAnswers.fromCompleteAnswers(completeAnswers) shouldBe IncompleteUserAnswers(
+      IncompleteUserAnswers.fromCompleteAnswers(completeAnswers) shouldBe Fixtures.incompleteUserAnswers(
         Some(LicenceType.DriverOfTaxisAndPrivateHires),
         Some(LicenceTimeTrading.TwoToFourYears),
         Some(LicenceValidityPeriod.UpToTwoYears),
         Some(TaxSituation.PAYE),
         None,
-        Some(EntityType.Individual),
-        None,
-        None,
-        None,
-        None,
-        None
+        Some(EntityType.Individual)
       )
 
     }
@@ -96,18 +91,13 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
         )
 
       val completeAnswers =
-        CompleteUserAnswers(
+        Fixtures.completeUserAnswers(
           LicenceType.DriverOfTaxisAndPrivateHires,
           LicenceTimeTrading.ZeroToTwoYears,
           LicenceValidityPeriod.UpToThreeYears,
           Some(TaxSituation.PAYE),
           None,
-          Some(EntityType.Company),
-          None,
-          None,
-          None,
-          None,
-          None
+          Some(EntityType.Company)
         )
 
       "unsets the licence type field" in {
