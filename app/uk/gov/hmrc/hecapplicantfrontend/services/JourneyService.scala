@@ -341,10 +341,10 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
     session.mapAsCompany { companySession =>
       val attemptsExceeded = companySession.ctutrAnswerAttempts >= appConfig.maxCtutrAnswerAttempts
       val ctutrOpt         = session.userAnswers.fold(_.ctutr, _.ctutr)
-      if (attemptsExceeded && ctutrOpt.isEmpty) {
+      if (attemptsExceeded) {
         routes.CompanyDetailsController.tooManyCtutrAttempts()
       } else {
-        session.userAnswers.fold(_.ctutr, _.ctutr) map { _ =>
+        ctutrOpt map { _ =>
           companySession.retrievedJourneyData match {
             case CompanyRetrievedJourneyData(_, Some(_), Some(ctStatus)) =>
               ctStatus.latestAccountingPeriod.map(_.ctStatus) match {
