@@ -61,9 +61,7 @@ object HECSession {
     completedTaxCheck: Option[HECTaxCheck],
     taxCheckStartDateTime: Option[ZonedDateTime],
     unexpiredTaxChecks: List[TaxCheckListItem],
-    //I think it should start with 1, otherwise it starts with attempt 0,
-    // then 1, 2, then 3, by the time it reaches 3, it's basically the fourth attempt
-    ctutrAnswerAttempts: Int = 1
+    ctutrAnswerAttempts: Int = 0
   ) extends HECSession {
     override val entityType: EntityType = EntityType.Company
   }

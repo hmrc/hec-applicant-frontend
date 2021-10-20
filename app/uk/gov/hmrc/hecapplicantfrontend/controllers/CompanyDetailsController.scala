@@ -341,10 +341,15 @@ class CompanyDetailsController @Inject() (
           val result = for {
             ctStatus            <- taxCheckService.getCTStatus(ctutr.strippedCtutr, start, end)
             updatedRetrievedData = companySession.retrievedJourneyData.copy(ctStatus = ctStatus)
-            next                <- journeyService.updateAndNext(
-                                     routes.CompanyDetailsController.enterCtutr(),
-                                     companySession.copy(userAnswers = updatedAnswers, retrievedJourneyData = updatedRetrievedData)
-                                   )
+            next                <-
+              journeyService.updateAndNext(
+                routes.CompanyDetailsController.enterCtutr(),
+                companySession.copy(
+                  userAnswers = updatedAnswers,
+                  retrievedJourneyData = updatedRetrievedData,
+                  ctutrAnswerAttempts = 0
+                )
+              )
           } yield next
 
           result.fold(
@@ -364,30 +369,32 @@ class CompanyDetailsController @Inject() (
 
           val ctutrsNotMatched = formWithErrors.errors.exists(_.message === "error.ctutrsDoNotMatch")
 
-          def incrementAttemptsAndDisplayFormError: Future[Result] = {
+          def incrementAttemptsAndDisplayFormError = {
             val updatedSession = companySession.copy(ctutrAnswerAttempts = companySession.ctutrAnswerAttempts + 1)
-            sessionStore.store(updatedSession) map { _ =>
-              ok(formWithErrors)
-            } fold (
-              internalServerError("Could not update ctutr answer attempts"),
-              identity
-            )
+            sessionStore
+              .store(updatedSession)
+              .fold(
+                internalServerError("Could not update ctutr answer attempts"),
+                _ => ok(formWithErrors)
+              )
           }
 
           def displayFormError: Future[Result] = Future.successful(ok(formWithErrors))
 
-          if (ctutrsNotMatched) incrementAttemptsAndDisplayFormError else displayFormError
+          if (ctutrsNotMatched && maxCtutrAnswerAttemptsReached)
+            goToNextPage
+          else if (ctutrsNotMatched) incrementAttemptsAndDisplayFormError
+          else displayFormError
 
         }
 
-        enterCtutrForm(desCtutr)
-          .bindFromRequest()
-          .fold(
-            errors => if (maxCtutrAnswerAttemptsReached) goToNextPage else handleFormWithErrors(errors),
-            ctutr =>
-              if (maxCtutrAnswerAttemptsReached) goToNextPage
-              else handleValidAnswer(ctutr)
-          )
+        if (maxCtutrAnswerAttemptsReached) goToNextPage
+        else {
+          enterCtutrForm(desCtutr)
+            .bindFromRequest()
+            .fold(handleFormWithErrors, handleValidAnswer)
+        }
+
       }
     }
   }

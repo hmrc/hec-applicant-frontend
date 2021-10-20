@@ -80,7 +80,7 @@ class HECSessionDataSpec extends AnyWordSpec with Matchers {
           |  "retrievedJourneyData" : { },
           |  "userAnswers" : { "type" : "Incomplete" },
           |  "unexpiredTaxChecks" : [],
-          |  "ctutrAnswerAttempts" : 1,
+          |  "ctutrAnswerAttempts" : 0,
           |  "type":"Company"
           |}""".stripMargin)
 
