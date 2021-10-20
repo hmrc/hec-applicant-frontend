@@ -80,7 +80,7 @@ class CompanyDetailsControllerSpec
   val retrievedJourneyDataWithCompanyName =
     Fixtures.companyRetrievedJourneyData(companyName = Some(CompanyHouseName("some-company")))
 
-  private lazy val maxCtutrAttempts = 4
+  private lazy val maxCtutrAttempts = 3
 
   lazy val config: Configuration =
     Configuration(

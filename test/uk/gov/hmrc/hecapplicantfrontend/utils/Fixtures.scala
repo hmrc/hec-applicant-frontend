@@ -147,7 +147,7 @@ object Fixtures {
     completedTaxCheck: Option[HECTaxCheck] = None,
     taxCheckStartDateTime: Option[ZonedDateTime] = None,
     unexpiredTaxChecks: List[TaxCheckListItem] = List.empty,
-    ctutrAnswerAttempts: Int = 0
+    ctutrAnswerAttempts: Int = 1
   ): CompanyHECSession = CompanyHECSession(
     loginData = loginData,
     retrievedJourneyData = retrievedJourneyData,
