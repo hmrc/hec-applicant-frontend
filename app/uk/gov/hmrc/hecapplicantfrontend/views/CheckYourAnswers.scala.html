@@ -100,6 +100,56 @@
         )
     }
 }
+@crnRow = @{
+  completeAnswers.crn.map { crn =>
+    summaryListRow(
+        messages("crn.title"),
+        crn.value,
+        routes.CRNController.companyRegistrationNumber(),
+        messages(s"$key.crn.screenReaderText")
+    )
+  }
+}
+@ctutrRow = @{
+  completeAnswers.ctutr.map { ctutr =>
+    summaryListRow(
+      messages("enterCtutr.title"),
+      ctutr.value,
+      routes.CompanyDetailsController.enterCtutr(),
+      messages(s"$key.ctutr.screenReaderText")
+    )
+  }
+}
+@recentlyStartedTradingRow = @{
+  completeAnswers.recentlyStartedTrading.map { recentlyStartedTrading =>
+    summaryListRow(
+      messages("recentlyStartedTrading.title"),
+      messages(s"recentlyStartedTrading.${YesNoOption.yesNoOption(recentlyStartedTrading).messageKey}"),
+      routes.CompanyDetailsController.recentlyStartedTrading(),
+      messages(s"$key.recentlyStartedTrading.screenReaderText")
+    )
+  }
+}
+@chargeableForCTRow = @{
+  completeAnswers.chargeableForCT.map { chargeableForCT =>
+    summaryListRow(
+      messages("chargeableForCT.title"),
+      messages(s"chargeableForCT.${YesNoOption.yesNoOption(chargeableForCT).messageKey}"),
+      routes.CompanyDetailsController.chargeableForCorporationTax(),
+      messages(s"$key.chargeableForCT.screenReaderText")
+    )
+  }
+}
+@ctIncomeDeclaredRow = @{
+  completeAnswers.ctIncomeDeclared.map { ctIncomeDeclared =>
+    summaryListRow(
+      messages("ctIncomeDeclared.title"),
+      messages(s"ctIncomeDeclared.${YesNoOption.yesNoOption(ctIncomeDeclared).messageKey}"),
+      routes.CompanyDetailsController.ctIncomeStatement(),
+      messages(s"$key.ctIncomeDeclared.screenReaderText")
+    )
+  }
+}
 
 @rows = @{List(
     Some(licenceTypeRow),
@@ -107,7 +157,12 @@
     Some(licenceValidityPeriodRow),
     entityTypeRow,
     taxSituationRow,
-    saIncomeDeclaredRow
+    saIncomeDeclaredRow,
+    crnRow,
+    ctutrRow,
+    recentlyStartedTradingRow,
+    chargeableForCTRow,
+    ctIncomeDeclaredRow
 ).collect{ case Some(r) => r }}
 
 @layout(pageTitle = Some(title), backLocation = Some(back)) {
