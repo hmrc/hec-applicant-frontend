@@ -1478,54 +1478,103 @@ class CompanyDetailsControllerSpec
 
       "redirect to the next page" when {
 
-        "user gives a valid answer" in {
-          val _13DigitCtutr = s"111$ctutr1"
-          List(
-            ctutr1               -> ctutr1,
-            s"k$ctutr1"          -> ctutr1,
-            s"${ctutr1}k"        -> ctutr1,
-            _13DigitCtutr        -> ctutr1,
-            s"k${_13DigitCtutr}" -> ctutr1,
-            s"${_13DigitCtutr}k" -> ctutr1
-          ).foreach { case (ctutrAnswer, strippedCtutrAnswer) =>
-            withClue(s"for CTUTR = $ctutrAnswer") {
-              val answers = Fixtures.incompleteUserAnswers()
-              val session = Fixtures.companyHECSession(
-                companyLoginData,
-                Fixtures.companyRetrievedJourneyData(desCtutr = Some(CTUTR(strippedCtutrAnswer)))
-              )
+        "user gives a valid answer " when {
 
-              val today                   = LocalDate.now
-              val lookbackPeriodStartDate = today.minusYears(2).plusDays(1)
-              val lookbackPeriodEndDate   = today.minusYears(1)
-              val ctStatusResponse        = CTStatusResponse(CTUTR(strippedCtutrAnswer), today, today, None)
-
-              val updatedAnswers       = answers.copy(ctutr = Some(CTUTR(ctutrAnswer)))
-              val updatedRetrievedData = session.retrievedJourneyData.copy(ctStatus = Some(ctStatusResponse))
-              val updatedSession       =
-                session.copy(userAnswers = updatedAnswers, retrievedJourneyData = updatedRetrievedData)
-
-              inSequence {
-                mockAuthWithNoRetrievals()
-                mockGetSession(session)
-                mockTimeProviderToday(LocalDate.now)
-                mockTaxCheckServiceGetCtStatus(
-                  CTUTR(strippedCtutrAnswer),
-                  lookbackPeriodStartDate,
-                  lookbackPeriodEndDate
-                )(
-                  Right(Some(ctStatusResponse))
+          "and the ctutr attempt in session is 0" in {
+            val _13DigitCtutr = s"111$ctutr1"
+            List(
+              ctutr1               -> ctutr1,
+              s"k$ctutr1"          -> ctutr1,
+              s"${ctutr1}k"        -> ctutr1,
+              _13DigitCtutr        -> ctutr1,
+              s"k${_13DigitCtutr}" -> ctutr1,
+              s"${_13DigitCtutr}k" -> ctutr1
+            ).foreach { case (ctutrAnswer, strippedCtutrAnswer) =>
+              withClue(s"for CTUTR = $ctutrAnswer") {
+                val answers = Fixtures.incompleteUserAnswers()
+                val session = Fixtures.companyHECSession(
+                  companyLoginData,
+                  Fixtures.companyRetrievedJourneyData(desCtutr = Some(CTUTR(strippedCtutrAnswer)))
                 )
-                mockJourneyServiceUpdateAndNext(
-                  enterCtutrRoute,
-                  session,
-                  updatedSession
-                )(Right(mockNextCall))
-              }
 
-              checkIsRedirect(performAction("enterCtutr" -> ctutrAnswer), mockNextCall)
+                val today                   = LocalDate.now
+                val lookbackPeriodStartDate = today.minusYears(2).plusDays(1)
+                val lookbackPeriodEndDate   = today.minusYears(1)
+                val ctStatusResponse        = CTStatusResponse(CTUTR(strippedCtutrAnswer), today, today, None)
+
+                val updatedAnswers       = answers.copy(ctutr = Some(CTUTR(ctutrAnswer)))
+                val updatedRetrievedData = session.retrievedJourneyData.copy(ctStatus = Some(ctStatusResponse))
+                val updatedSession       =
+                  session.copy(userAnswers = updatedAnswers, retrievedJourneyData = updatedRetrievedData)
+
+                inSequence {
+                  mockAuthWithNoRetrievals()
+                  mockGetSession(session)
+                  mockTimeProviderToday(LocalDate.now)
+                  mockTaxCheckServiceGetCtStatus(
+                    CTUTR(strippedCtutrAnswer),
+                    lookbackPeriodStartDate,
+                    lookbackPeriodEndDate
+                  )(
+                    Right(Some(ctStatusResponse))
+                  )
+                  mockJourneyServiceUpdateAndNext(
+                    enterCtutrRoute,
+                    session,
+                    updatedSession
+                  )(Right(mockNextCall))
+                }
+
+                checkIsRedirect(performAction("enterCtutr" -> ctutrAnswer), mockNextCall)
+              }
             }
           }
+
+          "and the ctutr attempt in session is not 0, in updated session it should get reset to 0" in {
+
+            val answers = Fixtures.incompleteUserAnswers()
+            val session = Fixtures.companyHECSession(
+              companyLoginData,
+              Fixtures.companyRetrievedJourneyData(desCtutr = Some(CTUTR("1111111111"))),
+              ctutrAnswerAttempts = 2
+            )
+
+            val today                   = LocalDate.now
+            val lookbackPeriodStartDate = today.minusYears(2).plusDays(1)
+            val lookbackPeriodEndDate   = today.minusYears(1)
+            val ctStatusResponse        = CTStatusResponse(CTUTR("1111111111"), today, today, None)
+
+            val updatedAnswers       = answers.copy(ctutr = Some(CTUTR("1111111111")))
+            val updatedRetrievedData = session.retrievedJourneyData.copy(ctStatus = Some(ctStatusResponse))
+            val updatedSession       =
+              session.copy(
+                userAnswers = updatedAnswers,
+                retrievedJourneyData = updatedRetrievedData,
+                ctutrAnswerAttempts = 0
+              )
+
+            inSequence {
+              mockAuthWithNoRetrievals()
+              mockGetSession(session)
+              mockTimeProviderToday(LocalDate.now)
+              mockTaxCheckServiceGetCtStatus(
+                CTUTR("1111111111"),
+                lookbackPeriodStartDate,
+                lookbackPeriodEndDate
+              )(
+                Right(Some(ctStatusResponse))
+              )
+              mockJourneyServiceUpdateAndNext(
+                enterCtutrRoute,
+                session,
+                updatedSession
+              )(Right(mockNextCall))
+            }
+
+            checkIsRedirect(performAction("enterCtutr" -> "1111111111"), mockNextCall)
+
+          }
+
         }
 
         "user's answer and DES CTUTR do not match & maximum number of ctutr attempts has been reached" in {
