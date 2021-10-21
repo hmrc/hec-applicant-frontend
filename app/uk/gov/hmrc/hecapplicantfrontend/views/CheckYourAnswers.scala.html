@@ -28,7 +28,7 @@
 
 @this(layout: Layout, govukSummaryList : GovukSummaryList, govukButton: GovukButton, formWithCSRF: FormWithCSRF)
 
-@(back: Call, completeAnswers: CompleteUserAnswers)(implicit request: Request[_], messages: Messages)
+@(back: Call, completeAnswers: CompleteUserAnswers, date: Option[String])(implicit request: Request[_], messages: Messages)
 @key = @{"checkYourAnswers"}
 @title = @{messages(s"$key.title")}
 @summaryListRow(question: String, answer: String, changeLocation: Call, changeScreenReaderText: String) = @{
@@ -133,7 +133,7 @@
 @chargeableForCTRow = @{
   completeAnswers.chargeableForCT.map { chargeableForCT =>
     summaryListRow(
-      messages("chargeableForCT.title"),
+      messages("chargeableForCT.title", date),
       messages(s"chargeableForCT.${YesNoOption.yesNoOption(chargeableForCT).messageKey}"),
       routes.CompanyDetailsController.chargeableForCorporationTax(),
       messages(s"$key.chargeableForCT.screenReaderText")
