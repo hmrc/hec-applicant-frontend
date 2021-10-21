@@ -285,9 +285,9 @@ recentlyStartedTrading.error.invalid = Select yes if your company started or res
 
 # Enter CTUTR
 enterCtutr.title = What is your Corporation Tax Unique Taxpayer Reference (UTR)?
-enterCtutr.hint = This is 10 numbers, for example 1234567890. It will be on tax returns and other letters about Corporation Tax. It may be called ‘reference’, ‘UTR’ or ‘official use’.
+enterCtutr.hint = This is 10 or 13 characters long, and may start with a letter. It will be on tax returns and other letters about Corporation Tax. It may be called ‘reference’, ‘UTR’ or ‘official use’. You can find a lost UTR number.
 enterCtutr.link2 = If you do not have a UTR
 enterCtutr.error.required = Enter your Corporation Tax Unique Taxpayer Reference
-enterCtutr.error.ctutrInvalidFormat = Corporation Tax UTR should be 10 digits long and contain only numbers
-enterCtutr.error.ctutrChecksumFailed = Corporation Tax UTR failed checksum validation
+enterCtutr.error.ctutrInvalidFormat = Enter a valid Corporation Tax Unique Taxpayer Reference
+enterCtutr.error.ctutrChecksumFailed = Corporation Tax Unique Taxpayer Reference failed checksum validation
 enterCtutr.error.ctutrsDoNotMatch = Your Corporation Tax Unique Taxpayer Reference does not match the information we hold for this company

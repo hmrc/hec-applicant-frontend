@@ -1132,7 +1132,7 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
             }
           }
 
-          "no CTUTR found in enrolments" in {
+          "no CTUTR found in enrolments but des CTUTR is there" in {
             val companyData = companyLoginData.copy(
               ctutr = None
             )
@@ -1152,6 +1152,27 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
               updatedSession
             )
             await(result.value) shouldBe Right(routes.CompanyDetailsController.enterCtutr())
+          }
+          "no CTUTR found in enrolments and  des CTUTR is not found" in {
+            val companyData = companyLoginData.copy(
+              ctutr = None
+            )
+            val journeyData = CompanyRetrievedJourneyData(
+              companyName = Some(CompanyHouseName("Test tech Ltd")),
+              desCtutr = None,
+              ctStatus = Some(anyCTStatusResponse)
+            )
+
+            val (session, updatedSession) = buildSessions(companyData, journeyData)
+
+            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+            mockStoreSession(updatedSession)(Right(()))
+
+            val result = journeyService.updateAndNext(
+              routes.CompanyDetailsController.confirmCompanyDetails(),
+              updatedSession
+            )
+            await(result.value) shouldBe Right(routes.CompanyDetailsController.ctutrNotMatched())
           }
 
         }
