@@ -53,7 +53,7 @@ class CheckYourAnswersController @Inject() (
             Ok(checkYourAnswersPage(back, c, None))
 
           case _ =>
-            logger.warn("Could not find complete answers")
+            logger.warn("Could not find complete user answers for individual")
             InternalServerError
         }
       case companySession: CompanyHECSession       =>
@@ -66,7 +66,7 @@ class CheckYourAnswersController @Inject() (
             val back       = journeyService.previous(routes.CheckYourAnswersController.checkYourAnswers())
             Ok(checkYourAnswersPage(back, completedAnswers, endDateStr))
           case _                                     =>
-            logger.warn("Could not find complete answers")
+            logger.warn("Could not find complete user answers for company")
             InternalServerError
         }
 
