@@ -26,10 +26,10 @@ import play.api.http.Status.OK
 import play.api.libs.json.{Json, OFormat}
 import play.mvc.Http.Status.{CREATED, NOT_FOUND}
 import uk.gov.hmrc.hecapplicantfrontend.connectors.HECConnector
-import uk.gov.hmrc.hecapplicantfrontend.models.ApplicantDetails.IndividualApplicantDetails
+import uk.gov.hmrc.hecapplicantfrontend.models.ApplicantDetails.{CompanyApplicantDetails, IndividualApplicantDetails}
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, IndividualHECSession}
-import uk.gov.hmrc.hecapplicantfrontend.models.HECTaxCheckData.IndividualHECTaxCheckData
-import uk.gov.hmrc.hecapplicantfrontend.models.TaxDetails.IndividualTaxDetails
+import uk.gov.hmrc.hecapplicantfrontend.models.HECTaxCheckData.{CompanyHECTaxCheckData, IndividualHECTaxCheckData}
+import uk.gov.hmrc.hecapplicantfrontend.models.TaxDetails.{CompanyTaxDetails, IndividualTaxDetails}
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.CompleteUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR, SAUTR}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceDetails
@@ -162,7 +162,44 @@ class TaxCheckServiceImpl @Inject() (hecConnector: HECConnector)(implicit ec: Ex
         HECTaxCheckSource.Digital
       )
 
-    case _: CompanyHECSession => sys.error("Not handled yet")
+    case CompanyHECSession(
+          companyLoginData,
+          retrievedJourneyData,
+          _,
+          _,
+          taxCheckStartDateTime,
+          _,
+          _
+        ) =>
+      val companyApplicantDetails = CompanyApplicantDetails(
+        companyLoginData.ggCredId,
+        completeUserAnswers.crn.getOrElse(sys.error("crn is not present")),
+        retrievedJourneyData.companyName.getOrElse(sys.error("company House Name is not present"))
+      )
+
+      val companyLicenceDetails = LicenceDetails(
+        completeUserAnswers.licenceType,
+        completeUserAnswers.licenceTimeTrading,
+        completeUserAnswers.licenceValidityPeriod
+      )
+
+      val companyTaxDetails = CompanyTaxDetails(
+        retrievedJourneyData.desCtutr.getOrElse(sys.error("CTUTR not found")),
+        completeUserAnswers.ctIncomeDeclared,
+        retrievedJourneyData.ctStatus.getOrElse(sys.error("ct status response not found")),
+        completeUserAnswers.recentlyStartedTrading,
+        completeUserAnswers.chargeableForCT
+      )
+
+      CompanyHECTaxCheckData(
+        companyApplicantDetails,
+        companyLicenceDetails,
+        companyTaxDetails,
+        taxCheckStartDateTime.getOrElse(
+          sys.error("taxCheckStartDateTime is not present")
+        ),
+        HECTaxCheckSource.Digital
+      )
 
   }
 
