@@ -247,7 +247,7 @@ class CheckYourAnswersControllerSpec
               CheckYourAnswersRow(
                 messageFromMessageKey(
                   "chargeableForCT.title",
-                  Some(TimeUtils.govDisplayFormat(LocalDate.of(2021, 10, 9)))
+                  TimeUtils.govDisplayFormat(LocalDate.of(2021, 10, 9))
                 ),
                 messageFromMessageKey("chargeableForCT.yes"),
                 routes.CompanyDetailsController.chargeableForCorporationTax().url
