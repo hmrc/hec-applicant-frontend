@@ -1512,69 +1512,118 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
 
       "convert incomplete answers to complete answers when all questions have been answered and" when {
 
-        "the user has selected an individual only licence type" in {
-          val completeAnswers = Fixtures.completeUserAnswers(
-            LicenceType.DriverOfTaxisAndPrivateHires,
-            LicenceTimeTrading.ZeroToTwoYears,
-            LicenceValidityPeriod.UpToOneYear,
-            Some(TaxSituation.PAYE)
-          )
+        "user is an individual and " when {
 
-          val incompleteAnswers = Fixtures.incompleteUserAnswers(
-            Some(completeAnswers.licenceType),
-            Some(completeAnswers.licenceTimeTrading),
-            Some(completeAnswers.licenceValidityPeriod),
-            completeAnswers.taxSituation,
-            completeAnswers.saIncomeDeclared
-          )
-
-          val individualData = individualLoginData.copy(sautr = Some(SAUTR("utr")))
-          val journeyData    =
-            IndividualRetrievedJourneyData(
-              saStatus = Some(SAStatusResponse(SAUTR("utr"), TaxYear(2020), SAStatus.NoticeToFileIssued))
+          "the user has selected an individual only licence type" in {
+            val completeAnswers = Fixtures.completeUserAnswers(
+              LicenceType.DriverOfTaxisAndPrivateHires,
+              LicenceTimeTrading.ZeroToTwoYears,
+              LicenceValidityPeriod.UpToOneYear,
+              Some(TaxSituation.PAYE)
             )
 
-          val session = IndividualHECSession(individualData, journeyData, incompleteAnswers, None, None, List.empty)
+            val incompleteAnswers = Fixtures.incompleteUserAnswers(
+              Some(completeAnswers.licenceType),
+              Some(completeAnswers.licenceTimeTrading),
+              Some(completeAnswers.licenceValidityPeriod),
+              completeAnswers.taxSituation,
+              completeAnswers.saIncomeDeclared
+            )
 
-          implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
-
-          mockStoreSession(session.copy(userAnswers = completeAnswers))(Right(()))
-
-          val result = journeyService.updateAndNext(
-            routes.LicenceDetailsController.licenceTimeTrading(),
-            session
-          )
-          await(result.value) shouldBe Right(routes.CheckYourAnswersController.checkYourAnswers())
-
-        }
-
-        "the user has selected a licence type which both individuals and companies can have" in {
-          List(
-            LicenceType.ScrapMetalDealerSite,
-            LicenceType.ScrapMetalMobileCollector,
-            LicenceType.OperatorOfPrivateHireVehicles
-          ).foreach { licenceType =>
-            withClue(s"For licence type $licenceType: ") {
-              val completeAnswers = Fixtures.completeUserAnswers(
-                licenceType,
-                LicenceTimeTrading.ZeroToTwoYears,
-                LicenceValidityPeriod.UpToOneYear,
-                Some(TaxSituation.PAYE),
-                Some(YesNoAnswer.Yes),
-                Some(EntityType.Company)
+            val individualData = individualLoginData.copy(sautr = Some(SAUTR("utr")))
+            val journeyData    =
+              IndividualRetrievedJourneyData(
+                saStatus = Some(SAStatusResponse(SAUTR("utr"), TaxYear(2020), SAStatus.NoticeToFileIssued))
               )
 
-              val incompleteAnswers = Fixtures.incompleteUserAnswers(
-                Some(completeAnswers.licenceType),
-                Some(completeAnswers.licenceTimeTrading),
-                Some(completeAnswers.licenceValidityPeriod),
-                completeAnswers.taxSituation,
-                Some(YesNoAnswer.Yes),
-                Some(EntityType.Company)
-              )
+            val session = IndividualHECSession(individualData, journeyData, incompleteAnswers, None, None, List.empty)
 
-              val session                                     =
-                IndividualHECSession(
+            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+
+            mockStoreSession(session.copy(userAnswers = completeAnswers))(Right(()))
+
+            val result = journeyService.updateAndNext(
+              routes.LicenceDetailsController.licenceTimeTrading(),
+              session
+            )
+            await(result.value) shouldBe Right(routes.CheckYourAnswersController.checkYourAnswers())
+
+          }
+
+          "the user has selected a licence type which both individuals and companies can have" in {
+            List(
+              LicenceType.ScrapMetalDealerSite,
+              LicenceType.ScrapMetalMobileCollector,
+              LicenceType.OperatorOfPrivateHireVehicles
+            ).foreach { licenceType =>
+              withClue(s"For licence type $licenceType: ") {
+                val completeAnswers = Fixtures.completeUserAnswers(
+                  licenceType,
+                  LicenceTimeTrading.ZeroToTwoYears,
+                  LicenceValidityPeriod.UpToOneYear,
+                  Some(TaxSituation.PAYE),
+                  Some(YesNoAnswer.Yes),
+                  Some(EntityType.Company)
+                )
+
+                val incompleteAnswers = Fixtures.incompleteUserAnswers(
+                  Some(completeAnswers.licenceType),
+                  Some(completeAnswers.licenceTimeTrading),
+                  Some(completeAnswers.licenceValidityPeriod),
+                  completeAnswers.taxSituation,
+                  Some(YesNoAnswer.Yes),
+                  Some(EntityType.Company)
+                )
+
+                val session                                     =
+                  IndividualHECSession(
+                    individualLoginData,
+                    IndividualRetrievedJourneyData.empty,
+                    incompleteAnswers,
+                    None,
+                    None,
+                    List.empty
+                  )
+                implicit val request: RequestWithSessionData[_] =
+                  requestWithSessionData(session)
+
+                mockStoreSession(session.copy(userAnswers = completeAnswers))(Right(()))
+
+                val result = journeyService.updateAndNext(
+                  routes.LicenceDetailsController.licenceTimeTrading(),
+                  session
+                )
+                await(result.value) shouldBe Right(routes.CheckYourAnswersController.checkYourAnswers())
+
+              }
+
+            }
+
+          }
+
+          "the user has selected a non-SA tax situation" in {
+            List(
+              TaxSituation.PAYE,
+              TaxSituation.NotChargeable
+            ).foreach { taxSituation =>
+              withClue(s"For tax situation $taxSituation: ") {
+                val completeAnswers = Fixtures.completeUserAnswers(
+                  LicenceType.DriverOfTaxisAndPrivateHires,
+                  LicenceTimeTrading.ZeroToTwoYears,
+                  LicenceValidityPeriod.UpToOneYear,
+                  Some(taxSituation)
+                )
+
+                val incompleteAnswers = Fixtures.incompleteUserAnswers(
+                  Some(completeAnswers.licenceType),
+                  Some(completeAnswers.licenceTimeTrading),
+                  Some(completeAnswers.licenceValidityPeriod),
+                  completeAnswers.taxSituation,
+                  completeAnswers.saIncomeDeclared,
+                  completeAnswers.entityType
+                )
+
+                val session = IndividualHECSession(
                   individualLoginData,
                   IndividualRetrievedJourneyData.empty,
                   incompleteAnswers,
@@ -1582,145 +1631,235 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
                   None,
                   List.empty
                 )
-              implicit val request: RequestWithSessionData[_] =
-                requestWithSessionData(session)
 
-              mockStoreSession(session.copy(userAnswers = completeAnswers))(Right(()))
+                implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+                mockStoreSession(session.copy(userAnswers = completeAnswers))(Right(()))
 
-              val result = journeyService.updateAndNext(
-                routes.LicenceDetailsController.licenceTimeTrading(),
-                session
-              )
-              await(result.value) shouldBe Right(routes.CheckYourAnswersController.checkYourAnswers())
-
+                val result = journeyService.updateAndNext(
+                  routes.LicenceDetailsController.licenceTimeTrading(),
+                  session
+                )
+                await(result.value) shouldBe Right(routes.CheckYourAnswersController.checkYourAnswers())
+              }
             }
-
           }
 
+          "the user has selected an SA tax situation, SA status is ReturnFound & SA income declared is present" in {
+            List(
+              TaxSituation.SA,
+              TaxSituation.SAPAYE
+            ).foreach { taxSituation =>
+              withClue(s"For tax situation $taxSituation: ") {
+                val completeAnswers = Fixtures.completeUserAnswers(
+                  LicenceType.DriverOfTaxisAndPrivateHires,
+                  LicenceTimeTrading.ZeroToTwoYears,
+                  LicenceValidityPeriod.UpToOneYear,
+                  Some(taxSituation),
+                  Some(YesNoAnswer.Yes)
+                )
+
+                val incompleteAnswers = Fixtures.incompleteUserAnswers(
+                  Some(completeAnswers.licenceType),
+                  Some(completeAnswers.licenceTimeTrading),
+                  Some(completeAnswers.licenceValidityPeriod),
+                  completeAnswers.taxSituation,
+                  completeAnswers.saIncomeDeclared,
+                  completeAnswers.entityType
+                )
+
+                val journeyData = IndividualRetrievedJourneyData(
+                  saStatus = Some(SAStatusResponse(SAUTR("utr"), TaxYear(2020), SAStatus.ReturnFound))
+                )
+                val session     =
+                  IndividualHECSession(individualLoginData, journeyData, incompleteAnswers, None, None, List.empty)
+
+                implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+                mockStoreSession(session.copy(userAnswers = completeAnswers))(Right(()))
+
+                val result = journeyService.updateAndNext(
+                  routes.LicenceDetailsController.licenceTimeTrading(),
+                  session
+                )
+                await(result.value) shouldBe Right(routes.CheckYourAnswersController.checkYourAnswers())
+              }
+            }
+          }
+
+          "the user has selected an SA tax situation, SA status != ReturnFound" in {
+            List(
+              TaxSituation.SA,
+              TaxSituation.SAPAYE
+            ).foreach { taxSituation =>
+              withClue(s"For tax situation $taxSituation: ") {
+                val completeAnswers = Fixtures.completeUserAnswers(
+                  LicenceType.DriverOfTaxisAndPrivateHires,
+                  LicenceTimeTrading.ZeroToTwoYears,
+                  LicenceValidityPeriod.UpToOneYear,
+                  Some(taxSituation)
+                )
+
+                val incompleteAnswers = Fixtures.incompleteUserAnswers(
+                  Some(completeAnswers.licenceType),
+                  Some(completeAnswers.licenceTimeTrading),
+                  Some(completeAnswers.licenceValidityPeriod),
+                  completeAnswers.taxSituation,
+                  completeAnswers.saIncomeDeclared,
+                  completeAnswers.entityType
+                )
+
+                val journeyData = IndividualRetrievedJourneyData(
+                  saStatus = Some(SAStatusResponse(SAUTR("utr"), TaxYear(2020), SAStatus.NoReturnFound))
+                )
+                val session     =
+                  IndividualHECSession(individualLoginData, journeyData, incompleteAnswers, None, None, List.empty)
+
+                implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+                mockStoreSession(session.copy(userAnswers = completeAnswers))(Right(()))
+
+                val result = journeyService.updateAndNext(
+                  routes.LicenceDetailsController.licenceTimeTrading(),
+                  session
+                )
+                await(result.value) shouldBe Right(routes.CheckYourAnswersController.checkYourAnswers())
+              }
+            }
+          }
         }
 
-        "the user has selected a non-SA tax situation" in {
-          List(
-            TaxSituation.PAYE,
-            TaxSituation.NotChargeable
-          ).foreach { taxSituation =>
-            withClue(s"For tax situation $taxSituation: ") {
-              val completeAnswers = Fixtures.completeUserAnswers(
-                LicenceType.DriverOfTaxisAndPrivateHires,
-                LicenceTimeTrading.ZeroToTwoYears,
-                LicenceValidityPeriod.UpToOneYear,
-                Some(taxSituation)
-              )
+        "user is a company and " when {
 
-              val incompleteAnswers = Fixtures.incompleteUserAnswers(
-                Some(completeAnswers.licenceType),
-                Some(completeAnswers.licenceTimeTrading),
-                Some(completeAnswers.licenceValidityPeriod),
-                completeAnswers.taxSituation,
-                completeAnswers.saIncomeDeclared,
-                completeAnswers.entityType
-              )
+          val startDate = LocalDate.of(2020, 10, 9)
+          val endDate   = LocalDate.of(2021, 10, 9)
 
-              val session = IndividualHECSession(
-                individualLoginData,
-                IndividualRetrievedJourneyData.empty,
+          def createCTStatus(latestAccountingPeriod: Option[CTAccountingPeriod]) =
+            CTStatusResponse(
+              ctutr = CTUTR("1111111111"),
+              startDate = LocalDate.of(2020, 10, 9),
+              endDate = LocalDate.of(2021, 10, 9),
+              latestAccountingPeriod = latestAccountingPeriod
+            )
+          def getCompanySessionData(
+            licenceType: LicenceType,
+            chargeableForCTOpt: Option[YesNoAnswer],
+            ctIncomeDeclaredOpt: Option[YesNoAnswer],
+            recentlyStartedTradingOpt: Option[YesNoAnswer],
+            ctStatusResponse: Option[CTStatusResponse]
+          ): (UserAnswers.CompleteUserAnswers, CompanyHECSession) = {
+
+            val completeAnswers   = Fixtures.completeUserAnswers(
+              licenceType,
+              LicenceTimeTrading.ZeroToTwoYears,
+              LicenceValidityPeriod.UpToOneYear,
+              entityType = Some(EntityType.Company),
+              crn = Some(CRN("1123456")),
+              companyDetailsConfirmed = Some(YesNoAnswer.Yes),
+              chargeableForCT = chargeableForCTOpt,
+              ctIncomeDeclared = ctIncomeDeclaredOpt,
+              recentlyStartedTrading = recentlyStartedTradingOpt
+            )
+            val incompleteAnswers = Fixtures.incompleteUserAnswers(
+              Some(completeAnswers.licenceType),
+              Some(completeAnswers.licenceTimeTrading),
+              Some(completeAnswers.licenceValidityPeriod),
+              entityType = Some(EntityType.Company),
+              crn = Some(CRN("1123456")),
+              companyDetailsConfirmed = Some(YesNoAnswer.Yes),
+              chargeableForCT = chargeableForCTOpt,
+              ctIncomeDeclared = ctIncomeDeclaredOpt,
+              recentlyStartedTrading = recentlyStartedTradingOpt
+            )
+
+            val session =
+              CompanyHECSession(
+                Fixtures.companyLoginData(ctutr = Some(CTUTR("1111111111"))),
+                Fixtures.companyRetrievedJourneyData(ctStatus = ctStatusResponse),
                 incompleteAnswers,
                 None,
                 None,
                 List.empty
               )
+            (completeAnswers, session)
 
-              implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
-              mockStoreSession(session.copy(userAnswers = completeAnswers))(Right(()))
+          }
 
-              val result = journeyService.updateAndNext(
-                routes.LicenceDetailsController.licenceTimeTrading(),
-                session
+          def nextPageIsCYA(session: CompanyHECSession, completeAnswers: UserAnswers) = {
+            implicit val request: RequestWithSessionData[_] =
+              requestWithSessionData(session)
+
+            mockStoreSession(session.copy(userAnswers = completeAnswers))(Right(()))
+
+            val result = journeyService.updateAndNext(
+              routes.LicenceDetailsController.licenceTimeTrading(),
+              session
+            )
+            await(result.value) shouldBe Right(routes.CheckYourAnswersController.checkYourAnswers())
+
+          }
+
+          "the user has selected a licence type which both individuals and companies can have" in {
+            List(
+              LicenceType.ScrapMetalDealerSite,
+              LicenceType.ScrapMetalMobileCollector,
+              LicenceType.OperatorOfPrivateHireVehicles
+            ).foreach { licenceType =>
+              withClue(s"For licence type $licenceType: ") {
+
+                val (completeAnswers, session) = getCompanySessionData(
+                  licenceType,
+                  Some(YesNoAnswer.Yes),
+                  Some(YesNoAnswer.Yes),
+                  Some(YesNoAnswer.Yes),
+                  Some(createCTStatus(Some(CTAccountingPeriod(startDate, endDate, CTStatus.ReturnFound))))
+                )
+                nextPageIsCYA(session, completeAnswers)
+
+              }
+
+            }
+
+          }
+
+          "the user has some ctStatus Response with latest accounting period status None, recentlyStartedTrading has Yes value " in {
+            val (completeAnswers, session) = getCompanySessionData(
+              LicenceType.ScrapMetalMobileCollector,
+              recentlyStartedTradingOpt = Some(YesNoAnswer.Yes),
+              ctStatusResponse = Some(createCTStatus(None)),
+              ctIncomeDeclaredOpt = None,
+              chargeableForCTOpt = None
+            )
+            nextPageIsCYA(session, completeAnswers)
+
+          }
+
+          "the user has some ctStatus Response with latest accounting period status NoticeToFileIssued, chargeableForCT has some value " in {
+            List(
+              YesNoAnswer.Yes,
+              YesNoAnswer.No
+            ).foreach { yesNo =>
+              val (completeAnswers, session) = getCompanySessionData(
+                LicenceType.ScrapMetalMobileCollector,
+                recentlyStartedTradingOpt = None,
+                ctStatusResponse =
+                  Some(createCTStatus(Some(CTAccountingPeriod(startDate, endDate, CTStatus.NoticeToFileIssued)))),
+                ctIncomeDeclaredOpt = None,
+                chargeableForCTOpt = Some(yesNo)
               )
-              await(result.value) shouldBe Right(routes.CheckYourAnswersController.checkYourAnswers())
+              nextPageIsCYA(session, completeAnswers)
             }
           }
-        }
 
-        "the user has selected an SA tax situation, SA status is ReturnFound & SA income declared is present" in {
-          List(
-            TaxSituation.SA,
-            TaxSituation.SAPAYE
-          ).foreach { taxSituation =>
-            withClue(s"For tax situation $taxSituation: ") {
-              val completeAnswers = Fixtures.completeUserAnswers(
-                LicenceType.DriverOfTaxisAndPrivateHires,
-                LicenceTimeTrading.ZeroToTwoYears,
-                LicenceValidityPeriod.UpToOneYear,
-                Some(taxSituation),
-                Some(YesNoAnswer.Yes)
-              )
-
-              val incompleteAnswers = Fixtures.incompleteUserAnswers(
-                Some(completeAnswers.licenceType),
-                Some(completeAnswers.licenceTimeTrading),
-                Some(completeAnswers.licenceValidityPeriod),
-                completeAnswers.taxSituation,
-                completeAnswers.saIncomeDeclared,
-                completeAnswers.entityType
-              )
-
-              val journeyData = IndividualRetrievedJourneyData(
-                saStatus = Some(SAStatusResponse(SAUTR("utr"), TaxYear(2020), SAStatus.ReturnFound))
-              )
-              val session     =
-                IndividualHECSession(individualLoginData, journeyData, incompleteAnswers, None, None, List.empty)
-
-              implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
-              mockStoreSession(session.copy(userAnswers = completeAnswers))(Right(()))
-
-              val result = journeyService.updateAndNext(
-                routes.LicenceDetailsController.licenceTimeTrading(),
-                session
-              )
-              await(result.value) shouldBe Right(routes.CheckYourAnswersController.checkYourAnswers())
-            }
+          "the user has some ctStatus Response with latest accounting period status NoReturnFound, chargeableForCT has No value " in {
+            val (completeAnswers, session) = getCompanySessionData(
+              LicenceType.ScrapMetalMobileCollector,
+              recentlyStartedTradingOpt = None,
+              ctStatusResponse =
+                Some(createCTStatus(Some(CTAccountingPeriod(startDate, endDate, CTStatus.NoReturnFound)))),
+              ctIncomeDeclaredOpt = None,
+              chargeableForCTOpt = Some(YesNoAnswer.No)
+            )
+            nextPageIsCYA(session, completeAnswers)
           }
-        }
 
-        "the user has selected an SA tax situation, SA status != ReturnFound" in {
-          List(
-            TaxSituation.SA,
-            TaxSituation.SAPAYE
-          ).foreach { taxSituation =>
-            withClue(s"For tax situation $taxSituation: ") {
-              val completeAnswers = Fixtures.completeUserAnswers(
-                LicenceType.DriverOfTaxisAndPrivateHires,
-                LicenceTimeTrading.ZeroToTwoYears,
-                LicenceValidityPeriod.UpToOneYear,
-                Some(taxSituation)
-              )
-
-              val incompleteAnswers = Fixtures.incompleteUserAnswers(
-                Some(completeAnswers.licenceType),
-                Some(completeAnswers.licenceTimeTrading),
-                Some(completeAnswers.licenceValidityPeriod),
-                completeAnswers.taxSituation,
-                completeAnswers.saIncomeDeclared,
-                completeAnswers.entityType
-              )
-
-              val journeyData = IndividualRetrievedJourneyData(
-                saStatus = Some(SAStatusResponse(SAUTR("utr"), TaxYear(2020), SAStatus.NoReturnFound))
-              )
-              val session     =
-                IndividualHECSession(individualLoginData, journeyData, incompleteAnswers, None, None, List.empty)
-
-              implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
-              mockStoreSession(session.copy(userAnswers = completeAnswers))(Right(()))
-
-              val result = journeyService.updateAndNext(
-                routes.LicenceDetailsController.licenceTimeTrading(),
-                session
-              )
-              await(result.value) shouldBe Right(routes.CheckYourAnswersController.checkYourAnswers())
-            }
-          }
         }
 
       }
