@@ -133,7 +133,7 @@
 @chargeableForCTRow = @{
   completeAnswers.chargeableForCT.map { chargeableForCT =>
     summaryListRow(
-      messages("chargeableForCT.title", date),
+      messages("chargeableForCT.title", date.getOrElse("")),
       messages(s"chargeableForCT.${YesNoOption.yesNoOption(chargeableForCT).messageKey}"),
       routes.CompanyDetailsController.chargeableForCorporationTax(),
       messages(s"$key.chargeableForCT.screenReaderText")
