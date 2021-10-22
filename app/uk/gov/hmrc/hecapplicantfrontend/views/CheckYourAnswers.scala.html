@@ -137,7 +137,7 @@
 }
 @chargeableForCTRow = @{
   completeAnswers.chargeableForCT.map { chargeableForCT =>
-    val retrievedCompanyData = retrievedJourneyData match {
+    val latestAccountingPeriod = retrievedJourneyData match {
       case c: CompanyRetrievedJourneyData => c.ctStatus match {
         case Some(CTStatusResponse(_, _, _, Some(latestAccountingPeriod))) => latestAccountingPeriod
         case _ => sys.error("chargeableForCT answer found when no accounting period")
@@ -145,7 +145,7 @@
       case _ => sys.error("chargeableForCT answer found when company journey data not retrieved")
     }
     summaryListRow(
-      messages("chargeableForCT.title", TimeUtils.govDisplayFormat(retrievedCompanyData.endDate)),
+      messages("chargeableForCT.title", TimeUtils.govDisplayFormat(latestAccountingPeriod.endDate)),
       messages(s"chargeableForCT.${YesNoOption.yesNoOption(chargeableForCT).messageKey}"),
       routes.CompanyDetailsController.chargeableForCorporationTax(),
       messages(s"$key.chargeableForCT.screenReaderText")
