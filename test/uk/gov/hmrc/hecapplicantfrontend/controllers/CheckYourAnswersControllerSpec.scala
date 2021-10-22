@@ -182,40 +182,32 @@ class CheckYourAnswersControllerSpec
           )
         }
 
-        "applicant is a Company" in {
-          val answers = Fixtures.completeUserAnswers(
+        "applicant is a Company and " when {
+
+          def createCompleteAnswers(
+            chargeableForCTOpt: Option[YesNoAnswer],
+            ctIncomeDeclaredOpt: Option[YesNoAnswer],
+            recentlyStartedTrading: Option[YesNoAnswer]
+          ) = Fixtures.completeUserAnswers(
             LicenceType.ScrapMetalMobileCollector,
             LicenceTimeTrading.ZeroToTwoYears,
             LicenceValidityPeriod.UpToTwoYears,
             entityType = Some(EntityType.Company),
             crn = Some(CRN("1123456")),
             companyDetailsConfirmed = Some(YesNoAnswer.Yes),
-            chargeableForCT = Some(YesNoAnswer.Yes),
-            ctIncomeDeclared = Some(YesNoAnswer.Yes)
+            chargeableForCT = chargeableForCTOpt,
+            ctIncomeDeclared = ctIncomeDeclaredOpt,
+            recentlyStartedTrading = recentlyStartedTrading
           )
 
-          val session =
-            CompanyHECSession(
-              companyLoginData,
-              Fixtures.companyRetrievedJourneyData(
-                companyName = Some(CompanyHouseName("Test Tech Ltd")),
-                desCtutr = Some(CTUTR("1111111111")),
-                ctStatus = Some(
-                  CTStatusResponse(
-                    ctutr = CTUTR("1111111111"),
-                    startDate = LocalDate.of(2020, 10, 9),
-                    endDate = LocalDate.of(2021, 10, 9),
-                    latestAccountingPeriod = Some(
-                      CTAccountingPeriod(LocalDate.of(2020, 10, 9), LocalDate.of(2021, 10, 9), CTStatus.ReturnFound)
-                    )
-                  )
-                )
-              ),
-              answers,
-              None,
-              None,
-              List.empty
+          def createCTStatus(latestAccountingPeriod: Option[CTAccountingPeriod]) = Some(
+            CTStatusResponse(
+              ctutr = CTUTR("1111111111"),
+              startDate = LocalDate.of(2020, 10, 9),
+              endDate = LocalDate.of(2021, 10, 9),
+              latestAccountingPeriod = latestAccountingPeriod
             )
+          )
 
           val expectedRows =
             List(
@@ -256,34 +248,111 @@ class CheckYourAnswersControllerSpec
                 messageFromMessageKey("ctIncomeDeclared.title"),
                 messageFromMessageKey("ctIncomeDeclared.yes"),
                 routes.CompanyDetailsController.ctIncomeStatement().url
+              ),
+              CheckYourAnswersRow(
+                messageFromMessageKey("recentlyStartedTrading.title"),
+                messageFromMessageKey("recentlyStartedTrading.yes"),
+                routes.CompanyDetailsController.recentlyStartedTrading().url
               )
             )
 
-          inSequence {
-            mockAuthWithNoRetrievals()
-            mockGetSession(session)
-            mockJourneyServiceGetPrevious(routes.CheckYourAnswersController.checkYourAnswers(), session)(
-              mockPreviousCall
+          "company has not recently started trading" in {
+
+            val answers = createCompleteAnswers(Some(YesNoAnswer.Yes), Some(YesNoAnswer.Yes), None)
+
+            val session =
+              CompanyHECSession(
+                companyLoginData,
+                Fixtures.companyRetrievedJourneyData(
+                  companyName = Some(CompanyHouseName("Test Tech Ltd")),
+                  desCtutr = Some(CTUTR("1111111111")),
+                  ctStatus = createCTStatus(
+                    Some(
+                      CTAccountingPeriod(LocalDate.of(2020, 10, 9), LocalDate.of(2021, 10, 9), CTStatus.ReturnFound)
+                    )
+                  )
+                ),
+                answers,
+                None,
+                None,
+                List.empty
+              )
+
+            inSequence {
+              mockAuthWithNoRetrievals()
+              mockGetSession(session)
+              mockJourneyServiceGetPrevious(routes.CheckYourAnswersController.checkYourAnswers(), session)(
+                mockPreviousCall
+              )
+            }
+
+            checkPageIsDisplayed(
+              performAction(),
+              messageFromMessageKey("checkYourAnswers.title"),
+              { doc =>
+                doc.select("#back").attr("href") shouldBe mockPreviousCall.url
+
+                val rows =
+                  doc.select(".govuk-summary-list__row").iterator().asScala.toList.map { element =>
+                    val question  = element.select(".govuk-summary-list__key").text()
+                    val answer    = element.select(".govuk-summary-list__value").text()
+                    val changeUrl = element.select(".govuk-link").attr("href")
+                    CheckYourAnswersRow(question, answer, changeUrl)
+                  }
+
+                rows shouldBe expectedRows.dropRight(1)
+              }
             )
+
           }
 
-          checkPageIsDisplayed(
-            performAction(),
-            messageFromMessageKey("checkYourAnswers.title"),
-            { doc =>
-              doc.select("#back").attr("href") shouldBe mockPreviousCall.url
+          "company has  recently started trading" in {
 
-              val rows =
-                doc.select(".govuk-summary-list__row").iterator().asScala.toList.map { element =>
-                  val question  = element.select(".govuk-summary-list__key").text()
-                  val answer    = element.select(".govuk-summary-list__value").text()
-                  val changeUrl = element.select(".govuk-link").attr("href")
-                  CheckYourAnswersRow(question, answer, changeUrl)
-                }
+            val answers = createCompleteAnswers(None, None, Some(YesNoAnswer.Yes))
 
-              rows shouldBe expectedRows
+            val session =
+              CompanyHECSession(
+                companyLoginData,
+                Fixtures.companyRetrievedJourneyData(
+                  companyName = Some(CompanyHouseName("Test Tech Ltd")),
+                  desCtutr = Some(CTUTR("1111111111")),
+                  ctStatus = createCTStatus(
+                    None
+                  )
+                ),
+                answers,
+                None,
+                None,
+                List.empty
+              )
+
+            inSequence {
+              mockAuthWithNoRetrievals()
+              mockGetSession(session)
+              mockJourneyServiceGetPrevious(routes.CheckYourAnswersController.checkYourAnswers(), session)(
+                mockPreviousCall
+              )
             }
-          )
+
+            checkPageIsDisplayed(
+              performAction(),
+              messageFromMessageKey("checkYourAnswers.title"),
+              { doc =>
+                doc.select("#back").attr("href") shouldBe mockPreviousCall.url
+
+                val rows =
+                  doc.select(".govuk-summary-list__row").iterator().asScala.toList.map { element =>
+                    val question  = element.select(".govuk-summary-list__key").text()
+                    val answer    = element.select(".govuk-summary-list__value").text()
+                    val changeUrl = element.select(".govuk-link").attr("href")
+                    CheckYourAnswersRow(question, answer, changeUrl)
+                  }
+
+                rows shouldBe (expectedRows.take(5) ::: expectedRows.takeRight(1))
+              }
+            )
+
+          }
         }
 
       }
