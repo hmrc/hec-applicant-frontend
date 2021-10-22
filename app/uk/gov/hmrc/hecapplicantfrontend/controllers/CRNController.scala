@@ -115,6 +115,10 @@ class CRNController @Inject() (
     updatedAnswers          =
       companySession.userAnswers
         .unset(_.crn)
+        .unset(_.companyDetailsConfirmed)
+        .unset(_.chargeableForCT)
+        .unset(_.ctIncomeDeclared)
+        .unset(_.recentlyStartedTrading)
         .copy(crn = Some(crn))
     updatedRetrievedData    =
       companySession.retrievedJourneyData.copy(

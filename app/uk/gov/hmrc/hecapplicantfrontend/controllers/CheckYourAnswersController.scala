@@ -21,6 +21,7 @@ import com.google.inject.{Inject, Singleton}
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
+import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, IndividualHECSession}
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.CompleteUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.services.{JourneyService, TaxCheckService}
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
@@ -44,14 +45,27 @@ class CheckYourAnswersController @Inject() (
     with Logging {
 
   val checkYourAnswers: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
-    request.sessionData.userAnswers match {
-      case c: CompleteUserAnswers =>
-        val back = journeyService.previous(routes.CheckYourAnswersController.checkYourAnswers())
-        Ok(checkYourAnswersPage(back, c))
+    request.sessionData match {
+      case individualSession: IndividualHECSession =>
+        individualSession.userAnswers match {
+          case c: CompleteUserAnswers =>
+            val back = journeyService.previous(routes.CheckYourAnswersController.checkYourAnswers())
+            Ok(checkYourAnswersPage(back, c, individualSession.retrievedJourneyData))
 
-      case _ =>
-        logger.warn("Could not find complete answers")
-        InternalServerError
+          case _ =>
+            logger.warn("Could not find complete answers")
+            InternalServerError
+        }
+      case companySession: CompanyHECSession       =>
+        companySession.userAnswers match {
+          case completedAnswers: CompleteUserAnswers =>
+            val back = journeyService.previous(routes.CheckYourAnswersController.checkYourAnswers())
+            Ok(checkYourAnswersPage(back, completedAnswers, companySession.retrievedJourneyData))
+          case _                                     =>
+            logger.warn("Could not find complete answers")
+            InternalServerError
+        }
+
     }
 
   }

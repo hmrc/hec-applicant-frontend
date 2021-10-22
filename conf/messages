@@ -175,6 +175,11 @@ checkYourAnswers.licenceValidityPeriod.screenReaderText = how long your most rec
 checkYourAnswers.entityType.screenReaderText = who the tax check is for
 checkYourAnswers.taxSituation.screenReaderText = how you pay tax on any work carried out using your licence
 checkYourAnswers.saIncomeDeclared.screenReaderText = if you included income you earned using this type of licence in your tax return
+checkYourAnswers.crn.screenReaderText = your company registration number
+checkYourAnswers.ctutr.screenReaderText = your Corporation Tax Unique Taxpayer Reference
+checkYourAnswers.chargeableForCT.screenReaderText = if your company was chargeable for Corporation Tax
+checkYourAnswers.recentlyStartedTrading.screenReaderText = if your company started or restarted training in the last 12 months
+checkYourAnswers.ctIncomeDeclared.screenReaderText = if you included all income your company earned using this type of licence in your tax return
 
 # Tax Check Complete
 taxCheckComplete.title = Tax Check Complete
