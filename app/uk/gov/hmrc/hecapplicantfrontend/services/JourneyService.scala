@@ -286,26 +286,27 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
       companySession.userAnswers.fold(_.companyDetailsConfirmed, _.companyDetailsConfirmed) match {
         case Some(YesNoAnswer.Yes) =>
           (companySession.loginData.ctutr, companySession.retrievedJourneyData) match {
+            // enrolment and DES CTUTR present but don't match
+            case (Some(ctutr), CompanyRetrievedJourneyData(_, Some(desCtutr), _)) if ctutr =!= desCtutr =>
+              routes.CompanyDetailsController.ctutrNotMatched()
 
-            case (Some(ctutr), CompanyRetrievedJourneyData(_, Some(desCtutr), Some(ctStatus))) =>
-              if (ctutr.value === desCtutr.value)
-                ctStatus.latestAccountingPeriod.map(_.ctStatus) match {
-                  case Some(_) => routes.CompanyDetailsController.chargeableForCorporationTax()
-                  case None    => routes.CompanyDetailsController.recentlyStartedTrading()
-                }
-              else
-                routes.CompanyDetailsController.ctutrNotMatched()
+            // enrolment and DES CTUTRs are present and match, CT status found
+            case (Some(_), CompanyRetrievedJourneyData(_, Some(_), Some(ctStatus)))                     =>
+              ctStatus.latestAccountingPeriod.map(_.ctStatus) match {
+                case Some(_) => routes.CompanyDetailsController.chargeableForCorporationTax()
+                case None    => routes.CompanyDetailsController.recentlyStartedTrading()
+              }
 
-            // enrolment and DES CTUTRs are present, but CT status couldn't be fetched
-            case (Some(_), CompanyRetrievedJourneyData(_, Some(_), None))                      =>
+            // enrolment and DES CTUTRs are present and match, but CT status couldn't be fetched
+            case (Some(_), CompanyRetrievedJourneyData(_, Some(_), None))                               =>
               routes.CompanyDetailsController.cannotDoTaxCheck()
 
             // DES CTUTR not fetched
-            case (_, CompanyRetrievedJourneyData(_, None, _))                                  =>
+            case (_, CompanyRetrievedJourneyData(_, None, _))                                           =>
               routes.CompanyDetailsController.ctutrNotMatched()
 
             //enrollment CTUTR is not present
-            case (None, _)                                                                     =>
+            case (None, _)                                                                              =>
               routes.CompanyDetailsController.enterCtutr()
           }
         case Some(YesNoAnswer.No)  => routes.CRNController.companyRegistrationNumber()
