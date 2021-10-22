@@ -20,10 +20,8 @@
 @import uk.gov.hmrc.hecapplicantfrontend.models.ids
 @import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 @import uk.gov.hmrc.govukfrontend.views.html.components._
-@import uk.gov.hmrc.hmrcfrontend.views.html.components.HmrcNewTabLink
-@import uk.gov.hmrc.hmrcfrontend.views.viewmodels.newtablink.NewTabLink
 
-@this(layout: Layout, govukInput: GovukInput, govukButton: GovukButton, formWithCSRF: FormWithCSRF, govukErrorSummary : GovukErrorSummary, hmrcNewTabLink: HmrcNewTabLink)
+@this(layout: Layout, govukInput: GovukInput, govukButton: GovukButton, formWithCSRF: FormWithCSRF, govukErrorSummary : GovukErrorSummary)
 
 @(form: Form[ids.CTUTR], back: Call)(implicit request: Request[_], messages: Messages)
 @key = @{"enterCtutr"}
@@ -57,11 +55,7 @@
     ))
 
     <p class="govuk-body">
-      @hmrcNewTabLink(params = NewTabLink(
-        href = Some(routes.CompanyDetailsController.dontHaveUtr().url),
-        text = messages(s"$key.link2"),
-        language = Some(messages("lang.code"))
-      ))
+        <a class="govuk-link" href="@{routes.CompanyDetailsController.dontHaveUtr().url}">@messages(s"$key.link2")</a>
     </p>
 
     @govukButton(Button(
