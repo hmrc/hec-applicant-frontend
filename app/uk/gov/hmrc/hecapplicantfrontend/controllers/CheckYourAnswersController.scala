@@ -24,7 +24,7 @@ import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, Session
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, IndividualHECSession}
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.CompleteUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.services.{JourneyService, TaxCheckService}
-import uk.gov.hmrc.hecapplicantfrontend.util.{Logging, TimeUtils}
+import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging.LoggerOps
 import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -50,7 +50,7 @@ class CheckYourAnswersController @Inject() (
         individualSession.userAnswers match {
           case c: CompleteUserAnswers =>
             val back = journeyService.previous(routes.CheckYourAnswersController.checkYourAnswers())
-            Ok(checkYourAnswersPage(back, c, None))
+            Ok(checkYourAnswersPage(back, c, individualSession.retrievedJourneyData))
 
           case _ =>
             logger.warn("Could not find complete answers")
@@ -59,12 +59,8 @@ class CheckYourAnswersController @Inject() (
       case companySession: CompanyHECSession       =>
         companySession.userAnswers match {
           case completedAnswers: CompleteUserAnswers =>
-            val endDateStr = companySession.retrievedJourneyData.ctStatus
-              .map(_.latestAccountingPeriod.map(_.endDate))
-              .flatten
-              .map(TimeUtils.govDisplayFormat)
-            val back       = journeyService.previous(routes.CheckYourAnswersController.checkYourAnswers())
-            Ok(checkYourAnswersPage(back, completedAnswers, endDateStr))
+            val back = journeyService.previous(routes.CheckYourAnswersController.checkYourAnswers())
+            Ok(checkYourAnswersPage(back, completedAnswers, companySession.retrievedJourneyData))
           case _                                     =>
             logger.warn("Could not find complete answers")
             InternalServerError

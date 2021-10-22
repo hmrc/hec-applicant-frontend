@@ -24,7 +24,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.ApplicantDetails.{CompanyApplican
 import uk.gov.hmrc.hecapplicantfrontend.models.HECTaxCheckData.{CompanyHECTaxCheckData, IndividualHECTaxCheckData}
 import uk.gov.hmrc.hecapplicantfrontend.models.SAStatus.ReturnFound
 import uk.gov.hmrc.hecapplicantfrontend.models.TaxDetails.{CompanyTaxDetails, IndividualTaxDetails}
-import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CTUTR, GGCredId, NINO, SAUTR}
+import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR, GGCredId, NINO, SAUTR}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 
 class HECTaxCheckDataSpec extends AnyWordSpec with Matchers {
@@ -90,37 +90,61 @@ class HECTaxCheckDataSpec extends AnyWordSpec with Matchers {
 
       val companyTaxCheckData: HECTaxCheckData =
         CompanyHECTaxCheckData(
-          CompanyApplicantDetails(
-            GGCredId("ggCredId")
-          ),
+          CompanyApplicantDetails(GGCredId("ggCredId"), CRN("12345678"), CompanyHouseName("Test Tech Ltd")),
           LicenceDetails(
             LicenceType.ScrapMetalMobileCollector,
             LicenceTimeTrading.EightYearsOrMore,
             LicenceValidityPeriod.UpToThreeYears
           ),
           CompanyTaxDetails(
-            CTUTR("utr")
+            desCTUTR = CTUTR("1111111111"),
+            userSuppliedCTUTR = Some(CTUTR("1111111111")),
+            ctIncomeDeclared = Some(YesNoAnswer.Yes),
+            ctStatus = CTStatusResponse(
+              ctutr = CTUTR("1111111111"),
+              startDate = LocalDate.of(2020, 10, 9),
+              endDate = LocalDate.of(2021, 10, 9),
+              latestAccountingPeriod =
+                Some(CTAccountingPeriod(LocalDate.of(2020, 10, 9), LocalDate.of(2021, 10, 9), CTStatus.ReturnFound))
+            ),
+            recentlyStaredTrading = None,
+            Some(YesNoAnswer.Yes)
           ),
           taxCheckStartDateTime,
           HECTaxCheckSource.Digital
         )
 
       val companyJson = Json.parse("""{
-          | "applicantDetails":{
-          |   "ggCredId":"ggCredId"
-          | },
-          | "licenceDetails":{
-          |   "licenceType":"ScrapMetalMobileCollector",
-          |   "licenceTimeTrading":"EightYearsOrMore",
-          |   "licenceValidityPeriod":"UpToThreeYears"
-          | },
-          | "taxDetails":{
-          |   "ctutr":"utr"
-          | },
-          | "taxCheckStartDateTime" : "2021-10-09T09:12:34+01:00[Europe/London]",
-          | "type":"Company",
-          | "source": "Digital"
-          |}""".stripMargin)
+                                     | "applicantDetails":{
+                                     |   "ggCredId":"ggCredId",
+                                     |   "crn":"12345678",
+                                     |   "companyName":"Test Tech Ltd"
+                                     | },
+                                     | "licenceDetails":{
+                                     |   "licenceType":"ScrapMetalMobileCollector",
+                                     |   "licenceTimeTrading":"EightYearsOrMore",
+                                     |   "licenceValidityPeriod":"UpToThreeYears"
+                                     | },
+                                     | "taxDetails":{
+                                     |   "desCTUTR":"1111111111",
+                                     |   "userSuppliedCTUTR":"1111111111",
+                                     |   "ctIncomeDeclared" : "Yes",
+                                     |   "ctStatus": {
+                                     |      "ctutr":"1111111111",
+                                     |      "startDate":"2020-10-09",
+                                     |      "endDate":"2021-10-09",
+                                     |      "latestAccountingPeriod" : {
+                                     |          "startDate":"2020-10-09",
+                                     |           "endDate":"2021-10-09",
+                                     |           "ctStatus":"ReturnFound"
+                                     |      }
+                                     |   },
+                                     |   "chargeableForCT" : "Yes"
+                                     | },
+                                     | "taxCheckStartDateTime" : "2021-10-09T09:12:34+01:00[Europe/London]",
+                                     | "source": "Digital",
+                                     |  "type":"Company"
+                                     |}""".stripMargin)
 
       "serialize Individual data" in {
         Json.toJson(individualTaxCheckData) shouldBe individualJson

@@ -185,6 +185,7 @@ class TaxCheckServiceImpl @Inject() (hecConnector: HECConnector)(implicit ec: Ex
 
       val companyTaxDetails = CompanyTaxDetails(
         retrievedJourneyData.desCtutr.getOrElse(sys.error("CTUTR not found")),
+        completeUserAnswers.ctutr,
         completeUserAnswers.ctIncomeDeclared,
         retrievedJourneyData.ctStatus.getOrElse(sys.error("ct status response not found")),
         completeUserAnswers.recentlyStartedTrading,

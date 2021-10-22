@@ -94,7 +94,9 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
       routes.LicenceDetailsController.licenceTypeExit() ->
         routes.LicenceDetailsController.licenceType(),
       routes.EntityTypeController.wrongEntityType()     ->
-        routes.EntityTypeController.entityType()
+        routes.EntityTypeController.entityType(),
+      routes.CompanyDetailsController.dontHaveUtr()     ->
+        routes.CompanyDetailsController.enterCtutr()
     )
 
   override def firstPage(session: HECSession): Call = {
@@ -284,8 +286,6 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
       companySession.userAnswers.fold(_.companyDetailsConfirmed, _.companyDetailsConfirmed) match {
         case Some(YesNoAnswer.Yes) =>
           (companySession.loginData.ctutr, companySession.retrievedJourneyData) match {
-            case (None, _) =>
-              routes.CompanyDetailsController.enterCtutr()
 
             case (Some(ctutr), CompanyRetrievedJourneyData(_, Some(desCtutr), Some(ctStatus))) =>
               if (ctutr.value === desCtutr.value)
@@ -303,6 +303,10 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
             // DES CTUTR not fetched
             case (_, CompanyRetrievedJourneyData(_, None, _))                                  =>
               routes.CompanyDetailsController.ctutrNotMatched()
+
+            //enrollment CTUTR is not present
+            case (None, _)                                                                     =>
+              routes.CompanyDetailsController.enterCtutr()
           }
         case Some(YesNoAnswer.No)  => routes.CRNController.companyRegistrationNumber()
         case None                  => sys.error("Confirm company details answer was not found")

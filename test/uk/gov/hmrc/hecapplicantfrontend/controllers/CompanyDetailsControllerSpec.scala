@@ -38,6 +38,7 @@ import uk.gov.hmrc.hecapplicantfrontend.utils.Fixtures
 import uk.gov.hmrc.http.HeaderCarrier
 
 import java.time.LocalDate
+import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -97,6 +98,8 @@ class CompanyDetailsControllerSpec
     "handling requests to the confirm company details page " must {
 
       def performAction(): Future[Result] = controller.confirmCompanyDetails(FakeRequest())
+
+      behave like authAndSessionDataBehaviour(performAction)
 
       "display the page" when {
 
@@ -483,6 +486,8 @@ class CompanyDetailsControllerSpec
 
       def performAction(): Future[Result] = controller.chargeableForCorporationTax(FakeRequest())
 
+      behave like authAndSessionDataBehaviour(performAction)
+
       "display the page" when {
         val companyData = retrievedJourneyDataWithCompanyName.copy(
           ctStatus = Some(
@@ -734,6 +739,8 @@ class CompanyDetailsControllerSpec
       val ctIncomeStatementSubmitRoute = routes.CompanyDetailsController.ctIncomeStatementSubmit()
 
       def performAction(): Future[Result] = controller.ctIncomeStatement(FakeRequest())
+
+      behave like authAndSessionDataBehaviour(performAction)
 
       "display the page" when {
         val companyData = retrievedJourneyDataWithCompanyName.copy(
@@ -987,6 +994,8 @@ class CompanyDetailsControllerSpec
 
       def performAction(): Future[Result] = controller.recentlyStartedTrading(FakeRequest())
 
+      behave like authAndSessionDataBehaviour(performAction)
+
       "display the page" when {
         val companyData = retrievedJourneyDataWithCompanyName.copy(
           ctStatus = Some(
@@ -1207,6 +1216,8 @@ class CompanyDetailsControllerSpec
       val enterCtutrSubmitRoute = routes.CompanyDetailsController.enterCtutrSubmit()
 
       def performAction(): Future[Result] = controller.enterCtutr(FakeRequest())
+
+      behave like authAndSessionDataBehaviour(performAction)
 
       "display the page" when {
         val companyData = retrievedJourneyDataWithCompanyName.copy(
@@ -1600,6 +1611,39 @@ class CompanyDetailsControllerSpec
       }
 
     }
+
+    "handling requests to the 'don't have CTUTR' page" must {
+
+      def performAction() = controller.dontHaveUtr(FakeRequest())
+
+      behave like authAndSessionDataBehaviour(performAction)
+
+      "display the page" in {
+        val session = Fixtures.companyHECSession()
+        inSequence {
+          mockAuthWithNoRetrievals()
+          mockGetSession(session)
+          mockJourneyServiceGetPrevious(routes.CompanyDetailsController.dontHaveUtr(), session)(mockPreviousCall)
+        }
+
+        checkPageIsDisplayed(
+          performAction(),
+          messageFromMessageKey("dontHaveCtutr.title"),
+          { doc =>
+            doc.select("#back").attr("href") shouldBe mockPreviousCall.url
+            val links = doc.select(".govuk-body > .govuk-link")
+            links.iterator().asScala.toList.map(_.attr("href")) shouldBe List(
+              appConfig.registerForCtUrl,
+              appConfig.findLostUtrUrl,
+              mockPreviousCall.url
+            )
+          }
+        )
+
+      }
+
+    }
+
   }
 
 }
