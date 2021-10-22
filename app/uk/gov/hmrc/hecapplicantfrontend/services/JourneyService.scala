@@ -94,7 +94,9 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
       routes.LicenceDetailsController.licenceTypeExit() ->
         routes.LicenceDetailsController.licenceType(),
       routes.EntityTypeController.wrongEntityType()     ->
-        routes.EntityTypeController.entityType()
+        routes.EntityTypeController.entityType(),
+      routes.CompanyDetailsController.dontHaveUtr()     ->
+        routes.CompanyDetailsController.enterCtutr()
     )
 
   override def firstPage(session: HECSession): Call = {

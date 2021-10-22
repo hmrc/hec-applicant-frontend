@@ -2417,6 +2417,15 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
 
         }
 
+        "the 'dont have' CTUTR' page" in {
+          implicit val request: RequestWithSessionData[_] = requestWithSessionData(Fixtures.companyHECSession())
+          val result                                      = journeyService.previous(
+            routes.CompanyDetailsController.dontHaveUtr()
+          )
+
+          result shouldBe routes.CompanyDetailsController.enterCtutr()
+        }
+
         def buildIndividualSession(taxSituation: TaxSituation, saStatus: SAStatus): HECSession = {
           val individualLoginData =
             IndividualLoginData(
