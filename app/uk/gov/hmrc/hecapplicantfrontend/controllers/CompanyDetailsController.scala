@@ -56,6 +56,7 @@ class CompanyDetailsController @Inject() (
   chargeableForCTPage: html.ChargeableForCT,
   ctIncomeStatementPage: html.CTIncomeStatement,
   enterCtutrPage: html.EnterCtutr,
+  dontHaveCtutrPage: html.DontHaveCtutr,
   sessionStore: SessionStore,
   mcc: MessagesControllerComponents
 )(implicit appConfig: AppConfig, ec: ExecutionContext)
@@ -400,7 +401,8 @@ class CompanyDetailsController @Inject() (
   }
 
   val dontHaveUtr: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
-    Ok(s"${request.sessionData}")
+    val back = journeyService.previous(routes.CompanyDetailsController.dontHaveUtr())
+    Ok(dontHaveCtutrPage(back))
   }
 
   val tooManyCtutrAttempts: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
