@@ -27,8 +27,7 @@ import play.api.i18n.I18nSupport
 import play.api.mvc._
 import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 import uk.gov.hmrc.hecapplicantfrontend.controllers.CRNController.crnForm
-import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, RequestWithSessionData, SessionDataAction}
-import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.CompanyHECSession
+import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
 import uk.gov.hmrc.hecapplicantfrontend.models.Error
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.CRN
 import uk.gov.hmrc.hecapplicantfrontend.services.{CompanyDetailsService, JourneyService}
@@ -56,78 +55,83 @@ class CRNController @Inject() (
   val companyRegistrationNumber: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
     val crn  = request.sessionData.userAnswers.fold(_.crn, _.crn)
     val back = journeyService.previous(routes.CRNController.companyRegistrationNumber())
-    val form = crn.fold(crnForm)(crnForm.fill)
+    val form = crn.fold(crnForm())(crnForm().fill)
     Ok(crnPage(form, back))
   }
 
   val companyRegistrationNumberSubmit: Action[AnyContent] =
     authAction.andThen(sessionDataAction).async { implicit request =>
-      crnForm
-        .bindFromRequest()
-        .fold(
-          formWithErrors =>
-            Ok(
-              crnPage(
-                formWithErrors,
-                journeyService.previous(routes.CRNController.companyRegistrationNumber())
-              )
-            ),
-          handleValidCrn
-        )
+      request.sessionData.mapAsCompany { implicit companySession =>
+        val crnNotFoundInCompaniesHouseErrorMsg = "CRN not found in companies house"
 
-    }
+        def ok(form: Form[CRN]) =
+          Ok(
+            crnPage(
+              form,
+              journeyService.previous(routes.CRNController.companyRegistrationNumber())
+            )
+          )
 
-  private def handleValidCrn(crn: CRN)(implicit request: RequestWithSessionData[_]): Future[Result] =
-    request.sessionData match {
-      case companySession: CompanyHECSession =>
-        checkCompanyName(crn, companySession)
-          .fold(
-            { e =>
-              logger.warn(" Couldn't get company Name from the given CRN", e)
+        def fetchCompanyNameAndProceed(crn: CRN): EitherT[Future, Error, Call] = for {
+          companyHouseDetailsOpt <- companyDetailsService.findCompany(crn)
+          updatedAnswers          =
+            companySession.userAnswers
+              .unset(_.crn)
+              .unset(_.companyDetailsConfirmed)
+              .unset(_.chargeableForCT)
+              .unset(_.ctIncomeDeclared)
+              .unset(_.recentlyStartedTrading)
+              .copy(crn = Some(crn))
+          updatedRetrievedData    =
+            companySession.retrievedJourneyData.copy(
+              companyName = companyHouseDetailsOpt.map(_.companyName)
+            )
+          updatedSession          =
+            companySession.copy(retrievedJourneyData = updatedRetrievedData, userAnswers = updatedAnswers)
+          next                   <- companyHouseDetailsOpt match {
+                                      case Some(_) =>
+                                        journeyService
+                                          .updateAndNext(routes.CRNController.companyRegistrationNumber(), updatedSession)
+                                      case None    =>
+                                        EitherT[Future, Error, Call](Future.successful(Left(Error(crnNotFoundInCompaniesHouseErrorMsg))))
+                                    }
+        } yield next
+
+        def handleError(e: Error) = e.value.fold(
+          errMsg =>
+            if (errMsg === crnNotFoundInCompaniesHouseErrorMsg) {
+              val constraint: Constraint[CRN] = Constraint(_ => Invalid("error.notFoundInCompaniesHouse"))
+              ok(crnForm(constraint).bindFromRequest())
+            } else {
+              logger.warn(errMsg, e)
               InternalServerError
             },
-            Redirect
-          )
-      case _                                 =>
-        logger.error("Individual should not see this page")
-        Future.successful(InternalServerError)
-    }
+          _ => {
+            logger.warn("Could not update session and proceed", e)
+            InternalServerError
+          }
+        )
 
-  private def checkCompanyName(crn: CRN, companySession: CompanyHECSession)(implicit
-    request: RequestWithSessionData[_]
-  ): EitherT[Future, Error, Call] = {
-    val sessionCrn = companySession.userAnswers.fold(_.crn, _.crn)
-    sessionCrn match {
-      //check if the submitted crn is equal to the crn in session
-      //then no need to call the companyDetailsService, pick company name from the sessiongit
-      //else fetch company name using the service
-      case Some(crnSession) if crn.value === crnSession.value =>
-        journeyService
-          .updateAndNext(routes.CRNController.companyRegistrationNumber(), companySession)
-      case _                                                  => fetchCompanyName(crn, companySession)
-    }
-  }
+        def handleValidCrn(crn: CRN): Future[Result] = {
+          val sessionCrn = companySession.userAnswers.fold(_.crn, _.crn)
+          val result     = sessionCrn match {
+            //check if the submitted crn is equal to the crn in session
+            //then no need to call the companyDetailsService, pick company name from the session
+            //else fetch company name using the service
+            case Some(crnSession) if crn.value === crnSession.value =>
+              journeyService.updateAndNext(routes.CRNController.companyRegistrationNumber(), companySession)
+            case _                                                  =>
+              fetchCompanyNameAndProceed(crn)
+          }
 
-  private def fetchCompanyName(crn: CRN, companySession: CompanyHECSession)(implicit
-    request: RequestWithSessionData[_]
-  ): EitherT[Future, Error, Call] = for {
-    companyHouseDetailsOpt <- companyDetailsService.findCompany(crn)
-    updatedAnswers          =
-      companySession.userAnswers
-        .unset(_.crn)
-        .unset(_.companyDetailsConfirmed)
-        .unset(_.chargeableForCT)
-        .unset(_.ctIncomeDeclared)
-        .unset(_.recentlyStartedTrading)
-        .copy(crn = Some(crn))
-    updatedRetrievedData    =
-      companySession.retrievedJourneyData.copy(
-        companyName = companyHouseDetailsOpt.map(_.companyName)
-      )
-    updatedSession          = companySession.copy(retrievedJourneyData = updatedRetrievedData, userAnswers = updatedAnswers)
-    next                   <- journeyService
-                                .updateAndNext(routes.CRNController.companyRegistrationNumber(), updatedSession)
-  } yield next
+          result.fold(handleError, Redirect)
+        }
+
+        crnForm()
+          .bindFromRequest()
+          .fold(ok, handleValidCrn)
+      }
+    }
 
 }
 
@@ -140,14 +144,14 @@ object CRNController {
   //Should have only alphanumeric characters
   //Should be in correct format - first two chars alphanumeric and rest 5/6 chars as number
   // and Should have only either 7 or 8 characters
-  private val crnConstraint: Constraint[CRN] =
-    Constraint(code =>
-      if (!code.value.forall(_.isLetterOrDigit)) Invalid("error.nonAlphanumericChars")
-      else if (code.value.matches(crnRegex)) Valid
+  val crnConstraint: Constraint[CRN] =
+    Constraint(crn =>
+      if (!crn.value.forall(_.isLetterOrDigit)) Invalid("error.nonAlphanumericChars")
+      else if (crn.value.matches(crnRegex)) Valid
       else Invalid("error.crnInvalid")
     )
 
-  val crnForm: Form[CRN] =
+  def crnForm(constraint: Constraint[CRN] = crnConstraint): Form[CRN] =
     Form(
       mapping(
         "crn" -> nonEmptyText
@@ -155,7 +159,7 @@ object CRNController {
             s => CRN(s.removeWhitespace.toUpperCase(Locale.UK)),
             _.value
           )
-          .verifying(crnConstraint)
+          .verifying(constraint)
       )(identity)(Some(_))
     )
 }

@@ -49,8 +49,9 @@ class CRNControllerSpec
     with JourneyServiceSupport {
 
   val mockCompanyDetailsService = mock[CompanyDetailsService]
-  val validCRN                  =
-    List(CRN("11123456"), CRN("1S1 23 45"), CRN("1S123456"), CRN("1s123456"), CRN("1S12345"), CRN("1112345"))
+  val validCRN                  = CRN("11123456")
+  val validCRNs                 =
+    List(validCRN, CRN("1S1 23 45"), CRN("1S123456"), CRN("1s123456"), CRN("1S12345"), CRN("1112345"))
   val nonAlphaNumCRN            = List(CRN("$£%^&"), CRN("AA1244&"))
   val inValidCRN                =
     List(CRN("AAB3456"), CRN("12345AAA"))
@@ -120,7 +121,7 @@ class CRNControllerSpec
             .fromCompleteAnswers(answers)
             .copy(
               taxSituation = None,
-              crn = Some(validCRN(0))
+              crn = Some(validCRN)
             )
           val session        =
             CompanyHECSession(companyLoginData, CompanyRetrievedJourneyData.empty, answers, None, None, List.empty)
@@ -147,7 +148,7 @@ class CRNControllerSpec
               link.text should startWith(messageFromMessageKey("crn.link"))
 
               val input = doc.select(".govuk-input")
-              input.attr("value") shouldBe validCRN(0).value
+              input.attr("value") shouldBe validCRN.value
 
             }
           )
@@ -260,6 +261,23 @@ class CRNControllerSpec
             }
           }
 
+          "CRN match was not found in companies house db" in {
+            inSequence {
+              mockAuthWithNoRetrievals()
+              mockGetSession(session)
+              mockFindCompany(validCRN)(Right(None))
+              mockJourneyServiceGetPrevious(routes.CRNController.companyRegistrationNumber(), session)(
+                mockPreviousCall
+              )
+            }
+
+            checkFormErrorIsDisplayed(
+              performAction("crn" -> validCRN.value),
+              messageFromMessageKey("crn.title"),
+              messageFromMessageKey("crn.error.notFoundInCompaniesHouse")
+            )
+          }
+
         }
 
         "return an InternalServerError" when {
@@ -275,7 +293,7 @@ class CRNControllerSpec
           "there is an error updating and getting the next endpoint" in {
             val updatedAnswers = IncompleteUserAnswers
               .fromCompleteAnswers(answers)
-              .copy(crn = Some(validCRN(0)))
+              .copy(crn = Some(validCRN))
 
             val updatedSession = session.copy(
               retrievedJourneyData = session.retrievedJourneyData.copy(companyName = Some(companyHouseName)),
@@ -285,7 +303,7 @@ class CRNControllerSpec
             inSequence {
               mockAuthWithNoRetrievals()
               mockGetSession(session)
-              mockFindCompany(validCRN(0))(
+              mockFindCompany(validCRN)(
                 Right(Some(CompanyHouseDetails(companyHouseName)))
               )
               mockJourneyServiceUpdateAndNext(
@@ -297,7 +315,7 @@ class CRNControllerSpec
               )
             }
 
-            status(performAction("crn" -> validCRN(0).value)) shouldBe INTERNAL_SERVER_ERROR
+            status(performAction("crn" -> validCRN.value)) shouldBe INTERNAL_SERVER_ERROR
 
           }
 
@@ -311,7 +329,7 @@ class CRNControllerSpec
           controller.companyRegistrationNumberSubmit(FakeRequest().withFormUrlEncodedBody(data: _*))
 
         def testNextCall(companyDetails: Option[CompanyHouseDetails]) =
-          validCRN.foreach { crn =>
+          validCRNs.foreach { crn =>
             withClue(s" For CRN : $crn") {
 
               val formattedCrn = CRN(crn.value.removeWhitespace.toUpperCase(Locale.UK))
@@ -356,10 +374,6 @@ class CRNControllerSpec
 
         "a valid CRN is submitted and company is found " in {
           testNextCall(Some(CompanyHouseDetails(companyHouseName)))
-        }
-
-        "a valid CRN is submitted but company is not found " in {
-          testNextCall(None)
         }
 
       }
