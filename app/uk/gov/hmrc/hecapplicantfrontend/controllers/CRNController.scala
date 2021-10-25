@@ -88,12 +88,10 @@ class CRNController @Inject() (
             )
           updatedSession          =
             companySession.copy(retrievedJourneyData = updatedRetrievedData, userAnswers = updatedAnswers)
-          next                   <- companyHouseDetailsOpt match {
-                                      case Some(_) =>
-                                        journeyService
-                                          .updateAndNext(routes.CRNController.companyRegistrationNumber(), updatedSession)
-                                      case None    =>
-                                        EitherT[Future, Error, Call](Future.successful(Left(Error(crnNotFoundInCompaniesHouseErrorMsg))))
+          next                   <- companyHouseDetailsOpt map { _ =>
+                                      journeyService.updateAndNext(routes.CRNController.companyRegistrationNumber(), updatedSession)
+                                    } getOrElse {
+                                      EitherT[Future, Error, Call](Future.successful(Left(Error(crnNotFoundInCompaniesHouseErrorMsg))))
                                     }
         } yield next
 
