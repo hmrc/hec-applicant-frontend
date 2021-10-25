@@ -259,8 +259,15 @@ class CompanyDetailsController @Inject() (
   val chargeableForCorporationTaxSubmit: Action[AnyContent] =
     authAction.andThen(sessionDataAction).async { implicit request =>
       def handleValidAnswer(chargeableForCT: YesNoAnswer) = {
-        val updatedAnswers =
-          request.sessionData.userAnswers.unset(_.chargeableForCT).copy(chargeableForCT = Some(chargeableForCT))
+        val updatedAnswers = {
+          val existingAnswer = request.sessionData.userAnswers.fold(_.chargeableForCT, _.chargeableForCT)
+          if (existingAnswer.contains(chargeableForCT)) request.sessionData.userAnswers
+          else
+            request.sessionData.userAnswers
+              .unset(_.chargeableForCT)
+              .unset(_.ctIncomeDeclared)
+              .copy(chargeableForCT = Some(chargeableForCT))
+        }
 
         journeyService
           .updateAndNext(
