@@ -1644,6 +1644,37 @@ class CompanyDetailsControllerSpec
 
     }
 
+    "handling requests to the 'CT UTR not matched' page" must {
+
+      def performAction() = controller.ctutrNotMatched(FakeRequest())
+
+      behave like authAndSessionDataBehaviour(performAction)
+
+      "display the page" in {
+        val session = Fixtures.companyHECSession()
+        inSequence {
+          mockAuthWithNoRetrievals()
+          mockGetSession(session)
+          mockJourneyServiceGetPrevious(routes.CompanyDetailsController.ctutrNotMatched(), session)(mockPreviousCall)
+        }
+
+        checkPageIsDisplayed(
+          performAction(),
+          messageFromMessageKey("ctutrNotMatched.title"),
+          { doc =>
+            doc.select("#back").attr("href") shouldBe mockPreviousCall.url
+            val links = doc.select(".govuk-body > .govuk-link")
+            links.iterator().asScala.toList.map(_.attr("href")) shouldBe List(
+              appConfig.signOutUri,
+              appConfig.createGGAccount
+            )
+          }
+        )
+
+      }
+
+    }
+
   }
 
 }
