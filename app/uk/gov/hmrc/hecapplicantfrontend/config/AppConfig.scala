@@ -55,6 +55,8 @@ class AppConfig @Inject() (config: Configuration, contactFrontendConfig: Contact
 
   lazy val signOutUri: String = config.get[String]("auth.sign-out.uri")
 
+  val createGGAccount: String = config.get[String]("external-url.create-gg-account")
+
   val authTimeoutSeconds: Int          = config.get[FiniteDuration]("auth.sign-out.inactivity-timeout").toSeconds.toInt
   val authTimeoutCountdownSeconds: Int =
     config.get[FiniteDuration]("auth.sign-out.inactivity-countdown").toSeconds.toInt
