@@ -708,24 +708,54 @@ class CompanyDetailsControllerSpec
 
       "redirect to the next page" when {
 
-        "user gives a valid answer" in {
-          val answers = Fixtures.incompleteUserAnswers(crn = Some(CRN("crn")))
-          val session = Fixtures.companyHECSession(companyLoginData, validJourneyData, answers)
+        "user gives a valid answer and" when {
 
-          val updatedAnswers = answers.copy(chargeableForCT = Some(YesNoAnswer.No))
-          val updatedSession = session.copy(userAnswers = updatedAnswers)
+          "the answer has not changed from an answer found in session" in {
+            val answers = Fixtures.incompleteUserAnswers(
+              crn = Some(CRN("crn")),
+              chargeableForCT = Some(YesNoAnswer.Yes),
+              ctIncomeDeclared = Some(YesNoAnswer.No)
+            )
+            val session = Fixtures.companyHECSession(companyLoginData, validJourneyData, answers)
 
-          inSequence {
-            mockAuthWithNoRetrievals()
-            mockGetSession(session)
-            mockJourneyServiceUpdateAndNext(
-              routes.CompanyDetailsController.chargeableForCorporationTax(),
-              session,
-              updatedSession
-            )(Right(mockNextCall))
+            inSequence {
+              mockAuthWithNoRetrievals()
+              mockGetSession(session)
+              mockJourneyServiceUpdateAndNext(
+                routes.CompanyDetailsController.chargeableForCorporationTax(),
+                session,
+                session
+              )(Right(mockNextCall))
+            }
+
+            checkIsRedirect(performAction("chargeableForCT" -> "0"), mockNextCall)
           }
 
-          checkIsRedirect(performAction("chargeableForCT" -> "1"), mockNextCall)
+          "the answer has changed from an answer found in session" in {
+            val answers = Fixtures.completeUserAnswers(
+              crn = Some(CRN("crn")),
+              chargeableForCT = Some(YesNoAnswer.Yes),
+              ctIncomeDeclared = Some(YesNoAnswer.No)
+            )
+            val session = Fixtures.companyHECSession(companyLoginData, validJourneyData, answers)
+
+            val updatedAnswers = IncompleteUserAnswers
+              .fromCompleteAnswers(answers)
+              .copy(chargeableForCT = Some(YesNoAnswer.No), ctIncomeDeclared = None)
+            val updatedSession = session.copy(userAnswers = updatedAnswers)
+
+            inSequence {
+              mockAuthWithNoRetrievals()
+              mockGetSession(session)
+              mockJourneyServiceUpdateAndNext(
+                routes.CompanyDetailsController.chargeableForCorporationTax(),
+                session,
+                updatedSession
+              )(Right(mockNextCall))
+            }
+
+            checkIsRedirect(performAction("chargeableForCT" -> "1"), mockNextCall)
+          }
         }
 
       }
