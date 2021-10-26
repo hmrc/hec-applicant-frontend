@@ -95,11 +95,9 @@ class CRNController @Inject() (
           formErrorOrNext        <- companyHouseDetailsOpt map { _ =>
                                       updateAndNext(updatedSession)
                                     } getOrElse {
-                                      EitherT[Future, Error, Either[Form[CRN], Call]] {
-                                        val constraint: Constraint[CRN] =
-                                          Constraint(_ => Invalid("error.notFoundInCompaniesHouse"))
-                                        Future.successful(Right(Left(crnForm(constraint).bindFromRequest())))
-                                      }
+                                      val constraint: Constraint[CRN] =
+                                        Constraint(_ => Invalid("error.notFoundInCompaniesHouse"))
+                                      EitherT.pure[Future, Error](Left(crnForm(constraint).bindFromRequest()))
                                     }
         } yield formErrorOrNext
 
