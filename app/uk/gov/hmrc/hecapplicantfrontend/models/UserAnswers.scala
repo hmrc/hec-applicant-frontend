@@ -20,6 +20,8 @@ import ai.x.play.json.Jsonx
 import monocle.Lens
 import monocle.macros.Lenses
 import play.api.libs.json._
+import uk.gov.hmrc.hecapplicantfrontend.models.CompanyUserAnswers.{CompleteCompanyUserAnswers, IncompleteCompanyUserAnswers}
+import uk.gov.hmrc.hecapplicantfrontend.models.IndividualUserAnswers.{CompleteIndividualUserAnswers, IncompleteIndividualUserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 
@@ -38,57 +40,142 @@ object UserAnswersType {
 sealed trait UserAnswers extends Product with Serializable {
   val userAnswersType: UserAnswersType
 }
+sealed trait IndividualUserAnswers extends UserAnswers
+sealed trait CompanyUserAnswers extends UserAnswers
 
-object UserAnswers {
+sealed trait IncompleteUserAnswers extends UserAnswers
+sealed trait CompleteUserAnswers extends UserAnswers
+
+object IndividualUserAnswers {
 
   @Lenses
-  final case class IncompleteUserAnswers(
+  final case class IncompleteIndividualUserAnswers(
     licenceType: Option[LicenceType],
     licenceTimeTrading: Option[LicenceTimeTrading],
     licenceValidityPeriod: Option[LicenceValidityPeriod],
     taxSituation: Option[TaxSituation],
     saIncomeDeclared: Option[YesNoAnswer],
-    entityType: Option[EntityType],
-    crn: Option[CRN],
-    companyDetailsConfirmed: Option[YesNoAnswer],
-    chargeableForCT: Option[YesNoAnswer],
-    ctIncomeDeclared: Option[YesNoAnswer],
-    recentlyStartedTrading: Option[YesNoAnswer],
-    ctutr: Option[CTUTR]
-  ) extends UserAnswers {
+    entityType: Option[EntityType]
+  ) extends IndividualUserAnswers
+      with IncompleteUserAnswers {
     val userAnswersType: UserAnswersType = UserAnswersType.Incomplete
   }
 
-  final case class CompleteUserAnswers(
+  final case class CompleteIndividualUserAnswers(
     licenceType: LicenceType,
     licenceTimeTrading: LicenceTimeTrading,
     licenceValidityPeriod: LicenceValidityPeriod,
-    taxSituation: Option[TaxSituation],
-    saIncomeDeclared: Option[YesNoAnswer],
-    entityType: Option[EntityType],
-    crn: Option[CRN],
-    companyDetailsConfirmed: Option[YesNoAnswer],
-    chargeableForCT: Option[YesNoAnswer],
-    ctIncomeDeclared: Option[YesNoAnswer],
-    recentlyStartedTrading: Option[YesNoAnswer],
-    ctutr: Option[CTUTR]
-  ) extends UserAnswers {
+    taxSituation: TaxSituation,
+    saIncomeDeclared: YesNoAnswer,
+    entityType: Option[EntityType]
+  ) extends IndividualUserAnswers
+      with CompleteUserAnswers {
     val userAnswersType: UserAnswersType = UserAnswersType.Complete
   }
 
   object IncompleteUserAnswers {
 
-    def fromCompleteAnswers(c: CompleteUserAnswers): IncompleteUserAnswers =
-      IncompleteUserAnswers(
+    def fromCompleteAnswers(c: CompleteIndividualUserAnswers): IncompleteIndividualUserAnswers =
+      IncompleteIndividualUserAnswers(
         Some(c.licenceType),
         Some(c.licenceTimeTrading),
         Some(c.licenceValidityPeriod),
-        c.taxSituation,
-        c.saIncomeDeclared,
-        c.entityType,
-        c.crn,
-        c.companyDetailsConfirmed,
-        c.chargeableForCT,
+        Some(c.taxSituation),
+        Some(c.saIncomeDeclared),
+        c.entityType
+      )
+
+  }
+
+  implicit class IndividualUserAnswersOps(private val u: IndividualUserAnswers) extends AnyVal {
+
+    def fold[A](ifIncomplete: IncompleteIndividualUserAnswers => A, ifComplete: CompleteIndividualUserAnswers => A): A =
+      u match {
+        case i: IncompleteIndividualUserAnswers => ifIncomplete(i)
+        case c: CompleteIndividualUserAnswers   => ifComplete(c)
+      }
+
+    def unset[A](
+      fieldLens: IncompleteIndividualUserAnswers.type => Lens[
+        IncompleteIndividualUserAnswers,
+        Option[A]
+      ]
+    ): IncompleteIndividualUserAnswers =
+      fieldLens(IncompleteIndividualUserAnswers).set(None)(
+        fold(identity, IncompleteUserAnswers.fromCompleteAnswers)
+      )
+
+  }
+
+  val empty: IncompleteIndividualUserAnswers =
+    IncompleteIndividualUserAnswers(None, None, None, None, None, None)
+
+  implicit val format: OFormat[IndividualUserAnswers] = new OFormat[IndividualUserAnswers] {
+    override def reads(json: JsValue): JsResult[IndividualUserAnswers] =
+      (json \ "type")
+        .validate[UserAnswersType]
+        .flatMap {
+          case UserAnswersType.Incomplete => Json.reads[IncompleteIndividualUserAnswers].reads(json)
+          case UserAnswersType.Complete   => Json.reads[CompleteIndividualUserAnswers].reads(json)
+        }
+
+    override def writes(o: IndividualUserAnswers): JsObject = {
+      val json = o match {
+        case i: IncompleteIndividualUserAnswers => Json.writes[IncompleteIndividualUserAnswers].writes(i)
+        case c: CompleteIndividualUserAnswers   => Json.writes[CompleteIndividualUserAnswers].writes(c)
+      }
+      json ++ Json.obj("type" -> o.userAnswersType)
+    }
+  }
+
+}
+
+object CompanyUserAnswers {
+
+  @Lenses
+  final case class IncompleteCompanyUserAnswers(
+    licenceType: Option[LicenceType],
+    licenceTimeTrading: Option[LicenceTimeTrading],
+    licenceValidityPeriod: Option[LicenceValidityPeriod],
+    entityType: Option[EntityType],
+    crn: Option[CRN],
+    companyDetailsConfirmed: Option[YesNoAnswer],
+    chargeableForCT: Option[YesNoAnswer],
+    ctIncomeDeclared: Option[YesNoAnswer],
+    recentlyStartedTrading: Option[YesNoAnswer],
+    ctutr: Option[CTUTR]
+  ) extends CompanyUserAnswers
+      with IncompleteUserAnswers {
+    val userAnswersType: UserAnswersType = UserAnswersType.Incomplete
+  }
+
+  final case class CompleteCompanyUserAnswers(
+    licenceType: LicenceType,
+    licenceTimeTrading: LicenceTimeTrading,
+    licenceValidityPeriod: LicenceValidityPeriod,
+    entityType: EntityType,
+    crn: CRN,
+    companyDetailsConfirmed: YesNoAnswer,
+    chargeableForCT: YesNoAnswer,
+    ctIncomeDeclared: Option[YesNoAnswer],
+    recentlyStartedTrading: Option[YesNoAnswer],
+    ctutr: Option[CTUTR]
+  ) extends CompanyUserAnswers
+      with CompleteUserAnswers {
+    val userAnswersType: UserAnswersType = UserAnswersType.Complete
+  }
+
+  object IncompleteCompanyUserAnswers {
+
+    def fromCompleteAnswers(c: CompleteCompanyUserAnswers): IncompleteCompanyUserAnswers =
+      IncompleteCompanyUserAnswers(
+        Some(c.licenceType),
+        Some(c.licenceTimeTrading),
+        Some(c.licenceValidityPeriod),
+        Some(c.entityType),
+        Some(c.crn),
+        Some(c.companyDetailsConfirmed),
+        Some(c.chargeableForCT),
         c.ctIncomeDeclared,
         c.recentlyStartedTrading,
         c.ctutr
@@ -96,56 +183,125 @@ object UserAnswers {
 
   }
 
-  implicit class UserAnswersOps(private val u: UserAnswers) extends AnyVal {
+  implicit class CompanyUserAnswersOps(private val u: CompanyUserAnswers) extends AnyVal {
 
-    def fold[A](ifIncomplete: IncompleteUserAnswers => A, ifComplete: CompleteUserAnswers => A): A = u match {
-      case i: IncompleteUserAnswers => ifIncomplete(i)
-      case c: CompleteUserAnswers   => ifComplete(c)
-    }
+    def fold[A](ifIncomplete: IncompleteCompanyUserAnswers => A, ifComplete: CompleteCompanyUserAnswers => A): A =
+      u match {
+        case i: IncompleteCompanyUserAnswers => ifIncomplete(i)
+        case c: CompleteCompanyUserAnswers   => ifComplete(c)
+      }
 
     def unset[A](
-      fieldLens: IncompleteUserAnswers.type => Lens[
-        IncompleteUserAnswers,
+      fieldLens: IncompleteCompanyUserAnswers.type => Lens[
+        IncompleteCompanyUserAnswers,
         Option[A]
       ]
-    ): IncompleteUserAnswers =
-      fieldLens(IncompleteUserAnswers).set(None)(
-        fold(identity, IncompleteUserAnswers.fromCompleteAnswers)
+    ): IncompleteCompanyUserAnswers =
+      fieldLens(IncompleteCompanyUserAnswers).set(None)(
+        fold(identity, IncompleteCompanyUserAnswers.fromCompleteAnswers)
       )
 
   }
 
-  val empty: IncompleteUserAnswers = IncompleteUserAnswers(
-    None,
-    None,
-    None,
-    None,
-    None,
-    None,
-    None,
-    None,
-    None,
-    None,
-    None,
-    None
-  )
+  val empty: IncompleteCompanyUserAnswers =
+    IncompleteCompanyUserAnswers(None, None, None, None, None, None, None, None, None, None)
 
-  implicit val format: OFormat[UserAnswers] = new OFormat[UserAnswers] {
-    override def reads(json: JsValue): JsResult[UserAnswers] =
+  implicit val format: OFormat[CompanyUserAnswers] = new OFormat[CompanyUserAnswers] {
+    override def reads(json: JsValue): JsResult[CompanyUserAnswers] =
       (json \ "type")
         .validate[UserAnswersType]
         .flatMap {
-          case UserAnswersType.Incomplete => Json.reads[IncompleteUserAnswers].reads(json)
-          case UserAnswersType.Complete   => Json.reads[CompleteUserAnswers].reads(json)
+          case UserAnswersType.Incomplete => Json.reads[IncompleteCompanyUserAnswers].reads(json)
+          case UserAnswersType.Complete   => Json.reads[CompleteCompanyUserAnswers].reads(json)
         }
 
-    override def writes(o: UserAnswers): JsObject = {
+    override def writes(o: CompanyUserAnswers): JsObject = {
       val json = o match {
-        case i: IncompleteUserAnswers => Json.writes[IncompleteUserAnswers].writes(i)
-        case c: CompleteUserAnswers   => Json.writes[CompleteUserAnswers].writes(c)
+        case i: IncompleteCompanyUserAnswers => Json.writes[IncompleteCompanyUserAnswers].writes(i)
+        case c: CompleteCompanyUserAnswers   => Json.writes[CompleteCompanyUserAnswers].writes(c)
       }
       json ++ Json.obj("type" -> o.userAnswersType)
     }
   }
 
+}
+
+object UserAnswers {
+  implicit class UserAnswersOps(private val u: UserAnswers) extends AnyVal {
+
+    def fold[A](
+      ifIndividualIncomplete: IncompleteIndividualUserAnswers => A,
+      ifIndividualComplete: CompleteIndividualUserAnswers => A,
+      ifCompanyIncomplete: IncompleteCompanyUserAnswers => A,
+      ifCompanyComplete: CompleteCompanyUserAnswers => A
+    ): A =
+      u match {
+        case i: IncompleteIndividualUserAnswers => ifIndividualIncomplete(i)
+        case i: CompleteIndividualUserAnswers   => ifIndividualComplete(i)
+        case i: IncompleteCompanyUserAnswers    => ifCompanyIncomplete(i)
+        case i: CompleteCompanyUserAnswers      => ifCompanyComplete(i)
+      }
+
+    def foldByCompleteness[A](
+      ifIncomplete: IncompleteUserAnswers => A,
+      ifComplete: CompleteUserAnswers => A
+    ): A =
+      u match {
+        case i: IncompleteUserAnswers => ifIncomplete(i)
+        case i: CompleteUserAnswers   => ifComplete(i)
+      }
+  }
+}
+
+/**
+  * Combined case class for individual and company complete answers
+  */
+final case class CompleteUserAnswersCombined(
+  licenceType: LicenceType,
+  licenceTimeTrading: LicenceTimeTrading,
+  licenceValidityPeriod: LicenceValidityPeriod,
+  taxSituation: Option[TaxSituation],
+  saIncomeDeclared: Option[YesNoAnswer],
+  entityType: Option[EntityType],
+  crn: Option[CRN],
+  companyDetailsConfirmed: Option[YesNoAnswer],
+  chargeableForCT: Option[YesNoAnswer],
+  ctIncomeDeclared: Option[YesNoAnswer],
+  recentlyStartedTrading: Option[YesNoAnswer],
+  ctutr: Option[CTUTR]
+)
+
+object CompleteUserAnswersCombined {
+
+  def fromIndividualAnswers(c: CompleteIndividualUserAnswers): CompleteUserAnswersCombined =
+    CompleteUserAnswersCombined(
+      licenceType = c.licenceType,
+      licenceTimeTrading = c.licenceTimeTrading,
+      licenceValidityPeriod = c.licenceValidityPeriod,
+      taxSituation = Some(c.taxSituation),
+      saIncomeDeclared = Some(c.saIncomeDeclared),
+      entityType = c.entityType,
+      crn = None,
+      companyDetailsConfirmed = None,
+      chargeableForCT = None,
+      ctIncomeDeclared = None,
+      recentlyStartedTrading = None,
+      ctutr = None
+    )
+
+  def fromCompanyAnswers(c: CompleteCompanyUserAnswers): CompleteUserAnswersCombined =
+    CompleteUserAnswersCombined(
+      licenceType = c.licenceType,
+      licenceTimeTrading = c.licenceTimeTrading,
+      licenceValidityPeriod = c.licenceValidityPeriod,
+      taxSituation = None,
+      saIncomeDeclared = None,
+      entityType = Some(c.entityType),
+      crn = Some(c.crn),
+      companyDetailsConfirmed = Some(c.companyDetailsConfirmed),
+      chargeableForCT = Some(c.chargeableForCT),
+      ctIncomeDeclared = c.ctIncomeDeclared,
+      recentlyStartedTrading = c.recentlyStartedTrading,
+      ctutr = c.ctutr
+    )
 }

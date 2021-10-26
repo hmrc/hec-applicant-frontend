@@ -82,7 +82,7 @@ class CompanyDetailsController @Inject() (
     request.sessionData mapAsCompany { companySession =>
       ensureCompanyDataHasCompanyName(companySession) { companyHouseName =>
         val companyDetailsConfirmed =
-          request.sessionData.userAnswers.fold(_.companyDetailsConfirmed, _.companyDetailsConfirmed)
+          companySession.userAnswers.fold(_.companyDetailsConfirmed, u => Some(u.companyDetailsConfirmed))
         val form = {
           val emptyForm = CompanyDetailsController.yesNoForm("confirmCompanyName", YesNoAnswer.values)
           companyDetailsConfirmed.fold(emptyForm)(emptyForm.fill)
@@ -151,7 +151,7 @@ class CompanyDetailsController @Inject() (
 
           case YesNoAnswer.No =>
             // wipe CRN answer prior to navigating to next page
-            val answersWithoutCrn = request.sessionData.userAnswers
+            val answersWithoutCrn = session.userAnswers
               .unset(_.crn)
               .unset(_.companyDetailsConfirmed)
               .copy(companyDetailsConfirmed = Some(companyDetailsConfirmed))
@@ -168,7 +168,7 @@ class CompanyDetailsController @Inject() (
 
       request.sessionData mapAsCompany { companySession =>
         ensureCompanyDataHasCompanyName(companySession) { companyHouseName =>
-          ensureUserAnswersHasCRN(request.sessionData) { crn =>
+          ensureUserAnswersHasCRN(companySession) { crn =>
             CompanyDetailsController
               .yesNoForm("confirmCompanyName", YesNoAnswer.values)
               .bindFromRequest()
@@ -180,9 +180,9 @@ class CompanyDetailsController @Inject() (
 
   val recentlyStartedTrading: Action[AnyContent] =
     authAction.andThen(sessionDataAction).async { implicit request =>
-      request.sessionData mapAsCompany { _ =>
+      request.sessionData mapAsCompany { companySession =>
         val recentlyStartedTrading =
-          request.sessionData.userAnswers.fold(_.recentlyStartedTrading, _.recentlyStartedTrading)
+          companySession.userAnswers.fold(_.recentlyStartedTrading, _.recentlyStartedTrading)
         val form = {
           val emptyForm = CompanyDetailsController.yesNoForm("recentlyStartedTrading", YesNoAnswer.values)
           recentlyStartedTrading.fold(emptyForm)(emptyForm.fill)
@@ -199,46 +199,48 @@ class CompanyDetailsController @Inject() (
 
   val recentlyStartedTradingSubmit: Action[AnyContent] =
     authAction.andThen(sessionDataAction).async { implicit request =>
-      def handleValidAnswer(recentlyStartedTrading: YesNoAnswer) = {
-        val updatedAnswers =
-          request.sessionData.userAnswers
+      request.sessionData mapAsCompany { companySession =>
+        def handleValidAnswer(recentlyStartedTrading: YesNoAnswer) = {
+          val updatedAnswers = companySession.userAnswers
             .unset(_.recentlyStartedTrading)
             .copy(recentlyStartedTrading = Some(recentlyStartedTrading))
 
-        journeyService
-          .updateAndNext(
-            routes.CompanyDetailsController.recentlyStartedTrading(),
-            request.sessionData.mapAsCompany(_.copy(userAnswers = updatedAnswers))
-          )
+          journeyService
+            .updateAndNext(
+              routes.CompanyDetailsController.recentlyStartedTrading(),
+              request.sessionData.mapAsCompany(_.copy(userAnswers = updatedAnswers))
+            )
+            .fold(
+              { e =>
+                logger.warn("Could not update session and proceed", e)
+                InternalServerError
+              },
+              Redirect
+            )
+        }
+
+        CompanyDetailsController
+          .yesNoForm("recentlyStartedTrading", YesNoAnswer.values)
+          .bindFromRequest()
           .fold(
-            { e =>
-              logger.warn("Could not update session and proceed", e)
-              InternalServerError
-            },
-            Redirect
+            formWithErrors =>
+              Ok(
+                recentlyStartedTradingPage(
+                  form = formWithErrors,
+                  back = journeyService.previous(routes.CompanyDetailsController.recentlyStartedTrading()),
+                  options = YesNoOption.yesNoOptions
+                )
+              ),
+            handleValidAnswer
           )
       }
-      CompanyDetailsController
-        .yesNoForm("recentlyStartedTrading", YesNoAnswer.values)
-        .bindFromRequest()
-        .fold(
-          formWithErrors =>
-            Ok(
-              recentlyStartedTradingPage(
-                form = formWithErrors,
-                back = journeyService.previous(routes.CompanyDetailsController.recentlyStartedTrading()),
-                options = YesNoOption.yesNoOptions
-              )
-            ),
-          handleValidAnswer
-        )
     }
 
   val chargeableForCorporationTax: Action[AnyContent] =
     authAction.andThen(sessionDataAction).async { implicit request =>
       request.sessionData mapAsCompany { companySession =>
         ensureCompanyDataHasCTStatusAccountingPeriod(companySession) { latestAccountingPeriod =>
-          val chargeableForCT = request.sessionData.userAnswers.fold(_.chargeableForCT, _.chargeableForCT)
+          val chargeableForCT = companySession.userAnswers.fold(_.chargeableForCT, u => Some(u.chargeableForCT))
           val endDateStr      = TimeUtils.govDisplayFormat(latestAccountingPeriod.endDate)
           val form = {
             val emptyForm = CompanyDetailsController.yesNoForm("chargeableForCT", YesNoAnswer.values, List(endDateStr))
@@ -258,32 +260,32 @@ class CompanyDetailsController @Inject() (
 
   val chargeableForCorporationTaxSubmit: Action[AnyContent] =
     authAction.andThen(sessionDataAction).async { implicit request =>
-      def handleValidAnswer(chargeableForCT: YesNoAnswer) = {
-        val updatedAnswers = {
-          val existingAnswer = request.sessionData.userAnswers.fold(_.chargeableForCT, _.chargeableForCT)
-          if (existingAnswer.contains(chargeableForCT)) request.sessionData.userAnswers
-          else
-            request.sessionData.userAnswers
-              .unset(_.chargeableForCT)
-              .unset(_.ctIncomeDeclared)
-              .copy(chargeableForCT = Some(chargeableForCT))
+      request.sessionData mapAsCompany { companySession =>
+        def handleValidAnswer(chargeableForCT: YesNoAnswer) = {
+          val updatedAnswers = {
+            val existingAnswer = companySession.userAnswers.fold(_.chargeableForCT, u => Some(u.chargeableForCT))
+            if (existingAnswer.contains(chargeableForCT)) companySession.userAnswers
+            else
+              companySession.userAnswers
+                .unset(_.chargeableForCT)
+                .unset(_.ctIncomeDeclared)
+                .copy(chargeableForCT = Some(chargeableForCT))
+          }
+
+          journeyService
+            .updateAndNext(
+              routes.CompanyDetailsController.chargeableForCorporationTax(),
+              companySession.copy(userAnswers = updatedAnswers)
+            )
+            .fold(
+              { e =>
+                logger.warn("Could not update session and proceed", e)
+                InternalServerError
+              },
+              Redirect
+            )
         }
 
-        journeyService
-          .updateAndNext(
-            routes.CompanyDetailsController.chargeableForCorporationTax(),
-            request.sessionData.mapAsCompany(_.copy(userAnswers = updatedAnswers))
-          )
-          .fold(
-            { e =>
-              logger.warn("Could not update session and proceed", e)
-              InternalServerError
-            },
-            Redirect
-          )
-      }
-
-      request.sessionData mapAsCompany { companySession =>
         ensureCompanyDataHasCTStatusAccountingPeriod(companySession) { latestAccountingPeriod =>
           val endDateStr = TimeUtils.govDisplayFormat(latestAccountingPeriod.endDate)
           CompanyDetailsController
@@ -313,7 +315,7 @@ class CompanyDetailsController @Inject() (
   val enterCtutr: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     request.sessionData mapAsCompany { companySession =>
       ensureCompanyDataHasDesCtutr(companySession) { desCtutr =>
-        val ctutr     = request.sessionData.userAnswers.fold(_.ctutr, _.ctutr)
+        val ctutr     = companySession.userAnswers.fold(_.ctutr, _.ctutr)
         val back      = journeyService.previous(routes.CompanyDetailsController.enterCtutr())
         val ctutrForm = enterCtutrForm(desCtutr)
         val form      = ctutr.fold(ctutrForm)(ctutrForm.fill)
@@ -420,7 +422,7 @@ class CompanyDetailsController @Inject() (
     request.sessionData mapAsCompany { companySession =>
       ensureCompanyDataHasCTStatusAccountingPeriod(companySession) { latestAccountingPeriod =>
         val back             = journeyService.previous(routes.CompanyDetailsController.ctIncomeStatement())
-        val ctIncomeDeclared = request.sessionData.userAnswers.fold(_.ctIncomeDeclared, _.ctIncomeDeclared)
+        val ctIncomeDeclared = companySession.userAnswers.fold(_.ctIncomeDeclared, _.ctIncomeDeclared)
         val form = {
           val emptyForm = CompanyDetailsController.yesNoForm("ctIncomeDeclared", YesNoAnswer.values)
           ctIncomeDeclared.fold(emptyForm)(emptyForm.fill)
@@ -516,9 +518,9 @@ class CompanyDetailsController @Inject() (
     }
 
   private def ensureUserAnswersHasCRN(
-    session: HECSession
+    session: CompanyHECSession
   )(f: CRN => Future[Result]): Future[Result] =
-    session.userAnswers.fold(_.crn, _.crn) match {
+    session.userAnswers.fold(_.crn, u => Some(u.crn)) match {
       case Some(crn) => f(crn)
       case None      =>
         logger.warn("CRN is not populated in user answers")

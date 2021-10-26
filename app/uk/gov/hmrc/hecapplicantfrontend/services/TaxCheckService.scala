@@ -30,10 +30,9 @@ import uk.gov.hmrc.hecapplicantfrontend.models.ApplicantDetails.{CompanyApplican
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, IndividualHECSession}
 import uk.gov.hmrc.hecapplicantfrontend.models.HECTaxCheckData.{CompanyHECTaxCheckData, IndividualHECTaxCheckData}
 import uk.gov.hmrc.hecapplicantfrontend.models.TaxDetails.{CompanyTaxDetails, IndividualTaxDetails}
-import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.CompleteUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR, SAUTR}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceDetails
-import uk.gov.hmrc.hecapplicantfrontend.models.{CTStatusResponse, Error, HECSession, HECTaxCheck, HECTaxCheckData, HECTaxCheckSource, SAStatusResponse, TaxCheckListItem, TaxYear}
+import uk.gov.hmrc.hecapplicantfrontend.models.{CTStatusResponse, CompleteUserAnswersCombined, Error, HECSession, HECTaxCheck, HECTaxCheckData, HECTaxCheckSource, SAStatusResponse, TaxCheckListItem, TaxYear}
 import uk.gov.hmrc.hecapplicantfrontend.services.TaxCheckService._
 import uk.gov.hmrc.hecapplicantfrontend.util.HttpResponseOps._
 import uk.gov.hmrc.http.HeaderCarrier
@@ -46,7 +45,7 @@ trait TaxCheckService {
 
   def saveTaxCheck(
     session: HECSession,
-    answers: CompleteUserAnswers
+    answers: CompleteUserAnswersCombined
   )(implicit hc: HeaderCarrier): EitherT[Future, Error, HECTaxCheck]
 
   def getSAStatus(sautr: SAUTR, taxYear: TaxYear)(implicit hc: HeaderCarrier): EitherT[Future, Error, SAStatusResponse]
@@ -67,7 +66,7 @@ class TaxCheckServiceImpl @Inject() (hecConnector: HECConnector)(implicit ec: Ex
 
   def saveTaxCheck(
     session: HECSession,
-    answers: CompleteUserAnswers
+    answers: CompleteUserAnswersCombined
   )(implicit hc: HeaderCarrier): EitherT[Future, Error, HECTaxCheck] = {
     val taxCheckData = toHECTaxCheckData(session, answers)
     hecConnector
@@ -124,7 +123,7 @@ class TaxCheckServiceImpl @Inject() (hecConnector: HECConnector)(implicit ec: Ex
 
   private def toHECTaxCheckData(
     session: HECSession,
-    completeUserAnswers: CompleteUserAnswers
+    completeUserAnswers: CompleteUserAnswersCombined
   ): HECTaxCheckData = session match {
     case IndividualHECSession(
           loginData,

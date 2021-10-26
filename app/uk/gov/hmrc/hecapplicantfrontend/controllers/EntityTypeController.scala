@@ -51,7 +51,8 @@ class EntityTypeController @Inject() (
 
   val entityType: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
     val back       = journeyService.previous(routes.EntityTypeController.entityType())
-    val entityType = request.sessionData.userAnswers.fold(_.entityType, _.entityType)
+    val entityType =
+      request.sessionData.userAnswers.fold(_.entityType, _.entityType, _.entityType, u => Some(u.entityType))
     val form = {
       val emptyForm = entityTypeForm(entityTypeOptions)
       entityType.fold(emptyForm)(emptyForm.fill)
@@ -62,15 +63,20 @@ class EntityTypeController @Inject() (
 
   val entityTypeSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     def handleValidEntityType(entityType: EntityType): Future[Result] = {
-      val updatedAnswers =
-        request.sessionData.userAnswers.unset(_.entityType).copy(entityType = Some(entityType))
+      val updatedSession = request.sessionData.fold(
+        { individualSession =>
+          val answers = individualSession.userAnswers.unset(_.entityType).copy(entityType = Some(entityType))
+          individualSession.copy(userAnswers = answers)
+        },
+        { companySession =>
+          val answers = companySession.userAnswers.unset(_.entityType).copy(entityType = Some(entityType))
+          companySession.copy(userAnswers = answers)
+        }
+      )
       journeyService
         .updateAndNext(
           routes.EntityTypeController.entityType(),
-          request.sessionData.fold(
-            _.copy(userAnswers = updatedAnswers),
-            _.copy(userAnswers = updatedAnswers)
-          )
+          updatedSession
         )
         .fold(
           { e =>
@@ -97,7 +103,8 @@ class EntityTypeController @Inject() (
   }
 
   val wrongGGAccount: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
-    request.sessionData.userAnswers.fold(_.entityType, _.entityType) match {
+    request.sessionData.userAnswers
+      .fold(_.entityType, _.entityType, _.entityType, u => Some(u.entityType)) match {
       case Some(entityType) =>
         val back = journeyService.previous(routes.EntityTypeController.wrongGGAccount())
         Ok(wrongGGAccountPage(back, entityType))

@@ -39,7 +39,7 @@ object HECSession {
   final case class IndividualHECSession(
     loginData: IndividualLoginData,
     retrievedJourneyData: IndividualRetrievedJourneyData,
-    userAnswers: UserAnswers,
+    userAnswers: IndividualUserAnswers,
     completedTaxCheck: Option[HECTaxCheck],
     taxCheckStartDateTime: Option[ZonedDateTime],
     unexpiredTaxChecks: List[TaxCheckListItem]
@@ -50,14 +50,21 @@ object HECSession {
   object IndividualHECSession {
 
     def newSession(loginData: IndividualLoginData): IndividualHECSession =
-      IndividualHECSession(loginData, IndividualRetrievedJourneyData.empty, UserAnswers.empty, None, None, List.empty)
+      IndividualHECSession(
+        loginData,
+        IndividualRetrievedJourneyData.empty,
+        IndividualUserAnswers.empty,
+        None,
+        None,
+        List.empty
+      )
 
   }
 
   final case class CompanyHECSession(
     loginData: CompanyLoginData,
     retrievedJourneyData: CompanyRetrievedJourneyData,
-    userAnswers: UserAnswers,
+    userAnswers: CompanyUserAnswers,
     completedTaxCheck: Option[HECTaxCheck],
     taxCheckStartDateTime: Option[ZonedDateTime],
     unexpiredTaxChecks: List[TaxCheckListItem],
@@ -69,7 +76,7 @@ object HECSession {
   object CompanyHECSession {
 
     def newSession(loginData: CompanyLoginData): CompanyHECSession =
-      CompanyHECSession(loginData, CompanyRetrievedJourneyData.empty, UserAnswers.empty, None, None, List.empty)
+      CompanyHECSession(loginData, CompanyRetrievedJourneyData.empty, CompanyUserAnswers.empty, None, None, List.empty)
 
   }
 

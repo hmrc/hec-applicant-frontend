@@ -17,7 +17,7 @@
 @import play.api.i18n.Messages
 @import play.api.mvc.{Call, Request}
 @import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
-@import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.CompleteUserAnswers
+@import uk.gov.hmrc.hecapplicantfrontend.models.CompleteUserAnswersUnified
 @import uk.gov.hmrc.govukfrontend.views.html.components._
 @import uk.gov.hmrc.hecapplicantfrontend.models.views.LicenceTypeOption
 @import uk.gov.hmrc.hecapplicantfrontend.models.views.LicenceTimeTradingOption
@@ -32,7 +32,7 @@
 
 @this(layout: Layout, govukSummaryList : GovukSummaryList, govukButton: GovukButton, formWithCSRF: FormWithCSRF)
 
-@(back: Call, completeAnswers: CompleteUserAnswers, retrievedJourneyData: RetrievedJourneyData)(implicit request: Request[_], messages: Messages)
+@(back: Call, completeAnswers: CompleteUserAnswersUnified, retrievedJourneyData: RetrievedJourneyData)(implicit request: Request[_], messages: Messages)
 
 @key = @{"checkYourAnswers"}
 @title = @{messages(s"$key.title")}
