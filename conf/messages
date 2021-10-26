@@ -300,5 +300,5 @@ enterCtutr.error.ctutrsDoNotMatch = Your Corporation Tax Unique Taxpayer Referen
 # Don't have CTUTR
 dontHaveCtutr.title=If you do not have a UTR
 dontHaveCtutr.p1=If you do not have your UTR number you can <a href="{0}" class="govuk-link" target="_blank" rel="noopener noreferrer">find a lost UTR (opens in a new tab)</a>.
-dontHaveCtutr.p2=You need to <a href="{0}" class="govuk-link">register for Corportation Tax</a>, before you can do a tax check.
+dontHaveCtutr.p2=You need to <a href="{0}" class="govuk-link">register for Corporation Tax</a>, before you can do a tax check.
 dontHaveCtutr.p3=Once you have your UTR number, you can <a href="{0}" class="govuk-link">go back and try again</a>.
