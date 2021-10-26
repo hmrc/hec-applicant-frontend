@@ -17,7 +17,6 @@
 @import play.api.i18n.Messages
 @import play.api.mvc.{Call, Request}
 @import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
-@import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 @import uk.gov.hmrc.hecapplicantfrontend.models
 
 @this(layout: Layout)
@@ -40,7 +39,7 @@
 
     <h2 class="govuk-heading-l">@{messages(s"$key.h2")}</h2>
     <p class="govuk-body">
-        <a class="govuk-link" href="@{s"${appConfig.signOutUri}?continue=${appConfig.selfBaseUrl}${routes.StartController.start().url}"}">
+        <a class="govuk-link" href="@{appConfig.signOutAndSignBackInUrl}">
         @{messages(s"$key.link")}
         </a>
     </p>

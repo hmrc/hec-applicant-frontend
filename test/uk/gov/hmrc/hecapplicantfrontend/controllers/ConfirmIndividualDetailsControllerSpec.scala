@@ -245,7 +245,7 @@ class ConfirmIndividualDetailsControllerSpec
             messageFromMessageKey("confirmIndividualDetailsExit.title"),
             { doc =>
               doc.select("#back").attr("href") shouldBe mockPreviousCall.url
-              val link = doc.select(s"p > a[href=${appConfig.signOutUri}]")
+              val link = doc.select(s"p > a[href=${appConfig.signOutUrl(continueUrl = None)}]")
               link.isEmpty shouldBe false
 
             }

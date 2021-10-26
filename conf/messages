@@ -254,14 +254,9 @@ confirmCompanyName.error.required = Select yes if this is the company you want t
 confirmCompanyName.error.invalid = Select yes if this is the company you want to do the tax check for
 
 # CTUTR not matched
-ctutrNotMatched.title = You cannot use this service
-ctutrNotMatched.p1 = This could be because either:
-ctutrNotMatched.bullet1 = We could not match the company details you entered with our records.
-ctutrNotMatched.bullet2 = You have not yet registered for Corporation Tax and do not have a Corporation Tax Unique Taxpayer Reference.
-ctutrNotMatched.wrongDetails.heading = If your company details were wrong
-ctutrNotMatched.wrongDetails.p1 = If you think we may hold the wrong company details, <a class="govuk-link" href="{0}">tell Companies House about any changes</a>.
-ctutrNotMatched.notRegistered.heading = If you have not yet registered for Corporation Tax
-ctutrNotMatched.notRegistered.p1 = You’ll need to <a href="{0}" class="govuk-link">register for Corporation Tax</a>.
+ctutrNotMatched.title = We could not match your company details
+ctutrNotMatched.p1 = We could not match the details you entered about your company with the records we hold.
+ctutrNotMatched.p2 = This may be because you signed in with the wrong Government Gateway account. <a href="{0}" class="govuk-link">Sign in with the correct account</a> for this company or <a href="{1}" class="govuk-link">create a new Government Gateway account</a>.
 
 # No accounting period found
 noAccountingPeriodFound.title = Your Corporation Tax accounting period

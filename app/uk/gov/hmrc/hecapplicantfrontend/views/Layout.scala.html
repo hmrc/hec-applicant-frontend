@@ -53,7 +53,7 @@
     @if(showSignOutLink) {
         @hmrcTimeoutDialogHelper(
             title = Some(messages("hmrcTimeoutDialog.title")),
-            signOutUrl = appConfig.signOutUri,
+            signOutUrl = appConfig.signOutUrl(continueUrl = None),
             timeoutUrl = Some(routes.SignOutController.signOutFromTimeout().url),
             countdown = Some(appConfig.authTimeoutCountdownSeconds),
             timeout = Some(appConfig.authTimeoutSeconds)
@@ -99,7 +99,7 @@
 @govukLayout(
     pageTitle = Some(documentTitle),
     headBlock = Some(hmrcHead(headBlock = Some(head), nonce = CSPNonce.get)),
-    headerBlock = Some(hmrcStandardHeader(signOutUrl = if(showSignOutLink) Some(appConfig.signOutUri) else None)),
+    headerBlock = Some(hmrcStandardHeader(signOutUrl = if(showSignOutLink) Some(appConfig.signOutUrl(continueUrl = None)) else None)),
     scriptsBlock = Some(hmrcScripts(scriptsBlock = Some(scripts), nonce = CSPNonce.get)),
     beforeContentBlock = Some(beforeContentBlock),
     footerBlock = Some(hmrcStandardFooter())

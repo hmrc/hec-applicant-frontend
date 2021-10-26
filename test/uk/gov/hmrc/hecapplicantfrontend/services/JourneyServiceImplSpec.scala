@@ -982,7 +982,7 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
             val journeyData    = CompanyRetrievedJourneyData.empty.copy(
               companyName = Some(CompanyHouseName("Test tech Ltd")),
               desCtutr = Some(CTUTR("des-ctutr")),
-              ctStatus = Some(anyCTStatusResponse)
+              ctStatus = None
             )
             val session        = CompanyHECSession(companyData, journeyData, UserAnswers.empty, None, None, List.empty)
             val updatedSession =
@@ -1041,40 +1041,6 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
             await(result.value) shouldBe Right(routes.CompanyDetailsController.ctutrNotMatched())
           }
 
-          "CT status could not be fetched" in {
-            val companyData = companyLoginData.copy(
-              ctutr = Some(CTUTR("enrolments-ctutr"))
-            )
-            val journeyData = CompanyRetrievedJourneyData(
-              companyName = Some(CompanyHouseName("Test tech Ltd")),
-              desCtutr = Some(CTUTR("des-ctutr")),
-              ctStatus = None
-            )
-
-            val session        = CompanyHECSession(companyData, journeyData, UserAnswers.empty, None, None, List.empty)
-            val updatedSession =
-              CompanyHECSession(
-                companyData,
-                journeyData,
-                UserAnswers.empty.copy(
-                  crn = Some(CRN("1234567")),
-                  companyDetailsConfirmed = Some(YesNoAnswer.Yes)
-                ),
-                None,
-                None,
-                List.empty
-              )
-
-            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
-            mockStoreSession(updatedSession)(Right(()))
-
-            val result = journeyService.updateAndNext(
-              routes.CompanyDetailsController.confirmCompanyDetails(),
-              updatedSession
-            )
-            await(result.value) shouldBe Right(routes.CompanyDetailsController.cannotDoTaxCheck())
-          }
-
           "enrolments and DES CTUTRs match" when {
             def testForCTStatus(status: CTStatus) = {
               val companyData = companyLoginData.copy(
@@ -1130,6 +1096,41 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
               )
               await(result.value) shouldBe Right(routes.CompanyDetailsController.recentlyStartedTrading())
             }
+
+            "CT status could not be fetched" in {
+              val companyData = companyLoginData.copy(
+                ctutr = Some(CTUTR("ctutr"))
+              )
+              val journeyData = CompanyRetrievedJourneyData(
+                companyName = Some(CompanyHouseName("Test tech Ltd")),
+                desCtutr = Some(CTUTR("ctutr")),
+                ctStatus = None
+              )
+
+              val session        = CompanyHECSession(companyData, journeyData, UserAnswers.empty, None, None, List.empty)
+              val updatedSession =
+                CompanyHECSession(
+                  companyData,
+                  journeyData,
+                  UserAnswers.empty.copy(
+                    crn = Some(CRN("1234567")),
+                    companyDetailsConfirmed = Some(YesNoAnswer.Yes)
+                  ),
+                  None,
+                  None,
+                  List.empty
+                )
+
+              implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+              mockStoreSession(updatedSession)(Right(()))
+
+              val result = journeyService.updateAndNext(
+                routes.CompanyDetailsController.confirmCompanyDetails(),
+                updatedSession
+              )
+              await(result.value) shouldBe Right(routes.CompanyDetailsController.cannotDoTaxCheck())
+            }
+
           }
 
           "no CTUTR found in enrolments but des CTUTR is there" in {
@@ -1153,6 +1154,7 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
             )
             await(result.value) shouldBe Right(routes.CompanyDetailsController.enterCtutr())
           }
+
           "no CTUTR found in enrolments and  des CTUTR is not found" in {
             val companyData = companyLoginData.copy(
               ctutr = None
