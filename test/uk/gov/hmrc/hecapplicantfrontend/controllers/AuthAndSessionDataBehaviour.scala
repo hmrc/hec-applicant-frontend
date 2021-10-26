@@ -33,7 +33,7 @@ trait AuthAndSessionDataBehaviour { this: ControllerSpec with AuthSupport with S
 
   val selfUrl = "http://self:123"
 
-  val basGatewayUrl = "https://bas:456"
+  val signInUrl = "https://sign-in:456"
 
   val ggOrigin = "ggOrigin"
 
@@ -42,7 +42,7 @@ trait AuthAndSessionDataBehaviour { this: ControllerSpec with AuthSupport with S
       s"""
          | self.url = "$selfUrl"
          | auth {
-         |   sign-in.url = "$basGatewayUrl"
+         |   sign-in.url = "$signInUrl"
          |   gg.origin = "$ggOrigin"
          | }
          |""".stripMargin
@@ -63,7 +63,7 @@ trait AuthAndSessionDataBehaviour { this: ControllerSpec with AuthSupport with S
           val result = performAction()
           checkIsRedirect(
             result,
-            s"$basGatewayUrl?continue=${(s"$selfUrl/tax-check-for-licence/start").urlEncode}&origin=$ggOrigin"
+            s"$signInUrl?continue=${(s"$selfUrl/tax-check-for-licence/start").urlEncode}&origin=$ggOrigin"
           )
         }
       }
