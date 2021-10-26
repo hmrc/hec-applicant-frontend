@@ -28,9 +28,9 @@ import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.CompanyHECSession
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.CompanyLoginData
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.CompanyRetrievedJourneyData
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.IncompleteUserAnswers
-import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, GGCredId}
+import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR, GGCredId}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.hecapplicantfrontend.models.{CompanyHouseDetails, CompanyHouseName, Error}
+import uk.gov.hmrc.hecapplicantfrontend.models.{CompanyHouseDetails, CompanyHouseName, Error, YesNoAnswer}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.{CompanyDetailsService, JourneyService}
 import uk.gov.hmrc.hecapplicantfrontend.util.StringUtils.StringOps
@@ -49,8 +49,9 @@ class CRNControllerSpec
     with JourneyServiceSupport {
 
   val mockCompanyDetailsService = mock[CompanyDetailsService]
-  val validCRN                  =
-    List(CRN("11123456"), CRN("1S1 23 45"), CRN("1S123456"), CRN("1s123456"), CRN("1S12345"), CRN("1112345"))
+  val validCRN                  = CRN("11123456")
+  val validCRNs                 =
+    List(validCRN, CRN("1S1 23 45"), CRN("1S123456"), CRN("1s123456"), CRN("1S12345"), CRN("1112345"))
   val nonAlphaNumCRN            = List(CRN("$£%^&"), CRN("AA1244&"))
   val inValidCRN                =
     List(CRN("AAB3456"), CRN("12345AAA"))
@@ -120,7 +121,7 @@ class CRNControllerSpec
             .fromCompleteAnswers(answers)
             .copy(
               taxSituation = None,
-              crn = Some(validCRN(0))
+              crn = Some(validCRN)
             )
           val session        =
             CompanyHECSession(companyLoginData, CompanyRetrievedJourneyData.empty, answers, None, None, List.empty)
@@ -147,7 +148,7 @@ class CRNControllerSpec
               link.text should startWith(messageFromMessageKey("crn.link"))
 
               val input = doc.select(".govuk-input")
-              input.attr("value") shouldBe validCRN(0).value
+              input.attr("value") shouldBe validCRN.value
 
             }
           )
@@ -260,6 +261,23 @@ class CRNControllerSpec
             }
           }
 
+          "CRN match was not found in companies house db" in {
+            inSequence {
+              mockAuthWithNoRetrievals()
+              mockGetSession(session)
+              mockFindCompany(validCRN)(Right(None))
+              mockJourneyServiceGetPrevious(routes.CRNController.companyRegistrationNumber(), session)(
+                mockPreviousCall
+              )
+            }
+
+            checkFormErrorIsDisplayed(
+              performAction("crn" -> validCRN.value),
+              messageFromMessageKey("crn.title"),
+              messageFromMessageKey("crn.error.notFoundInCompaniesHouse")
+            )
+          }
+
         }
 
         "return an InternalServerError" when {
@@ -275,7 +293,7 @@ class CRNControllerSpec
           "there is an error updating and getting the next endpoint" in {
             val updatedAnswers = IncompleteUserAnswers
               .fromCompleteAnswers(answers)
-              .copy(crn = Some(validCRN(0)))
+              .copy(crn = Some(validCRN))
 
             val updatedSession = session.copy(
               retrievedJourneyData = session.retrievedJourneyData.copy(companyName = Some(companyHouseName)),
@@ -285,7 +303,7 @@ class CRNControllerSpec
             inSequence {
               mockAuthWithNoRetrievals()
               mockGetSession(session)
-              mockFindCompany(validCRN(0))(
+              mockFindCompany(validCRN)(
                 Right(Some(CompanyHouseDetails(companyHouseName)))
               )
               mockJourneyServiceUpdateAndNext(
@@ -297,7 +315,7 @@ class CRNControllerSpec
               )
             }
 
-            status(performAction("crn" -> validCRN(0).value)) shouldBe INTERNAL_SERVER_ERROR
+            status(performAction("crn" -> validCRN.value)) shouldBe INTERNAL_SERVER_ERROR
 
           }
 
@@ -311,7 +329,7 @@ class CRNControllerSpec
           controller.companyRegistrationNumberSubmit(FakeRequest().withFormUrlEncodedBody(data: _*))
 
         def testNextCall(companyDetails: Option[CompanyHouseDetails]) =
-          validCRN.foreach { crn =>
+          validCRNs.foreach { crn =>
             withClue(s" For CRN : $crn") {
 
               val formattedCrn = CRN(crn.value.removeWhitespace.toUpperCase(Locale.UK))
@@ -358,8 +376,81 @@ class CRNControllerSpec
           testNextCall(Some(CompanyHouseDetails(companyHouseName)))
         }
 
-        "a valid CRN is submitted but company is not found " in {
-          testNextCall(None)
+        "previously set CRN is changed, CRN dependent answers are reset" in {
+          val companyDetails = Some(CompanyHouseDetails(companyHouseName))
+
+          val answers = Fixtures.completeUserAnswers(
+            licenceType = LicenceType.OperatorOfPrivateHireVehicles,
+            licenceTimeTrading = LicenceTimeTrading.ZeroToTwoYears,
+            licenceValidityPeriod = LicenceValidityPeriod.UpToOneYear,
+            crn = Some(CRN("old-crn")),
+            companyDetailsConfirmed = Some(YesNoAnswer.Yes),
+            chargeableForCT = Some(YesNoAnswer.Yes),
+            ctIncomeDeclared = Some(YesNoAnswer.Yes),
+            recentlyStartedTrading = Some(YesNoAnswer.No),
+            ctutr = Some(CTUTR("some-ctutr"))
+          )
+          val session = Fixtures.companyHECSession(loginData = companyLoginData, userAnswers = answers)
+
+          val updatedAnswers = IncompleteUserAnswers
+            .fromCompleteAnswers(answers)
+            .copy(
+              crn = Some(validCRN),
+              companyDetailsConfirmed = None,
+              chargeableForCT = None,
+              ctIncomeDeclared = None,
+              recentlyStartedTrading = None,
+              ctutr = None
+            )
+
+          val updatedRetrievedJourneyData =
+            session.retrievedJourneyData.copy(companyName = companyDetails.map(_.companyName))
+          val updatedSession              =
+            session.copy(retrievedJourneyData = updatedRetrievedJourneyData, userAnswers = updatedAnswers)
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockFindCompany(validCRN)(
+              Right(companyDetails)
+            )
+            mockJourneyServiceUpdateAndNext(
+              routes.CRNController.companyRegistrationNumber(),
+              session,
+              updatedSession
+            )(
+              Right(mockNextCall)
+            )
+          }
+          checkIsRedirect(performAction("crn" -> validCRN.value), mockNextCall)
+        }
+
+        "previously set CRN is unchanged, CRN dependent answers are not reset" in {
+          val answers = Fixtures.completeUserAnswers(
+            licenceType = LicenceType.OperatorOfPrivateHireVehicles,
+            licenceTimeTrading = LicenceTimeTrading.ZeroToTwoYears,
+            licenceValidityPeriod = LicenceValidityPeriod.UpToOneYear,
+            crn = Some(validCRN),
+            companyDetailsConfirmed = Some(YesNoAnswer.Yes),
+            chargeableForCT = Some(YesNoAnswer.Yes),
+            ctIncomeDeclared = Some(YesNoAnswer.Yes),
+            recentlyStartedTrading = Some(YesNoAnswer.No),
+            ctutr = Some(CTUTR("some-ctutr"))
+          )
+          val session = Fixtures.companyHECSession(loginData = companyLoginData, userAnswers = answers)
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockJourneyServiceUpdateAndNext(
+              routes.CRNController.companyRegistrationNumber(),
+              session,
+              session
+            )(
+              Right(mockNextCall)
+            )
+          }
+          checkIsRedirect(performAction("crn" -> validCRN.value), mockNextCall)
         }
 
       }
