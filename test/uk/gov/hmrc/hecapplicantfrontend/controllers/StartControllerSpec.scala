@@ -36,6 +36,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CTUTR, GGCredId, NINO, SAUTR
 import uk.gov.hmrc.hecapplicantfrontend.models.{CitizenDetails, DateOfBirth, EmailAddress, Error, Name, TaxCheckListItem}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.{CitizenDetailsService, JourneyService, TaxCheckService}
+import uk.gov.hmrc.hecapplicantfrontend.util.StringUtils.StringOps
 import uk.gov.hmrc.http.HeaderCarrier
 
 import java.net.URLEncoder
@@ -47,11 +48,11 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
 
   import StartControllerSpec._
 
-  val ivOrigin      = "ivOrigin"
-  val ivUrl         = "https://iv:123"
-  val selfBaseUrl   = "http://self:456"
-  val basGatewayUrl = "https://bas:456"
-  val ggOrigin      = "ggOrigin"
+  val ivOrigin    = "ivOrigin"
+  val ivUrl       = "https://iv:123"
+  val selfBaseUrl = "http://self:456"
+  val signInUrl   = "https://sign-in:456"
+  val ggOrigin    = "ggOrigin"
 
   override lazy val additionalConfig: Configuration = Configuration(
     ConfigFactory.parseString(
@@ -65,7 +66,7 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
          |self.url = "$selfBaseUrl"
          |
          |auth {
-         |   bas-gateway.url = "$basGatewayUrl"
+         |   sign-in.url = "$signInUrl"
          |   gg.origin = "$ggOrigin"
          |}
          |""".stripMargin
@@ -682,7 +683,7 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
             val result = performAction()
             checkIsRedirect(
               result,
-              s"$basGatewayUrl?continue=$selfBaseUrl/tax-check-for-licence/start&origin=$ggOrigin"
+              s"$signInUrl?continue=${(s"$selfBaseUrl/tax-check-for-licence/start").urlEncode}&origin=$ggOrigin"
             )
           }
         }

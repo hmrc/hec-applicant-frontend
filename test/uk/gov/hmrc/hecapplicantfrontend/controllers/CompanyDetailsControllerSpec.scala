@@ -1665,8 +1665,8 @@ class CompanyDetailsControllerSpec
             doc.select("#back").attr("href") shouldBe mockPreviousCall.url
             val links = doc.select(".govuk-body > .govuk-link")
             links.iterator().asScala.toList.map(_.attr("href")) shouldBe List(
-              appConfig.signOutUri,
-              appConfig.createGGAccount
+              appConfig.signOutAndSignBackInUrl,
+              appConfig.registerForNewGGAccountUrl(EntityType.Company)
             )
           }
         )

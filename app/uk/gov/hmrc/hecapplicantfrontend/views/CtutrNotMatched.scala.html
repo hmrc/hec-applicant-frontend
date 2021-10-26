@@ -17,6 +17,7 @@
 @import play.api.i18n.Messages
 @import play.api.mvc.{Call, Request}
 @import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
+@import uk.gov.hmrc.hecapplicantfrontend.models.EntityType.Company
 @import play.twirl.api.Html
 
 @this(layout: Layout)
@@ -28,5 +29,5 @@
 @layout(pageTitle = Some(title), backLocation = Some(back)) {
   <h1 class="govuk-heading-xl">@title</h1>
   <p class="govuk-body">@messages(s"$key.p1")</p>
-  <p class="govuk-body">@Html(messages(s"$key.p2", appConfig.signOutUri, appConfig.createGGAccount))</p>
+  <p class="govuk-body">@Html(messages(s"$key.p2", appConfig.signOutAndSignBackInUrl, appConfig.registerForNewGGAccountUrl(Company)))</p>
 }

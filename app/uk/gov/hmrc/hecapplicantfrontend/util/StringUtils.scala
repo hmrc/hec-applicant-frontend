@@ -16,11 +16,15 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.util
 
+import java.net.URLEncoder
+
 object StringUtils {
 
   implicit class StringOps(private val s: String) extends AnyVal {
 
     def removeWhitespace: String = s.replaceAll("\\s", "")
+
+    def urlEncode: String = URLEncoder.encode(s, "UTF-8")
 
   }
 

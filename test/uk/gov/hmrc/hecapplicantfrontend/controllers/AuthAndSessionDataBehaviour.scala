@@ -24,6 +24,7 @@ import uk.gov.hmrc.auth.core.authorise.EmptyPredicate
 import uk.gov.hmrc.auth.core.retrieve.EmptyRetrieval
 import uk.gov.hmrc.auth.core.{AuthorisationException, BearerTokenExpired, IncorrectCredentialStrength, InsufficientEnrolments, InternalError, InvalidBearerToken, MissingBearerToken, NoActiveSession, SessionRecordNotFound, UnsupportedAffinityGroup, UnsupportedAuthProvider, UnsupportedCredentialRole}
 import uk.gov.hmrc.hecapplicantfrontend.models.Error
+import uk.gov.hmrc.hecapplicantfrontend.util.StringUtils.StringOps
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -41,7 +42,7 @@ trait AuthAndSessionDataBehaviour { this: ControllerSpec with AuthSupport with S
       s"""
          | self.url = "$selfUrl"
          | auth {
-         |   bas-gateway.url = "$basGatewayUrl"
+         |   sign-in.url = "$basGatewayUrl"
          |   gg.origin = "$ggOrigin"
          | }
          |""".stripMargin
@@ -60,7 +61,10 @@ trait AuthAndSessionDataBehaviour { this: ControllerSpec with AuthSupport with S
           mockAuth(EmptyPredicate, EmptyRetrieval)(Future.failed(e))
 
           val result = performAction()
-          checkIsRedirect(result, s"$basGatewayUrl?continue=$selfUrl/tax-check-for-licence/start&origin=$ggOrigin")
+          checkIsRedirect(
+            result,
+            s"$basGatewayUrl?continue=${(s"$selfUrl/tax-check-for-licence/start").urlEncode}&origin=$ggOrigin"
+          )
         }
       }
 

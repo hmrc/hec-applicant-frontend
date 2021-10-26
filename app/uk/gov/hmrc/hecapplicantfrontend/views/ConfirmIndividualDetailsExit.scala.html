@@ -27,5 +27,5 @@
 @layout(pageTitle = Some(title), backLocation = Some(back)) {
     <h1 class="govuk-heading-xl">@title</h1>
     <p class="govuk-body">@{messages("confirmIndividualDetailsExit.p1")}</p>
-    <p class="govuk-body">@{Html(messages("confirmIndividualDetailsExit.p2", appConfig.signOutUri))}</p>
+    <p class="govuk-body">@{Html(messages("confirmIndividualDetailsExit.p2", appConfig.signOutUrl(continueUrl = None)))}</p>
 }

@@ -25,6 +25,8 @@ import play.api.mvc.Result
 import play.api.mvc.Results.Redirect
 import uk.gov.hmrc.auth.core.ConfidenceLevel
 import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
+import uk.gov.hmrc.hecapplicantfrontend.models.EntityType
+import uk.gov.hmrc.hecapplicantfrontend.util.StringUtils.StringOps
 import uk.gov.hmrc.hmrcfrontend.config.ContactFrontendConfig
 
 import java.util.UUID
@@ -47,17 +49,33 @@ class AppConfig @Inject() (config: Configuration, contactFrontendConfig: Contact
 
   val selfBaseUrl: String = platformHost.getOrElse(config.get[String]("self.url"))
 
+  val ggOrigin: String = config.get[String]("auth.gg.origin")
+
   lazy val signInUrl: String = {
-    val basGateway: String = config.get[String]("auth.bas-gateway.url")
-    val origin: String     = config.get[String]("auth.gg.origin")
-    s"$basGateway?continue=$selfBaseUrl${routes.StartController.start().url}&origin=$origin"
+    val url: String = config.get[String]("auth.sign-in.url")
+    s"$url?continue=${(s"$selfBaseUrl${routes.StartController.start().url}").urlEncode}&origin=$ggOrigin"
   }
 
-  lazy val signOutUri: String = config.get[String]("auth.sign-out.uri")
+  private val signOutUri: String = config.get[String]("auth.sign-out.uri")
 
-  val createGGAccount: String = config.get[String]("external-url.create-gg-account")
+  def signOutUrl(continueUrl: Option[String]): String =
+    continueUrl.fold(signOutUri)(continue => s"$signOutUri?continue=${continue.urlEncode}")
 
-  val authTimeoutSeconds: Int          = config.get[FiniteDuration]("auth.sign-out.inactivity-timeout").toSeconds.toInt
+  val signOutAndSignBackInUrl: String =
+    signOutUrl(continueUrl = Some(s"$selfBaseUrl${routes.StartController.start().url}"))
+
+  private val registerForNewGGAccountUri: String = config.get[String]("auth.register-new-account.url")
+
+  def registerForNewGGAccountUrl(entityType: EntityType): String = {
+    val accountType = entityType match {
+      case EntityType.Individual => "Individual"
+      case EntityType.Company    => "Organisation"
+    }
+    s"$registerForNewGGAccountUri?continueUrl=${routes.StartController.start().url.urlEncode}&accountType=$accountType&origin=$ggOrigin"
+  }
+
+  val authTimeoutSeconds: Int = config.get[FiniteDuration]("auth.sign-out.inactivity-timeout").toSeconds.toInt
+
   val authTimeoutCountdownSeconds: Int =
     config.get[FiniteDuration]("auth.sign-out.inactivity-countdown").toSeconds.toInt
 
