@@ -28,7 +28,7 @@ import play.api.mvc._
 import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 import uk.gov.hmrc.hecapplicantfrontend.controllers.CRNController.crnForm
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
-import uk.gov.hmrc.hecapplicantfrontend.models.Error
+import uk.gov.hmrc.hecapplicantfrontend.models.{Error, HECSession}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.CRN
 import uk.gov.hmrc.hecapplicantfrontend.services.{CompanyDetailsService, JourneyService}
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
@@ -62,8 +62,6 @@ class CRNController @Inject() (
   val companyRegistrationNumberSubmit: Action[AnyContent] =
     authAction.andThen(sessionDataAction).async { implicit request =>
       request.sessionData.mapAsCompany { implicit companySession =>
-        val crnNotFoundInCompaniesHouseErrorMsg = "CRN not found in companies house"
-
         def ok(form: Form[CRN]) =
           Ok(
             crnPage(
@@ -72,7 +70,12 @@ class CRNController @Inject() (
             )
           )
 
-        def fetchCompanyNameAndProceed(crn: CRN): EitherT[Future, Error, Call] = for {
+        def updateAndNext(updatedSession: HECSession): EitherT[Future, Error, Either[Form[CRN], Call]] =
+          journeyService
+            .updateAndNext(routes.CRNController.companyRegistrationNumber(), updatedSession)
+            .map(Right[Form[CRN], Call])
+
+        def fetchCompanyNameAndProceed(crn: CRN): EitherT[Future, Error, Either[Form[CRN], Call]] = for {
           companyHouseDetailsOpt <- companyDetailsService.findCompany(crn)
           updatedAnswers          =
             companySession.userAnswers
@@ -88,41 +91,34 @@ class CRNController @Inject() (
             )
           updatedSession          =
             companySession.copy(retrievedJourneyData = updatedRetrievedData, userAnswers = updatedAnswers)
-          next                   <- companyHouseDetailsOpt map { _ =>
-                                      journeyService.updateAndNext(routes.CRNController.companyRegistrationNumber(), updatedSession)
+          formErrorOrNext        <- companyHouseDetailsOpt map { _ =>
+                                      updateAndNext(updatedSession)
                                     } getOrElse {
-                                      EitherT[Future, Error, Call](Future.successful(Left(Error(crnNotFoundInCompaniesHouseErrorMsg))))
+                                      EitherT[Future, Error, Either[Form[CRN], Call]] {
+                                        val constraint: Constraint[CRN] =
+                                          Constraint(_ => Invalid("error.notFoundInCompaniesHouse"))
+                                        Future.successful(Right(Left(crnForm(constraint).bindFromRequest())))
+                                      }
                                     }
-        } yield next
-
-        def handleError(e: Error) = e.value.fold(
-          errMsg =>
-            if (errMsg === crnNotFoundInCompaniesHouseErrorMsg) {
-              val constraint: Constraint[CRN] = Constraint(_ => Invalid("error.notFoundInCompaniesHouse"))
-              ok(crnForm(constraint).bindFromRequest())
-            } else {
-              logger.warn(errMsg, e)
-              InternalServerError
-            },
-          _ => {
-            logger.warn("Could not update session and proceed", e)
-            InternalServerError
-          }
-        )
+        } yield formErrorOrNext
 
         def handleValidCrn(crn: CRN): Future[Result] = {
-          val sessionCrn = companySession.userAnswers.fold(_.crn, _.crn)
-          val result     = sessionCrn match {
+          val sessionCrn                                              = companySession.userAnswers.fold(_.crn, _.crn)
+          val result: EitherT[Future, Error, Either[Form[CRN], Call]] = sessionCrn match {
             //check if the submitted crn is equal to the crn in session
             //then no need to call the companyDetailsService, pick company name from the session
             //else fetch company name using the service
-            case Some(crnSession) if crn.value === crnSession.value =>
-              journeyService.updateAndNext(routes.CRNController.companyRegistrationNumber(), companySession)
-            case _                                                  =>
-              fetchCompanyNameAndProceed(crn)
+            case Some(crnSession) if crn.value === crnSession.value => updateAndNext(companySession)
+            case _                                                  => fetchCompanyNameAndProceed(crn)
           }
 
-          result.fold(handleError, Redirect)
+          result.fold(
+            e => {
+              logger.warn("Could not update session and proceed", e)
+              InternalServerError
+            },
+            _.fold(ok, Redirect)
+          )
         }
 
         crnForm()
