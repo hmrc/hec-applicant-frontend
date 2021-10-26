@@ -28,9 +28,9 @@ import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.CompanyHECSession
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.CompanyLoginData
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.CompanyRetrievedJourneyData
 import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.IncompleteUserAnswers
-import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, GGCredId}
+import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR, GGCredId}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.hecapplicantfrontend.models.{CompanyHouseDetails, CompanyHouseName, Error}
+import uk.gov.hmrc.hecapplicantfrontend.models.{CompanyHouseDetails, CompanyHouseName, Error, YesNoAnswer}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.{CompanyDetailsService, JourneyService}
 import uk.gov.hmrc.hecapplicantfrontend.util.StringUtils.StringOps
@@ -374,6 +374,83 @@ class CRNControllerSpec
 
         "a valid CRN is submitted and company is found " in {
           testNextCall(Some(CompanyHouseDetails(companyHouseName)))
+        }
+
+        "previously set CRN is changed, CRN dependent answers are reset" in {
+          val companyDetails = Some(CompanyHouseDetails(companyHouseName))
+
+          val answers = Fixtures.completeUserAnswers(
+            licenceType = LicenceType.OperatorOfPrivateHireVehicles,
+            licenceTimeTrading = LicenceTimeTrading.ZeroToTwoYears,
+            licenceValidityPeriod = LicenceValidityPeriod.UpToOneYear,
+            crn = Some(CRN("old-crn")),
+            companyDetailsConfirmed = Some(YesNoAnswer.Yes),
+            chargeableForCT = Some(YesNoAnswer.Yes),
+            ctIncomeDeclared = Some(YesNoAnswer.Yes),
+            recentlyStartedTrading = Some(YesNoAnswer.No),
+            ctutr = Some(CTUTR("some-ctutr"))
+          )
+          val session = Fixtures.companyHECSession(loginData = companyLoginData, userAnswers = answers)
+
+          val updatedAnswers = IncompleteUserAnswers
+            .fromCompleteAnswers(answers)
+            .copy(
+              crn = Some(validCRN),
+              companyDetailsConfirmed = None,
+              chargeableForCT = None,
+              ctIncomeDeclared = None,
+              recentlyStartedTrading = None,
+              ctutr = None
+            )
+
+          val updatedRetrievedJourneyData =
+            session.retrievedJourneyData.copy(companyName = companyDetails.map(_.companyName))
+          val updatedSession              =
+            session.copy(retrievedJourneyData = updatedRetrievedJourneyData, userAnswers = updatedAnswers)
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockFindCompany(validCRN)(
+              Right(companyDetails)
+            )
+            mockJourneyServiceUpdateAndNext(
+              routes.CRNController.companyRegistrationNumber(),
+              session,
+              updatedSession
+            )(
+              Right(mockNextCall)
+            )
+          }
+          checkIsRedirect(performAction("crn" -> validCRN.value), mockNextCall)
+        }
+
+        "previously set CRN is unchanged, CRN dependent answers are not reset" in {
+          val answers = Fixtures.completeUserAnswers(
+            licenceType = LicenceType.OperatorOfPrivateHireVehicles,
+            licenceTimeTrading = LicenceTimeTrading.ZeroToTwoYears,
+            licenceValidityPeriod = LicenceValidityPeriod.UpToOneYear,
+            crn = Some(validCRN),
+            companyDetailsConfirmed = Some(YesNoAnswer.Yes),
+            chargeableForCT = Some(YesNoAnswer.Yes),
+            ctIncomeDeclared = Some(YesNoAnswer.Yes),
+            recentlyStartedTrading = Some(YesNoAnswer.No),
+            ctutr = Some(CTUTR("some-ctutr"))
+          )
+          val session = Fixtures.companyHECSession(loginData = companyLoginData, userAnswers = answers)
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockJourneyServiceUpdateAndNext(
+              routes.CRNController.companyRegistrationNumber(),
+              session,
+              session
+            )(
+              Right(mockNextCall)
+            )
+          }
+          checkIsRedirect(performAction("crn" -> validCRN.value), mockNextCall)
         }
 
       }

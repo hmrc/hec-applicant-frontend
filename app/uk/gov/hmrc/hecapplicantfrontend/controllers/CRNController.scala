@@ -84,6 +84,7 @@ class CRNController @Inject() (
               .unset(_.chargeableForCT)
               .unset(_.ctIncomeDeclared)
               .unset(_.recentlyStartedTrading)
+              .unset(_.ctutr)
               .copy(crn = Some(crn))
           updatedRetrievedData    =
             companySession.retrievedJourneyData.copy(
