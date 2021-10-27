@@ -19,7 +19,9 @@ package uk.gov.hmrc.hecapplicantfrontend.models
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.Json
+import uk.gov.hmrc.hecapplicantfrontend.models.CompanyUserAnswers.IncompleteCompanyUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.IndividualUserAnswers.IncompleteIndividualUserAnswers
+import uk.gov.hmrc.hecapplicantfrontend.models.ids.CRN
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hecapplicantfrontend.utils.Fixtures
 
@@ -181,5 +183,153 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
     }
   }
 
-  // TODO add tests for CompanyUserAnswers
+  "CompanyUserAnswers" must {
+
+    "have an empty val" in {
+      CompanyUserAnswers.empty shouldBe Fixtures.incompleteCompanyUserAnswers()
+    }
+
+    "have a fold method" which {
+
+      "works with incomplete answers" in {
+        val incompleteAnswers = CompanyUserAnswers.empty
+        incompleteAnswers.fold(
+          _ shouldBe incompleteAnswers,
+          _ => fail()
+        )
+      }
+
+      "works with complete answers" in {
+        val completeAnswers = Fixtures.completeCompanyUserAnswers()
+        completeAnswers.fold(
+          _ => fail(),
+          _ shouldBe completeAnswers
+        )
+      }
+
+    }
+
+    "have a method which converts complete answers to incomplete" in {
+      val completeAnswers = Fixtures.completeCompanyUserAnswers(
+        LicenceType.DriverOfTaxisAndPrivateHires,
+        LicenceTimeTrading.TwoToFourYears,
+        LicenceValidityPeriod.UpToTwoYears,
+        EntityType.Company,
+        CRN("crn"),
+        YesNoAnswer.Yes
+      )
+      IncompleteCompanyUserAnswers.fromCompleteAnswers(completeAnswers) shouldBe Fixtures
+        .incompleteCompanyUserAnswers(
+          Some(LicenceType.DriverOfTaxisAndPrivateHires),
+          Some(LicenceTimeTrading.TwoToFourYears),
+          Some(LicenceValidityPeriod.UpToTwoYears),
+          Some(EntityType.Company),
+          Some(CRN("crn")),
+          Some(YesNoAnswer.Yes)
+        )
+
+    }
+
+    "have an unset method" which {
+
+      val incompleteAnswers =
+        Fixtures.incompleteCompanyUserAnswers(
+          Some(LicenceType.DriverOfTaxisAndPrivateHires),
+          Some(LicenceTimeTrading.ZeroToTwoYears),
+          Some(LicenceValidityPeriod.UpToThreeYears),
+          Some(EntityType.Company),
+          Some(CRN("crn")),
+          Some(YesNoAnswer.Yes)
+        )
+
+      val completeAnswers =
+        Fixtures.completeCompanyUserAnswers(
+          LicenceType.DriverOfTaxisAndPrivateHires,
+          LicenceTimeTrading.ZeroToTwoYears,
+          LicenceValidityPeriod.UpToThreeYears,
+          EntityType.Company,
+          CRN("crn"),
+          YesNoAnswer.Yes
+        )
+
+      "unsets the licence type field" in {
+        incompleteAnswers.unset(_.licenceType) shouldBe incompleteAnswers.copy(licenceType = None)
+        completeAnswers.unset(_.licenceType)   shouldBe incompleteAnswers.copy(licenceType = None)
+      }
+
+      "unsets the licence time trading field" in {
+        incompleteAnswers.unset(_.licenceTimeTrading) shouldBe incompleteAnswers.copy(licenceTimeTrading = None)
+        completeAnswers.unset(_.licenceTimeTrading)   shouldBe incompleteAnswers.copy(licenceTimeTrading = None)
+      }
+
+      "unsets the licence validity period field" in {
+        incompleteAnswers.unset(_.licenceValidityPeriod) shouldBe incompleteAnswers.copy(licenceValidityPeriod = None)
+        completeAnswers.unset(_.licenceValidityPeriod)   shouldBe incompleteAnswers.copy(licenceValidityPeriod = None)
+      }
+
+      "unsets the entity type field" in {
+        incompleteAnswers.unset(_.entityType) shouldBe incompleteAnswers.copy(entityType = None)
+        completeAnswers.unset(_.entityType)   shouldBe incompleteAnswers.copy(entityType = None)
+      }
+
+    }
+
+    "perform JSON de/serialisation correctly" must {
+      val incompleteAnswers: CompanyUserAnswers =
+        Fixtures.incompleteCompanyUserAnswers(
+          Some(LicenceType.DriverOfTaxisAndPrivateHires),
+          Some(LicenceTimeTrading.ZeroToTwoYears),
+          Some(LicenceValidityPeriod.UpToThreeYears),
+          Some(EntityType.Company),
+          Some(CRN("crn")),
+          Some(YesNoAnswer.Yes)
+        )
+
+      val incompleteJson = Json.parse("""{
+                                        |"licenceType":"DriverOfTaxisAndPrivateHires",
+                                        |"licenceTimeTrading":"ZeroToTwoYears",
+                                        |"licenceValidityPeriod":"UpToThreeYears",
+                                        |"entityType":"Company",
+                                        |"crn": "crn",
+                                        |"companyDetailsConfirmed": "Yes",
+                                        |"type":"Incomplete"
+                                        |}""".stripMargin)
+
+      val completeAnswers: CompanyUserAnswers =
+        Fixtures.completeCompanyUserAnswers(
+          LicenceType.DriverOfTaxisAndPrivateHires,
+          LicenceTimeTrading.ZeroToTwoYears,
+          LicenceValidityPeriod.UpToThreeYears,
+          EntityType.Company,
+          CRN("crn"),
+          YesNoAnswer.Yes
+        )
+
+      val completeJson = Json.parse("""{
+                                      |"licenceType":"DriverOfTaxisAndPrivateHires",
+                                      |"licenceTimeTrading":"ZeroToTwoYears",
+                                      |"licenceValidityPeriod":"UpToThreeYears",
+                                      |"entityType":"Company",
+                                      |"crn": "crn",
+                                      |"companyDetailsConfirmed": "Yes",
+                                      |"type":"Complete"
+                                      |}""".stripMargin)
+
+      "serialize Incomplete answers" in {
+        Json.toJson(incompleteAnswers) shouldBe incompleteJson
+      }
+
+      "serialize Complete answers" in {
+        Json.toJson(completeAnswers) shouldBe completeJson
+      }
+
+      "deserialize Incomplete answers" in {
+        Json.fromJson[CompanyUserAnswers](incompleteJson).get shouldBe incompleteAnswers
+      }
+
+      "deserialize Complete answers" in {
+        Json.fromJson[CompanyUserAnswers](completeJson).get shouldBe completeAnswers
+      }
+    }
+  }
 }
