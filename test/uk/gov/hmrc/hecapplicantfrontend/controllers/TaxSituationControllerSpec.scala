@@ -597,22 +597,23 @@ class TaxSituationControllerSpec
 
       }
 
-      "return an InternalServerError" when {
-
-        "a licence type cannot be found in session" in {
-          val session = IndividualHECSession.newSession(individualLoginData)
+      "throw runtime exception" when {
+        "retrieved user data in session is for a company" in {
+          val session = CompanyHECSession.newSession(companyRetrievedData)
 
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockTimeProviderToday(date)
           }
 
-          status(performAction()) shouldBe INTERNAL_SERVER_ERROR
+          assertThrows[RuntimeException](await(performAction()))
         }
+      }
 
-        "retrieved user data in session is for a company" in {
-          val session = CompanyHECSession.newSession(companyRetrievedData)
+      "return an InternalServerError" when {
+
+        "a licence type cannot be found in session" in {
+          val session = IndividualHECSession.newSession(individualLoginData)
 
           inSequence {
             mockAuthWithNoRetrievals()

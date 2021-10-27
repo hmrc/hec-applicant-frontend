@@ -344,7 +344,6 @@ class LicenceDetailsControllerSpec
               )
             val updatedSession = session.copy(userAnswers = updatedAnswers)
             nextpageRedirectTest(session, updatedSession, "1", None)
-
           }
 
           "the user has previously completed answering questions" in {
@@ -422,9 +421,7 @@ class LicenceDetailsControllerSpec
         "valid Company data is submitted and" when {
 
           "the user has not previously completed answering questions" in {
-            val answers        = CompanyUserAnswers.empty.copy(
-              licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles)
-            )
+            val answers        = CompanyUserAnswers.empty
             val updatedAnswers =
               CompanyUserAnswers.empty.copy(licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles))
             val session        =
@@ -434,8 +431,8 @@ class LicenceDetailsControllerSpec
                 answers
               )
             val updatedSession = session.copy(userAnswers = updatedAnswers, taxCheckStartDateTime = Some(now))
-            nextpageRedirectTest(session, updatedSession, "0", Some(() => mockTimeProviderNow(now)))
 
+            nextpageRedirectTest(session, updatedSession, "0", Some(() => mockTimeProviderNow(now)))
           }
 
           "the user has previously completed answering questions" in {
@@ -1014,17 +1011,14 @@ class LicenceDetailsControllerSpec
         "valid data is submitted and" when {
 
           "the user has not previously completed answering questions" in {
-            val answers        = IndividualUserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
+            val answers = IndividualUserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
+            val session = Fixtures.individualHECSession(
+              individualLoginData,
+              IndividualRetrievedJourneyData.empty,
+              answers
+            )
+
             val updatedAnswers = answers.copy(licenceValidityPeriod = Some(UpToOneYear))
-            val session        =
-              IndividualHECSession(
-                individualLoginData,
-                IndividualRetrievedJourneyData.empty,
-                answers,
-                None,
-                None,
-                List.empty
-              )
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 
             inSequence {

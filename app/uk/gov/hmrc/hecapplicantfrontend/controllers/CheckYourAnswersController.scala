@@ -22,8 +22,8 @@ import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
 import uk.gov.hmrc.hecapplicantfrontend.models.CompanyUserAnswers.CompleteCompanyUserAnswers
+import uk.gov.hmrc.hecapplicantfrontend.models.CompleteUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.IndividualUserAnswers.CompleteIndividualUserAnswers
-import uk.gov.hmrc.hecapplicantfrontend.models.{CompleteUserAnswers, CompleteUserAnswersCombined}
 import uk.gov.hmrc.hecapplicantfrontend.services.{JourneyService, TaxCheckService}
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging.LoggerOps
@@ -39,16 +39,12 @@ class CheckYourAnswersController @Inject() (
   taxCheckService: TaxCheckService,
   journeyService: JourneyService,
   mcc: MessagesControllerComponents,
-  checkYourAnswersPage: html.CheckYourAnswers
+  checkYourAnswersIndividualPage: html.CheckYourAnswersIndividual,
+  checkYourAnswersCompanyPage: html.CheckYourAnswersCompany
 )(implicit ec: ExecutionContext)
     extends FrontendController(mcc)
     with I18nSupport
     with Logging {
-
-  private def toCompleteUserAnswersCombined(c: CompleteUserAnswers) = c match {
-    case i: CompleteIndividualUserAnswers => CompleteUserAnswersCombined.fromIndividualAnswers(i)
-    case i: CompleteCompanyUserAnswers    => CompleteUserAnswersCombined.fromCompanyAnswers(i)
-  }
 
   val checkYourAnswers: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
     request.sessionData.userAnswers.foldByCompleteness(
@@ -57,9 +53,13 @@ class CheckYourAnswersController @Inject() (
         InternalServerError
       },
       { complete =>
-        val back            = journeyService.previous(routes.CheckYourAnswersController.checkYourAnswers())
-        val combinedAnswers = toCompleteUserAnswersCombined(complete)
-        Ok(checkYourAnswersPage(back, combinedAnswers, request.sessionData.retrievedJourneyData))
+        val back = journeyService.previous(routes.CheckYourAnswersController.checkYourAnswers())
+        complete match {
+          case c: CompleteIndividualUserAnswers =>
+            Ok(checkYourAnswersIndividualPage(back, c))
+          case c: CompleteCompanyUserAnswers    =>
+            Ok(checkYourAnswersCompanyPage(back, c, request.sessionData.retrievedJourneyData))
+        }
       }
     )
   }
@@ -67,9 +67,8 @@ class CheckYourAnswersController @Inject() (
   val checkYourAnswersSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     request.sessionData.userAnswers match {
       case c: CompleteUserAnswers =>
-        val combinedAnswers = toCompleteUserAnswersCombined(c)
-        val result          = for {
-          taxCheck      <- taxCheckService.saveTaxCheck(request.sessionData, combinedAnswers)
+        val result = for {
+          taxCheck      <- taxCheckService.saveTaxCheck(request.sessionData, c)
           updatedSession = request.sessionData.fold(
                              _.copy(completedTaxCheck = Some(taxCheck)),
                              _.copy(completedTaxCheck = Some(taxCheck))

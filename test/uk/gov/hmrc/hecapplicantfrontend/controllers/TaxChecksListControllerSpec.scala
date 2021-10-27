@@ -62,7 +62,7 @@ class TaxChecksListControllerSpec
 
       behave like (authAndSessionDataBehaviour(performAction))
 
-      val answers = Fixtures.incompleteUserAnswers(
+      val answers = Fixtures.incompleteIndividualUserAnswers(
         Some(LicenceType.ScrapMetalMobileCollector)
       )
 

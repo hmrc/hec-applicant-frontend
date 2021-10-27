@@ -26,10 +26,8 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.hecapplicantfrontend.models.CompanyUserAnswers.IncompleteCompanyUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.CompanyHECSession
-import uk.gov.hmrc.hecapplicantfrontend.models.IndividualUserAnswers.IncompleteIndividualUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.CompanyLoginData
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.CompanyRetrievedJourneyData
-import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.IncompleteUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR, GGCredId}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hecapplicantfrontend.models.{CompanyHouseDetails, CompanyHouseName, Error, YesNoAnswer}
@@ -281,18 +279,13 @@ class CRNControllerSpec
 
         "return an InternalServerError" when {
 
-          val answers = Fixtures.completeCompanyUserAnswers(
-            LicenceType.OperatorOfPrivateHireVehicles,
-            LicenceTimeTrading.ZeroToTwoYears,
-            LicenceValidityPeriod.UpToOneYear
-          )
-          val session =
-            CompanyHECSession(companyLoginData, CompanyRetrievedJourneyData.empty, answers, None, None, List.empty)
+          val answers = Fixtures.completeCompanyUserAnswers()
+          val session = Fixtures.companyHECSession(companyLoginData, CompanyRetrievedJourneyData.empty, answers)
 
           "there is an error updating and getting the next endpoint" in {
             val updatedAnswers = IncompleteCompanyUserAnswers
               .fromCompleteAnswers(answers)
-              .copy(crn = Some(validCRN))
+              .copy(crn = Some(validCRN), companyDetailsConfirmed = None)
 
             val updatedSession = session.copy(
               retrievedJourneyData = session.retrievedJourneyData.copy(companyName = Some(companyHouseName)),
@@ -332,17 +325,12 @@ class CRNControllerSpec
             withClue(s" For CRN : $crn") {
 
               val formattedCrn = CRN(crn.value.removeWhitespace.toUpperCase(Locale.UK))
-              val answers      = Fixtures.completeCompanyUserAnswers(
-                LicenceType.OperatorOfPrivateHireVehicles,
-                LicenceTimeTrading.ZeroToTwoYears,
-                LicenceValidityPeriod.UpToOneYear
-              )
-              val session      =
-                CompanyHECSession(companyLoginData, CompanyRetrievedJourneyData.empty, answers, None, None, List.empty)
+              val answers      = Fixtures.completeCompanyUserAnswers()
+              val session      = Fixtures.companyHECSession(companyLoginData, CompanyRetrievedJourneyData.empty, answers)
 
               val updatedAnswers = IncompleteCompanyUserAnswers
                 .fromCompleteAnswers(answers)
-                .copy(crn = Some(formattedCrn))
+                .copy(crn = Some(formattedCrn), companyDetailsConfirmed = None)
 
               val updatedRetrievedJourneyData =
                 session.retrievedJourneyData.copy(companyName = companyDetails.map(_.companyName))

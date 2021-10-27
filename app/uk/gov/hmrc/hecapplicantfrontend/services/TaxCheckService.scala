@@ -27,12 +27,14 @@ import play.api.libs.json.{Json, OFormat}
 import play.mvc.Http.Status.{CREATED, NOT_FOUND}
 import uk.gov.hmrc.hecapplicantfrontend.connectors.HECConnector
 import uk.gov.hmrc.hecapplicantfrontend.models.ApplicantDetails.{CompanyApplicantDetails, IndividualApplicantDetails}
+import uk.gov.hmrc.hecapplicantfrontend.models.CompanyUserAnswers.CompleteCompanyUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, IndividualHECSession}
 import uk.gov.hmrc.hecapplicantfrontend.models.HECTaxCheckData.{CompanyHECTaxCheckData, IndividualHECTaxCheckData}
+import uk.gov.hmrc.hecapplicantfrontend.models.IndividualUserAnswers.CompleteIndividualUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.TaxDetails.{CompanyTaxDetails, IndividualTaxDetails}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR, SAUTR}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceDetails
-import uk.gov.hmrc.hecapplicantfrontend.models.{CTStatusResponse, CompleteUserAnswersCombined, Error, HECSession, HECTaxCheck, HECTaxCheckData, HECTaxCheckSource, SAStatusResponse, TaxCheckListItem, TaxYear}
+import uk.gov.hmrc.hecapplicantfrontend.models.{CTStatusResponse, CompleteUserAnswers, Error, HECSession, HECTaxCheck, HECTaxCheckData, HECTaxCheckSource, SAStatusResponse, TaxCheckListItem, TaxYear}
 import uk.gov.hmrc.hecapplicantfrontend.services.TaxCheckService._
 import uk.gov.hmrc.hecapplicantfrontend.util.HttpResponseOps._
 import uk.gov.hmrc.http.HeaderCarrier
@@ -45,7 +47,7 @@ trait TaxCheckService {
 
   def saveTaxCheck(
     session: HECSession,
-    answers: CompleteUserAnswersCombined
+    answers: CompleteUserAnswers
   )(implicit hc: HeaderCarrier): EitherT[Future, Error, HECTaxCheck]
 
   def getSAStatus(sautr: SAUTR, taxYear: TaxYear)(implicit hc: HeaderCarrier): EitherT[Future, Error, SAStatusResponse]
@@ -66,7 +68,7 @@ class TaxCheckServiceImpl @Inject() (hecConnector: HECConnector)(implicit ec: Ex
 
   def saveTaxCheck(
     session: HECSession,
-    answers: CompleteUserAnswersCombined
+    answers: CompleteUserAnswers
   )(implicit hc: HeaderCarrier): EitherT[Future, Error, HECTaxCheck] = {
     val taxCheckData = toHECTaxCheckData(session, answers)
     hecConnector
@@ -123,20 +125,23 @@ class TaxCheckServiceImpl @Inject() (hecConnector: HECConnector)(implicit ec: Ex
 
   private def toHECTaxCheckData(
     session: HECSession,
-    completeUserAnswers: CompleteUserAnswersCombined
-  ): HECTaxCheckData = session match {
-    case IndividualHECSession(
-          loginData,
-          retrievedJourneyData,
-          _,
-          _,
-          taxCheckStartDateTime,
-          _
+    completeUserAnswers: CompleteUserAnswers
+  ): HECTaxCheckData = (session, completeUserAnswers) match {
+    case (
+          IndividualHECSession(
+            loginData,
+            retrievedJourneyData,
+            _,
+            _,
+            taxCheckStartDateTime,
+            _
+          ),
+          answers: CompleteIndividualUserAnswers
         ) =>
       val licenceDetails   = LicenceDetails(
-        completeUserAnswers.licenceType,
-        completeUserAnswers.licenceTimeTrading,
-        completeUserAnswers.licenceValidityPeriod
+        answers.licenceType,
+        answers.licenceTimeTrading,
+        answers.licenceValidityPeriod
       )
       val applicantDetails = IndividualApplicantDetails(
         loginData.ggCredId,
@@ -147,8 +152,8 @@ class TaxCheckServiceImpl @Inject() (hecConnector: HECConnector)(implicit ec: Ex
       val taxDetails = IndividualTaxDetails(
         loginData.nino,
         loginData.sautr,
-        completeUserAnswers.taxSituation,
-        completeUserAnswers.saIncomeDeclared,
+        Some(answers.taxSituation),
+        Some(answers.saIncomeDeclared),
         retrievedJourneyData.saStatus
       )
       IndividualHECTaxCheckData(
@@ -161,34 +166,37 @@ class TaxCheckServiceImpl @Inject() (hecConnector: HECConnector)(implicit ec: Ex
         HECTaxCheckSource.Digital
       )
 
-    case CompanyHECSession(
-          companyLoginData,
-          retrievedJourneyData,
-          _,
-          _,
-          taxCheckStartDateTime,
-          _,
-          _
+    case (
+          CompanyHECSession(
+            companyLoginData,
+            retrievedJourneyData,
+            _,
+            _,
+            taxCheckStartDateTime,
+            _,
+            _
+          ),
+          answers: CompleteCompanyUserAnswers
         ) =>
       val companyApplicantDetails = CompanyApplicantDetails(
         companyLoginData.ggCredId,
-        completeUserAnswers.crn.getOrElse(sys.error("crn is not present")),
+        answers.crn,
         retrievedJourneyData.companyName.getOrElse(sys.error("company House Name is not present"))
       )
 
       val companyLicenceDetails = LicenceDetails(
-        completeUserAnswers.licenceType,
-        completeUserAnswers.licenceTimeTrading,
-        completeUserAnswers.licenceValidityPeriod
+        answers.licenceType,
+        answers.licenceTimeTrading,
+        answers.licenceValidityPeriod
       )
 
       val companyTaxDetails = CompanyTaxDetails(
         retrievedJourneyData.desCtutr.getOrElse(sys.error("CTUTR not found")),
-        completeUserAnswers.ctutr,
-        completeUserAnswers.ctIncomeDeclared,
+        answers.ctutr,
+        answers.ctIncomeDeclared,
         retrievedJourneyData.ctStatus.getOrElse(sys.error("ct status response not found")),
-        completeUserAnswers.recentlyStartedTrading,
-        completeUserAnswers.chargeableForCT
+        answers.recentlyStartedTrading,
+        answers.chargeableForCT
       )
 
       CompanyHECTaxCheckData(
@@ -201,6 +209,7 @@ class TaxCheckServiceImpl @Inject() (hecConnector: HECConnector)(implicit ec: Ex
         HECTaxCheckSource.Digital
       )
 
+    case _ => sys.error("Invalid session & complete answers combination")
   }
 
   def getUnexpiredTaxCheckCodes()(implicit hc: HeaderCarrier): EitherT[Future, Error, List[TaxCheckListItem]] =
