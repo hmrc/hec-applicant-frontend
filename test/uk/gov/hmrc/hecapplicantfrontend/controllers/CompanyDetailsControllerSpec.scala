@@ -26,8 +26,8 @@ import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{await, defaultAwaitTimeout, status}
 import uk.gov.hmrc.auth.core.AuthConnector
+import uk.gov.hmrc.hecapplicantfrontend.models.CompanyUserAnswers.IncompleteCompanyUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.CompanyHECSession
-import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.IncompleteUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models._
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
@@ -136,15 +136,15 @@ class CompanyDetailsControllerSpec
 
         "the user has previously answered the question" in {
 
-          val answers = Fixtures.completeUserAnswers(
+          val answers = Fixtures.completeCompanyUserAnswers(
             licenceType = LicenceType.OperatorOfPrivateHireVehicles,
             licenceTimeTrading = LicenceTimeTrading.ZeroToTwoYears,
             licenceValidityPeriod = LicenceValidityPeriod.UpToOneYear,
-            companyDetailsConfirmed = Some(YesNoAnswer.Yes)
+            companyDetailsConfirmed = YesNoAnswer.Yes
           )
           val session = Fixtures.companyHECSession(companyLoginData, retrievedJourneyDataWithCompanyName, answers)
 
-          val updatedAnswers = IncompleteUserAnswers
+          val updatedAnswers = IncompleteCompanyUserAnswers
             .fromCompleteAnswers(answers)
             .copy(companyDetailsConfirmed = Some(YesNoAnswer.No))
           val updatedSession = session.copy(userAnswers = updatedAnswers)
@@ -212,7 +212,7 @@ class CompanyDetailsControllerSpec
         val session = Fixtures.companyHECSession(
           companyLoginData,
           retrievedJourneyDataWithCompanyName,
-          Fixtures.incompleteUserAnswers(crn = Some(CRN("crn")))
+          Fixtures.incompleteCompanyUserAnswers(crn = Some(CRN("crn")))
         )
 
         "nothing has been submitted" in {
@@ -298,7 +298,7 @@ class CompanyDetailsControllerSpec
           }
 
           "the call to fetch CT status fails" in {
-            val answers = Fixtures.incompleteUserAnswers(crn = Some(CRN("crn")))
+            val answers = Fixtures.incompleteCompanyUserAnswers(crn = Some(CRN("crn")))
             // session contains CTUTR from enrolments
             val session = Fixtures.companyHECSession(
               Fixtures.companyLoginData(ctutr = Some(CTUTR("ctutr"))),
@@ -320,7 +320,7 @@ class CompanyDetailsControllerSpec
           }
 
           "the call to update and next fails" in {
-            val answers = Fixtures.incompleteUserAnswers(crn = Some(CRN("crn")))
+            val answers = Fixtures.incompleteCompanyUserAnswers(crn = Some(CRN("crn")))
             // session contains CTUTR from enrolments
             val ctutr   = CTUTR("ctutr")
             val session = Fixtures.companyHECSession(
@@ -362,7 +362,7 @@ class CompanyDetailsControllerSpec
 
         "user answers with a No" when {
           "the call to update and next fails" in {
-            val answers = Fixtures.incompleteUserAnswers(crn = Some(CRN("crn")))
+            val answers = Fixtures.incompleteCompanyUserAnswers(crn = Some(CRN("crn")))
             val session = Fixtures.companyHECSession(companyLoginData, retrievedJourneyDataWithCompanyName, answers)
 
             // should wipe out CRN answer if user says that the company name is incorrect
@@ -389,7 +389,7 @@ class CompanyDetailsControllerSpec
 
         "user answers with a Yes and all data fetches are successful" when {
           "the enrolment and DES CTUTRs match" in {
-            val answers = Fixtures.incompleteUserAnswers(crn = Some(CRN("crn")))
+            val answers = Fixtures.incompleteCompanyUserAnswers(crn = Some(CRN("crn")))
             // session contains CTUTR from enrolments
             val ctutr   = CTUTR("ctutr")
             val session = Fixtures.companyHECSession(
@@ -427,7 +427,7 @@ class CompanyDetailsControllerSpec
           }
 
           "the enrolment and DES CTUTRs do not match" in {
-            val answers     = Fixtures.incompleteUserAnswers(crn = Some(CRN("crn")))
+            val answers     = Fixtures.incompleteCompanyUserAnswers(crn = Some(CRN("crn")))
             // session contains CTUTR from enrolments
             val companyData = companyLoginData.copy(ctutr = Some(CTUTR("ctutr")))
             val session     =
@@ -456,7 +456,7 @@ class CompanyDetailsControllerSpec
         }
 
         "user answers with a No" in {
-          val answers = Fixtures.incompleteUserAnswers(crn = Some(CRN("crn")))
+          val answers = Fixtures.incompleteCompanyUserAnswers(crn = Some(CRN("crn")))
           val session = Fixtures.companyHECSession(companyLoginData, retrievedJourneyDataWithCompanyName, answers)
 
           // should wipe out CRN answer if user says that the company name is incorrect
@@ -502,7 +502,8 @@ class CompanyDetailsControllerSpec
 
         "the user has not previously answered the question " in {
 
-          val session = CompanyHECSession(companyLoginData, companyData, UserAnswers.empty, None, None, List.empty)
+          val session =
+            CompanyHECSession(companyLoginData, companyData, CompanyUserAnswers.empty, None, None, List.empty)
 
           inSequence {
             mockAuthWithNoRetrievals()
@@ -530,7 +531,7 @@ class CompanyDetailsControllerSpec
 
         "the user has previously answered the question" in {
 
-          val answers = Fixtures.completeUserAnswers(
+          val answers = Fixtures.completeCompanyUserAnswers(
             LicenceType.OperatorOfPrivateHireVehicles,
             LicenceTimeTrading.ZeroToTwoYears,
             LicenceValidityPeriod.UpToOneYear,
@@ -539,7 +540,7 @@ class CompanyDetailsControllerSpec
           )
           val session = CompanyHECSession(companyLoginData, companyData, answers, None, None, List.empty)
 
-          val updatedAnswers = IncompleteUserAnswers
+          val updatedAnswers = IncompleteCompanyUserAnswers
             .fromCompleteAnswers(answers)
             .copy(chargeableForCT = Some(YesNoAnswer.Yes))
           val updatedSession = session.copy(userAnswers = updatedAnswers)
@@ -586,7 +587,7 @@ class CompanyDetailsControllerSpec
             retrievedJourneyDataWithCompanyName.copy(
               ctStatus = Some(CTStatusResponse(CTUTR("utr"), date, date, None))
             ),
-            UserAnswers.empty,
+            CompanyUserAnswers.empty,
             None,
             None,
             List.empty
@@ -621,7 +622,7 @@ class CompanyDetailsControllerSpec
         val session = Fixtures.companyHECSession(
           companyLoginData,
           validJourneyData,
-          Fixtures.incompleteUserAnswers(crn = Some(CRN("crn")))
+          Fixtures.incompleteCompanyUserAnswers(crn = Some(CRN("crn")))
         )
 
         def test(formAnswer: (String, String)*) = {
@@ -677,7 +678,7 @@ class CompanyDetailsControllerSpec
         }
 
         "the call to update and next fails" in {
-          val answers = Fixtures.incompleteUserAnswers(crn = Some(CRN("crn")))
+          val answers = Fixtures.incompleteCompanyUserAnswers(crn = Some(CRN("crn")))
           val session = Fixtures.companyHECSession(
             companyLoginData,
             retrievedJourneyDataWithCompanyName.copy(
@@ -711,7 +712,7 @@ class CompanyDetailsControllerSpec
         "user gives a valid answer and" when {
 
           "the answer has not changed from an answer found in session" in {
-            val answers = Fixtures.incompleteUserAnswers(
+            val answers = Fixtures.incompleteCompanyUserAnswers(
               crn = Some(CRN("crn")),
               chargeableForCT = Some(YesNoAnswer.Yes),
               ctIncomeDeclared = Some(YesNoAnswer.No)
@@ -732,14 +733,14 @@ class CompanyDetailsControllerSpec
           }
 
           "the answer has changed from an answer found in session" in {
-            val answers = Fixtures.completeUserAnswers(
-              crn = Some(CRN("crn")),
+            val answers = Fixtures.completeCompanyUserAnswers(
+              crn = CRN("crn"),
               chargeableForCT = Some(YesNoAnswer.Yes),
               ctIncomeDeclared = Some(YesNoAnswer.No)
             )
             val session = Fixtures.companyHECSession(companyLoginData, validJourneyData, answers)
 
-            val updatedAnswers = IncompleteUserAnswers
+            val updatedAnswers = IncompleteCompanyUserAnswers
               .fromCompleteAnswers(answers)
               .copy(chargeableForCT = Some(YesNoAnswer.No), ctIncomeDeclared = None)
             val updatedSession = session.copy(userAnswers = updatedAnswers)
@@ -815,17 +816,17 @@ class CompanyDetailsControllerSpec
 
         "the user has previously answered the question" in {
 
-          val answers = Fixtures.completeUserAnswers(
+          val answers = Fixtures.completeCompanyUserAnswers(
             licenceType = LicenceType.OperatorOfPrivateHireVehicles,
             licenceTimeTrading = LicenceTimeTrading.ZeroToTwoYears,
             licenceValidityPeriod = LicenceValidityPeriod.UpToOneYear,
-            companyDetailsConfirmed = Some(YesNoAnswer.Yes),
+            companyDetailsConfirmed = YesNoAnswer.Yes,
             chargeableForCT = Some(YesNoAnswer.No),
             ctIncomeDeclared = Some(YesNoAnswer.Yes)
           )
           val session = Fixtures.companyHECSession(companyLoginData, companyData, answers)
 
-          val updatedAnswers = IncompleteUserAnswers
+          val updatedAnswers = IncompleteCompanyUserAnswers
             .fromCompleteAnswers(answers)
             .copy(ctIncomeDeclared = Some(YesNoAnswer.No))
           val updatedSession = session.copy(userAnswers = updatedAnswers)
@@ -901,7 +902,7 @@ class CompanyDetailsControllerSpec
         val session = Fixtures.companyHECSession(
           companyLoginData,
           validJourneyData,
-          Fixtures.incompleteUserAnswers(crn = Some(CRN("crn")))
+          Fixtures.incompleteCompanyUserAnswers(crn = Some(CRN("crn")))
         )
 
         def test(formAnswer: (String, String)*) = {
@@ -957,7 +958,7 @@ class CompanyDetailsControllerSpec
         }
 
         "the call to update and next fails" in {
-          val answers = Fixtures.incompleteUserAnswers(crn = Some(CRN("crn")))
+          val answers = Fixtures.incompleteCompanyUserAnswers(crn = Some(CRN("crn")))
           val session = Fixtures.companyHECSession(
             companyLoginData,
             retrievedJourneyDataWithCompanyName.copy(
@@ -993,7 +994,7 @@ class CompanyDetailsControllerSpec
       "redirect to the next page" when {
 
         "user gives a valid answer" in {
-          val answers = Fixtures.incompleteUserAnswers(crn = Some(CRN("crn")))
+          val answers = Fixtures.incompleteCompanyUserAnswers(crn = Some(CRN("crn")))
           val session = Fixtures.companyHECSession(companyLoginData, validJourneyData, answers)
 
           val updatedAnswers = answers.copy(ctIncomeDeclared = Some(YesNoAnswer.No))
@@ -1040,7 +1041,8 @@ class CompanyDetailsControllerSpec
 
         "the user has not previously answered the question " in {
 
-          val session = CompanyHECSession(companyLoginData, companyData, UserAnswers.empty, None, None, List.empty)
+          val session =
+            CompanyHECSession(companyLoginData, companyData, CompanyUserAnswers.empty, None, None, List.empty)
 
           inSequence {
             mockAuthWithNoRetrievals()
@@ -1066,16 +1068,16 @@ class CompanyDetailsControllerSpec
 
         "the user has previously answered the question" in {
 
-          val answers = Fixtures.completeUserAnswers(
+          val answers = Fixtures.completeCompanyUserAnswers(
             licenceType = LicenceType.OperatorOfPrivateHireVehicles,
             licenceTimeTrading = LicenceTimeTrading.ZeroToTwoYears,
             licenceValidityPeriod = LicenceValidityPeriod.UpToOneYear,
-            companyDetailsConfirmed = Some(YesNoAnswer.Yes),
+            companyDetailsConfirmed = YesNoAnswer.Yes,
             recentlyStartedTrading = Some(YesNoAnswer.Yes)
           )
           val session = CompanyHECSession(companyLoginData, companyData, answers, None, None, List.empty)
 
-          val updatedAnswers = IncompleteUserAnswers
+          val updatedAnswers = IncompleteCompanyUserAnswers
             .fromCompleteAnswers(answers)
             .copy(recentlyStartedTrading = Some(YesNoAnswer.No))
           val updatedSession = session.copy(userAnswers = updatedAnswers)
@@ -1135,7 +1137,7 @@ class CompanyDetailsControllerSpec
         val session = CompanyHECSession(
           companyLoginData,
           validJourneyData,
-          UserAnswers.empty.copy(crn = Some(CRN("crn"))),
+          CompanyUserAnswers.empty.copy(crn = Some(CRN("crn"))),
           None,
           None,
           List.empty
@@ -1180,7 +1182,7 @@ class CompanyDetailsControllerSpec
         }
 
         "the call to update and next fails" in {
-          val answers = UserAnswers.empty.copy(crn = Some(CRN("crn")))
+          val answers = CompanyUserAnswers.empty.copy(crn = Some(CRN("crn")))
           val session = CompanyHECSession(
             companyLoginData,
             retrievedJourneyDataWithCompanyName.copy(
@@ -1217,7 +1219,7 @@ class CompanyDetailsControllerSpec
       "redirect to the next page" when {
 
         "user gives a valid answer" in {
-          val answers = UserAnswers.empty.copy(crn = Some(CRN("crn")))
+          val answers = CompanyUserAnswers.empty.copy(crn = Some(CRN("crn")))
           val session = CompanyHECSession(companyLoginData, validJourneyData, answers, None, None, List.empty)
 
           val updatedAnswers = answers.copy(recentlyStartedTrading = Some(YesNoAnswer.No))
@@ -1284,7 +1286,7 @@ class CompanyDetailsControllerSpec
 
         "the user has previously answered the question" in {
           val ctutr   = "1111111111"
-          val answers = Fixtures.completeUserAnswers(
+          val answers = Fixtures.completeCompanyUserAnswers(
             ctutr = Some(CTUTR(ctutr))
           )
           val session = Fixtures.companyHECSession(companyLoginData, companyData, answers)
@@ -1458,7 +1460,7 @@ class CompanyDetailsControllerSpec
 
         "the call to update and next fails" when {
           "user answer is valid" in {
-            val answers = Fixtures.incompleteUserAnswers()
+            val answers = Fixtures.incompleteCompanyUserAnswers()
             val session = Fixtures.companyHECSession(
               companyLoginData,
               Fixtures.companyRetrievedJourneyData(desCtutr = Some(CTUTR(ctutr1)))
@@ -1532,7 +1534,7 @@ class CompanyDetailsControllerSpec
               s"${_13DigitCtutr}k" -> ctutr1
             ).foreach { case (ctutrAnswer, strippedCtutrAnswer) =>
               withClue(s"for CTUTR = $ctutrAnswer") {
-                val answers = Fixtures.incompleteUserAnswers()
+                val answers = Fixtures.incompleteCompanyUserAnswers()
                 val session = Fixtures.companyHECSession(
                   companyLoginData,
                   Fixtures.companyRetrievedJourneyData(desCtutr = Some(CTUTR(strippedCtutrAnswer)))
@@ -1573,7 +1575,7 @@ class CompanyDetailsControllerSpec
 
           "and the ctutr attempt in session is not 0, in updated session it should get reset to 0" in {
 
-            val answers = Fixtures.incompleteUserAnswers()
+            val answers = Fixtures.incompleteCompanyUserAnswers()
             val session = Fixtures.companyHECSession(
               companyLoginData,
               Fixtures.companyRetrievedJourneyData(desCtutr = Some(CTUTR("1111111111"))),

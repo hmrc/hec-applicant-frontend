@@ -19,22 +19,22 @@ package uk.gov.hmrc.hecapplicantfrontend.models
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.Json
-import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.IncompleteUserAnswers
+import uk.gov.hmrc.hecapplicantfrontend.models.IndividualUserAnswers.IncompleteIndividualUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hecapplicantfrontend.utils.Fixtures
 
 class UserAnswersSpec extends AnyWordSpec with Matchers {
 
-  "UserAnswers" must {
+  "IndividualUserAnswers" must {
 
     "have an empty val" in {
-      UserAnswers.empty shouldBe Fixtures.incompleteUserAnswers()
+      IndividualUserAnswers.empty shouldBe Fixtures.incompleteIndividualUserAnswers()
     }
 
     "have a fold method" which {
 
       "works with incomplete answers" in {
-        val incompleteAnswers = UserAnswers.empty
+        val incompleteAnswers = IndividualUserAnswers.empty
         incompleteAnswers.fold(
           _ shouldBe incompleteAnswers,
           _ => fail()
@@ -42,12 +42,12 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
       }
 
       "works with complete answers" in {
-        val completeAnswers = Fixtures.completeUserAnswers(
+        val completeAnswers = Fixtures.completeIndividualUserAnswers(
           LicenceType.DriverOfTaxisAndPrivateHires,
           LicenceTimeTrading.TwoToFourYears,
           LicenceValidityPeriod.UpToFiveYears,
-          Some(TaxSituation.PAYE),
-          None,
+          TaxSituation.PAYE,
+          YesNoAnswer.Yes,
           Some(EntityType.Individual)
         )
         completeAnswers.fold(
@@ -59,44 +59,45 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
     }
 
     "have a method which converts complete answers to incomplete" in {
-      val completeAnswers = Fixtures.completeUserAnswers(
+      val completeAnswers = Fixtures.completeIndividualUserAnswers(
         LicenceType.DriverOfTaxisAndPrivateHires,
         LicenceTimeTrading.TwoToFourYears,
         LicenceValidityPeriod.UpToTwoYears,
-        Some(TaxSituation.PAYE),
-        None,
+        TaxSituation.PAYE,
+        YesNoAnswer.Yes,
         Some(EntityType.Individual)
       )
-      IncompleteUserAnswers.fromCompleteAnswers(completeAnswers) shouldBe Fixtures.incompleteUserAnswers(
-        Some(LicenceType.DriverOfTaxisAndPrivateHires),
-        Some(LicenceTimeTrading.TwoToFourYears),
-        Some(LicenceValidityPeriod.UpToTwoYears),
-        Some(TaxSituation.PAYE),
-        None,
-        Some(EntityType.Individual)
-      )
+      IncompleteIndividualUserAnswers.fromCompleteAnswers(completeAnswers) shouldBe Fixtures
+        .incompleteIndividualUserAnswers(
+          Some(LicenceType.DriverOfTaxisAndPrivateHires),
+          Some(LicenceTimeTrading.TwoToFourYears),
+          Some(LicenceValidityPeriod.UpToTwoYears),
+          Some(TaxSituation.PAYE),
+          Some(YesNoAnswer.Yes),
+          Some(EntityType.Individual)
+        )
 
     }
 
     "have an unset method" which {
 
       val incompleteAnswers =
-        Fixtures.incompleteUserAnswers(
+        Fixtures.incompleteIndividualUserAnswers(
           Some(LicenceType.DriverOfTaxisAndPrivateHires),
           Some(LicenceTimeTrading.ZeroToTwoYears),
           Some(LicenceValidityPeriod.UpToThreeYears),
           Some(TaxSituation.PAYE),
-          None,
+          Some(YesNoAnswer.Yes),
           Some(EntityType.Company)
         )
 
       val completeAnswers =
-        Fixtures.completeUserAnswers(
+        Fixtures.completeIndividualUserAnswers(
           LicenceType.DriverOfTaxisAndPrivateHires,
           LicenceTimeTrading.ZeroToTwoYears,
           LicenceValidityPeriod.UpToThreeYears,
-          Some(TaxSituation.PAYE),
-          None,
+          TaxSituation.PAYE,
+          YesNoAnswer.Yes,
           Some(EntityType.Company)
         )
 
@@ -123,8 +124,8 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
     }
 
     "perform JSON de/serialisation correctly" must {
-      val incompleteAnswers: UserAnswers =
-        Fixtures.incompleteUserAnswers(
+      val incompleteAnswers: IndividualUserAnswers =
+        Fixtures.incompleteIndividualUserAnswers(
           Some(LicenceType.DriverOfTaxisAndPrivateHires),
           Some(LicenceTimeTrading.ZeroToTwoYears),
           Some(LicenceValidityPeriod.UpToThreeYears),
@@ -142,13 +143,13 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
                                         |"type":"Incomplete"
                                         |}""".stripMargin)
 
-      val completeAnswers: UserAnswers =
-        Fixtures.completeUserAnswers(
+      val completeAnswers: IndividualUserAnswers =
+        Fixtures.completeIndividualUserAnswers(
           LicenceType.DriverOfTaxisAndPrivateHires,
           LicenceTimeTrading.ZeroToTwoYears,
           LicenceValidityPeriod.UpToThreeYears,
-          Some(TaxSituation.PAYE),
-          None,
+          TaxSituation.PAYE,
+          YesNoAnswer.Yes,
           Some(EntityType.Company)
         )
 
@@ -157,6 +158,7 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
                                       |"licenceTimeTrading":"ZeroToTwoYears",
                                       |"licenceValidityPeriod":"UpToThreeYears",
                                       |"taxSituation":"PAYE",
+                                      |"saIncomeDeclared": "Yes",
                                       |"entityType":"Company",
                                       |"type":"Complete"
                                       |}""".stripMargin)
@@ -170,13 +172,14 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
       }
 
       "deserialize Incomplete answers" in {
-        Json.fromJson[UserAnswers](incompleteJson).get shouldBe incompleteAnswers
+        Json.fromJson[IndividualUserAnswers](incompleteJson).get shouldBe incompleteAnswers
       }
 
       "deserialize Complete answers" in {
-        Json.fromJson[UserAnswers](completeJson).get shouldBe completeAnswers
+        Json.fromJson[IndividualUserAnswers](completeJson).get shouldBe completeAnswers
       }
     }
   }
 
+  // TODO add tests for CompanyUserAnswers
 }

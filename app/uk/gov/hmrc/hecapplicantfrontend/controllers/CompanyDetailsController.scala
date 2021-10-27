@@ -240,7 +240,7 @@ class CompanyDetailsController @Inject() (
     authAction.andThen(sessionDataAction).async { implicit request =>
       request.sessionData mapAsCompany { companySession =>
         ensureCompanyDataHasCTStatusAccountingPeriod(companySession) { latestAccountingPeriod =>
-          val chargeableForCT = companySession.userAnswers.fold(_.chargeableForCT, u => Some(u.chargeableForCT))
+          val chargeableForCT = companySession.userAnswers.fold(_.chargeableForCT, _.chargeableForCT)
           val endDateStr      = TimeUtils.govDisplayFormat(latestAccountingPeriod.endDate)
           val form = {
             val emptyForm = CompanyDetailsController.yesNoForm("chargeableForCT", YesNoAnswer.values, List(endDateStr))
@@ -263,7 +263,7 @@ class CompanyDetailsController @Inject() (
       request.sessionData mapAsCompany { companySession =>
         def handleValidAnswer(chargeableForCT: YesNoAnswer) = {
           val updatedAnswers = {
-            val existingAnswer = companySession.userAnswers.fold(_.chargeableForCT, u => Some(u.chargeableForCT))
+            val existingAnswer = companySession.userAnswers.fold(_.chargeableForCT, _.chargeableForCT)
             if (existingAnswer.contains(chargeableForCT)) companySession.userAnswers
             else
               companySession.userAnswers

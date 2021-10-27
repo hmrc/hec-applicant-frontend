@@ -73,7 +73,7 @@ object IndividualUserAnswers {
     val userAnswersType: UserAnswersType = UserAnswersType.Complete
   }
 
-  object IncompleteUserAnswers {
+  object IncompleteIndividualUserAnswers {
 
     def fromCompleteAnswers(c: CompleteIndividualUserAnswers): IncompleteIndividualUserAnswers =
       IncompleteIndividualUserAnswers(
@@ -102,7 +102,7 @@ object IndividualUserAnswers {
       ]
     ): IncompleteIndividualUserAnswers =
       fieldLens(IncompleteIndividualUserAnswers).set(None)(
-        fold(identity, IncompleteUserAnswers.fromCompleteAnswers)
+        fold(identity, IncompleteIndividualUserAnswers.fromCompleteAnswers)
       )
 
   }
@@ -156,7 +156,7 @@ object CompanyUserAnswers {
     entityType: EntityType,
     crn: CRN,
     companyDetailsConfirmed: YesNoAnswer,
-    chargeableForCT: YesNoAnswer,
+    chargeableForCT: Option[YesNoAnswer],
     ctIncomeDeclared: Option[YesNoAnswer],
     recentlyStartedTrading: Option[YesNoAnswer],
     ctutr: Option[CTUTR]
@@ -175,7 +175,7 @@ object CompanyUserAnswers {
         Some(c.entityType),
         Some(c.crn),
         Some(c.companyDetailsConfirmed),
-        Some(c.chargeableForCT),
+        c.chargeableForCT,
         c.ctIncomeDeclared,
         c.recentlyStartedTrading,
         c.ctutr
@@ -299,7 +299,7 @@ object CompleteUserAnswersCombined {
       entityType = Some(c.entityType),
       crn = Some(c.crn),
       companyDetailsConfirmed = Some(c.companyDetailsConfirmed),
-      chargeableForCT = Some(c.chargeableForCT),
+      chargeableForCT = c.chargeableForCT,
       ctIncomeDeclared = c.ctIncomeDeclared,
       recentlyStartedTrading = c.recentlyStartedTrading,
       ctutr = c.ctutr

@@ -26,7 +26,6 @@ import uk.gov.hmrc.hecapplicantfrontend.controllers.CheckYourAnswersControllerSp
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, IndividualHECSession}
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.IndividualLoginData
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.IndividualRetrievedJourneyData
-import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.CompleteUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models._
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR, GGCredId, NINO}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
@@ -102,23 +101,20 @@ class CheckYourAnswersControllerSpec
       "display the page" when {
 
         "applicant is an Individual" in {
-          val answers = Fixtures.completeUserAnswers(
+          val answers = Fixtures.completeIndividualUserAnswers(
             LicenceType.ScrapMetalMobileCollector,
             LicenceTimeTrading.ZeroToTwoYears,
             LicenceValidityPeriod.UpToTwoYears,
-            Some(TaxSituation.PAYE),
-            Some(YesNoAnswer.Yes),
+            TaxSituation.PAYE,
+            YesNoAnswer.Yes,
             Some(EntityType.Individual)
           )
 
           val session =
-            IndividualHECSession(
+            Fixtures.individualHECSession(
               individualLoginData,
               IndividualRetrievedJourneyData.empty,
-              answers,
-              None,
-              None,
-              List.empty
+              answers
             )
 
           val expectedRows =
@@ -188,13 +184,13 @@ class CheckYourAnswersControllerSpec
             chargeableForCTOpt: Option[YesNoAnswer],
             ctIncomeDeclaredOpt: Option[YesNoAnswer],
             recentlyStartedTrading: Option[YesNoAnswer]
-          ) = Fixtures.completeUserAnswers(
+          ) = Fixtures.completeCompanyUserAnswers(
             LicenceType.ScrapMetalMobileCollector,
             LicenceTimeTrading.ZeroToTwoYears,
             LicenceValidityPeriod.UpToTwoYears,
-            entityType = Some(EntityType.Company),
-            crn = Some(CRN("1123456")),
-            companyDetailsConfirmed = Some(YesNoAnswer.Yes),
+            entityType = EntityType.Company,
+            crn = CRN("1123456"),
+            companyDetailsConfirmed = YesNoAnswer.Yes,
             chargeableForCT = chargeableForCTOpt,
             ctIncomeDeclared = ctIncomeDeclaredOpt,
             recentlyStartedTrading = recentlyStartedTrading
@@ -365,37 +361,31 @@ class CheckYourAnswersControllerSpec
 
       behave like authAndSessionDataBehaviour(performAction)
 
-      val completeAnswers = Fixtures.completeUserAnswers(
+      val completeAnswers = Fixtures.completeIndividualUserAnswers(
         LicenceType.OperatorOfPrivateHireVehicles,
         LicenceTimeTrading.TwoToFourYears,
         LicenceValidityPeriod.UpToOneYear,
-        Some(TaxSituation.SA),
-        Some(YesNoAnswer.Yes),
+        TaxSituation.SA,
+        YesNoAnswer.Yes,
         Some(EntityType.Individual)
       )
 
-      val session =
-        IndividualHECSession(
-          individualLoginData,
-          IndividualRetrievedJourneyData.empty,
-          completeAnswers,
-          None,
-          Some(zonedDateTimeNow),
-          List.empty
-        )
+      val session = Fixtures.individualHECSession(
+        loginData = individualLoginData,
+        retrievedJourneyData = IndividualRetrievedJourneyData.empty,
+        userAnswers = completeAnswers,
+        taxCheckStartDateTime = Some(zonedDateTimeNow)
+      )
 
       val hecTaxCheck = HECTaxCheck(HECTaxCheckCode(""), LocalDate.now())
 
       "return an InternalServerError" when {
 
         "there are no complete answers in session" in {
-          val session = IndividualHECSession(
+          val session = Fixtures.individualHECSession(
             individualLoginData,
             IndividualRetrievedJourneyData.empty,
-            UserAnswers.empty,
-            None,
-            None,
-            List.empty
+            IndividualUserAnswers.empty
           )
 
           inSequence {

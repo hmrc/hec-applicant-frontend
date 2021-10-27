@@ -183,7 +183,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
                   Some(entityType),
                   Some(crn),
                   Some(companyDetailsConfirmed),
-                  Some(chargeableForCT),
+                  chargeableForCT,
                   ctIncomeDeclared,
                   recentlyStartedTrading,
                   ctutr
@@ -345,7 +345,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
 
   private def chargeableForCTRoute(session: HECSession) =
     session.mapAsCompany { companySession =>
-      companySession.userAnswers.fold(_.chargeableForCT, u => Some(u.chargeableForCT)) map {
+      companySession.userAnswers.fold(_.chargeableForCT, _.chargeableForCT) map {
         case YesNoAnswer.No  => routes.CheckYourAnswersController.checkYourAnswers()
         case YesNoAnswer.Yes =>
           companySession.retrievedJourneyData.ctStatus.flatMap(_.latestAccountingPeriod) match {

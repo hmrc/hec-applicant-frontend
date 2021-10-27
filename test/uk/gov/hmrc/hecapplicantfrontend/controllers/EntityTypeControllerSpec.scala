@@ -21,10 +21,11 @@ import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
+import uk.gov.hmrc.hecapplicantfrontend.models.CompanyUserAnswers.IncompleteCompanyUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, IndividualHECSession}
+import uk.gov.hmrc.hecapplicantfrontend.models.IndividualUserAnswers.IncompleteIndividualUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.{CompanyRetrievedJourneyData, IndividualRetrievedJourneyData}
-import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.IncompleteUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models._
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
@@ -98,12 +99,12 @@ class EntityTypeControllerSpec
             IndividualHECSession(
               individualLoginData,
               IndividualRetrievedJourneyData.empty,
-              Fixtures.completeUserAnswers(
+              Fixtures.completeIndividualUserAnswers(
                 LicenceType.DriverOfTaxisAndPrivateHires,
                 LicenceTimeTrading.ZeroToTwoYears,
                 LicenceValidityPeriod.UpToTwoYears,
-                Some(TaxSituation.PAYE),
-                Some(YesNoAnswer.Yes),
+                TaxSituation.PAYE,
+                YesNoAnswer.Yes,
                 Some(EntityType.Individual)
               ),
               None,
@@ -195,8 +196,8 @@ class EntityTypeControllerSpec
       "return an internal server error" when {
 
         "the call to update and next fails" in {
-          val answers        = UserAnswers.empty
-          val updatedAnswers = UserAnswers.empty.copy(entityType = Some(EntityType.Individual))
+          val answers        = IndividualUserAnswers.empty
+          val updatedAnswers = IndividualUserAnswers.empty.copy(entityType = Some(EntityType.Individual))
           val session        =
             IndividualHECSession(
               individualLoginData,
@@ -226,8 +227,8 @@ class EntityTypeControllerSpec
         "valid data is submitted and" when {
 
           "the user is Individual has not previously completed answering questions" in {
-            val answers        = UserAnswers.empty
-            val updatedAnswers = UserAnswers.empty.copy(entityType = Some(EntityType.Company))
+            val answers        = IndividualUserAnswers.empty
+            val updatedAnswers = IndividualUserAnswers.empty.copy(entityType = Some(EntityType.Company))
             val session        =
               IndividualHECSession(
                 individualLoginData,
@@ -251,8 +252,8 @@ class EntityTypeControllerSpec
           }
 
           "the user is Company has not previously completed answering questions" in {
-            val answers        = UserAnswers.empty
-            val updatedAnswers = UserAnswers.empty.copy(entityType = Some(EntityType.Company))
+            val answers        = CompanyUserAnswers.empty
+            val updatedAnswers = CompanyUserAnswers.empty.copy(entityType = Some(EntityType.Company))
             val session        =
               CompanyHECSession(companyLoginData, CompanyRetrievedJourneyData.empty, answers, None, None, List.empty)
             val updatedSession = session.copy(userAnswers = updatedAnswers)
@@ -273,14 +274,14 @@ class EntityTypeControllerSpec
           }
 
           "the user has previously completed answering questions" in {
-            val answers        = Fixtures.completeUserAnswers(
+            val answers        = Fixtures.completeIndividualUserAnswers(
               LicenceType.DriverOfTaxisAndPrivateHires,
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToOneYear,
-              Some(TaxSituation.PAYE),
-              Some(YesNoAnswer.Yes)
+              TaxSituation.PAYE,
+              YesNoAnswer.Yes
             )
-            val updatedAnswers = IncompleteUserAnswers
+            val updatedAnswers = IncompleteIndividualUserAnswers
               .fromCompleteAnswers(answers)
               .copy(entityType = Some(EntityType.Company))
             val session        =
@@ -306,14 +307,12 @@ class EntityTypeControllerSpec
           }
 
           "the user is a company and  has previously completed answering questions" in {
-            val answers        = Fixtures.completeUserAnswers(
+            val answers        = Fixtures.completeCompanyUserAnswers(
               licenceType = LicenceType.OperatorOfPrivateHireVehicles,
               licenceTimeTrading = LicenceTimeTrading.ZeroToTwoYears,
-              licenceValidityPeriod = LicenceValidityPeriod.UpToOneYear,
-              taxSituation = Some(TaxSituation.SAPAYE),
-              saIncomeDeclared = Some(YesNoAnswer.Yes)
+              licenceValidityPeriod = LicenceValidityPeriod.UpToOneYear
             )
-            val updatedAnswers = IncompleteUserAnswers
+            val updatedAnswers = IncompleteCompanyUserAnswers
               .fromCompleteAnswers(answers)
               .copy(entityType = Some(EntityType.Company))
             val session        =
@@ -352,7 +351,7 @@ class EntityTypeControllerSpec
           val session = IndividualHECSession(
             individualLoginData,
             IndividualRetrievedJourneyData.empty,
-            UserAnswers.empty,
+            IndividualUserAnswers.empty,
             None,
             None,
             List.empty
@@ -375,7 +374,7 @@ class EntityTypeControllerSpec
           val session = IndividualHECSession(
             individualLoginData,
             IndividualRetrievedJourneyData.empty,
-            UserAnswers.empty.copy(entityType = Some(selectedEntityType)),
+            IndividualUserAnswers.empty.copy(entityType = Some(selectedEntityType)),
             None,
             None,
             List.empty

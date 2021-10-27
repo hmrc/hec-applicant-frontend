@@ -16,24 +16,39 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.utils
 
+import uk.gov.hmrc.hecapplicantfrontend.models.CompanyUserAnswers.{CompleteCompanyUserAnswers, IncompleteCompanyUserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, IndividualHECSession}
+import uk.gov.hmrc.hecapplicantfrontend.models.IndividualUserAnswers.{CompleteIndividualUserAnswers, IncompleteIndividualUserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.{CompanyRetrievedJourneyData, IndividualRetrievedJourneyData}
-import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.{CompleteUserAnswers, IncompleteUserAnswers}
+import uk.gov.hmrc.hecapplicantfrontend.models._
 import uk.gov.hmrc.hecapplicantfrontend.models.ids._
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.hecapplicantfrontend.models._
 
 import java.time.{LocalDate, ZonedDateTime}
 
 object Fixtures {
 
-  def incompleteUserAnswers(
+  def incompleteIndividualUserAnswers(
     licenceType: Option[LicenceType] = None,
     licenceTimeTrading: Option[LicenceTimeTrading] = None,
     licenceValidityPeriod: Option[LicenceValidityPeriod] = None,
     taxSituation: Option[TaxSituation] = None,
     saIncomeDeclared: Option[YesNoAnswer] = None,
+    entityType: Option[EntityType] = None
+  ): IncompleteIndividualUserAnswers = IncompleteIndividualUserAnswers(
+    licenceType = licenceType,
+    licenceTimeTrading = licenceTimeTrading,
+    licenceValidityPeriod = licenceValidityPeriod,
+    taxSituation = taxSituation,
+    saIncomeDeclared = saIncomeDeclared,
+    entityType = entityType
+  )
+
+  def incompleteCompanyUserAnswers(
+    licenceType: Option[LicenceType] = None,
+    licenceTimeTrading: Option[LicenceTimeTrading] = None,
+    licenceValidityPeriod: Option[LicenceValidityPeriod] = None,
     entityType: Option[EntityType] = None,
     crn: Option[CRN] = None,
     companyDetailsConfirmed: Option[YesNoAnswer] = None,
@@ -41,12 +56,10 @@ object Fixtures {
     ctIncomeDeclared: Option[YesNoAnswer] = None,
     recentlyStartedTrading: Option[YesNoAnswer] = None,
     ctutr: Option[CTUTR] = None
-  ): IncompleteUserAnswers = IncompleteUserAnswers(
+  ): IncompleteCompanyUserAnswers = IncompleteCompanyUserAnswers(
     licenceType = licenceType,
     licenceTimeTrading = licenceTimeTrading,
     licenceValidityPeriod = licenceValidityPeriod,
-    taxSituation = taxSituation,
-    saIncomeDeclared = saIncomeDeclared,
     entityType = entityType,
     crn = crn,
     companyDetailsConfirmed = companyDetailsConfirmed,
@@ -56,25 +69,37 @@ object Fixtures {
     ctutr = ctutr
   )
 
-  def completeUserAnswers(
+  def completeIndividualUserAnswers(
     licenceType: LicenceType = LicenceType.DriverOfTaxisAndPrivateHires,
     licenceTimeTrading: LicenceTimeTrading = LicenceTimeTrading.ZeroToTwoYears,
     licenceValidityPeriod: LicenceValidityPeriod = LicenceValidityPeriod.UpToOneYear,
-    taxSituation: Option[TaxSituation] = None,
-    saIncomeDeclared: Option[YesNoAnswer] = None,
-    entityType: Option[EntityType] = None,
-    crn: Option[CRN] = None,
-    companyDetailsConfirmed: Option[YesNoAnswer] = None,
-    chargeableForCT: Option[YesNoAnswer] = None,
-    ctIncomeDeclared: Option[YesNoAnswer] = None,
-    recentlyStartedTrading: Option[YesNoAnswer] = None,
-    ctutr: Option[CTUTR] = None
-  ): CompleteUserAnswers = CompleteUserAnswers(
+    taxSituation: TaxSituation = TaxSituation.PAYE,
+    saIncomeDeclared: YesNoAnswer = YesNoAnswer.Yes,
+    entityType: Option[EntityType] = None
+  ): CompleteIndividualUserAnswers = CompleteIndividualUserAnswers(
     licenceType = licenceType,
     licenceTimeTrading = licenceTimeTrading,
     licenceValidityPeriod = licenceValidityPeriod,
     taxSituation = taxSituation,
     saIncomeDeclared = saIncomeDeclared,
+    entityType = entityType
+  )
+
+  def completeCompanyUserAnswers(
+    licenceType: LicenceType = LicenceType.DriverOfTaxisAndPrivateHires,
+    licenceTimeTrading: LicenceTimeTrading = LicenceTimeTrading.ZeroToTwoYears,
+    licenceValidityPeriod: LicenceValidityPeriod = LicenceValidityPeriod.UpToOneYear,
+    entityType: EntityType = EntityType.Company,
+    crn: CRN = CRN("crn"),
+    companyDetailsConfirmed: YesNoAnswer = YesNoAnswer.Yes,
+    chargeableForCT: Option[YesNoAnswer] = None,
+    ctIncomeDeclared: Option[YesNoAnswer] = None,
+    recentlyStartedTrading: Option[YesNoAnswer] = None,
+    ctutr: Option[CTUTR] = None
+  ): CompleteCompanyUserAnswers = CompleteCompanyUserAnswers(
+    licenceType = licenceType,
+    licenceTimeTrading = licenceTimeTrading,
+    licenceValidityPeriod = licenceValidityPeriod,
     entityType = entityType,
     crn = crn,
     companyDetailsConfirmed = companyDetailsConfirmed,
@@ -106,7 +131,7 @@ object Fixtures {
   def individualHECSession(
     loginData: IndividualLoginData = individualLoginData(),
     retrievedJourneyData: IndividualRetrievedJourneyData = individualRetrievedJourneyData(),
-    userAnswers: UserAnswers = incompleteUserAnswers(),
+    userAnswers: IndividualUserAnswers = incompleteIndividualUserAnswers(),
     completedTaxCheck: Option[HECTaxCheck] = None,
     taxCheckStartDateTime: Option[ZonedDateTime] = None,
     unexpiredTaxChecks: List[TaxCheckListItem] = List.empty
@@ -143,7 +168,7 @@ object Fixtures {
   def companyHECSession(
     loginData: CompanyLoginData = companyLoginData(),
     retrievedJourneyData: CompanyRetrievedJourneyData = companyRetrievedJourneyData(),
-    userAnswers: UserAnswers = incompleteUserAnswers(),
+    userAnswers: CompanyUserAnswers = incompleteCompanyUserAnswers(),
     completedTaxCheck: Option[HECTaxCheck] = None,
     taxCheckStartDateTime: Option[ZonedDateTime] = None,
     unexpiredTaxChecks: List[TaxCheckListItem] = List.empty,

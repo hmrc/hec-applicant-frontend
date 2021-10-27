@@ -126,15 +126,12 @@ class TaxSituationControllerSpec
         "the user has not previously answered the question " when {
 
           "licence Type is Driver of taxis and private hire vehicles" in {
-            val session = IndividualHECSession(
+            val session = Fixtures.individualHECSession(
               individualLoginData,
               IndividualRetrievedJourneyData.empty,
-              UserAnswers.empty.copy(
+              IndividualUserAnswers.empty.copy(
                 licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)
-              ),
-              None,
-              None,
-              List.empty
+              )
             )
 
             inSequence {
@@ -169,19 +166,16 @@ class TaxSituationControllerSpec
 
         "the user has previously answered the question" in {
           val session =
-            IndividualHECSession(
+            Fixtures.individualHECSession(
               individualLoginData,
               IndividualRetrievedJourneyData.empty,
-              Fixtures.completeUserAnswers(
+              Fixtures.completeIndividualUserAnswers(
                 LicenceType.DriverOfTaxisAndPrivateHires,
                 LicenceTimeTrading.TwoToFourYears,
                 LicenceValidityPeriod.UpToThreeYears,
-                Some(TaxSituation.PAYE),
-                Some(YesNoAnswer.Yes)
-              ),
-              None,
-              None,
-              List.empty
+                TaxSituation.PAYE,
+                YesNoAnswer.Yes
+              )
             )
 
           inSequence {
@@ -212,15 +206,12 @@ class TaxSituationControllerSpec
         "with tax year as 2019 to 2020" when {
 
           "today's date is start of the year" in {
-            val session = IndividualHECSession(
+            val session = Fixtures.individualHECSession(
               individualLoginData,
               IndividualRetrievedJourneyData.empty,
-              UserAnswers.empty.copy(
+              IndividualUserAnswers.empty.copy(
                 licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)
-              ),
-              None,
-              None,
-              List.empty
+              )
             )
 
             inSequence {
@@ -254,15 +245,12 @@ class TaxSituationControllerSpec
           }
 
           "today's date is more than six months from 6 april 2020" in {
-            val session = IndividualHECSession(
+            val session = Fixtures.individualHECSession(
               individualLoginData,
               IndividualRetrievedJourneyData.empty,
-              UserAnswers.empty.copy(
+              IndividualUserAnswers.empty.copy(
                 licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)
-              ),
-              None,
-              None,
-              List.empty
+              )
             )
 
             inSequence {
@@ -296,15 +284,12 @@ class TaxSituationControllerSpec
           }
 
           "today's date is exactly six months from 6 april 2020" in {
-            val session = IndividualHECSession(
+            val session = Fixtures.individualHECSession(
               individualLoginData,
               IndividualRetrievedJourneyData.empty,
-              UserAnswers.empty.copy(
+              IndividualUserAnswers.empty.copy(
                 licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)
-              ),
-              None,
-              None,
-              List.empty
+              )
             )
 
             inSequence {
@@ -342,15 +327,12 @@ class TaxSituationControllerSpec
         "with tax year as 2020 to 2021" when {
 
           "today's date is start of the year 2022" in {
-            val session = IndividualHECSession(
+            val session = Fixtures.individualHECSession(
               individualLoginData,
               IndividualRetrievedJourneyData.empty,
-              UserAnswers.empty.copy(
+              IndividualUserAnswers.empty.copy(
                 licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)
-              ),
-              None,
-              None,
-              List.empty
+              )
             )
 
             inSequence {
@@ -384,15 +366,10 @@ class TaxSituationControllerSpec
           }
 
           "today's date is more than six months from 6 april 2021" in {
-            val session = IndividualHECSession(
+            val session = Fixtures.individualHECSession(
               individualLoginData,
               IndividualRetrievedJourneyData.empty,
-              UserAnswers.empty.copy(
-                licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)
-              ),
-              None,
-              None,
-              List.empty
+              IndividualUserAnswers.empty.copy(licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires))
             )
 
             inSequence {
@@ -426,15 +403,10 @@ class TaxSituationControllerSpec
           }
 
           "today's date is exactly six months from 6 april 2021" in {
-            val session = IndividualHECSession(
+            val session = Fixtures.individualHECSession(
               individualLoginData,
               IndividualRetrievedJourneyData.empty,
-              UserAnswers.empty.copy(
-                licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)
-              ),
-              None,
-              None,
-              List.empty
+              IndividualUserAnswers.empty.copy(licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires))
             )
 
             inSequence {
@@ -474,15 +446,10 @@ class TaxSituationControllerSpec
       "display only relevant options" when {
 
         "licence type = DriverOfTaxisAndPrivateHires" in {
-          val session = IndividualHECSession(
+          val session = Fixtures.individualHECSession(
             individualLoginData,
             IndividualRetrievedJourneyData.empty,
-            UserAnswers.empty.copy(
-              licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)
-            ),
-            None,
-            None,
-            List.empty
+            IndividualUserAnswers.empty.copy(licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires))
           )
 
           inSequence {
@@ -519,15 +486,12 @@ class TaxSituationControllerSpec
             LicenceType.OperatorOfPrivateHireVehicles
           ).foreach { licenceType =>
             withClue(s"For licence type $licenceType: ") {
-              val session = IndividualHECSession(
+              val session = Fixtures.individualHECSession(
                 individualLoginData,
                 IndividualRetrievedJourneyData.empty,
-                UserAnswers.empty.copy(
+                IndividualUserAnswers.empty.copy(
                   licenceType = Some(licenceType)
-                ),
-                None,
-                None,
-                List.empty
+                )
               )
 
               inSequence {
@@ -570,16 +534,13 @@ class TaxSituationControllerSpec
 
       "show a form error" when {
 
-        val answers        = UserAnswers.empty
-        val updatedAnswers = UserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
+        val answers        = IndividualUserAnswers.empty
+        val updatedAnswers = IndividualUserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
         val session        =
-          IndividualHECSession(
+          Fixtures.individualHECSession(
             individualLoginData,
             IndividualRetrievedJourneyData.empty,
-            answers,
-            None,
-            None,
-            List.empty
+            answers
           )
         val updatedSession = session.copy(userAnswers = updatedAnswers)
 
@@ -663,17 +624,14 @@ class TaxSituationControllerSpec
         }
 
         "the call to update and next fails" in {
-          val answers = UserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
-          val session = IndividualHECSession(
+          val answers = IndividualUserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
+          val session = Fixtures.individualHECSession(
             individualLoginData.copy(sautr = Some(SAUTR("utr"))),
             IndividualRetrievedJourneyData.empty,
-            answers,
-            None,
-            None,
-            List.empty
+            answers
           )
 
-          val updatedAnswers = UserAnswers.empty
+          val updatedAnswers = IndividualUserAnswers.empty
             .copy(
               licenceType = Some(DriverOfTaxisAndPrivateHires),
               licenceValidityPeriod = None,
@@ -706,11 +664,9 @@ class TaxSituationControllerSpec
         TaxSituation.NotChargeable -> "3"
       )
       def testNonSA(taxSituation: TaxSituation) = {
-        val answers        = UserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
-        val individualData =
-          individualLoginData.copy(sautr = Some(SAUTR("utr")))
-        val session        =
-          IndividualHECSession(individualData, IndividualRetrievedJourneyData.empty, answers, None, None, List.empty)
+        val answers        = IndividualUserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
+        val individualData = individualLoginData.copy(sautr = Some(SAUTR("utr")))
+        val session        = Fixtures.individualHECSession(individualData, IndividualRetrievedJourneyData.empty, answers)
 
         val updatedAnswers = answers.copy(taxSituation = Some(taxSituation))
         val updatedSession = session.copy(userAnswers = updatedAnswers)
@@ -741,11 +697,9 @@ class TaxSituationControllerSpec
       }
 
       def testSA(taxSituation: TaxSituation, statusResponse: SAStatusResponse) = {
-        val answers        = UserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
-        val individualData =
-          individualLoginData.copy(sautr = Some(SAUTR("utr")))
-        val session        =
-          IndividualHECSession(individualData, IndividualRetrievedJourneyData.empty, answers, None, None, List.empty)
+        val answers        = IndividualUserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
+        val individualData = individualLoginData.copy(sautr = Some(SAUTR("utr")))
+        val session        = Fixtures.individualHECSession(individualData, IndividualRetrievedJourneyData.empty, answers)
 
         val updatedAnswers = answers.copy(taxSituation = Some(taxSituation))
         val updatedSession = session.copy(
@@ -780,11 +734,11 @@ class TaxSituationControllerSpec
       }
 
       "throw internal server error if call to fetch SA status fails" in {
-        val answers        = UserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
+        val answers        = IndividualUserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
         val individualData =
           individualLoginData.copy(sautr = Some(SAUTR("utr")))
         val session        =
-          IndividualHECSession(individualData, IndividualRetrievedJourneyData.empty, answers, None, None, List.empty)
+          Fixtures.individualHECSession(individualData, IndividualRetrievedJourneyData.empty, answers)
 
         inSequence {
           mockAuthWithNoRetrievals()
@@ -801,14 +755,11 @@ class TaxSituationControllerSpec
         "valid data is submitted and" when {
 
           "the user has not previously completed answering questions" in {
-            val answers = UserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
-            val session = IndividualHECSession(
+            val answers = IndividualUserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
+            val session = Fixtures.individualHECSession(
               individualLoginData.copy(sautr = Some(SAUTR("utr"))),
               IndividualRetrievedJourneyData.empty,
-              answers,
-              None,
-              None,
-              List.empty
+              answers
             )
 
             val updatedAnswers = answers.copy(taxSituation = Some(TaxSituation.PAYE))
@@ -831,25 +782,22 @@ class TaxSituationControllerSpec
           }
 
           "the user has previously completed answering questions" in {
-            val answers = Fixtures.completeUserAnswers(
+            val answers = Fixtures.completeIndividualUserAnswers(
               LicenceType.DriverOfTaxisAndPrivateHires,
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToThreeYears,
-              Some(TaxSituation.PAYE),
-              Some(YesNoAnswer.Yes),
+              TaxSituation.PAYE,
+              YesNoAnswer.Yes,
               Some(EntityType.Individual)
             )
 
-            val session = IndividualHECSession(
+            val session = Fixtures.individualHECSession(
               individualLoginData.copy(sautr = Some(SAUTR("utr"))),
               IndividualRetrievedJourneyData.empty,
-              answers,
-              None,
-              None,
-              List.empty
+              answers
             )
 
-            val updatedAnswers = Fixtures.incompleteUserAnswers(
+            val updatedAnswers = Fixtures.incompleteIndividualUserAnswers(
               Some(LicenceType.DriverOfTaxisAndPrivateHires),
               Some(LicenceTimeTrading.ZeroToTwoYears),
               Some(LicenceValidityPeriod.UpToThreeYears),
