@@ -56,22 +56,22 @@ class AppConfig @Inject() (config: Configuration, contactFrontendConfig: Contact
     s"$url?continue=${(s"$selfBaseUrl${routes.StartController.start().url}").urlEncode}&origin=$ggOrigin"
   }
 
-  private val signOutUri: String = config.get[String]("auth.sign-out.uri")
+  private val signOutUrlBase: String = config.get[String]("auth.sign-out.url")
 
   def signOutUrl(continueUrl: Option[String]): String =
-    continueUrl.fold(signOutUri)(continue => s"$signOutUri?continue=${continue.urlEncode}")
+    continueUrl.fold(signOutUrlBase)(continue => s"$signOutUrlBase?continue=${continue.urlEncode}")
 
   val signOutAndSignBackInUrl: String =
     signOutUrl(continueUrl = Some(s"$selfBaseUrl${routes.StartController.start().url}"))
 
-  private val registerForNewGGAccountUri: String = config.get[String]("auth.register-new-account.url")
+  private val registerForNewGGAccountUrl: String = config.get[String]("auth.register-new-account.url")
 
   def registerForNewGGAccountUrl(entityType: EntityType): String = {
     val accountType = entityType match {
       case EntityType.Individual => "Individual"
       case EntityType.Company    => "Organisation"
     }
-    s"$registerForNewGGAccountUri?continueUrl=${routes.StartController.start().url.urlEncode}&accountType=$accountType&origin=$ggOrigin"
+    s"$registerForNewGGAccountUrl?continueUrl=${routes.StartController.start().url.urlEncode}&accountType=$accountType&origin=$ggOrigin"
   }
 
   val authTimeoutSeconds: Int = config.get[FiniteDuration]("auth.sign-out.inactivity-timeout").toSeconds.toInt
