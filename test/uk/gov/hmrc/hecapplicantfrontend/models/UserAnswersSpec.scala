@@ -47,7 +47,7 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
           LicenceTimeTrading.TwoToFourYears,
           LicenceValidityPeriod.UpToFiveYears,
           TaxSituation.PAYE,
-          YesNoAnswer.Yes,
+          Some(YesNoAnswer.Yes),
           Some(EntityType.Individual)
         )
         completeAnswers.fold(
@@ -64,7 +64,7 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
         LicenceTimeTrading.TwoToFourYears,
         LicenceValidityPeriod.UpToTwoYears,
         TaxSituation.PAYE,
-        YesNoAnswer.Yes,
+        Some(YesNoAnswer.Yes),
         Some(EntityType.Individual)
       )
       IncompleteIndividualUserAnswers.fromCompleteAnswers(completeAnswers) shouldBe Fixtures
@@ -97,7 +97,7 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
           LicenceTimeTrading.ZeroToTwoYears,
           LicenceValidityPeriod.UpToThreeYears,
           TaxSituation.PAYE,
-          YesNoAnswer.Yes,
+          Some(YesNoAnswer.Yes),
           Some(EntityType.Company)
         )
 
@@ -149,7 +149,7 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
           LicenceTimeTrading.ZeroToTwoYears,
           LicenceValidityPeriod.UpToThreeYears,
           TaxSituation.PAYE,
-          YesNoAnswer.Yes,
+          Some(YesNoAnswer.Yes),
           Some(EntityType.Company)
         )
 

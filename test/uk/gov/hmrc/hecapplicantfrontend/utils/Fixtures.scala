@@ -74,7 +74,7 @@ object Fixtures {
     licenceTimeTrading: LicenceTimeTrading = LicenceTimeTrading.ZeroToTwoYears,
     licenceValidityPeriod: LicenceValidityPeriod = LicenceValidityPeriod.UpToOneYear,
     taxSituation: TaxSituation = TaxSituation.PAYE,
-    saIncomeDeclared: YesNoAnswer = YesNoAnswer.Yes,
+    saIncomeDeclared: Option[YesNoAnswer] = None,
     entityType: Option[EntityType] = None
   ): CompleteIndividualUserAnswers = CompleteIndividualUserAnswers(
     licenceType = licenceType,

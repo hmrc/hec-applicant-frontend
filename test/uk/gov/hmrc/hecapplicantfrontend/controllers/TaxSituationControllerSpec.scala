@@ -174,7 +174,7 @@ class TaxSituationControllerSpec
                 LicenceTimeTrading.TwoToFourYears,
                 LicenceValidityPeriod.UpToThreeYears,
                 TaxSituation.PAYE,
-                YesNoAnswer.Yes
+                Some(YesNoAnswer.Yes)
               )
             )
 
@@ -788,7 +788,7 @@ class TaxSituationControllerSpec
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToThreeYears,
               TaxSituation.PAYE,
-              YesNoAnswer.Yes,
+              Some(YesNoAnswer.Yes),
               Some(EntityType.Individual)
             )
 

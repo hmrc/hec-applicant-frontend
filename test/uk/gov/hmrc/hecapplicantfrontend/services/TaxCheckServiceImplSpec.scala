@@ -100,7 +100,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         LicenceTimeTrading.TwoToFourYears,
         LicenceValidityPeriod.UpToOneYear,
         TaxSituation.SA,
-        YesNoAnswer.Yes
+        Some(YesNoAnswer.Yes)
       )
 
       val retrievedJourneyData = IndividualRetrievedJourneyData(None)
@@ -120,7 +120,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
           individualLoginData.nino,
           Some(sautr),
           Some(completeAnswers.taxSituation),
-          Some(completeAnswers.saIncomeDeclared),
+          completeAnswers.saIncomeDeclared,
           None
         ),
         zonedDateTimeNow,

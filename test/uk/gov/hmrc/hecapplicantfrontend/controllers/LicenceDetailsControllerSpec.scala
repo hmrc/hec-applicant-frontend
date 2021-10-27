@@ -167,7 +167,7 @@ class LicenceDetailsControllerSpec
                   LicenceTimeTrading.ZeroToTwoYears,
                   LicenceValidityPeriod.UpToTwoYears,
                   TaxSituation.SA,
-                  YesNoAnswer.Yes,
+                  Some(YesNoAnswer.Yes),
                   Some(EntityType.Individual)
                 )
               )
@@ -352,7 +352,7 @@ class LicenceDetailsControllerSpec
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToOneYear,
               TaxSituation.SA,
-              YesNoAnswer.Yes,
+              Some(YesNoAnswer.Yes),
               Some(EntityType.Individual)
             )
             val updatedAnswers =
@@ -376,7 +376,7 @@ class LicenceDetailsControllerSpec
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToOneYear,
               TaxSituation.SA,
-              YesNoAnswer.Yes,
+              Some(YesNoAnswer.Yes),
               Some(EntityType.Individual)
             )
             val updatedAnswers =
@@ -399,7 +399,7 @@ class LicenceDetailsControllerSpec
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToOneYear,
               TaxSituation.SA,
-              YesNoAnswer.Yes,
+              Some(YesNoAnswer.Yes),
               Some(EntityType.Individual)
             )
             val session =
@@ -567,7 +567,7 @@ class LicenceDetailsControllerSpec
                 LicenceTimeTrading.TwoToFourYears,
                 LicenceValidityPeriod.UpToThreeYears,
                 TaxSituation.SA,
-                YesNoAnswer.Yes,
+                Some(YesNoAnswer.Yes),
                 Some(EntityType.Company)
               )
             )
@@ -735,7 +735,7 @@ class LicenceDetailsControllerSpec
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToFiveYears,
               TaxSituation.SA,
-              YesNoAnswer.Yes,
+              Some(YesNoAnswer.Yes),
               Some(EntityType.Company)
             )
             val updatedAnswers = Fixtures.incompleteIndividualUserAnswers(
@@ -856,7 +856,7 @@ class LicenceDetailsControllerSpec
                     LicenceTimeTrading.TwoToFourYears,
                     LicenceValidityPeriod.UpToThreeYears,
                     TaxSituation.SA,
-                    YesNoAnswer.Yes,
+                    Some(YesNoAnswer.Yes),
                     Some(EntityType.Individual)
                   )
                 )
@@ -1043,7 +1043,7 @@ class LicenceDetailsControllerSpec
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToThreeYears,
               TaxSituation.SA,
-              YesNoAnswer.Yes,
+              Some(YesNoAnswer.Yes),
               Some(EntityType.Individual)
             )
             val updatedAnswers = Fixtures.incompleteIndividualUserAnswers(

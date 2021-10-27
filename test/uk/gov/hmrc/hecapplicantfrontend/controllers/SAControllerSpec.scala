@@ -174,7 +174,7 @@ class SAControllerSpec
                 LicenceTimeTrading.ZeroToTwoYears,
                 LicenceValidityPeriod.UpToTwoYears,
                 TaxSituation.PAYE,
-                YesNoAnswer.Yes,
+                Some(YesNoAnswer.Yes),
                 Some(EntityType.Individual)
               )
             )
@@ -318,7 +318,7 @@ class SAControllerSpec
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToOneYear,
               TaxSituation.SA,
-              YesNoAnswer.Yes
+              Some(YesNoAnswer.Yes)
             )
             val updatedAnswers = IncompleteIndividualUserAnswers
               .fromCompleteAnswers(answers)

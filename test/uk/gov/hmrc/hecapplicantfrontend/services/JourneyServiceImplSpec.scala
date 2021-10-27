@@ -277,7 +277,7 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
                   licenceTimeTrading = LicenceTimeTrading.TwoToFourYears,
                   licenceValidityPeriod = UpToOneYear,
                   taxSituation = PAYE,
-                  saIncomeDeclared = YesNoAnswer.Yes,
+                  saIncomeDeclared = Some(YesNoAnswer.Yes),
                   entityType = Some(Individual)
                 ),
                 None,
@@ -729,7 +729,7 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
                 licenceTimeTrading = LicenceTimeTrading.TwoToFourYears,
                 licenceValidityPeriod = UpToOneYear,
                 taxSituation = PAYE,
-                saIncomeDeclared = YesNoAnswer.Yes,
+                saIncomeDeclared = Some(YesNoAnswer.Yes),
                 entityType = Some(Individual)
               ),
               None,
@@ -1460,7 +1460,7 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
               Some(completeAnswers.licenceTimeTrading),
               Some(completeAnswers.licenceValidityPeriod),
               Some(completeAnswers.taxSituation),
-              Some(completeAnswers.saIncomeDeclared)
+              completeAnswers.saIncomeDeclared
             )
 
             val individualData = individualLoginData.copy(sautr = Some(SAUTR("utr")))
@@ -1495,7 +1495,7 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
                   LicenceTimeTrading.ZeroToTwoYears,
                   LicenceValidityPeriod.UpToOneYear,
                   TaxSituation.PAYE,
-                  YesNoAnswer.Yes,
+                  Some(YesNoAnswer.Yes),
                   Some(EntityType.Company)
                 )
 
@@ -1549,7 +1549,7 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
                   Some(completeAnswers.licenceTimeTrading),
                   Some(completeAnswers.licenceValidityPeriod),
                   Some(completeAnswers.taxSituation),
-                  Some(completeAnswers.saIncomeDeclared),
+                  completeAnswers.saIncomeDeclared,
                   completeAnswers.entityType
                 )
 
@@ -1582,7 +1582,7 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
                   LicenceTimeTrading.ZeroToTwoYears,
                   LicenceValidityPeriod.UpToOneYear,
                   taxSituation,
-                  YesNoAnswer.Yes
+                  Some(YesNoAnswer.Yes)
                 )
 
                 val incompleteAnswers = Fixtures.incompleteIndividualUserAnswers(
@@ -1590,7 +1590,7 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
                   Some(completeAnswers.licenceTimeTrading),
                   Some(completeAnswers.licenceValidityPeriod),
                   Some(completeAnswers.taxSituation),
-                  Some(completeAnswers.saIncomeDeclared),
+                  completeAnswers.saIncomeDeclared,
                   completeAnswers.entityType
                 )
 
@@ -1630,7 +1630,7 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
                   Some(completeAnswers.licenceTimeTrading),
                   Some(completeAnswers.licenceValidityPeriod),
                   Some(completeAnswers.taxSituation),
-                  Some(completeAnswers.saIncomeDeclared),
+                  completeAnswers.saIncomeDeclared,
                   completeAnswers.entityType
                 )
 
@@ -2147,7 +2147,7 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToOneYear,
               taxSituation,
-              YesNoAnswer.Yes,
+              Some(YesNoAnswer.Yes),
               entityType
             )
 
@@ -2492,7 +2492,7 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
             LicenceTimeTrading.ZeroToTwoYears,
             LicenceValidityPeriod.UpToOneYear,
             TaxSituation.PAYE,
-            YesNoAnswer.Yes,
+            Some(YesNoAnswer.Yes),
             Some(EntityType.Individual)
           )
           implicit val request: RequestWithSessionData[_] =
@@ -2730,12 +2730,11 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
           ctIncomeDeclared = ctIncomeDeclaredOpt,
           recentlyStartedTrading = recentlyStartedTradingOpt
         )
-        val session           =
-          Fixtures.companyHECSession(
-            companyData,
-            journeyData,
-            CompanyUserAnswers.empty
-          )
+        val session           = Fixtures.companyHECSession(
+          companyData,
+          journeyData,
+          CompanyUserAnswers.empty
+        )
         JourneyServiceImpl.allCompanyAnswersComplete(incompleteAnswers, session)
       }
       val date                  = LocalDate.now()

@@ -153,7 +153,7 @@ class TaxCheckServiceImpl @Inject() (hecConnector: HECConnector)(implicit ec: Ex
         loginData.nino,
         loginData.sautr,
         Some(answers.taxSituation),
-        Some(answers.saIncomeDeclared),
+        answers.saIncomeDeclared,
         retrievedJourneyData.saStatus
       )
       IndividualHECTaxCheckData(

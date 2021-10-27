@@ -90,12 +90,14 @@
     )
 }
 @saIncomeDeclaredRow = @{
-    summaryListRow(
-        messages("saIncomeDeclared.title"),
-        messages(s"saIncomeDeclared.${YesNoOption.yesNoOption(completeAnswers.saIncomeDeclared).messageKey}"),
-        routes.SAController.saIncomeStatement(),
-        messages(s"$key.saIncomeDeclared.screenReaderText")
-    )
+    completeAnswers.saIncomeDeclared.map { saIncomeDeclared =>
+        summaryListRow(
+            messages("saIncomeDeclared.title"),
+            messages(s"saIncomeDeclared.${YesNoOption.yesNoOption(saIncomeDeclared).messageKey}"),
+            routes.SAController.saIncomeStatement(),
+            messages(s"$key.saIncomeDeclared.screenReaderText")
+        )
+    }
 }
 
 @rows = @{List(
@@ -104,7 +106,7 @@
     Some(licenceValidityPeriodRow),
     entityTypeRow,
     Some(taxSituationRow),
-    Some(saIncomeDeclaredRow)
+    saIncomeDeclaredRow
 ).collect{ case Some(r) => r }}
 
 @layout(pageTitle = Some(title), backLocation = Some(back)) {

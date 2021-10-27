@@ -66,7 +66,7 @@ object IndividualUserAnswers {
     licenceTimeTrading: LicenceTimeTrading,
     licenceValidityPeriod: LicenceValidityPeriod,
     taxSituation: TaxSituation,
-    saIncomeDeclared: YesNoAnswer,
+    saIncomeDeclared: Option[YesNoAnswer],
     entityType: Option[EntityType]
   ) extends IndividualUserAnswers
       with CompleteUserAnswers {
@@ -81,7 +81,7 @@ object IndividualUserAnswers {
         Some(c.licenceTimeTrading),
         Some(c.licenceValidityPeriod),
         Some(c.taxSituation),
-        Some(c.saIncomeDeclared),
+        c.saIncomeDeclared,
         c.entityType
       )
 

@@ -106,7 +106,7 @@ class CheckYourAnswersControllerSpec
             LicenceTimeTrading.ZeroToTwoYears,
             LicenceValidityPeriod.UpToTwoYears,
             TaxSituation.PAYE,
-            YesNoAnswer.Yes,
+            Some(YesNoAnswer.Yes),
             Some(EntityType.Individual)
           )
 
@@ -366,7 +366,7 @@ class CheckYourAnswersControllerSpec
         LicenceTimeTrading.TwoToFourYears,
         LicenceValidityPeriod.UpToOneYear,
         TaxSituation.SA,
-        YesNoAnswer.Yes,
+        Some(YesNoAnswer.Yes),
         Some(EntityType.Individual)
       )
 
