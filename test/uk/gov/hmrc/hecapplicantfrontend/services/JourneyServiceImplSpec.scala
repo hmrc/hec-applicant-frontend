@@ -953,37 +953,6 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
             await(result.value) shouldBe Right(routes.CompanyDetailsController.ctutrNotMatched())
           }
 
-          "CT status could not be fetched" in {
-            val companyData = companyLoginData.copy(
-              ctutr = Some(CTUTR("enrolments-ctutr"))
-            )
-            val journeyData = CompanyRetrievedJourneyData(
-              companyName = Some(CompanyHouseName("Test tech Ltd")),
-              desCtutr = Some(CTUTR("des-ctutr")),
-              ctStatus = None
-            )
-
-            val session        = Fixtures.companyHECSession(companyData, journeyData, CompanyUserAnswers.empty)
-            val updatedSession =
-              Fixtures.companyHECSession(
-                companyData,
-                journeyData,
-                CompanyUserAnswers.empty.copy(
-                  crn = Some(CRN("1234567")),
-                  companyDetailsConfirmed = Some(YesNoAnswer.Yes)
-                )
-              )
-
-            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
-            mockStoreSession(updatedSession)(Right(()))
-
-            val result = journeyService.updateAndNext(
-              routes.CompanyDetailsController.confirmCompanyDetails(),
-              updatedSession
-            )
-            await(result.value) shouldBe Right(routes.CompanyDetailsController.cannotDoTaxCheck())
-          }
-
           "enrolments and DES CTUTRs match" when {
             def testForCTStatus(status: CTStatus) = {
               val companyData = companyLoginData.copy(
