@@ -61,7 +61,7 @@ class AppConfig @Inject() (config: Configuration, contactFrontendConfig: Contact
   def signOutUrl(continueUrl: Option[String]): String =
     continueUrl.fold(signOutUrlBase)(continue => s"$signOutUrlBase?continue=${continue.urlEncode}")
 
-  val signOutAndSignBackInUrl: String =
+  lazy val signOutAndSignBackInUrl: String =
     signOutUrl(continueUrl = Some(s"$selfBaseUrl${routes.StartController.start().url}"))
 
   private val registerForNewGGAccountUrl: String = config.get[String]("auth.register-new-account.url")
