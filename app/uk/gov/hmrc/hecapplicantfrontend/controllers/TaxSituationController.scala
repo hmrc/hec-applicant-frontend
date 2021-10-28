@@ -59,7 +59,7 @@ class TaxSituationController @Inject() (
       licenceTypeOpt match {
         case Some(licenceType) =>
           val back         = journeyService.previous(routes.TaxSituationController.taxSituation())
-          val reportIncome = individualSession.userAnswers.fold(_.taxSituation, u => Some(u.taxSituation))
+          val reportIncome = individualSession.userAnswers.fold(_.taxSituation, _.taxSituation.some)
           val options      = taxSituationOptions(licenceType)
           val form = {
             val emptyForm = taxSituationForm(options)

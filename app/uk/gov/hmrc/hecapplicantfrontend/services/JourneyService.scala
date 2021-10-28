@@ -21,6 +21,7 @@ import cats.data.EitherT
 import cats.instances.future._
 import cats.instances.string._
 import cats.syntax.eq._
+import cats.syntax.option._
 import com.google.inject.{ImplementedBy, Inject, Singleton}
 import play.api.mvc.Call
 import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
@@ -248,7 +249,10 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
     }
 
   private def licenceValidityPeriodRoute(session: HECSession): Call =
-    session.userAnswers.fold(_.licenceType, c => Some(c.licenceType), _.licenceType, c => Some(c.licenceType)) match {
+    session.userAnswers.fold(
+      _.fold(_.licenceType, _.licenceType.some),
+      _.fold(_.licenceType, _.licenceType.some)
+    ) match {
       case Some(licenceType) =>
         if (licenceTypeForIndividualAndCompany(licenceType)) routes.EntityTypeController.entityType()
         else routes.TaxSituationController.taxSituation()
@@ -258,7 +262,10 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
 
   private def entityTypeRoute(session: HECSession): Call = {
     val maybeSelectedEntityType =
-      session.userAnswers.fold(_.entityType, _.entityType, _.entityType, u => Some(u.entityType))
+      session.userAnswers.fold(
+        _.fold(_.entityType, _.entityType),
+        _.fold(_.entityType, _.entityType.some)
+      )
     val ggEntityType            = session.entityType
 
     maybeSelectedEntityType match {
@@ -276,7 +283,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
 
   private def taxSituationRoute(session: HECSession): Call =
     session.mapAsIndividual { individualSession: IndividualHECSession =>
-      individualSession.userAnswers.fold(_.taxSituation, u => Some(u.taxSituation)) match {
+      individualSession.userAnswers.fold(_.taxSituation, _.taxSituation.some) match {
         case None =>
           sys.error("Could not find tax situation for tax situation route")
 
@@ -311,7 +318,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
 
   private def confirmCompanyDetailsRoute(session: HECSession) =
     session.mapAsCompany { companySession =>
-      companySession.userAnswers.fold(_.companyDetailsConfirmed, u => Some(u.companyDetailsConfirmed)) match {
+      companySession.userAnswers.fold(_.companyDetailsConfirmed, _.companyDetailsConfirmed.some) match {
         case Some(YesNoAnswer.Yes) =>
           (companySession.loginData.ctutr, companySession.retrievedJourneyData) match {
             // enrolment and DES CTUTR present but don't match

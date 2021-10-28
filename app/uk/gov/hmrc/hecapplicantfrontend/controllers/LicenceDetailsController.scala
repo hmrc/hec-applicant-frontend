@@ -18,6 +18,7 @@ package uk.gov.hmrc.hecapplicantfrontend.controllers
 
 import cats.implicits.catsSyntaxEq
 import cats.instances.future._
+import cats.syntax.option._
 import com.google.inject.{Inject, Singleton}
 import play.api.data.Form
 import play.api.data.Forms.{mapping, of}
@@ -58,8 +59,10 @@ class LicenceDetailsController @Inject() (
 
   val licenceType: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     val back        = journeyService.previous(routes.LicenceDetailsController.licenceType())
-    val licenceType = request.sessionData.userAnswers
-      .fold(_.licenceType, c => Some(c.licenceType), _.licenceType, c => Some(c.licenceType))
+    val licenceType = request.sessionData.userAnswers.fold(
+      _.fold(_.licenceType, _.licenceType.some),
+      _.fold(_.licenceType, _.licenceType.some)
+    )
 
     val licenceOptions = licenceTypeOptions(request.sessionData)
     val form = {
@@ -73,8 +76,10 @@ class LicenceDetailsController @Inject() (
     val licenceOptions = licenceTypeOptions(request.sessionData)
     def handleValidLicenceType(licenceType: LicenceType): Future[Result] = {
       val taxCheckStartDateTime = request.sessionData.taxCheckStartDateTime.getOrElse(timeProvider.now)
-      val licenceTypeAnswer     = request.sessionData.userAnswers
-        .fold(_.licenceType, c => Some(c.licenceType), _.licenceType, c => Some(c.licenceType))
+      val licenceTypeAnswer     = request.sessionData.userAnswers.fold(
+        _.fold(_.licenceType, _.licenceType.some),
+        _.fold(_.licenceType, _.licenceType.some)
+      )
       val updatedSession        =
         if (licenceTypeAnswer.contains(licenceType))
           request.sessionData
@@ -132,10 +137,8 @@ class LicenceDetailsController @Inject() (
   val licenceTimeTrading: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     val back        = journeyService.previous(routes.LicenceDetailsController.licenceTimeTrading())
     val timeTrading = request.sessionData.userAnswers.fold(
-      _.licenceTimeTrading,
-      c => Some(c.licenceTimeTrading),
-      _.licenceTimeTrading,
-      c => Some(c.licenceTimeTrading)
+      _.fold(_.licenceTimeTrading, _.licenceTimeTrading.some),
+      _.fold(_.licenceTimeTrading, _.licenceTimeTrading.some)
     )
     val form = {
       val emptyForm = licenceTimeTradingForm(licenceTimeTradingOptions)
@@ -162,6 +165,7 @@ class LicenceDetailsController @Inject() (
           company.copy(userAnswers = answers)
         }
       )
+
       journeyService
         .updateAndNext(
           routes.LicenceDetailsController.licenceTimeTrading(),
@@ -192,18 +196,17 @@ class LicenceDetailsController @Inject() (
   }
 
   val recentLicenceLength: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
-    // TODO create nice helper
-    val licenceTypeOpt = request.sessionData.userAnswers
-      .fold(_.licenceType, c => Some(c.licenceType), _.licenceType, c => Some(c.licenceType))
+    val licenceTypeOpt = request.sessionData.userAnswers.fold(
+      _.fold(_.licenceType, _.licenceType.some),
+      _.fold(_.licenceType, _.licenceType.some)
+    )
     licenceTypeOpt match {
       case Some(licenceType) =>
         val back          = journeyService.previous(routes.LicenceDetailsController.recentLicenceLength())
         val licenceLength =
           request.sessionData.userAnswers.fold(
-            _.licenceValidityPeriod,
-            c => Some(c.licenceValidityPeriod),
-            _.licenceValidityPeriod,
-            c => Some(c.licenceValidityPeriod)
+            _.fold(_.licenceValidityPeriod, _.licenceValidityPeriod.some),
+            _.fold(_.licenceValidityPeriod, _.licenceValidityPeriod.some)
           )
         val options       = licenceValidityPeriodOptions(licenceType)
         val form = {
@@ -248,8 +251,10 @@ class LicenceDetailsController @Inject() (
           Redirect
         )
     }
-    val licenceTypeOpt = request.sessionData.userAnswers
-      .fold(_.licenceType, c => Some(c.licenceType), _.licenceType, c => Some(c.licenceType))
+    val licenceTypeOpt = request.sessionData.userAnswers.fold(
+      _.fold(_.licenceType, _.licenceType.some),
+      _.fold(_.licenceType, _.licenceType.some)
+    )
     licenceTypeOpt match {
       case Some(licenceType) =>
         val options: List[LicenceValidityPeriod] = licenceValidityPeriodOptions(licenceType)

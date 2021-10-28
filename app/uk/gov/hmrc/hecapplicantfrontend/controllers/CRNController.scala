@@ -19,6 +19,7 @@ package uk.gov.hmrc.hecapplicantfrontend.controllers
 import cats.data.EitherT
 import cats.implicits.{catsKernelStdOrderForString, catsSyntaxEq}
 import cats.instances.future._
+import cats.syntax.option._
 import com.google.inject.Inject
 import play.api.data.Form
 import play.api.data.Forms.{mapping, nonEmptyText}
@@ -54,7 +55,7 @@ class CRNController @Inject() (
 
   val companyRegistrationNumber: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
     request.sessionData.mapAsCompany { implicit companySession =>
-      val crn  = companySession.userAnswers.fold(_.crn, u => Some(u.crn))
+      val crn  = companySession.userAnswers.fold(_.crn, _.crn.some)
       val back = journeyService.previous(routes.CRNController.companyRegistrationNumber())
       val form = crn.fold(crnForm())(crnForm().fill)
       Ok(crnPage(form, back))
@@ -104,7 +105,7 @@ class CRNController @Inject() (
         } yield formErrorOrNext
 
         def handleValidCrn(crn: CRN): Future[Result] = {
-          val sessionCrn                                              = companySession.userAnswers.fold(_.crn, u => Some(u.crn))
+          val sessionCrn                                              = companySession.userAnswers.fold(_.crn, _.crn.some)
           val result: EitherT[Future, Error, Either[Form[CRN], Call]] = sessionCrn match {
             //check if the submitted crn is equal to the crn in session
             //then no need to call the companyDetailsService, pick company name from the session

@@ -229,7 +229,7 @@ object CompanyUserAnswers {
 object UserAnswers {
   implicit class UserAnswersOps(private val u: UserAnswers) extends AnyVal {
 
-    def fold[A](
+    def foldOld[A](
       ifIndividualIncomplete: IncompleteIndividualUserAnswers => A,
       ifIndividualComplete: CompleteIndividualUserAnswers => A,
       ifCompanyIncomplete: IncompleteCompanyUserAnswers => A,
@@ -240,6 +240,15 @@ object UserAnswers {
         case i: CompleteIndividualUserAnswers   => ifIndividualComplete(i)
         case i: IncompleteCompanyUserAnswers    => ifCompanyIncomplete(i)
         case i: CompleteCompanyUserAnswers      => ifCompanyComplete(i)
+      }
+
+    def fold[A](
+      ifIndividual: IndividualUserAnswers => A,
+      ifCompany: CompanyUserAnswers => A
+    ): A =
+      u match {
+        case i: IndividualUserAnswers => ifIndividual(i)
+        case i: CompanyUserAnswers    => ifCompany(i)
       }
 
     def foldByCompleteness[A](

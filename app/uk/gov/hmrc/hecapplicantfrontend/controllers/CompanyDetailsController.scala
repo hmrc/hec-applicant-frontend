@@ -82,7 +82,7 @@ class CompanyDetailsController @Inject() (
     request.sessionData mapAsCompany { companySession =>
       ensureCompanyDataHasCompanyName(companySession) { companyHouseName =>
         val companyDetailsConfirmed =
-          companySession.userAnswers.fold(_.companyDetailsConfirmed, u => Some(u.companyDetailsConfirmed))
+          companySession.userAnswers.fold(_.companyDetailsConfirmed, _.companyDetailsConfirmed.some)
         val form = {
           val emptyForm = CompanyDetailsController.yesNoForm("confirmCompanyName", YesNoAnswer.values)
           companyDetailsConfirmed.fold(emptyForm)(emptyForm.fill)
@@ -520,7 +520,7 @@ class CompanyDetailsController @Inject() (
   private def ensureUserAnswersHasCRN(
     session: CompanyHECSession
   )(f: CRN => Future[Result]): Future[Result] =
-    session.userAnswers.fold(_.crn, u => Some(u.crn)) match {
+    session.userAnswers.fold(_.crn, _.crn.some) match {
       case Some(crn) => f(crn)
       case None      =>
         logger.warn("CRN is not populated in user answers")
