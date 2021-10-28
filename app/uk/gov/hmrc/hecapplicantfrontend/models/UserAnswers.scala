@@ -20,8 +20,6 @@ import ai.x.play.json.Jsonx
 import monocle.Lens
 import monocle.macros.Lenses
 import play.api.libs.json._
-import uk.gov.hmrc.hecapplicantfrontend.models.CompanyUserAnswers.{CompleteCompanyUserAnswers, IncompleteCompanyUserAnswers}
-import uk.gov.hmrc.hecapplicantfrontend.models.IndividualUserAnswers.{CompleteIndividualUserAnswers, IncompleteIndividualUserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 
@@ -228,19 +226,6 @@ object CompanyUserAnswers {
 
 object UserAnswers {
   implicit class UserAnswersOps(private val u: UserAnswers) extends AnyVal {
-
-    def foldOld[A](
-      ifIndividualIncomplete: IncompleteIndividualUserAnswers => A,
-      ifIndividualComplete: CompleteIndividualUserAnswers => A,
-      ifCompanyIncomplete: IncompleteCompanyUserAnswers => A,
-      ifCompanyComplete: CompleteCompanyUserAnswers => A
-    ): A =
-      u match {
-        case i: IncompleteIndividualUserAnswers => ifIndividualIncomplete(i)
-        case i: CompleteIndividualUserAnswers   => ifIndividualComplete(i)
-        case i: IncompleteCompanyUserAnswers    => ifCompanyIncomplete(i)
-        case i: CompleteCompanyUserAnswers      => ifCompanyComplete(i)
-      }
 
     def fold[A](
       ifIndividual: IndividualUserAnswers => A,

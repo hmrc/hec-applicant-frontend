@@ -168,7 +168,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
 
       case Some(next) =>
         // if we're not on the last page and there is no next page some exit page has been reached
-        def isExitPageNext =
+        val isExitPageNext =
           !paths.contains(next) && next =!= routes.TaxCheckCompleteController.taxCheckComplete()
 
         val updatedSession = session match {
