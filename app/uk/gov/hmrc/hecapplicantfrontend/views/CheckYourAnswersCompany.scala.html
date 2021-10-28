@@ -19,12 +19,7 @@
 @import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 @import uk.gov.hmrc.hecapplicantfrontend.models.CompanyUserAnswers.CompleteCompanyUserAnswers
 @import uk.gov.hmrc.govukfrontend.views.html.components._
-@import uk.gov.hmrc.hecapplicantfrontend.models.views.EntityTypeOption
-@import uk.gov.hmrc.hecapplicantfrontend.models.views.YesNoOption
 @import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData
-@import uk.gov.hmrc.hecapplicantfrontend.models.CTStatusResponse
-@import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.CompanyRetrievedJourneyData
-@import uk.gov.hmrc.hecapplicantfrontend.util.TimeUtils
 @import uk.gov.hmrc.hecapplicantfrontend.views.helpers.SummaryRows
 
 @this(layout: Layout, govukSummaryList : GovukSummaryList, govukButton: GovukButton, formWithCSRF: FormWithCSRF, summaryRows: SummaryRows)
@@ -34,83 +29,12 @@
 @key = @{"checkYourAnswers"}
 @title = @{messages(s"$key.title")}
 
-@entityTypeRow = @{
-    summaryRows.summaryListRow(
-        messages("entityType.title"),
-        messages(s"entityType.${EntityTypeOption.entityTypeOption(completeAnswers.entityType).messageKey}"),
-        routes.EntityTypeController.entityType(),
-        messages(s"$key.entityType.screenReaderText")
-    )
-}
-@crnRow = @{
-    summaryRows.summaryListRow(
-        messages("crn.title"),
-        completeAnswers.crn.value,
-        routes.CRNController.companyRegistrationNumber(),
-        messages(s"$key.crn.screenReaderText")
-    )
-}
-@ctutrRow = @{
-  completeAnswers.ctutr.map { ctutr =>
-    summaryRows.summaryListRow(
-      messages("enterCtutr.title"),
-      ctutr.value,
-      routes.CompanyDetailsController.enterCtutr(),
-      messages(s"$key.ctutr.screenReaderText")
-    )
-  }
-}
-@recentlyStartedTradingRow = @{
-  completeAnswers.recentlyStartedTrading.map { recentlyStartedTrading =>
-    summaryRows.summaryListRow(
-      messages("recentlyStartedTrading.title"),
-      messages(s"recentlyStartedTrading.${YesNoOption.yesNoOption(recentlyStartedTrading).messageKey}"),
-      routes.CompanyDetailsController.recentlyStartedTrading(),
-      messages(s"$key.recentlyStartedTrading.screenReaderText")
-    )
-  }
-}
-@chargeableForCTRow = @{
-  completeAnswers.chargeableForCT.map { chargeableForCT =>
-    val latestAccountingPeriod = retrievedJourneyData match {
-      case c: CompanyRetrievedJourneyData => c.ctStatus match {
-        case Some(CTStatusResponse(_, _, _, Some(latestAccountingPeriod))) => latestAccountingPeriod
-        case _ => sys.error("chargeableForCT answer found when no accounting period")
-      }
-      case _ => sys.error("chargeableForCT answer found when company journey data not retrieved")
-    }
-    summaryRows.summaryListRow(
-      messages("chargeableForCT.title", TimeUtils.govDisplayFormat(latestAccountingPeriod.endDate)),
-      messages(s"chargeableForCT.${YesNoOption.yesNoOption(chargeableForCT).messageKey}"),
-      routes.CompanyDetailsController.chargeableForCorporationTax(),
-      messages(s"$key.chargeableForCT.screenReaderText")
-    )
-  }
-}
-@ctIncomeDeclaredRow = @{
-  completeAnswers.ctIncomeDeclared.map { ctIncomeDeclared =>
-    summaryRows.summaryListRow(
-      messages("ctIncomeDeclared.title"),
-      messages(s"ctIncomeDeclared.${YesNoOption.yesNoOption(ctIncomeDeclared).messageKey}"),
-      routes.CompanyDetailsController.ctIncomeStatement(),
-      messages(s"$key.ctIncomeDeclared.screenReaderText")
-    )
-  }
-}
-
-@rows = @{List(
-    Some(entityTypeRow),
-    Some(crnRow),
-    ctutrRow,
-    recentlyStartedTradingRow,
-    chargeableForCTRow,
-    ctIncomeDeclaredRow
-).collect{ case Some(r) => r }}
-
 @layout(pageTitle = Some(title), backLocation = Some(back)) {
     <h1 class="govuk-heading-xl">@title</h1>
     <p class="govuk-body">@messages(s"$key.p1")</p>
-    @govukSummaryList(SummaryList(rows = summaryRows.licenceDetailsRows(completeAnswers) ::: rows))
+    @govukSummaryList(SummaryList(rows =
+      summaryRows.licenceDetailsRows(completeAnswers) ::: summaryRows.companyRows(completeAnswers, retrievedJourneyData)
+    ))
     <h2 class="govuk-heading-l">@{messages(s"$key.declaration.heading")}</h2>
     <p class="govuk-body">@{messages(s"$key.declaration.p1")}</p>
     @formWithCSRF(action = routes.CheckYourAnswersController.checkYourAnswersSubmit()) {
