@@ -27,6 +27,8 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 import uk.gov.hmrc.hecapplicantfrontend.controllers.LicenceDetailsController._
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
+import uk.gov.hmrc.hecapplicantfrontend.models.CompanyUserAnswers.IncompleteCompanyUserAnswers
+import uk.gov.hmrc.hecapplicantfrontend.models.IndividualUserAnswers.IncompleteIndividualUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceTimeTrading._
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType._
@@ -149,21 +151,12 @@ class LicenceDetailsController @Inject() (
 
   val licenceTimeTradingSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     def handleValidLicenceTimeTrading(licenceTimeTrading: LicenceTimeTrading): Future[Result] = {
-      val updatedSession = request.sessionData.fold(
-        { individual =>
-          val answers = individual.userAnswers.fold(
-            _.unset(_.licenceTimeTrading).copy(licenceTimeTrading = Some(licenceTimeTrading)),
-            _.unset(_.licenceTimeTrading).copy(licenceTimeTrading = Some(licenceTimeTrading))
-          )
-          individual.copy(userAnswers = answers)
-        },
-        { company =>
-          val answers = company.userAnswers.fold(
-            _.unset(_.licenceTimeTrading).copy(licenceTimeTrading = Some(licenceTimeTrading)),
-            _.unset(_.licenceTimeTrading).copy(licenceTimeTrading = Some(licenceTimeTrading))
-          )
-          company.copy(userAnswers = answers)
-        }
+      val updatedSession = request.sessionData.replaceField(
+        request.sessionData,
+        IncompleteIndividualUserAnswers.licenceTimeTrading,
+        IncompleteCompanyUserAnswers.licenceTimeTrading,
+        _.copy(licenceTimeTrading = Some(licenceTimeTrading)),
+        _.copy(licenceTimeTrading = Some(licenceTimeTrading))
       )
 
       journeyService
@@ -223,19 +216,12 @@ class LicenceDetailsController @Inject() (
 
   val recentLicenceLengthSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     def handleValidLicenceTimePeriod(licenceValidityPeriod: LicenceValidityPeriod): Future[Result] = {
-      val updatedSession = request.sessionData.fold(
-        { individual =>
-          val answers = individual.userAnswers
-            .unset(_.licenceValidityPeriod)
-            .copy(licenceValidityPeriod = Some(licenceValidityPeriod))
-          individual.copy(userAnswers = answers)
-        },
-        { company =>
-          val answers = company.userAnswers
-            .unset(_.licenceValidityPeriod)
-            .copy(licenceValidityPeriod = Some(licenceValidityPeriod))
-          company.copy(userAnswers = answers)
-        }
+      val updatedSession = request.sessionData.replaceField(
+        request.sessionData,
+        IncompleteIndividualUserAnswers.licenceValidityPeriod,
+        IncompleteCompanyUserAnswers.licenceValidityPeriod,
+        _.copy(licenceValidityPeriod = Some(licenceValidityPeriod)),
+        _.copy(licenceValidityPeriod = Some(licenceValidityPeriod))
       )
 
       journeyService

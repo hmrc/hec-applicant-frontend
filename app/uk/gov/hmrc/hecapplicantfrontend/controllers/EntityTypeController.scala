@@ -25,7 +25,9 @@ import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
+import uk.gov.hmrc.hecapplicantfrontend.models.CompanyUserAnswers.IncompleteCompanyUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.EntityType
+import uk.gov.hmrc.hecapplicantfrontend.models.IndividualUserAnswers.IncompleteIndividualUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
 import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging}
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging._
@@ -66,15 +68,12 @@ class EntityTypeController @Inject() (
 
   val entityTypeSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     def handleValidEntityType(entityType: EntityType): Future[Result] = {
-      val updatedSession = request.sessionData.fold(
-        { individualSession =>
-          val answers = individualSession.userAnswers.unset(_.entityType).copy(entityType = Some(entityType))
-          individualSession.copy(userAnswers = answers)
-        },
-        { companySession =>
-          val answers = companySession.userAnswers.unset(_.entityType).copy(entityType = Some(entityType))
-          companySession.copy(userAnswers = answers)
-        }
+      val updatedSession = request.sessionData.replaceField(
+        request.sessionData,
+        IncompleteIndividualUserAnswers.entityType,
+        IncompleteCompanyUserAnswers.entityType,
+        _.copy(entityType = Some(entityType)),
+        _.copy(entityType = Some(entityType))
       )
       journeyService
         .updateAndNext(

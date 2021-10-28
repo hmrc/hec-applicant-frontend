@@ -99,10 +99,8 @@ object IndividualUserAnswers {
         Option[A]
       ]
     ): IncompleteIndividualUserAnswers =
-      fieldLens(IncompleteIndividualUserAnswers).set(None)(
-        fold(identity, IncompleteIndividualUserAnswers.fromCompleteAnswers)
-      )
-
+      fieldLens(IncompleteIndividualUserAnswers)
+        .set(None)(fold(identity, IncompleteIndividualUserAnswers.fromCompleteAnswers))
   }
 
   val empty: IncompleteIndividualUserAnswers =
@@ -195,9 +193,8 @@ object CompanyUserAnswers {
         Option[A]
       ]
     ): IncompleteCompanyUserAnswers =
-      fieldLens(IncompleteCompanyUserAnswers).set(None)(
-        fold(identity, IncompleteCompanyUserAnswers.fromCompleteAnswers)
-      )
+      fieldLens(IncompleteCompanyUserAnswers)
+        .set(None)(fold(identity, IncompleteCompanyUserAnswers.fromCompleteAnswers))
 
   }
 
