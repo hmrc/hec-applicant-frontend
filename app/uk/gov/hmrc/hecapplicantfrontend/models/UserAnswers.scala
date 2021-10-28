@@ -243,3 +243,19 @@ object UserAnswers {
       }
   }
 }
+
+object CompleteUserAnswers {
+  import IndividualUserAnswers._
+  import CompanyUserAnswers._
+
+  implicit class CompleteUserAnswersOps(private val c: CompleteUserAnswers) extends AnyVal {
+    def foldOnEntityType[A](
+      ifIndividual: CompleteIndividualUserAnswers => A,
+      ifCompany: CompleteCompanyUserAnswers => A
+    ): A = c match {
+      case individual: CompleteIndividualUserAnswers => ifIndividual(individual)
+      case company: CompleteCompanyUserAnswers       => ifCompany(company)
+    }
+
+  }
+}

@@ -19,100 +19,19 @@
 @import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 @import uk.gov.hmrc.hecapplicantfrontend.models.IndividualUserAnswers.CompleteIndividualUserAnswers
 @import uk.gov.hmrc.govukfrontend.views.html.components._
-@import uk.gov.hmrc.hecapplicantfrontend.models.views.LicenceTypeOption
-@import uk.gov.hmrc.hecapplicantfrontend.models.views.LicenceTimeTradingOption
-@import uk.gov.hmrc.hecapplicantfrontend.models.views.LicenceValidityPeriodOption
-@import uk.gov.hmrc.hecapplicantfrontend.models.views.EntityTypeOption
-@import uk.gov.hmrc.hecapplicantfrontend.models.views.TaxSituationOption
-@import uk.gov.hmrc.hecapplicantfrontend.models.views.YesNoOption
+@import uk.gov.hmrc.hecapplicantfrontend.views.helpers.SummaryRows
 
-@this(layout: Layout, govukSummaryList : GovukSummaryList, govukButton: GovukButton, formWithCSRF: FormWithCSRF)
+@this(layout: Layout, govukSummaryList : GovukSummaryList, govukButton: GovukButton, formWithCSRF: FormWithCSRF, summaryRows: SummaryRows)
 
 @(back: Call, completeAnswers: CompleteIndividualUserAnswers)(implicit request: Request[_], messages: Messages)
 
 @key = @{"checkYourAnswers"}
 @title = @{messages(s"$key.title")}
-@summaryListRow(question: String, answer: String, changeLocation: Call, changeScreenReaderText: String) = @{
-    SummaryListRow(
-        key = Key(content = Text(question)),
-        value = Value(content = Text(answer)),
-        actions = Some(Actions(
-            items = Seq(
-                ActionItem(
-                    href = changeLocation.url,
-                    content = Text(messages(s"$key.change")),
-                    visuallyHiddenText = Some(changeScreenReaderText)
-                )
-            )
-        ))
-    )
- }
-@licenceTypeRow = @{
-    summaryListRow(
-        messages("licenceType.title"),
-        messages(s"licenceType.${LicenceTypeOption.licenceTypeOption(completeAnswers.licenceType).messageKey}"),
-        routes.LicenceDetailsController.licenceType(),
-        messages(s"$key.licenceType.screenReaderText")
-    )
-}
-@licenceTimeTradingRow = @{
-    summaryListRow(
-        messages("licenceTimeTrading.title"),
-        messages(s"licenceTimeTrading.${LicenceTimeTradingOption.licenceTimeTradingOption(completeAnswers.licenceTimeTrading).messageKey}"),
-        routes.LicenceDetailsController.licenceTimeTrading(),
-        messages(s"$key.licenceTimeTrading.screenReaderText")
-    )
-}
-@licenceValidityPeriodRow = @{
-    summaryListRow(
-        messages("licenceValidityPeriod.title"),
-        messages(s"licenceValidityPeriod.${LicenceValidityPeriodOption.licenceValidityPeriodOption(completeAnswers.licenceValidityPeriod).messageKey}"),
-        routes.LicenceDetailsController.recentLicenceLength(),
-        messages(s"$key.licenceValidityPeriod.screenReaderText")
-    )
-}
-@entityTypeRow = @{
-    completeAnswers.entityType.map { entityType =>
-        summaryListRow(
-            messages("entityType.title"),
-            messages(s"entityType.${EntityTypeOption.entityTypeOption(entityType).messageKey}"),
-            routes.EntityTypeController.entityType(),
-            messages(s"$key.entityType.screenReaderText")
-        )
-    }
-}
-@taxSituationRow = @{
-    summaryListRow(
-        messages("taxSituation.title"),
-        messages(s"taxSituation.${TaxSituationOption.taxSituationOption(completeAnswers.taxSituation).messageKey}"),
-        routes.TaxSituationController.taxSituation(),
-        messages(s"$key.taxSituation.screenReaderText")
-    )
-}
-@saIncomeDeclaredRow = @{
-    completeAnswers.saIncomeDeclared.map { saIncomeDeclared =>
-        summaryListRow(
-            messages("saIncomeDeclared.title"),
-            messages(s"saIncomeDeclared.${YesNoOption.yesNoOption(saIncomeDeclared).messageKey}"),
-            routes.SAController.saIncomeStatement(),
-            messages(s"$key.saIncomeDeclared.screenReaderText")
-        )
-    }
-}
-
-@rows = @{List(
-    Some(licenceTypeRow),
-    Some(licenceTimeTradingRow),
-    Some(licenceValidityPeriodRow),
-    entityTypeRow,
-    Some(taxSituationRow),
-    saIncomeDeclaredRow
-).collect{ case Some(r) => r }}
 
 @layout(pageTitle = Some(title), backLocation = Some(back)) {
     <h1 class="govuk-heading-xl">@title</h1>
     <p class="govuk-body">@messages(s"$key.p1")</p>
-    @govukSummaryList(SummaryList(rows = rows))
+    @govukSummaryList(SummaryList(rows = summaryRows.licenceDetailsRows(completeAnswers) ::: summaryRows.individualRows(completeAnswers)))
     <h2 class="govuk-heading-l">@{messages(s"$key.declaration.heading")}</h2>
     <p class="govuk-body">@{messages(s"$key.declaration.p1")}</p>
     @formWithCSRF(action = routes.CheckYourAnswersController.checkYourAnswersSubmit()) {
