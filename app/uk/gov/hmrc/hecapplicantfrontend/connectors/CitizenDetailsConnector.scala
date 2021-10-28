@@ -40,7 +40,7 @@ class CitizenDetailsConnectorImpl @Inject() (http: HttpClient, servicesConfig: S
 
   private val baseUrl: String = servicesConfig.baseUrl("citizen-details")
 
-  private def getDetailsUrl(nino: NINO): String = s"$baseUrl/citizen-details/nino-no-suffix/${nino.noSuffix}"
+  private def getDetailsUrl(nino: NINO): String = s"$baseUrl/citizen-details/nino/${nino.value}"
 
   override def getCitizenDetails(nino: NINO)(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse] =
     EitherT[Future, Error, HttpResponse](
