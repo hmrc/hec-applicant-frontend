@@ -40,6 +40,7 @@ import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging.LoggerOps
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
+import uk.gov.hmrc.domain.Nino
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -190,7 +191,7 @@ class StartController @Inject() (
         case None =>
           EitherT.leftT(DataError("Could not find NINO for CL≥250"))
 
-        case Some(nino) =>
+        case Some(nino) if Nino.isValid(nino) =>
           val citizenDetailsFut = citizenDetailsService
             .getCitizenDetails(NINO(nino))
             .leftMap(BackendError(_): StartError)
@@ -199,6 +200,9 @@ class StartController @Inject() (
             citizenDetails <- citizenDetailsFut
             result         <- validateSautrAndBuildIndividualData(citizenDetails, nino)
           } yield result
+
+        case Some(_) =>
+          EitherT.leftT(DataError("Invalid NINO format"))
       }
     }
   }
