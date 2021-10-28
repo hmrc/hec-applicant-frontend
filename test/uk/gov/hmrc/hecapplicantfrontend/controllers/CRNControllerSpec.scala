@@ -24,10 +24,10 @@ import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
+import uk.gov.hmrc.hecapplicantfrontend.models.CompanyUserAnswers.IncompleteCompanyUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.CompanyHECSession
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.CompanyLoginData
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.CompanyRetrievedJourneyData
-import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.IncompleteUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR, GGCredId}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hecapplicantfrontend.models.{CompanyHouseDetails, CompanyHouseName, Error, YesNoAnswer}
@@ -111,18 +111,15 @@ class CRNControllerSpec
 
         "the user has previously answered the question" in {
 
-          val answers = Fixtures.completeUserAnswers(
+          val answers = Fixtures.completeCompanyUserAnswers(
             LicenceType.OperatorOfPrivateHireVehicles,
             LicenceTimeTrading.ZeroToTwoYears,
             LicenceValidityPeriod.UpToOneYear
           )
 
-          val updatedAnswers = IncompleteUserAnswers
+          val updatedAnswers = IncompleteCompanyUserAnswers
             .fromCompleteAnswers(answers)
-            .copy(
-              taxSituation = None,
-              crn = Some(validCRN)
-            )
+            .copy(crn = Some(validCRN))
           val session        =
             CompanyHECSession(companyLoginData, CompanyRetrievedJourneyData.empty, answers, None, None, List.empty)
           val updatedSession = session.copy(userAnswers = updatedAnswers)
@@ -282,18 +279,13 @@ class CRNControllerSpec
 
         "return an InternalServerError" when {
 
-          val answers = Fixtures.completeUserAnswers(
-            LicenceType.OperatorOfPrivateHireVehicles,
-            LicenceTimeTrading.ZeroToTwoYears,
-            LicenceValidityPeriod.UpToOneYear
-          )
-          val session =
-            CompanyHECSession(companyLoginData, CompanyRetrievedJourneyData.empty, answers, None, None, List.empty)
+          val answers = Fixtures.completeCompanyUserAnswers()
+          val session = Fixtures.companyHECSession(companyLoginData, CompanyRetrievedJourneyData.empty, answers)
 
           "there is an error updating and getting the next endpoint" in {
-            val updatedAnswers = IncompleteUserAnswers
+            val updatedAnswers = IncompleteCompanyUserAnswers
               .fromCompleteAnswers(answers)
-              .copy(crn = Some(validCRN))
+              .copy(crn = Some(validCRN), companyDetailsConfirmed = None)
 
             val updatedSession = session.copy(
               retrievedJourneyData = session.retrievedJourneyData.copy(companyName = Some(companyHouseName)),
@@ -333,19 +325,12 @@ class CRNControllerSpec
             withClue(s" For CRN : $crn") {
 
               val formattedCrn = CRN(crn.value.removeWhitespace.toUpperCase(Locale.UK))
-              val answers      = Fixtures.completeUserAnswers(
-                LicenceType.OperatorOfPrivateHireVehicles,
-                LicenceTimeTrading.ZeroToTwoYears,
-                LicenceValidityPeriod.UpToOneYear
-              )
-              val session      =
-                CompanyHECSession(companyLoginData, CompanyRetrievedJourneyData.empty, answers, None, None, List.empty)
+              val answers      = Fixtures.completeCompanyUserAnswers()
+              val session      = Fixtures.companyHECSession(companyLoginData, CompanyRetrievedJourneyData.empty, answers)
 
-              val updatedAnswers = IncompleteUserAnswers
+              val updatedAnswers = IncompleteCompanyUserAnswers
                 .fromCompleteAnswers(answers)
-                .copy(
-                  crn = Some(formattedCrn)
-                )
+                .copy(crn = Some(formattedCrn), companyDetailsConfirmed = None)
 
               val updatedRetrievedJourneyData =
                 session.retrievedJourneyData.copy(companyName = companyDetails.map(_.companyName))
@@ -379,12 +364,12 @@ class CRNControllerSpec
         "previously set CRN is changed, CRN dependent answers are reset" in {
           val companyDetails = Some(CompanyHouseDetails(companyHouseName))
 
-          val answers = Fixtures.completeUserAnswers(
+          val answers = Fixtures.completeCompanyUserAnswers(
             licenceType = LicenceType.OperatorOfPrivateHireVehicles,
             licenceTimeTrading = LicenceTimeTrading.ZeroToTwoYears,
             licenceValidityPeriod = LicenceValidityPeriod.UpToOneYear,
-            crn = Some(CRN("old-crn")),
-            companyDetailsConfirmed = Some(YesNoAnswer.Yes),
+            crn = CRN("old-crn"),
+            companyDetailsConfirmed = YesNoAnswer.Yes,
             chargeableForCT = Some(YesNoAnswer.Yes),
             ctIncomeDeclared = Some(YesNoAnswer.Yes),
             recentlyStartedTrading = Some(YesNoAnswer.No),
@@ -392,7 +377,7 @@ class CRNControllerSpec
           )
           val session = Fixtures.companyHECSession(loginData = companyLoginData, userAnswers = answers)
 
-          val updatedAnswers = IncompleteUserAnswers
+          val updatedAnswers = IncompleteCompanyUserAnswers
             .fromCompleteAnswers(answers)
             .copy(
               crn = Some(validCRN),
@@ -426,12 +411,12 @@ class CRNControllerSpec
         }
 
         "previously set CRN is unchanged, CRN dependent answers are not reset" in {
-          val answers = Fixtures.completeUserAnswers(
+          val answers = Fixtures.completeCompanyUserAnswers(
             licenceType = LicenceType.OperatorOfPrivateHireVehicles,
             licenceTimeTrading = LicenceTimeTrading.ZeroToTwoYears,
             licenceValidityPeriod = LicenceValidityPeriod.UpToOneYear,
-            crn = Some(validCRN),
-            companyDetailsConfirmed = Some(YesNoAnswer.Yes),
+            crn = validCRN,
+            companyDetailsConfirmed = YesNoAnswer.Yes,
             chargeableForCT = Some(YesNoAnswer.Yes),
             ctIncomeDeclared = Some(YesNoAnswer.Yes),
             recentlyStartedTrading = Some(YesNoAnswer.No),

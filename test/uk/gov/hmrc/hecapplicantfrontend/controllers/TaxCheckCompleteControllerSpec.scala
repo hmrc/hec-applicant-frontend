@@ -84,9 +84,7 @@ class TaxCheckCompleteControllerSpec
           val session      = IndividualHECSession(
             individualLoginData,
             IndividualRetrievedJourneyData.empty,
-            UserAnswers.empty.copy(
-              licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)
-            ),
+            IndividualUserAnswers.empty.copy(licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)),
             Some(HECTaxCheck(HECTaxCheckCode(taxCheckCode), expiryDate)),
             None,
             List.empty

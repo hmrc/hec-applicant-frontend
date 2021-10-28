@@ -17,6 +17,7 @@
 package uk.gov.hmrc.hecapplicantfrontend.controllers
 
 import cats.instances.future._
+import cats.syntax.option._
 import com.google.inject.{Inject, Singleton}
 import play.api.data.Form
 import play.api.data.Forms.{mapping, of}
@@ -24,7 +25,9 @@ import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
+import uk.gov.hmrc.hecapplicantfrontend.models.CompanyUserAnswers.IncompleteCompanyUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.EntityType
+import uk.gov.hmrc.hecapplicantfrontend.models.IndividualUserAnswers.IncompleteIndividualUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
 import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging}
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging._
@@ -51,7 +54,10 @@ class EntityTypeController @Inject() (
 
   val entityType: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
     val back       = journeyService.previous(routes.EntityTypeController.entityType())
-    val entityType = request.sessionData.userAnswers.fold(_.entityType, _.entityType)
+    val entityType = request.sessionData.userAnswers.fold(
+      _.fold(_.entityType, _.entityType),
+      _.fold(_.entityType, _.entityType.some)
+    )
     val form = {
       val emptyForm = entityTypeForm(entityTypeOptions)
       entityType.fold(emptyForm)(emptyForm.fill)
@@ -62,15 +68,17 @@ class EntityTypeController @Inject() (
 
   val entityTypeSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     def handleValidEntityType(entityType: EntityType): Future[Result] = {
-      val updatedAnswers =
-        request.sessionData.userAnswers.unset(_.entityType).copy(entityType = Some(entityType))
+      val updatedSession = request.sessionData.replaceField(
+        request.sessionData,
+        IncompleteIndividualUserAnswers.entityType,
+        IncompleteCompanyUserAnswers.entityType,
+        _.copy(entityType = Some(entityType)),
+        _.copy(entityType = Some(entityType))
+      )
       journeyService
         .updateAndNext(
           routes.EntityTypeController.entityType(),
-          request.sessionData.fold(
-            _.copy(userAnswers = updatedAnswers),
-            _.copy(userAnswers = updatedAnswers)
-          )
+          updatedSession
         )
         .fold(
           { e =>
@@ -97,7 +105,10 @@ class EntityTypeController @Inject() (
   }
 
   val wrongGGAccount: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
-    request.sessionData.userAnswers.fold(_.entityType, _.entityType) match {
+    request.sessionData.userAnswers.fold(
+      _.fold(_.entityType, _.entityType),
+      _.fold(_.entityType, _.entityType.some)
+    ) match {
       case Some(entityType) =>
         val back = journeyService.previous(routes.EntityTypeController.wrongGGAccount())
         Ok(wrongGGAccountPage(back, entityType))

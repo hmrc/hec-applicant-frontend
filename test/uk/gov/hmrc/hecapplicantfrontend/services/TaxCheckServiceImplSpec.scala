@@ -95,11 +95,11 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         Some(email)
       )
 
-      val completeAnswers = Fixtures.completeUserAnswers(
+      val completeAnswers = Fixtures.completeIndividualUserAnswers(
         LicenceType.OperatorOfPrivateHireVehicles,
         LicenceTimeTrading.TwoToFourYears,
         LicenceValidityPeriod.UpToOneYear,
-        Some(TaxSituation.SA),
+        TaxSituation.SA,
         Some(YesNoAnswer.Yes)
       )
 
@@ -119,7 +119,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         IndividualTaxDetails(
           individualLoginData.nino,
           Some(sautr),
-          completeAnswers.taxSituation,
+          Some(completeAnswers.taxSituation),
           completeAnswers.saIncomeDeclared,
           None
         ),

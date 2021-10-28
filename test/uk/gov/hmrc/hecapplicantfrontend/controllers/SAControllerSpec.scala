@@ -23,9 +23,9 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.IndividualHECSession
+import uk.gov.hmrc.hecapplicantfrontend.models.IndividualUserAnswers.IncompleteIndividualUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.IndividualLoginData
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.IndividualRetrievedJourneyData
-import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.IncompleteUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models._
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
@@ -166,20 +166,17 @@ class SAControllerSpec
 
         "the user has previously answered the question" in {
           val session =
-            IndividualHECSession(
+            Fixtures.individualHECSession(
               individualLoginData,
               IndividualRetrievedJourneyData.empty,
-              Fixtures.completeUserAnswers(
+              Fixtures.completeIndividualUserAnswers(
                 LicenceType.DriverOfTaxisAndPrivateHires,
                 LicenceTimeTrading.ZeroToTwoYears,
                 LicenceValidityPeriod.UpToTwoYears,
-                Some(TaxSituation.PAYE),
+                TaxSituation.PAYE,
                 Some(YesNoAnswer.Yes),
                 Some(EntityType.Individual)
-              ),
-              None,
-              None,
-              List.empty
+              )
             )
 
           inSequence {
@@ -266,16 +263,13 @@ class SAControllerSpec
       "return an internal server error" when {
 
         "the call to update and next fails" in {
-          val answers        = UserAnswers.empty
-          val updatedAnswers = UserAnswers.empty.copy(saIncomeDeclared = Some(YesNoAnswer.Yes))
+          val answers        = IndividualUserAnswers.empty
+          val updatedAnswers = IndividualUserAnswers.empty.copy(saIncomeDeclared = Some(YesNoAnswer.Yes))
           val session        =
-            IndividualHECSession(
+            Fixtures.individualHECSession(
               individualLoginData,
               IndividualRetrievedJourneyData.empty,
-              answers,
-              None,
-              None,
-              List.empty
+              answers
             )
           val updatedSession = session.copy(userAnswers = updatedAnswers)
 
@@ -297,16 +291,13 @@ class SAControllerSpec
         "valid data is submitted and" when {
 
           "the user has not previously completed answering questions" in {
-            val answers        = UserAnswers.empty
-            val updatedAnswers = UserAnswers.empty.copy(saIncomeDeclared = Some(YesNoAnswer.No))
+            val answers        = IndividualUserAnswers.empty
+            val updatedAnswers = IndividualUserAnswers.empty.copy(saIncomeDeclared = Some(YesNoAnswer.No))
             val session        =
-              IndividualHECSession(
+              Fixtures.individualHECSession(
                 individualLoginData,
                 IndividualRetrievedJourneyData.empty,
-                answers,
-                None,
-                None,
-                List.empty
+                answers
               )
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 
@@ -322,24 +313,21 @@ class SAControllerSpec
           }
 
           "the user has previously completed answering questions" in {
-            val answers        = Fixtures.completeUserAnswers(
+            val answers        = Fixtures.completeIndividualUserAnswers(
               LicenceType.DriverOfTaxisAndPrivateHires,
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToOneYear,
-              Some(TaxSituation.SA),
+              TaxSituation.SA,
               Some(YesNoAnswer.Yes)
             )
-            val updatedAnswers = IncompleteUserAnswers
+            val updatedAnswers = IncompleteIndividualUserAnswers
               .fromCompleteAnswers(answers)
               .copy(saIncomeDeclared = Some(YesNoAnswer.No))
             val session        =
-              IndividualHECSession(
+              Fixtures.individualHECSession(
                 individualLoginData,
                 IndividualRetrievedJourneyData.empty,
-                answers,
-                None,
-                None,
-                List.empty
+                answers
               )
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 

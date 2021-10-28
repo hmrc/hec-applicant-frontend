@@ -23,6 +23,7 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthenticatedRequest, RequestWithSessionData}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.{ControllerSpec, SessionSupport, routes}
+import uk.gov.hmrc.hecapplicantfrontend.models.CompanyUserAnswers.CompleteCompanyUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.EntityType.{Company, Individual}
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, IndividualHECSession}
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
@@ -201,13 +202,10 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
 
             val session        = IndividualHECSession.newSession(individualLoginData)
             val updatedSession =
-              IndividualHECSession(
+              Fixtures.individualHECSession(
                 individualLoginData,
                 IndividualRetrievedJourneyData.empty,
-                UserAnswers.empty.copy(licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)),
-                None,
-                None,
-                List.empty
+                IndividualUserAnswers.empty.copy(licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires))
               )
 
             implicit val request: RequestWithSessionData[_] =
@@ -227,7 +225,8 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
             val session        = CompanyHECSession.newSession(companyLoginData)
             val updatedSession =
               session.copy(
-                userAnswers = UserAnswers.empty.copy(licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles))
+                userAnswers =
+                  CompanyUserAnswers.empty.copy(licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles))
               )
 
             implicit val request: RequestWithSessionData[_] =
@@ -249,13 +248,10 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
           "when all user answers are not complete" in {
             val session        = IndividualHECSession.newSession(individualLoginData)
             val updatedSession =
-              IndividualHECSession(
+              Fixtures.individualHECSession(
                 individualLoginData,
                 IndividualRetrievedJourneyData.empty,
-                UserAnswers.empty.copy(licenceTimeTrading = Some(LicenceTimeTrading.TwoToFourYears)),
-                None,
-                None,
-                List.empty
+                IndividualUserAnswers.empty.copy(licenceTimeTrading = Some(LicenceTimeTrading.TwoToFourYears))
               )
 
             implicit val request: RequestWithSessionData[_] =
@@ -273,20 +269,19 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
           "when all user answers are complete" in {
             val session        = IndividualHECSession.newSession(individualLoginData)
             val updatedSession =
-              IndividualHECSession(
+              Fixtures.individualHECSession(
                 individualLoginData,
                 IndividualRetrievedJourneyData.empty,
-                Fixtures.completeUserAnswers(
+                Fixtures.completeIndividualUserAnswers(
                   licenceType = DriverOfTaxisAndPrivateHires,
                   licenceTimeTrading = LicenceTimeTrading.TwoToFourYears,
                   licenceValidityPeriod = UpToOneYear,
-                  taxSituation = Some(PAYE),
+                  taxSituation = PAYE,
                   saIncomeDeclared = Some(YesNoAnswer.Yes),
                   entityType = Some(Individual)
                 ),
                 None,
-                Some(taxCheckStartDateTime),
-                List.empty
+                Some(taxCheckStartDateTime)
               )
 
             implicit val request: RequestWithSessionData[_] =
@@ -306,24 +301,18 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
         "the licence validity period page and" when {
 
           "no licence type can be found in session" in {
-            val answers        = UserAnswers.empty
+            val answers        = IndividualUserAnswers.empty
             val session        =
-              IndividualHECSession(
+              Fixtures.individualHECSession(
                 individualLoginData,
                 IndividualRetrievedJourneyData.empty,
-                answers,
-                None,
-                None,
-                List.empty
+                answers
               )
             val updatedSession =
-              IndividualHECSession(
+              Fixtures.individualHECSession(
                 individualLoginData,
                 IndividualRetrievedJourneyData.empty,
-                answers.copy(licenceValidityPeriod = Some(LicenceValidityPeriod.UpToTwoYears)),
-                None,
-                None,
-                List.empty
+                answers.copy(licenceValidityPeriod = Some(LicenceValidityPeriod.UpToTwoYears))
               )
 
             implicit val request: RequestWithSessionData[_] =
@@ -338,24 +327,18 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
           }
 
           "the licence type in the session is 'driver of taxis'" in {
-            val answers        = UserAnswers.empty.copy(licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires))
+            val answers        = IndividualUserAnswers.empty.copy(licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires))
             val session        =
-              IndividualHECSession(
+              Fixtures.individualHECSession(
                 individualLoginData,
                 IndividualRetrievedJourneyData.empty,
-                answers,
-                None,
-                None,
-                List.empty
+                answers
               )
             val updatedSession =
-              IndividualHECSession(
+              Fixtures.individualHECSession(
                 individualLoginData,
                 IndividualRetrievedJourneyData.empty,
-                answers.copy(licenceValidityPeriod = Some(LicenceValidityPeriod.UpToTwoYears)),
-                None,
-                None,
-                List.empty
+                answers.copy(licenceValidityPeriod = Some(LicenceValidityPeriod.UpToTwoYears))
               )
 
             implicit val request: RequestWithSessionData[_] =
@@ -377,24 +360,18 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
               LicenceType.ScrapMetalMobileCollector
             ).foreach { licenceType =>
               withClue(s"For licence type $licenceType: ") {
-                val answers        = UserAnswers.empty.copy(licenceType = Some(licenceType))
+                val answers        = IndividualUserAnswers.empty.copy(licenceType = Some(licenceType))
                 val session        =
-                  IndividualHECSession(
+                  Fixtures.individualHECSession(
                     individualLoginData,
                     IndividualRetrievedJourneyData.empty,
-                    answers,
-                    None,
-                    None,
-                    List.empty
+                    answers
                   )
                 val updatedSession =
-                  IndividualHECSession(
+                  Fixtures.individualHECSession(
                     individualLoginData,
                     IndividualRetrievedJourneyData.empty,
-                    answers.copy(licenceValidityPeriod = Some(LicenceValidityPeriod.UpToOneYear)),
-                    None,
-                    None,
-                    List.empty
+                    answers.copy(licenceValidityPeriod = Some(LicenceValidityPeriod.UpToOneYear))
                   )
 
                 implicit val request: RequestWithSessionData[_] =
@@ -425,11 +402,10 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
               case c: CompanyLoginData    => CompanyHECSession.newSession(c)
             }
 
-            val updatedAnswers = UserAnswers.empty.copy(entityType = Some(selectedEntityType))
             val updatedSession =
               session.fold(
-                _.copy(userAnswers = updatedAnswers),
-                _.copy(userAnswers = updatedAnswers)
+                _.copy(userAnswers = IndividualUserAnswers.empty.copy(entityType = Some(selectedEntityType))),
+                _.copy(userAnswers = CompanyUserAnswers.empty.copy(entityType = Some(selectedEntityType)))
               )
 
             implicit val request: RequestWithSessionData[_] =
@@ -445,15 +421,12 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
           }
 
           "no entity type can be found in session" in {
-            val answers                                     = UserAnswers.empty
+            val answers                                     = IndividualUserAnswers.empty
             val session                                     =
-              IndividualHECSession(
+              Fixtures.individualHECSession(
                 individualLoginData,
                 IndividualRetrievedJourneyData.empty,
-                answers,
-                None,
-                None,
-                List.empty
+                answers
               )
             implicit val request: RequestWithSessionData[_] =
               requestWithSessionData(session)
@@ -503,30 +476,27 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
               saStatus = Some(SAStatusResponse(SAUTR(""), TaxYear(2020), status))
             )
 
-          val answers = UserAnswers.empty.copy(licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires))
+          val individualAnswers =
+            IndividualUserAnswers.empty.copy(licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires))
+          val companyAnswers    =
+            CompanyUserAnswers.empty.copy(licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires))
 
-          def answersWithTaxSituation(taxSituation: TaxSituation) = UserAnswers.empty.copy(
+          def answersWithTaxSituation(taxSituation: TaxSituation) = IndividualUserAnswers.empty.copy(
             licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires),
             taxSituation = Some(taxSituation)
           )
 
           "tax situation is missing" in {
-            val session        = IndividualHECSession(
+            val session        = Fixtures.individualHECSession(
               individualWithSautr,
               retrievedJourneyDataWithSaStatus(SAStatus.NoticeToFileIssued),
-              answers,
-              None,
-              None,
-              List.empty
+              individualAnswers
             )
             val updatedSession =
-              IndividualHECSession(
+              Fixtures.individualHECSession(
                 individualWithSautr,
                 retrievedJourneyDataWithSaStatus(SAStatus.ReturnFound),
-                answers,
-                None,
-                None,
-                List.empty
+                individualAnswers
               )
 
             implicit val request: RequestWithSessionData[_] =
@@ -542,21 +512,15 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
 
           def testPAYENotChargeable(taxSituation: TaxSituation) = {
             val session        =
-              IndividualHECSession(
+              Fixtures.individualHECSession(
                 individualWithSautr,
                 retrievedJourneyDataWithSaStatus(),
-                answers,
-                None,
-                None,
-                List.empty
+                individualAnswers
               )
-            val updatedSession = IndividualHECSession(
+            val updatedSession = Fixtures.individualHECSession(
               individualWithSautr,
               retrievedJourneyDataWithSaStatus(),
-              answersWithTaxSituation(taxSituation),
-              None,
-              None,
-              List.empty
+              answersWithTaxSituation(taxSituation)
             )
 
             implicit val request: RequestWithSessionData[_] =
@@ -581,14 +545,11 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
 
           def testsForSelfAssessment(taxSituation: TaxSituation): Unit = {
             "SAUTR is present but there is no SA status response" in {
-              val answersWithTaxSituation = answers.copy(taxSituation = Some(taxSituation))
-              val session                 = IndividualHECSession(
+              val answersWithTaxSituation = individualAnswers.copy(taxSituation = Some(taxSituation))
+              val session                 = Fixtures.individualHECSession(
                 individualLoginData.copy(sautr = Some(SAUTR(""))),
                 IndividualRetrievedJourneyData.empty,
-                answersWithTaxSituation,
-                None,
-                None,
-                List.empty
+                answersWithTaxSituation
               )
 
               implicit val request: RequestWithSessionData[_] =
@@ -604,24 +565,18 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
 
             "SAUTR is missing" in {
               val individualWithoutSautr  = individualLoginData
-              val answersWithTaxSituation = answers.copy(taxSituation = Some(taxSituation))
+              val answersWithTaxSituation = individualAnswers.copy(taxSituation = Some(taxSituation))
               val session                 =
-                IndividualHECSession(
+                Fixtures.individualHECSession(
                   individualWithoutSautr,
                   IndividualRetrievedJourneyData.empty,
-                  answers,
-                  None,
-                  None,
-                  List.empty
+                  individualAnswers
                 )
               val updatedSession          =
-                IndividualHECSession(
+                Fixtures.individualHECSession(
                   individualWithoutSautr,
                   IndividualRetrievedJourneyData.empty,
-                  answersWithTaxSituation,
-                  None,
-                  None,
-                  List.empty
+                  answersWithTaxSituation
                 )
 
               implicit val request: RequestWithSessionData[_] =
@@ -638,15 +593,12 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
 
             "applicant type is company" in {
               val session        =
-                CompanyHECSession(companyLoginData, CompanyRetrievedJourneyData.empty, answers, None, None, List.empty)
+                Fixtures.companyHECSession(companyLoginData, CompanyRetrievedJourneyData.empty, companyAnswers)
               val updatedSession =
-                CompanyHECSession(
+                Fixtures.companyHECSession(
                   companyLoginData,
                   CompanyRetrievedJourneyData.empty,
-                  answersWithTaxSituation(taxSituation),
-                  None,
-                  None,
-                  List.empty
+                  companyAnswers
                 )
 
               implicit val request: RequestWithSessionData[_] =
@@ -663,15 +615,12 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
             "SA status = ReturnFound" in {
               val journeyDataReturnFound = retrievedJourneyDataWithSaStatus(SAStatus.ReturnFound)
               val session                =
-                IndividualHECSession(individualWithSautr, journeyDataReturnFound, answers, None, None, List.empty)
+                Fixtures.individualHECSession(individualWithSautr, journeyDataReturnFound, individualAnswers)
               val updatedSession         =
-                IndividualHECSession(
+                Fixtures.individualHECSession(
                   individualWithSautr,
                   journeyDataReturnFound,
-                  answersWithTaxSituation(taxSituation),
-                  None,
-                  None,
-                  List.empty
+                  answersWithTaxSituation(taxSituation)
                 )
 
               implicit val request: RequestWithSessionData[_] =
@@ -688,15 +637,12 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
             "SA status = NoReturnFound" in {
               val journeyDataNoReturnFound = retrievedJourneyDataWithSaStatus(SAStatus.NoReturnFound)
               val session                  =
-                IndividualHECSession(individualWithSautr, journeyDataNoReturnFound, answers, None, None, List.empty)
+                Fixtures.individualHECSession(individualWithSautr, journeyDataNoReturnFound, individualAnswers)
               val updatedSession           =
-                IndividualHECSession(
+                Fixtures.individualHECSession(
                   individualWithSautr,
                   journeyDataNoReturnFound,
-                  answersWithTaxSituation(taxSituation),
-                  None,
-                  None,
-                  List.empty
+                  answersWithTaxSituation(taxSituation)
                 )
 
               implicit val request: RequestWithSessionData[_] =
@@ -713,15 +659,12 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
             "SA status = NoticeToFileIssued" in {
               val journeyDataNoticeIssued = retrievedJourneyDataWithSaStatus(SAStatus.NoticeToFileIssued)
               val session                 =
-                IndividualHECSession(individualWithSautr, journeyDataNoticeIssued, answers, None, None, List.empty)
+                Fixtures.individualHECSession(individualWithSautr, journeyDataNoticeIssued, individualAnswers)
               val updatedSession          =
-                IndividualHECSession(
+                Fixtures.individualHECSession(
                   individualWithSautr,
                   journeyDataNoticeIssued,
-                  answersWithTaxSituation(taxSituation),
-                  None,
-                  None,
-                  List.empty
+                  answersWithTaxSituation(taxSituation)
                 )
 
               implicit val request: RequestWithSessionData[_] =
@@ -778,20 +721,19 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
           }
 
           "all user answers are complete" in {
-            val session                                     = IndividualHECSession(
+            val session                                     = Fixtures.individualHECSession(
               individualLoginData,
               IndividualRetrievedJourneyData.empty,
-              Fixtures.completeUserAnswers(
+              Fixtures.completeIndividualUserAnswers(
                 licenceType = DriverOfTaxisAndPrivateHires,
                 licenceTimeTrading = LicenceTimeTrading.TwoToFourYears,
                 licenceValidityPeriod = UpToOneYear,
-                taxSituation = Some(PAYE),
+                taxSituation = PAYE,
                 saIncomeDeclared = Some(YesNoAnswer.Yes),
                 entityType = Some(Individual)
               ),
               None,
-              Some(taxCheckStartDateTime),
-              List.empty
+              Some(taxCheckStartDateTime)
             )
             implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
 
@@ -810,13 +752,10 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
           def testCrnNextpage(companyName: Option[CompanyHouseName], resultCall: Call) = {
             val session        = CompanyHECSession.newSession(companyLoginData)
             val updatedSession =
-              CompanyHECSession(
+              Fixtures.companyHECSession(
                 companyLoginData,
                 CompanyRetrievedJourneyData.empty.copy(companyName = companyName),
-                UserAnswers.empty.copy(crn = Some(CRN("1234567"))),
-                None,
-                None,
-                List.empty
+                CompanyUserAnswers.empty.copy(crn = Some(CRN("1234567")))
               )
 
             implicit val request: RequestWithSessionData[_] =
@@ -850,25 +789,19 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
             val journeyData =
               CompanyRetrievedJourneyData.empty.copy(companyName = Some(CompanyHouseName("Test tech Ltd")))
 
-            val session        = CompanyHECSession(
+            val session        = Fixtures.companyHECSession(
               companyLoginData,
               journeyData,
-              UserAnswers.empty,
-              None,
-              None,
-              List.empty
+              CompanyUserAnswers.empty
             )
             val updatedSession =
-              CompanyHECSession(
+              Fixtures.companyHECSession(
                 companyLoginData,
                 journeyData,
-                UserAnswers.empty.copy(
+                CompanyUserAnswers.empty.copy(
                   crn = Some(CRN("1234567")),
                   companyDetailsConfirmed = Some(YesNoAnswer.No)
-                ),
-                None,
-                None,
-                List.empty
+                )
               )
 
             implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
@@ -885,25 +818,19 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
             val journeyData =
               CompanyRetrievedJourneyData.empty.copy(companyName = Some(CompanyHouseName("Test tech Ltd")))
 
-            val session        = CompanyHECSession(
+            val session        = Fixtures.companyHECSession(
               companyLoginData,
               journeyData,
-              UserAnswers.empty,
-              None,
-              None,
-              List.empty
+              CompanyUserAnswers.empty
             )
             val updatedSession =
-              CompanyHECSession(
+              Fixtures.companyHECSession(
                 companyLoginData,
                 journeyData,
-                UserAnswers.empty.copy(
+                CompanyUserAnswers.empty.copy(
                   crn = Some(CRN("1234567")),
                   companyDetailsConfirmed = None
-                ),
-                None,
-                None,
-                List.empty
+                )
               )
 
             implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
@@ -919,16 +846,10 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
           "the applicant is an individual" in {
             val session        = IndividualHECSession.newSession(individualLoginData)
             val updatedSession =
-              IndividualHECSession(
+              Fixtures.individualHECSession(
                 individualLoginData,
                 IndividualRetrievedJourneyData.empty,
-                UserAnswers.empty.copy(
-                  crn = Some(CRN("1234567")),
-                  companyDetailsConfirmed = Some(YesNoAnswer.Yes)
-                ),
-                None,
-                None,
-                List.empty
+                IndividualUserAnswers.empty
               )
 
             implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
@@ -942,18 +863,15 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
           }
 
           def buildSessions(loginData: CompanyLoginData, retrievedJourneyData: CompanyRetrievedJourneyData) = {
-            val session        = CompanyHECSession(loginData, retrievedJourneyData, UserAnswers.empty, None, None, List.empty)
+            val session        = Fixtures.companyHECSession(loginData, retrievedJourneyData, CompanyUserAnswers.empty)
             val updatedSession =
-              CompanyHECSession(
+              Fixtures.companyHECSession(
                 loginData,
                 retrievedJourneyData,
-                UserAnswers.empty.copy(
+                CompanyUserAnswers.empty.copy(
                   crn = Some(CRN("1234567")),
                   companyDetailsConfirmed = Some(YesNoAnswer.Yes)
-                ),
-                None,
-                None,
-                List.empty
+                )
               )
             (session, updatedSession)
           }
@@ -984,18 +902,15 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
               desCtutr = Some(CTUTR("des-ctutr")),
               ctStatus = None
             )
-            val session        = CompanyHECSession(companyData, journeyData, UserAnswers.empty, None, None, List.empty)
+            val session        = Fixtures.companyHECSession(companyData, journeyData, CompanyUserAnswers.empty)
             val updatedSession =
-              CompanyHECSession(
+              Fixtures.companyHECSession(
                 companyData,
                 journeyData,
-                UserAnswers.empty.copy(
+                CompanyUserAnswers.empty.copy(
                   crn = Some(CRN("1234567")),
                   companyDetailsConfirmed = Some(YesNoAnswer.Yes)
-                ),
-                None,
-                None,
-                List.empty
+                )
               )
 
             implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
@@ -1017,18 +932,15 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
               desCtutr = None,
               ctStatus = None
             )
-            val session        = CompanyHECSession(companyData, journeyData, UserAnswers.empty, None, None, List.empty)
+            val session        = Fixtures.companyHECSession(companyData, journeyData, CompanyUserAnswers.empty)
             val updatedSession =
-              CompanyHECSession(
+              Fixtures.companyHECSession(
                 companyData,
                 journeyData,
-                UserAnswers.empty.copy(
+                CompanyUserAnswers.empty.copy(
                   crn = Some(CRN("1234567")),
                   companyDetailsConfirmed = Some(YesNoAnswer.Yes)
-                ),
-                None,
-                None,
-                List.empty
+                )
               )
 
             implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
@@ -1107,18 +1019,15 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
                 ctStatus = None
               )
 
-              val session        = CompanyHECSession(companyData, journeyData, UserAnswers.empty, None, None, List.empty)
+              val session        = Fixtures.companyHECSession(companyData, journeyData, CompanyUserAnswers.empty)
               val updatedSession =
-                CompanyHECSession(
+                Fixtures.companyHECSession(
                   companyData,
                   journeyData,
-                  UserAnswers.empty.copy(
+                  CompanyUserAnswers.empty.copy(
                     crn = Some(CRN("1234567")),
                     companyDetailsConfirmed = Some(YesNoAnswer.Yes)
-                  ),
-                  None,
-                  None,
-                  List.empty
+                  )
                 )
 
               implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
@@ -1186,7 +1095,7 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
           "throw" when {
             "the applicant is an individual" in {
               val session        = IndividualHECSession.newSession(individualLoginData)
-              val updatedSession = session.copy(userAnswers = UserAnswers.empty.copy(crn = Some(CRN("1234567"))))
+              val updatedSession = session.copy(userAnswers = IndividualUserAnswers.empty)
 
               implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
 
@@ -1197,7 +1106,7 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
 
             "applicant is company but chargeable for CT answer is missing" in {
               val session        = CompanyHECSession.newSession(companyLoginData)
-              val updatedSession = session.copy(userAnswers = UserAnswers.empty.copy(crn = Some(CRN("1234567"))))
+              val updatedSession = session.copy(userAnswers = CompanyUserAnswers.empty.copy(crn = Some(CRN("1234567"))))
 
               implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
 
@@ -1211,10 +1120,10 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
               val journeyData    = CompanyRetrievedJourneyData.empty.copy(
                 ctStatus = Some(CTStatusResponse(CTUTR("utr"), date, date, None))
               )
-              val session        = CompanyHECSession(companyLoginData, journeyData, UserAnswers.empty, None, None, List.empty)
+              val session        = Fixtures.companyHECSession(companyLoginData, journeyData, CompanyUserAnswers.empty)
               val updatedSession = session.copy(
                 userAnswers =
-                  UserAnswers.empty.copy(crn = Some(CRN("1234567")), chargeableForCT = Some(YesNoAnswer.Yes))
+                  CompanyUserAnswers.empty.copy(crn = Some(CRN("1234567")), chargeableForCT = Some(YesNoAnswer.Yes))
               )
 
               implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
@@ -1237,10 +1146,10 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
                     Some(CTStatusResponse(CTUTR("utr"), date, date, Some(CTAccountingPeriod(date, date, status))))
                 )
                 val session        =
-                  CompanyHECSession(companyLoginData, journeyData, UserAnswers.empty, None, None, List.empty)
+                  Fixtures.companyHECSession(companyLoginData, journeyData, CompanyUserAnswers.empty)
                 val updatedSession = session.copy(
                   userAnswers =
-                    UserAnswers.empty.copy(crn = Some(CRN("1234567")), chargeableForCT = Some(YesNoAnswer.No))
+                    CompanyUserAnswers.empty.copy(crn = Some(CRN("1234567")), chargeableForCT = Some(YesNoAnswer.No))
                 )
 
                 implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
@@ -1267,14 +1176,14 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
               )
             )
 
-            val yesUserAnswers = UserAnswers.empty.copy(
+            val yesUserAnswers = CompanyUserAnswers.empty.copy(
               crn = Some(CRN("1234567")),
               chargeableForCT = Some(YesNoAnswer.Yes)
             )
 
             def test(status: CTStatus, destination: Call) = {
               val session        =
-                CompanyHECSession(companyLoginData, companyData(status), UserAnswers.empty, None, None, List.empty)
+                Fixtures.companyHECSession(companyLoginData, companyData(status), CompanyUserAnswers.empty)
               val updatedSession = session.copy(userAnswers = yesUserAnswers)
 
               implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
@@ -1324,16 +1233,10 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
           "the applicant is an individual" in {
             val session        = IndividualHECSession.newSession(individualLoginData)
             val updatedSession =
-              IndividualHECSession(
+              Fixtures.individualHECSession(
                 individualLoginData,
                 IndividualRetrievedJourneyData.empty,
-                UserAnswers.empty.copy(
-                  crn = Some(CRN("1234567")),
-                  companyDetailsConfirmed = Some(YesNoAnswer.Yes)
-                ),
-                None,
-                None,
-                List.empty
+                IndividualUserAnswers.empty
               )
 
             implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
@@ -1353,19 +1256,16 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
               None
             )
 
-            val updatedUserAnswer = UserAnswers.empty.copy(
+            val updatedUserAnswer = CompanyUserAnswers.empty.copy(
               crn = Some(CRN("1412345")),
               recentlyStartedTrading = Some(answer)
             )
 
             val session        =
-              CompanyHECSession(
+              Fixtures.companyHECSession(
                 companyLoginData,
                 companyRetrievedJourneyData,
-                UserAnswers.empty,
-                None,
-                None,
-                List.empty
+                CompanyUserAnswers.empty
               )
             val updatedSession = session.copy(userAnswers = updatedUserAnswer)
 
@@ -1440,7 +1340,7 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
                   ctStatus = None,
                   desCtutr = Some(CTUTR("utr"))
                 ),
-                userAnswers = Fixtures.incompleteUserAnswers(ctutr = None)
+                userAnswers = Fixtures.incompleteCompanyUserAnswers(ctutr = None)
               )
 
               implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
@@ -1459,7 +1359,7 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
                   ctStatus = None,
                   desCtutr = Some(CTUTR("utr"))
                 ),
-                userAnswers = Fixtures.incompleteUserAnswers(ctutr = Some(CTUTR("utr")))
+                userAnswers = Fixtures.incompleteCompanyUserAnswers(ctutr = Some(CTUTR("utr")))
               )
 
               implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
@@ -1477,7 +1377,7 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
                   ctStatus = Some(Fixtures.ctStatusResponse(latestAccountingPeriod = None)),
                   desCtutr = Some(CTUTR("utr"))
                 ),
-                userAnswers = Fixtures.incompleteUserAnswers(ctutr = Some(CTUTR("utr")))
+                userAnswers = Fixtures.incompleteCompanyUserAnswers(ctutr = Some(CTUTR("utr")))
               )
 
               implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
@@ -1496,7 +1396,7 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
                     Some(Fixtures.ctStatusResponse(latestAccountingPeriod = Some(Fixtures.ctAccountingPeriod()))),
                   desCtutr = Some(CTUTR("utr"))
                 ),
-                userAnswers = Fixtures.incompleteUserAnswers(ctutr = Some(CTUTR("utr")))
+                userAnswers = Fixtures.incompleteCompanyUserAnswers(ctutr = Some(CTUTR("utr")))
               )
 
               implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
@@ -1517,18 +1417,18 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
         "user is an individual and " when {
 
           "the user has selected an individual only licence type" in {
-            val completeAnswers = Fixtures.completeUserAnswers(
+            val completeAnswers = Fixtures.completeIndividualUserAnswers(
               LicenceType.DriverOfTaxisAndPrivateHires,
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToOneYear,
-              Some(TaxSituation.PAYE)
+              TaxSituation.PAYE
             )
 
-            val incompleteAnswers = Fixtures.incompleteUserAnswers(
+            val incompleteAnswers = Fixtures.incompleteIndividualUserAnswers(
               Some(completeAnswers.licenceType),
               Some(completeAnswers.licenceTimeTrading),
               Some(completeAnswers.licenceValidityPeriod),
-              completeAnswers.taxSituation,
+              Some(completeAnswers.taxSituation),
               completeAnswers.saIncomeDeclared
             )
 
@@ -1538,7 +1438,7 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
                 saStatus = Some(SAStatusResponse(SAUTR("utr"), TaxYear(2020), SAStatus.NoticeToFileIssued))
               )
 
-            val session = IndividualHECSession(individualData, journeyData, incompleteAnswers, None, None, List.empty)
+            val session = Fixtures.individualHECSession(individualData, journeyData, incompleteAnswers)
 
             implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
 
@@ -1559,32 +1459,29 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
               LicenceType.OperatorOfPrivateHireVehicles
             ).foreach { licenceType =>
               withClue(s"For licence type $licenceType: ") {
-                val completeAnswers = Fixtures.completeUserAnswers(
+                val completeAnswers = Fixtures.completeIndividualUserAnswers(
                   licenceType,
                   LicenceTimeTrading.ZeroToTwoYears,
                   LicenceValidityPeriod.UpToOneYear,
-                  Some(TaxSituation.PAYE),
+                  TaxSituation.PAYE,
                   Some(YesNoAnswer.Yes),
                   Some(EntityType.Company)
                 )
 
-                val incompleteAnswers = Fixtures.incompleteUserAnswers(
+                val incompleteAnswers = Fixtures.incompleteIndividualUserAnswers(
                   Some(completeAnswers.licenceType),
                   Some(completeAnswers.licenceTimeTrading),
                   Some(completeAnswers.licenceValidityPeriod),
-                  completeAnswers.taxSituation,
+                  Some(completeAnswers.taxSituation),
                   Some(YesNoAnswer.Yes),
                   Some(EntityType.Company)
                 )
 
                 val session                                     =
-                  IndividualHECSession(
+                  Fixtures.individualHECSession(
                     individualLoginData,
                     IndividualRetrievedJourneyData.empty,
-                    incompleteAnswers,
-                    None,
-                    None,
-                    List.empty
+                    incompleteAnswers
                   )
                 implicit val request: RequestWithSessionData[_] =
                   requestWithSessionData(session)
@@ -1609,29 +1506,26 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
               TaxSituation.NotChargeable
             ).foreach { taxSituation =>
               withClue(s"For tax situation $taxSituation: ") {
-                val completeAnswers = Fixtures.completeUserAnswers(
+                val completeAnswers = Fixtures.completeIndividualUserAnswers(
                   LicenceType.DriverOfTaxisAndPrivateHires,
                   LicenceTimeTrading.ZeroToTwoYears,
                   LicenceValidityPeriod.UpToOneYear,
-                  Some(taxSituation)
+                  taxSituation
                 )
 
-                val incompleteAnswers = Fixtures.incompleteUserAnswers(
+                val incompleteAnswers = Fixtures.incompleteIndividualUserAnswers(
                   Some(completeAnswers.licenceType),
                   Some(completeAnswers.licenceTimeTrading),
                   Some(completeAnswers.licenceValidityPeriod),
-                  completeAnswers.taxSituation,
+                  Some(completeAnswers.taxSituation),
                   completeAnswers.saIncomeDeclared,
                   completeAnswers.entityType
                 )
 
-                val session = IndividualHECSession(
+                val session = Fixtures.individualHECSession(
                   individualLoginData,
                   IndividualRetrievedJourneyData.empty,
-                  incompleteAnswers,
-                  None,
-                  None,
-                  List.empty
+                  incompleteAnswers
                 )
 
                 implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
@@ -1652,19 +1546,19 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
               TaxSituation.SAPAYE
             ).foreach { taxSituation =>
               withClue(s"For tax situation $taxSituation: ") {
-                val completeAnswers = Fixtures.completeUserAnswers(
+                val completeAnswers = Fixtures.completeIndividualUserAnswers(
                   LicenceType.DriverOfTaxisAndPrivateHires,
                   LicenceTimeTrading.ZeroToTwoYears,
                   LicenceValidityPeriod.UpToOneYear,
-                  Some(taxSituation),
+                  taxSituation,
                   Some(YesNoAnswer.Yes)
                 )
 
-                val incompleteAnswers = Fixtures.incompleteUserAnswers(
+                val incompleteAnswers = Fixtures.incompleteIndividualUserAnswers(
                   Some(completeAnswers.licenceType),
                   Some(completeAnswers.licenceTimeTrading),
                   Some(completeAnswers.licenceValidityPeriod),
-                  completeAnswers.taxSituation,
+                  Some(completeAnswers.taxSituation),
                   completeAnswers.saIncomeDeclared,
                   completeAnswers.entityType
                 )
@@ -1693,18 +1587,18 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
               TaxSituation.SAPAYE
             ).foreach { taxSituation =>
               withClue(s"For tax situation $taxSituation: ") {
-                val completeAnswers = Fixtures.completeUserAnswers(
+                val completeAnswers = Fixtures.completeIndividualUserAnswers(
                   LicenceType.DriverOfTaxisAndPrivateHires,
                   LicenceTimeTrading.ZeroToTwoYears,
                   LicenceValidityPeriod.UpToOneYear,
-                  Some(taxSituation)
+                  taxSituation
                 )
 
-                val incompleteAnswers = Fixtures.incompleteUserAnswers(
+                val incompleteAnswers = Fixtures.incompleteIndividualUserAnswers(
                   Some(completeAnswers.licenceType),
                   Some(completeAnswers.licenceTimeTrading),
                   Some(completeAnswers.licenceValidityPeriod),
-                  completeAnswers.taxSituation,
+                  Some(completeAnswers.taxSituation),
                   completeAnswers.saIncomeDeclared,
                   completeAnswers.entityType
                 )
@@ -1746,20 +1640,20 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
             ctIncomeDeclaredOpt: Option[YesNoAnswer],
             recentlyStartedTradingOpt: Option[YesNoAnswer],
             ctStatusResponse: Option[CTStatusResponse]
-          ): (UserAnswers.CompleteUserAnswers, CompanyHECSession) = {
+          ): (CompleteCompanyUserAnswers, CompanyHECSession) = {
 
-            val completeAnswers   = Fixtures.completeUserAnswers(
+            val completeAnswers   = Fixtures.completeCompanyUserAnswers(
               licenceType,
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToOneYear,
-              entityType = Some(EntityType.Company),
-              crn = Some(CRN("1123456")),
-              companyDetailsConfirmed = Some(YesNoAnswer.Yes),
+              entityType = EntityType.Company,
+              crn = CRN("1123456"),
+              companyDetailsConfirmed = YesNoAnswer.Yes,
               chargeableForCT = chargeableForCTOpt,
               ctIncomeDeclared = ctIncomeDeclaredOpt,
               recentlyStartedTrading = recentlyStartedTradingOpt
             )
-            val incompleteAnswers = Fixtures.incompleteUserAnswers(
+            val incompleteAnswers = Fixtures.incompleteCompanyUserAnswers(
               Some(completeAnswers.licenceType),
               Some(completeAnswers.licenceTimeTrading),
               Some(completeAnswers.licenceValidityPeriod),
@@ -1784,7 +1678,7 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
 
           }
 
-          def nextPageIsCYA(session: CompanyHECSession, completeAnswers: UserAnswers) = {
+          def nextPageIsCYA(session: CompanyHECSession, completeAnswers: CompanyUserAnswers) = {
             implicit val request: RequestWithSessionData[_] =
               requestWithSessionData(session)
 
@@ -1869,7 +1763,7 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
       "not convert incomplete answers to complete answers when all questions have been answered and" when {
 
         "the selected entity type is not consistent with the entity type retrieved from the GG creds" in {
-          val incompleteAnswers = Fixtures.incompleteUserAnswers(
+          val incompleteAnswers = Fixtures.incompleteIndividualUserAnswers(
             Some(LicenceType.OperatorOfPrivateHireVehicles),
             Some(LicenceTimeTrading.ZeroToTwoYears),
             Some(LicenceValidityPeriod.UpToOneYear),
@@ -1879,13 +1773,10 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
           )
 
           val session                                     =
-            IndividualHECSession(
+            Fixtures.individualHECSession(
               individualLoginData,
               IndividualRetrievedJourneyData.empty,
-              incompleteAnswers,
-              None,
-              None,
-              List.empty
+              incompleteAnswers
             )
           implicit val request: RequestWithSessionData[_] =
             requestWithSessionData(session)
@@ -1998,13 +1889,11 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
 
           "an individual" when {
             "there are preexisting tax check codes" in {
-              val session                                     = IndividualHECSession(
+              val session                                     = Fixtures.individualHECSession(
                 individualLoginData,
                 IndividualRetrievedJourneyData.empty,
-                UserAnswers.empty,
-                None,
-                None,
-                taxChecks
+                IndividualUserAnswers.empty,
+                unexpiredTaxChecks = taxChecks
               )
               implicit val request: RequestWithSessionData[_] =
                 requestWithSessionData(session)
@@ -2031,13 +1920,11 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
 
           "a company" when {
             "there are preexisting tax check codes" in {
-              val session                                     = CompanyHECSession(
+              val session                                     = Fixtures.companyHECSession(
                 companyLoginData,
                 CompanyRetrievedJourneyData.empty,
-                UserAnswers.empty,
-                None,
-                None,
-                taxChecks
+                CompanyUserAnswers.empty,
+                unexpiredTaxChecks = taxChecks
               )
               implicit val request: RequestWithSessionData[_] =
                 requestWithSessionData(session)
@@ -2077,15 +1964,12 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
         }
 
         "the licence time trading page when the session contains an licence expiry date which is not more than 1 year ago" in {
-          val session                                     = IndividualHECSession(
+          val session                                     = Fixtures.individualHECSession(
             individualLoginData,
             IndividualRetrievedJourneyData.empty,
-            UserAnswers.empty.copy(
+            IndividualUserAnswers.empty.copy(
               licenceType = Some(LicenceType.ScrapMetalDealerSite)
-            ),
-            None,
-            None,
-            List.empty
+            )
           )
           implicit val request: RequestWithSessionData[_] =
             requestWithSessionData(session)
@@ -2106,15 +1990,12 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
               LicenceType.ScrapMetalMobileCollector
             ).foreach { licenceType =>
               withClue(s"For licence type $licenceType: ") {
-                val session                                     = IndividualHECSession(
+                val session                                     = Fixtures.individualHECSession(
                   individualLoginData,
                   IndividualRetrievedJourneyData.empty,
-                  UserAnswers.empty.copy(
+                  IndividualUserAnswers.empty.copy(
                     licenceType = Some(licenceType)
-                  ),
-                  None,
-                  None,
-                  List.empty
+                  )
                 )
                 implicit val request: RequestWithSessionData[_] =
                   requestWithSessionData(session)
@@ -2131,16 +2012,13 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
         }
 
         "the wrong GG account page" in {
-          val session                                     = IndividualHECSession(
+          val session                                     = Fixtures.individualHECSession(
             individualLoginData,
             IndividualRetrievedJourneyData.empty,
-            UserAnswers.empty.copy(
+            IndividualUserAnswers.empty.copy(
               licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles),
               entityType = Some(EntityType.Company)
-            ),
-            None,
-            None,
-            List.empty
+            )
           )
           implicit val request: RequestWithSessionData[_] =
             requestWithSessionData(session)
@@ -2153,15 +2031,12 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
         }
 
         "the wrong entity type page" in {
-          val session                                     = IndividualHECSession(
+          val session                                     = Fixtures.individualHECSession(
             individualLoginData,
             IndividualRetrievedJourneyData.empty,
-            UserAnswers.empty.copy(
+            IndividualUserAnswers.empty.copy(
               licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles)
-            ),
-            None,
-            None,
-            List.empty
+            )
           )
           implicit val request: RequestWithSessionData[_] =
             requestWithSessionData(session)
@@ -2177,15 +2052,12 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
 
           "the licence type selected is 'driver of taxis'" in {
 
-            val session                                     = IndividualHECSession(
+            val session                                     = Fixtures.individualHECSession(
               individualLoginData,
               IndividualRetrievedJourneyData.empty,
-              UserAnswers.empty.copy(
+              IndividualUserAnswers.empty.copy(
                 licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)
-              ),
-              None,
-              None,
-              List.empty
+              )
             )
             implicit val request: RequestWithSessionData[_] =
               requestWithSessionData(session)
@@ -2198,16 +2070,13 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
           }
 
           "the licence type is not 'driver of taxis' and the entity type is correct" in {
-            val session                                     = IndividualHECSession(
+            val session                                     = Fixtures.individualHECSession(
               individualLoginData,
               IndividualRetrievedJourneyData.empty,
-              UserAnswers.empty.copy(
+              IndividualUserAnswers.empty.copy(
                 licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles),
                 entityType = Some(EntityType.Individual)
-              ),
-              None,
-              None,
-              List.empty
+              )
             )
             implicit val request: RequestWithSessionData[_] =
               requestWithSessionData(session)
@@ -2242,11 +2111,11 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
           )
 
           def userAnswers(licenceType: LicenceType, taxSituation: TaxSituation, entityType: Option[EntityType]) =
-            Fixtures.completeUserAnswers(
+            Fixtures.completeIndividualUserAnswers(
               licenceType,
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToOneYear,
-              Some(taxSituation),
+              taxSituation,
               Some(YesNoAnswer.Yes),
               entityType
             )
@@ -2403,17 +2272,14 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
         }
 
         "the company registration number page" in {
-          val session                                     = CompanyHECSession(
+          val session                                     = Fixtures.companyHECSession(
             companyLoginData,
             CompanyRetrievedJourneyData.empty.copy(companyName = Some(CompanyHouseName("Test Tech Ltd"))),
-            UserAnswers.empty.copy(
+            CompanyUserAnswers.empty.copy(
               licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles),
               entityType = Some(Company),
               crn = Some(CRN("123456"))
-            ),
-            None,
-            None,
-            List.empty
+            )
           )
           implicit val request: RequestWithSessionData[_] =
             requestWithSessionData(session)
@@ -2426,17 +2292,14 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
         }
 
         "the confirm company details page" in {
-          val session                                     = CompanyHECSession(
+          val session                                     = Fixtures.companyHECSession(
             companyLoginData,
             CompanyRetrievedJourneyData.empty.copy(companyName = Some(CompanyHouseName("Test Tech Ltd"))),
-            UserAnswers.empty.copy(
+            CompanyUserAnswers.empty.copy(
               licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles),
               entityType = Some(Company),
               crn = Some(CRN("123456"))
-            ),
-            None,
-            None,
-            List.empty
+            )
           )
           implicit val request: RequestWithSessionData[_] =
             requestWithSessionData(session)
@@ -2450,17 +2313,14 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
         }
 
         "the company details not found page" in {
-          val session                                     = CompanyHECSession(
+          val session                                     = Fixtures.companyHECSession(
             companyLoginData,
             CompanyRetrievedJourneyData.empty,
-            UserAnswers.empty.copy(
+            CompanyUserAnswers.empty.copy(
               licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles),
               entityType = Some(Company),
               crn = Some(CRN("123456"))
-            ),
-            None,
-            None,
-            List.empty
+            )
           )
           implicit val request: RequestWithSessionData[_] =
             requestWithSessionData(session)
@@ -2491,20 +2351,17 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
           )
 
           val updatedSession =
-            CompanyHECSession(
+            Fixtures.companyHECSession(
               companyData,
               journeyData,
-              UserAnswers.empty.copy(
+              CompanyUserAnswers.empty.copy(
                 licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles),
                 licenceTimeTrading = Some(LicenceTimeTrading.TwoToFourYears),
                 licenceValidityPeriod = Some(LicenceValidityPeriod.UpToOneYear),
                 entityType = Some(Company),
                 crn = Some(CRN("1234567")),
                 companyDetailsConfirmed = Some(YesNoAnswer.Yes)
-              ),
-              None,
-              None,
-              List.empty
+              )
             )
 
           implicit val request: RequestWithSessionData[_] = requestWithSessionData(updatedSession)
@@ -2533,20 +2390,17 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
           )
 
           val updatedSession =
-            CompanyHECSession(
+            Fixtures.companyHECSession(
               companyData,
               journeyData,
-              UserAnswers.empty.copy(
+              CompanyUserAnswers.empty.copy(
                 licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles),
                 licenceTimeTrading = Some(LicenceTimeTrading.TwoToFourYears),
                 licenceValidityPeriod = Some(LicenceValidityPeriod.UpToOneYear),
                 entityType = Some(Company),
                 crn = Some(CRN("1234567")),
                 companyDetailsConfirmed = Some(YesNoAnswer.Yes)
-              ),
-              None,
-              None,
-              List.empty
+              )
             )
 
           implicit val request: RequestWithSessionData[_] = requestWithSessionData(updatedSession)
@@ -2584,7 +2438,7 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
           IndividualHECSession(
             individualLoginData,
             journeyData,
-            Fixtures.incompleteUserAnswers(
+            Fixtures.incompleteIndividualUserAnswers(
               Some(LicenceType.DriverOfTaxisAndPrivateHires),
               Some(LicenceTimeTrading.ZeroToTwoYears),
               Some(LicenceValidityPeriod.UpToOneYear),
@@ -2602,11 +2456,11 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
       "return the check your answers page" when {
 
         "the answers in the session are complete and the current page is not the check your answers page" in {
-          val completeAnswers                             = Fixtures.completeUserAnswers(
+          val completeAnswers                             = Fixtures.completeIndividualUserAnswers(
             LicenceType.DriverOfTaxisAndPrivateHires,
             LicenceTimeTrading.ZeroToTwoYears,
             LicenceValidityPeriod.UpToOneYear,
-            Some(TaxSituation.PAYE),
+            TaxSituation.PAYE,
             Some(YesNoAnswer.Yes),
             Some(EntityType.Individual)
           )
@@ -2633,398 +2487,389 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
 
     }
 
-    "JourneyServiceImpl.allAnswersComplete" when {
+    "JourneyServiceImpl.allIndividualAnswersComplete" must {
+      val incompleteAnswersBase = Fixtures.incompleteIndividualUserAnswers(
+        licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires),
+        licenceTimeTrading = Some(LicenceTimeTrading.ZeroToTwoYears),
+        licenceValidityPeriod = Some(LicenceValidityPeriod.UpToOneYear),
+        taxSituation = Some(TaxSituation.PAYE)
+      )
 
-      "session is individual" must {
-        val incompleteAnswersBase = Fixtures.incompleteUserAnswers(
-          licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires),
-          licenceTimeTrading = Some(LicenceTimeTrading.ZeroToTwoYears),
-          licenceValidityPeriod = Some(LicenceValidityPeriod.UpToOneYear),
-          taxSituation = Some(TaxSituation.PAYE)
-        )
+      "return false" when {
 
-        "return false" when {
+        "licence type is missing" in {
+          JourneyServiceImpl.allIndividualAnswersComplete(
+            incompleteAnswersBase.copy(licenceType = None),
+            IndividualHECSession.newSession(individualLoginData)
+          ) shouldBe false
+        }
 
-          "licence type is missing" in {
-            JourneyServiceImpl.allAnswersComplete(
-              incompleteAnswersBase.copy(licenceType = None),
-              IndividualHECSession.newSession(individualLoginData)
-            ) shouldBe false
+        "licence time trading is missing" in {
+          JourneyServiceImpl.allIndividualAnswersComplete(
+            incompleteAnswersBase.copy(licenceTimeTrading = None),
+            IndividualHECSession.newSession(individualLoginData)
+          ) shouldBe false
+        }
+
+        "licence validity period is missing" in {
+          JourneyServiceImpl.allIndividualAnswersComplete(
+            incompleteAnswersBase.copy(licenceValidityPeriod = None),
+            IndividualHECSession.newSession(individualLoginData)
+          ) shouldBe false
+        }
+
+        "entity type is present" in {
+          JourneyServiceImpl.allIndividualAnswersComplete(
+            incompleteUserAnswers = incompleteAnswersBase.copy(entityType = Some(EntityType.Individual)),
+            IndividualHECSession.newSession(individualLoginData)
+          ) shouldBe false
+        }
+
+        "tax situation = SA & status = ReturnFound & income declared is missing)" in {
+          List(
+            TaxSituation.SA,
+            TaxSituation.SAPAYE
+          ) foreach { taxSituation =>
+            withClue(s"for $taxSituation") {
+              val journeyData = IndividualRetrievedJourneyData(
+                saStatus = Some(SAStatusResponse(SAUTR("utr"), TaxYear(2020), SAStatus.ReturnFound))
+              )
+
+              val session =
+                IndividualHECSession.newSession(individualLoginData).copy(retrievedJourneyData = journeyData)
+
+              JourneyServiceImpl.allIndividualAnswersComplete(
+                incompleteUserAnswers = incompleteAnswersBase.copy(
+                  taxSituation = Some(taxSituation),
+                  saIncomeDeclared = None
+                ),
+                session
+              ) shouldBe false
+            }
           }
+        }
+      }
 
-          "licence time trading is missing" in {
-            JourneyServiceImpl.allAnswersComplete(
-              incompleteAnswersBase.copy(licenceTimeTrading = None),
-              IndividualHECSession.newSession(individualLoginData)
-            ) shouldBe false
-          }
+      "return true" when {
 
-          "licence validity period is missing" in {
-            JourneyServiceImpl.allAnswersComplete(
-              incompleteAnswersBase.copy(licenceValidityPeriod = None),
-              IndividualHECSession.newSession(individualLoginData)
-            ) shouldBe false
-          }
+        "entity type is missing" in {
+          JourneyServiceImpl.allIndividualAnswersComplete(
+            incompleteAnswersBase,
+            IndividualHECSession.newSession(individualLoginData)
+          ) shouldBe true
+        }
 
-          "entity type is present" in {
-            JourneyServiceImpl.allAnswersComplete(
-              incompleteUserAnswers = incompleteAnswersBase.copy(entityType = Some(EntityType.Individual)),
-              IndividualHECSession.newSession(individualLoginData)
-            ) shouldBe false
-          }
+        "tax situation = non-SA (irrespective of whether income declared is missing or present)" in {
+          List(
+            TaxSituation.PAYE,
+            TaxSituation.NotChargeable
+          ) foreach { taxSituation =>
+            withClue(s"for $taxSituation") {
+              // income declared is missing
+              JourneyServiceImpl.allIndividualAnswersComplete(
+                incompleteUserAnswers = incompleteAnswersBase.copy(
+                  taxSituation = Some(taxSituation),
+                  saIncomeDeclared = None
+                ),
+                IndividualHECSession.newSession(individualLoginData)
+              ) shouldBe true
 
-          "tax situation = SA & status = ReturnFound & income declared is missing)" in {
-            List(
-              TaxSituation.SA,
-              TaxSituation.SAPAYE
-            ) foreach { taxSituation =>
-              withClue(s"for $taxSituation") {
-                val journeyData = IndividualRetrievedJourneyData(
-                  saStatus = Some(SAStatusResponse(SAUTR("utr"), TaxYear(2020), SAStatus.ReturnFound))
-                )
-
-                val session =
-                  IndividualHECSession.newSession(individualLoginData).copy(retrievedJourneyData = journeyData)
-
-                JourneyServiceImpl.allAnswersComplete(
-                  incompleteUserAnswers = incompleteAnswersBase.copy(
-                    taxSituation = Some(taxSituation),
-                    saIncomeDeclared = None
-                  ),
-                  session
-                ) shouldBe false
-              }
+              // income declared is present
+              JourneyServiceImpl.allIndividualAnswersComplete(
+                incompleteUserAnswers = incompleteAnswersBase.copy(
+                  taxSituation = Some(taxSituation),
+                  saIncomeDeclared = Some(YesNoAnswer.Yes)
+                ),
+                IndividualHECSession.newSession(individualLoginData)
+              ) shouldBe true
             }
           }
         }
 
-        "return true" when {
+        "tax situation = SA & status != ReturnFound (irrespective of whether income declared is missing or present)" in {
+          val saTaxSituations = List(
+            TaxSituation.SA,
+            TaxSituation.SAPAYE
+          )
+          val saStatuses      = List[SAStatus](
+            SAStatus.NoticeToFileIssued,
+            SAStatus.NoReturnFound
+          )
 
-          "entity type is missing" in {
-            JourneyServiceImpl.allAnswersComplete(
-              incompleteAnswersBase,
-              IndividualHECSession.newSession(individualLoginData)
+          val permutations = for {
+            ts     <- saTaxSituations
+            status <- saStatuses
+          } yield ts -> status
+
+          permutations foreach { case (taxSituation, saStatus) =>
+            withClue(s"for $taxSituation & $saStatus") {
+              val journeyData =
+                IndividualRetrievedJourneyData(
+                  saStatus = Some(SAStatusResponse(SAUTR("utr"), TaxYear(2020), saStatus))
+                )
+
+              val session =
+                IndividualHECSession.newSession(individualLoginData).copy(retrievedJourneyData = journeyData)
+
+              // income declared is missing
+              JourneyServiceImpl.allIndividualAnswersComplete(
+                incompleteUserAnswers = incompleteAnswersBase.copy(
+                  taxSituation = Some(taxSituation),
+                  saIncomeDeclared = None
+                ),
+                session
+              ) shouldBe true
+
+              // income declared is present
+              JourneyServiceImpl.allIndividualAnswersComplete(
+                incompleteUserAnswers = incompleteAnswersBase.copy(
+                  taxSituation = Some(taxSituation),
+                  saIncomeDeclared = Some(YesNoAnswer.Yes)
+                ),
+                session
+              ) shouldBe true
+            }
+          }
+        }
+
+        "tax situation = SA & status = ReturnFound & income declared is present)" in {
+          List(
+            TaxSituation.SA,
+            TaxSituation.SAPAYE
+          ) foreach { taxSituation =>
+            withClue(s"for $taxSituation") {
+              val journeyData = IndividualRetrievedJourneyData(
+                saStatus = Some(SAStatusResponse(SAUTR("utr"), TaxYear(2020), SAStatus.ReturnFound))
+              )
+
+              val session =
+                IndividualHECSession.newSession(individualLoginData).copy(retrievedJourneyData = journeyData)
+
+              JourneyServiceImpl.allIndividualAnswersComplete(
+                incompleteUserAnswers = incompleteAnswersBase.copy(
+                  taxSituation = Some(taxSituation),
+                  saIncomeDeclared = Some(YesNoAnswer.Yes)
+                ),
+                session
+              ) shouldBe true
+            }
+          }
+        }
+
+      }
+    }
+
+    "JourneyServiceImpl.allCompanyAnswersComplete" must {
+      val incompleteAnswersBase = Fixtures.incompleteCompanyUserAnswers(
+        licenceType = Some(LicenceType.ScrapMetalDealerSite),
+        licenceTimeTrading = Some(LicenceTimeTrading.ZeroToTwoYears),
+        licenceValidityPeriod = Some(LicenceValidityPeriod.UpToOneYear),
+        entityType = Some(Company)
+      )
+
+      def checkCompanyDataComplete(
+        chargeableForCTOpt: Option[YesNoAnswer],
+        ctIncomeDeclaredOpt: Option[YesNoAnswer],
+        recentlyStartedTradingOpt: Option[YesNoAnswer],
+        latestAccountingPeriod: Option[CTAccountingPeriod],
+        licenceType: Some[LicenceType] = Some(LicenceType.ScrapMetalDealerSite)
+      ) = {
+        val date                = LocalDate.now()
+        val companyData         = companyLoginData.copy(
+          ctutr = Some(CTUTR("ctutr"))
+        )
+        val anyCTStatusResponse = CTStatusResponse(
+          ctutr = CTUTR("utr"),
+          startDate = date,
+          endDate = date,
+          latestAccountingPeriod = latestAccountingPeriod
+        )
+        val journeyData         = CompanyRetrievedJourneyData(
+          companyName = Some(CompanyHouseName("Test tech Ltd")),
+          desCtutr = Some(CTUTR("ctutr")),
+          ctStatus = Some(anyCTStatusResponse)
+        )
+
+        val incompleteAnswers = incompleteAnswersBase.copy(
+          licenceType = licenceType,
+          entityType = Some(Company),
+          crn = Some(CRN("1234567")),
+          companyDetailsConfirmed = Some(YesNoAnswer.Yes),
+          chargeableForCT = chargeableForCTOpt,
+          ctIncomeDeclared = ctIncomeDeclaredOpt,
+          recentlyStartedTrading = recentlyStartedTradingOpt
+        )
+        val session           = Fixtures.companyHECSession(
+          companyData,
+          journeyData,
+          CompanyUserAnswers.empty
+        )
+        JourneyServiceImpl.allCompanyAnswersComplete(incompleteAnswers, session)
+      }
+      val date                  = LocalDate.now()
+
+      "return false" when {
+        "licence type is missing" in {
+          JourneyServiceImpl.allCompanyAnswersComplete(
+            incompleteAnswersBase.copy(licenceType = None),
+            CompanyHECSession.newSession(companyLoginData)
+          ) shouldBe false
+        }
+
+        "licence time trading is missing" in {
+          JourneyServiceImpl.allCompanyAnswersComplete(
+            incompleteAnswersBase.copy(licenceTimeTrading = None),
+            CompanyHECSession.newSession(companyLoginData)
+          ) shouldBe false
+        }
+
+        "licence validity period is missing" in {
+          JourneyServiceImpl.allCompanyAnswersComplete(
+            incompleteAnswersBase.copy(licenceValidityPeriod = None),
+            CompanyHECSession.newSession(companyLoginData)
+          ) shouldBe false
+        }
+
+        "entity type is missing" in {
+          JourneyServiceImpl.allCompanyAnswersComplete(
+            incompleteUserAnswers = incompleteAnswersBase,
+            CompanyHECSession.newSession(companyLoginData)
+          ) shouldBe false
+        }
+
+        "recently started trading is not present " when {
+
+          "chargeable for CT answer is Yes, CT status = ReturnFound & CT income declared answer is missing" in {
+            checkCompanyDataComplete(
+              Some(YesNoAnswer.Yes),
+              None,
+              None,
+              Some(CTAccountingPeriod(date, date, CTStatus.ReturnFound))
+            ) shouldBe false
+          }
+
+          "chargeable for CT answer is Yes & CT status = NoReturnFound" in {
+            checkCompanyDataComplete(
+              Some(YesNoAnswer.Yes),
+              None,
+              None,
+              Some(CTAccountingPeriod(date, date, CTStatus.NoReturnFound))
+            ) shouldBe false
+          }
+
+          "chargeable for CT answer is not present" in {
+            checkCompanyDataComplete(
+              None,
+              None,
+              None,
+              Some(CTAccountingPeriod(date, date, CTStatus.NoReturnFound))
+            ) shouldBe false
+          }
+
+        }
+
+        "recently started trading is  present and is NO " when {
+
+          "chargeable for CT answer is Yes, CT status = ReturnFound & CT income declared answer is missing" in {
+            checkCompanyDataComplete(
+              Some(YesNoAnswer.Yes),
+              None,
+              Some(YesNoAnswer.No),
+              Some(CTAccountingPeriod(date, date, CTStatus.ReturnFound))
+            ) shouldBe false
+          }
+
+          "chargeable for CT answer is Yes & CT status = NoReturnFound" in {
+            checkCompanyDataComplete(
+              Some(YesNoAnswer.Yes),
+              None,
+              Some(YesNoAnswer.No),
+              Some(CTAccountingPeriod(date, date, CTStatus.NoReturnFound))
+            ) shouldBe false
+          }
+
+          "chargeable for CT answer is not present" in {
+            checkCompanyDataComplete(
+              None,
+              None,
+              Some(YesNoAnswer.No),
+              Some(CTAccountingPeriod(date, date, CTStatus.NoReturnFound))
+            ) shouldBe false
+          }
+
+        }
+
+      }
+
+      "return true" when {
+
+        "recently started trading is not present" when {
+
+          "CT status is present & chargeable for CT answer is No" in {
+            val date                                        = LocalDate.now
+            val licenceTypes                                = List(
+              LicenceType.OperatorOfPrivateHireVehicles,
+              LicenceType.ScrapMetalDealerSite,
+              LicenceType.ScrapMetalMobileCollector
+            )
+            val ctStatuses                                  = List(
+              CTStatus.ReturnFound,
+              CTStatus.NoReturnFound,
+              CTStatus.NoticeToFileIssued
+            )
+            val permutations: List[(LicenceType, CTStatus)] = for {
+              licenceType <- licenceTypes
+              ctStatus    <- ctStatuses
+            } yield (licenceType, ctStatus)
+            permutations foreach { case (licenceType, ctStatus) =>
+              withClue(s"for licenceType = $licenceType & CT status = $ctStatus") {
+                checkCompanyDataComplete(
+                  Some(YesNoAnswer.No),
+                  None,
+                  None,
+                  Some(CTAccountingPeriod(date, date, ctStatus)),
+                  Some(licenceType)
+                ) shouldBe true
+              }
+            }
+          }
+
+          "chargeable for CT answer is Yes and CT status = NoticeToFileIssued" in {
+            checkCompanyDataComplete(
+              Some(YesNoAnswer.Yes),
+              None,
+              None,
+              Some(CTAccountingPeriod(date, date, CTStatus.NoticeToFileIssued))
             ) shouldBe true
           }
 
-          "tax situation = non-SA (irrespective of whether income declared is missing or present)" in {
-            List(
-              TaxSituation.PAYE,
-              TaxSituation.NotChargeable
-            ) foreach { taxSituation =>
-              withClue(s"for $taxSituation") {
-                // income declared is missing
-                JourneyServiceImpl.allAnswersComplete(
-                  incompleteUserAnswers = incompleteAnswersBase.copy(
-                    taxSituation = Some(taxSituation),
-                    saIncomeDeclared = None
-                  ),
-                  IndividualHECSession.newSession(individualLoginData)
-                ) shouldBe true
+          "chargeable for CT answer is Yes, CT status = ReturnFound & CT income declared answer is present" in {
 
-                // income declared is present
-                JourneyServiceImpl.allAnswersComplete(
-                  incompleteUserAnswers = incompleteAnswersBase.copy(
-                    taxSituation = Some(taxSituation),
-                    saIncomeDeclared = Some(YesNoAnswer.Yes)
-                  ),
-                  IndividualHECSession.newSession(individualLoginData)
-                ) shouldBe true
-              }
-            }
-          }
+            checkCompanyDataComplete(
+              Some(YesNoAnswer.Yes),
+              Some(YesNoAnswer.Yes),
+              None,
+              Some(CTAccountingPeriod(date, date, CTStatus.ReturnFound))
+            ) shouldBe true
 
-          "tax situation = SA & status != ReturnFound (irrespective of whether income declared is missing or present)" in {
-            val saTaxSituations = List(
-              TaxSituation.SA,
-              TaxSituation.SAPAYE
-            )
-            val saStatuses      = List[SAStatus](
-              SAStatus.NoticeToFileIssued,
-              SAStatus.NoReturnFound
-            )
-
-            val permutations = for {
-              ts     <- saTaxSituations
-              status <- saStatuses
-            } yield ts -> status
-
-            permutations foreach { case (taxSituation, saStatus) =>
-              withClue(s"for $taxSituation & $saStatus") {
-                val journeyData =
-                  IndividualRetrievedJourneyData(
-                    saStatus = Some(SAStatusResponse(SAUTR("utr"), TaxYear(2020), saStatus))
-                  )
-
-                val session =
-                  IndividualHECSession.newSession(individualLoginData).copy(retrievedJourneyData = journeyData)
-
-                // income declared is missing
-                JourneyServiceImpl.allAnswersComplete(
-                  incompleteUserAnswers = incompleteAnswersBase.copy(
-                    taxSituation = Some(taxSituation),
-                    saIncomeDeclared = None
-                  ),
-                  session
-                ) shouldBe true
-
-                // income declared is present
-                JourneyServiceImpl.allAnswersComplete(
-                  incompleteUserAnswers = incompleteAnswersBase.copy(
-                    taxSituation = Some(taxSituation),
-                    saIncomeDeclared = Some(YesNoAnswer.Yes)
-                  ),
-                  session
-                ) shouldBe true
-              }
-            }
-          }
-
-          "tax situation = SA & status = ReturnFound & income declared is present)" in {
-            List(
-              TaxSituation.SA,
-              TaxSituation.SAPAYE
-            ) foreach { taxSituation =>
-              withClue(s"for $taxSituation") {
-                val journeyData = IndividualRetrievedJourneyData(
-                  saStatus = Some(SAStatusResponse(SAUTR("utr"), TaxYear(2020), SAStatus.ReturnFound))
-                )
-
-                val session =
-                  IndividualHECSession.newSession(individualLoginData).copy(retrievedJourneyData = journeyData)
-
-                JourneyServiceImpl.allAnswersComplete(
-                  incompleteUserAnswers = incompleteAnswersBase.copy(
-                    taxSituation = Some(taxSituation),
-                    saIncomeDeclared = Some(YesNoAnswer.Yes)
-                  ),
-                  session
-                ) shouldBe true
-              }
-            }
           }
 
         }
-      }
 
-      "session is company" must {
-        val incompleteAnswersBase = Fixtures.incompleteUserAnswers(
-          licenceType = Some(LicenceType.ScrapMetalDealerSite),
-          licenceTimeTrading = Some(LicenceTimeTrading.ZeroToTwoYears),
-          licenceValidityPeriod = Some(LicenceValidityPeriod.UpToOneYear),
-          entityType = Some(Company)
-        )
+        "recently started trading is present and  is yes" when {
 
-        def checkCompanyDataComplete(
-          chargeableForCTOpt: Option[YesNoAnswer],
-          ctIncomeDeclaredOpt: Option[YesNoAnswer],
-          recentlyStartedTradingOpt: Option[YesNoAnswer],
-          latestAccountingPeriod: Option[CTAccountingPeriod],
-          licenceType: Some[LicenceType] = Some(LicenceType.ScrapMetalDealerSite)
-        ) = {
-          val date                = LocalDate.now()
-          val companyData         = companyLoginData.copy(
-            ctutr = Some(CTUTR("ctutr"))
-          )
-          val anyCTStatusResponse = CTStatusResponse(
-            ctutr = CTUTR("utr"),
-            startDate = date,
-            endDate = date,
-            latestAccountingPeriod = latestAccountingPeriod
-          )
-          val journeyData         = CompanyRetrievedJourneyData(
-            companyName = Some(CompanyHouseName("Test tech Ltd")),
-            desCtutr = Some(CTUTR("ctutr")),
-            ctStatus = Some(anyCTStatusResponse)
-          )
-
-          val incompleteAnswers = incompleteAnswersBase.copy(
-            licenceType = licenceType,
-            taxSituation = None,
-            entityType = Some(Company),
-            crn = Some(CRN("1234567")),
-            companyDetailsConfirmed = Some(YesNoAnswer.Yes),
-            chargeableForCT = chargeableForCTOpt,
-            ctIncomeDeclared = ctIncomeDeclaredOpt,
-            recentlyStartedTrading = recentlyStartedTradingOpt
-          )
-          val session           =
-            CompanyHECSession(
-              companyData,
-              journeyData,
-              UserAnswers.empty,
+          "chargeable for CT answer is not present, CT income declared answer is no present" in {
+            checkCompanyDataComplete(
               None,
               None,
-              List.empty
-            )
-          JourneyServiceImpl.allAnswersComplete(incompleteAnswers, session)
-        }
-        val date                  = LocalDate.now()
-
-        "return false" when {
-          "licence type is missing" in {
-            JourneyServiceImpl.allAnswersComplete(
-              incompleteAnswersBase.copy(licenceType = None),
-              CompanyHECSession.newSession(companyLoginData)
-            ) shouldBe false
-          }
-
-          "licence time trading is missing" in {
-            JourneyServiceImpl.allAnswersComplete(
-              incompleteAnswersBase.copy(licenceTimeTrading = None),
-              CompanyHECSession.newSession(companyLoginData)
-            ) shouldBe false
-          }
-
-          "licence validity period is missing" in {
-            JourneyServiceImpl.allAnswersComplete(
-              incompleteAnswersBase.copy(licenceValidityPeriod = None),
-              CompanyHECSession.newSession(companyLoginData)
-            ) shouldBe false
-          }
-
-          "entity type is missing" in {
-            JourneyServiceImpl.allAnswersComplete(
-              incompleteUserAnswers = incompleteAnswersBase,
-              CompanyHECSession.newSession(companyLoginData)
-            ) shouldBe false
-          }
-
-          "recently started trading is not present " when {
-
-            "chargeable for CT answer is Yes, CT status = ReturnFound & CT income declared answer is missing" in {
-              checkCompanyDataComplete(
-                Some(YesNoAnswer.Yes),
-                None,
-                None,
-                Some(CTAccountingPeriod(date, date, CTStatus.ReturnFound))
-              ) shouldBe false
-            }
-
-            "chargeable for CT answer is Yes & CT status = NoReturnFound" in {
-              checkCompanyDataComplete(
-                Some(YesNoAnswer.Yes),
-                None,
-                None,
-                Some(CTAccountingPeriod(date, date, CTStatus.NoReturnFound))
-              ) shouldBe false
-            }
-
-            "chargeable for CT answer is not present" in {
-              checkCompanyDataComplete(
-                None,
-                None,
-                None,
-                Some(CTAccountingPeriod(date, date, CTStatus.NoReturnFound))
-              ) shouldBe false
-            }
-
-          }
-
-          "recently started trading is  present and is NO " when {
-
-            "chargeable for CT answer is Yes, CT status = ReturnFound & CT income declared answer is missing" in {
-              checkCompanyDataComplete(
-                Some(YesNoAnswer.Yes),
-                None,
-                Some(YesNoAnswer.No),
-                Some(CTAccountingPeriod(date, date, CTStatus.ReturnFound))
-              ) shouldBe false
-            }
-
-            "chargeable for CT answer is Yes & CT status = NoReturnFound" in {
-              checkCompanyDataComplete(
-                Some(YesNoAnswer.Yes),
-                None,
-                Some(YesNoAnswer.No),
-                Some(CTAccountingPeriod(date, date, CTStatus.NoReturnFound))
-              ) shouldBe false
-            }
-
-            "chargeable for CT answer is not present" in {
-              checkCompanyDataComplete(
-                None,
-                None,
-                Some(YesNoAnswer.No),
-                Some(CTAccountingPeriod(date, date, CTStatus.NoReturnFound))
-              ) shouldBe false
-            }
-
+              Some(YesNoAnswer.Yes),
+              None
+            ) shouldBe true
           }
 
         }
 
-        "return true" when {
-
-          "recently started trading is not present" when {
-
-            "CT status is present & chargeable for CT answer is No" in {
-              val date                                        = LocalDate.now
-              val licenceTypes                                = List(
-                LicenceType.OperatorOfPrivateHireVehicles,
-                LicenceType.ScrapMetalDealerSite,
-                LicenceType.ScrapMetalMobileCollector
-              )
-              val ctStatuses                                  = List(
-                CTStatus.ReturnFound,
-                CTStatus.NoReturnFound,
-                CTStatus.NoticeToFileIssued
-              )
-              val permutations: List[(LicenceType, CTStatus)] = for {
-                licenceType <- licenceTypes
-                ctStatus    <- ctStatuses
-              } yield (licenceType, ctStatus)
-              permutations foreach { case (licenceType, ctStatus) =>
-                withClue(s"for licenceType = $licenceType & CT status = $ctStatus") {
-                  checkCompanyDataComplete(
-                    Some(YesNoAnswer.No),
-                    None,
-                    None,
-                    Some(CTAccountingPeriod(date, date, ctStatus)),
-                    Some(licenceType)
-                  ) shouldBe true
-                }
-              }
-            }
-
-            "chargeable for CT answer is Yes and CT status = NoticeToFileIssued" in {
-              checkCompanyDataComplete(
-                Some(YesNoAnswer.Yes),
-                None,
-                None,
-                Some(CTAccountingPeriod(date, date, CTStatus.NoticeToFileIssued))
-              ) shouldBe true
-            }
-
-            "chargeable for CT answer is Yes, CT status = ReturnFound & CT income declared answer is present" in {
-
-              checkCompanyDataComplete(
-                Some(YesNoAnswer.Yes),
-                Some(YesNoAnswer.Yes),
-                None,
-                Some(CTAccountingPeriod(date, date, CTStatus.ReturnFound))
-              ) shouldBe true
-
-            }
-
-          }
-
-          "recently started trading is present and  is yes" when {
-
-            "chargeable for CT answer is not present, CT income declared answer is no present" in {
-              checkCompanyDataComplete(
-                None,
-                None,
-                Some(YesNoAnswer.Yes),
-                None
-              ) shouldBe true
-            }
-
-          }
-
-        }
       }
-
     }
 
   }

@@ -21,18 +21,20 @@ import cats.data.EitherT
 import cats.instances.future._
 import cats.instances.string._
 import cats.syntax.eq._
+import cats.syntax.option._
 import com.google.inject.{ImplementedBy, Inject, Singleton}
 import play.api.mvc.Call
 import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 import uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.saTaxSituations
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.RequestWithSessionData
 import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
+import uk.gov.hmrc.hecapplicantfrontend.models.CompanyUserAnswers.{CompleteCompanyUserAnswers, IncompleteCompanyUserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models.EntityType.{Company, Individual}
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, IndividualHECSession}
+import uk.gov.hmrc.hecapplicantfrontend.models.IndividualUserAnswers.{CompleteIndividualUserAnswers, IncompleteIndividualUserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.{CompanyRetrievedJourneyData, IndividualRetrievedJourneyData}
 import uk.gov.hmrc.hecapplicantfrontend.models.SAStatus.ReturnFound
-import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswers.{CompleteUserAnswers, IncompleteUserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
 import uk.gov.hmrc.hecapplicantfrontend.models.{CTStatus, EntityType, Error, HECSession, SAStatus, SAStatusResponse, TaxSituation, YesNoAnswer}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
@@ -116,7 +118,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
     for {
       upliftedSession <- EitherT.fromEither[Future](upliftToCompleteAnswersIfComplete(updatedSession, current))
       next            <- EitherT.fromOption[Future](
-                           upliftedSession.userAnswers.fold(
+                           upliftedSession.userAnswers.foldByCompleteness(
                              _ =>
                                if (currentPageIsCYA) sys.error("All user answers are not complete")
                                else paths.get(current).map(_(upliftedSession)),
@@ -146,7 +148,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
         case _                   => None
       }
 
-    lazy val hasCompletedAnswers = r.sessionData.userAnswers.fold(_ => false, _ => true)
+    lazy val hasCompletedAnswers = r.sessionData.userAnswers.foldByCompleteness(_ => false, _ => true)
 
     if (current === routes.StartController.start())
       current
@@ -169,31 +171,34 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
         val isExitPageNext =
           !paths.contains(next) && next =!= routes.TaxCheckCompleteController.taxCheckComplete()
 
-        val updatedSession = session.userAnswers match {
-          case _ if isExitPageNext =>
-            session
+        val updatedSession = session match {
+          case _ if isExitPageNext => session
 
-          case incomplete @ IncompleteUserAnswers(
-                Some(licenceType),
-                Some(licenceTimeTrading),
-                Some(licenceValidityPeriod),
-                taxSituation,
-                saIncomeDeclared,
-                entityType,
-                crn,
-                companyDetailsConfirmed,
-                chargeableForCT,
-                ctIncomeDeclared,
-                recentlyStartedTrading,
-                ctutr
-              ) if allAnswersComplete(incomplete, session) =>
+          case companySession @ CompanyHECSession(
+                _,
+                _,
+                companyAnswers @ IncompleteCompanyUserAnswers(
+                  Some(licenceType),
+                  Some(licenceTimeTrading),
+                  Some(licenceValidityPeriod),
+                  Some(entityType),
+                  Some(crn),
+                  Some(companyDetailsConfirmed),
+                  chargeableForCT,
+                  ctIncomeDeclared,
+                  recentlyStartedTrading,
+                  ctutr
+                ),
+                _,
+                _,
+                _,
+                _
+              ) if allCompanyAnswersComplete(companyAnswers, companySession) =>
             val completeAnswers =
-              CompleteUserAnswers(
+              CompleteCompanyUserAnswers(
                 licenceType,
                 licenceTimeTrading,
                 licenceValidityPeriod,
-                taxSituation,
-                saIncomeDeclared,
                 entityType,
                 crn,
                 companyDetailsConfirmed,
@@ -202,10 +207,33 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
                 recentlyStartedTrading,
                 ctutr
               )
-            session.fold(
-              _.copy(userAnswers = completeAnswers),
-              _.copy(userAnswers = completeAnswers)
-            )
+            companySession.copy(userAnswers = completeAnswers)
+
+          case individualSession @ IndividualHECSession(
+                _,
+                _,
+                individualAnswers @ IncompleteIndividualUserAnswers(
+                  Some(licenceType),
+                  Some(licenceTimeTrading),
+                  Some(licenceValidityPeriod),
+                  Some(taxSituation),
+                  saIncomeDeclared,
+                  entityType
+                ),
+                _,
+                _,
+                _
+              ) if allIndividualAnswersComplete(individualAnswers, individualSession) =>
+            val completeAnswers =
+              CompleteIndividualUserAnswers(
+                licenceType,
+                licenceTimeTrading,
+                licenceValidityPeriod,
+                taxSituation,
+                saIncomeDeclared,
+                entityType
+              )
+            individualSession.copy(userAnswers = completeAnswers)
 
           case _ => session
         }
@@ -221,7 +249,10 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
     }
 
   private def licenceValidityPeriodRoute(session: HECSession): Call =
-    session.userAnswers.fold(_.licenceType, c => Some(c.licenceType)) match {
+    session.userAnswers.fold(
+      _.fold(_.licenceType, _.licenceType.some),
+      _.fold(_.licenceType, _.licenceType.some)
+    ) match {
       case Some(licenceType) =>
         if (licenceTypeForIndividualAndCompany(licenceType)) routes.EntityTypeController.entityType()
         else routes.TaxSituationController.taxSituation()
@@ -230,7 +261,11 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
     }
 
   private def entityTypeRoute(session: HECSession): Call = {
-    val maybeSelectedEntityType = session.userAnswers.fold(_.entityType, _.entityType)
+    val maybeSelectedEntityType =
+      session.userAnswers.fold(
+        _.fold(_.entityType, _.entityType),
+        _.fold(_.entityType, _.entityType.some)
+      )
     val ggEntityType            = session.entityType
 
     maybeSelectedEntityType match {
@@ -248,7 +283,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
 
   private def taxSituationRoute(session: HECSession): Call =
     session.mapAsIndividual { individualSession: IndividualHECSession =>
-      individualSession.userAnswers.fold(_.taxSituation, _.taxSituation) match {
+      individualSession.userAnswers.fold(_.taxSituation, _.taxSituation.some) match {
         case None =>
           sys.error("Could not find tax situation for tax situation route")
 
@@ -275,15 +310,15 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
     }
 
   private def companyRegistrationNumberRoute(session: HECSession) =
-    session.mapAsCompany { companySession: CompanyHECSession =>
+    session.mapAsCompany { companySession =>
       companySession.retrievedJourneyData.companyName.fold(
         routes.CompanyDetailsNotFoundController.companyNotFound()
       )(_ => routes.CompanyDetailsController.confirmCompanyDetails())
     }
 
   private def confirmCompanyDetailsRoute(session: HECSession) =
-    session.mapAsCompany { companySession: CompanyHECSession =>
-      companySession.userAnswers.fold(_.companyDetailsConfirmed, _.companyDetailsConfirmed) match {
+    session.mapAsCompany { companySession =>
+      companySession.userAnswers.fold(_.companyDetailsConfirmed, _.companyDetailsConfirmed.some) match {
         case Some(YesNoAnswer.Yes) =>
           (companySession.loginData.ctutr, companySession.retrievedJourneyData) match {
             // enrolment and DES CTUTR present but don't match
@@ -316,8 +351,8 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
     }
 
   private def chargeableForCTRoute(session: HECSession) =
-    session.mapAsCompany { companySession: CompanyHECSession =>
-      session.userAnswers.fold(_.chargeableForCT, _.chargeableForCT) map {
+    session.mapAsCompany { companySession =>
+      companySession.userAnswers.fold(_.chargeableForCT, _.chargeableForCT) map {
         case YesNoAnswer.No  => routes.CheckYourAnswersController.checkYourAnswers()
         case YesNoAnswer.Yes =>
           companySession.retrievedJourneyData.ctStatus.flatMap(_.latestAccountingPeriod) match {
@@ -335,17 +370,19 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
     }
 
   private def recentlyStartedTradingRoute(session: HECSession) =
-    session.userAnswers.fold(_.recentlyStartedTrading, _.recentlyStartedTrading) map {
-      case YesNoAnswer.Yes => routes.CheckYourAnswersController.checkYourAnswers()
-      case YesNoAnswer.No  => routes.CompanyDetailsController.cannotDoTaxCheck()
-    } getOrElse {
-      sys.error("Answer missing for if company has recently started trading")
+    session.mapAsCompany { companySession =>
+      companySession.userAnswers.fold(_.recentlyStartedTrading, _.recentlyStartedTrading) map {
+        case YesNoAnswer.Yes => routes.CheckYourAnswersController.checkYourAnswers()
+        case YesNoAnswer.No  => routes.CompanyDetailsController.cannotDoTaxCheck()
+      } getOrElse {
+        sys.error("Answer missing for if company has recently started trading")
+      }
     }
 
   private def enterCtutrRoute(session: HECSession) =
     session.mapAsCompany { companySession =>
       val attemptsExceeded = companySession.ctutrAnswerAttempts >= appConfig.maxCtutrAnswerAttempts
-      val ctutrOpt         = session.userAnswers.fold(_.ctutr, _.ctutr)
+      val ctutrOpt         = companySession.userAnswers.fold(_.ctutr, _.ctutr)
       if (attemptsExceeded) {
         routes.CompanyDetailsController.tooManyCtutrAttempts()
       } else {
@@ -420,63 +457,61 @@ object JourneyServiceImpl {
     }
 
   /**
-    * Process the incomplete answers and retrieved user data to determine if all answers have been given by the user
+    * Process the incomplete individual answers and retrieved user data to determine if all answers have
+    * been given by the user
     *
-    * @param incompleteUserAnswers The incomplete answers
-    * @param session The current session data
+    * @param incompleteUserAnswers Individual incomplete answers
+    * @param session Individual session data
     * @return A boolean representing whether or not the user has completed answering all relevant questions
     */
-  def allAnswersComplete(
-    incompleteUserAnswers: IncompleteUserAnswers,
-    session: HECSession
+  def allIndividualAnswersComplete(
+    incompleteUserAnswers: IncompleteIndividualUserAnswers,
+    session: IndividualHECSession
   ): Boolean =
-    session match {
-      case individualSession: IndividualHECSession =>
-        incompleteUserAnswers match {
-          case IncompleteUserAnswers(
-                Some(licenceType),
-                Some(_),
-                Some(_),
-                Some(taxSituation),
-                saIncomeDeclared,
-                entityType,
-                _,
-                _,
-                _,
-                _,
-                _,
-                _
-              ) =>
-            val licenceTypeCheck      = checkEntityTypePresentIfRequired(licenceType, entityType)
-            val saIncomeDeclaredCheck =
-              checkSAIncomeDeclared(taxSituation, saIncomeDeclared, individualSession.retrievedJourneyData)
-            licenceTypeCheck && saIncomeDeclaredCheck
+    incompleteUserAnswers match {
+      case IncompleteIndividualUserAnswers(
+            Some(licenceType),
+            Some(_),
+            Some(_),
+            Some(taxSituation),
+            saIncomeDeclared,
+            entityType
+          ) =>
+        val licenceTypeCheck      = checkEntityTypePresentIfRequired(licenceType, entityType)
+        val saIncomeDeclaredCheck =
+          checkSAIncomeDeclared(taxSituation, saIncomeDeclared, session.retrievedJourneyData)
+        licenceTypeCheck && saIncomeDeclaredCheck
 
-          case _ => false
-        }
+      case _ => false
+    }
 
-      case companySession: CompanyHECSession =>
-        incompleteUserAnswers match {
-          case IncompleteUserAnswers(
-                Some(licenceType),
-                Some(_),
-                Some(_),
-                _,
-                _,
-                entityType,
-                Some(_),
-                Some(_),
-                chargeableForCT,
-                ctIncomeDeclared,
-                recentlyStartedTrading,
-                _
-              ) =>
-            val licenceTypeCheck = checkEntityTypePresentIfRequired(licenceType, entityType)
-            val companyDataCheck =
-              checkCompanyDataComplete(chargeableForCT, ctIncomeDeclared, recentlyStartedTrading, companySession)
-            licenceTypeCheck && companyDataCheck
+  /**
+    * Process the incomplete company answers and retrieved user data to determine if all answers have
+    * been given by the user
+    *
+    * @param incompleteUserAnswers Company incomplete answers
+    * @param session Company session data
+    * @return A boolean representing whether or not the user has completed answering all relevant questions
+    */
+  def allCompanyAnswersComplete(
+    incompleteUserAnswers: IncompleteCompanyUserAnswers,
+    session: CompanyHECSession
+  ): Boolean =
+    incompleteUserAnswers match {
+      case IncompleteCompanyUserAnswers(
+            Some(_),
+            Some(_),
+            Some(_),
+            Some(_),
+            Some(_),
+            Some(_),
+            chargeableForCT,
+            ctIncomeDeclared,
+            recentlyStartedTrading,
+            _
+          ) =>
+        checkCompanyDataComplete(chargeableForCT, ctIncomeDeclared, recentlyStartedTrading, session)
 
-          case _ => false
-        }
+      case _ => false
     }
 }

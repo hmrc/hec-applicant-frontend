@@ -17,7 +17,10 @@
 package uk.gov.hmrc.hecapplicantfrontend.models
 
 import cats.Eq
+import monocle.Lens
 import play.api.libs.json.{JsObject, JsResult, JsValue, Json, OFormat}
+import uk.gov.hmrc.hecapplicantfrontend.models.CompanyUserAnswers.IncompleteCompanyUserAnswers
+import uk.gov.hmrc.hecapplicantfrontend.models.IndividualUserAnswers.IncompleteIndividualUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.{CompanyRetrievedJourneyData, IndividualRetrievedJourneyData}
 
@@ -39,7 +42,7 @@ object HECSession {
   final case class IndividualHECSession(
     loginData: IndividualLoginData,
     retrievedJourneyData: IndividualRetrievedJourneyData,
-    userAnswers: UserAnswers,
+    userAnswers: IndividualUserAnswers,
     completedTaxCheck: Option[HECTaxCheck],
     taxCheckStartDateTime: Option[ZonedDateTime],
     unexpiredTaxChecks: List[TaxCheckListItem]
@@ -50,14 +53,21 @@ object HECSession {
   object IndividualHECSession {
 
     def newSession(loginData: IndividualLoginData): IndividualHECSession =
-      IndividualHECSession(loginData, IndividualRetrievedJourneyData.empty, UserAnswers.empty, None, None, List.empty)
+      IndividualHECSession(
+        loginData,
+        IndividualRetrievedJourneyData.empty,
+        IndividualUserAnswers.empty,
+        None,
+        None,
+        List.empty
+      )
 
   }
 
   final case class CompanyHECSession(
     loginData: CompanyLoginData,
     retrievedJourneyData: CompanyRetrievedJourneyData,
-    userAnswers: UserAnswers,
+    userAnswers: CompanyUserAnswers,
     completedTaxCheck: Option[HECTaxCheck],
     taxCheckStartDateTime: Option[ZonedDateTime],
     unexpiredTaxChecks: List[TaxCheckListItem],
@@ -69,7 +79,7 @@ object HECSession {
   object CompanyHECSession {
 
     def newSession(loginData: CompanyLoginData): CompanyHECSession =
-      CompanyHECSession(loginData, CompanyRetrievedJourneyData.empty, UserAnswers.empty, None, None, List.empty)
+      CompanyHECSession(loginData, CompanyRetrievedJourneyData.empty, CompanyUserAnswers.empty, None, None, List.empty)
 
   }
 
@@ -96,6 +106,39 @@ object HECSession {
         _ => sys.error("Expected company session data but got individual session data"),
         f
       )
+
+    /**
+      * Replaces a field value in the session
+      * @param session The session
+      * @param individualLens Lens for individual incomplete user answers
+      * @param companyLens Lens for company incomplete user answers
+      * @param individualUpdate Update method for individual incomplete user answers
+      * @param companyUpdate Update method for company incomplete user answers
+      * @tparam A Represents the field value type of the field being replaced
+      * @return The updated session
+      */
+    def replaceField[A](
+      session: HECSession,
+      individualLens: Lens[IncompleteIndividualUserAnswers, Option[A]],
+      companyLens: Lens[IncompleteCompanyUserAnswers, Option[A]],
+      individualUpdate: IncompleteIndividualUserAnswers => IncompleteIndividualUserAnswers,
+      companyUpdate: IncompleteCompanyUserAnswers => IncompleteCompanyUserAnswers
+    ): HECSession = session.fold(
+      { individual =>
+        val answers = individual.userAnswers.fold(
+          i => individualUpdate(i.unset(_ => individualLens)),
+          i => individualUpdate(i.unset(_ => individualLens))
+        )
+        individual.copy(userAnswers = answers)
+      },
+      { company =>
+        val answers = company.userAnswers.fold(
+          i => companyUpdate(i.unset(_ => companyLens)),
+          i => companyUpdate(i.unset(_ => companyLens))
+        )
+        company.copy(userAnswers = answers)
+      }
+    )
 
   }
 
