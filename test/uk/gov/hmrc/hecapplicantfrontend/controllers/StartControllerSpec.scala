@@ -145,10 +145,12 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
 
       val ctutr = CTUTR("1234567895")
 
+      val nino = NINO("AB123456C")
+
       val completeIndividualLoginData =
         IndividualLoginData(
           ggCredId,
-          NINO("nino"),
+          nino,
           Some(sautr),
           Name("First", "Last"),
           DateOfBirth(LocalDate.now()),
@@ -481,6 +483,23 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
                 ConfidenceLevel.L250,
                 Some(AffinityGroup.Individual),
                 None,
+                Some(sautr),
+                completeIndividualLoginData.emailAddress,
+                Enrolments(Set.empty),
+                Some(retrievedGGCredential(completeIndividualLoginData.ggCredId))
+              )
+              mockGetSession(Right(None))
+            }
+          )
+        }
+
+        "the NINO format is invalid" in {
+          testIsError(() =>
+            inSequence {
+              mockAuthWithRetrievals(
+                ConfidenceLevel.L250,
+                Some(AffinityGroup.Individual),
+                Some(NINO("invalid-nino")),
                 Some(sautr),
                 completeIndividualLoginData.emailAddress,
                 Enrolments(Set.empty),

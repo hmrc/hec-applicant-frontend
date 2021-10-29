@@ -21,11 +21,7 @@ import play.api.libs.json.{Format, Json}
 /**
   * National Insurance number
   */
-final case class NINO(value: String) extends AnyVal {
-
-  def noSuffix: String = value.dropRight(1)
-
-}
+final case class NINO(value: String) extends AnyVal
 
 object NINO {
 
