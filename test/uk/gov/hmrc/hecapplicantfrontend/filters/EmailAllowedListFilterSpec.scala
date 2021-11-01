@@ -123,6 +123,7 @@ class EmailAllowedListFilterSpec
         val result  = emailAllowedListFilter(true)(requestHandler)(request)
         status(result) shouldBe 200
       }
+
     }
 
   }
