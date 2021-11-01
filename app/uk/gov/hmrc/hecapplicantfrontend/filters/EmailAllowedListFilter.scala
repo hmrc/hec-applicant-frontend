@@ -43,55 +43,27 @@ class EmailAllowedListFilter @Inject() (
   val userEmailListEnabled: Boolean           = config.underlying.getBoolean("userAllowedList.enabled")
   val userEmailAllowedList: util.List[String] = config.underlying.getStringList("user-allow-list")
 
-  def isExcludedEndpoint(rh: RequestHeader): Boolean =
+  //function checks if the existing url contains access denied end point,
+  //then it shouldn't go to else part at line 61 to avoid being in a loop
+  private def isExcludedEndpoint(rh: RequestHeader): Boolean =
     rh.uri.contains(routes.AccessDeniedController.accessDenied().url)
 
   override def apply(f: RequestHeader => Future[Result])(rh: RequestHeader): Future[Result] =
     if (userEmailListEnabled) {
-      println(" inside checking user email list")
       implicit val hc: HeaderCarrier =
         HeaderCarrierConverter.fromRequestAndSession(rh, rh.session)
       authorised()
-        .retrieve(Retrievals.email) { email =>
-          if (isExcludedEndpoint(rh) || email.exists(x => userEmailAllowedList.contains(x))) {
+        .retrieve(Retrievals.email) { emailOpt =>
+          if (isExcludedEndpoint(rh) || emailOpt.exists(email => userEmailAllowedList.contains(email))) {
             println(" inside first if")
             f(rh)
           } else {
-            println(" inside first else")
             Future.successful(Redirect(routes.AccessDeniedController.accessDenied))
           }
         }
-        .recoverWith { case _: NoActiveSession =>
-          println(" inside case")
-          f(rh)
-        }
+        .recoverWith { case _: NoActiveSession => f(rh) }
     } else {
       f(rh)
     }
 
-//  override def apply(f: RequestHeader => Future[Result])(rh: RequestHeader): Future[Result] =
-//    if (userEmailListEnabled) {
-//      println(" inside checking user email list")
-//      implicit val hc: HeaderCarrier =
-//        HeaderCarrierConverter.fromRequestAndSession(rh, rh.session)
-//      authConnector
-//        .authorise(AuthProviders(AuthProvider.GovernmentGateway), Retrievals.email)
-//        .flatMap { x =>
-//          println(" inside flatmap::" + x.toString)
-//          x match {
-//            case Some(email) =>
-//              println(" email is ::" + email)
-//              if (userEmailAllowedList.contains(email)) {
-//                f(rh)
-//              } else { Future.successful(Redirect(routes.AccessDeniedController.accessDenied)) }
-//            case None        =>
-//              println(" inside None")
-//              Future.successful(Redirect(routes.AccessDeniedController.accessDenied))
-//          }
-//
-//        }
-//        .recoverWith { case _: NoActiveSession => f(rh) }
-//    } else {
-//      f(rh)
-//    }
 }
