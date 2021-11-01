@@ -55,7 +55,6 @@ class EmailAllowedListFilter @Inject() (
       authorised()
         .retrieve(Retrievals.email) { emailOpt =>
           if (isExcludedEndpoint(rh) || emailOpt.exists(email => userEmailAllowedList.contains(email))) {
-            println(" inside first if")
             f(rh)
           } else {
             Future.successful(Redirect(routes.AccessDeniedController.accessDenied))

@@ -51,6 +51,8 @@ trait ControllerSpec extends AnyWordSpec with Matchers with BeforeAndAfterAll wi
           ConfigFactory.parseString(
             """
             | microservice.metrics.graphite.enabled = false 
+            | userAllowedList.enabled = false
+            | 
       | """.stripMargin
           )
         ).withFallback(additionalConfig)
