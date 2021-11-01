@@ -43,6 +43,9 @@ class EmailAllowedListFilter @Inject() (
   val userEmailListEnabled: Boolean           = config.underlying.getBoolean("userAllowedList.enabled")
   val userEmailAllowedList: util.List[String] = config.underlying.getStringList("user-allow-list")
 
+  def isExcludedEndpoint(rh: RequestHeader): Boolean =
+    rh.uri.contains(routes.AccessDeniedController.accessDenied().url)
+
   override def apply(f: RequestHeader => Future[Result])(rh: RequestHeader): Future[Result] =
     if (userEmailListEnabled) {
       println(" inside checking user email list")
@@ -50,7 +53,7 @@ class EmailAllowedListFilter @Inject() (
         HeaderCarrierConverter.fromRequestAndSession(rh, rh.session)
       authorised()
         .retrieve(Retrievals.email) { email =>
-          if (email.exists(x => userEmailAllowedList.contains(x))) {
+          if (isExcludedEndpoint(rh) || email.exists(x => userEmailAllowedList.contains(x))) {
             println(" inside first if")
             f(rh)
           } else {

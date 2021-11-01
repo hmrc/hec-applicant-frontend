@@ -19,20 +19,19 @@ package uk.gov.hmrc.hecapplicantfrontend.controllers
 import com.google.inject.{Inject, Singleton}
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
-import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
+import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.AuthAction
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
 @Singleton
 class AccessDeniedController @Inject() (
   authAction: AuthAction,
-  sessionDataAction: SessionDataAction,
   mcc: MessagesControllerComponents
 ) extends FrontendController(mcc)
     with I18nSupport
     with Logging {
 
-  val accessDenied: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
-    Ok(s"access denied, session : ${request.sessionData}")
+  val accessDenied: Action[AnyContent] = authAction { _ =>
+    Ok(s"access denied, session")
   }
 }
