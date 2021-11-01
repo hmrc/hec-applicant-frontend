@@ -46,7 +46,9 @@ class EmailAllowedListFilter @Inject() (
   private def isExcludedEndpoint(rh: RequestHeader): Boolean =
     rh.uri.contains(routes.AccessDeniedController.accessDenied().url)
 
-  def isExcludedEndpoint(rh: RequestHeader): Boolean =
+  //function checks if the existing url contains access denied end point,
+  //then it shouldn't go to else part at line 61 to avoid being in a loop
+  private def isExcludedEndpoint(rh: RequestHeader): Boolean =
     rh.uri.contains(routes.AccessDeniedController.accessDenied().url)
 
   override def apply(f: RequestHeader => Future[Result])(rh: RequestHeader): Future[Result] =
