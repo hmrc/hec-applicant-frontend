@@ -49,7 +49,7 @@ class EmailAllowedListFilterSpec
   def additionalConfig(isEnabled: Boolean): Configuration = Configuration(
     ConfigFactory.parseString(
       s"""
-        | user-allow-list = ["user@test.com"]
+        | user-allowed-list = ["user@test.com"]
         | userAllowedList.enabled = $isEnabled
         | 
         | """.stripMargin

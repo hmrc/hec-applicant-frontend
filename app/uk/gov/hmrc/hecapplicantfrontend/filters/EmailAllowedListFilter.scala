@@ -41,7 +41,7 @@ class EmailAllowedListFilter @Inject() (
     with Logging {
 
   val userEmailListEnabled: Boolean           = config.underlying.getBoolean("userAllowedList.enabled")
-  val userEmailAllowedList: util.List[String] = config.underlying.getStringList("user-allow-list")
+  val userEmailAllowedList: util.List[String] = config.underlying.getStringList("user-allowed-list")
 
   //function checks if the existing url contains access denied end point,
   //then it shouldn't go to else part at line 61 to avoid being in a loop
