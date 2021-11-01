@@ -46,6 +46,9 @@ class EmailAllowedListFilter @Inject() (
   private def isExcludedEndpoint(rh: RequestHeader): Boolean =
     rh.uri.contains(routes.AccessDeniedController.accessDenied().url)
 
+  def isExcludedEndpoint(rh: RequestHeader): Boolean =
+    rh.uri.contains(routes.AccessDeniedController.accessDenied().url)
+
   override def apply(f: RequestHeader => Future[Result])(rh: RequestHeader): Future[Result] =
     if (userEmailListEnabled) {
       implicit val hc: HeaderCarrier =
