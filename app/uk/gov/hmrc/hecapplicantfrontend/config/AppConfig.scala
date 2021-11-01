@@ -81,6 +81,7 @@ class AppConfig @Inject() (config: Configuration, contactFrontendConfig: Contact
 
   lazy val redirectToIvUplift: Result = {
     val ivUrl: String = platformHost.getOrElse(config.get[String]("iv.url"))
+    val ivLocation    = config.get[String]("iv.location")
 
     val ivOrigin: String = config.get[String]("iv.origin")
 
@@ -96,7 +97,7 @@ class AppConfig @Inject() (config: Configuration, contactFrontendConfig: Contact
         s"$selfBaseUrl$successRelativeUrl" -> s"$selfBaseUrl$failureRelativeUrl"
     }
 
-    val redirectToIvUrl: String = s"$ivUrl/mdtp/uplift"
+    val redirectToIvUrl: String = s"$ivUrl$ivLocation/uplift"
 
     Redirect(
       redirectToIvUrl,
