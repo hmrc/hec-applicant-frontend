@@ -67,6 +67,8 @@ GET        /cannot-do-tax-check            uk.gov.hmrc.hecapplicantfrontend.cont
 
 GET        /company-not-found              uk.gov.hmrc.hecapplicantfrontend.controllers.CompanyDetailsNotFoundController.companyNotFound
 
+GET        /access-denied                  uk.gov.hmrc.hecapplicantfrontend.controllers.AccessDeniedController.accessDenied
+
 # IV
 GET  /failed-iv/callback                         uk.gov.hmrc.hecapplicantfrontend.controllers.IvFailureController.ivFailure(journeyId: java.util.UUID)
 GET  /failed-iv/retry                            uk.gov.hmrc.hecapplicantfrontend.controllers.IvFailureController.retry
