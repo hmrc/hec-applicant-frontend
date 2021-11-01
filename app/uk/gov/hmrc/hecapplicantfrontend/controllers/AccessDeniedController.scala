@@ -30,7 +30,6 @@ class AccessDeniedController @Inject() (
 ) extends FrontendController(mcc)
     with I18nSupport
     with Logging {
-
   val accessDenied: Action[AnyContent] = authAction { _ =>
     Ok(s"access denied, session")
   }

@@ -27,6 +27,7 @@ import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
+
 import configs.syntax._
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -63,5 +64,4 @@ class EmailAllowedListFilter @Inject() (
     } else {
       f(rh)
     }
-
 }
