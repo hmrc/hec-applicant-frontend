@@ -50,6 +50,7 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
 
   val ivOrigin    = "ivOrigin"
   val ivUrl       = "https://iv:123"
+  val ivLocation  = "/iv-location"
   val selfBaseUrl = "http://self:456"
   val signInUrl   = "https://sign-in:456"
   val ggOrigin    = "ggOrigin"
@@ -59,6 +60,7 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
       s"""
          |iv {
          |  origin = "$ivOrigin"
+         |  location = $ivLocation
          |  url = "$ivUrl"
          |  use-relative-urls = false
          |}
@@ -645,7 +647,7 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
           mockActions()
           checkIsRedirect(
             performAction(),
-            s"$ivUrl/mdtp/uplift?$queryString"
+            s"$ivUrl$ivLocation/uplift?$queryString"
           )
         }
 
