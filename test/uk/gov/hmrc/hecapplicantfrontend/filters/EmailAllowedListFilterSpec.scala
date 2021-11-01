@@ -19,27 +19,34 @@ package uk.gov.hmrc.hecapplicantfrontend.filters
 import akka.actor.ActorSystem
 import akka.stream.Materializer
 import com.typesafe.config.ConfigFactory
-import org.scalamock.scalatest.MockFactory
 import org.scalatest.BeforeAndAfterAll
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
+import play.api.inject.bind
+import play.api.inject.guice.GuiceableModule
 import play.api.mvc.{RequestHeader, Result, Results}
 import play.api.test.FakeRequest
-import uk.gov.hmrc.auth.core.AuthConnector
 import play.api.test.Helpers._
-import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, HECSession}
-import uk.gov.hmrc.hecapplicantfrontend.utils.Fixtures
+import uk.gov.hmrc.auth.core.AuthConnector
+import uk.gov.hmrc.auth.core.authorise.EmptyPredicate
+import uk.gov.hmrc.auth.core.retrieve.Credentials
+import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
+import uk.gov.hmrc.hecapplicantfrontend.controllers.{AuthSupport, ControllerSpec, JourneyServiceSupport, routes}
+import uk.gov.hmrc.hecapplicantfrontend.models.EmailAddress
+import uk.gov.hmrc.hecapplicantfrontend.models.ids.GGCredId
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class EmailAllowedListFilterSpec extends AnyWordSpec with Matchers with MockFactory with BeforeAndAfterAll {
+class EmailAllowedListFilterSpec
+    extends ControllerSpec
+    with AuthSupport
+    with BeforeAndAfterAll
+    with JourneyServiceSupport {
 
   implicit val system            = ActorSystem()
   implicit val mat: Materializer = Materializer(system)
 
-  def config(isEnabled: Boolean): Configuration = Configuration(
+  def additionalConfig(isEnabled: Boolean): Configuration = Configuration(
     ConfigFactory.parseString(
       s"""
         | user-allow-list = ["user@test.com"]
@@ -54,27 +61,79 @@ class EmailAllowedListFilterSpec extends AnyWordSpec with Matchers with MockFact
     mat.shutdown()
   }
 
-  val mockAuthConnector = mock[AuthConnector]
-//  def overrideBindings: List[GuiceableModule] = List(
-//    bind[AuthConnector].toInstance(mockAuthConnector)
-//  )
+  override def overrideBindings: List[GuiceableModule] = List(
+    bind[AuthConnector].toInstance(mockAuthConnector)
+  )
 
-  val emailAllowedListFilter = new EmailAllowedListFilter(mat, mockAuthConnector, config(true))
+  val retrievals = Retrievals.email
+
+  def mockAuthWithRetrievals(
+    retrievedEmailAddress: Option[EmailAddress]
+  ) =
+    mockAuth(EmptyPredicate, retrievals)(
+      Future.successful(retrievedEmailAddress.map(_.value))
+    )
+
+  def emailAllowedListFilter(isEnabled: Boolean) =
+    new EmailAllowedListFilter(mat, mockAuthConnector, additionalConfig(isEnabled))
+
+  def retrievedGGCredential(ggCredId: GGCredId) =
+    Credentials(ggCredId.value, "GovernmentGateway")
 
   "EmailAllowedListFilterSpec" when {
 
-    "enable config is false, moe to next page" when {
+    "email allowed config is false, move to next page" when {
 
       "user allowed email list contains the email in enrollment" in {
 
-        val individualLoginData = Fixtures.individualLoginData(emailAddress = Some(EmailAddress("user@test.com")))
-        val hecSession          = Fixtures.individualHECSession(individualLoginData)
+        val requestHandler: RequestHeader => Future[Result] = _ => Future.successful(Results.Ok)
+        val request                                         = FakeRequest()
+        val result                                          = emailAllowedListFilter(false)(requestHandler)(request)
+        status(result) shouldBe 200
+      }
 
-        val requestHeader: RequestHeader => Future[Result] = _ => Future.successful(Results.Ok)
-        val request                                        = FakeRequest("GET", "/some-url").withSession(hecSession)
-        val result                                         = emailAllowedListFilter(requestHeader)(request)
-        await(result) shouldBe 200
+      "user allowed email list doesn't contain the email in enrollment" in {
 
+        val requestHandler: RequestHeader => Future[Result] = _ => Future.successful(Results.Ok)
+        val request                                         = FakeRequest()
+        val result                                          = emailAllowedListFilter(false)(requestHandler)(request)
+        status(result) shouldBe 200
+      }
+
+    }
+
+    "email allowed config is true" when {
+
+      "user allowed email list contains the email in enrollment, move to next page" in {
+
+        val requestHandler: RequestHeader => Future[Result] = _ => Future.successful(Results.Ok)
+        val request                                         = FakeRequest()
+        mockAuthWithRetrievals(
+          Some(EmailAddress("user@test.com"))
+        )
+        val result                                          = emailAllowedListFilter(true)(requestHandler)(request)
+        status(result) shouldBe 200
+      }
+
+      "user allowed email list doesn't contain the email in enrollment, move to access denied" in {
+
+        val requestHandler: RequestHeader => Future[Result] = _ => Future.successful(Results.Ok)
+        val request                                         = FakeRequest()
+        mockAuthWithRetrievals(
+          Some(EmailAddress("user1@test.com"))
+        )
+        val result                                          = emailAllowedListFilter(true)(requestHandler)(request)
+        checkIsRedirect(result, routes.AccessDeniedController.accessDenied)
+      }
+
+      "the uri in current session is access denied, move to next page" in {
+        val requestHandler: RequestHeader => Future[Result] = _ => Future.successful(Results.Ok)
+        val request                                         = FakeRequest(routes.AccessDeniedController.accessDenied)
+        mockAuthWithRetrievals(
+          Some(EmailAddress("user1@test.com"))
+        )
+        val result                                          = emailAllowedListFilter(true)(requestHandler)(request)
+        status(result) shouldBe 200
       }
     }
 

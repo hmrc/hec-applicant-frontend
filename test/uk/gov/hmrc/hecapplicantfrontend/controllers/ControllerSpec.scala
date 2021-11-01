@@ -42,7 +42,14 @@ trait ControllerSpec extends AnyWordSpec with Matchers with BeforeAndAfterAll wi
 
   def overrideBindings: List[GuiceableModule] = List.empty[GuiceableModule]
 
-  def additionalConfig = Configuration()
+  def additionalConfig = Configuration(
+    ConfigFactory.parseString(
+      """
+      | userAllowedList.enabled = false
+      | 
+      | """.stripMargin
+    )
+  )
 
   def buildFakeApplication(): Application =
     new GuiceApplicationBuilder()
@@ -51,7 +58,6 @@ trait ControllerSpec extends AnyWordSpec with Matchers with BeforeAndAfterAll wi
           ConfigFactory.parseString(
             """
             | microservice.metrics.graphite.enabled = false 
-            | userAllowedList.enabled = false
             | 
       | """.stripMargin
           )
