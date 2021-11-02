@@ -55,7 +55,7 @@ class IvFailureController @Inject() (
       .fold(
         { e =>
           logger.warn("Could not check IV journey error status", e)
-          InternalServerError
+          sys.error("Could not check IV journey error status")
         },
         { ivErrorStatus =>
           val redirectTo = ivErrorStatus match {

@@ -50,7 +50,7 @@ class CheckYourAnswersController @Inject() (
     request.sessionData.userAnswers.foldByCompleteness(
       { _ =>
         logger.warn("Could not find complete answers")
-        InternalServerError
+        sys.error("Could not find complete answers")
       },
       { complete =>
         val back = journeyService.previous(routes.CheckYourAnswersController.checkYourAnswers())
@@ -79,14 +79,14 @@ class CheckYourAnswersController @Inject() (
         result.fold(
           { e =>
             logger.warn("Could not save tax check", e)
-            InternalServerError
+            sys.error("Could not save tax check")
           },
           Redirect
         )
 
       case _ =>
         logger.warn("Could not find complete answers")
-        InternalServerError
+        sys.error("Could not find complete answers")
     }
   }
 

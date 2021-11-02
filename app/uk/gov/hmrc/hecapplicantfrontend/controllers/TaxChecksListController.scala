@@ -51,7 +51,7 @@ class TaxChecksListController @Inject() (
     request.sessionData.unexpiredTaxChecks match {
       case Nil       =>
         logger.warn("No tax check codes found")
-        InternalServerError
+        sys.error("No tax check codes found")
       case taxChecks =>
         val sorted = taxChecks.sortBy(_.createDate)
         val back   = journeyService.previous(routes.TaxChecksListController.unexpiredTaxChecks())
@@ -65,7 +65,7 @@ class TaxChecksListController @Inject() (
       .fold(
         { e =>
           logger.warn("Could not save tax check", e)
-          InternalServerError
+          sys.error("Could not save tax check")
         },
         Redirect
       )

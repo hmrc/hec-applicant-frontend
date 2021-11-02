@@ -42,7 +42,7 @@ class TaxCheckCompleteController @Inject() (
       case Some(taxCheck) => Ok(taxCheckCompletePage(taxCheck))
       case None           =>
         logger.warn("Tax check code not found")
-        InternalServerError
+        sys.error("Tax check code not found")
     }
   }
 }

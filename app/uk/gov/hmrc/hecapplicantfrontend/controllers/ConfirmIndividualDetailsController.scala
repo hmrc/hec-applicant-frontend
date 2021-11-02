@@ -58,7 +58,7 @@ class ConfirmIndividualDetailsController @Inject() (
           .fold(
             { e =>
               logger.warn("Could not update and find next page", e)
-              InternalServerError
+              sys.error("Could not update and find next page")
             },
             Redirect
           )

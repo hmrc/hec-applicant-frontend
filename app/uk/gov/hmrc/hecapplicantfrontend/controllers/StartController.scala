@@ -82,22 +82,22 @@ class StartController @Inject() (
       {
         case DataError(msg) =>
           logger.warn(s"Issue with data: $msg")
-          InternalServerError
+          sys.error(s"Issue with data: $msg")
 
         case BackendError(e) =>
           logger.warn(s"Backend error", e)
-          InternalServerError
+          sys.error("")
 
         case InsufficientConfidenceLevel =>
           appConfig.redirectToIvUplift
 
         case UnsupportedAuthProvider(provider) =>
           logger.warn(s"Unsupported auth provider: $provider")
-          InternalServerError
+          sys.error(s"Unsupported auth provider: $provider")
 
         case AgentLogin =>
           logger.warn("Agent login")
-          InternalServerError
+          sys.error("Agent login")
 
       },
       session => Redirect(journeyService.firstPage(session))

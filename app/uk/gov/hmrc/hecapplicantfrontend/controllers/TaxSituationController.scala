@@ -70,8 +70,8 @@ class TaxSituationController @Inject() (
           // the edge case where the tax year might change from one page to the next
           Ok(taxSituationPage(form, back, options, getTaxYear(timeProvider.currentDate)))
         case None              =>
-          logger.error("Couldn't find licence Type")
-          InternalServerError
+          logger.warn("Couldn't find licence Type")
+          sys.error("Couldn't find licence Type")
       }
     }
   }
@@ -112,7 +112,7 @@ class TaxSituationController @Inject() (
         result.fold(
           { e =>
             logger.warn("Fetch SA status failed or could not update session and proceed", e)
-            InternalServerError
+            sys.error("Fetch SA status failed or could not update session and proceed")
           },
           Redirect
         )
@@ -137,8 +137,8 @@ class TaxSituationController @Inject() (
               handleValidTaxSituation
             )
         case None              =>
-          logger.error("Couldn't find licence type")
-          InternalServerError
+          logger.warn("Couldn't find licence type")
+          sys.error("Couldn't find licence type")
       }
     }
   }

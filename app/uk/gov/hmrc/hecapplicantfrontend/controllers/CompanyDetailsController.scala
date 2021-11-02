@@ -23,7 +23,7 @@ import play.api.data.Form
 import play.api.data.Forms.{mapping, nonEmptyText, of}
 import play.api.data.validation.{Constraint, Invalid, Valid}
 import play.api.i18n.I18nSupport
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
+import play.api.mvc.{Action, AnyContent, Call, MessagesControllerComponents, Result}
 import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 import uk.gov.hmrc.hecapplicantfrontend.controllers.CompanyDetailsController.enterCtutrForm
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, RequestWithSessionData, SessionDataAction}
@@ -38,6 +38,7 @@ import uk.gov.hmrc.hecapplicantfrontend.util.Logging.LoggerOps
 import uk.gov.hmrc.hecapplicantfrontend.util.StringUtils.StringOps
 import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging, TimeProvider, TimeUtils}
 import uk.gov.hmrc.hecapplicantfrontend.views.html
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
 import java.time.LocalDate
@@ -94,11 +95,6 @@ class CompanyDetailsController @Inject() (
 
   val confirmCompanyDetailsSubmit: Action[AnyContent] =
     authAction.andThen(sessionDataAction).async { implicit request =>
-      def internalServerError(errorMessage: String)(e: Error) = {
-        logger.warn(errorMessage, e)
-        InternalServerError
-      }
-
       def callUpdateAndNext(updatedSession: HECSession) =
         journeyService
           .updateAndNext(
@@ -137,7 +133,7 @@ class CompanyDetailsController @Inject() (
         } yield call
 
         result.fold(
-          internalServerError("Could not update session and proceed"),
+          systemError("Could not update session and proceed"),
           Redirect
         )
       }
@@ -156,7 +152,7 @@ class CompanyDetailsController @Inject() (
               .unset(_.companyDetailsConfirmed)
               .copy(companyDetailsConfirmed = Some(companyDetailsConfirmed))
             callUpdateAndNext(session.copy(userAnswers = answersWithoutCrn)).fold(
-              internalServerError("Could not update session and proceed"),
+              systemError("Could not update session and proceed"),
               Redirect
             )
         }
@@ -205,18 +201,10 @@ class CompanyDetailsController @Inject() (
             .unset(_.recentlyStartedTrading)
             .copy(recentlyStartedTrading = Some(recentlyStartedTrading))
 
-          journeyService
-            .updateAndNext(
-              routes.CompanyDetailsController.recentlyStartedTrading(),
-              request.sessionData.mapAsCompany(_.copy(userAnswers = updatedAnswers))
-            )
-            .fold(
-              { e =>
-                logger.warn("Could not update session and proceed", e)
-                InternalServerError
-              },
-              Redirect
-            )
+          updateAndNextJourneyData(
+            routes.CompanyDetailsController.recentlyStartedTrading(),
+            request.sessionData.mapAsCompany(_.copy(userAnswers = updatedAnswers))
+          )
         }
 
         CompanyDetailsController
@@ -272,18 +260,10 @@ class CompanyDetailsController @Inject() (
                 .copy(chargeableForCT = Some(chargeableForCT))
           }
 
-          journeyService
-            .updateAndNext(
-              routes.CompanyDetailsController.chargeableForCorporationTax(),
-              companySession.copy(userAnswers = updatedAnswers)
-            )
-            .fold(
-              { e =>
-                logger.warn("Could not update session and proceed", e)
-                InternalServerError
-              },
-              Redirect
-            )
+          updateAndNextJourneyData(
+            routes.CompanyDetailsController.chargeableForCorporationTax(),
+            companySession.copy(userAnswers = updatedAnswers)
+          )
         }
 
         ensureCompanyDataHasCTStatusAccountingPeriod(companySession) { latestAccountingPeriod =>
@@ -327,22 +307,12 @@ class CompanyDetailsController @Inject() (
   val enterCtutrSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     request.sessionData mapAsCompany { companySession =>
       ensureCompanyDataHasDesCtutr(companySession) { desCtutr =>
-        def internalServerError(errorMsg: String)(e: Error) = {
-          logger.warn(errorMsg, e)
-          InternalServerError
-        }
-
         def maxCtutrAnswerAttemptsReached = companySession.ctutrAnswerAttempts >= appConfig.maxCtutrAnswerAttempts
 
-        def goToNextPage: Future[Result] = journeyService
-          .updateAndNext(
-            routes.CompanyDetailsController.enterCtutr(),
-            companySession
-          )
-          .fold(
-            internalServerError("Could not update session and proceed"),
-            Redirect
-          )
+        def goToNextPage: Future[Result] = updateAndNextJourneyData(
+          routes.CompanyDetailsController.enterCtutr(),
+          companySession
+        )
 
         def handleValidAnswer(ctutr: CTUTR) = {
           val updatedAnswers = companySession.userAnswers.unset(_.ctutr).copy(ctutr = Some(ctutr))
@@ -363,7 +333,7 @@ class CompanyDetailsController @Inject() (
           } yield next
 
           result.fold(
-            internalServerError("Could not update session and proceed"),
+            systemError("Could not update session and proceed"),
             Redirect
           )
         }
@@ -384,7 +354,7 @@ class CompanyDetailsController @Inject() (
             sessionStore
               .store(updatedSession)
               .fold(
-                internalServerError("Could not update ctutr answer attempts"),
+                systemError("Could not update ctutr answer attempts"),
                 _ => ok(formWithErrors)
               )
           }
@@ -446,18 +416,10 @@ class CompanyDetailsController @Inject() (
           val updatedAnswers =
             companySession.userAnswers.unset(_.ctIncomeDeclared).copy(ctIncomeDeclared = Some(incomeDeclared))
 
-          journeyService
-            .updateAndNext(
-              routes.CompanyDetailsController.ctIncomeStatement(),
-              companySession.copy(userAnswers = updatedAnswers)
-            )
-            .fold(
-              { e =>
-                logger.warn("Could not update session and proceed", e)
-                InternalServerError
-              },
-              Redirect
-            )
+          updateAndNextJourneyData(
+            routes.CompanyDetailsController.ctIncomeStatement(),
+            companySession.copy(userAnswers = updatedAnswers)
+          )
         }
 
         CompanyDetailsController
@@ -491,7 +453,7 @@ class CompanyDetailsController @Inject() (
       case Some(companyName) => f(companyName)
       case None              =>
         logger.warn("Missing company name")
-        InternalServerError
+        sys.error("Missing company name")
     }
 
   private def ensureCompanyDataHasDesCtutr(
@@ -501,7 +463,7 @@ class CompanyDetailsController @Inject() (
       case Some(ctutr) => f(ctutr)
       case None        =>
         logger.warn("Missing DES-CTUTR")
-        InternalServerError
+        sys.error("Missing DES-CTUTR")
     }
 
   private def ensureCompanyDataHasCTStatusAccountingPeriod(
@@ -511,10 +473,10 @@ class CompanyDetailsController @Inject() (
       case Some(CTStatusResponse(_, _, _, Some(latestAccountingPeriod))) => f(latestAccountingPeriod)
       case Some(_)                                                       =>
         logger.warn("Missing CT status latest accounting period")
-        InternalServerError
+        sys.error("Missing CT status latest accounting period")
       case None                                                          =>
         logger.warn("Missing CT status")
-        InternalServerError
+        sys.error("Missing CT status")
     }
 
   private def ensureUserAnswersHasCRN(
@@ -524,8 +486,27 @@ class CompanyDetailsController @Inject() (
       case Some(crn) => f(crn)
       case None      =>
         logger.warn("CRN is not populated in user answers")
-        InternalServerError
+        sys.error("CRN is not populated in user answers")
     }
+
+  private def systemError(errorMsg: String)(e: Error) = {
+    logger.warn(errorMsg, e)
+    sys.error(errorMsg)
+  }
+
+  private def updateAndNextJourneyData(current: Call, updatedSession: HECSession)(implicit
+    r: RequestWithSessionData[_],
+    hc: HeaderCarrier
+  ): Future[Result] =
+    journeyService
+      .updateAndNext(
+        current,
+        updatedSession
+      )
+      .fold(
+        systemError("Could not update session and proceed"),
+        Redirect
+      )
 }
 
 object CompanyDetailsController {

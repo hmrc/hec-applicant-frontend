@@ -83,7 +83,7 @@ class EntityTypeController @Inject() (
         .fold(
           { e =>
             logger.warn("Could not update session and proceed", e)
-            InternalServerError
+            sys.error("Could not update session and proceed")
           },
           Redirect
         )
@@ -115,7 +115,7 @@ class EntityTypeController @Inject() (
 
       case None =>
         logger.warn("Could not find entity type")
-        InternalServerError
+        sys.error("Could not find entity type")
     }
 
   }
