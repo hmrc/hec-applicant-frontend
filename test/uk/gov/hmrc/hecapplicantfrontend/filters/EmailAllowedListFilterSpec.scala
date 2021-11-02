@@ -52,7 +52,11 @@ class EmailAllowedListFilterSpec
         | enabled = $isEnabled
         | list = ["user@test.com"]
         | }
+<<<<<<< HEAD
         |
+=======
+        | 
+>>>>>>> HEC-1135 PR comments
         | """.stripMargin
     )
   )
@@ -127,5 +131,4 @@ class EmailAllowedListFilterSpec
     }
 
   }
-
 }
