@@ -49,8 +49,10 @@ class EmailAllowedListFilterSpec
   def additionalConfig(isEnabled: Boolean): Configuration = Configuration(
     ConfigFactory.parseString(
       s"""
-        | user-allowed-list = ["user@test.com"]
-        | userAllowedList.enabled = $isEnabled
+        | email-allow-list {
+        | enabled = $isEnabled
+        | list = ["user@test.com"]
+        | }
         | 
         | """.stripMargin
     )
@@ -58,7 +60,7 @@ class EmailAllowedListFilterSpec
 
   override def afterAll(): Unit = {
     super.afterAll()
-    mat.shutdown()
+    await(system.terminate())
   }
 
   override def overrideBindings: List[GuiceableModule] = List(
@@ -80,63 +82,49 @@ class EmailAllowedListFilterSpec
   def retrievedGGCredential(ggCredId: GGCredId) =
     Credentials(ggCredId.value, "GovernmentGateway")
 
+  val requestHandler: RequestHeader => Future[Result] = _ => Future.successful(Results.Ok)
+
   "EmailAllowedListFilterSpec" when {
 
-    "email allowed config is false, move to next page" when {
+    "email allowed config is false, move to next page, irrespective of enrollment contains the email id or not" in {
 
-      "user allowed email list contains the email in enrollment" in {
-
-        val requestHandler: RequestHeader => Future[Result] = _ => Future.successful(Results.Ok)
-        val request                                         = FakeRequest()
-        val result                                          = emailAllowedListFilter(false)(requestHandler)(request)
-        status(result) shouldBe 200
-      }
-
-      "user allowed email list doesn't contain the email in enrollment" in {
-
-        val requestHandler: RequestHeader => Future[Result] = _ => Future.successful(Results.Ok)
-        val request                                         = FakeRequest()
-        val result                                          = emailAllowedListFilter(false)(requestHandler)(request)
-        status(result) shouldBe 200
-      }
-
+      val request = FakeRequest()
+      val result  = emailAllowedListFilter(false)(requestHandler)(request)
+      status(result) shouldBe 200
     }
 
     "email allowed config is true" when {
 
       "user allowed email list contains the email in enrollment, move to next page" in {
 
-        val requestHandler: RequestHeader => Future[Result] = _ => Future.successful(Results.Ok)
-        val request                                         = FakeRequest()
+        val request = FakeRequest()
         mockAuthWithRetrievals(
           Some(EmailAddress("user@test.com"))
         )
-        val result                                          = emailAllowedListFilter(true)(requestHandler)(request)
+        val result  = emailAllowedListFilter(true)(requestHandler)(request)
         status(result) shouldBe 200
       }
 
       "user allowed email list doesn't contain the email in enrollment, move to access denied" in {
 
-        val requestHandler: RequestHeader => Future[Result] = _ => Future.successful(Results.Ok)
-        val request                                         = FakeRequest()
+        val request = FakeRequest()
         mockAuthWithRetrievals(
           Some(EmailAddress("user1@test.com"))
         )
-        val result                                          = emailAllowedListFilter(true)(requestHandler)(request)
+        val result  = emailAllowedListFilter(true)(requestHandler)(request)
         checkIsRedirect(result, routes.AccessDeniedController.accessDenied)
       }
 
       "the uri in current session is access denied, move to next page" in {
-        val requestHandler: RequestHeader => Future[Result] = _ => Future.successful(Results.Ok)
-        val request                                         = FakeRequest(routes.AccessDeniedController.accessDenied)
+
+        val request = FakeRequest(routes.AccessDeniedController.accessDenied)
         mockAuthWithRetrievals(
           Some(EmailAddress("user1@test.com"))
         )
-        val result                                          = emailAllowedListFilter(true)(requestHandler)(request)
+        val result  = emailAllowedListFilter(true)(requestHandler)(request)
         status(result) shouldBe 200
       }
     }
 
   }
-
 }

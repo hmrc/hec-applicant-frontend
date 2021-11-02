@@ -19,16 +19,15 @@ package uk.gov.hmrc.hecapplicantfrontend.filters
 import akka.stream.Materializer
 import com.google.inject.Inject
 import play.api.Configuration
-import play.api.mvc.Results.{Redirect}
+import play.api.mvc.Results.Redirect
 import play.api.mvc.{Filter, RequestHeader, Result}
-import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 import uk.gov.hmrc.auth.core._
+import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
-
-import java.util
+import configs.syntax._
 import scala.concurrent.{ExecutionContext, Future}
 
 class EmailAllowedListFilter @Inject() (
@@ -40,11 +39,9 @@ class EmailAllowedListFilter @Inject() (
     with AuthorisedFunctions
     with Logging {
 
-  val userEmailListEnabled: Boolean           = config.underlying.getBoolean("userAllowedList.enabled")
-  val userEmailAllowedList: util.List[String] = config.underlying.getStringList("user-allowed-list")
+  val userEmailListEnabled: Boolean      = config.underlying.getBoolean("email-allow-list.enabled")
+  val userEmailAllowedList: List[String] = config.underlying.get[List[String]]("email-allow-list.list").value
 
-  //function checks if the existing url contains access denied end point,
-  //then it shouldn't go to else part at line 61 to avoid being in a loop
   private def isExcludedEndpoint(rh: RequestHeader): Boolean =
     rh.uri.contains(routes.AccessDeniedController.accessDenied().url)
 
@@ -54,6 +51,8 @@ class EmailAllowedListFilter @Inject() (
         HeaderCarrierConverter.fromRequestAndSession(rh, rh.session)
       authorised()
         .retrieve(Retrievals.email) { emailOpt =>
+          //if access denied point is in session uri or email list contains the email from the enrollment, call the function f
+          //access denied uri is checked to avoid it to go to else part where it wil stuck in a loop
           if (isExcludedEndpoint(rh) || emailOpt.exists(email => userEmailAllowedList.contains(email))) {
             f(rh)
           } else {
