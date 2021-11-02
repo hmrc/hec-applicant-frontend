@@ -80,8 +80,7 @@ class AuthWithRetrievalsAction @Inject() (
       }
       .recover {
         case _: NoActiveSession        => Redirect(appConfig.signInUrl)
-        case e: AuthorisationException =>
-          sys.error(s"Could not authorise: ${e.getMessage}")
+        case e: AuthorisationException => sys.error(s"Could not authorise: ${e.getMessage}")
       }
   }
 
