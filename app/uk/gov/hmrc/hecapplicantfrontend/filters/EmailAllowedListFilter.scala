@@ -27,7 +27,10 @@ import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
+<<<<<<< HEAD
 
+=======
+>>>>>>> HEC-1135 PR comments
 import configs.syntax._
 import scala.concurrent.{ExecutionContext, Future}
 
