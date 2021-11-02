@@ -778,7 +778,28 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
           }
 
           "the company is  not found" in {
-            testCrnNextpage(None, routes.CompanyDetailsNotFoundController.companyNotFound())
+
+            val session                                     = CompanyHECSession.newSession(companyLoginData)
+            val updatedSession                              =
+              Fixtures.companyHECSession(
+                companyLoginData,
+                CompanyRetrievedJourneyData.empty,
+                CompanyUserAnswers.empty.copy(crn = Some(CRN("1234567")))
+              )
+            implicit val request: RequestWithSessionData[_] =
+              requestWithSessionData(session)
+
+            assertThrows[RuntimeException](
+              await(
+                journeyService
+                  .updateAndNext(
+                    routes.CRNController.companyRegistrationNumber(),
+                    updatedSession
+                  )
+                  .value
+              )
+            )
+
           }
 
         }
@@ -2306,27 +2327,6 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
 
           val result = journeyService.previous(
             routes.CompanyDetailsController.confirmCompanyDetails()
-          )
-
-          result shouldBe routes.CRNController.companyRegistrationNumber()
-
-        }
-
-        "the company details not found page" in {
-          val session                                     = Fixtures.companyHECSession(
-            companyLoginData,
-            CompanyRetrievedJourneyData.empty,
-            CompanyUserAnswers.empty.copy(
-              licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles),
-              entityType = Some(Company),
-              crn = Some(CRN("123456"))
-            )
-          )
-          implicit val request: RequestWithSessionData[_] =
-            requestWithSessionData(session)
-
-          val result = journeyService.previous(
-            routes.CompanyDetailsNotFoundController.companyNotFound()
           )
 
           result shouldBe routes.CRNController.companyRegistrationNumber()

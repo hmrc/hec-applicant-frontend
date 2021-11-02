@@ -71,7 +71,7 @@ class TaxCheckCompleteControllerSpec
             mockGetSession(session)
           }
 
-          status(performAction()) shouldBe INTERNAL_SERVER_ERROR
+          assertThrows[RuntimeException](await(performAction()))
         }
 
       }

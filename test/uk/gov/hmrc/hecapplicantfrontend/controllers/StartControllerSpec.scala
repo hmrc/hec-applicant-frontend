@@ -369,12 +369,11 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
         }
       }
 
-      "return an InternalServerError" when {
+      "return a technical error" when {
 
         def testIsError(mockActions: () => Unit) = {
           mockActions()
-
-          status(performAction()) shouldBe INTERNAL_SERVER_ERROR
+          assertThrows[RuntimeException](await(performAction()))
         }
 
         "an AuthorisationException is thrown" in {

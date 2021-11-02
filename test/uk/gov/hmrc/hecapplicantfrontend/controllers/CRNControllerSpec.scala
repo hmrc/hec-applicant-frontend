@@ -18,7 +18,6 @@ package uk.gov.hmrc.hecapplicantfrontend.controllers
 
 import cats.data.EitherT
 import cats.instances.future._
-import play.api.http.Status.INTERNAL_SERVER_ERROR
 import play.api.inject.bind
 import play.api.mvc.Result
 import play.api.test.FakeRequest
@@ -277,7 +276,7 @@ class CRNControllerSpec
 
         }
 
-        "return an InternalServerError" when {
+        "return a technical error" when {
 
           val answers = Fixtures.completeCompanyUserAnswers()
           val session = Fixtures.companyHECSession(companyLoginData, CompanyRetrievedJourneyData.empty, answers)
@@ -307,7 +306,7 @@ class CRNControllerSpec
               )
             }
 
-            status(performAction("crn" -> validCRN.value)) shouldBe INTERNAL_SERVER_ERROR
+            assertThrows[RuntimeException](await(performAction("crn" -> validCRN.value)))
 
           }
 

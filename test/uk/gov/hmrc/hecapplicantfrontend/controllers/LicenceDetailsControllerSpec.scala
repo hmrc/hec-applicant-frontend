@@ -275,7 +275,7 @@ class LicenceDetailsControllerSpec
 
       }
 
-      "return an internal server error" when {
+      "return a technical error" when {
 
         "the call to update and next fails" in {
           val answers        = IndividualUserAnswers.empty
@@ -299,8 +299,8 @@ class LicenceDetailsControllerSpec
               Left(Error(new Exception))
             )
           }
+          assertThrows[RuntimeException](await(performAction("licenceType" -> "0")))
 
-          status(performAction("licenceType" -> "0")) shouldBe INTERNAL_SERVER_ERROR
         }
 
       }
@@ -661,7 +661,7 @@ class LicenceDetailsControllerSpec
 
       }
 
-      "return an internal server error" when {
+      "return a technical error" when {
 
         "the call to update and next fails" in {
           val answers        = IndividualUserAnswers.empty
@@ -689,8 +689,8 @@ class LicenceDetailsControllerSpec
               Left(Error(new Exception))
             )
           }
+          assertThrows[RuntimeException](await(performAction("licenceTimeTrading" -> "0")))
 
-          status(performAction("licenceTimeTrading" -> "0")) shouldBe INTERNAL_SERVER_ERROR
         }
 
       }
@@ -783,7 +783,7 @@ class LicenceDetailsControllerSpec
 
       behave like authAndSessionDataBehaviour(performAction)
 
-      "return an InternalServerError" when {
+      "return a technical error" when {
 
         "a licence type cannot be found in session" in {
           val session = IndividualHECSession.newSession(individualLoginData)
@@ -792,8 +792,8 @@ class LicenceDetailsControllerSpec
             mockAuthWithNoRetrievals()
             mockGetSession(session)
           }
+          assertThrows[RuntimeException](await(performAction()))
 
-          status(performAction()) shouldBe INTERNAL_SERVER_ERROR
         }
 
       }
@@ -902,7 +902,7 @@ class LicenceDetailsControllerSpec
 
       behave like authAndSessionDataBehaviour(() => performAction())
 
-      "return an InternalServerError" when {
+      "return a technical error" when {
 
         "a licence type cannot be found in session" in {
           val session = IndividualHECSession.newSession(individualLoginData)
@@ -911,8 +911,8 @@ class LicenceDetailsControllerSpec
             mockAuthWithNoRetrievals()
             mockGetSession(session)
           }
+          assertThrows[RuntimeException](await(performAction()))
 
-          status(performAction()) shouldBe INTERNAL_SERVER_ERROR
         }
 
         "the call to update and next fails" in {
@@ -938,8 +938,8 @@ class LicenceDetailsControllerSpec
               Left(Error(new Exception))
             )
           }
+          assertThrows[RuntimeException](await(performAction("licenceValidityPeriod" -> "0")))
 
-          status(performAction("licenceValidityPeriod" -> "0")) shouldBe INTERNAL_SERVER_ERROR
         }
 
       }

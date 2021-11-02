@@ -193,7 +193,7 @@ class EntityTypeControllerSpec
 
       }
 
-      "return an internal server error" when {
+      "throw an exception" when {
 
         "the call to update and next fails" in {
           val answers        = IndividualUserAnswers.empty
@@ -216,8 +216,10 @@ class EntityTypeControllerSpec
               Left(Error(new Exception))
             )
           }
+          assertThrows[RuntimeException] {
+            await(performAction("entityType" -> "0"))
+          }
 
-          status(performAction("entityType" -> "0")) shouldBe INTERNAL_SERVER_ERROR
         }
 
       }
@@ -362,7 +364,7 @@ class EntityTypeControllerSpec
             mockGetSession(session)
           }
 
-          status(performAction()) shouldBe INTERNAL_SERVER_ERROR
+          assertThrows[RuntimeException](await(performAction()))
 
         }
 

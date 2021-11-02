@@ -93,7 +93,7 @@ class CheckYourAnswersControllerSpec
             mockGetSession(session)
           }
 
-          status(performAction()) shouldBe INTERNAL_SERVER_ERROR
+          assertThrows[RuntimeException](await(performAction()))
         }
 
       }
@@ -379,7 +379,7 @@ class CheckYourAnswersControllerSpec
 
       val hecTaxCheck = HECTaxCheck(HECTaxCheckCode(""), LocalDate.now())
 
-      "return an InternalServerError" when {
+      "return a technical error" when {
 
         "there are no complete answers in session" in {
           val session = Fixtures.individualHECSession(
@@ -392,8 +392,8 @@ class CheckYourAnswersControllerSpec
             mockAuthWithNoRetrievals()
             mockGetSession(session)
           }
+          assertThrows[RuntimeException](await(performAction()))
 
-          status(performAction()) shouldBe INTERNAL_SERVER_ERROR
         }
 
         "there is an error saving the tax check" in {
@@ -404,8 +404,7 @@ class CheckYourAnswersControllerSpec
               Left(Error(new Exception("Oh no!")))
             )
           }
-
-          status(performAction()) shouldBe INTERNAL_SERVER_ERROR
+          assertThrows[RuntimeException](await(performAction()))
 
         }
 
@@ -422,8 +421,8 @@ class CheckYourAnswersControllerSpec
               updatedSession
             )(Left(Error("")))
           }
+          assertThrows[RuntimeException](await(performAction()))
 
-          status(performAction()) shouldBe INTERNAL_SERVER_ERROR
         }
 
       }
