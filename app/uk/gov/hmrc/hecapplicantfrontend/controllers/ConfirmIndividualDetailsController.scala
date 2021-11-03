@@ -24,7 +24,6 @@ import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
-import uk.gov.hmrc.hecapplicantfrontend.util.Logging.LoggerOps
 import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
@@ -56,10 +55,7 @@ class ConfirmIndividualDetailsController @Inject() (
         journeyService
           .updateAndNext(routes.ConfirmIndividualDetailsController.confirmIndividualDetails(), request.sessionData)
           .fold(
-            { e =>
-              logger.warn("Could not update and find next page", e)
-              sys.error("Could not update and find next page")
-            },
+            _.throws("Could not update and find next page"),
             Redirect
           )
       }

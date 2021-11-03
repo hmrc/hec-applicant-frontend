@@ -24,7 +24,6 @@ import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.AuthAction
 import uk.gov.hmrc.hecapplicantfrontend.models.iv.IvErrorStatus.{PreconditionFailed => IvPreconditionFailed, _}
 import uk.gov.hmrc.hecapplicantfrontend.services.IvService
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
-import uk.gov.hmrc.hecapplicantfrontend.util.Logging.LoggerOps
 import uk.gov.hmrc.hecapplicantfrontend.views
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
@@ -53,10 +52,7 @@ class IvFailureController @Inject() (
     ivService
       .getFailedJourneyStatus(journeyId)
       .fold(
-        { e =>
-          logger.warn("Could not check IV journey error status", e)
-          sys.error("Could not check IV journey error status")
-        },
+        _.throws("Could not check IV journey error status"),
         { ivErrorStatus =>
           val redirectTo = ivErrorStatus match {
             case Incomplete           => routes.IvFailureController.technicalIssue()

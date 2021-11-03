@@ -31,6 +31,6 @@ class AccessDeniedController @Inject() (
     with I18nSupport
     with Logging {
   val accessDenied: Action[AnyContent] = authAction { _ =>
-    Ok(s"access denied")
+    Ok("access denied")
   }
 }

@@ -23,7 +23,7 @@ import play.api.data.Form
 import play.api.data.Forms.{mapping, nonEmptyText, of}
 import play.api.data.validation.{Constraint, Invalid, Valid}
 import play.api.i18n.I18nSupport
-import play.api.mvc.{Action, AnyContent, Call, MessagesControllerComponents, Result}
+import play.api.mvc._
 import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 import uk.gov.hmrc.hecapplicantfrontend.controllers.CompanyDetailsController.enterCtutrForm
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, RequestWithSessionData, SessionDataAction}
@@ -34,7 +34,6 @@ import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR}
 import uk.gov.hmrc.hecapplicantfrontend.models.views.YesNoOption
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.{JourneyService, TaxCheckService}
-import uk.gov.hmrc.hecapplicantfrontend.util.Logging.LoggerOps
 import uk.gov.hmrc.hecapplicantfrontend.util.StringUtils.StringOps
 import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging, TimeProvider, TimeUtils}
 import uk.gov.hmrc.hecapplicantfrontend.views.html
@@ -133,7 +132,7 @@ class CompanyDetailsController @Inject() (
         } yield call
 
         result.fold(
-          systemError("Could not update session and proceed"),
+          _.throws("Could not update session and proceed"),
           Redirect
         )
       }
@@ -152,7 +151,7 @@ class CompanyDetailsController @Inject() (
               .unset(_.companyDetailsConfirmed)
               .copy(companyDetailsConfirmed = Some(companyDetailsConfirmed))
             callUpdateAndNext(session.copy(userAnswers = answersWithoutCrn)).fold(
-              systemError("Could not update session and proceed"),
+              _.throws("Could not update session and proceed"),
               Redirect
             )
         }
@@ -333,7 +332,7 @@ class CompanyDetailsController @Inject() (
           } yield next
 
           result.fold(
-            systemError("Could not update session and proceed"),
+            _.throws("Could not update session and proceed"),
             Redirect
           )
         }
@@ -354,7 +353,7 @@ class CompanyDetailsController @Inject() (
             sessionStore
               .store(updatedSession)
               .fold(
-                systemError("Could not update ctutr answer attempts"),
+                _.throws("Could not update ctutr answer attempts"),
                 _ => ok(formWithErrors)
               )
           }
@@ -452,7 +451,6 @@ class CompanyDetailsController @Inject() (
     companySession.retrievedJourneyData.companyName match {
       case Some(companyName) => f(companyName)
       case None              =>
-        logger.warn("Missing company name")
         sys.error("Missing company name")
     }
 
@@ -462,7 +460,6 @@ class CompanyDetailsController @Inject() (
     companySession.retrievedJourneyData.desCtutr match {
       case Some(ctutr) => f(ctutr)
       case None        =>
-        logger.warn("Missing DES-CTUTR")
         sys.error("Missing DES-CTUTR")
     }
 
@@ -472,10 +469,8 @@ class CompanyDetailsController @Inject() (
     companySession.retrievedJourneyData.ctStatus match {
       case Some(CTStatusResponse(_, _, _, Some(latestAccountingPeriod))) => f(latestAccountingPeriod)
       case Some(_)                                                       =>
-        logger.warn("Missing CT status latest accounting period")
         sys.error("Missing CT status latest accounting period")
       case None                                                          =>
-        logger.warn("Missing CT status")
         sys.error("Missing CT status")
     }
 
@@ -485,14 +480,8 @@ class CompanyDetailsController @Inject() (
     session.userAnswers.fold(_.crn, _.crn.some) match {
       case Some(crn) => f(crn)
       case None      =>
-        logger.warn("CRN is not populated in user answers")
         sys.error("CRN is not populated in user answers")
     }
-
-  private def systemError(errorMsg: String)(e: Error) = {
-    logger.warn(errorMsg, e)
-    sys.error(errorMsg)
-  }
 
   private def updateAndNextJourneyData(current: Call, updatedSession: HECSession)(implicit
     r: RequestWithSessionData[_],
@@ -504,7 +493,7 @@ class CompanyDetailsController @Inject() (
         updatedSession
       )
       .fold(
-        systemError("Could not update session and proceed"),
+        _.throws("Could not update session and proceed"),
         Redirect
       )
 }

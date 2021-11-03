@@ -41,7 +41,6 @@ class TaxCheckCompleteController @Inject() (
     request.sessionData.completedTaxCheck match {
       case Some(taxCheck) => Ok(taxCheckCompletePage(taxCheck))
       case None           =>
-        logger.warn("Tax check code not found")
         sys.error("Tax check code not found")
     }
   }

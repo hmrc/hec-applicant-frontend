@@ -23,7 +23,6 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
-import uk.gov.hmrc.hecapplicantfrontend.util.Logging.LoggerOps
 import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
@@ -50,7 +49,6 @@ class TaxChecksListController @Inject() (
   val unexpiredTaxChecks: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
     request.sessionData.unexpiredTaxChecks match {
       case Nil       =>
-        logger.warn("No tax check codes found")
         sys.error("No tax check codes found")
       case taxChecks =>
         val sorted = taxChecks.sortBy(_.createDate)
@@ -63,10 +61,7 @@ class TaxChecksListController @Inject() (
     journeyService
       .updateAndNext(routes.TaxChecksListController.unexpiredTaxChecks(), request.sessionData)
       .fold(
-        { e =>
-          logger.warn("Could not save tax check", e)
-          sys.error("Could not save tax check")
-        },
+        _.throws("Could not save tax check"),
         Redirect
       )
   }

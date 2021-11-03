@@ -34,9 +34,8 @@ import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceTimeTrading._
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType._
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceValidityPeriod._
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.hecapplicantfrontend.models.{CompanyUserAnswers, Error, HECSession, IndividualUserAnswers}
+import uk.gov.hmrc.hecapplicantfrontend.models.{CompanyUserAnswers, HECSession, IndividualUserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
-import uk.gov.hmrc.hecapplicantfrontend.util.Logging.LoggerOps
 import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging, TimeProvider}
 import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.http.HeaderCarrier
@@ -192,7 +191,6 @@ class LicenceDetailsController @Inject() (
         }
         Ok(licenceValidityPeriodPage(form, back, options))
       case None              =>
-        logger.warn("Couldn't find licence Type")
         sys.error("Couldn't find licence Type")
     }
 
@@ -234,14 +232,8 @@ class LicenceDetailsController @Inject() (
             handleValidLicenceTimePeriod
           )
       case None              =>
-        logger.error("Couldn't find licence Type")
-        sys.error("")
+        sys.error("Couldn't find licence Type")
     }
-  }
-
-  private def systemError(errorMsg: String)(e: Error) = {
-    logger.warn(errorMsg, e)
-    sys.error(errorMsg)
   }
 
   private def updateAndNextJourneyData(current: Call, updatedSession: HECSession)(implicit
@@ -254,7 +246,7 @@ class LicenceDetailsController @Inject() (
         updatedSession
       )
       .fold(
-        systemError("Could not update session and proceed"),
+        _.throws("Could not update session and proceed"),
         Redirect
       )
 

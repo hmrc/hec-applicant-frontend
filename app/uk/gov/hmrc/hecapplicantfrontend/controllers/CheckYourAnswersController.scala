@@ -26,7 +26,6 @@ import uk.gov.hmrc.hecapplicantfrontend.models.CompleteUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.IndividualUserAnswers.CompleteIndividualUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.services.{JourneyService, TaxCheckService}
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
-import uk.gov.hmrc.hecapplicantfrontend.util.Logging.LoggerOps
 import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
@@ -48,10 +47,7 @@ class CheckYourAnswersController @Inject() (
 
   val checkYourAnswers: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
     request.sessionData.userAnswers.foldByCompleteness(
-      { _ =>
-        logger.warn("Could not find complete answers")
-        sys.error("Could not find complete answers")
-      },
+      _ => sys.error("Could not find complete answers"),
       { complete =>
         val back = journeyService.previous(routes.CheckYourAnswersController.checkYourAnswers())
         complete match {
@@ -77,15 +73,11 @@ class CheckYourAnswersController @Inject() (
         } yield next
 
         result.fold(
-          { e =>
-            logger.warn("Could not save tax check", e)
-            sys.error("Could not save tax check")
-          },
+          _.throws("Could not save tax check"),
           Redirect
         )
 
       case _ =>
-        logger.warn("Could not find complete answers")
         sys.error("Could not find complete answers")
     }
   }
