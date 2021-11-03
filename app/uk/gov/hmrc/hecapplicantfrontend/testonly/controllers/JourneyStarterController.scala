@@ -49,17 +49,6 @@ class JourneyStarterController @Inject() (
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  private def handleLogin(loginData: LoginData) =
-    authLoginStubService
-      .login(loginData)
-      .fold(
-        e => sys.error(s"Could not login: $e"),
-        headers => SeeOther(redirectUrl).withHeaders(headers.asList: _*)
-      )
-
-  private def ctEnrolment(ctutr: CTUTR): Enrolment =
-    Enrolment("IR-CT", Seq(EnrolmentIdentifier("UTR", ctutr.value)), "Activated")
-
   val journeyStarter: Action[AnyContent] = Action { implicit request =>
     Ok(journeyStartPage())
   }
@@ -89,5 +78,20 @@ class JourneyStarterController @Inject() (
       )
     )
   }
+
+  private def handleLogin(loginData: LoginData) =
+    authLoginStubService
+      .login(loginData)
+      .fold(
+        e => sys.error(s"Could not login: $e"),
+        { case (headers, cookies) =>
+          SeeOther(redirectUrl)
+            .withCookies(cookies.toSeq: _*)
+            .withHeaders(headers.headers: _*)
+        }
+      )
+
+  private def ctEnrolment(ctutr: CTUTR): Enrolment =
+    Enrolment("IR-CT", Seq(EnrolmentIdentifier("UTR", ctutr.value)), "Activated")
 
 }

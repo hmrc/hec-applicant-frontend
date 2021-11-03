@@ -20,9 +20,11 @@ import cats.data.EitherT
 import cats.syntax.eq._
 import com.google.inject.{ImplementedBy, Inject, Singleton}
 import play.api.http.Status._
+import play.api.libs.ws.{WSCookie, WSResponse}
+import play.api.mvc.{Cookie, Cookies, Headers}
 import uk.gov.hmrc.hecapplicantfrontend.models.Error
 import uk.gov.hmrc.hecapplicantfrontend.testonly.connectors.AuthLoginStubConnector
-import uk.gov.hmrc.hecapplicantfrontend.testonly.models.{HttpHeaders, LoginData}
+import uk.gov.hmrc.hecapplicantfrontend.testonly.models.LoginData
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -30,7 +32,7 @@ import scala.concurrent.{ExecutionContext, Future}
 @ImplementedBy(classOf[AuthLoginStubServiceImpl])
 trait AuthLoginStubService {
 
-  def login(loginData: LoginData)(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpHeaders]
+  def login(loginData: LoginData)(implicit hc: HeaderCarrier): EitherT[Future, Error, (Headers, Cookies)]
 
 }
 
@@ -40,7 +42,7 @@ class AuthLoginStubServiceImpl @Inject() (connector: AuthLoginStubConnector)(imp
 
   override def login(
     loginData: LoginData
-  )(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpHeaders] =
+  )(implicit hc: HeaderCarrier): EitherT[Future, Error, (Headers, Cookies)] =
     connector.login(loginData).subflatMap { httpResponse =>
       val status        = httpResponse.status
       lazy val location = httpResponse.header("location")
@@ -53,8 +55,30 @@ class AuthLoginStubServiceImpl @Inject() (connector: AuthLoginStubConnector)(imp
       } else if (!location.contains(loginData.redirectUrl))
         Left(Error(s"Location header value [${location.getOrElse("")}] of response was not ${loginData.redirectUrl}"))
       else {
-        Right(HttpHeaders(httpResponse.headers))
+        val cookies = Cookies(httpResponse.cookies.map(toCookie))
+        val headers = toHeaders(httpResponse)
+        Right(headers -> cookies)
+
       }
     }
+
+  private def toHeaders(response: WSResponse): Headers = {
+    val headers: List[(String, String)] =
+      response.headers.foldLeft(List.empty[(String, String)]) { case (acc, (key, values)) =>
+        acc ::: values.map(key -> _).toList
+      }
+    Headers(headers: _*)
+  }
+
+  private def toCookie(c: WSCookie): Cookie =
+    Cookie(
+      c.name,
+      c.value,
+      c.maxAge.map(_.toInt),
+      c.path.getOrElse(""),
+      c.domain,
+      c.secure,
+      c.httpOnly
+    )
 
 }
