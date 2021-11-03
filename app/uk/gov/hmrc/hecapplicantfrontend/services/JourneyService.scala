@@ -516,7 +516,6 @@ object JourneyServiceImpl {
             _
           ) =>
         checkCompanyDataComplete(chargeableForCT, ctIncomeDeclared, recentlyStartedTrading, session, maxCtutrAttempts)
-
       case _ => false
     }
 }
