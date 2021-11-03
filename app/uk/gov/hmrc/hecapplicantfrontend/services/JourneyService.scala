@@ -440,20 +440,24 @@ object JourneyServiceImpl {
     chargeableForCTOpt: Option[YesNoAnswer],
     ctIncomeDeclaredOpt: Option[YesNoAnswer],
     recentlyStartedTradingOpt: Option[YesNoAnswer],
-    companySession: CompanyHECSession
+    companySession: CompanyHECSession,
+    appConfig: AppConfig
   ): Boolean =
-    companySession.retrievedJourneyData.ctStatus match {
-      case None                   => false
-      case Some(ctStatusResponse) =>
-        ctStatusResponse.latestAccountingPeriod.map(_.ctStatus) match {
-          case None                              => recentlyStartedTradingOpt.contains(YesNoAnswer.Yes)
-          case Some(CTStatus.NoticeToFileIssued) => chargeableForCTOpt.isDefined
-          case Some(CTStatus.NoReturnFound)      => chargeableForCTOpt.contains(YesNoAnswer.No)
-          case Some(CTStatus.ReturnFound)        =>
-            chargeableForCTOpt.contains(YesNoAnswer.No) || (chargeableForCTOpt.contains(
-              YesNoAnswer.Yes
-            ) && ctIncomeDeclaredOpt.nonEmpty)
-        }
+    if (companySession.ctutrAnswerAttempts >= appConfig.maxCtutrAnswerAttempts) false
+    else {
+      companySession.retrievedJourneyData.ctStatus match {
+        case None                   => false
+        case Some(ctStatusResponse) =>
+          ctStatusResponse.latestAccountingPeriod.map(_.ctStatus) match {
+            case None                              => recentlyStartedTradingOpt.contains(YesNoAnswer.Yes)
+            case Some(CTStatus.NoticeToFileIssued) => chargeableForCTOpt.isDefined
+            case Some(CTStatus.NoReturnFound)      => chargeableForCTOpt.contains(YesNoAnswer.No)
+            case Some(CTStatus.ReturnFound)        =>
+              chargeableForCTOpt.contains(YesNoAnswer.No) || (chargeableForCTOpt.contains(
+                YesNoAnswer.Yes
+              ) && ctIncomeDeclaredOpt.nonEmpty)
+          }
+      }
     }
 
   /**
@@ -495,7 +499,8 @@ object JourneyServiceImpl {
     */
   def allCompanyAnswersComplete(
     incompleteUserAnswers: IncompleteCompanyUserAnswers,
-    session: CompanyHECSession
+    session: CompanyHECSession,
+    appConfig: AppConfig
   ): Boolean =
     incompleteUserAnswers match {
       case IncompleteCompanyUserAnswers(
@@ -510,7 +515,7 @@ object JourneyServiceImpl {
             recentlyStartedTrading,
             _
           ) =>
-        checkCompanyDataComplete(chargeableForCT, ctIncomeDeclared, recentlyStartedTrading, session)
+        checkCompanyDataComplete(chargeableForCT, ctIncomeDeclared, recentlyStartedTrading, session, appConfig)
 
       case _ => false
     }

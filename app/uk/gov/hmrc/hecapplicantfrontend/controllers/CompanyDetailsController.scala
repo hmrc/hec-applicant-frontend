@@ -306,12 +306,14 @@ class CompanyDetailsController @Inject() (
   val enterCtutrSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     request.sessionData mapAsCompany { companySession =>
       ensureCompanyDataHasDesCtutr(companySession) { desCtutr =>
-        def maxCtutrAnswerAttemptsReached = companySession.ctutrAnswerAttempts >= appConfig.maxCtutrAnswerAttempts
+        def maxCtutrAnswerAttemptsReached(companySession: CompanyHECSession) =
+          companySession.ctutrAnswerAttempts >= appConfig.maxCtutrAnswerAttempts
 
-        def goToNextPage: Future[Result] = updateAndNextJourneyData(
-          routes.CompanyDetailsController.enterCtutr(),
-          companySession
-        )
+        def goToNextPage(updatedSession: CompanyHECSession): Future[Result] =
+          updateAndNextJourneyData(
+            routes.CompanyDetailsController.enterCtutr(),
+            updatedSession
+          )
 
         def handleValidAnswer(ctutr: CTUTR) = {
           val updatedAnswers = companySession.userAnswers.unset(_.ctutr).copy(ctutr = Some(ctutr))
@@ -354,20 +356,25 @@ class CompanyDetailsController @Inject() (
               .store(updatedSession)
               .fold(
                 _.doThrow("Could not update ctutr answer attempts"),
-                _ => ok(formWithErrors)
+                _ =>
+                  if (maxCtutrAnswerAttemptsReached(updatedSession)) {
+                    goToNextPage(updatedSession)
+                  } else {
+                    Future.successful(ok(formWithErrors))
+                  }
               )
+              .flatten
           }
 
           def displayFormError: Future[Result] = Future.successful(ok(formWithErrors))
 
-          if (ctutrsNotMatched && maxCtutrAnswerAttemptsReached)
-            goToNextPage
+          if (ctutrsNotMatched && maxCtutrAnswerAttemptsReached(companySession)) goToNextPage(companySession)
           else if (ctutrsNotMatched) incrementAttemptsAndDisplayFormError
           else displayFormError
 
         }
 
-        if (maxCtutrAnswerAttemptsReached) goToNextPage
+        if (maxCtutrAnswerAttemptsReached(companySession)) goToNextPage(companySession)
         else {
           enterCtutrForm(desCtutr)
             .bindFromRequest()
