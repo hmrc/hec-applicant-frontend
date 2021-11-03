@@ -73,7 +73,7 @@ class SAController @Inject() (
             individualSession.copy(userAnswers = updatedAnswers)
           )
           .fold(
-            _.throws("Could not update session and proceed"),
+            _.doThrow("Could not update session and proceed"),
             Redirect
           )
       }

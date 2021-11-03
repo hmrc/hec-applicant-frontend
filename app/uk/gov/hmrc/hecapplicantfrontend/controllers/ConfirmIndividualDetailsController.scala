@@ -55,7 +55,7 @@ class ConfirmIndividualDetailsController @Inject() (
         journeyService
           .updateAndNext(routes.ConfirmIndividualDetailsController.confirmIndividualDetails(), request.sessionData)
           .fold(
-            _.throws("Could not update and find next page"),
+            _.doThrow("Could not update and find next page"),
             Redirect
           )
       }

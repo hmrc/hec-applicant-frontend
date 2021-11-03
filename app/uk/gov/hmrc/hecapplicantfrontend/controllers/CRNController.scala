@@ -114,7 +114,7 @@ class CRNController @Inject() (
           }
 
           result.fold(
-            _.throws("Could not update session and proceed"),
+            _.doThrow("Could not update session and proceed"),
             _.fold(ok, Redirect)
           )
         }

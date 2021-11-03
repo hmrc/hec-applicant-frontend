@@ -73,7 +73,7 @@ class CheckYourAnswersController @Inject() (
         } yield next
 
         result.fold(
-          _.throws("Could not save tax check"),
+          _.doThrow("Could not save tax check"),
           Redirect
         )
 

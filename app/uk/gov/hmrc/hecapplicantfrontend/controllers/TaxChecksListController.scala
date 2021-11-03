@@ -61,7 +61,7 @@ class TaxChecksListController @Inject() (
     journeyService
       .updateAndNext(routes.TaxChecksListController.unexpiredTaxChecks(), request.sessionData)
       .fold(
-        _.throws("Could not save tax check"),
+        _.doThrow("Could not save tax check"),
         Redirect
       )
   }

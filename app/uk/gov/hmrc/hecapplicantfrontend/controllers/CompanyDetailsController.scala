@@ -132,7 +132,7 @@ class CompanyDetailsController @Inject() (
         } yield call
 
         result.fold(
-          _.throws("Could not update session and proceed"),
+          _.doThrow("Could not update session and proceed"),
           Redirect
         )
       }
@@ -151,7 +151,7 @@ class CompanyDetailsController @Inject() (
               .unset(_.companyDetailsConfirmed)
               .copy(companyDetailsConfirmed = Some(companyDetailsConfirmed))
             callUpdateAndNext(session.copy(userAnswers = answersWithoutCrn)).fold(
-              _.throws("Could not update session and proceed"),
+              _.doThrow("Could not update session and proceed"),
               Redirect
             )
         }
@@ -332,7 +332,7 @@ class CompanyDetailsController @Inject() (
           } yield next
 
           result.fold(
-            _.throws("Could not update session and proceed"),
+            _.doThrow("Could not update session and proceed"),
             Redirect
           )
         }
@@ -353,7 +353,7 @@ class CompanyDetailsController @Inject() (
             sessionStore
               .store(updatedSession)
               .fold(
-                _.throws("Could not update ctutr answer attempts"),
+                _.doThrow("Could not update ctutr answer attempts"),
                 _ => ok(formWithErrors)
               )
           }
@@ -493,7 +493,7 @@ class CompanyDetailsController @Inject() (
         updatedSession
       )
       .fold(
-        _.throws("Could not update session and proceed"),
+        _.doThrow("Could not update session and proceed"),
         Redirect
       )
 }

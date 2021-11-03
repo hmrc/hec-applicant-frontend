@@ -108,7 +108,7 @@ class TaxSituationController @Inject() (
         } yield next
 
         result.fold(
-          _.throws("Fetch SA status failed or could not update session and proceed"),
+          _.doThrow("Fetch SA status failed or could not update session and proceed"),
           Redirect
         )
       }

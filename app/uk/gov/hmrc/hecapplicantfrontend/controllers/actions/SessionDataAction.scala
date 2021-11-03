@@ -44,7 +44,7 @@ class SessionDataAction @Inject() (
   ): Future[Either[Result, RequestWithSessionData[A]]] =
     sessionStore
       .get()(request)
-      .leftMap(_.throws("Could not get session data"))
+      .leftMap(_.doThrow("Could not get session data"))
       .subflatMap(
         _.map(RequestWithSessionData(request, _))
           .toRight(Redirect(routes.StartController.start()))
