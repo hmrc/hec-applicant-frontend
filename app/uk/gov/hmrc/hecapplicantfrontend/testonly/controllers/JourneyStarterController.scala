@@ -27,8 +27,8 @@ import uk.gov.hmrc.hecapplicantfrontend.models.EmailAddress
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CTUTR, NINO}
 import uk.gov.hmrc.hecapplicantfrontend.testonly.models.LoginData
 import uk.gov.hmrc.hecapplicantfrontend.testonly.services.AuthLoginStubService
+import uk.gov.hmrc.hecapplicantfrontend.testonly.views.html
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
-import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
@@ -36,7 +36,7 @@ import scala.concurrent.ExecutionContext
 
 @Singleton
 class JourneyStarterController @Inject() (
-  journeyStartPage: html.testonly.JourneyStarter,
+  journeyStartPage: html.JourneyStarter,
   authLoginStubService: AuthLoginStubService,
   appConfig: AppConfig,
   mcc: MessagesControllerComponents
