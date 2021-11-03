@@ -193,7 +193,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
                 _,
                 _,
                 _
-              ) if allCompanyAnswersComplete(companyAnswers, companySession) =>
+              ) if allCompanyAnswersComplete(companyAnswers, companySession, appConfig) =>
             val completeAnswers =
               CompleteCompanyUserAnswers(
                 licenceType,

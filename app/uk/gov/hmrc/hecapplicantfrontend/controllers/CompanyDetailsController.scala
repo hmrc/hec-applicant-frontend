@@ -349,9 +349,17 @@ class CompanyDetailsController @Inject() (
         def handleFormWithErrors(formWithErrors: Form[CTUTR]): Future[Result] = {
 
           val ctutrsNotMatched = formWithErrors.errors.exists(_.message === "error.ctutrsDoNotMatch")
+          val ctutrOpt         = formWithErrors.value
 
           def incrementAttemptsAndDisplayFormError = {
-            val updatedSession = companySession.copy(ctutrAnswerAttempts = companySession.ctutrAnswerAttempts + 1)
+            val updatedAnswers = companySession.userAnswers
+              .unset(_.ctutr)
+              .unset(_.ctIncomeDeclared)
+              .unset(_.recentlyStartedTrading)
+              .unset(_.chargeableForCT)
+              .copy(ctutr = ctutrOpt)
+            val updatedSession = companySession
+              .copy(ctutrAnswerAttempts = companySession.ctutrAnswerAttempts + 1, userAnswers = updatedAnswers)
             sessionStore
               .store(updatedSession)
               .fold(
