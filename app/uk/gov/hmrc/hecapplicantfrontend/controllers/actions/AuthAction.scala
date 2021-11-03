@@ -17,8 +17,8 @@
 package uk.gov.hmrc.hecapplicantfrontend.controllers.actions
 
 import com.google.inject.{Inject, Singleton}
-import play.api.mvc.Results.{InternalServerError, Redirect}
-import play.api.mvc.{ActionBuilder, ActionFunction, AnyContent, BodyParser, MessagesControllerComponents, Request, Result, WrappedRequest}
+import play.api.mvc.Results.Redirect
+import play.api.mvc._
 import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisationException, AuthorisedFunctions, NoActiveSession}
 import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
@@ -55,8 +55,8 @@ class AuthAction @Inject() (
           Redirect(appConfig.signInUrl)
 
         case e: AuthorisationException =>
-          logger.warn(s"Could not authorise: ${e.getMessage}")
-          InternalServerError
+          sys.error(s"Could not authorise: ${e.getMessage}")
+
       }
   }
 

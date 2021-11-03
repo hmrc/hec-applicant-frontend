@@ -28,6 +28,7 @@ import com.google.inject.{Inject, Singleton}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Request}
 import uk.gov.hmrc.auth.core.retrieve.Credentials
 import uk.gov.hmrc.auth.core.{AffinityGroup, ConfidenceLevel, Enrolments}
+import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.hecapplicantfrontend.config.{AppConfig, EnrolmentConfig}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.AuthWithRetrievalsAction
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, IndividualHECSession}
@@ -37,10 +38,8 @@ import uk.gov.hmrc.hecapplicantfrontend.models.{CitizenDetails, EmailAddress, Er
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.{CitizenDetailsService, JourneyService, TaxCheckService}
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
-import uk.gov.hmrc.hecapplicantfrontend.util.Logging.LoggerOps
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import uk.gov.hmrc.domain.Nino
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -81,23 +80,19 @@ class StartController @Inject() (
     result.fold(
       {
         case DataError(msg) =>
-          logger.warn(s"Issue with data: $msg")
-          InternalServerError
+          sys.error(s"Issue with data: $msg")
 
         case BackendError(e) =>
-          logger.warn(s"Backend error", e)
-          InternalServerError
+          sys.error(s"Backend error :: $e")
 
         case InsufficientConfidenceLevel =>
           appConfig.redirectToIvUplift
 
         case UnsupportedAuthProvider(provider) =>
-          logger.warn(s"Unsupported auth provider: $provider")
-          InternalServerError
+          sys.error(s"Unsupported auth provider: $provider")
 
         case AgentLogin =>
-          logger.warn("Agent login")
-          InternalServerError
+          sys.error("Agent login")
 
       },
       session => Redirect(journeyService.firstPage(session))

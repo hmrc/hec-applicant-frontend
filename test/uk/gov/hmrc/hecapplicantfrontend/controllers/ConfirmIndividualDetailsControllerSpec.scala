@@ -160,7 +160,7 @@ class ConfirmIndividualDetailsControllerSpec
             )(Left(Error("")))
           }
 
-          status(performAction()) shouldBe INTERNAL_SERVER_ERROR
+          assertThrows[RuntimeException](await(performAction()))
         }
 
       }

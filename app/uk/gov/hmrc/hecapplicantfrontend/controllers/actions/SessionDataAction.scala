@@ -18,13 +18,12 @@ package uk.gov.hmrc.hecapplicantfrontend.controllers.actions
 
 import cats.instances.future._
 import com.google.inject.{Inject, Singleton}
-import play.api.mvc.Results.{InternalServerError, Redirect}
+import play.api.mvc.Results.Redirect
 import play.api.mvc.{ActionRefiner, Result, WrappedRequest}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
-import uk.gov.hmrc.hecapplicantfrontend.util.Logging.LoggerOps
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -45,10 +44,7 @@ class SessionDataAction @Inject() (
   ): Future[Either[Result, RequestWithSessionData[A]]] =
     sessionStore
       .get()(request)
-      .leftMap { e =>
-        logger.warn("Could not get session data", e)
-        InternalServerError
-      }
+      .leftMap(_.doThrow("Could not get session data"))
       .subflatMap(
         _.map(RequestWithSessionData(request, _))
           .toRight(Redirect(routes.StartController.start()))

@@ -260,7 +260,7 @@ class SAControllerSpec
 
       }
 
-      "return an internal server error" when {
+      "return a technical error" when {
 
         "the call to update and next fails" in {
           val answers        = IndividualUserAnswers.empty
@@ -281,7 +281,7 @@ class SAControllerSpec
             )
           }
 
-          status(performAction("saIncomeDeclared" -> "0")) shouldBe INTERNAL_SERVER_ERROR
+          assertThrows[RuntimeException](await(performAction("saIncomeDeclared" -> "0")))
         }
 
       }

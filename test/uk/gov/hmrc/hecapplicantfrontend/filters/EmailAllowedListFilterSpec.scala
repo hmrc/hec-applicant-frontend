@@ -33,7 +33,6 @@ import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 import uk.gov.hmrc.hecapplicantfrontend.controllers.{AuthSupport, ControllerSpec, JourneyServiceSupport, routes}
 import uk.gov.hmrc.hecapplicantfrontend.models.EmailAddress
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.GGCredId
-
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -53,7 +52,6 @@ class EmailAllowedListFilterSpec
         | enabled = $isEnabled
         | list = ["user@test.com"]
         | }
-        | 
         | """.stripMargin
     )
   )
@@ -124,6 +122,7 @@ class EmailAllowedListFilterSpec
         val result  = emailAllowedListFilter(true)(requestHandler)(request)
         status(result) shouldBe 200
       }
+
     }
 
   }

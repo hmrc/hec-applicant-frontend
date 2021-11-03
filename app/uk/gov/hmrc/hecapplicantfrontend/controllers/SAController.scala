@@ -28,7 +28,6 @@ import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, Session
 import uk.gov.hmrc.hecapplicantfrontend.models.YesNoAnswer
 import uk.gov.hmrc.hecapplicantfrontend.models.views.YesNoOption
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
-import uk.gov.hmrc.hecapplicantfrontend.util.Logging.LoggerOps
 import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging, TimeProvider}
 import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -74,10 +73,7 @@ class SAController @Inject() (
             individualSession.copy(userAnswers = updatedAnswers)
           )
           .fold(
-            { e =>
-              logger.warn("Could not update session and proceed", e)
-              InternalServerError
-            },
+            _.doThrow("Could not update session and proceed"),
             Redirect
           )
       }

@@ -23,10 +23,10 @@ import com.google.inject.{Inject, Singleton}
 import play.api.data.Form
 import play.api.data.Forms.{mapping, of}
 import play.api.i18n.I18nSupport
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
+import play.api.mvc._
 import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 import uk.gov.hmrc.hecapplicantfrontend.controllers.LicenceDetailsController._
-import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
+import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, RequestWithSessionData, SessionDataAction}
 import uk.gov.hmrc.hecapplicantfrontend.models.CompanyUserAnswers.IncompleteCompanyUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.IndividualUserAnswers.IncompleteIndividualUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
@@ -36,9 +36,9 @@ import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceValidityPeriod._
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hecapplicantfrontend.models.{CompanyUserAnswers, HECSession, IndividualUserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
-import uk.gov.hmrc.hecapplicantfrontend.util.Logging.LoggerOps
 import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging, TimeProvider}
 import uk.gov.hmrc.hecapplicantfrontend.views.html
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -96,19 +96,10 @@ class LicenceDetailsController @Inject() (
               companySession.copy(userAnswers = answers, taxCheckStartDateTime = Some(taxCheckStartDateTime))
             }
           )
-
-      journeyService
-        .updateAndNext(
-          routes.LicenceDetailsController.licenceType(),
-          updatedSession
-        )
-        .fold(
-          { e =>
-            logger.warn("Could not update session and proceed", e)
-            InternalServerError
-          },
-          Redirect
-        )
+      updateAndNextJourneyData(
+        routes.LicenceDetailsController.licenceType(),
+        updatedSession
+      )
     }
 
     licenceTypeForm(licenceOptions)
@@ -159,18 +150,10 @@ class LicenceDetailsController @Inject() (
         _.copy(licenceTimeTrading = Some(licenceTimeTrading))
       )
 
-      journeyService
-        .updateAndNext(
-          routes.LicenceDetailsController.licenceTimeTrading(),
-          updatedSession
-        )
-        .fold(
-          { e =>
-            logger.warn("Could not update session and proceed", e)
-            InternalServerError
-          },
-          Redirect
-        )
+      updateAndNextJourneyData(
+        routes.LicenceDetailsController.licenceTimeTrading(),
+        updatedSession
+      )
     }
 
     licenceTimeTradingForm(licenceTimeTradingOptions)
@@ -208,8 +191,7 @@ class LicenceDetailsController @Inject() (
         }
         Ok(licenceValidityPeriodPage(form, back, options))
       case None              =>
-        logger.error("Couldn't find licence Type")
-        InternalServerError
+        sys.error("Couldn't find licence Type")
     }
 
   }
@@ -224,18 +206,10 @@ class LicenceDetailsController @Inject() (
         _.copy(licenceValidityPeriod = Some(licenceValidityPeriod))
       )
 
-      journeyService
-        .updateAndNext(
-          routes.LicenceDetailsController.recentLicenceLength(),
-          updatedSession
-        )
-        .fold(
-          { e =>
-            logger.warn("Could not update session and proceed", e)
-            InternalServerError
-          },
-          Redirect
-        )
+      updateAndNextJourneyData(
+        routes.LicenceDetailsController.recentLicenceLength(),
+        updatedSession
+      )
     }
     val licenceTypeOpt = request.sessionData.userAnswers.fold(
       _.fold(_.licenceType, _.licenceType.some),
@@ -258,10 +232,23 @@ class LicenceDetailsController @Inject() (
             handleValidLicenceTimePeriod
           )
       case None              =>
-        logger.error("Couldn't find licence Type")
-        InternalServerError
+        sys.error("Couldn't find licence Type")
     }
   }
+
+  private def updateAndNextJourneyData(current: Call, updatedSession: HECSession)(implicit
+    r: RequestWithSessionData[_],
+    hc: HeaderCarrier
+  ): Future[Result] =
+    journeyService
+      .updateAndNext(
+        current,
+        updatedSession
+      )
+      .fold(
+        _.doThrow("Could not update session and proceed"),
+        Redirect
+      )
 
 }
 
