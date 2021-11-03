@@ -44,7 +44,7 @@ class AuthLoginStubConnectorImpl @Inject() (config: Configuration, ws: WSClient)
 ) extends AuthLoginStubConnector {
 
   val authLoginStubUrl: String = {
-    val platformHost = config.underlying.get[Option[String]]("platform.host").value
+    val platformHost = config.underlying.get[Option[String]]("platform.frontend.host").value
     val baseUrl      =
       platformHost.getOrElse(
         config.underlying.get[String]("auth-login-stub.base-url").value
