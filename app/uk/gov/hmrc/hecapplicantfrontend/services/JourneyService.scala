@@ -338,7 +338,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
 
             // DES CTUTR not fetched
             case (_, CompanyRetrievedJourneyData(_, None, _))                                           =>
-              routes.CompanyDetailsController.ctutrNotMatched()
+              routes.CompanyDetailsController.cannotDoTaxCheck()
 
             //enrollment CTUTR is not present
             case (None, _)                                                                              =>
