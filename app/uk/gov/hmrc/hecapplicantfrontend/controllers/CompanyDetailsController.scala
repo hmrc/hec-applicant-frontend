@@ -368,6 +368,7 @@ class CompanyDetailsController @Inject() (
               .copy(ctutr = ctutrOpt)
             val updatedSession = companySession
               .copy(ctutrAnswerAttempts = companySession.ctutrAnswerAttempts + 1, userAnswers = updatedAnswers)
+
             sessionStore
               .store(updatedSession)
               .foldF(

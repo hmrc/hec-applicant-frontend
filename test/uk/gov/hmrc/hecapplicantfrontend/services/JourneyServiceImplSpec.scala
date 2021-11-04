@@ -2707,6 +2707,7 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
           ctutrAnswerAttempts = ctutrAttempts
         )
         JourneyServiceImpl.allCompanyAnswersComplete(incompleteAnswers, session, appConfig.maxCtutrAnswerAttempts)
+
       }
       val date                  = LocalDate.now()
 

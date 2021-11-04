@@ -207,7 +207,7 @@ class CheckYourAnswersControllerSpec
             )
           )
 
-          val expectedRows =
+          val expectedRows: List[CheckYourAnswersRow] =
             List(
               CheckYourAnswersRow(
                 messageFromMessageKey("licenceType.title"),

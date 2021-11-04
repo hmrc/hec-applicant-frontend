@@ -53,6 +53,17 @@ class SummaryRows {
       )
     )
 
+  def summaryListRow(question: String, answer: String): SummaryListRow =
+    SummaryListRow(
+      key = Key(content = Text(question)),
+      value = Value(content = Text(answer)),
+      actions = Some(
+        Actions(
+          items = Seq()
+        )
+      )
+    )
+
   def licenceDetailsRows(completeAnswers: CompleteUserAnswers)(implicit messages: Messages): List[SummaryListRow] = {
     val licenceTypeRow: SummaryListRow =
       summaryListRow(
@@ -113,9 +124,7 @@ class SummaryRows {
       completeAnswers.ctutr.map { ctutr =>
         summaryListRow(
           messages("enterCtutr.title"),
-          ctutr.value,
-          routes.CompanyDetailsController.enterCtutr(),
-          messages(s"$messageKey.ctutr.screenReaderText")
+          ctutr.value
         )
       }
     val recentlyStartedTradingRow =
