@@ -61,7 +61,7 @@ class TaxCheckCompleteControllerSpec
 
       behave like authAndSessionDataBehaviour(performAction)
 
-      "return an InternalServerError" when {
+      "return a technical error" when {
 
         "a tax check code cannot be found in session" in {
           val session = IndividualHECSession.newSession(individualLoginData)
@@ -71,7 +71,7 @@ class TaxCheckCompleteControllerSpec
             mockGetSession(session)
           }
 
-          status(performAction()) shouldBe INTERNAL_SERVER_ERROR
+          assertThrows[RuntimeException](await(performAction()))
         }
 
       }

@@ -17,7 +17,6 @@
 package uk.gov.hmrc.hecapplicantfrontend.controllers
 
 import org.jsoup.nodes.Element
-import play.api.http.Status.INTERNAL_SERVER_ERROR
 import play.api.inject.bind
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
@@ -81,7 +80,8 @@ class TaxChecksListControllerSpec
           mockGetSession(session)
         }
 
-        status(performAction()) shouldBe INTERNAL_SERVER_ERROR
+        assertThrows[RuntimeException](await(performAction()))
+
       }
 
       "display the page with tax checks sorted by create date" in {

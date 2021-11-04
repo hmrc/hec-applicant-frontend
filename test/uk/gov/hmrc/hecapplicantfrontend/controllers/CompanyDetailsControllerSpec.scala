@@ -20,11 +20,10 @@ import cats.data.EitherT
 import cats.instances.future._
 import com.typesafe.config.ConfigFactory
 import play.api.Configuration
-import play.api.http.Status.INTERNAL_SERVER_ERROR
 import play.api.inject.bind
 import play.api.mvc.Result
 import play.api.test.FakeRequest
-import play.api.test.Helpers.{await, defaultAwaitTimeout, status}
+import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.hecapplicantfrontend.models.CompanyUserAnswers.IncompleteCompanyUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.CompanyHECSession
@@ -175,7 +174,8 @@ class CompanyDetailsControllerSpec
 
       }
 
-      "return internal server error" when {
+      "return a technical error" when {
+
         "company name is not populated" in {
           val session = Fixtures.companyHECSession()
 
@@ -183,8 +183,7 @@ class CompanyDetailsControllerSpec
             mockAuthWithNoRetrievals()
             mockGetSession(session)
           }
-
-          status(performAction()) shouldBe INTERNAL_SERVER_ERROR
+          assertThrows[RuntimeException](await(performAction()))
         }
 
         "applicant is individual" in {
@@ -267,7 +266,7 @@ class CompanyDetailsControllerSpec
       val date                 = LocalDate.now
       val (startDate, endDate) = (date.minusYears(2).plusDays(1), date.minusYears(1))
 
-      "return an internal server error" when {
+      "return a technical error" when {
 
         "user answers with a Yes" when {
 
@@ -282,8 +281,8 @@ class CompanyDetailsControllerSpec
               mockAuthWithNoRetrievals()
               mockGetSession(session)
             }
+            assertThrows[RuntimeException](await(performAction("confirmCompanyName" -> "0")))
 
-            status(performAction("confirmCompanyName" -> "0")) shouldBe INTERNAL_SERVER_ERROR
           }
 
           "the applicant type is individual" in {
@@ -315,8 +314,8 @@ class CompanyDetailsControllerSpec
                 Left(Error("fetch ct status failed"))
               )
             }
+            assertThrows[RuntimeException](await(performAction("confirmCompanyName" -> "0")))
 
-            status(performAction("confirmCompanyName" -> "0")) shouldBe INTERNAL_SERVER_ERROR
           }
 
           "the call to update and next fails" in {
@@ -355,8 +354,8 @@ class CompanyDetailsControllerSpec
                 Left(Error("update and next failed"))
               )
             }
+            assertThrows[RuntimeException](await(performAction("confirmCompanyName" -> "0")))
 
-            status(performAction("confirmCompanyName" -> "0")) shouldBe INTERNAL_SERVER_ERROR
           }
         }
 
@@ -378,8 +377,8 @@ class CompanyDetailsControllerSpec
                 updatedSession
               )(Left(Error("some error")))
             }
+            assertThrows[RuntimeException](await(performAction("confirmCompanyName" -> "1")))
 
-            status(performAction("confirmCompanyName" -> "1")) shouldBe INTERNAL_SERVER_ERROR
           }
         }
 
@@ -571,7 +570,8 @@ class CompanyDetailsControllerSpec
 
       }
 
-      "return internal server error" when {
+      "return a technical error" when {
+
         "applicant is individual" in {
           inSequence {
             mockAuthWithNoRetrievals()
@@ -597,8 +597,8 @@ class CompanyDetailsControllerSpec
             mockAuthWithNoRetrievals()
             mockGetSession(session)
           }
+          assertThrows[RuntimeException](await(performAction()))
 
-          status(performAction()) shouldBe INTERNAL_SERVER_ERROR
         }
       }
     }
@@ -652,7 +652,7 @@ class CompanyDetailsControllerSpec
         }
       }
 
-      "return an internal server error" when {
+      "return a technical error" when {
 
         "the applicant type is individual" in {
           inSequence {
@@ -673,8 +673,8 @@ class CompanyDetailsControllerSpec
             mockAuthWithNoRetrievals()
             mockGetSession(session)
           }
+          assertThrows[RuntimeException](await(performAction()))
 
-          status(performAction()) shouldBe INTERNAL_SERVER_ERROR
         }
 
         "the call to update and next fails" in {
@@ -701,8 +701,7 @@ class CompanyDetailsControllerSpec
               Left(Error("update and next failed"))
             )
           }
-
-          status(performAction("chargeableForCT" -> "0")) shouldBe INTERNAL_SERVER_ERROR
+          assertThrows[RuntimeException](await(performAction("chargeableForCT" -> "0")))
         }
 
       }
@@ -857,7 +856,8 @@ class CompanyDetailsControllerSpec
 
       }
 
-      "return internal server error" when {
+      "return a technical error" when {
+
         "applicant is individual" in {
           inSequence {
             mockAuthWithNoRetrievals()
@@ -879,8 +879,8 @@ class CompanyDetailsControllerSpec
             mockAuthWithNoRetrievals()
             mockGetSession(session)
           }
+          assertThrows[RuntimeException](await(performAction()))
 
-          status(performAction()) shouldBe INTERNAL_SERVER_ERROR
         }
       }
     }
@@ -932,7 +932,7 @@ class CompanyDetailsControllerSpec
         }
       }
 
-      "return an internal server error" when {
+      "return a technical error" when {
 
         "the applicant type is individual" in {
           inSequence {
@@ -953,8 +953,8 @@ class CompanyDetailsControllerSpec
             mockAuthWithNoRetrievals()
             mockGetSession(session)
           }
+          assertThrows[RuntimeException](await(performAction()))
 
-          status(performAction()) shouldBe INTERNAL_SERVER_ERROR
         }
 
         "the call to update and next fails" in {
@@ -985,8 +985,8 @@ class CompanyDetailsControllerSpec
               Left(Error("update and next failed"))
             )
           }
+          assertThrows[RuntimeException](await(performAction("ctIncomeDeclared" -> "0")))
 
-          status(performAction("ctIncomeDeclared" -> "0")) shouldBe INTERNAL_SERVER_ERROR
         }
 
       }
@@ -1104,7 +1104,7 @@ class CompanyDetailsControllerSpec
 
       }
 
-      "return internal server error" when {
+      "return a technical error" when {
 
         "applicant is individual" in {
           inSequence {
@@ -1170,7 +1170,7 @@ class CompanyDetailsControllerSpec
         }
       }
 
-      "return an internal server error" when {
+      "return a technical error" when {
 
         "the applicant type is individual" in {
           inSequence {
@@ -1210,8 +1210,8 @@ class CompanyDetailsControllerSpec
               Left(Error("update and next failed"))
             )
           }
+          assertThrows[RuntimeException](await(performAction("recentlyStartedTrading" -> "0")))
 
-          status(performAction("recentlyStartedTrading" -> "0")) shouldBe INTERNAL_SERVER_ERROR
         }
 
       }
@@ -1317,7 +1317,7 @@ class CompanyDetailsControllerSpec
 
       }
 
-      "return internal server error" when {
+      "return technical error" when {
         "applicant is individual" in {
           inSequence {
             mockAuthWithNoRetrievals()
@@ -1337,8 +1337,7 @@ class CompanyDetailsControllerSpec
             mockAuthWithNoRetrievals()
             mockGetSession(session)
           }
-
-          status(performAction()) shouldBe INTERNAL_SERVER_ERROR
+          assertThrows[RuntimeException](await(performAction()))
         }
       }
     }
@@ -1411,7 +1410,7 @@ class CompanyDetailsControllerSpec
         }
       }
 
-      "return an internal server error" when {
+      "return a technical error" when {
 
         "the applicant type is individual" in {
           inSequence {
@@ -1432,8 +1431,7 @@ class CompanyDetailsControllerSpec
             mockAuthWithNoRetrievals()
             mockGetSession(session)
           }
-
-          status(performAction("enterCtutr" -> "some-utr")) shouldBe INTERNAL_SERVER_ERROR
+          assertThrows[RuntimeException](await(performAction("enterCtutr" -> "some-utr")))
         }
 
         "the call to fetch CT status fails" in {
@@ -1454,8 +1452,8 @@ class CompanyDetailsControllerSpec
               Left(Error("fetch CT status failed"))
             )
           }
+          assertThrows[RuntimeException](await(performAction("enterCtutr" -> ctutr1)))
 
-          status(performAction("enterCtutr" -> ctutr1)) shouldBe INTERNAL_SERVER_ERROR
         }
 
         "the call to update and next fails" when {
@@ -1490,8 +1488,8 @@ class CompanyDetailsControllerSpec
                 Left(Error("update and next failed"))
               )
             }
+            assertThrows[RuntimeException](await(performAction("enterCtutr" -> ctutr1)))
 
-            status(performAction("enterCtutr" -> ctutr1)) shouldBe INTERNAL_SERVER_ERROR
           }
 
           "user answer does not match DES CTUTR & maximum CTUTR attempts has been reached" in {
@@ -1512,8 +1510,7 @@ class CompanyDetailsControllerSpec
                 Left(Error("update and next failed"))
               )
             }
-
-            status(performAction("enterCtutr" -> ctutr2)) shouldBe INTERNAL_SERVER_ERROR
+            assertThrows[RuntimeException](await(performAction("enterCtutr" -> ctutr2)))
           }
         }
 

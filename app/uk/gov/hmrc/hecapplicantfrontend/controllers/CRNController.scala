@@ -29,11 +29,10 @@ import play.api.mvc._
 import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 import uk.gov.hmrc.hecapplicantfrontend.controllers.CRNController.crnForm
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
-import uk.gov.hmrc.hecapplicantfrontend.models.{Error, HECSession}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.CRN
+import uk.gov.hmrc.hecapplicantfrontend.models.{Error, HECSession}
 import uk.gov.hmrc.hecapplicantfrontend.services.{CompanyDetailsService, JourneyService}
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
-import uk.gov.hmrc.hecapplicantfrontend.util.Logging.LoggerOps
 import uk.gov.hmrc.hecapplicantfrontend.util.StringUtils.StringOps
 import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -115,10 +114,7 @@ class CRNController @Inject() (
           }
 
           result.fold(
-            e => {
-              logger.warn("Could not update session and proceed", e)
-              InternalServerError
-            },
+            _.doThrow("Could not update session and proceed"),
             _.fold(ok, Redirect)
           )
         }

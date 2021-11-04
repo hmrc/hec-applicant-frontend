@@ -31,7 +31,6 @@ import uk.gov.hmrc.hecapplicantfrontend.models.TaxSituation._
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
 import uk.gov.hmrc.hecapplicantfrontend.models.{Error, SAStatusResponse, TaxSituation, TaxYear}
 import uk.gov.hmrc.hecapplicantfrontend.services.{JourneyService, TaxCheckService}
-import uk.gov.hmrc.hecapplicantfrontend.util.Logging.LoggerOps
 import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging, TimeProvider}
 import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -70,8 +69,7 @@ class TaxSituationController @Inject() (
           // the edge case where the tax year might change from one page to the next
           Ok(taxSituationPage(form, back, options, getTaxYear(timeProvider.currentDate)))
         case None              =>
-          logger.error("Couldn't find licence Type")
-          InternalServerError
+          sys.error("Couldn't find licence Type")
       }
     }
   }
@@ -110,10 +108,7 @@ class TaxSituationController @Inject() (
         } yield next
 
         result.fold(
-          { e =>
-            logger.warn("Fetch SA status failed or could not update session and proceed", e)
-            InternalServerError
-          },
+          _.doThrow("Fetch SA status failed or could not update session and proceed"),
           Redirect
         )
       }
@@ -137,8 +132,7 @@ class TaxSituationController @Inject() (
               handleValidTaxSituation
             )
         case None              =>
-          logger.error("Couldn't find licence type")
-          InternalServerError
+          sys.error("Couldn't find licence type")
       }
     }
   }

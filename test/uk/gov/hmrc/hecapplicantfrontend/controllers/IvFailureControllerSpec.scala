@@ -24,7 +24,6 @@ import cats.instances.list._
 import cats.syntax.alternative._
 import cats.syntax.eq._
 import org.scalamock.handlers.CallHandler2
-import play.api.http.Status.INTERNAL_SERVER_ERROR
 import play.api.inject.bind
 import play.api.inject.guice.GuiceableModule
 import play.api.mvc.Result
@@ -74,7 +73,7 @@ class IvFailureControllerSpec
       def performAction(journeyId: UUID): Future[Result] =
         controller.ivFailure(journeyId)(FakeRequest())
 
-      "return an InternalServerError" when {
+      "return a technical error" when {
 
         "there is an error getting the failed journey status" in {
           val journeyId = UUID.randomUUID()
@@ -84,7 +83,7 @@ class IvFailureControllerSpec
             mockGetFailedJourneyStatus(journeyId)(Left(Error("")))
           }
 
-          status(performAction(journeyId)) shouldBe INTERNAL_SERVER_ERROR
+          assertThrows[RuntimeException](await(performAction(journeyId)))
         }
 
       }

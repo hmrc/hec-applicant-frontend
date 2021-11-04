@@ -106,7 +106,7 @@ class TaxSituationControllerSpec
 
       behave like authAndSessionDataBehaviour(performAction)
 
-      "return an InternalServerError" when {
+      "return a technical error" when {
 
         "a licence type cannot be found in session" in {
           val session = IndividualHECSession.newSession(individualLoginData)
@@ -115,8 +115,7 @@ class TaxSituationControllerSpec
             mockAuthWithNoRetrievals()
             mockGetSession(session)
           }
-
-          status(performAction()) shouldBe INTERNAL_SERVER_ERROR
+          assertThrows[RuntimeException](await(performAction()))
         }
 
       }
@@ -610,7 +609,7 @@ class TaxSituationControllerSpec
         }
       }
 
-      "return an InternalServerError" when {
+      "return a technical error" when {
 
         "a licence type cannot be found in session" in {
           val session = IndividualHECSession.newSession(individualLoginData)
@@ -620,8 +619,8 @@ class TaxSituationControllerSpec
             mockGetSession(session)
             mockTimeProviderToday(date)
           }
+          assertThrows[RuntimeException](await(performAction()))
 
-          status(performAction()) shouldBe INTERNAL_SERVER_ERROR
         }
 
         "the call to update and next fails" in {
@@ -652,8 +651,7 @@ class TaxSituationControllerSpec
               Left(Error(new Exception))
             )
           }
-
-          status(performAction("taxSituation" -> "0")) shouldBe INTERNAL_SERVER_ERROR
+          assertThrows[RuntimeException](await(performAction("taxSituation" -> "0")))
         }
 
       }
@@ -734,7 +732,7 @@ class TaxSituationControllerSpec
         }
       }
 
-      "throw internal server error if call to fetch SA status fails" in {
+      "throw technical error if call to fetch SA status fails" in {
         val answers        = IndividualUserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
         val individualData =
           individualLoginData.copy(sautr = Some(SAUTR("utr")))
@@ -747,8 +745,8 @@ class TaxSituationControllerSpec
           mockTimeProviderToday(date)
           mockGetSAStatus(SAUTR("utr"), TaxYear(2020))(Left(Error("")))
         }
+        assertThrows[RuntimeException](await(performAction("taxSituation" -> optionIndexMap(TaxSituation.SA))))
 
-        status(performAction("taxSituation" -> optionIndexMap(TaxSituation.SA))) shouldBe INTERNAL_SERVER_ERROR
       }
 
       "redirect to the next page" when {

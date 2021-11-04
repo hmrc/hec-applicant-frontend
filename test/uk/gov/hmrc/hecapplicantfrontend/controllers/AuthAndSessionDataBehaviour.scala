@@ -70,7 +70,7 @@ trait AuthAndSessionDataBehaviour { this: ControllerSpec with AuthSupport with S
 
     }
 
-    "return an InternalServerError when an AuthorisationException is thrown" in {
+    "return a techniical error when an AuthorisationException is thrown" in {
       List[AuthorisationException](
         InsufficientEnrolments(),
         UnsupportedAffinityGroup(),
@@ -82,7 +82,7 @@ trait AuthAndSessionDataBehaviour { this: ControllerSpec with AuthSupport with S
         withClue(s"For error $e: ") {
           mockAuth(EmptyPredicate, EmptyRetrieval)(Future.failed(e))
 
-          status(performAction()) shouldBe INTERNAL_SERVER_ERROR
+          assertThrows[RuntimeException](await(performAction()))
         }
       }
     }
@@ -91,13 +91,13 @@ trait AuthAndSessionDataBehaviour { this: ControllerSpec with AuthSupport with S
   def authAndSessionDataBehaviour(performAction: () => Future[Result]): Unit = {
 
     authBehaviour(performAction)
-    "return an InternalServerError when there is an error getting session data" in {
+    "return a technical error  when there is an error getting session data" in {
       inSequence {
         mockAuthWithNoRetrievals()
         mockGetSession(Left(Error("")))
       }
+      assertThrows[RuntimeException](await(performAction()))
 
-      status(performAction()) shouldBe INTERNAL_SERVER_ERROR
     }
 
     "redirect to the start endpoint when there is no session data" in {

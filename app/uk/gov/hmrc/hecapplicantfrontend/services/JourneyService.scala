@@ -312,7 +312,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
   private def companyRegistrationNumberRoute(session: HECSession) =
     session.mapAsCompany { companySession =>
       companySession.retrievedJourneyData.companyName.fold(
-        routes.CompanyDetailsNotFoundController.companyNotFound()
+        sys.error("company name not found")
       )(_ => routes.CompanyDetailsController.confirmCompanyDetails())
     }
 

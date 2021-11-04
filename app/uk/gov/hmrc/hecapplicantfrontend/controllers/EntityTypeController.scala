@@ -30,7 +30,6 @@ import uk.gov.hmrc.hecapplicantfrontend.models.EntityType
 import uk.gov.hmrc.hecapplicantfrontend.models.IndividualUserAnswers.IncompleteIndividualUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
 import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging}
-import uk.gov.hmrc.hecapplicantfrontend.util.Logging._
 import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
@@ -81,10 +80,7 @@ class EntityTypeController @Inject() (
           updatedSession
         )
         .fold(
-          { e =>
-            logger.warn("Could not update session and proceed", e)
-            InternalServerError
-          },
+          _.doThrow("Could not update session and proceed"),
           Redirect
         )
     }
@@ -114,8 +110,7 @@ class EntityTypeController @Inject() (
         Ok(wrongGGAccountPage(back, entityType))
 
       case None =>
-        logger.warn("Could not find entity type")
-        InternalServerError
+        sys.error("Could not find entity type")
     }
 
   }

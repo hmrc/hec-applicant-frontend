@@ -66,8 +66,6 @@ GET        /dont-have-ctutr                uk.gov.hmrc.hecapplicantfrontend.cont
 GET        /too-many-ctutr-attempts        uk.gov.hmrc.hecapplicantfrontend.controllers.CompanyDetailsController.tooManyCtutrAttempts
 GET        /cannot-do-tax-check            uk.gov.hmrc.hecapplicantfrontend.controllers.CompanyDetailsController.cannotDoTaxCheck
 
-GET        /company-not-found              uk.gov.hmrc.hecapplicantfrontend.controllers.CompanyDetailsNotFoundController.companyNotFound
-
 GET        /access-denied                  uk.gov.hmrc.hecapplicantfrontend.controllers.AccessDeniedController.accessDenied
 
 # IV
