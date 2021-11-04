@@ -18,13 +18,15 @@ package uk.gov.hmrc.hecapplicantfrontend.testonly.models
 
 import uk.gov.hmrc.auth.core.{AffinityGroup, ConfidenceLevel, Enrolment}
 import uk.gov.hmrc.hecapplicantfrontend.models.EmailAddress
-import uk.gov.hmrc.hecapplicantfrontend.models.ids.NINO
+import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO}
 
 final case class LoginData(
+  GGCredId: GGCredId,
   redirectUrl: String,
   confidenceLevel: ConfidenceLevel,
   affinityGroup: AffinityGroup,
   email: EmailAddress,
   nino: Option[NINO],
-  enrolment: Option[Enrolment]
+  enrolment: Option[Enrolment],
+  existingTaxChecks: List[SaveTaxCheckRequest]
 )

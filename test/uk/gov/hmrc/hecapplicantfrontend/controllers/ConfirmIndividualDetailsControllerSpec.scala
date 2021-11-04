@@ -150,13 +150,15 @@ class ConfirmIndividualDetailsControllerSpec
             )
           )
 
+          val updatedSession = session.copy(hasConfirmedDetails = Some(true))
+
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
             mockJourneyServiceUpdateAndNext(
               routes.ConfirmIndividualDetailsController.confirmIndividualDetails(),
               session,
-              session
+              updatedSession
             )(Left(Error("")))
           }
 
@@ -168,7 +170,7 @@ class ConfirmIndividualDetailsControllerSpec
       "proceed to the next page" when {
 
         "the next page can be found" in {
-          val session = IndividualHECSession.newSession(
+          val session        = IndividualHECSession.newSession(
             IndividualLoginData(
               GGCredId(""),
               NINO(""),
@@ -178,6 +180,7 @@ class ConfirmIndividualDetailsControllerSpec
               None
             )
           )
+          val updatedSession = session.copy(hasConfirmedDetails = Some(true))
 
           inSequence {
             mockAuthWithNoRetrievals()
@@ -185,7 +188,7 @@ class ConfirmIndividualDetailsControllerSpec
             mockJourneyServiceUpdateAndNext(
               routes.ConfirmIndividualDetailsController.confirmIndividualDetails(),
               session,
-              session
+              updatedSession
             )(Right(mockNextCall))
           }
 

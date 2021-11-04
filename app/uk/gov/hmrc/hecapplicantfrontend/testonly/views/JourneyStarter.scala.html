@@ -30,11 +30,11 @@
     <h1 class="govuk-heading-xl">@title</h1>
 
 
-    @formWithCSRF(action = routes.JourneyStarterController.startJourney1()) {
+    @formWithCSRF(action = routes.JourneyStarterController.individualJourney()) {
         @govukButton(Button(content = Text("Journey 1")))
     }
 
-    @formWithCSRF(action = routes.JourneyStarterController.startJourney2()) {
+    @formWithCSRF(action = routes.JourneyStarterController.individualJourney()) {
         @govukButton(Button(content = Text("Journey 2")))
     }
 }
