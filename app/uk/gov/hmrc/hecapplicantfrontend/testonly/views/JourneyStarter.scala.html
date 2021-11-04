@@ -34,7 +34,7 @@
         @govukButton(Button(content = Text("Journey 1")))
     }
 
-    @formWithCSRF(action = routes.JourneyStarterController.individualJourney()) {
+    @formWithCSRF(action = routes.JourneyStarterController.individualJourneyWithExistingTaxChecks()) {
         @govukButton(Button(content = Text("Journey 2")))
     }
 }

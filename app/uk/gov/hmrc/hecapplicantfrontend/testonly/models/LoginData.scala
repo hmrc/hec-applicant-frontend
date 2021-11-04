@@ -21,7 +21,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.EmailAddress
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO}
 
 final case class LoginData(
-  GGCredId: GGCredId,
+  ggCredId: GGCredId,
   redirectUrl: String,
   confidenceLevel: ConfidenceLevel,
   affinityGroup: AffinityGroup,

@@ -25,9 +25,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.Error
 import uk.gov.hmrc.hecapplicantfrontend.testonly.models.LoginData
 import uk.gov.hmrc.hecapplicantfrontend.util.StringUtils.StringOps
 import uk.gov.hmrc.http.{HeaderCarrier}
-//import uk.gov.hmrc.http.HttpReads.Implicits._
 
-import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
@@ -52,7 +50,7 @@ class AuthLoginStubConnectorImpl @Inject() (config: Configuration, ws: WSClient)
     val enrolmentIdentifier = loginData.enrolment.flatMap(_.identifiers.headOption)
 
     List(
-      "authorityId"                         -> Some(UUID.randomUUID().toString),
+      "authorityId"                         -> Some(loginData.ggCredId.value),
       "redirectionUrl"                      -> Some(loginData.redirectUrl),
       "credentialStrength"                  -> Some("strong"),
       "confidenceLevel"                     -> Some(loginData.confidenceLevel.level.toString),

@@ -78,7 +78,7 @@ class JourneyStarterController @Inject() (
   val individualJourneyWithExistingTaxChecks: Action[AnyContent] = Action.async { _ =>
     val ggCredId         = newGGCredId()
     val existingTaxCheck = SaveTaxCheckRequest(
-      HECTaxCheckCode("A2345K7T9"),
+      HECTaxCheckCode("MK23TRDD9"),
       ggCredId,
       LicenceType.DriverOfTaxisAndPrivateHires,
       Right(DateOfBirth(LocalDate.of(2000, 1, 1))),
@@ -126,8 +126,9 @@ class JourneyStarterController @Inject() (
                    loginData.existingTaxChecks
                      .map(hecService.saveTaxCheck)
                      .sequence[EitherT[Future, Error, *], Unit]
-                 else
+                 else {
                    EitherT.pure[Future, Error](List.empty)
+                 }
       session <- authLoginStubService.login(loginData)
     } yield session
 
