@@ -193,7 +193,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
                 _,
                 _,
                 _
-              ) if allCompanyAnswersComplete(companyAnswers, companySession, appConfig) =>
+              ) if allCompanyAnswersComplete(companyAnswers, companySession, appConfig.maxCtutrAnswerAttempts) =>
             val completeAnswers =
               CompleteCompanyUserAnswers(
                 licenceType,
@@ -441,9 +441,9 @@ object JourneyServiceImpl {
     ctIncomeDeclaredOpt: Option[YesNoAnswer],
     recentlyStartedTradingOpt: Option[YesNoAnswer],
     companySession: CompanyHECSession,
-    appConfig: AppConfig
+    maxCtutrAttempts: Int
   ): Boolean =
-    if (companySession.ctutrAnswerAttempts >= appConfig.maxCtutrAnswerAttempts) false
+    if (companySession.ctutrAnswerAttempts >= maxCtutrAttempts) false
     else {
       companySession.retrievedJourneyData.ctStatus match {
         case None                   => false
@@ -500,7 +500,7 @@ object JourneyServiceImpl {
   def allCompanyAnswersComplete(
     incompleteUserAnswers: IncompleteCompanyUserAnswers,
     session: CompanyHECSession,
-    appConfig: AppConfig
+    maxCtutrAttempts: Int
   ): Boolean =
     incompleteUserAnswers match {
       case IncompleteCompanyUserAnswers(
@@ -515,7 +515,7 @@ object JourneyServiceImpl {
             recentlyStartedTrading,
             _
           ) =>
-        checkCompanyDataComplete(chargeableForCT, ctIncomeDeclared, recentlyStartedTrading, session, appConfig)
+        checkCompanyDataComplete(chargeableForCT, ctIncomeDeclared, recentlyStartedTrading, session, maxCtutrAttempts)
 
       case _ => false
     }

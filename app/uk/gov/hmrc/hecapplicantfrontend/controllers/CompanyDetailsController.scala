@@ -316,7 +316,12 @@ class CompanyDetailsController @Inject() (
           )
 
         def handleValidAnswer(ctutr: CTUTR) = {
-          val updatedAnswers = companySession.userAnswers.unset(_.ctutr).copy(ctutr = Some(ctutr))
+          val updatedAnswers = companySession.userAnswers
+            .unset(_.ctutr)
+            .unset(_.ctIncomeDeclared)
+            .unset(_.recentlyStartedTrading)
+            .unset(_.chargeableForCT)
+            .copy(ctutr = Some(ctutr))
           val (start, end)   = CompanyDetailsController.calculateLookBackPeriod(timeProvider.currentDate)
 
           val result = for {
@@ -369,9 +374,9 @@ class CompanyDetailsController @Inject() (
               .foldF(
                 _.doThrow("Could not update ctutr answer attempts"),
                 _ =>
-                  //the bug - ctutr was attempting more than the max attempt because  once the updated session was stored in Db,
-                  // there was no action as the count reach max attemot and was waiting for user to make another attempt to check the count
-                  //so added this check here
+                  //If session is updated and successfully stored in DB, then do a check if ctutr attempt has reached the max limit
+                  // if yes, then go to too many ctutr attempt page else display the form error
+                  //In the absence if this check, form error will display and user will be able to do one more attempt than the max limit.
                   if (maxCtutrAnswerAttemptsReached(updatedSession)) {
                     goToNextPage(updatedSession)
                   } else {

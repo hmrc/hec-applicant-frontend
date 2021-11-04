@@ -183,15 +183,13 @@ class CheckYourAnswersControllerSpec
           def createCompleteAnswers(
             chargeableForCTOpt: Option[YesNoAnswer],
             ctIncomeDeclaredOpt: Option[YesNoAnswer],
-            recentlyStartedTrading: Option[YesNoAnswer],
-            ctutr: Option[CTUTR] = None
+            recentlyStartedTrading: Option[YesNoAnswer]
           ) = Fixtures.completeCompanyUserAnswers(
             LicenceType.ScrapMetalMobileCollector,
             LicenceTimeTrading.ZeroToTwoYears,
             LicenceValidityPeriod.UpToTwoYears,
             entityType = EntityType.Company,
             crn = CRN("1123456"),
-            ctutr = ctutr,
             companyDetailsConfirmed = YesNoAnswer.Yes,
             chargeableForCT = chargeableForCTOpt,
             ctIncomeDeclared = ctIncomeDeclaredOpt,
@@ -207,7 +205,7 @@ class CheckYourAnswersControllerSpec
             )
           )
 
-          val expectedRows: List[CheckYourAnswersRow] =
+          val expectedRows =
             List(
               CheckYourAnswersRow(
                 messageFromMessageKey("licenceType.title"),
@@ -233,11 +231,6 @@ class CheckYourAnswersControllerSpec
                 messageFromMessageKey("crn.title"),
                 "1123456",
                 routes.CRNController.companyRegistrationNumber().url
-              ),
-              CheckYourAnswersRow(
-                messageFromMessageKey("enterCtutr.title"),
-                "1111111111",
-                ""
               ),
               CheckYourAnswersRow(
                 messageFromMessageKey(
@@ -303,7 +296,7 @@ class CheckYourAnswersControllerSpec
                     CheckYourAnswersRow(question, answer, changeUrl)
                   }
 
-                rows shouldBe (expectedRows.take(5) ::: expectedRows.slice(6, 8))
+                rows shouldBe expectedRows.dropRight(1)
               }
             )
 
@@ -355,55 +348,6 @@ class CheckYourAnswersControllerSpec
               }
             )
 
-          }
-
-          "company's ctutr is present in user answers" in {
-            val answers =
-              createCompleteAnswers(Some(YesNoAnswer.Yes), Some(YesNoAnswer.Yes), None, Some(CTUTR("1111111111")))
-
-            val session =
-              CompanyHECSession(
-                companyLoginData,
-                Fixtures.companyRetrievedJourneyData(
-                  companyName = Some(CompanyHouseName("Test Tech Ltd")),
-                  desCtutr = Some(CTUTR("1111111111")),
-                  ctStatus = createCTStatus(
-                    Some(
-                      CTAccountingPeriod(LocalDate.of(2020, 10, 9), LocalDate.of(2021, 10, 9), CTStatus.ReturnFound)
-                    )
-                  )
-                ),
-                answers,
-                None,
-                None,
-                List.empty
-              )
-
-            inSequence {
-              mockAuthWithNoRetrievals()
-              mockGetSession(session)
-              mockJourneyServiceGetPrevious(routes.CheckYourAnswersController.checkYourAnswers(), session)(
-                mockPreviousCall
-              )
-            }
-
-            checkPageIsDisplayed(
-              performAction(),
-              messageFromMessageKey("checkYourAnswers.title"),
-              { doc =>
-                doc.select("#back").attr("href") shouldBe mockPreviousCall.url
-
-                val rows =
-                  doc.select(".govuk-summary-list__row").iterator().asScala.toList.map { element =>
-                    val question  = element.select(".govuk-summary-list__key").text()
-                    val answer    = element.select(".govuk-summary-list__value").text()
-                    val changeUrl = element.select(".govuk-link").attr("href")
-                    CheckYourAnswersRow(question, answer, changeUrl)
-                  }
-
-                rows shouldBe (expectedRows.take(8))
-              }
-            )
           }
         }
 

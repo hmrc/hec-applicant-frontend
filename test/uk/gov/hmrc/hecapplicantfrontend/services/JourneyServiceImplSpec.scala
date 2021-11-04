@@ -2706,7 +2706,7 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
           CompanyUserAnswers.empty,
           ctutrAnswerAttempts = ctutrAttempts
         )
-        JourneyServiceImpl.allCompanyAnswersComplete(incompleteAnswers, session, appConfig)
+        JourneyServiceImpl.allCompanyAnswersComplete(incompleteAnswers, session, appConfig.maxCtutrAnswerAttempts)
       }
       val date                  = LocalDate.now()
 
@@ -2715,7 +2715,7 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
           JourneyServiceImpl.allCompanyAnswersComplete(
             incompleteAnswersBase.copy(licenceType = None),
             CompanyHECSession.newSession(companyLoginData),
-            appConfig
+            appConfig.maxCtutrAnswerAttempts
           ) shouldBe false
         }
 
@@ -2723,7 +2723,7 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
           JourneyServiceImpl.allCompanyAnswersComplete(
             incompleteAnswersBase.copy(licenceTimeTrading = None),
             CompanyHECSession.newSession(companyLoginData),
-            appConfig
+            appConfig.maxCtutrAnswerAttempts
           ) shouldBe false
         }
 
@@ -2731,7 +2731,7 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
           JourneyServiceImpl.allCompanyAnswersComplete(
             incompleteAnswersBase.copy(licenceValidityPeriod = None),
             CompanyHECSession.newSession(companyLoginData),
-            appConfig
+            appConfig.maxCtutrAnswerAttempts
           ) shouldBe false
         }
 
@@ -2739,7 +2739,7 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
           JourneyServiceImpl.allCompanyAnswersComplete(
             incompleteUserAnswers = incompleteAnswersBase,
             CompanyHECSession.newSession(companyLoginData),
-            appConfig
+            appConfig.maxCtutrAnswerAttempts
           ) shouldBe false
         }
 
