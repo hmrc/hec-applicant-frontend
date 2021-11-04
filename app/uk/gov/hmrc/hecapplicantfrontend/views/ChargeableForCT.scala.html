@@ -43,15 +43,15 @@
       content = Text(messages(s"${e.key}.${e.message}", e.args: _*))
     )), title = Text(messages("generic.errorSummary"))))
   }
-  <h1 class="govuk-heading-xl">@title</h1>
+
   @formWithCSRF(action = routes.CompanyDetailsController.chargeableForCorporationTaxSubmit()) {
     @govukRadios(Radios(
       fieldset = Some(Fieldset(
         legend = Some(Legend(
           content = Text(title),
-          classes = "govuk-visually-hidden"
-        )),
-        attributes = Map("aria-describedby" -> "company-name")
+          classes = "govuk-fieldset__legend--xl",
+          isPageHeading = true
+        ))
       )),
       idPrefix = Some(key),
       name = key,
