@@ -398,7 +398,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
             case _                                                       => sys.error("DES CTUTR missing in journey data")
           }
         } getOrElse {
-          sys.error("CTUTR answer missing")
+          sys.error("CTUTR is missing from user answers")
         }
       }
     }

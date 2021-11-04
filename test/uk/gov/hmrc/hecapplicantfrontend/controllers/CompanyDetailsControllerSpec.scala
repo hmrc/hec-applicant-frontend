@@ -1394,19 +1394,24 @@ class CompanyDetailsControllerSpec
           test("enterCtutr.error.ctutrChecksumFailed", "enterCtutr" -> "1234567890")
         }
 
-        "input CTUTR does not match DES CTUTR" in {
-          inSequence {
-            mockAuthWithNoRetrievals()
-            mockGetSession(session)
-            mockStoreSession(session.copy(ctutrAnswerAttempts = session.ctutrAnswerAttempts + 1))(Right(()))
-            mockJourneyServiceGetPrevious(enterCtutrRoute, session)(mockPreviousCall)
+        "input CTUTR does not match DES CTUTR and" when {
+
+          "ctutr attempt in session is 0, increment is by 1" in {
+            val updatedSession = session.copy(ctutrAnswerAttempts = session.ctutrAnswerAttempts + 1)
+            inSequence {
+              mockAuthWithNoRetrievals()
+              mockGetSession(session)
+              mockStoreSession(updatedSession)(Right(()))
+              mockJourneyServiceGetPrevious(enterCtutrRoute, session)(mockPreviousCall)
+            }
+
+            checkFormErrorIsDisplayed(
+              performAction("enterCtutr" -> "2222222222"),
+              messageFromMessageKey("enterCtutr.title"),
+              messageFromMessageKey("enterCtutr.error.ctutrsDoNotMatch")
+            )
           }
 
-          checkFormErrorIsDisplayed(
-            performAction("enterCtutr" -> "2222222222"),
-            messageFromMessageKey("enterCtutr.title"),
-            messageFromMessageKey("enterCtutr.error.ctutrsDoNotMatch")
-          )
         }
       }
 
@@ -1615,6 +1620,28 @@ class CompanyDetailsControllerSpec
 
           }
 
+        }
+
+        "user's answer and DES CTUTR do not match & ctutr attempt in session is one less than the max ctutr attempt, counter is incremented" in {
+          val session        = Fixtures.companyHECSession(
+            companyLoginData,
+            Fixtures.companyRetrievedJourneyData(desCtutr = Some(CTUTR(ctutr1))),
+            ctutrAnswerAttempts = maxCtutrAttempts - 1
+          )
+          val updatedSession = session.copy(ctutrAnswerAttempts = maxCtutrAttempts)
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockStoreSession(updatedSession)(Right(()))
+            mockJourneyServiceUpdateAndNext(
+              enterCtutrRoute,
+              session,
+              updatedSession
+            )(Right(mockNextCall))
+          }
+
+          checkIsRedirect(performAction("enterCtutr" -> ctutr2), mockNextCall)
         }
 
         "user's answer and DES CTUTR do not match & maximum number of ctutr attempts has been reached" in {

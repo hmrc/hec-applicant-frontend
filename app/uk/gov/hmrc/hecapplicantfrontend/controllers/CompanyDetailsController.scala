@@ -351,7 +351,10 @@ class CompanyDetailsController @Inject() (
           val ctutrsNotMatched = formWithErrors.errors.exists(_.message === "error.ctutrsDoNotMatch")
           val ctutrOpt         = formWithErrors.value
 
+          def displayFormError: Future[Result] = Future.successful(ok(formWithErrors))
+
           def incrementAttemptsAndDisplayFormError = {
+
             val updatedAnswers = companySession.userAnswers
               .unset(_.ctutr)
               .unset(_.ctIncomeDeclared)
@@ -360,21 +363,23 @@ class CompanyDetailsController @Inject() (
               .copy(ctutr = ctutrOpt)
             val updatedSession = companySession
               .copy(ctutrAnswerAttempts = companySession.ctutrAnswerAttempts + 1, userAnswers = updatedAnswers)
+
             sessionStore
               .store(updatedSession)
-              .fold(
+              .foldF(
                 _.doThrow("Could not update ctutr answer attempts"),
                 _ =>
+                  //the bug - ctutr was attempting more than the max attempt because  once the updated session was stored in Db,
+                  // there was no action as the count reach max attemot and was waiting for user to make another attempt to check the count
+                  //so added this check here
                   if (maxCtutrAnswerAttemptsReached(updatedSession)) {
                     goToNextPage(updatedSession)
                   } else {
-                    Future.successful(ok(formWithErrors))
+                    displayFormError
                   }
               )
-              .flatten
-          }
 
-          def displayFormError: Future[Result] = Future.successful(ok(formWithErrors))
+          }
 
           if (ctutrsNotMatched && maxCtutrAnswerAttemptsReached(companySession)) goToNextPage(companySession)
           else if (ctutrsNotMatched) incrementAttemptsAndDisplayFormError
