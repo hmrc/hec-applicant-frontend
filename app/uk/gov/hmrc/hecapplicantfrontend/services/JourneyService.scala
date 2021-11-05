@@ -193,7 +193,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
                 _,
                 _,
                 _
-              ) if allCompanyAnswersComplete(companyAnswers, companySession) =>
+              ) if allCompanyAnswersComplete(companyAnswers, companySession, appConfig.maxCtutrAnswerAttempts) =>
             val completeAnswers =
               CompleteCompanyUserAnswers(
                 licenceType,
@@ -398,7 +398,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
             case _                                                       => sys.error("DES CTUTR missing in journey data")
           }
         } getOrElse {
-          sys.error("CTUTR answer missing")
+          sys.error("CTUTR is missing from user answers")
         }
       }
     }
@@ -440,20 +440,24 @@ object JourneyServiceImpl {
     chargeableForCTOpt: Option[YesNoAnswer],
     ctIncomeDeclaredOpt: Option[YesNoAnswer],
     recentlyStartedTradingOpt: Option[YesNoAnswer],
-    companySession: CompanyHECSession
+    companySession: CompanyHECSession,
+    maxCtutrAttempts: Int
   ): Boolean =
-    companySession.retrievedJourneyData.ctStatus match {
-      case None                   => false
-      case Some(ctStatusResponse) =>
-        ctStatusResponse.latestAccountingPeriod.map(_.ctStatus) match {
-          case None                              => recentlyStartedTradingOpt.contains(YesNoAnswer.Yes)
-          case Some(CTStatus.NoticeToFileIssued) => chargeableForCTOpt.isDefined
-          case Some(CTStatus.NoReturnFound)      => chargeableForCTOpt.contains(YesNoAnswer.No)
-          case Some(CTStatus.ReturnFound)        =>
-            chargeableForCTOpt.contains(YesNoAnswer.No) || (chargeableForCTOpt.contains(
-              YesNoAnswer.Yes
-            ) && ctIncomeDeclaredOpt.nonEmpty)
-        }
+    if (companySession.ctutrAnswerAttempts >= maxCtutrAttempts) false
+    else {
+      companySession.retrievedJourneyData.ctStatus match {
+        case None                   => false
+        case Some(ctStatusResponse) =>
+          ctStatusResponse.latestAccountingPeriod.map(_.ctStatus) match {
+            case None                              => recentlyStartedTradingOpt.contains(YesNoAnswer.Yes)
+            case Some(CTStatus.NoticeToFileIssued) => chargeableForCTOpt.isDefined
+            case Some(CTStatus.NoReturnFound)      => chargeableForCTOpt.contains(YesNoAnswer.No)
+            case Some(CTStatus.ReturnFound)        =>
+              chargeableForCTOpt.contains(YesNoAnswer.No) || (chargeableForCTOpt.contains(
+                YesNoAnswer.Yes
+              ) && ctIncomeDeclaredOpt.nonEmpty)
+          }
+      }
     }
 
   /**
@@ -495,7 +499,8 @@ object JourneyServiceImpl {
     */
   def allCompanyAnswersComplete(
     incompleteUserAnswers: IncompleteCompanyUserAnswers,
-    session: CompanyHECSession
+    session: CompanyHECSession,
+    maxCtutrAttempts: Int
   ): Boolean =
     incompleteUserAnswers match {
       case IncompleteCompanyUserAnswers(
@@ -510,7 +515,7 @@ object JourneyServiceImpl {
             recentlyStartedTrading,
             _
           ) =>
-        checkCompanyDataComplete(chargeableForCT, ctIncomeDeclared, recentlyStartedTrading, session)
+        checkCompanyDataComplete(chargeableForCT, ctIncomeDeclared, recentlyStartedTrading, session, maxCtutrAttempts)
 
       case _ => false
     }
