@@ -21,7 +21,7 @@ import play.api.mvc.Call
 import uk.gov.hmrc.govukfrontend.views.html.components._
 import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 import uk.gov.hmrc.hecapplicantfrontend.models.CompanyUserAnswers.CompleteCompanyUserAnswers
-import uk.gov.hmrc.hecapplicantfrontend.models.{CTStatusResponse, CompleteUserAnswers, RetrievedJourneyData, SAStatusResponse}
+import uk.gov.hmrc.hecapplicantfrontend.models.{CTStatusResponse, CompleteUserAnswers, RetrievedJourneyData, TaxYear}
 import uk.gov.hmrc.hecapplicantfrontend.models.views.{LicenceTimeTradingOption, LicenceTypeOption, LicenceValidityPeriodOption}
 import uk.gov.hmrc.hecapplicantfrontend.models.IndividualUserAnswers.CompleteIndividualUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.{CompanyRetrievedJourneyData, IndividualRetrievedJourneyData}
@@ -180,11 +180,12 @@ class SummaryRows {
       }
     val taxSituationRow = {
       val taxYear      = retrievedJourneyData match {
-        case c: IndividualRetrievedJourneyData =>
-          c.saStatus match {
-            case Some(SAStatusResponse(_, taxYear, _)) => taxYear
-            case _                                     => sys.error("taxSituation answer found when no saStatus response")
-          }
+        case _: IndividualRetrievedJourneyData =>
+          TaxYear(2020)
+//          c.saStatus match {
+//            case Some(SAStatusResponse(_, taxYear, _)) => taxYear
+//            case _                                     => sys.error("taxSituation answer found when no saStatus response")
+//          }
         case _                                 => sys.error("taxSituation answer found when individual journey data not retrieved")
       }
       val startTaxYear = taxYear.startYear.toString
