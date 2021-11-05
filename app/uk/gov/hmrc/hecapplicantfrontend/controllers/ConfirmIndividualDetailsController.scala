@@ -51,9 +51,10 @@ class ConfirmIndividualDetailsController @Inject() (
 
   val confirmIndividualDetailsSubmit: Action[AnyContent] =
     authAction.andThen(sessionDataAction).async { implicit request =>
-      request.sessionData.mapAsIndividual { _ =>
+      request.sessionData.mapAsIndividual { individualSession =>
+        val updatedSession = individualSession.copy(hasConfirmedDetails = Some(true))
         journeyService
-          .updateAndNext(routes.ConfirmIndividualDetailsController.confirmIndividualDetails(), request.sessionData)
+          .updateAndNext(routes.ConfirmIndividualDetailsController.confirmIndividualDetails(), updatedSession)
           .fold(
             _.doThrow("Could not update and find next page"),
             Redirect

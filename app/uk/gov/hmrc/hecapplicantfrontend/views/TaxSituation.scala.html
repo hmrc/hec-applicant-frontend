@@ -21,13 +21,14 @@
 @import uk.gov.hmrc.hecapplicantfrontend.models
 @import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 @import uk.gov.hmrc.hecapplicantfrontend.models.views.TaxSituationOption
+@import uk.gov.hmrc.hecapplicantfrontend.models.views.LicenceTypeOption
+@import java.util.Locale
 
 @this(layout: Layout, govukErrorSummary: GovukErrorSummary, govukRadios: GovukRadios, govukButton: GovukButton, formWithCSRF: FormWithCSRF)
 
-@(form: Form[models.TaxSituation], back: Call, options: List[models.TaxSituation], taxDisplayYear:models.TaxYear)(implicit request:
+@(form: Form[models.TaxSituation], back: Call, options: List[models.TaxSituation], taxDisplayYear: models.TaxYear, licenceType: models.licence.LicenceType)(implicit request:
 Request[_], messages: Messages)
 @key = @{"taxSituation"}
-@title = @{messages(s"$key.title")}
 @optionViewModels = @{options.map(TaxSituationOption.taxSituationOption)}
 @radioOptions = @{optionViewModels.zipWithIndex.map{ case (option, index) =>
     RadioItem(
@@ -39,6 +40,8 @@ Request[_], messages: Messages)
 }}
 @startYear = @{taxDisplayYear.startYear.toString}
 @endYear = @{s"${taxDisplayYear.startYear + 1}"}
+@title = @{messages(s"$key.title", startYear, endYear)}
+@licenceTypeDisplay = @{messages(s"licenceType.${LicenceTypeOption.licenceTypeOption(licenceType).messageKey}").toLowerCase(Locale.UK)}
 
 @layout(pageTitle = Some(title), hasErrors = form.hasErrors, backLocation = Some(back)) {
     @if(form.errors.nonEmpty) {
@@ -51,17 +54,22 @@ Request[_], messages: Messages)
             title = Text(messages("generic.errorSummary"))))
     }
 
+    <h1 class="govuk-heading-l">@title</h1>
+
+    <p class="govuk-body">
+      @messages(s"$key.p1", startYear, endYear)
+    </p>
+
     @formWithCSRF(action = routes.TaxSituationController.taxSituationSubmit()) {
         @govukRadios(
             Radios(
                 fieldset = Some(Fieldset(
                     legend = Some(Legend(
-                        content = Text(title),
-                        classes = "govuk-fieldset__legend--xl",
-                        isPageHeading = true
+                        content = Text(messages(s"$key.label", licenceTypeDisplay)),
+                        classes = "govuk-fieldset__legend--m",
+                        isPageHeading = false
                     ))
                 )),
-                hint = Some(Hint(content = Text(messages(s"$key.hint", startYear, endYear)))),
                 idPrefix = Some(key),
                 name = key,
                 items = radioOptions,

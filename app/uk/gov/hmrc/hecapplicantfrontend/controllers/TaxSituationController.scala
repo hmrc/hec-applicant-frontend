@@ -67,7 +67,7 @@ class TaxSituationController @Inject() (
 
           // Note: We should store the tax year calculated here in the session to be reused later to avoid
           // the edge case where the tax year might change from one page to the next
-          Ok(taxSituationPage(form, back, options, getTaxYear(timeProvider.currentDate)))
+          Ok(taxSituationPage(form, back, options, getTaxYear(timeProvider.currentDate), licenceType))
         case None              =>
           sys.error("Couldn't find licence Type")
       }
@@ -126,7 +126,8 @@ class TaxSituationController @Inject() (
                     formWithErrors,
                     journeyService.previous(routes.TaxSituationController.taxSituation()),
                     options,
-                    taxYear
+                    taxYear,
+                    licenceType
                   )
                 ),
               handleValidTaxSituation

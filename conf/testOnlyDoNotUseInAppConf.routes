@@ -11,3 +11,9 @@
 
 # Add all the application routes to the prod.routes file
 ->         /                          prod.Routes
+
+
+GET  /tax-check-for-licence/test-only/start-journeys         uk.gov.hmrc.hecapplicantfrontend.testonly.controllers.JourneyStarterController.journeyStarter
+POST /tax-check-for-licence/test-only/start-journey-1        uk.gov.hmrc.hecapplicantfrontend.testonly.controllers.JourneyStarterController.individualJourney
+POST /tax-check-for-licence/test-only/start-journey-2        uk.gov.hmrc.hecapplicantfrontend.testonly.controllers.JourneyStarterController.individualJourneyWithExistingTaxChecks
+POST /tax-check-for-licence/test-only/start-journey-3        uk.gov.hmrc.hecapplicantfrontend.testonly.controllers.JourneyStarterController.companyJourneyReturnFound
