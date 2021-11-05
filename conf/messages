@@ -86,7 +86,7 @@ date.11=November
 date.12=December
 
 # Licence type
-licenceType.title = What type of licence are you renewing or applying for?
+licenceType.title = What type of licence are you applying for?
 licenceType.hint = This is the licence type you’re doing a tax check for.
 licenceType.driverOfTaxis = Driver of taxis and private hires
 licenceType.driverOfTaxis.hint = Includes hackney carriage and dual licences.
@@ -94,8 +94,8 @@ licenceType.operatorOfPrivateHireVehicles = Operator of private hire vehicles
 licenceType.scrapMetalCollector = Scrap metal mobile collector
 licenceType.scrapMetalDealer = Scrap metal dealer site
 licenceType.link = Find out what to do if you cannot see your licence type
-licenceType.error.required = Select the type of licence you are renewing or applying for
-licenceType.error.invalid = Select the type of licence you are renewing or applying for
+licenceType.error.required = Select the type of licence you are applying for
+licenceType.error.invalid = Select the type of licence you are applying for
 
 # Licence type exit
 licenceTypeExit.title = You do not need to do a tax check
@@ -189,6 +189,7 @@ taxCheckComplete.p2 = The last day it can be used is: <strong>{0}</strong>.
 taxCheckComplete.whatNext = What you need to do next
 taxCheckComplete.list1 = Make a note of your tax check code. You can <span class="js-visible"><a class="govuk-link" href="#print-dialogue">print or save this page as a PDF</a>, or </span> <a href={0} class="govuk-link">see all of your tax check codes</a>.
 taxCheckComplete.list2 = Enter your tax check code in your licence application. Make sure you leave enough time for your application to be processed before your tax check code expires.
+taxCheckComplete.copyText = your tax check code
 
 # SAUTR Not Found
 sautrNotFound.title = You cannot use this service

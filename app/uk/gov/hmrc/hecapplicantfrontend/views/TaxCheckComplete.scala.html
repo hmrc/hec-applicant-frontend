@@ -45,7 +45,7 @@
     </ul>
 
     <div class="govuk-!-margin-top-2">
-      @copyButton(hecTaxCheck.taxCheckCode.value, Some(s"${messages("taxCheck.codeKey")}"))
+      @copyButton(hecTaxCheck.taxCheckCode.value, None, Some(s"${messages(s"$key.copyText")} "))
     </div>
 
 }
