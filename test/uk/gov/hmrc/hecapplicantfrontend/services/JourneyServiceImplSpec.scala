@@ -971,7 +971,7 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
               routes.CompanyDetailsController.confirmCompanyDetails(),
               updatedSession
             )
-            await(result.value) shouldBe Right(routes.CompanyDetailsController.ctutrNotMatched())
+            await(result.value) shouldBe Right(routes.CompanyDetailsController.cannotDoTaxCheck())
           }
 
           "enrolments and DES CTUTRs match" when {
@@ -1104,7 +1104,7 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
               routes.CompanyDetailsController.confirmCompanyDetails(),
               updatedSession
             )
-            await(result.value) shouldBe Right(routes.CompanyDetailsController.ctutrNotMatched())
+            await(result.value) shouldBe Right(routes.CompanyDetailsController.cannotDoTaxCheck())
           }
 
         }
@@ -2707,6 +2707,7 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
           ctutrAnswerAttempts = ctutrAttempts
         )
         JourneyServiceImpl.allCompanyAnswersComplete(incompleteAnswers, session, appConfig.maxCtutrAnswerAttempts)
+
       }
       val date                  = LocalDate.now()
 
