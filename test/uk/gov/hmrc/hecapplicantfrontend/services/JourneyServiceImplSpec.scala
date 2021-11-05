@@ -2672,7 +2672,8 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
         ctIncomeDeclaredOpt: Option[YesNoAnswer],
         recentlyStartedTradingOpt: Option[YesNoAnswer],
         latestAccountingPeriod: Option[CTAccountingPeriod],
-        licenceType: Some[LicenceType] = Some(LicenceType.ScrapMetalDealerSite)
+        licenceType: Some[LicenceType] = Some(LicenceType.ScrapMetalDealerSite),
+        ctutrAttempts: Int = 0
       ) = {
         val date                = LocalDate.now()
         val companyData         = companyLoginData.copy(
@@ -2702,9 +2703,10 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
         val session           = Fixtures.companyHECSession(
           companyData,
           journeyData,
-          CompanyUserAnswers.empty
+          CompanyUserAnswers.empty,
+          ctutrAnswerAttempts = ctutrAttempts
         )
-        JourneyServiceImpl.allCompanyAnswersComplete(incompleteAnswers, session)
+        JourneyServiceImpl.allCompanyAnswersComplete(incompleteAnswers, session, appConfig.maxCtutrAnswerAttempts)
       }
       val date                  = LocalDate.now()
 
@@ -2712,28 +2714,32 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
         "licence type is missing" in {
           JourneyServiceImpl.allCompanyAnswersComplete(
             incompleteAnswersBase.copy(licenceType = None),
-            CompanyHECSession.newSession(companyLoginData)
+            CompanyHECSession.newSession(companyLoginData),
+            appConfig.maxCtutrAnswerAttempts
           ) shouldBe false
         }
 
         "licence time trading is missing" in {
           JourneyServiceImpl.allCompanyAnswersComplete(
             incompleteAnswersBase.copy(licenceTimeTrading = None),
-            CompanyHECSession.newSession(companyLoginData)
+            CompanyHECSession.newSession(companyLoginData),
+            appConfig.maxCtutrAnswerAttempts
           ) shouldBe false
         }
 
         "licence validity period is missing" in {
           JourneyServiceImpl.allCompanyAnswersComplete(
             incompleteAnswersBase.copy(licenceValidityPeriod = None),
-            CompanyHECSession.newSession(companyLoginData)
+            CompanyHECSession.newSession(companyLoginData),
+            appConfig.maxCtutrAnswerAttempts
           ) shouldBe false
         }
 
         "entity type is missing" in {
           JourneyServiceImpl.allCompanyAnswersComplete(
             incompleteUserAnswers = incompleteAnswersBase,
-            CompanyHECSession.newSession(companyLoginData)
+            CompanyHECSession.newSession(companyLoginData),
+            appConfig.maxCtutrAnswerAttempts
           ) shouldBe false
         }
 
@@ -2797,6 +2803,16 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
             ) shouldBe false
           }
 
+        }
+
+        "when max ctutr attempt limit is reached" in {
+          checkCompanyDataComplete(
+            None,
+            None,
+            Some(YesNoAnswer.No),
+            Some(CTAccountingPeriod(date, date, CTStatus.NoReturnFound)),
+            ctutrAttempts = appConfig.maxCtutrAnswerAttempts
+          ) shouldBe false
         }
 
       }

@@ -306,15 +306,22 @@ class CompanyDetailsController @Inject() (
   val enterCtutrSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     request.sessionData mapAsCompany { companySession =>
       ensureCompanyDataHasDesCtutr(companySession) { desCtutr =>
-        def maxCtutrAnswerAttemptsReached = companySession.ctutrAnswerAttempts >= appConfig.maxCtutrAnswerAttempts
+        def maxCtutrAnswerAttemptsReached(companySession: CompanyHECSession) =
+          companySession.ctutrAnswerAttempts >= appConfig.maxCtutrAnswerAttempts
 
-        def goToNextPage: Future[Result] = updateAndNextJourneyData(
-          routes.CompanyDetailsController.enterCtutr(),
-          companySession
-        )
+        def goToNextPage(updatedSession: CompanyHECSession): Future[Result] =
+          updateAndNextJourneyData(
+            routes.CompanyDetailsController.enterCtutr(),
+            updatedSession
+          )
 
         def handleValidAnswer(ctutr: CTUTR) = {
-          val updatedAnswers = companySession.userAnswers.unset(_.ctutr).copy(ctutr = Some(ctutr))
+          val updatedAnswers = companySession.userAnswers
+            .unset(_.ctutr)
+            .unset(_.ctIncomeDeclared)
+            .unset(_.recentlyStartedTrading)
+            .unset(_.chargeableForCT)
+            .copy(ctutr = Some(ctutr))
           val (start, end)   = CompanyDetailsController.calculateLookBackPeriod(timeProvider.currentDate)
 
           val result = for {
@@ -347,27 +354,45 @@ class CompanyDetailsController @Inject() (
         def handleFormWithErrors(formWithErrors: Form[CTUTR]): Future[Result] = {
 
           val ctutrsNotMatched = formWithErrors.errors.exists(_.message === "error.ctutrsDoNotMatch")
-
-          def incrementAttemptsAndDisplayFormError = {
-            val updatedSession = companySession.copy(ctutrAnswerAttempts = companySession.ctutrAnswerAttempts + 1)
-            sessionStore
-              .store(updatedSession)
-              .fold(
-                _.doThrow("Could not update ctutr answer attempts"),
-                _ => ok(formWithErrors)
-              )
-          }
+          val ctutrOpt         = formWithErrors.value
 
           def displayFormError: Future[Result] = Future.successful(ok(formWithErrors))
 
-          if (ctutrsNotMatched && maxCtutrAnswerAttemptsReached)
-            goToNextPage
+          def incrementAttemptsAndDisplayFormError = {
+
+            val updatedAnswers = companySession.userAnswers
+              .unset(_.ctutr)
+              .unset(_.ctIncomeDeclared)
+              .unset(_.recentlyStartedTrading)
+              .unset(_.chargeableForCT)
+              .copy(ctutr = ctutrOpt)
+            val updatedSession = companySession
+              .copy(ctutrAnswerAttempts = companySession.ctutrAnswerAttempts + 1, userAnswers = updatedAnswers)
+
+            sessionStore
+              .store(updatedSession)
+              .foldF(
+                _.doThrow("Could not update ctutr answer attempts"),
+                _ =>
+                  //If session is updated and successfully stored in DB, then do a check if ctutr attempt has reached the max limit
+                  // if yes, then go to too many ctutr attempt page else display the form error
+                  //In the absence if this check, form error will display and user will be able to do one more attempt than the max limit.
+                  if (maxCtutrAnswerAttemptsReached(updatedSession)) {
+                    goToNextPage(updatedSession)
+                  } else {
+                    displayFormError
+                  }
+              )
+
+          }
+
+          if (ctutrsNotMatched && maxCtutrAnswerAttemptsReached(companySession)) goToNextPage(companySession)
           else if (ctutrsNotMatched) incrementAttemptsAndDisplayFormError
           else displayFormError
 
         }
 
-        if (maxCtutrAnswerAttemptsReached) goToNextPage
+        if (maxCtutrAnswerAttemptsReached(companySession)) goToNextPage(companySession)
         else {
           enterCtutrForm(desCtutr)
             .bindFromRequest()
