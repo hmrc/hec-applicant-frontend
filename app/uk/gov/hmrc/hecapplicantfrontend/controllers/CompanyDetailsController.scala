@@ -410,8 +410,7 @@ class CompanyDetailsController @Inject() (
   }
 
   val tooManyCtutrAttempts: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
-    val back = journeyService.previous(routes.CompanyDetailsController.tooManyCtutrAttempts())
-    Ok(tooManyCTUTRAttemptsPage(back))
+    Ok(tooManyCTUTRAttemptsPage())
   }
 
   val ctIncomeStatement: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>

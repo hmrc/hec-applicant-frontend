@@ -1742,16 +1742,13 @@ class CompanyDetailsControllerSpec
         inSequence {
           mockAuthWithNoRetrievals()
           mockGetSession(session)
-          mockJourneyServiceGetPrevious(routes.CompanyDetailsController.tooManyCtutrAttempts(), session)(
-            mockPreviousCall
-          )
         }
 
         checkPageIsDisplayed(
           performAction(),
           messageFromMessageKey("tooManyCtutrAttempts.title"),
           { doc =>
-            doc.select("#back").attr("href") shouldBe mockPreviousCall.url
+            doc.select("#back").isEmpty shouldBe true
             val link = doc.select(".govuk-body > .govuk-link")
             link.attr("href") shouldBe appConfig.taxCheckGuidanceUrl
           }
