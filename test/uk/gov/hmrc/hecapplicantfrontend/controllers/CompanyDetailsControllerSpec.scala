@@ -1731,6 +1731,33 @@ class CompanyDetailsControllerSpec
 
     }
 
+    "handling requests to the 'too many CT UTR attempts' page" must {
+
+      def performAction() = controller.tooManyCtutrAttempts(FakeRequest())
+
+      behave like authAndSessionDataBehaviour(performAction)
+
+      "display the page" in {
+        val session = Fixtures.companyHECSession()
+        inSequence {
+          mockAuthWithNoRetrievals()
+          mockGetSession(session)
+        }
+
+        checkPageIsDisplayed(
+          performAction(),
+          messageFromMessageKey("tooManyCtutrAttempts.title"),
+          { doc =>
+            doc.select("#back").isEmpty shouldBe true
+            val link = doc.select(".govuk-body > .govuk-link")
+            link.attr("href") shouldBe appConfig.taxCheckGuidanceUrl
+          }
+        )
+
+      }
+
+    }
+
   }
 
 }

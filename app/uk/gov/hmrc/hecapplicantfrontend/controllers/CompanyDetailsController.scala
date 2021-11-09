@@ -57,6 +57,7 @@ class CompanyDetailsController @Inject() (
   ctIncomeStatementPage: html.CTIncomeStatement,
   enterCtutrPage: html.EnterCtutr,
   dontHaveCtutrPage: html.DontHaveCtutr,
+  tooManyCTUTRAttemptsPage: html.TooManyCtutrAttempts,
   sessionStore: SessionStore,
   mcc: MessagesControllerComponents
 )(implicit appConfig: AppConfig, ec: ExecutionContext)
@@ -409,7 +410,7 @@ class CompanyDetailsController @Inject() (
   }
 
   val tooManyCtutrAttempts: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
-    Ok(s"${request.sessionData}")
+    Ok(tooManyCTUTRAttemptsPage())
   }
 
   val ctIncomeStatement: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>

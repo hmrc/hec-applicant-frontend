@@ -2421,6 +2421,45 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
           result shouldBe routes.CompanyDetailsController.enterCtutr()
         }
 
+        "the 'too many CTUTR attempts' page" in {
+          val companyData = companyLoginData.copy(
+            ctutr = None
+          )
+
+          val ctStatusResponse = CTStatusResponse(
+            ctutr = CTUTR("utr"),
+            startDate = LocalDate.now(),
+            endDate = LocalDate.now(),
+            latestAccountingPeriod = None
+          )
+          val journeyData      = CompanyRetrievedJourneyData(
+            companyName = Some(CompanyHouseName("Test tech Ltd")),
+            desCtutr = Some(CTUTR("ctutr")),
+            ctStatus = Some(ctStatusResponse)
+          )
+          val session          =
+            Fixtures.companyHECSession(
+              companyData,
+              journeyData,
+              CompanyUserAnswers.empty.copy(
+                licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles),
+                licenceTimeTrading = Some(LicenceTimeTrading.TwoToFourYears),
+                licenceValidityPeriod = Some(LicenceValidityPeriod.UpToOneYear),
+                entityType = Some(Company),
+                crn = Some(CRN("1234567")),
+                companyDetailsConfirmed = Some(YesNoAnswer.Yes)
+              ),
+              ctutrAnswerAttempts = Int.MaxValue
+            )
+
+          implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+          val result                                      = journeyService.previous(
+            routes.CompanyDetailsController.tooManyCtutrAttempts()
+          )
+
+          result shouldBe routes.CompanyDetailsController.enterCtutr()
+        }
+
         def buildIndividualSession(taxSituation: TaxSituation, saStatus: SAStatus): HECSession = {
           val individualLoginData =
             IndividualLoginData(
