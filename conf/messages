@@ -298,3 +298,8 @@ dontHaveCtutr.title=If you do not have a UTR
 dontHaveCtutr.p1=If you do not have your UTR number you can <a href="{0}" class="govuk-link" target="_blank" rel="noopener noreferrer">find a lost UTR (opens in a new tab)</a>.
 dontHaveCtutr.p2=You need to <a href="{0}" class="govuk-link">register for Corporation Tax</a>, before you can do a tax check.
 dontHaveCtutr.p3=Once you have your UTR number, you can <a href="{0}" class="govuk-link">go back and try again</a>.
+
+# Too many CTUTR attempts
+tooManyCtutrAttempts.title=You cannot do a tax check at the moment
+tooManyCtutrAttempts.p1=This is because you have entered a UTR that does not match your company, too many times.
+tooManyCtutrAttempts.p2=You will not be able to use this service for the next 3 hours. After that, you will be able to <a href="{0}" class="govuk-link">do a new tax check</a>.
