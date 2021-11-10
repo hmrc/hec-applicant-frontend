@@ -118,6 +118,7 @@ class AppConfig @Inject() (config: Configuration, contactFrontendConfig: Contact
   val registerForCtUrl: String             = config.get[String]("external-url.register-for-ct")
   val accountingPeriodsGuidanceUrl: String = config.get[String]("external-url.accounting-periods-guidance")
   val findLostUtrUrl: String               = config.get[String]("external-url.find-lost-utr")
+  val saGuidanceUrl: String                = config.get[String]("external-url.sa-guidance")
 
   val firstPageBackUrl: String = config.get[String]("first-page-back-url")
 

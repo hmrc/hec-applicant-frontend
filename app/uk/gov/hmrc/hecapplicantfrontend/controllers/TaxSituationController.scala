@@ -23,6 +23,7 @@ import play.api.data.Form
 import play.api.data.Forms.{mapping, of}
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
+import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 import uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.{getTaxYear, saTaxSituations, taxSituationForm, taxSituationOptions}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
 import uk.gov.hmrc.hecapplicantfrontend.models
@@ -47,7 +48,7 @@ class TaxSituationController @Inject() (
   mcc: MessagesControllerComponents,
   timeProvider: TimeProvider,
   taxSituationPage: html.TaxSituation
-)(implicit ec: ExecutionContext)
+)(implicit ec: ExecutionContext, appConfig: AppConfig)
     extends FrontendController(mcc)
     with I18nSupport
     with Logging {
