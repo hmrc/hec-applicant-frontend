@@ -3,20 +3,23 @@ import sbt._
 
 object AppDependencies {
 
+  val bootStrapVersion = "5.16.0"
+  val monocleVersion   = "2.1.0"
+
   val compile = Seq(
-    "uk.gov.hmrc"                %% "bootstrap-frontend-play-28" % "5.14.0",
-    "uk.gov.hmrc.mongo"          %% "hmrc-mongo-play-28"         % "0.55.0",
-    "uk.gov.hmrc"                %% "play-frontend-hmrc"         % "1.14.0-play-28",
+    "uk.gov.hmrc"                %% "bootstrap-frontend-play-28" % bootStrapVersion,
+    "uk.gov.hmrc.mongo"          %% "hmrc-mongo-play-28"         % "0.56.0",
+    "uk.gov.hmrc"                %% "play-frontend-hmrc"         % "1.25.0-play-28",
     "uk.gov.hmrc"                %% "domain"                     % "6.2.0-play-28",
     "org.typelevel"              %% "cats-core"                  % "2.6.1",
     "ai.x"                       %% "play-json-extensions"       % "0.42.0",
     "com.github.kxbmap"          %% "configs"                    % "0.4.4",
-    "com.github.julien-truffaut" %% "monocle-core"               % "2.1.0",
-    "com.github.julien-truffaut" %% "monocle-macro"              % "2.1.0"
+    "com.github.julien-truffaut" %% "monocle-core"               % monocleVersion,
+    "com.github.julien-truffaut" %% "monocle-macro"              % monocleVersion
   )
 
   val test = Seq(
-    "uk.gov.hmrc"            %% "bootstrap-test-play-28" % "5.14.0"            % Test,
+    "uk.gov.hmrc"            %% "bootstrap-test-play-28" % bootStrapVersion    % Test,
     "org.scalatest"          %% "scalatest"              % "3.2.10"            % Test,
     "org.jsoup"               % "jsoup"                  % "1.14.2"            % Test,
     "com.typesafe.play"      %% "play-test"              % PlayVersion.current % Test,
