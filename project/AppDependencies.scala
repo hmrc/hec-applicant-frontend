@@ -13,7 +13,7 @@ object AppDependencies {
     "uk.gov.hmrc"                %% "domain"                     % "6.2.0-play-28",
     "org.typelevel"              %% "cats-core"                  % "2.6.1",
     "ai.x"                       %% "play-json-extensions"       % "0.42.0",
-    "com.github.kxbmap"          %% "configs"                    % "0.4.4",
+    "com.github.kxbmap"          %% "configs"                    % "0.6.1",
     "com.github.julien-truffaut" %% "monocle-core"               % monocleVersion,
     "com.github.julien-truffaut" %% "monocle-macro"              % monocleVersion
   )
@@ -21,7 +21,7 @@ object AppDependencies {
   val test = Seq(
     "uk.gov.hmrc"            %% "bootstrap-test-play-28" % bootStrapVersion    % Test,
     "org.scalatest"          %% "scalatest"              % "3.2.10"            % Test,
-    "org.jsoup"               % "jsoup"                  % "1.14.2"            % Test,
+    "org.jsoup"               % "jsoup"                  % "1.14.3"            % Test,
     "com.typesafe.play"      %% "play-test"              % PlayVersion.current % Test,
     "org.scalamock"          %% "scalamock"              % "4.2.0"             % Test,
     "uk.gov.hmrc"            %% "reactivemongo-test"     % "5.0.0-play-28"     % Test,
