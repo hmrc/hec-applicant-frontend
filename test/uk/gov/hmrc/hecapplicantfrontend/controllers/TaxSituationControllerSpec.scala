@@ -374,307 +374,335 @@ class TaxSituationControllerSpec
 
       }
 
-      "handling submits on the tax situation page" must {
-        def performAction(data: (String, String)*): Future[Result] =
-          controller.taxSituationSubmit(FakeRequest().withFormUrlEncodedBody(data: _*))
+    }
 
-        behave like authAndSessionDataBehaviour(() => performAction())
+    "handling submits on the tax situation page" must {
+      def performAction(data: (String, String)*): Future[Result] =
+        controller.taxSituationSubmit(FakeRequest().withFormUrlEncodedBody(data: _*))
 
-        "show a form error" when {
+      behave like authAndSessionDataBehaviour(() => performAction())
 
-          val answers        = IndividualUserAnswers.empty
-          val updatedAnswers = IndividualUserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
-          val session        =
-            Fixtures.individualHECSession(
-              individualLoginData,
-              IndividualRetrievedJourneyData.empty,
-              answers
-            )
-          val updatedSession = session.copy(userAnswers = updatedAnswers)
+      "show a form error" when {
 
-          "nothing is submitted" in {
-            inSequence {
-              mockAuthWithNoRetrievals()
-              mockGetSession(updatedSession)
-              mockTimeProviderToday(date)
-              mockJourneyServiceGetPrevious(routes.TaxSituationController.taxSituation(), updatedSession)(
-                mockPreviousCall
-              )
-            }
+        val answers        = IndividualUserAnswers.empty
+        val updatedAnswers = IndividualUserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
+        val session        =
+          Fixtures.individualHECSession(
+            individualLoginData,
+            IndividualRetrievedJourneyData.empty,
+            answers,
+            relevantIncomeTaxYear = TaxYear(2020).some
+          )
+        val updatedSession = session.copy(userAnswers = updatedAnswers)
 
-            checkFormErrorIsDisplayed(
-              performAction(),
-              messageFromMessageKey("taxSituation.title"),
-              messageFromMessageKey("taxSituation.error.required")
+        "nothing is submitted" in {
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(updatedSession)
+            mockJourneyServiceGetPrevious(routes.TaxSituationController.taxSituation(), updatedSession)(
+              mockPreviousCall
             )
           }
 
-          "an index is submitted which is too large" in {
-            inSequence {
-              mockAuthWithNoRetrievals()
-              mockGetSession(updatedSession)
-              mockTimeProviderToday(date)
-              mockJourneyServiceGetPrevious(routes.TaxSituationController.taxSituation(), updatedSession)(
-                mockPreviousCall
-              )
-            }
+          checkFormErrorIsDisplayed(
+            performAction(),
+            messageFromMessageKey("taxSituation.title"),
+            messageFromMessageKey("taxSituation.error.required")
+          )
+        }
 
-            checkFormErrorIsDisplayed(
-              performAction("taxSituation" -> Int.MaxValue.toString),
-              messageFromMessageKey("taxSituation.title"),
-              messageFromMessageKey("taxSituation.error.invalid")
+        "an index is submitted which is too large" in {
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(updatedSession)
+            mockJourneyServiceGetPrevious(routes.TaxSituationController.taxSituation(), updatedSession)(
+              mockPreviousCall
             )
           }
 
-          "a value is submitted which is not a number" in {
-            inSequence {
-              mockAuthWithNoRetrievals()
-              mockGetSession(updatedSession)
-              mockTimeProviderToday(date)
-              mockJourneyServiceGetPrevious(routes.TaxSituationController.taxSituation(), updatedSession)(
-                mockPreviousCall
-              )
-            }
+          checkFormErrorIsDisplayed(
+            performAction("taxSituation" -> Int.MaxValue.toString),
+            messageFromMessageKey("taxSituation.title"),
+            messageFromMessageKey("taxSituation.error.invalid")
+          )
+        }
 
-            checkFormErrorIsDisplayed(
-              performAction("taxSituation" -> "xyz"),
-              messageFromMessageKey("taxSituation.title"),
-              messageFromMessageKey("taxSituation.error.invalid")
+        "a value is submitted which is not a number" in {
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(updatedSession)
+            mockJourneyServiceGetPrevious(routes.TaxSituationController.taxSituation(), updatedSession)(
+              mockPreviousCall
             )
           }
+
+          checkFormErrorIsDisplayed(
+            performAction("taxSituation" -> "xyz"),
+            messageFromMessageKey("taxSituation.title"),
+            messageFromMessageKey("taxSituation.error.invalid")
+          )
+        }
+
+      }
+
+      "throw runtime exception" when {
+        "retrieved user data in session is for a company" in {
+          val session = CompanyHECSession.newSession(companyRetrievedData)
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+          }
+
+          assertThrows[RuntimeException](await(performAction()))
+        }
+
+      }
+
+      "return a technical error" when {
+
+        "a licence type cannot be found in session" in {
+          val session = IndividualHECSession.newSession(individualLoginData)
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+          }
+          assertThrows[RuntimeException](await(performAction()))
 
         }
 
-        "throw runtime exception" when {
-          "retrieved user data in session is for a company" in {
-            val session = CompanyHECSession.newSession(companyRetrievedData)
+        "the call to update and next fails" in {
+          val answers = IndividualUserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
+          val session = Fixtures.individualHECSession(
+            individualLoginData.copy(sautr = Some(SAUTR("utr"))),
+            IndividualRetrievedJourneyData.empty,
+            answers,
+            relevantIncomeTaxYear = Some(TaxYear(2020))
+          )
 
-            inSequence {
-              mockAuthWithNoRetrievals()
-              mockGetSession(session)
-            }
-
-            assertThrows[RuntimeException](await(performAction()))
-          }
-        }
-
-        "return a technical error" when {
-
-          "a licence type cannot be found in session" in {
-            val session = IndividualHECSession.newSession(individualLoginData)
-
-            inSequence {
-              mockAuthWithNoRetrievals()
-              mockGetSession(session)
-            }
-            assertThrows[RuntimeException](await(performAction()))
-
-          }
-
-          "the call to update and next fails" in {
-            val answers = IndividualUserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
-            val session = Fixtures.individualHECSession(
-              individualLoginData.copy(sautr = Some(SAUTR("utr"))),
-              IndividualRetrievedJourneyData.empty,
-              answers
+          val updatedAnswers = IndividualUserAnswers.empty
+            .copy(
+              licenceType = Some(DriverOfTaxisAndPrivateHires),
+              licenceValidityPeriod = None,
+              taxSituation = Some(TaxSituation.PAYE)
             )
-
-            val updatedAnswers = IndividualUserAnswers.empty
-              .copy(
-                licenceType = Some(DriverOfTaxisAndPrivateHires),
-                licenceValidityPeriod = None,
-                taxSituation = Some(TaxSituation.PAYE)
-              )
-            val updatedSession = session.copy(userAnswers = updatedAnswers)
-
-            inSequence {
-              mockAuthWithNoRetrievals()
-              mockGetSession(session)
-              mockTimeProviderToday(date)
-              mockJourneyServiceUpdateAndNext(
-                routes.TaxSituationController.taxSituation(),
-                session,
-                updatedSession
-              )(
-                Left(Error(new Exception))
-              )
-            }
-            assertThrows[RuntimeException](await(performAction("taxSituation" -> "0")))
-          }
-
-        }
-
-        val optionIndexMap = Map(
-          TaxSituation.PAYE          -> "0",
-          TaxSituation.SA            -> "1",
-          TaxSituation.SAPAYE        -> "2",
-          TaxSituation.NotChargeable -> "3"
-        )
-
-        def testNonSA(taxSituation: TaxSituation) = {
-          val answers        = IndividualUserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
-          val individualData = individualLoginData.copy(sautr = Some(SAUTR("utr")))
-          val session        = Fixtures.individualHECSession(individualData, IndividualRetrievedJourneyData.empty, answers)
-
-          val updatedAnswers = answers.copy(taxSituation = Some(taxSituation))
           val updatedSession = session.copy(userAnswers = updatedAnswers)
 
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockTimeProviderToday(date)
             mockJourneyServiceUpdateAndNext(
               routes.TaxSituationController.taxSituation(),
               session,
               updatedSession
             )(
-              Right(mockNextCall)
+              Left(Error(new Exception))
             )
           }
-
-          checkIsRedirect(performAction("taxSituation" -> optionIndexMap(taxSituation)), mockNextCall)
+          assertThrows[RuntimeException](await(performAction("taxSituation" -> "0")))
         }
 
-        "redirect to next page without fetching SA status" when {
-          "tax situation = PAYE" in {
-            testNonSA(TaxSituation.PAYE)
-          }
-          "tax situation = NotChargeable" in {
-            testNonSA(TaxSituation.NotChargeable)
-          }
-        }
-
-        def testSA(taxSituation: TaxSituation, statusResponse: SAStatusResponse) = {
-          val answers        = IndividualUserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
-          val individualData = individualLoginData.copy(sautr = Some(SAUTR("utr")))
-          val session        = Fixtures.individualHECSession(individualData, IndividualRetrievedJourneyData.empty, answers)
-
-          val updatedAnswers = answers.copy(taxSituation = Some(taxSituation))
-          val updatedSession = session.copy(
-            userAnswers = updatedAnswers,
-            retrievedJourneyData = session.retrievedJourneyData.copy(saStatus = Some(statusResponse))
+        "relevant tax year is not in session " in {
+          val answers = IndividualUserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
+          val session = Fixtures.individualHECSession(
+            individualLoginData.copy(sautr = Some(SAUTR("utr"))),
+            IndividualRetrievedJourneyData.empty,
+            answers
           )
 
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockTimeProviderToday(date)
-            mockGetSAStatus(statusResponse.sautr, statusResponse.taxYear)(Right(statusResponse))
-            mockJourneyServiceUpdateAndNext(
-              routes.TaxSituationController.taxSituation(),
-              session,
-              updatedSession
-            )(
-              Right(mockNextCall)
-            )
           }
 
-          checkIsRedirect(performAction("taxSituation" -> optionIndexMap(taxSituation)), mockNextCall)
-        }
-
-        "redirect to next page after fetching SA status" when {
-          "tax situation = SA" in {
-            testSA(TaxSituation.SA, SAStatusResponse(SAUTR("utr"), TaxYear(2020), SAStatus.ReturnFound))
-          }
-          "tax situation = SAPAYE" in {
-            testSA(TaxSituation.SAPAYE, SAStatusResponse(SAUTR("utr"), TaxYear(2020), SAStatus.ReturnFound))
-          }
-        }
-
-        "throw technical error if call to fetch SA status fails" in {
-          val answers        = IndividualUserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
-          val individualData =
-            individualLoginData.copy(sautr = Some(SAUTR("utr")))
-          val session        =
-            Fixtures.individualHECSession(individualData, IndividualRetrievedJourneyData.empty, answers)
-
-          inSequence {
-            mockAuthWithNoRetrievals()
-            mockGetSession(session)
-            mockTimeProviderToday(date)
-            mockGetSAStatus(SAUTR("utr"), TaxYear(2020))(Left(Error("")))
-          }
-          assertThrows[RuntimeException](await(performAction("taxSituation" -> optionIndexMap(TaxSituation.SA))))
-
-        }
-
-        "redirect to the next page" when {
-
-          "valid data is submitted and" when {
-
-            "the user has not previously completed answering questions" in {
-              val answers = IndividualUserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
-              val session = Fixtures.individualHECSession(
-                individualLoginData.copy(sautr = Some(SAUTR("utr"))),
-                IndividualRetrievedJourneyData.empty,
-                answers
-              )
-
-              val updatedAnswers = answers.copy(taxSituation = Some(TaxSituation.PAYE))
-              val updatedSession = session.copy(userAnswers = updatedAnswers)
-
-              inSequence {
-                mockAuthWithNoRetrievals()
-                mockGetSession(session)
-                mockTimeProviderToday(date)
-                mockJourneyServiceUpdateAndNext(
-                  routes.TaxSituationController.taxSituation(),
-                  session,
-                  updatedSession
-                )(
-                  Right(mockNextCall)
-                )
-              }
-
-              checkIsRedirect(performAction("taxSituation" -> "0"), mockNextCall)
-            }
-
-            "the user has previously completed answering questions" in {
-              val answers = Fixtures.completeIndividualUserAnswers(
-                LicenceType.DriverOfTaxisAndPrivateHires,
-                LicenceTimeTrading.ZeroToTwoYears,
-                LicenceValidityPeriod.UpToThreeYears,
-                TaxSituation.PAYE,
-                Some(YesNoAnswer.Yes),
-                Some(EntityType.Individual)
-              )
-
-              val session = Fixtures.individualHECSession(
-                individualLoginData.copy(sautr = Some(SAUTR("utr"))),
-                IndividualRetrievedJourneyData.empty,
-                answers
-              )
-
-              val updatedAnswers = Fixtures.incompleteIndividualUserAnswers(
-                Some(LicenceType.DriverOfTaxisAndPrivateHires),
-                Some(LicenceTimeTrading.ZeroToTwoYears),
-                Some(LicenceValidityPeriod.UpToThreeYears),
-                Some(TaxSituation.PAYE),
-                None,
-                Some(EntityType.Individual)
-              )
-              val updatedSession = session.copy(userAnswers = updatedAnswers)
-
-              inSequence {
-                mockAuthWithNoRetrievals()
-                mockGetSession(session)
-                mockTimeProviderToday(date)
-                mockJourneyServiceUpdateAndNext(
-                  routes.TaxSituationController.taxSituation(),
-                  session,
-                  updatedSession
-                )(
-                  Right(mockNextCall)
-                )
-              }
-
-              checkIsRedirect(performAction("taxSituation" -> "0"), mockNextCall)
-            }
-          }
-
+          assertThrows[RuntimeException](await(performAction("taxSituation" -> "0")))
         }
 
       }
+
+      val optionIndexMap = Map(
+        TaxSituation.PAYE          -> "0",
+        TaxSituation.SA            -> "1",
+        TaxSituation.SAPAYE        -> "2",
+        TaxSituation.NotChargeable -> "3"
+      )
+
+      def testNonSA(taxSituation: TaxSituation) = {
+        val answers        = IndividualUserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
+        val individualData = individualLoginData.copy(sautr = Some(SAUTR("utr")))
+        val session        = Fixtures.individualHECSession(
+          individualData,
+          IndividualRetrievedJourneyData.empty,
+          answers,
+          relevantIncomeTaxYear = TaxYear(2020).some
+        )
+
+        val updatedAnswers = answers.copy(taxSituation = Some(taxSituation))
+        val updatedSession = session.copy(userAnswers = updatedAnswers)
+
+        inSequence {
+          mockAuthWithNoRetrievals()
+          mockGetSession(session)
+          mockJourneyServiceUpdateAndNext(
+            routes.TaxSituationController.taxSituation(),
+            session,
+            updatedSession
+          )(
+            Right(mockNextCall)
+          )
+        }
+
+        checkIsRedirect(performAction("taxSituation" -> optionIndexMap(taxSituation)), mockNextCall)
+      }
+
+      "redirect to next page without fetching SA status" when {
+        "tax situation = PAYE" in {
+          testNonSA(TaxSituation.PAYE)
+        }
+        "tax situation = NotChargeable" in {
+          testNonSA(TaxSituation.NotChargeable)
+        }
+      }
+
+      def testSA(taxSituation: TaxSituation, statusResponse: SAStatusResponse) = {
+        val answers        = IndividualUserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
+        val individualData = individualLoginData.copy(sautr = Some(SAUTR("utr")))
+        val session        = Fixtures.individualHECSession(
+          individualData,
+          IndividualRetrievedJourneyData.empty,
+          answers,
+          relevantIncomeTaxYear = TaxYear(2019).some
+        )
+
+        val updatedAnswers = answers.copy(taxSituation = Some(taxSituation))
+        val updatedSession = session.copy(
+          userAnswers = updatedAnswers,
+          retrievedJourneyData = session.retrievedJourneyData.copy(saStatus = Some(statusResponse))
+        )
+
+        inSequence {
+          mockAuthWithNoRetrievals()
+          mockGetSession(session)
+          mockGetSAStatus(statusResponse.sautr, TaxYear(2020))(Right(statusResponse))
+          mockJourneyServiceUpdateAndNext(
+            routes.TaxSituationController.taxSituation(),
+            session,
+            updatedSession
+          )(
+            Right(mockNextCall)
+          )
+        }
+
+        checkIsRedirect(performAction("taxSituation" -> optionIndexMap(taxSituation)), mockNextCall)
+      }
+
+      "redirect to next page after fetching SA status" when {
+        "tax situation = SA" in {
+          testSA(TaxSituation.SA, SAStatusResponse(SAUTR("utr"), TaxYear(2020), SAStatus.ReturnFound))
+        }
+        "tax situation = SAPAYE" in {
+          testSA(TaxSituation.SAPAYE, SAStatusResponse(SAUTR("utr"), TaxYear(2020), SAStatus.ReturnFound))
+        }
+      }
+
+      "throw technical error if call to fetch SA status fails" in {
+        val answers        = IndividualUserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
+        val individualData =
+          individualLoginData.copy(sautr = Some(SAUTR("utr")))
+        val session        =
+          Fixtures.individualHECSession(
+            individualData,
+            IndividualRetrievedJourneyData.empty,
+            answers,
+            relevantIncomeTaxYear = TaxYear(2019).some
+          )
+
+        inSequence {
+          mockAuthWithNoRetrievals()
+          mockGetSession(session)
+          mockGetSAStatus(SAUTR("utr"), TaxYear(2020))(Left(Error("")))
+        }
+        assertThrows[RuntimeException](await(performAction("taxSituation" -> optionIndexMap(TaxSituation.SA))))
+
+      }
+
+      "redirect to the next page" when {
+
+        "valid data is submitted and" when {
+
+          "the user has not previously completed answering questions" in {
+            val answers = IndividualUserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
+            val session = Fixtures.individualHECSession(
+              individualLoginData.copy(sautr = Some(SAUTR("utr"))),
+              IndividualRetrievedJourneyData.empty,
+              answers,
+              relevantIncomeTaxYear = TaxYear(2020).some
+            )
+
+            val updatedAnswers = answers.copy(taxSituation = Some(TaxSituation.PAYE))
+            val updatedSession = session.copy(userAnswers = updatedAnswers)
+
+            inSequence {
+              mockAuthWithNoRetrievals()
+              mockGetSession(session)
+              mockJourneyServiceUpdateAndNext(
+                routes.TaxSituationController.taxSituation(),
+                session,
+                updatedSession
+              )(
+                Right(mockNextCall)
+              )
+            }
+
+            checkIsRedirect(performAction("taxSituation" -> "0"), mockNextCall)
+          }
+
+          "the user has previously completed answering questions" in {
+            val answers = Fixtures.completeIndividualUserAnswers(
+              LicenceType.DriverOfTaxisAndPrivateHires,
+              LicenceTimeTrading.ZeroToTwoYears,
+              LicenceValidityPeriod.UpToThreeYears,
+              TaxSituation.PAYE,
+              Some(YesNoAnswer.Yes),
+              Some(EntityType.Individual)
+            )
+
+            val session = Fixtures.individualHECSession(
+              individualLoginData.copy(sautr = Some(SAUTR("utr"))),
+              IndividualRetrievedJourneyData.empty,
+              answers,
+              relevantIncomeTaxYear = TaxYear(2020).some
+            )
+
+            val updatedAnswers = Fixtures.incompleteIndividualUserAnswers(
+              Some(LicenceType.DriverOfTaxisAndPrivateHires),
+              Some(LicenceTimeTrading.ZeroToTwoYears),
+              Some(LicenceValidityPeriod.UpToThreeYears),
+              Some(TaxSituation.PAYE),
+              None,
+              Some(EntityType.Individual)
+            )
+            val updatedSession = session.copy(userAnswers = updatedAnswers)
+
+            inSequence {
+              mockAuthWithNoRetrievals()
+              mockGetSession(session)
+              mockJourneyServiceUpdateAndNext(
+                routes.TaxSituationController.taxSituation(),
+                session,
+                updatedSession
+              )(
+                Right(mockNextCall)
+              )
+            }
+
+            checkIsRedirect(performAction("taxSituation" -> "0"), mockNextCall)
+          }
+        }
+
+      }
+
     }
   }
 }

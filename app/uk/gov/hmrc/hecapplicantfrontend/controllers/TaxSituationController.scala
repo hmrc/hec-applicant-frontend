@@ -89,7 +89,8 @@ class TaxSituationController @Inject() (
   val taxSituationSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     request.sessionData.mapAsIndividual { individualSession =>
       request.sessionData.ensureLicenceTypePresent { licenceType =>
-        val taxYear                                                = individualSession.relevantIncomeTaxYear.getOrElse(getTaxYear(timeProvider.currentDate))
+        val taxYear                                                =
+          individualSession.relevantIncomeTaxYear.getOrElse(sys.error(" tax year not present in the session"))
         def fetchSAStatus(
           individualLoginData: IndividualLoginData,
           taxSituation: TaxSituation
