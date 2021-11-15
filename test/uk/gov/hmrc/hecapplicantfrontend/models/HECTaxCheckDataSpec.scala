@@ -50,7 +50,7 @@ class HECTaxCheckDataSpec extends AnyWordSpec with Matchers {
           IndividualTaxDetails(
             NINO("nino"),
             Some(SAUTR("utr")),
-            Some(TaxSituation.SA),
+            TaxSituation.SA,
             Some(YesNoAnswer.Yes),
             Some(SAStatusResponse(SAUTR("12345"), TaxYear(2021), ReturnFound)),
             TaxYear(2021)

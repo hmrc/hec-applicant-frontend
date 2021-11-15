@@ -153,7 +153,7 @@ class TaxCheckServiceImpl @Inject() (hecConnector: HECConnector)(implicit ec: Ex
       val taxDetails = IndividualTaxDetails(
         loginData.nino,
         loginData.sautr,
-        Some(answers.taxSituation),
+        answers.taxSituation,
         answers.saIncomeDeclared,
         retrievedJourneyData.saStatus,
         relevantIncomeTaxYear.getOrElse(

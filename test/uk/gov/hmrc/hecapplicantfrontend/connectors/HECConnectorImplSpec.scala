@@ -72,7 +72,7 @@ class HECConnectorImplSpec extends AnyWordSpec with Matchers with MockFactory wi
           IndividualTaxDetails(
             NINO(""),
             Some(SAUTR("")),
-            Some(TaxSituation.SA),
+            TaxSituation.SA,
             Some(YesNoAnswer.Yes),
             None,
             TaxYear(2021)

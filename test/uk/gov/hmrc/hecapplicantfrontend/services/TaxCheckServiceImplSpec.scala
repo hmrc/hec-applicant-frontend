@@ -121,7 +121,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         IndividualTaxDetails(
           individualLoginData.nino,
           Some(sautr),
-          Some(completeAnswers.taxSituation),
+          completeAnswers.taxSituation,
           completeAnswers.saIncomeDeclared,
           None,
           TaxYear(2021)
