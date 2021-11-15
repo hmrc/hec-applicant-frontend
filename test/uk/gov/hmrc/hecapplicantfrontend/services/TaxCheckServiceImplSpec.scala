@@ -147,10 +147,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         individualLoginData,
         retrievedJourneyData,
         completeAnswers,
-        None,
-        None,
-        List.empty,
-        incomeTaxYear.some
+        relevantIncomeTaxYear = incomeTaxYear.some
       )
 
       "return an error" when {

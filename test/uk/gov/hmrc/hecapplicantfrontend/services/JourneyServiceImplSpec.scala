@@ -1591,10 +1591,7 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
                   Fixtures.individualHECSession(
                     loginData = individualLoginData,
                     retrievedJourneyData = journeyData,
-                    userAnswers = incompleteAnswers,
-                    completedTaxCheck = None,
-                    taxCheckStartDateTime = None,
-                    unexpiredTaxChecks = List.empty
+                    userAnswers = incompleteAnswers
                   )
 
                 implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
@@ -1638,10 +1635,7 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
                   Fixtures.individualHECSession(
                     individualLoginData,
                     journeyData,
-                    incompleteAnswers,
-                    None,
-                    None,
-                    List.empty
+                    incompleteAnswers
                   )
 
                 implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
@@ -2159,10 +2153,7 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
             val session = Fixtures.individualHECSession(
               individualWithSautr,
               journeyDataWithSaStatus,
-              userAnswers(LicenceType.DriverOfTaxisAndPrivateHires, TaxSituation.SA, None),
-              None,
-              None,
-              List.empty
+              userAnswers(LicenceType.DriverOfTaxisAndPrivateHires, TaxSituation.SA, None)
             )
 
             testPrevPageIsTaxSituation(session)
@@ -2172,10 +2163,7 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
             val session = Fixtures.individualHECSession(
               individualWithSautr,
               journeyDataWithSaStatus,
-              userAnswers(LicenceType.DriverOfTaxisAndPrivateHires, TaxSituation.SAPAYE, None),
-              None,
-              None,
-              List.empty
+              userAnswers(LicenceType.DriverOfTaxisAndPrivateHires, TaxSituation.SAPAYE, None)
             )
 
             testPrevPageIsTaxSituation(session)
@@ -2189,10 +2177,7 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
                 LicenceType.DriverOfTaxisAndPrivateHires,
                 TaxSituation.PAYE,
                 None
-              ),
-              None,
-              None,
-              List.empty
+              )
             )
 
             testPrevPageIsTaxSituation(session)
@@ -2206,10 +2191,7 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
                 LicenceType.DriverOfTaxisAndPrivateHires,
                 TaxSituation.NotChargeable,
                 None
-              ),
-              None,
-              None,
-              List.empty
+              )
             )
 
             testPrevPageIsTaxSituation(session)
@@ -2497,10 +2479,7 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
               Some(LicenceValidityPeriod.UpToOneYear),
               Some(taxSituation),
               Some(YesNoAnswer.Yes)
-            ),
-            None,
-            None,
-            List.empty
+            )
           )
         }
 
@@ -2522,10 +2501,7 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
               Fixtures.individualHECSession(
                 individualLoginData,
                 IndividualRetrievedJourneyData.empty,
-                completeAnswers,
-                None,
-                None,
-                List.empty
+                completeAnswers
               )
             )
 

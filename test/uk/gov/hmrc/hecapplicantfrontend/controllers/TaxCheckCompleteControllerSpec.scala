@@ -86,9 +86,7 @@ class TaxCheckCompleteControllerSpec
             individualLoginData,
             IndividualRetrievedJourneyData.empty,
             IndividualUserAnswers.empty.copy(licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)),
-            Some(HECTaxCheck(HECTaxCheckCode(taxCheckCode), expiryDate)),
-            None,
-            List.empty
+            Some(HECTaxCheck(HECTaxCheckCode(taxCheckCode), expiryDate))
           )
 
           inSequence {

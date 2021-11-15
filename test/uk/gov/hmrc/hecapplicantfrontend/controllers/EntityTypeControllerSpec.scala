@@ -106,10 +106,7 @@ class EntityTypeControllerSpec
                 TaxSituation.PAYE,
                 Some(YesNoAnswer.Yes),
                 Some(EntityType.Individual)
-              ),
-              completedTaxCheck = None,
-              taxCheckStartDateTime = None,
-              unexpiredTaxChecks = List.empty
+              )
             )
 
           inSequence {
@@ -202,10 +199,7 @@ class EntityTypeControllerSpec
             Fixtures.individualHECSession(
               individualLoginData,
               IndividualRetrievedJourneyData.empty,
-              answers,
-              None,
-              None,
-              List.empty
+              answers
             )
           val updatedSession = session.copy(userAnswers = updatedAnswers)
 
@@ -235,10 +229,7 @@ class EntityTypeControllerSpec
               Fixtures.individualHECSession(
                 individualLoginData,
                 IndividualRetrievedJourneyData.empty,
-                answers,
-                None,
-                None,
-                List.empty
+                answers
               )
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 
@@ -290,10 +281,7 @@ class EntityTypeControllerSpec
               Fixtures.individualHECSession(
                 individualLoginData,
                 IndividualRetrievedJourneyData.empty,
-                answers,
-                None,
-                None,
-                List.empty
+                answers
               )
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 
@@ -353,10 +341,7 @@ class EntityTypeControllerSpec
           val session = Fixtures.individualHECSession(
             individualLoginData,
             IndividualRetrievedJourneyData.empty,
-            IndividualUserAnswers.empty,
-            None,
-            None,
-            List.empty
+            IndividualUserAnswers.empty
           )
 
           inSequence {
@@ -376,10 +361,7 @@ class EntityTypeControllerSpec
           val session = Fixtures.individualHECSession(
             individualLoginData,
             IndividualRetrievedJourneyData.empty,
-            IndividualUserAnswers.empty.copy(entityType = Some(selectedEntityType)),
-            None,
-            None,
-            List.empty
+            IndividualUserAnswers.empty.copy(entityType = Some(selectedEntityType))
           )
 
           inSequence {
