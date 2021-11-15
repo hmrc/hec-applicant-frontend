@@ -28,7 +28,7 @@
 
 @this(layout: Layout, govukErrorSummary: GovukErrorSummary, govukRadios: GovukRadios, govukButton: GovukButton, formWithCSRF: FormWithCSRF, hmrcNewTabLink: HmrcNewTabLink)
 
-@(form: Form[models.TaxSituation], back: Call, options: List[models.TaxSituation], taxDisplayYear:models.TaxYear)(implicit request:
+@(form: Form[models.TaxSituation], back: Call, options: List[models.TaxSituation], taxPeriodStartDate: String, taxPeriodEndDate: String)(implicit request:
 Request[_], messages: Messages, appConfig: AppConfig)
 @key = @{"taxSituation"}
 @title = @{messages(s"$key.title")}
@@ -41,8 +41,7 @@ Request[_], messages: Messages, appConfig: AppConfig)
         checked = form.data.values.toList.contains(index.toString)
     )
 }}
-@startYear = @{taxDisplayYear.startYear.toString}
-@endYear = @{s"${taxDisplayYear.startYear + 1}"}
+
 
 @layout(pageTitle = Some(title), hasErrors = form.hasErrors, backLocation = Some(back)) {
     @if(form.errors.nonEmpty) {
@@ -65,7 +64,7 @@ Request[_], messages: Messages, appConfig: AppConfig)
                         isPageHeading = true
                     ))
                 )),
-                hint = Some(Hint(content = Text(messages(s"$key.hint", startYear, endYear)))),
+                hint = Some(Hint(content = Text(messages(s"$key.hint", taxPeriodStartDate, taxPeriodEndDate)))),
                 idPrefix = Some(key),
                 name = key,
                 items = radioOptions,

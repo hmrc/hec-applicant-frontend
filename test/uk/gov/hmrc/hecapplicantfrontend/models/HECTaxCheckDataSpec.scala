@@ -52,7 +52,8 @@ class HECTaxCheckDataSpec extends AnyWordSpec with Matchers {
             Some(SAUTR("utr")),
             Some(TaxSituation.SA),
             Some(YesNoAnswer.Yes),
-            Some(SAStatusResponse(SAUTR("12345"), TaxYear(2021), ReturnFound))
+            Some(SAStatusResponse(SAUTR("12345"), TaxYear(2021), ReturnFound)),
+            TaxYear(2021)
           ),
           taxCheckStartDateTime,
           HECTaxCheckSource.Digital
@@ -81,7 +82,8 @@ class HECTaxCheckDataSpec extends AnyWordSpec with Matchers {
           |    "sautr": "12345",
           |    "taxYear": 2021,
           |    "status":"ReturnFound"
-          |    }
+          |    },
+          |    "relevantIncomeTaxYear": 2021
           | },
           | "taxCheckStartDateTime" : "2021-10-09T09:12:34+01:00[Europe/London]",
           | "type":"Individual",

@@ -282,7 +282,7 @@ class LicenceDetailsControllerSpec
           val updatedAnswers =
             IndividualUserAnswers.empty.copy(licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires))
           val session        =
-            IndividualHECSession(
+            Fixtures.individualHECSession(
               individualLoginData,
               IndividualRetrievedJourneyData.empty,
               answers,
@@ -334,7 +334,7 @@ class LicenceDetailsControllerSpec
             val updatedAnswers =
               IndividualUserAnswers.empty.copy(licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles))
             val session        =
-              IndividualHECSession(
+              Fixtures.individualHECSession(
                 individualLoginData,
                 IndividualRetrievedJourneyData.empty,
                 answers,
@@ -358,7 +358,7 @@ class LicenceDetailsControllerSpec
             val updatedAnswers =
               IndividualUserAnswers.empty.copy(licenceType = Some(LicenceType.ScrapMetalMobileCollector))
             val session        =
-              IndividualHECSession(
+              Fixtures.individualHECSession(
                 individualLoginData,
                 IndividualRetrievedJourneyData.empty,
                 answers,
@@ -381,7 +381,7 @@ class LicenceDetailsControllerSpec
             )
             val updatedAnswers =
               IndividualUserAnswers.empty.copy(licenceType = Some(LicenceType.ScrapMetalMobileCollector))
-            val session        = IndividualHECSession(
+            val session        = Fixtures.individualHECSession(
               individualLoginData,
               IndividualRetrievedJourneyData.empty,
               answers,
@@ -403,7 +403,7 @@ class LicenceDetailsControllerSpec
               Some(EntityType.Individual)
             )
             val session =
-              IndividualHECSession(
+              Fixtures.individualHECSession(
                 individualLoginData,
                 IndividualRetrievedJourneyData.empty,
                 answers,
@@ -668,7 +668,7 @@ class LicenceDetailsControllerSpec
           val updatedAnswers =
             IndividualUserAnswers.empty.copy(licenceTimeTrading = Some(LicenceTimeTrading.ZeroToTwoYears))
           val session        =
-            IndividualHECSession(
+            Fixtures.individualHECSession(
               individualLoginData,
               IndividualRetrievedJourneyData.empty,
               answers,
@@ -704,7 +704,7 @@ class LicenceDetailsControllerSpec
             val updatedAnswers =
               IndividualUserAnswers.empty.copy(licenceTimeTrading = Some(LicenceTimeTrading.FourToEightYears))
             val session        =
-              IndividualHECSession(
+              Fixtures.individualHECSession(
                 individualLoginData,
                 IndividualRetrievedJourneyData.empty,
                 answers,
@@ -747,7 +747,7 @@ class LicenceDetailsControllerSpec
               Some(EntityType.Company)
             )
             val session        =
-              IndividualHECSession(
+              Fixtures.individualHECSession(
                 individualLoginData,
                 IndividualRetrievedJourneyData.empty,
                 answers,
@@ -801,7 +801,7 @@ class LicenceDetailsControllerSpec
       "display the page" when {
 
         "the user has selected a licence type of 'operator of private hire vehicles'" in {
-          val session = IndividualHECSession(
+          val session = Fixtures.individualHECSession(
             individualLoginData,
             IndividualRetrievedJourneyData.empty,
             IndividualUserAnswers.empty.copy(
@@ -1055,7 +1055,7 @@ class LicenceDetailsControllerSpec
               Some(EntityType.Individual)
             )
             val session        =
-              IndividualHECSession(
+              Fixtures.individualHECSession(
                 individualLoginData,
                 IndividualRetrievedJourneyData.empty,
                 answers,

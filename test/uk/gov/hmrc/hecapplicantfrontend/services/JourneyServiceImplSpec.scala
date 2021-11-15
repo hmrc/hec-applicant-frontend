@@ -1588,7 +1588,14 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
                   saStatus = Some(SAStatusResponse(SAUTR("utr"), TaxYear(2020), SAStatus.ReturnFound))
                 )
                 val session     =
-                  IndividualHECSession(individualLoginData, journeyData, incompleteAnswers, None, None, List.empty)
+                  Fixtures.individualHECSession(
+                    loginData = individualLoginData,
+                    retrievedJourneyData = journeyData,
+                    userAnswers = incompleteAnswers,
+                    completedTaxCheck = None,
+                    taxCheckStartDateTime = None,
+                    unexpiredTaxChecks = List.empty
+                  )
 
                 implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
                 mockStoreSession(session.copy(userAnswers = completeAnswers))(Right(()))
@@ -1628,7 +1635,14 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
                   saStatus = Some(SAStatusResponse(SAUTR("utr"), TaxYear(2020), SAStatus.NoReturnFound))
                 )
                 val session     =
-                  IndividualHECSession(individualLoginData, journeyData, incompleteAnswers, None, None, List.empty)
+                  Fixtures.individualHECSession(
+                    individualLoginData,
+                    journeyData,
+                    incompleteAnswers,
+                    None,
+                    None,
+                    List.empty
+                  )
 
                 implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
                 mockStoreSession(session.copy(userAnswers = completeAnswers))(Right(()))
@@ -2142,7 +2156,7 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
             )
 
           "tax situation = SA & SA status = NoticeToFileIssued" in {
-            val session = IndividualHECSession(
+            val session = Fixtures.individualHECSession(
               individualWithSautr,
               journeyDataWithSaStatus,
               userAnswers(LicenceType.DriverOfTaxisAndPrivateHires, TaxSituation.SA, None),
@@ -2155,7 +2169,7 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
           }
 
           "tax situation = SAPAYE & SA status = NoticeToFileIssued" in {
-            val session = IndividualHECSession(
+            val session = Fixtures.individualHECSession(
               individualWithSautr,
               journeyDataWithSaStatus,
               userAnswers(LicenceType.DriverOfTaxisAndPrivateHires, TaxSituation.SAPAYE, None),
@@ -2168,7 +2182,7 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
           }
 
           "tax situation = PAYE" in {
-            val session = IndividualHECSession(
+            val session = Fixtures.individualHECSession(
               individualWithSautr,
               journeyDataWithSaStatus,
               userAnswers(
@@ -2185,7 +2199,7 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
           }
 
           "tax situation = Not Chargeable" in {
-            val session = IndividualHECSession(
+            val session = Fixtures.individualHECSession(
               individualWithSautr,
               journeyDataWithSaStatus,
               userAnswers(
@@ -2474,7 +2488,7 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
           val journeyData =
             IndividualRetrievedJourneyData(saStatus = Some(SAStatusResponse(SAUTR(""), TaxYear(2020), saStatus)))
 
-          IndividualHECSession(
+          Fixtures.individualHECSession(
             individualLoginData,
             journeyData,
             Fixtures.incompleteIndividualUserAnswers(
@@ -2505,7 +2519,7 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
           )
           implicit val request: RequestWithSessionData[_] =
             requestWithSessionData(
-              IndividualHECSession(
+              Fixtures.individualHECSession(
                 individualLoginData,
                 IndividualRetrievedJourneyData.empty,
                 completeAnswers,

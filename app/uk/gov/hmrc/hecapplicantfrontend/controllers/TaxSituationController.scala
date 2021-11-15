@@ -21,18 +21,19 @@ import cats.implicits._
 import com.google.inject.{Inject, Singleton}
 import play.api.data.Form
 import play.api.data.Forms.{mapping, of}
-import play.api.i18n.I18nSupport
+import play.api.i18n.{I18nSupport, Messages}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
-import uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.{getTaxYear, saTaxSituations, taxSituationForm, taxSituationOptions}
+import uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController._
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
 import uk.gov.hmrc.hecapplicantfrontend.models
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.IndividualLoginData
 import uk.gov.hmrc.hecapplicantfrontend.models.TaxSituation._
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
 import uk.gov.hmrc.hecapplicantfrontend.models.{Error, SAStatusResponse, TaxSituation, TaxYear}
+import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.{JourneyService, TaxCheckService}
-import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging, TimeProvider}
+import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging, TimeProvider, TimeUtils}
 import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
@@ -43,6 +44,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class TaxSituationController @Inject() (
   authAction: AuthAction,
   sessionDataAction: SessionDataAction,
+  sessionStore: SessionStore,
   journeyService: JourneyService,
   taxCheckService: TaxCheckService,
   mcc: MessagesControllerComponents,
@@ -53,90 +55,99 @@ class TaxSituationController @Inject() (
     with I18nSupport
     with Logging {
 
-  val taxSituation: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
+  val taxSituation: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     request.sessionData.mapAsIndividual { implicit individualSession =>
-      val licenceTypeOpt = individualSession.userAnswers.fold(_.licenceType, c => Some(c.licenceType))
-      licenceTypeOpt match {
-        case Some(licenceType) =>
-          val back         = journeyService.previous(routes.TaxSituationController.taxSituation())
-          val reportIncome = individualSession.userAnswers.fold(_.taxSituation, _.taxSituation.some)
-          val options      = taxSituationOptions(licenceType)
-          val form = {
-            val emptyForm = taxSituationForm(options)
-            reportIncome.fold(emptyForm)(emptyForm.fill)
-          }
+      request.sessionData.ensureLicenceTypePresent { licenceType =>
+        val back            = journeyService.previous(routes.TaxSituationController.taxSituation())
+        val taxSituationOpt = individualSession.userAnswers.fold(_.taxSituation, _.taxSituation.some)
+        val options         = taxSituationOptions(licenceType)
+        val form = {
+          val emptyForm = taxSituationForm(options)
+          taxSituationOpt.fold(emptyForm)(emptyForm.fill)
+        }
 
-          // Note: We should store the tax year calculated here in the session to be reused later to avoid
-          // the edge case where the tax year might change from one page to the next
-          Ok(taxSituationPage(form, back, options, getTaxYear(timeProvider.currentDate)))
-        case None              =>
-          sys.error("Couldn't find licence Type")
+        individualSession.relevantIncomeTaxYear match {
+          case Some(taxYear) =>
+            val (startDate, endDate) = getTaxPeriodStrings(taxYear)
+            Ok(taxSituationPage(form, back, options, startDate, endDate))
+          case None          =>
+            val taxYear              = getTaxYear(timeProvider.currentDate)
+            val (startDate, endDate) = getTaxPeriodStrings(taxYear)
+            val updatedSession       = individualSession.copy(relevantIncomeTaxYear = Some(taxYear))
+            sessionStore
+              .store(updatedSession)
+              .fold(
+                _.doThrow("Could not update session with tax year"),
+                _ => Ok(taxSituationPage(form, back, options, startDate, endDate))
+              )
+        }
+
       }
     }
   }
 
   val taxSituationSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     request.sessionData.mapAsIndividual { individualSession =>
-      val taxYear = getTaxYear(timeProvider.currentDate)
+      request.sessionData.ensureLicenceTypePresent { licenceType =>
+        val taxYear                                                = individualSession.relevantIncomeTaxYear.getOrElse(getTaxYear(timeProvider.currentDate))
+        def fetchSAStatus(
+          individualLoginData: IndividualLoginData,
+          taxSituation: TaxSituation
+        ): EitherT[Future, models.Error, Option[SAStatusResponse]] =
+          if (saTaxSituations.contains(taxSituation)) {
+            individualLoginData.sautr
+              .traverse[EitherT[Future, Error, *], SAStatusResponse](taxCheckService.getSAStatus(_, taxYear))
+          } else {
+            EitherT.pure[Future, models.Error](None)
+          }
 
-      def fetchSAStatus(
-        individualLoginData: IndividualLoginData,
-        taxSituation: TaxSituation
-      ): EitherT[Future, models.Error, Option[SAStatusResponse]] =
-        if (saTaxSituations.contains(taxSituation)) {
-          individualLoginData.sautr
-            .traverse[EitherT[Future, Error, *], SAStatusResponse](taxCheckService.getSAStatus(_, taxYear))
-        } else {
-          EitherT.pure[Future, models.Error](None)
+        def handleValidTaxSituation(taxSituation: TaxSituation): Future[Result] = {
+          val result = for {
+            maybeSaStatus <- fetchSAStatus(individualSession.loginData, taxSituation)
+
+            updatedRetrievedData = individualSession.retrievedJourneyData.copy(saStatus = maybeSaStatus)
+            // wipe the SA income declared answer since it is dependent on the tax situation answer
+            updatedAnswers       = individualSession.userAnswers
+                                     .unset(_.taxSituation)
+                                     .unset(_.saIncomeDeclared)
+                                     .copy(taxSituation = Some(taxSituation))
+            updatedRequest       = individualSession.copy(
+                                     userAnswers = updatedAnswers,
+                                     retrievedJourneyData = updatedRetrievedData
+                                   )
+
+            next <- journeyService.updateAndNext(routes.TaxSituationController.taxSituation(), updatedRequest)
+          } yield next
+
+          result.fold(
+            _.doThrow("Fetch SA status failed or could not update session and proceed"),
+            Redirect
+          )
         }
 
-      def handleValidTaxSituation(taxSituation: TaxSituation): Future[Result] = {
-        val result = for {
-          maybeSaStatus <- fetchSAStatus(individualSession.loginData, taxSituation)
-
-          updatedRetrievedData = individualSession.retrievedJourneyData.copy(saStatus = maybeSaStatus)
-          // wipe the SA income declared answer since it is dependent on the tax situation answer
-          updatedAnswers       = individualSession.userAnswers
-                                   .unset(_.taxSituation)
-                                   .unset(_.saIncomeDeclared)
-                                   .copy(taxSituation = Some(taxSituation))
-          updatedRequest       = individualSession.copy(
-                                   userAnswers = updatedAnswers,
-                                   retrievedJourneyData = updatedRetrievedData
-                                 )
-
-          next <- journeyService.updateAndNext(routes.TaxSituationController.taxSituation(), updatedRequest)
-        } yield next
-
-        result.fold(
-          _.doThrow("Fetch SA status failed or could not update session and proceed"),
-          Redirect
-        )
+        val options = taxSituationOptions(licenceType)
+        taxSituationForm(options)
+          .bindFromRequest()
+          .fold(
+            formWithErrors => {
+              val (startDate, endDate) = getTaxPeriodStrings(taxYear)
+              Ok(
+                taxSituationPage(
+                  formWithErrors,
+                  journeyService.previous(routes.TaxSituationController.taxSituation()),
+                  options,
+                  startDate,
+                  endDate
+                )
+              )
+            },
+            handleValidTaxSituation
+          )
       }
 
-      val licenceTypeOpt = individualSession.userAnswers.fold(_.licenceType, c => Some(c.licenceType))
-      licenceTypeOpt match {
-        case Some(licenceType) =>
-          val options = taxSituationOptions(licenceType)
-          taxSituationForm(options)
-            .bindFromRequest()
-            .fold(
-              formWithErrors =>
-                Ok(
-                  taxSituationPage(
-                    formWithErrors,
-                    journeyService.previous(routes.TaxSituationController.taxSituation()),
-                    options,
-                    taxYear
-                  )
-                ),
-              handleValidTaxSituation
-            )
-        case None              =>
-          sys.error("Couldn't find licence type")
-      }
     }
   }
+
 }
 
 object TaxSituationController {
@@ -172,6 +183,12 @@ object TaxSituationController {
     val sixMonthEarlierDate     = currentDate.minusMonths(6L)
     if (sixMonthEarlierDate.isBefore(currentYearTaxStartDate)) TaxYear(currentYear - 2)
     else TaxYear(currentYear - 1)
+  }
+
+  def getTaxPeriodStrings(taxYear: TaxYear)(implicit messages: Messages): (String, String) = {
+    val start = LocalDate.of(taxYear.startYear, 4, 6)
+    val end   = LocalDate.of(taxYear.startYear + 1, 4, 5)
+    TimeUtils.govDisplayFormat(start) -> TimeUtils.govDisplayFormat(end)
   }
 
 }

@@ -137,7 +137,7 @@ taxSituation.NotChargeable.hint = For example, you may have had a licence but no
 taxSituation.link = Find out who needs to register for Self Assessment (open in new window)
 taxSituation.error.required = Select your tax status
 taxSituation.error.invalid = Select your tax status
-taxSituation.hint = This is for the tax year 6 April {0} to 5 April {1}.
+taxSituation.hint = This is for the tax year {0} to {1}.
 
 # Entity Type
 entityType.title=Who are you doing a tax check for?
