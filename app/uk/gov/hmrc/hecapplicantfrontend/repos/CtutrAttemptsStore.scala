@@ -19,9 +19,7 @@ package uk.gov.hmrc.hecapplicantfrontend.repos
 import cats.data.{EitherT, OptionT}
 import cats.implicits.toBifunctorOps
 import com.google.inject.{ImplementedBy, Inject, Singleton}
-import org.mongodb.scala.model.IndexModel
 import play.api.Configuration
-import play.api.mvc.Request
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, GGCredId}
 import uk.gov.hmrc.hecapplicantfrontend.models.{CtutrAttempts, Error}
 import uk.gov.hmrc.mongo.cache.{CacheIdType, DataKey, MongoCacheRepository}
@@ -34,13 +32,11 @@ import scala.concurrent.{ExecutionContext, Future}
 @ImplementedBy(classOf[CtutrAttemptsStoreImpl])
 trait CtutrAttemptsStore {
 
-  def get(crn: CRN, ggCredId: GGCredId)(implicit request: Request[_]): EitherT[Future, Error, Option[CtutrAttempts]]
+  def get(crn: CRN, ggCredId: GGCredId): EitherT[Future, Error, Option[CtutrAttempts]]
 
-  def store(block: CtutrAttempts)(implicit
-    request: Request[_]
-  ): EitherT[Future, Error, Unit]
+  def store(ctutrAttempts: CtutrAttempts): EitherT[Future, Error, Unit]
 
-  def delete(crn: CRN, ggCredId: GGCredId)(implicit request: Request[_]): EitherT[Future, Error, Unit]
+  def delete(crn: CRN, ggCredId: GGCredId): EitherT[Future, Error, Unit]
 
 }
 
@@ -61,18 +57,17 @@ class CtutrAttemptsStoreImpl @Inject() (
 
   val dataKey: String = "hec-ctutr-attempts"
 
-  def mongoIndexes: Seq[IndexModel] = Seq()
-
   private def id(crn: CRN, ggCredId: GGCredId) = s"${crn.value}-${ggCredId.value}"
 
-  def get(crn: CRN, ggCredId: GGCredId)(implicit request: Request[_]): EitherT[Future, Error, Option[CtutrAttempts]] =
+  def get(crn: CRN, ggCredId: GGCredId): EitherT[Future, Error, Option[CtutrAttempts]] =
     EitherT(
       preservingMdc {
         findById(id(crn, ggCredId))
           .map { maybeCache =>
             val response: OptionT[Either[Error, *], CtutrAttempts] = for {
               cache ← OptionT.fromOption[Either[Error, *]](maybeCache)
-              //even if there is no data , cache returns with -> {"id" : "code1", data : {}}
+              // TODO rewrite
+              // even if there is no data , cache returns with -> {"id" : "code1", data : {}}
               //so added a logic if the json is empty, then return None
               // but if there is, then proceed to validate json
               cacheLength = cache.data.keys.size
@@ -97,14 +92,14 @@ class CtutrAttemptsStoreImpl @Inject() (
 
   def store(
     ctutrAttempts: CtutrAttempts
-  )(implicit request: Request[_]): EitherT[Future, Error, Unit] =
+  ): EitherT[Future, Error, Unit] =
     EitherT(preservingMdc {
       put[CtutrAttempts](id(ctutrAttempts.crn, ctutrAttempts.ggCredId))(DataKey(dataKey), ctutrAttempts)
         .map(_ => Right(()))
         .recover { case e => Left(Error(e)) }
     })
 
-  def delete(crn: CRN, ggCredId: GGCredId)(implicit request: Request[_]): EitherT[Future, Error, Unit] =
+  def delete(crn: CRN, ggCredId: GGCredId): EitherT[Future, Error, Unit] =
     EitherT(preservingMdc {
       deleteEntity(id(crn, ggCredId))
         .map(_ => Right(()))

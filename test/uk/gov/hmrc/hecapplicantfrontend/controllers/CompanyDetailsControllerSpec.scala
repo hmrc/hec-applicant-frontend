@@ -25,7 +25,6 @@ import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.RequestWithSessionData
 import uk.gov.hmrc.hecapplicantfrontend.models.CompanyUserAnswers.IncompleteCompanyUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.CompanyHECSession
 import uk.gov.hmrc.hecapplicantfrontend.models._
@@ -82,14 +81,14 @@ class CompanyDetailsControllerSpec
     result: Either[Error, CtutrAttempts]
   ) =
     (mockCtutrAttemptsService
-      .createOrIncrementAttempts(_: CRN, _: GGCredId)(_: RequestWithSessionData[_]))
-      .expects(crn, ggCredId, *)
+      .createOrIncrementAttempts(_: CRN, _: GGCredId))
+      .expects(crn, ggCredId)
       .returning(EitherT.fromEither[Future](result))
 
   def mockCtutrAttemptsServiceDelete(crn: CRN, ggCredId: GGCredId)(result: Either[Error, Unit]) =
     (mockCtutrAttemptsService
-      .delete(_: CRN, _: GGCredId)(_: RequestWithSessionData[_]))
-      .expects(crn, ggCredId, *)
+      .delete(_: CRN, _: GGCredId))
+      .expects(crn, ggCredId)
       .returning(EitherT.fromEither[Future](result))
 
   val controller                          = instanceOf[CompanyDetailsController]

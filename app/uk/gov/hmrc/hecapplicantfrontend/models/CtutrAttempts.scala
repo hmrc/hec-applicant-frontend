@@ -21,7 +21,6 @@ import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, GGCredId}
 
 import java.time.ZonedDateTime
 
-// TODO find a better name
 final case class CtutrAttempts(
   crn: CRN,
   ggCredId: GGCredId,

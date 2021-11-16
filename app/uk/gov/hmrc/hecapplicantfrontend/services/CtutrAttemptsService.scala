@@ -18,7 +18,6 @@ package uk.gov.hmrc.hecapplicantfrontend.services
 
 import cats.data.EitherT
 import com.google.inject.{ImplementedBy, Inject, Singleton}
-import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.RequestWithSessionData
 import uk.gov.hmrc.hecapplicantfrontend.models
 import uk.gov.hmrc.hecapplicantfrontend.models.CtutrAttempts
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, GGCredId}
@@ -30,13 +29,9 @@ import scala.concurrent.{ExecutionContext, Future}
 @ImplementedBy(classOf[CtutrAttemptsServiceImpl])
 trait CtutrAttemptsService {
 
-  def createOrIncrementAttempts(crn: CRN, ggCredId: GGCredId)(implicit
-    request: RequestWithSessionData[_]
-  ): EitherT[Future, models.Error, CtutrAttempts]
+  def createOrIncrementAttempts(crn: CRN, ggCredId: GGCredId): EitherT[Future, models.Error, CtutrAttempts]
 
-  def delete(crn: CRN, ggCredId: GGCredId)(implicit
-    request: RequestWithSessionData[_]
-  ): EitherT[Future, models.Error, Unit]
+  def delete(crn: CRN, ggCredId: GGCredId): EitherT[Future, models.Error, Unit]
 }
 
 @Singleton
@@ -54,9 +49,7 @@ class CtutrAttemptsServiceImpl @Inject() (
     * Store the new/updated data back into the database
     * @return The updated CTUTR attempts
     */
-  def createOrIncrementAttempts(crn: CRN, ggCredId: GGCredId)(implicit
-    request: RequestWithSessionData[_]
-  ): EitherT[Future, models.Error, CtutrAttempts] =
+  def createOrIncrementAttempts(crn: CRN, ggCredId: GGCredId): EitherT[Future, models.Error, CtutrAttempts] =
     for {
       attemptsOpt    <- ctutrAttemptsStore.get(crn, ggCredId)
       updatedAttempts = attemptsOpt match {
@@ -69,8 +62,7 @@ class CtutrAttemptsServiceImpl @Inject() (
       _              <- ctutrAttemptsStore.store(updatedAttempts)
     } yield updatedAttempts
 
-  def delete(crn: CRN, ggCredId: GGCredId)(implicit
-    request: RequestWithSessionData[_]
-  ): EitherT[Future, models.Error, Unit] = ctutrAttemptsStore.delete(crn, ggCredId)
+  def delete(crn: CRN, ggCredId: GGCredId): EitherT[Future, models.Error, Unit] =
+    ctutrAttemptsStore.delete(crn, ggCredId)
 
 }
