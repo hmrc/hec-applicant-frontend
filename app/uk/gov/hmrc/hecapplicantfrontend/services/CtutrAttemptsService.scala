@@ -30,9 +30,13 @@ import scala.concurrent.{ExecutionContext, Future}
 @ImplementedBy(classOf[CtutrAttemptsServiceImpl])
 trait CtutrAttemptsService {
 
-  def fetchAndUpdateFor(crn: CRN, ggCredId: GGCredId)(implicit
+  def createOrIncrementAttempts(crn: CRN, ggCredId: GGCredId)(implicit
     request: RequestWithSessionData[_]
   ): EitherT[Future, models.Error, CtutrAttempts]
+
+  def delete(crn: CRN, ggCredId: GGCredId)(implicit
+    request: RequestWithSessionData[_]
+  ): EitherT[Future, models.Error, Unit]
 }
 
 @Singleton
@@ -50,7 +54,7 @@ class CtutrAttemptsServiceImpl @Inject() (
     * Store the new/updated data back into the database
     * @return The updated CTUTR attempts
     */
-  def fetchAndUpdateFor(crn: CRN, ggCredId: GGCredId)(implicit
+  def createOrIncrementAttempts(crn: CRN, ggCredId: GGCredId)(implicit
     request: RequestWithSessionData[_]
   ): EitherT[Future, models.Error, CtutrAttempts] =
     for {
@@ -64,5 +68,9 @@ class CtutrAttemptsServiceImpl @Inject() (
                         }
       _              <- ctutrAttemptsStore.store(updatedAttempts)
     } yield updatedAttempts
+
+  def delete(crn: CRN, ggCredId: GGCredId)(implicit
+    request: RequestWithSessionData[_]
+  ): EitherT[Future, models.Error, Unit] = ctutrAttemptsStore.delete(crn, ggCredId)
 
 }

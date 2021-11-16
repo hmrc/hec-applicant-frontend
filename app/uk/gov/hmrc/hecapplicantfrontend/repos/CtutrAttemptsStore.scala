@@ -40,6 +40,8 @@ trait CtutrAttemptsStore {
     request: Request[_]
   ): EitherT[Future, Error, Unit]
 
+  def delete(crn: CRN, ggCredId: GGCredId)(implicit request: Request[_]): EitherT[Future, Error, Unit]
+
 }
 
 @Singleton
@@ -94,12 +96,18 @@ class CtutrAttemptsStoreImpl @Inject() (
     )
 
   def store(
-    block: CtutrAttempts
+    ctutrAttempts: CtutrAttempts
   )(implicit request: Request[_]): EitherT[Future, Error, Unit] =
     EitherT(preservingMdc {
-      put[CtutrAttempts](id(block.crn, block.ggCredId))(DataKey(dataKey), block)
+      put[CtutrAttempts](id(ctutrAttempts.crn, ctutrAttempts.ggCredId))(DataKey(dataKey), ctutrAttempts)
         .map(_ => Right(()))
         .recover { case e => Left(Error(e)) }
     })
 
+  def delete(crn: CRN, ggCredId: GGCredId)(implicit request: Request[_]): EitherT[Future, Error, Unit] =
+    EitherT(preservingMdc {
+      deleteEntity(id(crn, ggCredId))
+        .map(_ => Right(()))
+        .recover { case e => Left(Error(e)) }
+    })
 }

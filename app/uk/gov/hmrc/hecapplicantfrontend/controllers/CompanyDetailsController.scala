@@ -327,8 +327,12 @@ class CompanyDetailsController @Inject() (
               .copy(ctutr = Some(ctutr))
             val (start, end)   = CompanyDetailsController.calculateLookBackPeriod(timeProvider.currentDate)
 
+            val ctutrAttemptsDeleteFut = ctutrAttemptsService.delete(crn, companySession.loginData.ggCredId)
+            val ctStatusFut            = taxCheckService.getCTStatus(ctutr.strippedCtutr, start, end)
+
             val result = for {
-              ctStatus            <- taxCheckService.getCTStatus(ctutr.strippedCtutr, start, end)
+              _                   <- ctutrAttemptsDeleteFut
+              ctStatus            <- ctStatusFut
               updatedRetrievedData = companySession.retrievedJourneyData.copy(ctStatus = ctStatus)
               next                <-
                 journeyService.updateAndNext(
@@ -364,7 +368,7 @@ class CompanyDetailsController @Inject() (
             def incrementAttemptsAndDisplayFormError = {
 
               val result = for {
-                ctutrAttempts <- ctutrAttemptsService.fetchAndUpdateFor(crn, companySession.loginData.ggCredId)
+                ctutrAttempts <- ctutrAttemptsService.createOrIncrementAttempts(crn, companySession.loginData.ggCredId)
                 updatedAnswers = companySession.userAnswers
                                    .unset(_.ctutr)
                                    .unset(_.ctIncomeDeclared)
