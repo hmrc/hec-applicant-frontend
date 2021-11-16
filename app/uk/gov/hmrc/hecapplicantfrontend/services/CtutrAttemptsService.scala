@@ -64,7 +64,7 @@ class CtutrAttemptsServiceImpl @Inject() (
                             ctutrAttempts
                               .copy(attempts = ctutrAttempts.attempts + 1, lastUpdated = timeProvider.now)
                           case None                =>
-                            CtutrAttempts(crn, ggCredId, 0, timeProvider.now)
+                            CtutrAttempts(crn, ggCredId, 1, timeProvider.now)
                         }
       _              <- ctutrAttemptsStore.store(updatedAttempts)
     } yield updatedAttempts
