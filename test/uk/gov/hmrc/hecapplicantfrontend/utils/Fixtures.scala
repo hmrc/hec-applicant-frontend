@@ -134,7 +134,8 @@ object Fixtures {
     userAnswers: IndividualUserAnswers = incompleteIndividualUserAnswers(),
     completedTaxCheck: Option[HECTaxCheck] = None,
     taxCheckStartDateTime: Option[ZonedDateTime] = None,
-    unexpiredTaxChecks: List[TaxCheckListItem] = List.empty
+    unexpiredTaxChecks: List[TaxCheckListItem] = List.empty,
+    relevantIncomeTaxYear: Option[TaxYear] = None
   ): IndividualHECSession =
     IndividualHECSession(
       loginData = loginData,
@@ -142,7 +143,8 @@ object Fixtures {
       userAnswers = userAnswers,
       completedTaxCheck = completedTaxCheck,
       taxCheckStartDateTime = taxCheckStartDateTime,
-      unexpiredTaxChecks = unexpiredTaxChecks
+      unexpiredTaxChecks = unexpiredTaxChecks,
+      relevantIncomeTaxYear = relevantIncomeTaxYear
     )
 
   def companyLoginData(

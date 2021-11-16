@@ -222,6 +222,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
                 ),
                 _,
                 _,
+                _,
                 _
               ) if allIndividualAnswersComplete(individualAnswers, individualSession) =>
             val completeAnswers =

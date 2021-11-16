@@ -1588,7 +1588,11 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
                   saStatus = Some(SAStatusResponse(SAUTR("utr"), TaxYear(2020), SAStatus.ReturnFound))
                 )
                 val session     =
-                  IndividualHECSession(individualLoginData, journeyData, incompleteAnswers, None, None, List.empty)
+                  Fixtures.individualHECSession(
+                    loginData = individualLoginData,
+                    retrievedJourneyData = journeyData,
+                    userAnswers = incompleteAnswers
+                  )
 
                 implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
                 mockStoreSession(session.copy(userAnswers = completeAnswers))(Right(()))
@@ -1628,7 +1632,11 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
                   saStatus = Some(SAStatusResponse(SAUTR("utr"), TaxYear(2020), SAStatus.NoReturnFound))
                 )
                 val session     =
-                  IndividualHECSession(individualLoginData, journeyData, incompleteAnswers, None, None, List.empty)
+                  Fixtures.individualHECSession(
+                    individualLoginData,
+                    journeyData,
+                    incompleteAnswers
+                  )
 
                 implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
                 mockStoreSession(session.copy(userAnswers = completeAnswers))(Right(()))
@@ -2142,60 +2150,48 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
             )
 
           "tax situation = SA & SA status = NoticeToFileIssued" in {
-            val session = IndividualHECSession(
+            val session = Fixtures.individualHECSession(
               individualWithSautr,
               journeyDataWithSaStatus,
-              userAnswers(LicenceType.DriverOfTaxisAndPrivateHires, TaxSituation.SA, None),
-              None,
-              None,
-              List.empty
+              userAnswers(LicenceType.DriverOfTaxisAndPrivateHires, TaxSituation.SA, None)
             )
 
             testPrevPageIsTaxSituation(session)
           }
 
           "tax situation = SAPAYE & SA status = NoticeToFileIssued" in {
-            val session = IndividualHECSession(
+            val session = Fixtures.individualHECSession(
               individualWithSautr,
               journeyDataWithSaStatus,
-              userAnswers(LicenceType.DriverOfTaxisAndPrivateHires, TaxSituation.SAPAYE, None),
-              None,
-              None,
-              List.empty
+              userAnswers(LicenceType.DriverOfTaxisAndPrivateHires, TaxSituation.SAPAYE, None)
             )
 
             testPrevPageIsTaxSituation(session)
           }
 
           "tax situation = PAYE" in {
-            val session = IndividualHECSession(
+            val session = Fixtures.individualHECSession(
               individualWithSautr,
               journeyDataWithSaStatus,
               userAnswers(
                 LicenceType.DriverOfTaxisAndPrivateHires,
                 TaxSituation.PAYE,
                 None
-              ),
-              None,
-              None,
-              List.empty
+              )
             )
 
             testPrevPageIsTaxSituation(session)
           }
 
           "tax situation = Not Chargeable" in {
-            val session = IndividualHECSession(
+            val session = Fixtures.individualHECSession(
               individualWithSautr,
               journeyDataWithSaStatus,
               userAnswers(
                 LicenceType.DriverOfTaxisAndPrivateHires,
                 TaxSituation.NotChargeable,
                 None
-              ),
-              None,
-              None,
-              List.empty
+              )
             )
 
             testPrevPageIsTaxSituation(session)
@@ -2474,7 +2470,7 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
           val journeyData =
             IndividualRetrievedJourneyData(saStatus = Some(SAStatusResponse(SAUTR(""), TaxYear(2020), saStatus)))
 
-          IndividualHECSession(
+          Fixtures.individualHECSession(
             individualLoginData,
             journeyData,
             Fixtures.incompleteIndividualUserAnswers(
@@ -2483,10 +2479,7 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
               Some(LicenceValidityPeriod.UpToOneYear),
               Some(taxSituation),
               Some(YesNoAnswer.Yes)
-            ),
-            None,
-            None,
-            List.empty
+            )
           )
         }
 
@@ -2505,13 +2498,10 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
           )
           implicit val request: RequestWithSessionData[_] =
             requestWithSessionData(
-              IndividualHECSession(
+              Fixtures.individualHECSession(
                 individualLoginData,
                 IndividualRetrievedJourneyData.empty,
-                completeAnswers,
-                None,
-                None,
-                List.empty
+                completeAnswers
               )
             )
 

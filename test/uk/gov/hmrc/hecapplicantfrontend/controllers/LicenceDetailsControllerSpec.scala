@@ -282,13 +282,11 @@ class LicenceDetailsControllerSpec
           val updatedAnswers =
             IndividualUserAnswers.empty.copy(licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires))
           val session        =
-            IndividualHECSession(
+            Fixtures.individualHECSession(
               individualLoginData,
               IndividualRetrievedJourneyData.empty,
               answers,
-              None,
-              Some(now),
-              List.empty
+              taxCheckStartDateTime = Some(now)
             )
           val updatedSession = session.copy(userAnswers = updatedAnswers)
 
@@ -334,13 +332,11 @@ class LicenceDetailsControllerSpec
             val updatedAnswers =
               IndividualUserAnswers.empty.copy(licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles))
             val session        =
-              IndividualHECSession(
+              Fixtures.individualHECSession(
                 individualLoginData,
                 IndividualRetrievedJourneyData.empty,
                 answers,
-                None,
-                Some(now),
-                List.empty
+                taxCheckStartDateTime = Some(now)
               )
             val updatedSession = session.copy(userAnswers = updatedAnswers)
             nextpageRedirectTest(session, updatedSession, "1", None)
@@ -358,13 +354,10 @@ class LicenceDetailsControllerSpec
             val updatedAnswers =
               IndividualUserAnswers.empty.copy(licenceType = Some(LicenceType.ScrapMetalMobileCollector))
             val session        =
-              IndividualHECSession(
+              Fixtures.individualHECSession(
                 individualLoginData,
                 IndividualRetrievedJourneyData.empty,
-                answers,
-                None,
-                None,
-                List.empty
+                answers
               )
             val updatedSession = session.copy(userAnswers = updatedAnswers, taxCheckStartDateTime = Some(now))
             nextpageRedirectTest(session, updatedSession, "2", Some(() => mockTimeProviderNow(now)))
@@ -381,13 +374,11 @@ class LicenceDetailsControllerSpec
             )
             val updatedAnswers =
               IndividualUserAnswers.empty.copy(licenceType = Some(LicenceType.ScrapMetalMobileCollector))
-            val session        = IndividualHECSession(
+            val session        = Fixtures.individualHECSession(
               individualLoginData,
               IndividualRetrievedJourneyData.empty,
               answers,
-              None,
-              Some(now),
-              List.empty
+              taxCheckStartDateTime = Some(now)
             )
             val updatedSession = session.copy(userAnswers = updatedAnswers, taxCheckStartDateTime = Some(now))
             nextpageRedirectTest(session, updatedSession, "2", None)
@@ -403,13 +394,11 @@ class LicenceDetailsControllerSpec
               Some(EntityType.Individual)
             )
             val session =
-              IndividualHECSession(
+              Fixtures.individualHECSession(
                 individualLoginData,
                 IndividualRetrievedJourneyData.empty,
                 answers,
-                None,
-                Some(now),
-                List.empty
+                taxCheckStartDateTime = Some(now)
               )
 
             nextpageRedirectTest(session, session, "0", None)
@@ -668,13 +657,10 @@ class LicenceDetailsControllerSpec
           val updatedAnswers =
             IndividualUserAnswers.empty.copy(licenceTimeTrading = Some(LicenceTimeTrading.ZeroToTwoYears))
           val session        =
-            IndividualHECSession(
+            Fixtures.individualHECSession(
               individualLoginData,
               IndividualRetrievedJourneyData.empty,
-              answers,
-              None,
-              None,
-              List.empty
+              answers
             )
           val updatedSession = session.copy(userAnswers = updatedAnswers)
 
@@ -704,13 +690,10 @@ class LicenceDetailsControllerSpec
             val updatedAnswers =
               IndividualUserAnswers.empty.copy(licenceTimeTrading = Some(LicenceTimeTrading.FourToEightYears))
             val session        =
-              IndividualHECSession(
+              Fixtures.individualHECSession(
                 individualLoginData,
                 IndividualRetrievedJourneyData.empty,
-                answers,
-                None,
-                None,
-                List.empty
+                answers
               )
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 
@@ -747,13 +730,10 @@ class LicenceDetailsControllerSpec
               Some(EntityType.Company)
             )
             val session        =
-              IndividualHECSession(
+              Fixtures.individualHECSession(
                 individualLoginData,
                 IndividualRetrievedJourneyData.empty,
-                answers,
-                None,
-                None,
-                List.empty
+                answers
               )
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 
@@ -801,15 +781,12 @@ class LicenceDetailsControllerSpec
       "display the page" when {
 
         "the user has selected a licence type of 'operator of private hire vehicles'" in {
-          val session = IndividualHECSession(
+          val session = Fixtures.individualHECSession(
             individualLoginData,
             IndividualRetrievedJourneyData.empty,
             IndividualUserAnswers.empty.copy(
               licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles)
-            ),
-            None,
-            None,
-            List.empty
+            )
           )
 
           inSequence {
@@ -1055,13 +1032,10 @@ class LicenceDetailsControllerSpec
               Some(EntityType.Individual)
             )
             val session        =
-              IndividualHECSession(
+              Fixtures.individualHECSession(
                 individualLoginData,
                 IndividualRetrievedJourneyData.empty,
-                answers,
-                None,
-                None,
-                List.empty
+                answers
               )
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 
