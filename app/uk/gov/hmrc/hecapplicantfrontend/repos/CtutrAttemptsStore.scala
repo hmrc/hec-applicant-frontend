@@ -52,7 +52,7 @@ class CtutrAttemptsStoreImpl @Inject() (
   ec: ExecutionContext
 ) extends MongoCacheRepository(
       mongoComponent = mongo,
-      collectionName = "sessions",
+      collectionName = "ctutrAttempts",
       ttl = configuration.get[FiniteDuration]("ctutr-attempts-store-expiry-time"),
       timestampSupport = new CurrentTimestampSupport(),
       cacheIdType = CacheIdType.SimpleCacheId // Here, CacheId to be represented with `String`
