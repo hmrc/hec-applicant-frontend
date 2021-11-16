@@ -33,7 +33,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models._
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR}
 import uk.gov.hmrc.hecapplicantfrontend.models.views.YesNoOption
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
-import uk.gov.hmrc.hecapplicantfrontend.services.{JourneyService, TaxCheckService}
+import uk.gov.hmrc.hecapplicantfrontend.services.{CtutrAttemptsService, JourneyService, TaxCheckService}
 import uk.gov.hmrc.hecapplicantfrontend.util.StringUtils.StringOps
 import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging, TimeProvider, TimeUtils}
 import uk.gov.hmrc.hecapplicantfrontend.views.html
@@ -59,6 +59,7 @@ class CompanyDetailsController @Inject() (
   dontHaveCtutrPage: html.DontHaveCtutr,
   tooManyCTUTRAttemptsPage: html.TooManyCtutrAttempts,
   sessionStore: SessionStore,
+  ctutrAttemptsService: CtutrAttemptsService,
   mcc: MessagesControllerComponents
 )(implicit appConfig: AppConfig, ec: ExecutionContext)
     extends FrontendController(mcc)
@@ -307,74 +308,77 @@ class CompanyDetailsController @Inject() (
   val enterCtutrSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     request.sessionData mapAsCompany { companySession =>
       ensureCompanyDataHasDesCtutr(companySession) { desCtutr =>
-        def maxCtutrAnswerAttemptsReached(companySession: CompanyHECSession) =
-          companySession.ctutrAnswerAttempts >= appConfig.maxCtutrAnswerAttempts
+        ensureUserAnswersHasCRN(companySession) { crn =>
+          def maxCtutrAnswerAttemptsReached(companySession: CompanyHECSession) =
+            companySession.ctutrAnswerAttempts >= appConfig.maxCtutrAnswerAttempts
 
-        def goToNextPage(updatedSession: CompanyHECSession): Future[Result] =
-          updateAndNextJourneyData(
-            routes.CompanyDetailsController.enterCtutr(),
-            updatedSession
-          )
+          def goToNextPage(updatedSession: CompanyHECSession): Future[Result] =
+            updateAndNextJourneyData(
+              routes.CompanyDetailsController.enterCtutr(),
+              updatedSession
+            )
 
-        def handleValidAnswer(ctutr: CTUTR) = {
-          val updatedAnswers = companySession.userAnswers
-            .unset(_.ctutr)
-            .unset(_.ctIncomeDeclared)
-            .unset(_.recentlyStartedTrading)
-            .unset(_.chargeableForCT)
-            .copy(ctutr = Some(ctutr))
-          val (start, end)   = CompanyDetailsController.calculateLookBackPeriod(timeProvider.currentDate)
-
-          val result = for {
-            ctStatus            <- taxCheckService.getCTStatus(ctutr.strippedCtutr, start, end)
-            updatedRetrievedData = companySession.retrievedJourneyData.copy(ctStatus = ctStatus)
-            next                <-
-              journeyService.updateAndNext(
-                routes.CompanyDetailsController.enterCtutr(),
-                companySession.copy(
-                  userAnswers = updatedAnswers,
-                  retrievedJourneyData = updatedRetrievedData,
-                  ctutrAnswerAttempts = 0
-                )
-              )
-          } yield next
-
-          result.fold(
-            _.doThrow("Could not update session and proceed"),
-            Redirect
-          )
-        }
-
-        def ok(formWithErrors: Form[CTUTR]) = Ok(
-          enterCtutrPage(
-            formWithErrors,
-            journeyService.previous(routes.CompanyDetailsController.enterCtutr())
-          )
-        )
-
-        def handleFormWithErrors(formWithErrors: Form[CTUTR]): Future[Result] = {
-
-          val ctutrsNotMatched = formWithErrors.errors.exists(_.message === "error.ctutrsDoNotMatch")
-          val ctutrOpt         = formWithErrors.value
-
-          def displayFormError: Future[Result] = Future.successful(ok(formWithErrors))
-
-          def incrementAttemptsAndDisplayFormError = {
-
+          def handleValidAnswer(ctutr: CTUTR) = {
             val updatedAnswers = companySession.userAnswers
               .unset(_.ctutr)
               .unset(_.ctIncomeDeclared)
               .unset(_.recentlyStartedTrading)
               .unset(_.chargeableForCT)
-              .copy(ctutr = ctutrOpt)
-            val updatedSession = companySession
-              .copy(ctutrAnswerAttempts = companySession.ctutrAnswerAttempts + 1, userAnswers = updatedAnswers)
+              .copy(ctutr = Some(ctutr))
+            val (start, end)   = CompanyDetailsController.calculateLookBackPeriod(timeProvider.currentDate)
 
-            sessionStore
-              .store(updatedSession)
-              .foldF(
+            val result = for {
+              ctStatus            <- taxCheckService.getCTStatus(ctutr.strippedCtutr, start, end)
+              updatedRetrievedData = companySession.retrievedJourneyData.copy(ctStatus = ctStatus)
+              next                <-
+                journeyService.updateAndNext(
+                  routes.CompanyDetailsController.enterCtutr(),
+                  companySession.copy(
+                    userAnswers = updatedAnswers,
+                    retrievedJourneyData = updatedRetrievedData,
+                    ctutrAnswerAttempts = 0
+                  )
+                )
+            } yield next
+
+            result.fold(
+              _.doThrow("Could not update session and proceed"),
+              Redirect
+            )
+          }
+
+          def ok(formWithErrors: Form[CTUTR]) = Ok(
+            enterCtutrPage(
+              formWithErrors,
+              journeyService.previous(routes.CompanyDetailsController.enterCtutr())
+            )
+          )
+
+          def handleFormWithErrors(formWithErrors: Form[CTUTR]): Future[Result] = {
+
+            val ctutrsNotMatched = formWithErrors.errors.exists(_.message === "error.ctutrsDoNotMatch")
+            val ctutrOpt         = formWithErrors.value
+
+            def displayFormError: Future[Result] = Future.successful(ok(formWithErrors))
+
+            def incrementAttemptsAndDisplayFormError = {
+
+              val result = for {
+                ctutrAttempts <- ctutrAttemptsService.fetchAndUpdateFor(crn, companySession.loginData.ggCredId)
+                updatedAnswers = companySession.userAnswers
+                                   .unset(_.ctutr)
+                                   .unset(_.ctIncomeDeclared)
+                                   .unset(_.recentlyStartedTrading)
+                                   .unset(_.chargeableForCT)
+                                   .copy(ctutr = ctutrOpt)
+                updatedSession = companySession
+                                   .copy(ctutrAnswerAttempts = ctutrAttempts.attempts, userAnswers = updatedAnswers)
+                _             <- sessionStore.store(updatedSession)
+              } yield updatedSession
+
+              result.foldF(
                 _.doThrow("Could not update ctutr answer attempts"),
-                _ =>
+                updatedSession =>
                   //If session is updated and successfully stored in DB, then do a check if ctutr attempt has reached the max limit
                   // if yes, then go to too many ctutr attempt page else display the form error
                   //In the absence if this check, form error will display and user will be able to do one more attempt than the max limit.
@@ -384,22 +388,22 @@ class CompanyDetailsController @Inject() (
                     displayFormError
                   }
               )
+            }
+
+            if (ctutrsNotMatched && maxCtutrAnswerAttemptsReached(companySession)) goToNextPage(companySession)
+            else if (ctutrsNotMatched) incrementAttemptsAndDisplayFormError
+            else displayFormError
 
           }
 
-          if (ctutrsNotMatched && maxCtutrAnswerAttemptsReached(companySession)) goToNextPage(companySession)
-          else if (ctutrsNotMatched) incrementAttemptsAndDisplayFormError
-          else displayFormError
+          if (maxCtutrAnswerAttemptsReached(companySession)) goToNextPage(companySession)
+          else {
+            enterCtutrForm(desCtutr)
+              .bindFromRequest()
+              .fold(handleFormWithErrors, handleValidAnswer)
+          }
 
         }
-
-        if (maxCtutrAnswerAttemptsReached(companySession)) goToNextPage(companySession)
-        else {
-          enterCtutrForm(desCtutr)
-            .bindFromRequest()
-            .fold(handleFormWithErrors, handleValidAnswer)
-        }
-
       }
     }
   }
