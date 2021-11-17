@@ -36,7 +36,7 @@ import uk.gov.hmrc.hecapplicantfrontend.util.TimeProvider
 import uk.gov.hmrc.hecapplicantfrontend.utils.Fixtures
 import uk.gov.hmrc.http.HeaderCarrier
 
-import java.time.LocalDate
+import java.time.{LocalDate, ZonedDateTime}
 import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -1573,6 +1573,9 @@ class CompanyDetailsControllerSpec
             inSequence {
               mockAuthWithNoRetrievals()
               mockGetSession(session)
+              mockCtutrAttemptsServiceCreateOrIncrementAttempts(crn, companyLoginData.ggCredId)(
+                Right(CtutrAttempts(crn, companyLoginData.ggCredId, maxCtutrAttempts, Some(ZonedDateTime.now)))
+              )
               mockJourneyServiceUpdateAndNext(
                 enterCtutrRoute,
                 session,
@@ -1691,46 +1694,22 @@ class CompanyDetailsControllerSpec
 
         }
 
-        "user's answer and DES CTUTR do not match & ctutr attempts in session is one less than the max ctutr attempts, counter is incremented" in {
-          val answers        = Fixtures.incompleteCompanyUserAnswers(crn = Some(crn))
-          val session        = Fixtures.companyHECSession(
-            companyLoginData,
-            Fixtures.companyRetrievedJourneyData(desCtutr = Some(CTUTR(ctutr1))),
-            ctutrAnswerAttempts = maxCtutrAttempts - 1,
-            userAnswers = answers
-          )
-          val updatedSession = session.copy(ctutrAnswerAttempts = maxCtutrAttempts)
-          val ggCredId       = session.loginData.ggCredId
-
-          inSequence {
-            mockAuthWithNoRetrievals()
-            mockGetSession(session)
-            mockCtutrAttemptsServiceCreateOrIncrementAttempts(crn, ggCredId)(
-              Right(CtutrAttempts(crn, ggCredId, maxCtutrAttempts, None))
-            )
-            mockStoreSession(updatedSession)(Right(()))
-            mockJourneyServiceUpdateAndNext(
-              enterCtutrRoute,
-              session,
-              updatedSession
-            )(Right(mockNextCall))
-          }
-
-          checkIsRedirect(performAction("enterCtutr" -> ctutr2), mockNextCall)
-        }
-
-        "user's answer and DES CTUTR do not match & maximum number of ctutr attempts has been reached" in {
-          val answers = Fixtures.incompleteCompanyUserAnswers(crn = Some(CRN("crn")))
-          val session = Fixtures.companyHECSession(
+        "user's answer and DES CTUTR do not match & ctutr attempts have been blocked" in {
+          val answers  = Fixtures.incompleteCompanyUserAnswers(crn = Some(CRN("crn")))
+          val session  = Fixtures.companyHECSession(
             companyLoginData,
             Fixtures.companyRetrievedJourneyData(desCtutr = Some(CTUTR(ctutr1))),
             ctutrAnswerAttempts = maxCtutrAttempts,
             userAnswers = answers
           )
+          val ggCredId = session.loginData.ggCredId
 
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
+            mockCtutrAttemptsServiceCreateOrIncrementAttempts(crn, ggCredId)(
+              Right(CtutrAttempts(crn, ggCredId, maxCtutrAttempts, Some(ZonedDateTime.now)))
+            )
             mockJourneyServiceUpdateAndNext(
               enterCtutrRoute,
               session,

@@ -134,6 +134,14 @@ class CtutrAttemptsServiceImplSpec extends AnyWordSpec with Matchers with MockFa
           await(result.value) shouldBe Right(updatedCtutrAttempts)
         }
 
+        "existing ctutr attempts is blocked" in {
+          val existingCtutrAttempts = CtutrAttempts(crn, ggCredId, maxAttempts, Some(ZonedDateTime.now))
+          mockGet(crn, ggCredId)(Right(Some(existingCtutrAttempts)))
+
+          val result = service.createOrIncrementAttempts(crn, ggCredId)
+          await(result.value) shouldBe Right(existingCtutrAttempts)
+        }
+
       }
 
     }

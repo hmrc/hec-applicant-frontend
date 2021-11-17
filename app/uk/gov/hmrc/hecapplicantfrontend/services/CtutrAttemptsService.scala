@@ -50,26 +50,26 @@ class CtutrAttemptsServiceImpl @Inject() (
   /**
     * Fetch CTUTR attempts for the CRN-GGCredId combination
     * If not found, create a new document with 1 attempt
-    * If found, increment the number of attempts
-    * If maximum attempts reached, set the lock period
-    * Store the new/updated data back into the database
+    * If found & maximum attempts reached i.e. lock period is set, just return fetched data
+    * If found & number of attempts one less than max allowed, increment attempts & set the lock period
+    * If found & number of attempts more than one less than max allowed, only increment attempts
     * @return The updated CTUTR attempts
     */
   def createOrIncrementAttempts(crn: CRN, ggCredId: GGCredId): EitherT[Future, models.Error, CtutrAttempts] =
     for {
       attemptsOpt    <- ctutrAttemptsStore.get(crn, ggCredId)
       updatedAttempts = attemptsOpt match {
-                          case Some(ctutrAttempts) =>
+                          case None                                           => CtutrAttempts(crn, ggCredId, 1, None)
+                          case Some(ctutrAttempts) if ctutrAttempts.isBlocked => ctutrAttempts
+                          case Some(ctutrAttempts)                            =>
                             val lockedUntilOpt = if (ctutrAttempts.attempts >= appConfig.maxCtutrAnswerAttempts - 1) {
                               val durationInSeconds = appConfig.maxCtutrStoreExpiry.toSeconds
                               Some(timeProvider.now.plus(durationInSeconds, ChronoUnit.SECONDS))
                             } else None
-
                             ctutrAttempts.copy(attempts = ctutrAttempts.attempts + 1, blockedUntil = lockedUntilOpt)
-                          case None                =>
-                            CtutrAttempts(crn, ggCredId, 1, None)
                         }
-      _              <- ctutrAttemptsStore.store(updatedAttempts)
+      _              <- if (attemptsOpt.contains(updatedAttempts)) EitherT.pure[Future, models.Error](())
+                        else ctutrAttemptsStore.store(updatedAttempts)
     } yield updatedAttempts
 
   def delete(crn: CRN, ggCredId: GGCredId): EitherT[Future, models.Error, Unit] =

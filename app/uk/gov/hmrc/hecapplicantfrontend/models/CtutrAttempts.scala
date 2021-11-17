@@ -26,7 +26,9 @@ final case class CtutrAttempts(
   ggCredId: GGCredId,
   attempts: Int,
   blockedUntil: Option[ZonedDateTime]
-)
+) {
+  val isBlocked: Boolean = blockedUntil.isDefined
+}
 
 object CtutrAttempts {
   implicit val format: OFormat[CtutrAttempts] = Json.format

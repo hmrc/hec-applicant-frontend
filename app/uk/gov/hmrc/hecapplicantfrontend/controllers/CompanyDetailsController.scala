@@ -359,12 +359,12 @@ class CompanyDetailsController @Inject() (
                 .foldF(
                   _.doThrow("Could not create/update ctutr attempts"),
                   {
-                    case CtutrAttempts(_, _, attempts, Some(_)) =>
+                    case ctutrAttempts if ctutrAttempts.isBlocked =>
                       updateAndNextJourneyData(
                         routes.CompanyDetailsController.enterCtutr(),
-                        companySession.copy(ctutrAnswerAttempts = attempts)
+                        companySession.copy(ctutrAnswerAttempts = ctutrAttempts.attempts)
                       )
-                    case ctutrAttempts                          =>
+                    case ctutrAttempts                            =>
                       val updatedAnswers = companySession.userAnswers
                         .unset(_.ctutr)
                         .unset(_.ctIncomeDeclared)
