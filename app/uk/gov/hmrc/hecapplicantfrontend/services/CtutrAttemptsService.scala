@@ -18,12 +18,14 @@ package uk.gov.hmrc.hecapplicantfrontend.services
 
 import cats.data.EitherT
 import com.google.inject.{ImplementedBy, Inject, Singleton}
+import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 import uk.gov.hmrc.hecapplicantfrontend.models
 import uk.gov.hmrc.hecapplicantfrontend.models.CtutrAttempts
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, GGCredId}
 import uk.gov.hmrc.hecapplicantfrontend.repos.CtutrAttemptsStore
 import uk.gov.hmrc.hecapplicantfrontend.util.TimeProvider
 
+import java.time.temporal.ChronoUnit
 import scala.concurrent.{ExecutionContext, Future}
 
 @ImplementedBy(classOf[CtutrAttemptsServiceImpl])
@@ -37,15 +39,17 @@ trait CtutrAttemptsService {
 @Singleton
 class CtutrAttemptsServiceImpl @Inject() (
   ctutrAttemptsStore: CtutrAttemptsStore,
-  timeProvider: TimeProvider
+  timeProvider: TimeProvider,
+  appConfig: AppConfig
 )(implicit
   ec: ExecutionContext
 ) extends CtutrAttemptsService {
 
   /**
     * Fetch CTUTR attempts for the CRN-GGCredId combination
+    * If not found, create a new document with 1 attempt
     * If found, increment the number of attempts
-    * If not found, create a new document with 0 attempts
+    * If maximum attempts reached, set the lock period
     * Store the new/updated data back into the database
     * @return The updated CTUTR attempts
     */
@@ -54,10 +58,14 @@ class CtutrAttemptsServiceImpl @Inject() (
       attemptsOpt    <- ctutrAttemptsStore.get(crn, ggCredId)
       updatedAttempts = attemptsOpt match {
                           case Some(ctutrAttempts) =>
-                            ctutrAttempts
-                              .copy(attempts = ctutrAttempts.attempts + 1, lastUpdated = timeProvider.now)
+                            val lockedUntilOpt = if (ctutrAttempts.attempts >= appConfig.maxCtutrAnswerAttempts - 1) {
+                              val durationInSeconds = appConfig.maxCtutrStoreExpiry.toSeconds
+                              Some(timeProvider.now.plus(durationInSeconds, ChronoUnit.SECONDS))
+                            } else None
+
+                            ctutrAttempts.copy(attempts = ctutrAttempts.attempts + 1, lockedUntil = lockedUntilOpt)
                           case None                =>
-                            CtutrAttempts(crn, ggCredId, 1, timeProvider.now)
+                            CtutrAttempts(crn, ggCredId, 1, None)
                         }
       _              <- ctutrAttemptsStore.store(updatedAttempts)
     } yield updatedAttempts

@@ -25,7 +25,7 @@ final case class CtutrAttempts(
   crn: CRN,
   ggCredId: GGCredId,
   attempts: Int,
-  lastUpdated: ZonedDateTime
+  lockedUntil: Option[ZonedDateTime]
 )
 
 object CtutrAttempts {

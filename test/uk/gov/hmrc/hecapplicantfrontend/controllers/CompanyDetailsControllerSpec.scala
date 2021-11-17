@@ -36,7 +36,7 @@ import uk.gov.hmrc.hecapplicantfrontend.util.TimeProvider
 import uk.gov.hmrc.hecapplicantfrontend.utils.Fixtures
 import uk.gov.hmrc.http.HeaderCarrier
 
-import java.time.{LocalDate, ZonedDateTime}
+import java.time.LocalDate
 import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -1416,7 +1416,6 @@ class CompanyDetailsControllerSpec
         "input CTUTR does not match DES CTUTR and" when {
 
           "ctutr attempts in session is 0 & is incremented by 1" in {
-            val now            = ZonedDateTime.now()
             val crn            = CRN("crn")
             val ggCredId       = session.loginData.ggCredId
             val updatedSession = session.copy(ctutrAnswerAttempts = 1)
@@ -1425,7 +1424,7 @@ class CompanyDetailsControllerSpec
               mockAuthWithNoRetrievals()
               mockGetSession(session)
               mockCtutrAttemptsServiceCreateOrIncrementAttempts(crn, ggCredId)(
-                Right(CtutrAttempts(crn, ggCredId, 1, now))
+                Right(CtutrAttempts(crn, ggCredId, 1, None))
               )
               mockStoreSession(updatedSession)(Right(()))
               mockJourneyServiceGetPrevious(enterCtutrRoute, session)(mockPreviousCall)
@@ -1707,7 +1706,7 @@ class CompanyDetailsControllerSpec
             mockAuthWithNoRetrievals()
             mockGetSession(session)
             mockCtutrAttemptsServiceCreateOrIncrementAttempts(crn, ggCredId)(
-              Right(CtutrAttempts(crn, ggCredId, maxCtutrAttempts, ZonedDateTime.now))
+              Right(CtutrAttempts(crn, ggCredId, maxCtutrAttempts, None))
             )
             mockStoreSession(updatedSession)(Right(()))
             mockJourneyServiceUpdateAndNext(

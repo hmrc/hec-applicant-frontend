@@ -27,7 +27,6 @@ import uk.gov.hmrc.hecapplicantfrontend.models.CtutrAttempts
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, GGCredId}
 import uk.gov.hmrc.mongo.cache.DataKey
 
-import java.time.{ZoneId, ZonedDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class CtutrAttemptsStoreImplSpec extends AnyWordSpec with Matchers with MongoSupportSpec with Eventually {
@@ -48,8 +47,7 @@ class CtutrAttemptsStoreImplSpec extends AnyWordSpec with Matchers with MongoSup
     val ggCredId = GGCredId("ggCredId")
 
     "be able to insert ctutr attempts into mongo, read it back and delete it" in {
-      val now           = ZonedDateTime.of(2021, 10, 9, 9, 12, 34, 0, ZoneId.of("Europe/London"))
-      val ctutrAttempts = CtutrAttempts(crn, ggCredId, 1, now)
+      val ctutrAttempts = CtutrAttempts(crn, ggCredId, 1, None)
 
       // store a ctutr attempts object
       await(store.store(ctutrAttempts).value) shouldBe Right(())

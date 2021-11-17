@@ -22,13 +22,17 @@ import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.test.Helpers._
+import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 import uk.gov.hmrc.hecapplicantfrontend.models.ids._
 import uk.gov.hmrc.hecapplicantfrontend.models.{CtutrAttempts, Error}
 import uk.gov.hmrc.hecapplicantfrontend.repos.CtutrAttemptsStore
 import uk.gov.hmrc.hecapplicantfrontend.util.TimeProvider
+import uk.gov.hmrc.hecapplicantfrontend.utils.Fixtures
 
 import java.time.{ZoneId, ZonedDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
+import scala.language.postfixOps
 
 class CtutrAttemptsServiceImplSpec extends AnyWordSpec with Matchers with MockFactory {
 
@@ -37,7 +41,12 @@ class CtutrAttemptsServiceImplSpec extends AnyWordSpec with Matchers with MockFa
   val mockTimeProvider: TimeProvider = mock[TimeProvider]
   val now: ZonedDateTime             = ZonedDateTime.of(2021, 10, 9, 9, 12, 34, 0, ZoneId.of("Europe/London"))
 
-  val service: CtutrAttemptsServiceImpl = new CtutrAttemptsServiceImpl(mockCtutrAttemptsStore, mockTimeProvider)
+  private val maxAttempts = 3
+
+  val mockAppConfig: AppConfig = new Fixtures.TestConfig(maxAttempts, 3 hours)
+
+  val service: CtutrAttemptsServiceImpl =
+    new CtutrAttemptsServiceImpl(mockCtutrAttemptsStore, mockTimeProvider, mockAppConfig)
 
   private def mockStore(ctutrAttempts: CtutrAttempts)(result: Either[Error, Unit]) =
     (mockCtutrAttemptsStore
@@ -62,18 +71,17 @@ class CtutrAttemptsServiceImplSpec extends AnyWordSpec with Matchers with MockFa
 
       "return an error" when {
 
-        "ctutr attempts fetch fails" in {
+        "fetching ctutr attempts fails" in {
           mockGet(crn, ggCredId)(Left(Error("")))
 
           val result = service.createOrIncrementAttempts(crn, ggCredId)
           await(result.value) shouldBe a[Left[_, _]]
         }
 
-        "ctutr attempts save fails" in {
+        "saving ctutr attempts fails" in {
           inSequence {
             mockGet(crn, ggCredId)(Right(None))
-            mockTimeProviderNow(now)
-            mockStore(CtutrAttempts(crn, ggCredId, 1, now))(Left(Error("some error")))
+            mockStore(CtutrAttempts(crn, ggCredId, 1, None))(Left(Error("some error")))
           }
 
           val result = service.createOrIncrementAttempts(crn, ggCredId)
@@ -85,10 +93,9 @@ class CtutrAttemptsServiceImplSpec extends AnyWordSpec with Matchers with MockFa
       "return successfully" when {
 
         "no existing ctutr attempts found for CRN & GGCredId" in {
-          val ctutrAttempts = CtutrAttempts(crn, ggCredId, 1, now)
+          val ctutrAttempts = CtutrAttempts(crn, ggCredId, 1, None)
           inSequence {
             mockGet(crn, ggCredId)(Right(None))
-            mockTimeProviderNow(now)
             mockStore(ctutrAttempts)(Right(()))
           }
 
@@ -97,10 +104,25 @@ class CtutrAttemptsServiceImplSpec extends AnyWordSpec with Matchers with MockFa
         }
 
         "there exists ctutr attempts for CRN & GGCredId" in {
-          val existingCtutrAttempts = CtutrAttempts(crn, ggCredId, 1, now.minusMinutes(10))
+          val existingCtutrAttempts = CtutrAttempts(crn, ggCredId, 1, None)
           val updatedCtutrAttempts  = existingCtutrAttempts.copy(
             attempts = 2,
-            lastUpdated = now
+            lockedUntil = None
+          )
+          inSequence {
+            mockGet(crn, ggCredId)(Right(Some(existingCtutrAttempts)))
+            mockStore(updatedCtutrAttempts)(Right(()))
+          }
+
+          val result = service.createOrIncrementAttempts(crn, ggCredId)
+          await(result.value) shouldBe Right(updatedCtutrAttempts)
+        }
+
+        "existing number of attempts is one less than the maximum allowed" in {
+          val existingCtutrAttempts = CtutrAttempts(crn, ggCredId, maxAttempts - 1, None)
+          val updatedCtutrAttempts  = existingCtutrAttempts.copy(
+            attempts = maxAttempts,
+            lockedUntil = Some(now.plusHours(3))
           )
           inSequence {
             mockGet(crn, ggCredId)(Right(Some(existingCtutrAttempts)))
