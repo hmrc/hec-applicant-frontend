@@ -102,7 +102,7 @@ class CompanyDetailsControllerSpec
     Configuration(
       ConfigFactory.parseString(
         s"""
-           | maximum-ctutr-answer-attempts = $maxCtutrAttempts
+           | ctutr-attempts { maximum-attempts = $maxCtutrAttempts }
            |""".stripMargin
       )
     )

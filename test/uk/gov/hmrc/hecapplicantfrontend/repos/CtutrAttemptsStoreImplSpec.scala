@@ -35,7 +35,7 @@ class CtutrAttemptsStoreImplSpec extends AnyWordSpec with Matchers with MongoSup
   val config = Configuration(
     ConfigFactory.parseString(
       """
-        | ctutr-attempts-store-expiry-time = 30 minutes
+        | ctutr-attempts { store-expiry-time = 30 minutes }
         |""".stripMargin
     )
   )

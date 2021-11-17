@@ -44,7 +44,7 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
 
   private val maxCtutrAttempts                      = 3
   override lazy val additionalConfig: Configuration = Configuration(
-    ConfigFactory.parseString(s"maximum-ctutr-answer-attempts = $maxCtutrAttempts")
+    ConfigFactory.parseString(s"ctutr-attempts.maximum-attempts = $maxCtutrAttempts")
   )
 
   implicit val config                    = appConfig
