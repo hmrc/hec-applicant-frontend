@@ -1413,30 +1413,26 @@ class CompanyDetailsControllerSpec
           test("enterCtutr.error.ctutrChecksumFailed", "enterCtutr" -> "1234567890")
         }
 
-        "input CTUTR does not match DES CTUTR and" when {
+        "input CTUTR does not match DES CTUTR and" in {
+          val crn            = CRN("crn")
+          val ggCredId       = session.loginData.ggCredId
+          val updatedSession = session.copy(crnBlocked = false)
 
-          "ctutr attempts in session is 0 & is incremented by 1" in {
-            val crn            = CRN("crn")
-            val ggCredId       = session.loginData.ggCredId
-            val updatedSession = session.copy(ctutrAnswerAttempts = 1)
-
-            inSequence {
-              mockAuthWithNoRetrievals()
-              mockGetSession(session)
-              mockCtutrAttemptsServiceCreateOrIncrementAttempts(crn, ggCredId)(
-                Right(CtutrAttempts(crn, ggCredId, 1, None))
-              )
-              mockStoreSession(updatedSession)(Right(()))
-              mockJourneyServiceGetPrevious(enterCtutrRoute, session)(mockPreviousCall)
-            }
-
-            checkFormErrorIsDisplayed(
-              performAction("enterCtutr" -> "2222222222"),
-              messageFromMessageKey("enterCtutr.title"),
-              messageFromMessageKey("enterCtutr.error.ctutrsDoNotMatch")
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockCtutrAttemptsServiceCreateOrIncrementAttempts(crn, ggCredId)(
+              Right(CtutrAttempts(crn, ggCredId, 1, None))
             )
+            mockStoreSession(updatedSession)(Right(()))
+            mockJourneyServiceGetPrevious(enterCtutrRoute, session)(mockPreviousCall)
           }
 
+          checkFormErrorIsDisplayed(
+            performAction("enterCtutr" -> "2222222222"),
+            messageFromMessageKey("enterCtutr.title"),
+            messageFromMessageKey("enterCtutr.error.ctutrsDoNotMatch")
+          )
         }
       }
 
@@ -1562,11 +1558,11 @@ class CompanyDetailsControllerSpec
             assertThrows[RuntimeException](await(performAction("enterCtutr" -> ctutr1)))
           }
 
-          "user answer does not match DES CTUTR & maximum CTUTR attempts has been reached" in {
+          "user answer does not match DES CTUTR & CRN has been blocked" in {
             val session = Fixtures.companyHECSession(
               companyLoginData,
               Fixtures.companyRetrievedJourneyData(desCtutr = Some(CTUTR(ctutr1))),
-              ctutrAnswerAttempts = maxCtutrAttempts,
+              crnBlocked = true,
               userAnswers = Fixtures.incompleteCompanyUserAnswers(crn = Some(CRN("crn")))
             )
 
@@ -1594,7 +1590,7 @@ class CompanyDetailsControllerSpec
 
         "user gives a valid answer" when {
 
-          "and the ctutr attempts in session is 0" in {
+          "CRN is not blocked" in {
             val _13DigitCtutr = s"111$ctutr1"
             List(
               ctutr1               -> ctutr1,
@@ -1646,12 +1642,12 @@ class CompanyDetailsControllerSpec
             }
           }
 
-          "and the ctutr attempts in session is non-0, the number of attempts should be reset to 0" in {
+          "CRN is blocked, it is reset to false" in {
             val answers = Fixtures.incompleteCompanyUserAnswers(crn = Some(crn))
             val session = Fixtures.companyHECSession(
               companyLoginData,
               Fixtures.companyRetrievedJourneyData(desCtutr = Some(CTUTR("1111111111"))),
-              ctutrAnswerAttempts = 2,
+              crnBlocked = true,
               userAnswers = answers
             )
 
@@ -1666,7 +1662,7 @@ class CompanyDetailsControllerSpec
               session.copy(
                 userAnswers = updatedAnswers,
                 retrievedJourneyData = updatedRetrievedData,
-                ctutrAnswerAttempts = 0
+                crnBlocked = false
               )
 
             inSequence {
@@ -1699,7 +1695,7 @@ class CompanyDetailsControllerSpec
           val session  = Fixtures.companyHECSession(
             companyLoginData,
             Fixtures.companyRetrievedJourneyData(desCtutr = Some(CTUTR(ctutr1))),
-            ctutrAnswerAttempts = maxCtutrAttempts,
+            crnBlocked = true,
             userAnswers = answers
           )
           val ggCredId = session.loginData.ggCredId

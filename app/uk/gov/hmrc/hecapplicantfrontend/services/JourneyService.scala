@@ -24,7 +24,6 @@ import cats.syntax.eq._
 import cats.syntax.option._
 import com.google.inject.{ImplementedBy, Inject, Singleton}
 import play.api.mvc.Call
-import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 import uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.saTaxSituations
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.RequestWithSessionData
 import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
@@ -59,8 +58,7 @@ trait JourneyService {
 }
 
 @Singleton
-class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: ExecutionContext, appConfig: AppConfig)
-    extends JourneyService {
+class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: ExecutionContext) extends JourneyService {
 
   implicit val callEq: Eq[Call] = Eq.instance(_.url === _.url)
 
@@ -193,7 +191,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
                 _,
                 _,
                 _
-              ) if allCompanyAnswersComplete(companyAnswers, companySession, appConfig.maxCtutrAnswerAttempts) =>
+              ) if allCompanyAnswersComplete(companyAnswers, companySession) =>
             val completeAnswers =
               CompleteCompanyUserAnswers(
                 licenceType,
@@ -381,11 +379,10 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
 
   private def enterCtutrRoute(session: HECSession) =
     session.mapAsCompany { companySession =>
-      val attemptsExceeded = companySession.ctutrAnswerAttempts >= appConfig.maxCtutrAnswerAttempts
-      val ctutrOpt         = companySession.userAnswers.fold(_.ctutr, _.ctutr)
-      if (attemptsExceeded) {
+      if (companySession.crnBlocked) {
         routes.CompanyDetailsController.tooManyCtutrAttempts()
       } else {
+        val ctutrOpt = companySession.userAnswers.fold(_.ctutr, _.ctutr)
         ctutrOpt map { _ =>
           companySession.retrievedJourneyData match {
             case CompanyRetrievedJourneyData(_, Some(_), Some(ctStatus)) =>
@@ -440,24 +437,20 @@ object JourneyServiceImpl {
     chargeableForCTOpt: Option[YesNoAnswer],
     ctIncomeDeclaredOpt: Option[YesNoAnswer],
     recentlyStartedTradingOpt: Option[YesNoAnswer],
-    companySession: CompanyHECSession,
-    maxCtutrAttempts: Int
+    companySession: CompanyHECSession
   ): Boolean =
-    if (companySession.ctutrAnswerAttempts >= maxCtutrAttempts) false
-    else {
-      companySession.retrievedJourneyData.ctStatus match {
-        case None                   => false
-        case Some(ctStatusResponse) =>
-          ctStatusResponse.latestAccountingPeriod.map(_.ctStatus) match {
-            case None                              => recentlyStartedTradingOpt.contains(YesNoAnswer.Yes)
-            case Some(CTStatus.NoticeToFileIssued) => chargeableForCTOpt.isDefined
-            case Some(CTStatus.NoReturnFound)      => chargeableForCTOpt.contains(YesNoAnswer.No)
-            case Some(CTStatus.ReturnFound)        =>
-              chargeableForCTOpt.contains(YesNoAnswer.No) || (chargeableForCTOpt.contains(
-                YesNoAnswer.Yes
-              ) && ctIncomeDeclaredOpt.nonEmpty)
-          }
-      }
+    companySession.retrievedJourneyData.ctStatus match {
+      case None                   => false
+      case Some(ctStatusResponse) =>
+        ctStatusResponse.latestAccountingPeriod.map(_.ctStatus) match {
+          case None                              => recentlyStartedTradingOpt.contains(YesNoAnswer.Yes)
+          case Some(CTStatus.NoticeToFileIssued) => chargeableForCTOpt.isDefined
+          case Some(CTStatus.NoReturnFound)      => chargeableForCTOpt.contains(YesNoAnswer.No)
+          case Some(CTStatus.ReturnFound)        =>
+            chargeableForCTOpt.contains(YesNoAnswer.No) || (chargeableForCTOpt.contains(
+              YesNoAnswer.Yes
+            ) && ctIncomeDeclaredOpt.nonEmpty)
+        }
     }
 
   /**
@@ -499,8 +492,7 @@ object JourneyServiceImpl {
     */
   def allCompanyAnswersComplete(
     incompleteUserAnswers: IncompleteCompanyUserAnswers,
-    session: CompanyHECSession,
-    maxCtutrAttempts: Int
+    session: CompanyHECSession
   ): Boolean =
     incompleteUserAnswers match {
       case IncompleteCompanyUserAnswers(
@@ -515,7 +507,7 @@ object JourneyServiceImpl {
             recentlyStartedTrading,
             _
           ) =>
-        checkCompanyDataComplete(chargeableForCT, ctIncomeDeclared, recentlyStartedTrading, session, maxCtutrAttempts)
+        checkCompanyDataComplete(chargeableForCT, ctIncomeDeclared, recentlyStartedTrading, session)
       case _ => false
     }
 }

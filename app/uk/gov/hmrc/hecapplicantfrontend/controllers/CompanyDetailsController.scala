@@ -331,7 +331,7 @@ class CompanyDetailsController @Inject() (
                   companySession.copy(
                     userAnswers = updatedAnswers,
                     retrievedJourneyData = updatedRetrievedData,
-                    ctutrAnswerAttempts = 0
+                    crnBlocked = false
                   )
                 )
             } yield next
@@ -362,7 +362,7 @@ class CompanyDetailsController @Inject() (
                     case ctutrAttempts if ctutrAttempts.isBlocked =>
                       updateAndNextJourneyData(
                         routes.CompanyDetailsController.enterCtutr(),
-                        companySession.copy(ctutrAnswerAttempts = ctutrAttempts.attempts)
+                        companySession.copy(crnBlocked = ctutrAttempts.isBlocked)
                       )
                     case ctutrAttempts                            =>
                       val updatedAnswers = companySession.userAnswers
@@ -372,7 +372,7 @@ class CompanyDetailsController @Inject() (
                         .unset(_.chargeableForCT)
                         .copy(ctutr = formWithErrors.value)
                       val updatedSession = companySession
-                        .copy(ctutrAnswerAttempts = ctutrAttempts.attempts, userAnswers = updatedAnswers)
+                        .copy(crnBlocked = ctutrAttempts.isBlocked, userAnswers = updatedAnswers)
                       sessionStore
                         .store(updatedSession)
                         .foldF(

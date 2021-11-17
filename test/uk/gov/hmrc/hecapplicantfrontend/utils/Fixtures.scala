@@ -172,7 +172,7 @@ object Fixtures {
     completedTaxCheck: Option[HECTaxCheck] = None,
     taxCheckStartDateTime: Option[ZonedDateTime] = None,
     unexpiredTaxChecks: List[TaxCheckListItem] = List.empty,
-    ctutrAnswerAttempts: Int = 0
+    crnBlocked: Boolean = false
   ): CompanyHECSession = CompanyHECSession(
     loginData = loginData,
     retrievedJourneyData = retrievedJourneyData,
@@ -180,7 +180,7 @@ object Fixtures {
     completedTaxCheck = completedTaxCheck,
     taxCheckStartDateTime = taxCheckStartDateTime,
     unexpiredTaxChecks = unexpiredTaxChecks,
-    ctutrAnswerAttempts = ctutrAnswerAttempts
+    crnBlocked = crnBlocked
   )
 
   def ctStatusResponse(
