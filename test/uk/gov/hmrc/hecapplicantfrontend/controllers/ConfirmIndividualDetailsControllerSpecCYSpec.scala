@@ -18,6 +18,7 @@ package uk.gov.hmrc.hecapplicantfrontend.controllers
 
 import com.typesafe.config.ConfigFactory
 import play.api.Configuration
+import play.api.i18n.Lang
 import play.api.inject.bind
 import play.api.mvc.{Cookie, Result}
 import play.api.test.FakeRequest
@@ -34,13 +35,13 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class ConfirmIndividualDetailsControllerSpecCYSpec
-    extends ControllerCYSpec
+    extends ControllerSpec
     with AuthSupport
     with SessionSupport
     with AuthAndSessionDataBehaviour
     with JourneyServiceSupport {
-
-  override def overrideBindings = List(
+  override implicit val lang: Lang = Lang("cy")
+  override def overrideBindings    = List(
     bind[AuthConnector].toInstance(mockAuthConnector),
     bind[SessionStore].toInstance(mockSessionStore),
     bind[JourneyService].toInstance(mockJourneyService)
@@ -104,7 +105,6 @@ class ConfirmIndividualDetailsControllerSpecCYSpec
               doc.select("#back").attr("href")             shouldBe mockPreviousCall.url
               doc.select(".hmrc-language-select__list").text should include regex "English"
               doc.select(".hmrc-language-select__list").text should include regex "Cymraeg"
-              doc.select(".govuk-heading-xl").text           should include regex "Welsh"
             }
           )
 
