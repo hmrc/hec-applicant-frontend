@@ -309,15 +309,6 @@ class CompanyDetailsController @Inject() (
     request.sessionData mapAsCompany { companySession =>
       ensureCompanyDataHasDesCtutr(companySession) { desCtutr =>
         ensureUserAnswersHasCRN(companySession) { crn =>
-          def maxCtutrAnswerAttemptsReached(companySession: CompanyHECSession) =
-            companySession.ctutrAnswerAttempts >= appConfig.maxCtutrAnswerAttempts
-
-          def goToNextPage(updatedSession: CompanyHECSession): Future[Result] =
-            updateAndNextJourneyData(
-              routes.CompanyDetailsController.enterCtutr(),
-              updatedSession
-            )
-
           def handleValidAnswer(ctutr: CTUTR) = {
             val updatedAnswers = companySession.userAnswers
               .unset(_.ctutr)
@@ -360,53 +351,44 @@ class CompanyDetailsController @Inject() (
 
           def handleFormWithErrors(formWithErrors: Form[CTUTR]): Future[Result] = {
 
-            val ctutrsNotMatched = formWithErrors.errors.exists(_.message === "error.ctutrsDoNotMatch")
-            val ctutrOpt         = formWithErrors.value
-
             def displayFormError: Future[Result] = Future.successful(ok(formWithErrors))
 
-            def incrementAttemptsAndDisplayFormError = {
-
-              val result = for {
-                ctutrAttempts <- ctutrAttemptsService.createOrIncrementAttempts(crn, companySession.loginData.ggCredId)
-                updatedAnswers = companySession.userAnswers
-                                   .unset(_.ctutr)
-                                   .unset(_.ctIncomeDeclared)
-                                   .unset(_.recentlyStartedTrading)
-                                   .unset(_.chargeableForCT)
-                                   .copy(ctutr = ctutrOpt)
-                updatedSession = companySession
-                                   .copy(ctutrAnswerAttempts = ctutrAttempts.attempts, userAnswers = updatedAnswers)
-                _             <- sessionStore.store(updatedSession)
-              } yield updatedSession
-
-              result.foldF(
-                _.doThrow("Could not update ctutr answer attempts"),
-                updatedSession =>
-                  //If session is updated and successfully stored in DB, then do a check if ctutr attempt has reached the max limit
-                  // if yes, then go to too many ctutr attempt page else display the form error
-                  //In the absence if this check, form error will display and user will be able to do one more attempt than the max limit.
-                  if (maxCtutrAnswerAttemptsReached(updatedSession)) {
-                    goToNextPage(updatedSession)
-                  } else {
-                    displayFormError
+            def incrementAttemptsAndProceed =
+              ctutrAttemptsService
+                .createOrIncrementAttempts(crn, companySession.loginData.ggCredId)
+                .foldF(
+                  _.doThrow("Could not create/update ctutr attempts"),
+                  {
+                    case CtutrAttempts(_, _, attempts, Some(_)) =>
+                      updateAndNextJourneyData(
+                        routes.CompanyDetailsController.enterCtutr(),
+                        companySession.copy(ctutrAnswerAttempts = attempts)
+                      )
+                    case ctutrAttempts                          =>
+                      val updatedAnswers = companySession.userAnswers
+                        .unset(_.ctutr)
+                        .unset(_.ctIncomeDeclared)
+                        .unset(_.recentlyStartedTrading)
+                        .unset(_.chargeableForCT)
+                        .copy(ctutr = formWithErrors.value)
+                      val updatedSession = companySession
+                        .copy(ctutrAnswerAttempts = ctutrAttempts.attempts, userAnswers = updatedAnswers)
+                      sessionStore
+                        .store(updatedSession)
+                        .foldF(
+                          _.doThrow("Could not save session"),
+                          _ => displayFormError
+                        )
                   }
-              )
-            }
+                )
 
-            if (ctutrsNotMatched && maxCtutrAnswerAttemptsReached(companySession)) goToNextPage(companySession)
-            else if (ctutrsNotMatched) incrementAttemptsAndDisplayFormError
-            else displayFormError
-
+            val ctutrsNotMatched = formWithErrors.errors.exists(_.message === "error.ctutrsDoNotMatch")
+            if (ctutrsNotMatched) incrementAttemptsAndProceed else displayFormError
           }
 
-          if (maxCtutrAnswerAttemptsReached(companySession)) goToNextPage(companySession)
-          else {
-            enterCtutrForm(desCtutr)
-              .bindFromRequest()
-              .fold(handleFormWithErrors, handleValidAnswer)
-          }
-
+          enterCtutrForm(desCtutr)
+            .bindFromRequest()
+            .fold(handleFormWithErrors, handleValidAnswer)
         }
       }
     }

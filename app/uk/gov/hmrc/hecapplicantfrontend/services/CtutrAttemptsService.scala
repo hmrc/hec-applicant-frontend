@@ -34,6 +34,8 @@ trait CtutrAttemptsService {
   def createOrIncrementAttempts(crn: CRN, ggCredId: GGCredId): EitherT[Future, models.Error, CtutrAttempts]
 
   def delete(crn: CRN, ggCredId: GGCredId): EitherT[Future, models.Error, Unit]
+
+  def get(crn: CRN, ggCredId: GGCredId): EitherT[Future, models.Error, Option[CtutrAttempts]]
 }
 
 @Singleton
@@ -63,7 +65,7 @@ class CtutrAttemptsServiceImpl @Inject() (
                               Some(timeProvider.now.plus(durationInSeconds, ChronoUnit.SECONDS))
                             } else None
 
-                            ctutrAttempts.copy(attempts = ctutrAttempts.attempts + 1, lockedUntil = lockedUntilOpt)
+                            ctutrAttempts.copy(attempts = ctutrAttempts.attempts + 1, blockedUntil = lockedUntilOpt)
                           case None                =>
                             CtutrAttempts(crn, ggCredId, 1, None)
                         }
@@ -72,5 +74,8 @@ class CtutrAttemptsServiceImpl @Inject() (
 
   def delete(crn: CRN, ggCredId: GGCredId): EitherT[Future, models.Error, Unit] =
     ctutrAttemptsStore.delete(crn, ggCredId)
+
+  def get(crn: CRN, ggCredId: GGCredId): EitherT[Future, models.Error, Option[CtutrAttempts]] =
+    ctutrAttemptsStore.get(crn, ggCredId)
 
 }

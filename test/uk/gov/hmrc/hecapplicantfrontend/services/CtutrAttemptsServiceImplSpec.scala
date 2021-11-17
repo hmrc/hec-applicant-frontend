@@ -107,7 +107,7 @@ class CtutrAttemptsServiceImplSpec extends AnyWordSpec with Matchers with MockFa
           val existingCtutrAttempts = CtutrAttempts(crn, ggCredId, 1, None)
           val updatedCtutrAttempts  = existingCtutrAttempts.copy(
             attempts = 2,
-            lockedUntil = None
+            blockedUntil = None
           )
           inSequence {
             mockGet(crn, ggCredId)(Right(Some(existingCtutrAttempts)))
@@ -122,7 +122,7 @@ class CtutrAttemptsServiceImplSpec extends AnyWordSpec with Matchers with MockFa
           val existingCtutrAttempts = CtutrAttempts(crn, ggCredId, maxAttempts - 1, None)
           val updatedCtutrAttempts  = existingCtutrAttempts.copy(
             attempts = maxAttempts,
-            lockedUntil = Some(now.plusHours(3))
+            blockedUntil = Some(now.plusHours(3))
           )
           inSequence {
             mockGet(crn, ggCredId)(Right(Some(existingCtutrAttempts)))
