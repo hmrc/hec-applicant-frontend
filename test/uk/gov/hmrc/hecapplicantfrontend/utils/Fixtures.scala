@@ -16,9 +16,6 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.utils
 
-import play.api.mvc.Result
-import play.api.mvc.Results.Redirect
-import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 import uk.gov.hmrc.hecapplicantfrontend.models.CompanyUserAnswers.{CompleteCompanyUserAnswers, IncompleteCompanyUserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, IndividualHECSession}
 import uk.gov.hmrc.hecapplicantfrontend.models.IndividualUserAnswers.{CompleteIndividualUserAnswers, IncompleteIndividualUserAnswers}
@@ -29,7 +26,6 @@ import uk.gov.hmrc.hecapplicantfrontend.models.ids._
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 
 import java.time.{LocalDate, ZonedDateTime}
-import scala.concurrent.duration._
 
 object Fixtures {
 
@@ -208,37 +204,4 @@ object Fixtures {
     endDate = endDate,
     ctStatus = ctStatus
   )
-
-  class TestConfig(
-    override val maxCtutrAnswerAttempts: Int = 3,
-    override val maxCtutrStoreExpiry: FiniteDuration = 3 hours,
-    override val platformHost: Option[String] = None,
-    override val contactFrontendUrl: String = "",
-    override val contactFormServiceIdentifier: String = "",
-    override val welshLanguageSupportEnabled: Boolean = false,
-    override val ggOrigin: String = "",
-    override val authTimeoutSeconds: Int = 10,
-    override val authTimeoutCountdownSeconds: Int = 10,
-    override val betaFeedbackUrl: String = "",
-    override val selfBaseUrl: String = "",
-    override val signInUrl: String = "",
-    override val redirectToIvUplift: Result = Redirect(""),
-    override val signOutAndSignBackInUrl: String = "",
-    override val taxCheckGuidanceUrl: String = "",
-    override val registerForSaUrl: String = "",
-    override val contactHmrcSa: String = "",
-    override val companiesHouseSearchUrl: String = "",
-    override val companiesHouseUpdatesUrl: String = "",
-    override val registerForCtUrl: String = "",
-    override val accountingPeriodsGuidanceUrl: String = "",
-    override val findLostUtrUrl: String = "",
-    override val saGuidanceUrl: String = "",
-    override val firstPageBackUrl: String = ""
-  ) extends AppConfig {
-
-    override def signOutUrl(continueUrl: Option[String]): String = ???
-
-    override def registerForNewGGAccountUrl(entityType: EntityType): String = ???
-  }
-
 }

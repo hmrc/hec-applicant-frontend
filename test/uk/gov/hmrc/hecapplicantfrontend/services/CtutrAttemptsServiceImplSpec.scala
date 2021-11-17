@@ -18,23 +18,32 @@ package uk.gov.hmrc.hecapplicantfrontend.services
 
 import cats.data.EitherT
 import cats.instances.future._
+import com.typesafe.config.ConfigFactory
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import play.api.Configuration
 import play.api.test.Helpers._
-import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 import uk.gov.hmrc.hecapplicantfrontend.models.ids._
 import uk.gov.hmrc.hecapplicantfrontend.models.{CtutrAttempts, Error}
 import uk.gov.hmrc.hecapplicantfrontend.repos.CtutrAttemptsStore
 import uk.gov.hmrc.hecapplicantfrontend.util.TimeProvider
-import uk.gov.hmrc.hecapplicantfrontend.utils.Fixtures
 
 import java.time.{ZoneId, ZonedDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration._
-import scala.language.postfixOps
 
 class CtutrAttemptsServiceImplSpec extends AnyWordSpec with Matchers with MockFactory {
+
+  private val config = Configuration(
+    ConfigFactory.parseString(
+      """
+        | ctutr-attempts {
+        |   maximum-attempts = 3
+        |   store-expiry-time = 3 hours
+        | }
+        |""".stripMargin
+    )
+  )
 
   val mockCtutrAttemptsStore: CtutrAttemptsStore = mock[CtutrAttemptsStore]
 
@@ -43,10 +52,8 @@ class CtutrAttemptsServiceImplSpec extends AnyWordSpec with Matchers with MockFa
 
   private val maxAttempts = 3
 
-  val mockAppConfig: AppConfig = new Fixtures.TestConfig(maxAttempts, 3 hours)
-
   val service: CtutrAttemptsServiceImpl =
-    new CtutrAttemptsServiceImpl(mockCtutrAttemptsStore, mockTimeProvider, mockAppConfig)
+    new CtutrAttemptsServiceImpl(mockCtutrAttemptsStore, mockTimeProvider, config)
 
   private def mockStore(ctutrAttempts: CtutrAttempts)(result: Either[Error, Unit]) =
     (mockCtutrAttemptsStore

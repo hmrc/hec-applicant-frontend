@@ -66,10 +66,9 @@ class CtutrAttemptsStoreImpl @Inject() (
           .map { maybeCache =>
             val response: OptionT[Either[Error, *], CtutrAttempts] = for {
               cache ← OptionT.fromOption[Either[Error, *]](maybeCache)
-              // TODO rewrite
-              // even if there is no data , cache returns with -> {"id" : "code1", data : {}}
-              //so added a logic if the json is empty, then return None
-              // but if there is, then proceed to validate json
+              // even if there is no data found, cache returns with -> {"id" : "code1", data : {}}
+              // if the json is empty, return None
+              // if not, proceed to validate json
               cacheLength = cache.data.keys.size
               data       <- OptionT.fromOption[Either[Error, *]](if (cacheLength == 0) None else Some(cache.data))
               result ← OptionT.liftF[Either[Error, *], CtutrAttempts](

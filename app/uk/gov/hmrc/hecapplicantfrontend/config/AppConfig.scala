@@ -18,9 +18,6 @@ package uk.gov.hmrc.hecapplicantfrontend.config
 
 import cats.instances.char._
 import cats.syntax.eq._
-import com.google.inject.ImplementedBy
-
-import javax.inject.{Inject, Singleton}
 import play.api.Configuration
 import play.api.mvc.Result
 import play.api.mvc.Results.Redirect
@@ -31,48 +28,11 @@ import uk.gov.hmrc.hecapplicantfrontend.util.StringUtils.StringOps
 import uk.gov.hmrc.hmrcfrontend.config.ContactFrontendConfig
 
 import java.util.UUID
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.duration.FiniteDuration
 
-@ImplementedBy(classOf[AppConfigImpl])
-trait AppConfig {
-  val platformHost: Option[String]
-  val contactFrontendUrl: String
-  val contactFormServiceIdentifier: String
-  val betaFeedbackUrl: String
-  val welshLanguageSupportEnabled: Boolean
-  val selfBaseUrl: String
-  val ggOrigin: String
-  val signInUrl: String
-
-  def signOutUrl(continueUrl: Option[String]): String
-
-  val signOutAndSignBackInUrl: String
-
-  def registerForNewGGAccountUrl(entityType: EntityType): String
-
-  val authTimeoutSeconds: Int
-  val authTimeoutCountdownSeconds: Int
-
-  val redirectToIvUplift: Result
-
-  val taxCheckGuidanceUrl: String
-  val registerForSaUrl: String
-  val contactHmrcSa: String
-  val companiesHouseSearchUrl: String
-  val companiesHouseUpdatesUrl: String
-  val registerForCtUrl: String
-  val accountingPeriodsGuidanceUrl: String
-  val findLostUtrUrl: String
-  val saGuidanceUrl: String
-
-  val firstPageBackUrl: String
-
-  val maxCtutrAnswerAttempts: Int
-  val maxCtutrStoreExpiry: FiniteDuration
-}
-
 @Singleton
-class AppConfigImpl @Inject() (config: Configuration, contactFrontendConfig: ContactFrontendConfig) extends AppConfig {
+class AppConfig @Inject() (config: Configuration, contactFrontendConfig: ContactFrontendConfig) {
 
   val platformHost: Option[String] = config.getOptional[String]("platform.frontend.host")
   val contactFrontendUrl: String   =
@@ -162,5 +122,4 @@ class AppConfigImpl @Inject() (config: Configuration, contactFrontendConfig: Con
   val firstPageBackUrl: String = config.get[String]("first-page-back-url")
 
   val maxCtutrAnswerAttempts: Int         = config.get[Int]("ctutr-attempts.maximum-attempts")
-  val maxCtutrStoreExpiry: FiniteDuration = config.get[FiniteDuration]("ctutr-attempts.store-expiry-time")
 }
