@@ -17,6 +17,7 @@
 package uk.gov.hmrc.hecapplicantfrontend.services
 
 import cats.data.EitherT
+import cats.syntax.eq._
 import com.google.inject.{ImplementedBy, Inject, Singleton}
 import play.api.Configuration
 import uk.gov.hmrc.hecapplicantfrontend.models
@@ -31,9 +32,15 @@ import scala.concurrent.{ExecutionContext, Future}
 @ImplementedBy(classOf[CtutrAttemptsServiceImpl])
 trait CtutrAttemptsService {
 
-  def createOrIncrementAttempts(crn: CRN, ggCredId: GGCredId): EitherT[Future, models.Error, CtutrAttempts]
+  def updateAttempts(
+    crn: CRN,
+    ggCredId: GGCredId,
+    ctutrAttempts: Option[CtutrAttempts]
+  ): EitherT[Future, models.Error, CtutrAttempts]
 
   def delete(crn: CRN, ggCredId: GGCredId): EitherT[Future, models.Error, Unit]
+
+  def get(crn: CRN, ggCredId: GGCredId): EitherT[Future, models.Error, Option[CtutrAttempts]]
 }
 
 @Singleton
@@ -50,29 +57,49 @@ class CtutrAttemptsServiceImpl @Inject() (
     config.get[FiniteDuration]("ctutr-attempts.store-expiry-time").toSeconds
 
   /**
-    * Fetch CTUTR attempts for the CRN-GGCredId combination
-    * If not found, create a new document with 1 attempt
-    * If found & maximum attempts reached i.e. lock period is set, just return fetched data
-    * If found & number of attempts one less than max allowed, increment attempts & set the lock period
-    * If found & number of attempts more than one less than max allowed, only increment attempts
-    * @return The updated CTUTR attempts
+    * Update a previously fetched CtutrAttempts object
+    * Note: crn and ggCredId values should match corresponding values in ctutrAttempts if defined
+    *
+    * If ctutrAttempts
+    *    is undefined -> create a new document with 1 attempt
+    *    is defined & maximum attempts reached i.e. lock period is set -> just return fetched data
+    *    is defined & number of attempts one less than max allowed -> increment attempts & set the lock period
+    *    is defined & number of attempts more than one less than max allowed -> only increment attempts
+    *
+    * @param crn The CRN value
+    * @param ggCredId The GGCredId
+    * @param ctutrAttempts Previously fetched CTUTR attempts
+    * @return
     */
-  def createOrIncrementAttempts(crn: CRN, ggCredId: GGCredId): EitherT[Future, models.Error, CtutrAttempts] =
-    for {
-      attemptsOpt    <- ctutrAttemptsStore.get(crn, ggCredId)
-      updatedAttempts = attemptsOpt match {
-                          case None                                           => CtutrAttempts(crn, ggCredId, 1, None)
-                          case Some(ctutrAttempts) if ctutrAttempts.isBlocked => ctutrAttempts
-                          case Some(ctutrAttempts)                            =>
-                            val lockedUntilOpt = if (ctutrAttempts.attempts >= maxCtutrAnswerAttempts - 1) {
-                              Some(timeProvider.now.plusSeconds(maxCtutrStoreExpiryInSeconds))
-                            } else None
-                            ctutrAttempts.copy(attempts = ctutrAttempts.attempts + 1, blockedUntil = lockedUntilOpt)
-                        }
-      _              <- if (attemptsOpt.contains(updatedAttempts)) EitherT.pure[Future, models.Error](())
-                        else ctutrAttemptsStore.store(updatedAttempts)
-    } yield updatedAttempts
+  def updateAttempts(
+    crn: CRN,
+    ggCredId: GGCredId,
+    ctutrAttempts: Option[CtutrAttempts]
+  ): EitherT[Future, models.Error, CtutrAttempts] = {
+    require(
+      ctutrAttempts.forall(ca => ca.crn === crn && ca.ggCredId === ggCredId),
+      "crn and ggCredId should match corresponding values in ctutrAttempts if defined"
+    )
+
+    val updatedAttempts = ctutrAttempts match {
+      case None                                           => CtutrAttempts(crn, ggCredId, 1, None)
+      case Some(ctutrAttempts) if ctutrAttempts.isBlocked => ctutrAttempts
+      case Some(ctutrAttempts)                            =>
+        val lockedUntilOpt = if (ctutrAttempts.attempts >= maxCtutrAnswerAttempts - 1) {
+          Some(timeProvider.now.plusSeconds(maxCtutrStoreExpiryInSeconds))
+        } else None
+        ctutrAttempts.copy(attempts = ctutrAttempts.attempts + 1, blockedUntil = lockedUntilOpt)
+    }
+
+    if (ctutrAttempts.contains(updatedAttempts))
+      EitherT.pure[Future, models.Error](updatedAttempts)
+    else
+      ctutrAttemptsStore.store(updatedAttempts).map(_ => updatedAttempts)
+  }
 
   def delete(crn: CRN, ggCredId: GGCredId): EitherT[Future, models.Error, Unit] =
     ctutrAttemptsStore.delete(crn, ggCredId)
+
+  def get(crn: CRN, ggCredId: GGCredId): EitherT[Future, models.Error, Option[CtutrAttempts]] =
+    ctutrAttemptsStore.get(crn, ggCredId)
 }

@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models.ids
 
+import cats.Eq
 import play.api.libs.json.{Format, Json}
 
 /**
@@ -26,5 +27,5 @@ final case class GGCredId(value: String) extends AnyVal
 object GGCredId {
 
   implicit val format: Format[GGCredId] = Json.valueFormat[GGCredId]
-
+  implicit val eq: Eq[GGCredId]         = Eq.fromUniversalEquals
 }

@@ -61,38 +61,40 @@ class CtutrAttemptsServiceImplSpec extends AnyWordSpec with Matchers with MockFa
       .expects(ctutrAttempts)
       .returning(EitherT.fromEither(result))
 
-  private def mockGet(crn: CRN, ggCredId: GGCredId)(result: Either[Error, Option[CtutrAttempts]]) =
-    (mockCtutrAttemptsStore
-      .get(_: CRN, _: GGCredId))
-      .expects(crn, ggCredId)
-      .returning(EitherT.fromEither(result))
-
   private def mockTimeProviderNow(d: ZonedDateTime) = (mockTimeProvider.now _).expects().returning(d)
 
   "CtutrAttemptsServiceImpl" when {
 
-    "handling requests to create or update ctutr attempts" must {
+    "handling requests to update ctutr attempts" must {
 
       val crn      = CRN("crn")
       val ggCredId = GGCredId("ggCredId")
 
       "return an error" when {
 
-        "fetching ctutr attempts fails" in {
-          mockGet(crn, ggCredId)(Left(Error("")))
+        "saving ctutr attempts fails" in {
+          mockStore(CtutrAttempts(crn, ggCredId, 1, None))(Left(Error("some error")))
 
-          val result = service.createOrIncrementAttempts(crn, ggCredId)
+          val result = service.updateAttempts(crn, ggCredId, None)
           await(result.value) shouldBe a[Left[_, _]]
         }
 
-        "saving ctutr attempts fails" in {
-          inSequence {
-            mockGet(crn, ggCredId)(Right(None))
-            mockStore(CtutrAttempts(crn, ggCredId, 1, None))(Left(Error("some error")))
-          }
+        "crn does not match the corresponding value in ctutr attempts" in {
+          assertThrows[IllegalArgumentException](
+            service.updateAttempts(crn, ggCredId, Some(CtutrAttempts(CRN("invalid"), ggCredId, 1, None)))
+          )
+        }
 
-          val result = service.createOrIncrementAttempts(crn, ggCredId)
-          await(result.value) shouldBe a[Left[_, _]]
+        "ggCredId does not match the corresponding value in ctutr attempts" in {
+          assertThrows[IllegalArgumentException](
+            service.updateAttempts(crn, ggCredId, Some(CtutrAttempts(crn, GGCredId("invalid"), 1, None)))
+          )
+        }
+
+        "both crn & ggCredId do not match the corresponding values in ctutr attempts" in {
+          assertThrows[IllegalArgumentException](
+            service.updateAttempts(crn, ggCredId, Some(CtutrAttempts(CRN("invalid"), GGCredId("invalid"), 1, None)))
+          )
         }
 
       }
@@ -101,12 +103,9 @@ class CtutrAttemptsServiceImplSpec extends AnyWordSpec with Matchers with MockFa
 
         "no existing ctutr attempts found for CRN & GGCredId" in {
           val ctutrAttempts = CtutrAttempts(crn, ggCredId, 1, None)
-          inSequence {
-            mockGet(crn, ggCredId)(Right(None))
-            mockStore(ctutrAttempts)(Right(()))
-          }
+          mockStore(ctutrAttempts)(Right(()))
 
-          val result = service.createOrIncrementAttempts(crn, ggCredId)
+          val result = service.updateAttempts(crn, ggCredId, None)
           await(result.value) shouldBe Right(ctutrAttempts)
         }
 
@@ -116,12 +115,9 @@ class CtutrAttemptsServiceImplSpec extends AnyWordSpec with Matchers with MockFa
             attempts = 2,
             blockedUntil = None
           )
-          inSequence {
-            mockGet(crn, ggCredId)(Right(Some(existingCtutrAttempts)))
-            mockStore(updatedCtutrAttempts)(Right(()))
-          }
+          mockStore(updatedCtutrAttempts)(Right(()))
 
-          val result = service.createOrIncrementAttempts(crn, ggCredId)
+          val result = service.updateAttempts(crn, ggCredId, Some(existingCtutrAttempts))
           await(result.value) shouldBe Right(updatedCtutrAttempts)
         }
 
@@ -132,20 +128,18 @@ class CtutrAttemptsServiceImplSpec extends AnyWordSpec with Matchers with MockFa
             blockedUntil = Some(now.plusHours(3))
           )
           inSequence {
-            mockGet(crn, ggCredId)(Right(Some(existingCtutrAttempts)))
             mockTimeProviderNow(now)
             mockStore(updatedCtutrAttempts)(Right(()))
           }
 
-          val result = service.createOrIncrementAttempts(crn, ggCredId)
+          val result = service.updateAttempts(crn, ggCredId, Some(existingCtutrAttempts))
           await(result.value) shouldBe Right(updatedCtutrAttempts)
         }
 
         "existing ctutr attempts is blocked" in {
           val existingCtutrAttempts = CtutrAttempts(crn, ggCredId, maxAttempts, Some(ZonedDateTime.now))
-          mockGet(crn, ggCredId)(Right(Some(existingCtutrAttempts)))
 
-          val result = service.createOrIncrementAttempts(crn, ggCredId)
+          val result = service.updateAttempts(crn, ggCredId, Some(existingCtutrAttempts))
           await(result.value) shouldBe Right(existingCtutrAttempts)
         }
 
