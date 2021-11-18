@@ -349,14 +349,13 @@ class CompanyDetailsController @Inject() (
             )
           )
 
-          def handleFormWithErrors(formWithErrors: Form[CTUTR], ctutrAttemptsOpt: Option[CtutrAttempts])
-            : Future[Result] = {
+          def handleFormWithErrors(formWithErrors: Form[CTUTR], ctutrAttempts: CtutrAttempts): Future[Result] = {
 
             def displayFormError: Future[Result] = Future.successful(ok(formWithErrors))
 
             def incrementAttemptsAndProceed =
               ctutrAttemptsService
-                .updateAttempts(crn, companySession.loginData.ggCredId, ctutrAttemptsOpt)
+                .updateAttempts(ctutrAttempts)
                 .foldF(
                   _.doThrow("Could not create/update ctutr attempts"),
                   {
@@ -388,20 +387,20 @@ class CompanyDetailsController @Inject() (
           }
 
           ctutrAttemptsService
-            .get(crn, companySession.loginData.ggCredId)
+            .getWithDefault(crn, companySession.loginData.ggCredId)
             .foldF(
               _.doThrow("Error fetching CTUTR attempts"),
-              {
-                case Some(ctutrAttempts) if ctutrAttempts.isBlocked =>
+              ctutrAttempts =>
+                if (ctutrAttempts.isBlocked) {
                   updateAndNextJourneyData(
                     routes.CompanyDetailsController.enterCtutr(),
                     companySession.copy(crnBlocked = true)
                   )
-                case ctutrAttempts                                  =>
+                } else {
                   enterCtutrForm(desCtutr)
                     .bindFromRequest()
                     .fold(handleFormWithErrors(_, ctutrAttempts), handleValidAnswer)
-              }
+                }
             )
         }
       }

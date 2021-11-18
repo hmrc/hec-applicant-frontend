@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models
 
+import cats.Eq
 import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, GGCredId}
 
@@ -32,4 +33,5 @@ final case class CtutrAttempts(
 
 object CtutrAttempts {
   implicit val format: OFormat[CtutrAttempts] = Json.format
+  implicit val eq: Eq[CtutrAttempts]          = Eq.fromUniversalEquals
 }

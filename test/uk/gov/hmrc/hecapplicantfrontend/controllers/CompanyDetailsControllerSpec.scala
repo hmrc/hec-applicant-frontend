@@ -77,19 +77,19 @@ class CompanyDetailsControllerSpec
       .expects(ctutr, startDate, endDate, *)
       .returning(EitherT.fromEither[Future](result))
 
-  def mockCtutrAttemptsServiceUpdateAttempts(crn: CRN, ggCredId: GGCredId, attempts: Option[CtutrAttempts])(
+  def mockCtutrAttemptsServiceUpdateAttempts(attempts: CtutrAttempts)(
     result: Either[Error, CtutrAttempts]
   ) =
     (mockCtutrAttemptsService
-      .updateAttempts(_: CRN, _: GGCredId, _: Option[CtutrAttempts]))
-      .expects(crn, ggCredId, attempts)
+      .updateAttempts(_: CtutrAttempts))
+      .expects(attempts)
       .returning(EitherT.fromEither[Future](result))
 
   def mockCtutrAttemptsServiceGet(crn: CRN, ggCredId: GGCredId)(
-    result: Either[Error, Option[CtutrAttempts]]
+    result: Either[Error, CtutrAttempts]
   ) =
     (mockCtutrAttemptsService
-      .get(_: CRN, _: GGCredId))
+      .getWithDefault(_: CRN, _: GGCredId))
       .expects(crn, ggCredId)
       .returning(EitherT.fromEither[Future](result))
 
@@ -1379,18 +1379,19 @@ class CompanyDetailsControllerSpec
       behave like authAndSessionDataBehaviour(() => performAction())
 
       "show a form error" when {
-        val userAnswers = Fixtures.incompleteCompanyUserAnswers(crn = Some(crn))
-        val session     = Fixtures.companyHECSession(
+        val userAnswers   = Fixtures.incompleteCompanyUserAnswers(crn = Some(crn))
+        val session       = Fixtures.companyHECSession(
           companyLoginData,
           retrievedJourneyData = Fixtures.companyRetrievedJourneyData(desCtutr = Some(CTUTR(ctutr1))),
           userAnswers = userAnswers
         )
+        val ctutrAttempts = CtutrAttempts(crn, GGCredId("ggCredId"), 1, None)
 
         def test(errorMessageKey: String, formAnswer: (String, String)*) = {
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockCtutrAttemptsServiceGet(crn, session.loginData.ggCredId)(Right(None))
+            mockCtutrAttemptsServiceGet(crn, session.loginData.ggCredId)(Right(ctutrAttempts))
             mockJourneyServiceGetPrevious(enterCtutrRoute, session)(mockPreviousCall)
           }
 
@@ -1444,12 +1445,13 @@ class CompanyDetailsControllerSpec
           )
 
           val ggCredId = session.loginData.ggCredId
+          val attempts = CtutrAttempts(crn, ggCredId, 1, None)
 
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockCtutrAttemptsServiceGet(crn, session.loginData.ggCredId)(Right(None))
-            mockCtutrAttemptsServiceUpdateAttempts(crn, ggCredId, None)(
+            mockCtutrAttemptsServiceGet(crn, session.loginData.ggCredId)(Right(attempts))
+            mockCtutrAttemptsServiceUpdateAttempts(attempts)(
               Right(CtutrAttempts(crn, ggCredId, 1, None))
             )
             mockStoreSession(updatedSession)(Right(()))
@@ -1465,6 +1467,8 @@ class CompanyDetailsControllerSpec
       }
 
       "return a technical error" when {
+
+        val attempts = CtutrAttempts(crn, GGCredId("ggCredId"), 1, None)
 
         "the applicant type is individual" in {
           inSequence {
@@ -1522,7 +1526,7 @@ class CompanyDetailsControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(companySessionWithCrn)
-            mockCtutrAttemptsServiceGet(crn, companySessionWithCrn.loginData.ggCredId)(Right(None))
+            mockCtutrAttemptsServiceGet(crn, companySessionWithCrn.loginData.ggCredId)(Right(attempts))
             mockTimeProviderToday(LocalDate.now)
             mockCtutrAttemptsServiceDelete(crn, companySessionWithCrn.loginData.ggCredId)(Left(Error("some error")))
           }
@@ -1537,7 +1541,7 @@ class CompanyDetailsControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(companySessionWithCrn)
-            mockCtutrAttemptsServiceGet(crn, companySessionWithCrn.loginData.ggCredId)(Right(None))
+            mockCtutrAttemptsServiceGet(crn, companySessionWithCrn.loginData.ggCredId)(Right(attempts))
             mockTimeProviderToday(LocalDate.now)
             mockCtutrAttemptsServiceDelete(crn, companySessionWithCrn.loginData.ggCredId)(Right(()))
             mockTaxCheckServiceGetCtStatus(CTUTR(ctutr1), lookbackPeriodStartDate, lookbackPeriodEndDate)(
@@ -1568,7 +1572,9 @@ class CompanyDetailsControllerSpec
             inSequence {
               mockAuthWithNoRetrievals()
               mockGetSession(session)
-              mockCtutrAttemptsServiceGet(crn, session.loginData.ggCredId)(Right(None))
+              mockCtutrAttemptsServiceGet(crn, session.loginData.ggCredId)(
+                Right(CtutrAttempts(crn, GGCredId("ggCredId"), 1, None))
+              )
               mockTimeProviderToday(LocalDate.now)
               mockCtutrAttemptsServiceDelete(crn, session.loginData.ggCredId)(Right(()))
               mockTaxCheckServiceGetCtStatus(CTUTR(ctutr1), lookbackPeriodStartDate, lookbackPeriodEndDate)(
@@ -1598,8 +1604,8 @@ class CompanyDetailsControllerSpec
             inSequence {
               mockAuthWithNoRetrievals()
               mockGetSession(session)
-              mockCtutrAttemptsServiceGet(crn, companyLoginData.ggCredId)(Right(Some(attempts)))
-              mockCtutrAttemptsServiceUpdateAttempts(crn, companyLoginData.ggCredId, Some(attempts))(
+              mockCtutrAttemptsServiceGet(crn, companyLoginData.ggCredId)(Right(attempts))
+              mockCtutrAttemptsServiceUpdateAttempts(attempts)(
                 Right(attempts.copy(blockedUntil = Some(ZonedDateTime.now)))
               )
               mockJourneyServiceUpdateAndNext(
@@ -1631,7 +1637,7 @@ class CompanyDetailsControllerSpec
           )
 
           val ggCredId = session.loginData.ggCredId
-          val attempts = CtutrAttempts(crn, ggCredId, 1, None)
+          val attempts = CtutrAttempts(crn, ggCredId, 0, None)
 
           val updatedSession = session.copy(
             userAnswers = userAnswers
@@ -1642,8 +1648,8 @@ class CompanyDetailsControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockCtutrAttemptsServiceGet(crn, session.loginData.ggCredId)(Right(None))
-            mockCtutrAttemptsServiceUpdateAttempts(crn, ggCredId, None)(Right(attempts))
+            mockCtutrAttemptsServiceGet(crn, session.loginData.ggCredId)(Right(attempts))
+            mockCtutrAttemptsServiceUpdateAttempts(attempts)(Right(attempts.copy(attempts = 1)))
             mockStoreSession(updatedSession)(Left(Error("some error")))
           }
 
@@ -1687,7 +1693,7 @@ class CompanyDetailsControllerSpec
                   mockAuthWithNoRetrievals()
                   mockGetSession(session)
                   mockCtutrAttemptsServiceGet(crn, companyLoginData.ggCredId)(
-                    Right(Some(CtutrAttempts(crn, companyLoginData.ggCredId, 1, None)))
+                    Right(CtutrAttempts(crn, companyLoginData.ggCredId, 1, None))
                   )
                   mockTimeProviderToday(LocalDate.now)
                   mockCtutrAttemptsServiceDelete(crn, session.loginData.ggCredId)(Right(()))
@@ -1725,7 +1731,7 @@ class CompanyDetailsControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockCtutrAttemptsServiceGet(crn, companyLoginData.ggCredId)(Right(Some(attempts)))
+            mockCtutrAttemptsServiceGet(crn, companyLoginData.ggCredId)(Right(attempts))
             mockJourneyServiceUpdateAndNext(
               enterCtutrRoute,
               session,
@@ -1751,10 +1757,8 @@ class CompanyDetailsControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockCtutrAttemptsServiceGet(crn, companyLoginData.ggCredId)(Right(Some(attempts)))
-            mockCtutrAttemptsServiceUpdateAttempts(crn, companyLoginData.ggCredId, Some(attempts))(
-              Right(updatedAttempts)
-            )
+            mockCtutrAttemptsServiceGet(crn, companyLoginData.ggCredId)(Right(attempts))
+            mockCtutrAttemptsServiceUpdateAttempts(attempts)(Right(updatedAttempts))
             mockJourneyServiceUpdateAndNext(
               enterCtutrRoute,
               session,
