@@ -29,13 +29,14 @@ import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.CompanyLoginData
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.CompanyRetrievedJourneyData
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR, GGCredId}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.hecapplicantfrontend.models.{CompanyHouseDetails, CompanyHouseName, Error, YesNoAnswer}
+import uk.gov.hmrc.hecapplicantfrontend.models.{CompanyHouseDetails, CompanyHouseName, CtutrAttempts, Error, YesNoAnswer}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
-import uk.gov.hmrc.hecapplicantfrontend.services.{CompanyDetailsService, JourneyService}
+import uk.gov.hmrc.hecapplicantfrontend.services.{CompanyDetailsService, CtutrAttemptsService, JourneyService}
 import uk.gov.hmrc.hecapplicantfrontend.util.StringUtils.StringOps
 import uk.gov.hmrc.hecapplicantfrontend.utils.Fixtures
 import uk.gov.hmrc.http.HeaderCarrier
 
+import java.time.ZonedDateTime
 import java.util.Locale
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -56,11 +57,14 @@ class CRNControllerSpec
     List(CRN("AAB3456"), CRN("12345AAA"))
   val companyHouseName          = CompanyHouseName("Test Tech Ltd")
 
+  val mockCtutrAttemptsService = mock[CtutrAttemptsService]
+
   override def overrideBindings = List(
     bind[AuthConnector].toInstance(mockAuthConnector),
     bind[SessionStore].toInstance(mockSessionStore),
     bind[JourneyService].toInstance(mockJourneyService),
-    bind[CompanyDetailsService].toInstance(mockCompanyDetailsService)
+    bind[CompanyDetailsService].toInstance(mockCompanyDetailsService),
+    bind[CtutrAttemptsService].toInstance(mockCtutrAttemptsService)
   )
 
   val controller       = instanceOf[CRNController]
@@ -72,6 +76,14 @@ class CRNControllerSpec
     .findCompany(_: CRN)(_: HeaderCarrier))
     .expects(crn, *)
     .returning(EitherT.fromEither(result))
+
+  def mockCtutrAttemptsServiceGet(crn: CRN, ggCredId: GGCredId)(
+    result: Either[Error, CtutrAttempts]
+  ) =
+    (mockCtutrAttemptsService
+      .getWithDefault(_: CRN, _: GGCredId))
+      .expects(crn, ggCredId)
+      .returning(EitherT.fromEither[Future](result))
 
   "CRNControllerSpec" when {
 
@@ -153,179 +165,255 @@ class CRNControllerSpec
 
       }
 
-      "handling submit on the CRN page" must {
+    }
 
-        def performAction(data: (String, String)*): Future[Result] =
-          controller.companyRegistrationNumberSubmit(FakeRequest().withFormUrlEncodedBody(data: _*))
+    "handling submit on the CRN page" must {
 
-        behave like authAndSessionDataBehaviour(() => performAction())
+      def performAction(data: (String, String)*): Future[Result] =
+        controller.companyRegistrationNumberSubmit(FakeRequest().withFormUrlEncodedBody(data: _*))
 
-        "show a form error" when {
+      behave like authAndSessionDataBehaviour(() => performAction())
 
-          val session = CompanyHECSession.newSession(companyLoginData)
+      "show a form error" when {
 
-          "nothing has been submitted" in {
-            inSequence {
-              mockAuthWithNoRetrievals()
-              mockGetSession(session)
-              mockJourneyServiceGetPrevious(routes.CRNController.companyRegistrationNumber(), session)(
-                mockPreviousCall
-              )
-            }
+        val session = CompanyHECSession.newSession(companyLoginData)
 
-            checkFormErrorIsDisplayed(
-              performAction(),
-              messageFromMessageKey("crn.title"),
-              messageFromMessageKey("crn.error.required")
+        "nothing has been submitted" in {
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockJourneyServiceGetPrevious(routes.CRNController.companyRegistrationNumber(), session)(
+              mockPreviousCall
             )
           }
 
-          "the submitted value is too long" in {
-            inSequence {
-              mockAuthWithNoRetrievals()
-              mockGetSession(session)
-              mockJourneyServiceGetPrevious(routes.CRNController.companyRegistrationNumber(), session)(
-                mockPreviousCall
-              )
-            }
+          checkFormErrorIsDisplayed(
+            performAction(),
+            messageFromMessageKey("crn.title"),
+            messageFromMessageKey("crn.error.required")
+          )
+        }
 
-            checkFormErrorIsDisplayed(
-              performAction("crn" -> "1234567890"),
-              messageFromMessageKey("crn.title"),
-              messageFromMessageKey("crn.error.crnInvalid")
+        "the submitted value is too long" in {
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockJourneyServiceGetPrevious(routes.CRNController.companyRegistrationNumber(), session)(
+              mockPreviousCall
             )
           }
 
-          "the submitted value is too short" in {
-            inSequence {
-              mockAuthWithNoRetrievals()
-              mockGetSession(session)
-              mockJourneyServiceGetPrevious(routes.CRNController.companyRegistrationNumber(), session)(
-                mockPreviousCall
-              )
-            }
+          checkFormErrorIsDisplayed(
+            performAction("crn" -> "1234567890"),
+            messageFromMessageKey("crn.title"),
+            messageFromMessageKey("crn.error.crnInvalid")
+          )
+        }
 
-            checkFormErrorIsDisplayed(
-              performAction("crn" -> "12345"),
-              messageFromMessageKey("crn.title"),
-              messageFromMessageKey("crn.error.crnInvalid")
+        "the submitted value is too short" in {
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockJourneyServiceGetPrevious(routes.CRNController.companyRegistrationNumber(), session)(
+              mockPreviousCall
             )
           }
 
-          "the submitted value contains characters which are not letters or digits" in {
+          checkFormErrorIsDisplayed(
+            performAction("crn" -> "12345"),
+            messageFromMessageKey("crn.title"),
+            messageFromMessageKey("crn.error.crnInvalid")
+          )
+        }
 
-            nonAlphaNumCRN.foreach { crn =>
-              withClue(s"For CRN $crn: ") {
-                inSequence {
-                  mockAuthWithNoRetrievals()
-                  mockGetSession(session)
-                  mockJourneyServiceGetPrevious(routes.CRNController.companyRegistrationNumber(), session)(
-                    mockPreviousCall
-                  )
-                }
+        "the submitted value contains characters which are not letters or digits" in {
 
-                checkFormErrorIsDisplayed(
-                  performAction("crn" -> crn.value),
-                  messageFromMessageKey("crn.title"),
-                  messageFromMessageKey("crn.error.nonAlphanumericChars")
+          nonAlphaNumCRN.foreach { crn =>
+            withClue(s"For CRN $crn: ") {
+              inSequence {
+                mockAuthWithNoRetrievals()
+                mockGetSession(session)
+                mockJourneyServiceGetPrevious(routes.CRNController.companyRegistrationNumber(), session)(
+                  mockPreviousCall
                 )
-
               }
 
-            }
-
-          }
-
-          "the submitted value contains alphanumeric characters but in wrong format" in {
-            inValidCRN.foreach { crn =>
-              withClue(s"For CRN $crn: ") {
-                inSequence {
-                  mockAuthWithNoRetrievals()
-                  mockGetSession(session)
-                  mockJourneyServiceGetPrevious(routes.CRNController.companyRegistrationNumber(), session)(
-                    mockPreviousCall
-                  )
-                }
-
-                checkFormErrorIsDisplayed(
-                  performAction("crn" -> crn.value),
-                  messageFromMessageKey("crn.title"),
-                  messageFromMessageKey("crn.error.crnInvalid")
-                )
-
-              }
-            }
-          }
-
-          "CRN match was not found in companies house db" in {
-            inSequence {
-              mockAuthWithNoRetrievals()
-              mockGetSession(session)
-              mockFindCompany(validCRN)(Right(None))
-              mockJourneyServiceGetPrevious(routes.CRNController.companyRegistrationNumber(), session)(
-                mockPreviousCall
+              checkFormErrorIsDisplayed(
+                performAction("crn" -> crn.value),
+                messageFromMessageKey("crn.title"),
+                messageFromMessageKey("crn.error.nonAlphanumericChars")
               )
+
             }
 
-            checkFormErrorIsDisplayed(
-              performAction("crn" -> validCRN.value),
-              messageFromMessageKey("crn.title"),
-              messageFromMessageKey("crn.error.notFoundInCompaniesHouse")
-            )
           }
 
         }
 
-        "return a technical error" when {
+        "the submitted value contains alphanumeric characters but in wrong format" in {
+          inValidCRN.foreach { crn =>
+            withClue(s"For CRN $crn: ") {
+              inSequence {
+                mockAuthWithNoRetrievals()
+                mockGetSession(session)
+                mockJourneyServiceGetPrevious(routes.CRNController.companyRegistrationNumber(), session)(
+                  mockPreviousCall
+                )
+              }
 
-          val answers = Fixtures.completeCompanyUserAnswers()
-          val session = Fixtures.companyHECSession(companyLoginData, CompanyRetrievedJourneyData.empty, answers)
-
-          "there is an error updating and getting the next endpoint" in {
-            val updatedAnswers = IncompleteCompanyUserAnswers
-              .fromCompleteAnswers(answers)
-              .copy(crn = Some(validCRN), companyDetailsConfirmed = None)
-
-            val updatedSession = session.copy(
-              retrievedJourneyData = session.retrievedJourneyData.copy(companyName = Some(companyHouseName)),
-              userAnswers = updatedAnswers
-            )
-
-            inSequence {
-              mockAuthWithNoRetrievals()
-              mockGetSession(session)
-              mockFindCompany(validCRN)(
-                Right(Some(CompanyHouseDetails(companyHouseName)))
+              checkFormErrorIsDisplayed(
+                performAction("crn" -> crn.value),
+                messageFromMessageKey("crn.title"),
+                messageFromMessageKey("crn.error.crnInvalid")
               )
-              mockJourneyServiceUpdateAndNext(
-                routes.CRNController.companyRegistrationNumber(),
-                session,
-                updatedSession
-              )(
-                Left(Error(""))
-              )
+
             }
+          }
+        }
 
-            assertThrows[RuntimeException](await(performAction("crn" -> validCRN.value)))
+        "CRN match was not found in companies house db" in {
+          val crn           = validCRN
+          val ctutrAttempts = CtutrAttempts(crn, GGCredId("ggCredId"), 1, None)
 
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockCtutrAttemptsServiceGet(crn, session.loginData.ggCredId)(Right(ctutrAttempts))
+            mockFindCompany(validCRN)(Right(None))
+            mockJourneyServiceGetPrevious(routes.CRNController.companyRegistrationNumber(), session)(
+              mockPreviousCall
+            )
           }
 
+          checkFormErrorIsDisplayed(
+            performAction("crn" -> crn.value),
+            messageFromMessageKey("crn.title"),
+            messageFromMessageKey("crn.error.notFoundInCompaniesHouse")
+          )
+        }
+
+      }
+
+      "return a technical error" when {
+
+        val answers = Fixtures.completeCompanyUserAnswers()
+        val session = Fixtures.companyHECSession(companyLoginData, CompanyRetrievedJourneyData.empty, answers)
+
+        "there is an error updating and getting the next endpoint" in {
+          val crn           = validCRN
+          val ctutrAttempts = CtutrAttempts(crn, GGCredId("ggCredId"), 1, None)
+
+          val updatedAnswers = IncompleteCompanyUserAnswers
+            .fromCompleteAnswers(answers)
+            .copy(crn = Some(validCRN), companyDetailsConfirmed = None)
+
+          val updatedSession = session.copy(
+            retrievedJourneyData = session.retrievedJourneyData.copy(companyName = Some(companyHouseName)),
+            userAnswers = updatedAnswers
+          )
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockCtutrAttemptsServiceGet(crn, session.loginData.ggCredId)(Right(ctutrAttempts))
+            mockFindCompany(validCRN)(
+              Right(Some(CompanyHouseDetails(companyHouseName)))
+            )
+            mockJourneyServiceUpdateAndNext(
+              routes.CRNController.companyRegistrationNumber(),
+              session,
+              updatedSession
+            )(
+              Left(Error(""))
+            )
+          }
+
+          assertThrows[RuntimeException](await(performAction("crn" -> crn.value)))
+
+        }
+
+        "CRN is blocked & updateAndNext fails" in {
+          val crn                  = validCRN
+          val answers              = Fixtures.completeCompanyUserAnswers()
+          val session              = Fixtures.companyHECSession(companyLoginData, CompanyRetrievedJourneyData.empty, answers)
+          val blockedCtutrAttempts = CtutrAttempts(crn, session.loginData.ggCredId, 1, Some(ZonedDateTime.now))
+
+          // CRN dependent answers are reset
+          val updatedAnswers = IncompleteCompanyUserAnswers
+            .fromCompleteAnswers(answers)
+            .copy(
+              crn = Some(crn),
+              companyDetailsConfirmed = None,
+              chargeableForCT = None,
+              ctIncomeDeclared = None,
+              recentlyStartedTrading = None,
+              ctutr = None
+            )
+
+          val updatedSession = session.copy(userAnswers = updatedAnswers, crnBlocked = true)
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockCtutrAttemptsServiceGet(crn, session.loginData.ggCredId)(Right(blockedCtutrAttempts))
+            mockJourneyServiceUpdateAndNext(
+              routes.CRNController.companyRegistrationNumber(),
+              session,
+              updatedSession
+            )(Left(Error("some error")))
+          }
+
+          assertThrows[RuntimeException](await(performAction("crn" -> crn.value)))
         }
 
       }
 
       "redirect to the next page" when {
 
-        def performAction(data: (String, String)*): Future[Result] =
-          controller.companyRegistrationNumberSubmit(FakeRequest().withFormUrlEncodedBody(data: _*))
+        "a blocked CRN is submitted" in {
+          val crn                  = validCRN
+          val answers              = Fixtures.completeCompanyUserAnswers()
+          val session              = Fixtures.companyHECSession(companyLoginData, CompanyRetrievedJourneyData.empty, answers)
+          val blockedCtutrAttempts = CtutrAttempts(crn, session.loginData.ggCredId, 1, Some(ZonedDateTime.now))
 
-        def testNextCall(companyDetails: Option[CompanyHouseDetails]) =
+          // CRN dependent answers are reset
+          val updatedAnswers = IncompleteCompanyUserAnswers
+            .fromCompleteAnswers(answers)
+            .copy(
+              crn = Some(crn),
+              companyDetailsConfirmed = None,
+              chargeableForCT = None,
+              ctIncomeDeclared = None,
+              recentlyStartedTrading = None,
+              ctutr = None
+            )
+
+          val updatedSession = session.copy(userAnswers = updatedAnswers, crnBlocked = true)
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockCtutrAttemptsServiceGet(crn, session.loginData.ggCredId)(Right(blockedCtutrAttempts))
+            mockJourneyServiceUpdateAndNext(
+              routes.CRNController.companyRegistrationNumber(),
+              session,
+              updatedSession
+            )(
+              Right(mockNextCall)
+            )
+          }
+          checkIsRedirect(performAction("crn" -> crn.value), mockNextCall)
+        }
+
+        "a valid & unblocked CRN is submitted and company is found" in {
+          val companyDetails = Some(CompanyHouseDetails(companyHouseName))
           validCRNs.foreach { crn =>
-            withClue(s" For CRN : $crn") {
+            withClue(s"for CRN: $crn") {
 
-              val formattedCrn = CRN(crn.value.removeWhitespace.toUpperCase(Locale.UK))
-              val answers      = Fixtures.completeCompanyUserAnswers()
-              val session      = Fixtures.companyHECSession(companyLoginData, CompanyRetrievedJourneyData.empty, answers)
+              val formattedCrn  = CRN(crn.value.removeWhitespace.toUpperCase(Locale.UK))
+              val answers       = Fixtures.completeCompanyUserAnswers()
+              val session       = Fixtures.companyHECSession(companyLoginData, CompanyRetrievedJourneyData.empty, answers)
+              val ctutrAttempts = CtutrAttempts(formattedCrn, session.loginData.ggCredId, 1, None)
 
               val updatedAnswers = IncompleteCompanyUserAnswers
                 .fromCompleteAnswers(answers)
@@ -339,6 +427,7 @@ class CRNControllerSpec
               inSequence {
                 mockAuthWithNoRetrievals()
                 mockGetSession(session)
+                mockCtutrAttemptsServiceGet(formattedCrn, session.loginData.ggCredId)(Right(ctutrAttempts))
                 mockFindCompany(formattedCrn)(
                   Right(companyDetails)
                 )
@@ -351,19 +440,14 @@ class CRNControllerSpec
                 )
               }
               checkIsRedirect(performAction("crn" -> crn.value), mockNextCall)
-
             }
-
           }
-
-        "a valid CRN is submitted and company is found " in {
-          testNextCall(Some(CompanyHouseDetails(companyHouseName)))
         }
 
         "previously set CRN is changed, CRN dependent answers are reset" in {
           val companyDetails = Some(CompanyHouseDetails(companyHouseName))
 
-          val answers = Fixtures.completeCompanyUserAnswers(
+          val answers       = Fixtures.completeCompanyUserAnswers(
             licenceType = LicenceType.OperatorOfPrivateHireVehicles,
             licenceTimeTrading = LicenceTimeTrading.ZeroToTwoYears,
             licenceValidityPeriod = LicenceValidityPeriod.UpToOneYear,
@@ -374,8 +458,10 @@ class CRNControllerSpec
             recentlyStartedTrading = Some(YesNoAnswer.No),
             ctutr = Some(CTUTR("some-ctutr"))
           )
-          val session = Fixtures.companyHECSession(loginData = companyLoginData, userAnswers = answers)
+          val session       = Fixtures.companyHECSession(loginData = companyLoginData, userAnswers = answers)
+          val ctutrAttempts = CtutrAttempts(validCRN, session.loginData.ggCredId, 1, None)
 
+          // CRN dependent answers are reset
           val updatedAnswers = IncompleteCompanyUserAnswers
             .fromCompleteAnswers(answers)
             .copy(
@@ -395,6 +481,7 @@ class CRNControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
+            mockCtutrAttemptsServiceGet(validCRN, session.loginData.ggCredId)(Right(ctutrAttempts))
             mockFindCompany(validCRN)(
               Right(companyDetails)
             )
@@ -410,7 +497,7 @@ class CRNControllerSpec
         }
 
         "previously set CRN is unchanged, CRN dependent answers are not reset" in {
-          val answers = Fixtures.completeCompanyUserAnswers(
+          val answers       = Fixtures.completeCompanyUserAnswers(
             licenceType = LicenceType.OperatorOfPrivateHireVehicles,
             licenceTimeTrading = LicenceTimeTrading.ZeroToTwoYears,
             licenceValidityPeriod = LicenceValidityPeriod.UpToOneYear,
@@ -421,15 +508,18 @@ class CRNControllerSpec
             recentlyStartedTrading = Some(YesNoAnswer.No),
             ctutr = Some(CTUTR("some-ctutr"))
           )
-          val session = Fixtures.companyHECSession(loginData = companyLoginData, userAnswers = answers)
+          val session       =
+            Fixtures.companyHECSession(loginData = companyLoginData, userAnswers = answers, crnBlocked = true)
+          val ctutrAttempts = CtutrAttempts(validCRN, session.loginData.ggCredId, 1, None)
 
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
+            mockCtutrAttemptsServiceGet(validCRN, session.loginData.ggCredId)(Right(ctutrAttempts))
             mockJourneyServiceUpdateAndNext(
               routes.CRNController.companyRegistrationNumber(),
               session,
-              session
+              session.copy(crnBlocked = false)
             )(
               Right(mockNextCall)
             )
@@ -438,7 +528,6 @@ class CRNControllerSpec
         }
 
       }
-
     }
 
   }
