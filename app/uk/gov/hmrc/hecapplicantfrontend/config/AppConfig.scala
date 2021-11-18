@@ -18,8 +18,6 @@ package uk.gov.hmrc.hecapplicantfrontend.config
 
 import cats.instances.char._
 import cats.syntax.eq._
-
-import javax.inject.{Inject, Singleton}
 import play.api.Configuration
 import play.api.mvc.Result
 import play.api.mvc.Results.Redirect
@@ -30,6 +28,7 @@ import uk.gov.hmrc.hecapplicantfrontend.util.StringUtils.StringOps
 import uk.gov.hmrc.hmrcfrontend.config.ContactFrontendConfig
 
 import java.util.UUID
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.duration.FiniteDuration
 
 @Singleton
@@ -122,5 +121,5 @@ class AppConfig @Inject() (config: Configuration, contactFrontendConfig: Contact
 
   val firstPageBackUrl: String = config.get[String]("first-page-back-url")
 
-  val maxCtutrAnswerAttempts: Int = config.get[Int]("maximum-ctutr-answer-attempts")
+  val maxCtutrAnswerAttempts: Int = config.get[Int]("ctutr-attempts.maximum-attempts")
 }
