@@ -52,6 +52,9 @@
           isPageHeading = true
         ))
       )),
+      hint = Some(Hint(
+        content = Text(messages(s"$key.hint"))
+      )),
       idPrefix = Some(key),
       name = key,
       items = radioOptions,

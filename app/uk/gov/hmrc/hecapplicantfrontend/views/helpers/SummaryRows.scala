@@ -21,10 +21,11 @@ import play.api.mvc.Call
 import uk.gov.hmrc.govukfrontend.views.html.components._
 import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 import uk.gov.hmrc.hecapplicantfrontend.models.CompanyUserAnswers.CompleteCompanyUserAnswers
-import uk.gov.hmrc.hecapplicantfrontend.models.{CTStatusResponse, CompleteUserAnswers, RetrievedJourneyData, TaxYear}
+import uk.gov.hmrc.hecapplicantfrontend.models.{CompleteUserAnswers, RetrievedJourneyData}
 import uk.gov.hmrc.hecapplicantfrontend.models.views.{LicenceTimeTradingOption, LicenceTypeOption, LicenceValidityPeriodOption}
+import uk.gov.hmrc.hecapplicantfrontend.models.CTStatusResponse
 import uk.gov.hmrc.hecapplicantfrontend.models.IndividualUserAnswers.CompleteIndividualUserAnswers
-import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.{CompanyRetrievedJourneyData, IndividualRetrievedJourneyData}
+import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.CompanyRetrievedJourneyData
 import uk.gov.hmrc.hecapplicantfrontend.util.TimeUtils
 import uk.gov.hmrc.hecapplicantfrontend.models.views.EntityTypeOption
 import uk.gov.hmrc.hecapplicantfrontend.models.views.YesNoOption
@@ -166,8 +167,7 @@ class SummaryRows {
   }
 
   def individualRows(
-    completeAnswers: CompleteIndividualUserAnswers,
-    retrievedJourneyData: RetrievedJourneyData
+    completeAnswers: CompleteIndividualUserAnswers
   )(implicit messages: Messages): List[SummaryListRow] = {
     val entityTypeRow       =
       completeAnswers.entityType.map { entityType =>
@@ -178,25 +178,13 @@ class SummaryRows {
           messages(s"$messageKey.entityType.screenReaderText")
         )
       }
-    val taxSituationRow = {
-      val taxYear      = retrievedJourneyData match {
-        case _: IndividualRetrievedJourneyData =>
-          TaxYear(2020)
-//          c.saStatus match {
-//            case Some(SAStatusResponse(_, taxYear, _)) => taxYear
-//            case _                                     => sys.error("taxSituation answer found when no saStatus response")
-//          }
-        case _                                 => sys.error("taxSituation answer found when individual journey data not retrieved")
-      }
-      val startTaxYear = taxYear.startYear.toString
-      val endTaxYear   = s"${taxYear.startYear + 1}"
+    val taxSituationRow     =
       summaryListRow(
-        messages("taxSituation.title", startTaxYear, endTaxYear),
+        messages("taxSituation.title"),
         messages(s"taxSituation.${TaxSituationOption.taxSituationOption(completeAnswers.taxSituation).messageKey}"),
         routes.TaxSituationController.taxSituation(),
         messages(s"$messageKey.taxSituation.screenReaderText")
       )
-    }
     val saIncomeDeclaredRow =
       completeAnswers.saIncomeDeclared.map { saIncomeDeclared =>
         summaryListRow(

@@ -60,27 +60,21 @@ class StartController @Inject() (
 
   val start: Action[AnyContent] = authWithRetrievalsAction.async { implicit request =>
     val result = for {
-      maybeStoredSession           <- sessionStore.get().leftMap(BackendError)
-      loginData                    <- maybeStoredSession.fold(handleNoSessionData(request.retrievedGGUserData))(storedSession =>
-                                        EitherT.pure(storedSession.fold(_.loginData, _.loginData))
-                                      )
-      existingTaxChecks            <- taxCheckService
-                                        .getUnexpiredTaxCheckCodes()
-                                        .leftMap(BackendError(_): StartError)
-      hasConfirmedIndividualDetails = maybeStoredSession.flatMap(_.fold(_.hasConfirmedDetails, _ => None))
-      newSession                    = loginData match {
-                                        case i: IndividualLoginData =>
-                                          IndividualHECSession
-                                            .newSession(i)
-                                            .copy(
-                                              unexpiredTaxChecks = existingTaxChecks,
-                                              hasConfirmedDetails = hasConfirmedIndividualDetails
-                                            )
-                                        case c: CompanyLoginData    =>
-                                          CompanyHECSession.newSession(c).copy(unexpiredTaxChecks = existingTaxChecks)
+      maybeStoredSession <- sessionStore.get().leftMap(BackendError)
+      loginData          <- maybeStoredSession.fold(handleNoSessionData(request.retrievedGGUserData))(storedSession =>
+                              EitherT.pure(storedSession.fold(_.loginData, _.loginData))
+                            )
+      existingTaxChecks  <- taxCheckService
+                              .getUnexpiredTaxCheckCodes()
+                              .leftMap(BackendError(_): StartError)
+      newSession          = loginData match {
+                              case i: IndividualLoginData =>
+                                IndividualHECSession.newSession(i).copy(unexpiredTaxChecks = existingTaxChecks)
+                              case c: CompanyLoginData    =>
+                                CompanyHECSession.newSession(c).copy(unexpiredTaxChecks = existingTaxChecks)
 
-                                      }
-      _                            <- sessionStore.store(newSession).leftMap(BackendError(_): StartError)
+                            }
+      _                  <- sessionStore.store(newSession).leftMap(BackendError(_): StartError)
     } yield newSession
 
     result.fold(

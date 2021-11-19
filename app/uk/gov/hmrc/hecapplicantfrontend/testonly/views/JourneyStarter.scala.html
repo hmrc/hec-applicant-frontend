@@ -16,25 +16,72 @@
 
 @import play.api.i18n.Messages
 @import play.api.mvc.Request
+@import play.api.data.Form
 @import uk.gov.hmrc.hecapplicantfrontend.testonly.controllers.routes
+@import uk.gov.hmrc.hecapplicantfrontend.testonly.models.Journey
+@import uk.gov.hmrc.hecapplicantfrontend.testonly.models.Journey._
 @import uk.gov.hmrc.hecapplicantfrontend.views.html.Layout
 @import uk.gov.hmrc.govukfrontend.views.html.components._
 
-@this(layout: Layout, formWithCSRF: FormWithCSRF,  govukButton: GovukButton)
+@this(layout: Layout,
+        formWithCSRF: FormWithCSRF,
+        govukButton: GovukButton,
+        govukErrorSummary: GovukErrorSummary,
+        govukRadios: GovukRadios
+)
 
-@()(implicit request: Request[_], messages: Messages)
+@(form: Form[Journey], options: List[Journey])(implicit request: Request[_], messages: Messages)
+
+@key = @{ "journey" }
 
 @title = @{ "Start a journey" }
 
-@layout(pageTitle = Some(title), showSignOutLink = false) {
-    <h1 class="govuk-heading-xl">@title</h1>
+@errorMessage = @{ "Choose an option" }
 
+@toRadioItem(journey: Journey, index: Int) = @{
+    val content = journey match {
+        case IndividualNoSA => "Individual, no SA UTR"
+        case IndividualSAReturnFound => "Individual, SA return found"
+        case IndividualSANoticeToFileIssued => "Individual, SA notice to file issued (but return found)"
+        case IndividualSANoReturnFound => "Individual, SA no return found (and no notice to file issued)"
+        case IndividualSAReturnFoundExistingTaxCheck => "Individual, SA return found with existing tax check"
+        case CompanyNoCTEnrolment => "Company, no CT enrolment"
+        case CompanyCTReturnFound => "Company, CT return found"
+        case CompanyCTNoticeToFileIssued => "Company, CT notice to file issued (but return found)"
+        case CompanyCTNoReturnFound => "Company, CT no return found (and no notice to file issued)"
+        case CompanyCTNoAccountingPeriods => "Company, CT no accounting period found"
+    }
+    RadioItem(Text(content), value = Some(index.toString))
+}
 
-    @formWithCSRF(action = routes.JourneyStarterController.individualJourney()) {
-        @govukButton(Button(content = Text("Journey 1")))
+@radioOptions = @{ options.zipWithIndex.map{ case (j, i) => toRadioItem(j, i)} }
+
+@layout(pageTitle = Some(title), hasErrors = form.hasErrors, showSignOutLink = false) {
+    @if(form.errors.nonEmpty) {
+        @govukErrorSummary(ErrorSummary(errorList = form.errors.map(e => ErrorLink(
+            href = Some(s"#${e.key}"),
+            content = Text(errorMessage)
+        )), title = Text(messages("generic.errorSummary"))))
+    }
+    @formWithCSRF(action = routes.JourneyStarterController.journeyStarterSubmit()) {
+
+        @govukRadios(Radios(
+            fieldset = Some(Fieldset(
+                legend = Some(Legend(
+                    content = Text(title),
+                    classes = "govuk-fieldset__legend--xl",
+                    isPageHeading = true
+                ))
+            )),
+            idPrefix = Some(key),
+            name = key,
+            items = radioOptions,
+            errorMessage = form.error(key).map(_ => ErrorMessage(
+                content = Text(messages(errorMessage))
+            ))
+        ))
+
+        @govukButton(Button(content = Text(messages("button.continue"))))
     }
 
-    @formWithCSRF(action = routes.JourneyStarterController.individualJourneyWithExistingTaxChecks()) {
-        @govukButton(Button(content = Text("Journey 2")))
-    }
 }

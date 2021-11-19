@@ -56,8 +56,7 @@
       items = radioOptions,
       errorMessage = form.error(key).map(e => ErrorMessage(
         content = Text(messages(s"$key.${e.message}"))
-      )),
-      classes = "govuk-radios--inline"
+      ))
     ))
     @govukButton(Button(content = Text(messages("button.continue"))))
   }

@@ -20,9 +20,8 @@
 @import play.twirl.api.Html
 @import uk.gov.hmrc.govukfrontend.views.html.components._
 @import uk.gov.hmrc.hecapplicantfrontend.util.TimeUtils
-@import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 
-@this(layout: Layout, govukPanel : GovukPanel, copyButton: components.CopyButton)
+@this(layout: Layout, govukPanel : GovukPanel)
 
 @(hecTaxCheck: HECTaxCheck)(implicit request: Request[_], messages: Messages)
 @key = @{"taxCheckComplete"}
@@ -40,12 +39,8 @@
     <h2 class="govuk-heading-m">@messages(s"$key.whatNext")</h2>
 
     <ul class="govuk-list govuk-list--number">
-        <li>@Html(messages(s"$key.list1", routes.StartController.start.url))</li>
+        <li>@Html(messages(s"$key.list1"))</li>
         <li>@messages(s"$key.list2")</li>
     </ul>
-
-    <div class="govuk-!-margin-top-2">
-      @copyButton(hecTaxCheck.taxCheckCode.value, None, Some(s"${messages(s"$key.copyText")} "))
-    </div>
 
 }

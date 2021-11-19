@@ -100,7 +100,7 @@ class CheckYourAnswersControllerSpec
 
       "display the page" when {
 
-        "applicant is an Individual" ignore {
+        "applicant is an Individual" in {
           val answers = Fixtures.completeIndividualUserAnswers(
             LicenceType.ScrapMetalMobileCollector,
             LicenceTimeTrading.ZeroToTwoYears,
