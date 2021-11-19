@@ -40,16 +40,16 @@
 
 @toRadioItem(journey: Journey, index: Int) = @{
     val content = journey match {
-        case IndividualNoSA => "Individual, no SA UTR"
-        case IndividualSAReturnFound => "Individual, SA return found"
-        case IndividualSANoticeToFileIssued => "Individual, SA notice to file issued (but return found)"
-        case IndividualSANoReturnFound => "Individual, SA no return found (and no notice to file issued)"
+        case IndividualNoSA                          => "Individual, no SA UTR"
+        case IndividualSAReturnFound                 => "Individual, SA return found"
+        case IndividualSANoticeToFileIssued          => "Individual, SA notice to file issued (but return found)"
+        case IndividualSANoReturnFound               => "Individual, SA no return found (and no notice to file issued)"
         case IndividualSAReturnFoundExistingTaxCheck => "Individual, SA return found with existing tax check"
-        case CompanyNoCTEnrolment => "Company, no CT enrolment"
-        case CompanyCTReturnFound => "Company, CT return found"
-        case CompanyCTNoticeToFileIssued => "Company, CT notice to file issued (but return found)"
-        case CompanyCTNoReturnFound => "Company, CT no return found (and no notice to file issued)"
-        case CompanyCTNoAccountingPeriods => "Company, CT no accounting period found"
+        case CompanyNoCTEnrolment =>                    "Company, no CT enrolment"
+        case CompanyCTReturnFound =>                    "Company, CT return found"
+        case CompanyCTNoticeToFileIssued =>             "Company, CT notice to file issued (but return found)"
+        case CompanyCTNoReturnFound =>                  "Company, CT no return found (and no notice to file issued)"
+        case CompanyCTNoAccountingPeriods =>            "Company, CT no accounting period found"
     }
     RadioItem(Text(content), value = Some(index.toString))
 }
@@ -77,7 +77,7 @@
             name = key,
             items = radioOptions,
             errorMessage = form.error(key).map(_ => ErrorMessage(
-                content = Text(messages(errorMessage))
+                content = Text(errorMessage)
             ))
         ))
 

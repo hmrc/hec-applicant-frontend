@@ -41,12 +41,12 @@ class AuthLoginStubConnectorImpl @Inject() (config: Configuration, ws: WSClient)
   ec: ExecutionContext
 ) extends AuthLoginStubConnector {
 
-  val authLoginStubUrl: String = {
+  private val authLoginStubUrl: String = {
     val baseUrl = config.underlying.get[String]("auth-login-stub.base-url").value
     s"$baseUrl/auth-login-stub/gg-sign-in"
   }
 
-  def requestFormBody(loginData: LoginData): Map[String, String] = {
+  private def requestFormBody(loginData: LoginData): Map[String, String] = {
     val enrolmentIdentifier = loginData.enrolment.flatMap(_.identifiers.headOption)
 
     List(
@@ -73,7 +73,7 @@ class AuthLoginStubConnectorImpl @Inject() (config: Configuration, ws: WSClient)
         .withFollowRedirects(false)
         .withHttpHeaders("Content-Type" -> "application/x-www-form-urlencoded")
         .post(formData)
-        .map((r: WSResponse) => Right(r))
+        .map(Right(_))
         .recover { case NonFatal(e) => Left(Error(e)) }
     )
   }

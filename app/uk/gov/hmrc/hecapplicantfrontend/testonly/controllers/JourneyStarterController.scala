@@ -25,6 +25,8 @@ import play.api.data.Form
 import play.api.data.Forms.{mapping, of}
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
+import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
+import uk.gov.hmrc.hecapplicantfrontend.controllers.{routes => nonTestOnlyRoutes}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.toFuture
 import uk.gov.hmrc.hecapplicantfrontend.models.Error
 import uk.gov.hmrc.hecapplicantfrontend.testonly.controllers.JourneyStarterController._
@@ -44,11 +46,14 @@ class JourneyStarterController @Inject() (
   authLoginStubService: AuthLoginStubService,
   hecService: HECService,
   journeyToLoginDataTransformer: JourneyToLoginDataTransformer,
+  appConfig: AppConfig,
   mcc: MessagesControllerComponents
 )(implicit ec: ExecutionContext)
     extends FrontendController(mcc)
     with I18nSupport
     with Logging {
+
+  private val redirectUrl = s"${appConfig.selfBaseUrl}${nonTestOnlyRoutes.StartController.start().url}"
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
@@ -61,20 +66,19 @@ class JourneyStarterController @Inject() (
       .bindFromRequest()
       .fold(
         formWithErrors => Ok(journeyStartPage(formWithErrors, journeyOptions)),
-        journey => handleJourney(journey)
+        journey => loginAndRedirect(journey)
       )
   }
 
-  private def handleJourney(journey: Journey): Future[Result] = {
-    val loginData = journeyToLoginDataTransformer.toLoginData(journey)
+  private def loginAndRedirect(journey: Journey): Future[Result] = {
+    val loginData = journeyToLoginDataTransformer.toLoginData(journey, redirectUrl)
     val result    = for {
       _       <- if (loginData.existingTaxChecks.nonEmpty)
                    loginData.existingTaxChecks
                      .map(hecService.saveTaxCheck)
                      .sequence[EitherT[Future, Error, *], Unit]
-                 else {
+                 else
                    EitherT.pure[Future, Error](List.empty)
-                 }
       session <- authLoginStubService.login(loginData)
     } yield session
 

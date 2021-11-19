@@ -53,13 +53,13 @@ class AuthLoginStubServiceImpl @Inject() (
     connector.login(loginData).subflatMap { httpResponse =>
       val status        = httpResponse.status
       lazy val location = httpResponse.header("location")
-      if (status =!= SEE_OTHER) {
+      if (status =!= SEE_OTHER)
         Left(
           Error(
             s"Call to login came back with status $status. Body was ${httpResponse.body}"
           )
         )
-      } else if (!location.contains(loginData.redirectUrl))
+      else if (!location.contains(loginData.redirectUrl))
         Left(Error(s"Location header value [${location.getOrElse("")}] of response was not ${loginData.redirectUrl}"))
       else {
         val sessionOpt =
@@ -67,7 +67,6 @@ class AuthLoginStubServiceImpl @Inject() (
             cookie   <- httpResponse.cookies.find(_.name === "mdtp")
             decrypted = Cookie(name = "mdtp", value = sessionCookieCrypto.crypto.decrypt(Crypted(cookie.value)).value)
             session   = sessionCookieBaker.decodeFromCookie(Some(decrypted))
-
           } yield session
 
         Either.fromOption(sessionOpt, Error("Could not extract session"))
