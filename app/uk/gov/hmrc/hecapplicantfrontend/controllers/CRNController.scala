@@ -115,16 +115,17 @@ class CRNController @Inject() (
           }
 
           val result = for {
-            ctutrAttempts <- ctutrAttemptsService.getWithDefault(crn, companySession.loginData.ggCredId)
-            eitherResult  <- if (ctutrAttempts.isBlocked) {
-                               val updatedSession =
-                                 companySession.copy(userAnswers = updateAnswers(crn), crnBlocked = true)
-                               updateAndNext(updatedSession)
-                             } else if (crnsMatch) {
-                               updateAndNext(companySession.copy(crnBlocked = false))
-                             } else {
-                               fetchCompanyNameAndProceed(crn)
-                             }
+            ctutrAttemptsOpt <- ctutrAttemptsService.get(crn, companySession.loginData.ggCredId)
+            isBlocked         = ctutrAttemptsOpt.exists(_.isBlocked)
+            eitherResult     <- if (isBlocked) {
+                                  val updatedSession =
+                                    companySession.copy(userAnswers = updateAnswers(crn), crnBlocked = true)
+                                  updateAndNext(updatedSession)
+                                } else if (crnsMatch) {
+                                  updateAndNext(companySession.copy(crnBlocked = false))
+                                } else {
+                                  fetchCompanyNameAndProceed(crn)
+                                }
           } yield eitherResult
 
           result.fold(

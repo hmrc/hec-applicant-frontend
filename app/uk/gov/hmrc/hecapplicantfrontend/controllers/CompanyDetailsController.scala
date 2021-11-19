@@ -309,99 +309,101 @@ class CompanyDetailsController @Inject() (
     request.sessionData mapAsCompany { companySession =>
       ensureCompanyDataHasDesCtutr(companySession) { desCtutr =>
         ensureUserAnswersHasCRN(companySession) { crn =>
-          def handleValidAnswer(ctutr: CTUTR) = {
-            val updatedAnswers = companySession.userAnswers
-              .unset(_.ctutr)
-              .unset(_.ctIncomeDeclared)
-              .unset(_.recentlyStartedTrading)
-              .unset(_.chargeableForCT)
-              .copy(ctutr = Some(ctutr))
-            val (start, end)   = CompanyDetailsController.calculateLookBackPeriod(timeProvider.currentDate)
+          ensureCompanyDataHasCompanyName(companySession) { companyName =>
+            def handleValidAnswer(ctutr: CTUTR) = {
+              val updatedAnswers = companySession.userAnswers
+                .unset(_.ctutr)
+                .unset(_.ctIncomeDeclared)
+                .unset(_.recentlyStartedTrading)
+                .unset(_.chargeableForCT)
+                .copy(ctutr = Some(ctutr))
+              val (start, end)   = CompanyDetailsController.calculateLookBackPeriod(timeProvider.currentDate)
 
-            val ctutrAttemptsDeleteFut = ctutrAttemptsService.delete(crn, companySession.loginData.ggCredId)
-            val ctStatusFut            = taxCheckService.getCTStatus(ctutr.strippedCtutr, start, end)
+              val ctutrAttemptsDeleteFut = ctutrAttemptsService.delete(crn, companySession.loginData.ggCredId)
+              val ctStatusFut            = taxCheckService.getCTStatus(ctutr.strippedCtutr, start, end)
 
-            val result = for {
-              _                   <- ctutrAttemptsDeleteFut
-              ctStatus            <- ctStatusFut
-              updatedRetrievedData = companySession.retrievedJourneyData.copy(ctStatus = ctStatus)
-              next                <-
-                journeyService.updateAndNext(
-                  routes.CompanyDetailsController.enterCtutr(),
-                  companySession.copy(
-                    userAnswers = updatedAnswers,
-                    retrievedJourneyData = updatedRetrievedData,
-                    crnBlocked = false
-                  )
-                )
-            } yield next
-
-            result.fold(
-              _.doThrow("Could not update session and proceed"),
-              Redirect
-            )
-          }
-
-          def ok(formWithErrors: Form[CTUTR]) = Ok(
-            enterCtutrPage(
-              formWithErrors,
-              journeyService.previous(routes.CompanyDetailsController.enterCtutr())
-            )
-          )
-
-          def handleFormWithErrors(formWithErrors: Form[CTUTR], ctutrAttempts: CtutrAttempts): Future[Result] = {
-
-            def displayFormError: Future[Result] = Future.successful(ok(formWithErrors))
-
-            def incrementAttemptsAndProceed =
-              ctutrAttemptsService
-                .updateAttempts(ctutrAttempts)
-                .foldF(
-                  _.doThrow("Could not create/update ctutr attempts"),
-                  {
-                    case ctutrAttempts if ctutrAttempts.isBlocked =>
-                      updateAndNextJourneyData(
-                        routes.CompanyDetailsController.enterCtutr(),
-                        companySession.copy(crnBlocked = ctutrAttempts.isBlocked)
-                      )
-                    case ctutrAttempts                            =>
-                      val updatedAnswers = companySession.userAnswers
-                        .unset(_.ctutr)
-                        .unset(_.ctIncomeDeclared)
-                        .unset(_.recentlyStartedTrading)
-                        .unset(_.chargeableForCT)
-                        .copy(ctutr = formWithErrors.value)
-                      val updatedSession = companySession
-                        .copy(crnBlocked = ctutrAttempts.isBlocked, userAnswers = updatedAnswers)
-                      sessionStore
-                        .store(updatedSession)
-                        .foldF(
-                          _.doThrow("Could not save session"),
-                          _ => displayFormError
-                        )
-                  }
-                )
-
-            val ctutrsNotMatched = formWithErrors.errors.exists(_.message === "error.ctutrsDoNotMatch")
-            if (ctutrsNotMatched) incrementAttemptsAndProceed else displayFormError
-          }
-
-          ctutrAttemptsService
-            .getWithDefault(crn, companySession.loginData.ggCredId)
-            .foldF(
-              _.doThrow("Error fetching CTUTR attempts"),
-              ctutrAttempts =>
-                if (ctutrAttempts.isBlocked) {
-                  updateAndNextJourneyData(
+              val result = for {
+                _                   <- ctutrAttemptsDeleteFut
+                ctStatus            <- ctStatusFut
+                updatedRetrievedData = companySession.retrievedJourneyData.copy(ctStatus = ctStatus)
+                next                <-
+                  journeyService.updateAndNext(
                     routes.CompanyDetailsController.enterCtutr(),
-                    companySession.copy(crnBlocked = true)
+                    companySession.copy(
+                      userAnswers = updatedAnswers,
+                      retrievedJourneyData = updatedRetrievedData,
+                      crnBlocked = false
+                    )
                   )
-                } else {
-                  enterCtutrForm(desCtutr)
-                    .bindFromRequest()
-                    .fold(handleFormWithErrors(_, ctutrAttempts), handleValidAnswer)
-                }
+              } yield next
+
+              result.fold(
+                _.doThrow("Could not update session and proceed"),
+                Redirect
+              )
+            }
+
+            def ok(formWithErrors: Form[CTUTR]) = Ok(
+              enterCtutrPage(
+                formWithErrors,
+                journeyService.previous(routes.CompanyDetailsController.enterCtutr())
+              )
             )
+
+            def handleFormWithErrors(formWithErrors: Form[CTUTR], ctutrAttempts: CtutrAttempts): Future[Result] = {
+
+              def displayFormError: Future[Result] = Future.successful(ok(formWithErrors))
+
+              def incrementAttemptsAndProceed =
+                ctutrAttemptsService
+                  .updateAttempts(ctutrAttempts)
+                  .foldF(
+                    _.doThrow("Could not create/update ctutr attempts"),
+                    {
+                      case ctutrAttempts if ctutrAttempts.isBlocked =>
+                        updateAndNextJourneyData(
+                          routes.CompanyDetailsController.enterCtutr(),
+                          companySession.copy(crnBlocked = ctutrAttempts.isBlocked)
+                        )
+                      case ctutrAttempts                            =>
+                        val updatedAnswers = companySession.userAnswers
+                          .unset(_.ctutr)
+                          .unset(_.ctIncomeDeclared)
+                          .unset(_.recentlyStartedTrading)
+                          .unset(_.chargeableForCT)
+                          .copy(ctutr = formWithErrors.value)
+                        val updatedSession = companySession
+                          .copy(crnBlocked = ctutrAttempts.isBlocked, userAnswers = updatedAnswers)
+                        sessionStore
+                          .store(updatedSession)
+                          .foldF(
+                            _.doThrow("Could not save session"),
+                            _ => displayFormError
+                          )
+                    }
+                  )
+
+              val ctutrsNotMatched = formWithErrors.errors.exists(_.message === "error.ctutrsDoNotMatch")
+              if (ctutrsNotMatched) incrementAttemptsAndProceed else displayFormError
+            }
+
+            ctutrAttemptsService
+              .getWithDefault(crn, companySession.loginData.ggCredId, companyName)
+              .foldF(
+                _.doThrow("Error fetching CTUTR attempts"),
+                ctutrAttempts =>
+                  if (ctutrAttempts.isBlocked) {
+                    updateAndNextJourneyData(
+                      routes.CompanyDetailsController.enterCtutr(),
+                      companySession.copy(crnBlocked = true)
+                    )
+                  } else {
+                    enterCtutrForm(desCtutr)
+                      .bindFromRequest()
+                      .fold(handleFormWithErrors(_, ctutrAttempts), handleValidAnswer)
+                  }
+              )
+          }
         }
       }
     }
@@ -412,8 +414,25 @@ class CompanyDetailsController @Inject() (
     Ok(dontHaveCtutrPage(back))
   }
 
-  val tooManyCtutrAttempts: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
-    Ok(tooManyCTUTRAttemptsPage())
+  val tooManyCtutrAttempts: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
+    request.sessionData mapAsCompany { companySession =>
+      ensureUserAnswersHasCRN(companySession) { crn =>
+        val back = journeyService.previous(routes.CompanyDetailsController.tooManyCtutrAttempts())
+
+        ctutrAttemptsService
+          .get(crn, companySession.loginData.ggCredId)
+          .fold(
+            _.doThrow("Error fetching ctutr attempts"),
+            {
+              case Some(CtutrAttempts(_, _, companyName, _, Some(blockedUntil))) =>
+                val formattedDate = TimeUtils.govDateTimeDisplayFormat(blockedUntil)
+                Ok(tooManyCTUTRAttemptsPage(back, crn.value, companyName.name, formattedDate))
+              case _                                                             =>
+                sys.error("CTUTR attempts is not blocked")
+            }
+          )
+      }
+    }
   }
 
   val ctIncomeStatement: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>

@@ -18,6 +18,7 @@ package uk.gov.hmrc.hecapplicantfrontend.util
 
 import play.api.i18n.Messages
 
+import java.time.format.DateTimeFormatter
 import java.time.{Clock, LocalDate, ZoneId, ZonedDateTime}
 
 object TimeUtils {
@@ -28,9 +29,24 @@ object TimeUtils {
 
   def now(): ZonedDateTime = ZonedDateTime.now(ZoneId.of("Europe/London"))
 
-  def govDisplayFormat(date: LocalDate)(implicit messages: Messages): String =
-    s"""${date.getDayOfMonth()} ${messages(
-      s"date.${date.getMonthValue()}"
-    )} ${date.getYear()}"""
+  def govDisplayFormat(date: LocalDate)(implicit messages: Messages): String = {
+    val dayOfMonth = date.getDayOfMonth
+    val month      = messages(s"date.${date.getMonthValue}")
+    val year       = date.getYear
+
+    s"$dayOfMonth $month $year"
+  }
+
+  private def getAmPm(date: ZonedDateTime) = if (date.getHour >= 12) "afterNoon" else "beforeNoon"
+
+  private def formatHourMinutes(time: ZonedDateTime): String =
+    time.format(DateTimeFormatter.ofPattern("h:mm"))
+
+  def govDateTimeDisplayFormat(date: ZonedDateTime)(implicit messages: Messages): String = {
+    val formattedDate = govDisplayFormat(date.toLocalDate)
+    val hourMin       = formatHourMinutes(date)
+    val amOrPm        = messages(s"date.${getAmPm(date)}")
+    s"""$formattedDate $hourMin$amOrPm"""
+  }
 
 }

@@ -85,6 +85,10 @@ date.10=October
 date.11=November
 date.12=December
 
+#AM/PM
+date.beforeNoon = am
+date.afterNoon = pm
+
 # Licence type
 licenceType.title = What type of licence are you renewing or applying for?
 licenceType.hint = This is the licence type you’re doing a tax check for.
@@ -300,6 +304,9 @@ dontHaveCtutr.p2=You need to <a href="{0}" class="govuk-link">register for Corpo
 dontHaveCtutr.p3=Once you have your UTR number, you can <a href="{0}" class="govuk-link">go back and try again</a>.
 
 # Too many CTUTR attempts
-tooManyCtutrAttempts.title=You cannot do a tax check at the moment
+tooManyCtutrAttempts.title=You cannot do a tax check for this company at the moment
 tooManyCtutrAttempts.p1=This is because you have entered a UTR that does not match your company, too many times.
-tooManyCtutrAttempts.p2=You will not be able to use this service for the next 3 hours. After that, you will be able to <a href="{0}" class="govuk-link">do a new tax check</a>.
+tooManyCtutrAttempts.p2=You will be unable to do a tax check for this company until {0}.
+tooManyCtutrAttempts.p3=You can go back and <a href="{0}" class="govuk-link">enter a different Company Registration Number</a>, or <a href="{1}" class="govuk-link">do a new tax check</a>.
+tooManyCtutrAttempts.companyName=Company name
+tooManyCtutrAttempts.crn=Company Registration Number
