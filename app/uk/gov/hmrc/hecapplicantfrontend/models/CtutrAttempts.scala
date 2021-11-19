@@ -14,18 +14,24 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hecapplicantfrontend.models.ids
+package uk.gov.hmrc.hecapplicantfrontend.models
 
 import cats.Eq
-import play.api.libs.json.{Format, Json}
+import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, GGCredId}
 
-/**
-  * Validated Government Gateway ID
-  */
-final case class GGCredId(value: String) extends AnyVal
+import java.time.ZonedDateTime
 
-object GGCredId {
+final case class CtutrAttempts(
+  crn: CRN,
+  ggCredId: GGCredId,
+  attempts: Int,
+  blockedUntil: Option[ZonedDateTime]
+) {
+  val isBlocked: Boolean = blockedUntil.isDefined
+}
 
-  implicit val format: Format[GGCredId] = Json.valueFormat[GGCredId]
-  implicit val eq: Eq[GGCredId]         = Eq.fromUniversalEquals
+object CtutrAttempts {
+  implicit val format: OFormat[CtutrAttempts] = Json.format
+  implicit val eq: Eq[CtutrAttempts]          = Eq.fromUniversalEquals
 }

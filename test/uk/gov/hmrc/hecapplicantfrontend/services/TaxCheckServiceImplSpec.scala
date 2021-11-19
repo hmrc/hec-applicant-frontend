@@ -17,6 +17,7 @@
 package uk.gov.hmrc.hecapplicantfrontend.services
 
 import cats.data.EitherT
+import cats.implicits.catsSyntaxOptionId
 import cats.instances.future._
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
@@ -25,7 +26,6 @@ import play.api.libs.json.Json
 import play.api.test.Helpers._
 import uk.gov.hmrc.hecapplicantfrontend.connectors.HECConnector
 import uk.gov.hmrc.hecapplicantfrontend.models.ApplicantDetails.IndividualApplicantDetails
-import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.IndividualHECSession
 import uk.gov.hmrc.hecapplicantfrontend.models.HECTaxCheckData.IndividualHECTaxCheckData
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.IndividualLoginData
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.IndividualRetrievedJourneyData
@@ -78,6 +78,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
+  val incomeTaxYear = TaxYear(2021)
+
   val emptyHeaders = Map.empty[String, Seq[String]]
 
   "TaxCheckServiceImpl" when {
@@ -119,9 +121,10 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         IndividualTaxDetails(
           individualLoginData.nino,
           Some(sautr),
-          Some(completeAnswers.taxSituation),
+          completeAnswers.taxSituation,
           completeAnswers.saIncomeDeclared,
-          None
+          None,
+          TaxYear(2021)
         ),
         zonedDateTimeNow,
         HECTaxCheckSource.Digital
@@ -131,21 +134,20 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
       val taxCheck     = HECTaxCheck(taxCheckCode, LocalDate.now().plusDays(2L))
       val taxCheckJson = Json.toJson(taxCheck)
 
-      val individualSession  = IndividualHECSession(
+      val individualSession  = Fixtures.individualHECSession(
         individualLoginData,
         retrievedJourneyData,
         completeAnswers,
         None,
         Some(zonedDateTimeNow),
-        List.empty
+        List.empty,
+        incomeTaxYear.some
       )
-      val individualSession2 = IndividualHECSession(
+      val individualSession2 = Fixtures.individualHECSession(
         individualLoginData,
         retrievedJourneyData,
         completeAnswers,
-        None,
-        None,
-        List.empty
+        relevantIncomeTaxYear = incomeTaxYear.some
       )
 
       "return an error" when {

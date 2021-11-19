@@ -23,6 +23,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.CompanyUserAnswers.IncompleteComp
 import uk.gov.hmrc.hecapplicantfrontend.models.IndividualUserAnswers.IncompleteIndividualUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.{CompanyRetrievedJourneyData, IndividualRetrievedJourneyData}
+import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
 
 import java.time.ZonedDateTime
 
@@ -46,7 +47,7 @@ object HECSession {
     completedTaxCheck: Option[HECTaxCheck],
     taxCheckStartDateTime: Option[ZonedDateTime],
     unexpiredTaxChecks: List[TaxCheckListItem],
-    hasConfirmedDetails: Option[Boolean] = None
+    relevantIncomeTaxYear: Option[TaxYear]
   ) extends HECSession {
     override val entityType: EntityType = EntityType.Individual
   }
@@ -73,7 +74,7 @@ object HECSession {
     completedTaxCheck: Option[HECTaxCheck],
     taxCheckStartDateTime: Option[ZonedDateTime],
     unexpiredTaxChecks: List[TaxCheckListItem],
-    ctutrAnswerAttempts: Int = 0
+    crnBlocked: Boolean = false
   ) extends HECSession {
     override val entityType: EntityType = EntityType.Company
   }
@@ -141,6 +142,20 @@ object HECSession {
         company.copy(userAnswers = answers)
       }
     )
+
+    def ensureLicenceTypePresent[A](f: LicenceType => A): A = {
+      import cats.implicits.catsSyntaxOptionId
+
+      val licenceTypeOpt = s match {
+        case i: IndividualHECSession => i.userAnswers.fold(_.licenceType, _.licenceType.some)
+        case c: CompanyHECSession    => c.userAnswers.fold(_.licenceType, _.licenceType.some)
+      }
+
+      licenceTypeOpt match {
+        case Some(licenceType) => f(licenceType)
+        case None              => sys.error("Couldn't find licence type")
+      }
+    }
 
   }
 

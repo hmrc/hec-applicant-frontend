@@ -24,7 +24,7 @@ import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.hecapplicantfrontend.models.CompanyUserAnswers.IncompleteCompanyUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, IndividualHECSession}
 import uk.gov.hmrc.hecapplicantfrontend.models.IndividualUserAnswers.IncompleteIndividualUserAnswers
-import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
+import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.CompanyLoginData
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.{CompanyRetrievedJourneyData, IndividualRetrievedJourneyData}
 import uk.gov.hmrc.hecapplicantfrontend.models._
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO}
@@ -53,7 +53,7 @@ class EntityTypeControllerSpec
   val controller = instanceOf[EntityTypeController]
 
   val individualLoginData =
-    IndividualLoginData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None)
+    Fixtures.individualLoginData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None)
 
   val companyLoginData =
     CompanyLoginData(GGCredId(""), None, None)
@@ -96,20 +96,17 @@ class EntityTypeControllerSpec
 
         "the user has previously answered the question" in {
           val session =
-            IndividualHECSession(
-              individualLoginData,
-              IndividualRetrievedJourneyData.empty,
-              Fixtures.completeIndividualUserAnswers(
+            Fixtures.individualHECSession(
+              loginData = individualLoginData,
+              retrievedJourneyData = IndividualRetrievedJourneyData.empty,
+              userAnswers = Fixtures.completeIndividualUserAnswers(
                 LicenceType.DriverOfTaxisAndPrivateHires,
                 LicenceTimeTrading.ZeroToTwoYears,
                 LicenceValidityPeriod.UpToTwoYears,
                 TaxSituation.PAYE,
                 Some(YesNoAnswer.Yes),
                 Some(EntityType.Individual)
-              ),
-              None,
-              None,
-              List.empty
+              )
             )
 
           inSequence {
@@ -199,13 +196,10 @@ class EntityTypeControllerSpec
           val answers        = IndividualUserAnswers.empty
           val updatedAnswers = IndividualUserAnswers.empty.copy(entityType = Some(EntityType.Individual))
           val session        =
-            IndividualHECSession(
+            Fixtures.individualHECSession(
               individualLoginData,
               IndividualRetrievedJourneyData.empty,
-              answers,
-              None,
-              None,
-              List.empty
+              answers
             )
           val updatedSession = session.copy(userAnswers = updatedAnswers)
 
@@ -232,13 +226,10 @@ class EntityTypeControllerSpec
             val answers        = IndividualUserAnswers.empty
             val updatedAnswers = IndividualUserAnswers.empty.copy(entityType = Some(EntityType.Company))
             val session        =
-              IndividualHECSession(
+              Fixtures.individualHECSession(
                 individualLoginData,
                 IndividualRetrievedJourneyData.empty,
-                answers,
-                None,
-                None,
-                List.empty
+                answers
               )
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 
@@ -287,13 +278,10 @@ class EntityTypeControllerSpec
               .fromCompleteAnswers(answers)
               .copy(entityType = Some(EntityType.Company))
             val session        =
-              IndividualHECSession(
+              Fixtures.individualHECSession(
                 individualLoginData,
                 IndividualRetrievedJourneyData.empty,
-                answers,
-                None,
-                None,
-                List.empty
+                answers
               )
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 
@@ -350,13 +338,10 @@ class EntityTypeControllerSpec
       "return an InternalServerError" when {
 
         "no selected entity type can be found in session" in {
-          val session = IndividualHECSession(
+          val session = Fixtures.individualHECSession(
             individualLoginData,
             IndividualRetrievedJourneyData.empty,
-            IndividualUserAnswers.empty,
-            None,
-            None,
-            List.empty
+            IndividualUserAnswers.empty
           )
 
           inSequence {
@@ -373,13 +358,10 @@ class EntityTypeControllerSpec
       "display the page" when {
 
         def testPage(selectedEntityType: EntityType, expectedP1: String): Unit = {
-          val session = IndividualHECSession(
+          val session = Fixtures.individualHECSession(
             individualLoginData,
             IndividualRetrievedJourneyData.empty,
-            IndividualUserAnswers.empty.copy(entityType = Some(selectedEntityType)),
-            None,
-            None,
-            List.empty
+            IndividualUserAnswers.empty.copy(entityType = Some(selectedEntityType))
           )
 
           inSequence {

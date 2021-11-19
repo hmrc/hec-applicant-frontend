@@ -29,6 +29,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models._
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
+import uk.gov.hmrc.hecapplicantfrontend.utils.Fixtures
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -81,13 +82,11 @@ class TaxCheckCompleteControllerSpec
         "tax check code has been generated for the user " in {
           val taxCheckCode = "LXB7G6DX7"
           val expiryDate   = LocalDate.of(2020, 1, 8)
-          val session      = IndividualHECSession(
+          val session      = Fixtures.individualHECSession(
             individualLoginData,
             IndividualRetrievedJourneyData.empty,
             IndividualUserAnswers.empty.copy(licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)),
-            Some(HECTaxCheck(HECTaxCheckCode(taxCheckCode), expiryDate)),
-            None,
-            List.empty
+            Some(HECTaxCheck(HECTaxCheckCode(taxCheckCode), expiryDate))
           )
 
           inSequence {

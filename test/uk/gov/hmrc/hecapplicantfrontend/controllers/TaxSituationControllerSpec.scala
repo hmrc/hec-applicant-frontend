@@ -17,13 +17,15 @@
 package uk.gov.hmrc.hecapplicantfrontend.controllers
 
 import cats.data.EitherT
+import cats.implicits.catsSyntaxOptionId
 import cats.instances.future._
 import org.jsoup.nodes.Document
 import play.api.inject.bind
-import play.api.mvc.Result
+import play.api.mvc.{Request, Result}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
+import uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.getTaxPeriodStrings
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, IndividualHECSession}
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.IndividualRetrievedJourneyData
@@ -68,8 +70,13 @@ class TaxSituationControllerSpec
 
   def mockTimeProviderToday(d: LocalDate) = (mockTimeProvider.currentDate _).expects().returning(d)
 
-  def taxYearMessage(startYear: Int, endYear: Int) =
-    messageFromMessageKey("taxSituation.p1", startYear.toString, endYear.toString)
+  def taxYearMessage(startYear: String, endYear: String) =
+    messageFromMessageKey("taxSituation.hint", startYear, endYear)
+
+  def mockStoreSession(individualSession: HECSession)(result: Either[Error, Unit]) = (mockSessionStore
+    .store(_: HECSession)(_: Request[_]))
+    .expects(individualSession, *)
+    .returning(EitherT.fromEither(result))
 
   val controller = instanceOf[TaxSituationController]
 
@@ -124,7 +131,7 @@ class TaxSituationControllerSpec
 
         "the user has not previously answered the question " when {
 
-          "licence Type is Driver of taxis and private hire vehicles" ignore {
+          "licence Type is Driver of taxis and private hire vehicles" in {
             val session = Fixtures.individualHECSession(
               individualLoginData,
               IndividualRetrievedJourneyData.empty,
@@ -133,6 +140,8 @@ class TaxSituationControllerSpec
               )
             )
 
+            val updatedSession = session.copy(relevantIncomeTaxYear = TaxYear(2020).some)
+
             inSequence {
               mockAuthWithNoRetrievals()
               mockGetSession(session)
@@ -140,6 +149,7 @@ class TaxSituationControllerSpec
                 mockPreviousCall
               )
               mockTimeProviderToday(TimeUtils.today())
+              mockStoreSession(updatedSession)(Right(()))
             }
 
             checkPageIsDisplayed(
@@ -163,8 +173,8 @@ class TaxSituationControllerSpec
 
         }
 
-        "the user has previously answered the question" ignore {
-          val session =
+        "the user has previously answered the question" in {
+          val session        =
             Fixtures.individualHECSession(
               individualLoginData,
               IndividualRetrievedJourneyData.empty,
@@ -176,6 +186,7 @@ class TaxSituationControllerSpec
                 Some(YesNoAnswer.Yes)
               )
             )
+          val updatedSession = session.copy(relevantIncomeTaxYear = TaxYear(2020).some)
 
           inSequence {
             mockAuthWithNoRetrievals()
@@ -184,6 +195,7 @@ class TaxSituationControllerSpec
               mockPreviousCall
             )
             mockTimeProviderToday(TimeUtils.today())
+            mockStoreSession(updatedSession)(Right(()))
           }
 
           checkPageIsDisplayed(
@@ -202,254 +214,15 @@ class TaxSituationControllerSpec
           )
         }
 
-        "with tax year as 2019 to 2020" when {
-
-          "today's date is start of the year" ignore {
-            val session = Fixtures.individualHECSession(
-              individualLoginData,
-              IndividualRetrievedJourneyData.empty,
-              IndividualUserAnswers.empty.copy(
-                licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)
-              )
-            )
-
-            inSequence {
-              mockAuthWithNoRetrievals()
-              mockGetSession(session)
-              mockJourneyServiceGetPrevious(routes.TaxSituationController.taxSituation(), session)(
-                mockPreviousCall
-              )
-              mockTimeProviderToday(LocalDate.of(2021, 1, 1))
-            }
-
-            checkPageIsDisplayed(
-              performAction(),
-              messageFromMessageKey("taxSituation.title"),
-              { doc =>
-                doc.select("#back").attr("href") shouldBe mockPreviousCall.url
-
-                doc.select("#taxSituation-hint").text shouldBe taxYearMessage(2019, 2020)
-
-                testAllTaxSituationsRadioOptions(doc)
-
-                val selectedOptions = doc.select(".govuk-radios__input[checked]")
-                selectedOptions.isEmpty shouldBe true
-
-                val form = doc.select("form")
-                form
-                  .attr("action") shouldBe routes.TaxSituationController.taxSituationSubmit().url
-              }
-            )
-
-          }
-
-          "today's date is more than six months from 6 april 2020" ignore {
-            val session = Fixtures.individualHECSession(
-              individualLoginData,
-              IndividualRetrievedJourneyData.empty,
-              IndividualUserAnswers.empty.copy(
-                licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)
-              )
-            )
-
-            inSequence {
-              mockAuthWithNoRetrievals()
-              mockGetSession(session)
-              mockJourneyServiceGetPrevious(routes.TaxSituationController.taxSituation(), session)(
-                mockPreviousCall
-              )
-              mockTimeProviderToday(LocalDate.of(2020, 10, 24))
-            }
-
-            checkPageIsDisplayed(
-              performAction(),
-              messageFromMessageKey("taxSituation.title"),
-              { doc =>
-                doc.select("#back").attr("href") shouldBe mockPreviousCall.url
-
-                doc.select("#taxSituation-hint").text shouldBe taxYearMessage(2019, 2020)
-
-                testAllTaxSituationsRadioOptions(doc)
-
-                val selectedOptions = doc.select(".govuk-radios__input[checked]")
-                selectedOptions.isEmpty shouldBe true
-
-                val form = doc.select("form")
-                form
-                  .attr("action") shouldBe routes.TaxSituationController.taxSituationSubmit().url
-              }
-            )
-
-          }
-
-          "today's date is exactly six months from 6 april 2020" ignore {
-            val session = Fixtures.individualHECSession(
-              individualLoginData,
-              IndividualRetrievedJourneyData.empty,
-              IndividualUserAnswers.empty.copy(
-                licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)
-              )
-            )
-
-            inSequence {
-              mockAuthWithNoRetrievals()
-              mockGetSession(session)
-              mockJourneyServiceGetPrevious(routes.TaxSituationController.taxSituation(), session)(
-                mockPreviousCall
-              )
-              mockTimeProviderToday(LocalDate.of(2020, 10, 6))
-            }
-
-            checkPageIsDisplayed(
-              performAction(),
-              messageFromMessageKey("taxSituation.title"),
-              { doc =>
-                doc.select("#back").attr("href") shouldBe mockPreviousCall.url
-
-                doc.select("#taxSituation-hint").text shouldBe taxYearMessage(2019, 2020)
-
-                testAllTaxSituationsRadioOptions(doc)
-
-                val selectedOptions = doc.select(".govuk-radios__input[checked]")
-                selectedOptions.isEmpty shouldBe true
-
-                val form = doc.select("form")
-                form
-                  .attr("action") shouldBe routes.TaxSituationController.taxSituationSubmit().url
-              }
-            )
-
-          }
-
-        }
-
-        "with tax year as 2020 to 2021" when {
-
-          "today's date is start of the year 2022" ignore {
-            val session = Fixtures.individualHECSession(
-              individualLoginData,
-              IndividualRetrievedJourneyData.empty,
-              IndividualUserAnswers.empty.copy(
-                licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)
-              )
-            )
-
-            inSequence {
-              mockAuthWithNoRetrievals()
-              mockGetSession(session)
-              mockJourneyServiceGetPrevious(routes.TaxSituationController.taxSituation(), session)(
-                mockPreviousCall
-              )
-              mockTimeProviderToday(LocalDate.of(2022, 1, 1))
-            }
-
-            checkPageIsDisplayed(
-              performAction(),
-              messageFromMessageKey("taxSituation.title"),
-              { doc =>
-                doc.select("#back").attr("href") shouldBe mockPreviousCall.url
-
-                doc.select("#taxSituation-hint").text shouldBe taxYearMessage(2020, 2021)
-
-                testAllTaxSituationsRadioOptions(doc)
-
-                val selectedOptions = doc.select(".govuk-radios__input[checked]")
-                selectedOptions.isEmpty shouldBe true
-
-                val form = doc.select("form")
-                form
-                  .attr("action") shouldBe routes.TaxSituationController.taxSituationSubmit().url
-              }
-            )
-
-          }
-
-          "today's date is more than six months from 6 april 2021" ignore {
-            val session = Fixtures.individualHECSession(
-              individualLoginData,
-              IndividualRetrievedJourneyData.empty,
-              IndividualUserAnswers.empty.copy(licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires))
-            )
-
-            inSequence {
-              mockAuthWithNoRetrievals()
-              mockGetSession(session)
-              mockJourneyServiceGetPrevious(routes.TaxSituationController.taxSituation(), session)(
-                mockPreviousCall
-              )
-              mockTimeProviderToday(LocalDate.of(2021, 10, 24))
-            }
-
-            checkPageIsDisplayed(
-              performAction(),
-              messageFromMessageKey("taxSituation.title"),
-              { doc =>
-                doc.select("#back").attr("href") shouldBe mockPreviousCall.url
-
-                doc.select("#taxSituation-hint").text shouldBe taxYearMessage(2020, 2021)
-
-                testAllTaxSituationsRadioOptions(doc)
-
-                val selectedOptions = doc.select(".govuk-radios__input[checked]")
-                selectedOptions.isEmpty shouldBe true
-
-                val form = doc.select("form")
-                form
-                  .attr("action") shouldBe routes.TaxSituationController.taxSituationSubmit().url
-              }
-            )
-
-          }
-
-          "today's date is exactly six months from 6 april 2021" ignore {
-            val session = Fixtures.individualHECSession(
-              individualLoginData,
-              IndividualRetrievedJourneyData.empty,
-              IndividualUserAnswers.empty.copy(licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires))
-            )
-
-            inSequence {
-              mockAuthWithNoRetrievals()
-              mockGetSession(session)
-              mockJourneyServiceGetPrevious(routes.TaxSituationController.taxSituation(), session)(
-                mockPreviousCall
-              )
-              mockTimeProviderToday(LocalDate.of(2021, 10, 6))
-            }
-
-            checkPageIsDisplayed(
-              performAction(),
-              messageFromMessageKey("taxSituation.title"),
-              { doc =>
-                doc.select("#back").attr("href") shouldBe mockPreviousCall.url
-
-                doc.select("#taxSituation-hint").text shouldBe taxYearMessage(2020, 2021)
-
-                testAllTaxSituationsRadioOptions(doc)
-
-                val selectedOptions = doc.select(".govuk-radios__input[checked]")
-                selectedOptions.isEmpty shouldBe true
-
-                val form = doc.select("form")
-                form
-                  .attr("action") shouldBe routes.TaxSituationController.taxSituationSubmit().url
-              }
-            )
-
-          }
-
-        }
-
-      }
-
-      "display only relevant options" when {
-
-        "licence type = DriverOfTaxisAndPrivateHires" ignore {
-          val session = Fixtures.individualHECSession(
+        def testPage(currentDate: LocalDate, taxYear: Int) = {
+          val session        = Fixtures.individualHECSession(
             individualLoginData,
             IndividualRetrievedJourneyData.empty,
-            IndividualUserAnswers.empty.copy(licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires))
+            IndividualUserAnswers.empty.copy(
+              licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)
+            )
           )
+          val updatedSession = session.copy(relevantIncomeTaxYear = TaxYear(taxYear).some)
 
           inSequence {
             mockAuthWithNoRetrievals()
@@ -457,7 +230,8 @@ class TaxSituationControllerSpec
             mockJourneyServiceGetPrevious(routes.TaxSituationController.taxSituation(), session)(
               mockPreviousCall
             )
-            mockTimeProviderToday(TimeUtils.today())
+            mockTimeProviderToday(currentDate)
+            mockStoreSession(updatedSession)(Right(()))
           }
 
           checkPageIsDisplayed(
@@ -465,6 +239,8 @@ class TaxSituationControllerSpec
             messageFromMessageKey("taxSituation.title"),
             { doc =>
               doc.select("#back").attr("href") shouldBe mockPreviousCall.url
+              val (startDate, endDate) = getTaxPeriodStrings(TaxYear(taxYear))
+              doc.select("#taxSituation-hint").text shouldBe taxYearMessage(startDate, endDate)
 
               testAllTaxSituationsRadioOptions(doc)
 
@@ -476,22 +252,48 @@ class TaxSituationControllerSpec
                 .attr("action") shouldBe routes.TaxSituationController.taxSituationSubmit().url
             }
           )
+
         }
 
-        "licence type is not DriverOfTaxisAndPrivateHires" ignore {
-          List(
-            LicenceType.ScrapMetalDealerSite,
-            LicenceType.ScrapMetalMobileCollector,
-            LicenceType.OperatorOfPrivateHireVehicles
-          ).foreach { licenceType =>
-            withClue(s"For licence type $licenceType: ") {
-              val session = Fixtures.individualHECSession(
+        "with tax year as 2019 to 2020" when {
+
+          "today's date is start of the year" in {
+            testPage(LocalDate.of(2020, 10, 24), 2019)
+          }
+
+          "today's date is more than six months from 6 april 2020" in {
+            testPage(LocalDate.of(2021, 1, 1), 2019)
+          }
+
+          "today's date is exactly six months from 6 april 2020" in {
+            testPage(LocalDate.of(2020, 10, 6), 2019)
+          }
+
+        }
+
+        "with tax year as 2020 to 2021" when {
+
+          "today's date is start of the year 2022" in {
+            testPage(LocalDate.of(2022, 1, 1), 2020)
+          }
+
+          "today's date is more than six months from 6 april 2021" in {
+            testPage(LocalDate.of(2021, 10, 24), 2020)
+          }
+
+          "today's date is exactly six months from 6 april 2021" in {
+            testPage(LocalDate.of(2021, 10, 6), 2020)
+          }
+
+          "display only relevant options" when {
+
+            "licence type = DriverOfTaxisAndPrivateHires" in {
+              val session        = Fixtures.individualHECSession(
                 individualLoginData,
                 IndividualRetrievedJourneyData.empty,
-                IndividualUserAnswers.empty.copy(
-                  licenceType = Some(licenceType)
-                )
+                IndividualUserAnswers.empty.copy(licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires))
               )
+              val updatedSession = session.copy(relevantIncomeTaxYear = TaxYear(2020).some)
 
               inSequence {
                 mockAuthWithNoRetrievals()
@@ -500,6 +302,7 @@ class TaxSituationControllerSpec
                   mockPreviousCall
                 )
                 mockTimeProviderToday(TimeUtils.today())
+                mockStoreSession(updatedSession)(Right(()))
               }
 
               checkPageIsDisplayed(
@@ -508,7 +311,7 @@ class TaxSituationControllerSpec
                 { doc =>
                   doc.select("#back").attr("href") shouldBe mockPreviousCall.url
 
-                  testNonPAYETaxSituationsRadioOptions(doc)
+                  testAllTaxSituationsRadioOptions(doc)
 
                   val selectedOptions = doc.select(".govuk-radios__input[checked]")
                   selectedOptions.isEmpty shouldBe true
@@ -519,8 +322,56 @@ class TaxSituationControllerSpec
                 }
               )
             }
+
+            "licence type is not DriverOfTaxisAndPrivateHires" in {
+              List(
+                LicenceType.ScrapMetalDealerSite,
+                LicenceType.ScrapMetalMobileCollector,
+                LicenceType.OperatorOfPrivateHireVehicles
+              ).foreach { licenceType =>
+                withClue(s"For licence type $licenceType: ") {
+                  val session        = Fixtures.individualHECSession(
+                    individualLoginData,
+                    IndividualRetrievedJourneyData.empty,
+                    IndividualUserAnswers.empty.copy(
+                      licenceType = Some(licenceType)
+                    )
+                  )
+                  val updatedSession = session.copy(relevantIncomeTaxYear = TaxYear(2020).some)
+
+                  inSequence {
+                    mockAuthWithNoRetrievals()
+                    mockGetSession(session)
+                    mockJourneyServiceGetPrevious(routes.TaxSituationController.taxSituation(), session)(
+                      mockPreviousCall
+                    )
+                    mockTimeProviderToday(TimeUtils.today())
+                    mockStoreSession(updatedSession)(Right(()))
+                  }
+
+                  checkPageIsDisplayed(
+                    performAction(),
+                    messageFromMessageKey("taxSituation.title"),
+                    { doc =>
+                      doc.select("#back").attr("href") shouldBe mockPreviousCall.url
+
+                      testNonPAYETaxSituationsRadioOptions(doc)
+
+                      val selectedOptions = doc.select(".govuk-radios__input[checked]")
+                      selectedOptions.isEmpty shouldBe true
+
+                      val form = doc.select("form")
+                      form
+                        .attr("action") shouldBe routes.TaxSituationController.taxSituationSubmit().url
+                    }
+                  )
+                }
+              }
+            }
           }
+
         }
+
       }
 
     }
@@ -539,15 +390,15 @@ class TaxSituationControllerSpec
           Fixtures.individualHECSession(
             individualLoginData,
             IndividualRetrievedJourneyData.empty,
-            answers
+            answers,
+            relevantIncomeTaxYear = TaxYear(2020).some
           )
         val updatedSession = session.copy(userAnswers = updatedAnswers)
 
-        "nothing is submitted" ignore {
+        "nothing is submitted" in {
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(updatedSession)
-            mockTimeProviderToday(date)
             mockJourneyServiceGetPrevious(routes.TaxSituationController.taxSituation(), updatedSession)(
               mockPreviousCall
             )
@@ -560,11 +411,10 @@ class TaxSituationControllerSpec
           )
         }
 
-        "an index is submitted which is too large" ignore {
+        "an index is submitted which is too large" in {
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(updatedSession)
-            mockTimeProviderToday(date)
             mockJourneyServiceGetPrevious(routes.TaxSituationController.taxSituation(), updatedSession)(
               mockPreviousCall
             )
@@ -577,11 +427,10 @@ class TaxSituationControllerSpec
           )
         }
 
-        "a value is submitted which is not a number" ignore {
+        "a value is submitted which is not a number" in {
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(updatedSession)
-            mockTimeProviderToday(date)
             mockJourneyServiceGetPrevious(routes.TaxSituationController.taxSituation(), updatedSession)(
               mockPreviousCall
             )
@@ -597,7 +446,7 @@ class TaxSituationControllerSpec
       }
 
       "throw runtime exception" when {
-        "retrieved user data in session is for a company" ignore {
+        "retrieved user data in session is for a company" in {
           val session = CompanyHECSession.newSession(companyRetrievedData)
 
           inSequence {
@@ -607,6 +456,7 @@ class TaxSituationControllerSpec
 
           assertThrows[RuntimeException](await(performAction()))
         }
+
       }
 
       "return a technical error" when {
@@ -617,7 +467,6 @@ class TaxSituationControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockTimeProviderToday(date)
           }
           assertThrows[RuntimeException](await(performAction()))
 
@@ -628,7 +477,8 @@ class TaxSituationControllerSpec
           val session = Fixtures.individualHECSession(
             individualLoginData.copy(sautr = Some(SAUTR("utr"))),
             IndividualRetrievedJourneyData.empty,
-            answers
+            answers,
+            relevantIncomeTaxYear = Some(TaxYear(2020))
           )
 
           val updatedAnswers = IndividualUserAnswers.empty
@@ -642,7 +492,6 @@ class TaxSituationControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockTimeProviderToday(date)
             mockJourneyServiceUpdateAndNext(
               routes.TaxSituationController.taxSituation(),
               session,
@@ -654,6 +503,22 @@ class TaxSituationControllerSpec
           assertThrows[RuntimeException](await(performAction("taxSituation" -> "0")))
         }
 
+        "relevant tax year is not in session " in {
+          val answers = IndividualUserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
+          val session = Fixtures.individualHECSession(
+            individualLoginData.copy(sautr = Some(SAUTR("utr"))),
+            IndividualRetrievedJourneyData.empty,
+            answers
+          )
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+          }
+
+          assertThrows[RuntimeException](await(performAction("taxSituation" -> "0")))
+        }
+
       }
 
       val optionIndexMap = Map(
@@ -662,10 +527,16 @@ class TaxSituationControllerSpec
         TaxSituation.SAPAYE        -> "2",
         TaxSituation.NotChargeable -> "3"
       )
+
       def testNonSA(taxSituation: TaxSituation) = {
         val answers        = IndividualUserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
         val individualData = individualLoginData.copy(sautr = Some(SAUTR("utr")))
-        val session        = Fixtures.individualHECSession(individualData, IndividualRetrievedJourneyData.empty, answers)
+        val session        = Fixtures.individualHECSession(
+          individualData,
+          IndividualRetrievedJourneyData.empty,
+          answers,
+          relevantIncomeTaxYear = TaxYear(2020).some
+        )
 
         val updatedAnswers = answers.copy(taxSituation = Some(taxSituation))
         val updatedSession = session.copy(userAnswers = updatedAnswers)
@@ -673,7 +544,6 @@ class TaxSituationControllerSpec
         inSequence {
           mockAuthWithNoRetrievals()
           mockGetSession(session)
-          mockTimeProviderToday(date)
           mockJourneyServiceUpdateAndNext(
             routes.TaxSituationController.taxSituation(),
             session,
@@ -698,7 +568,12 @@ class TaxSituationControllerSpec
       def testSA(taxSituation: TaxSituation, statusResponse: SAStatusResponse) = {
         val answers        = IndividualUserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
         val individualData = individualLoginData.copy(sautr = Some(SAUTR("utr")))
-        val session        = Fixtures.individualHECSession(individualData, IndividualRetrievedJourneyData.empty, answers)
+        val session        = Fixtures.individualHECSession(
+          individualData,
+          IndividualRetrievedJourneyData.empty,
+          answers,
+          relevantIncomeTaxYear = TaxYear(2019).some
+        )
 
         val updatedAnswers = answers.copy(taxSituation = Some(taxSituation))
         val updatedSession = session.copy(
@@ -709,8 +584,7 @@ class TaxSituationControllerSpec
         inSequence {
           mockAuthWithNoRetrievals()
           mockGetSession(session)
-          mockTimeProviderToday(date)
-          mockGetSAStatus(statusResponse.sautr, statusResponse.taxYear)(Right(statusResponse))
+          mockGetSAStatus(statusResponse.sautr, TaxYear(2020))(Right(statusResponse))
           mockJourneyServiceUpdateAndNext(
             routes.TaxSituationController.taxSituation(),
             session,
@@ -737,12 +611,16 @@ class TaxSituationControllerSpec
         val individualData =
           individualLoginData.copy(sautr = Some(SAUTR("utr")))
         val session        =
-          Fixtures.individualHECSession(individualData, IndividualRetrievedJourneyData.empty, answers)
+          Fixtures.individualHECSession(
+            individualData,
+            IndividualRetrievedJourneyData.empty,
+            answers,
+            relevantIncomeTaxYear = TaxYear(2019).some
+          )
 
         inSequence {
           mockAuthWithNoRetrievals()
           mockGetSession(session)
-          mockTimeProviderToday(date)
           mockGetSAStatus(SAUTR("utr"), TaxYear(2020))(Left(Error("")))
         }
         assertThrows[RuntimeException](await(performAction("taxSituation" -> optionIndexMap(TaxSituation.SA))))
@@ -758,7 +636,8 @@ class TaxSituationControllerSpec
             val session = Fixtures.individualHECSession(
               individualLoginData.copy(sautr = Some(SAUTR("utr"))),
               IndividualRetrievedJourneyData.empty,
-              answers
+              answers,
+              relevantIncomeTaxYear = TaxYear(2020).some
             )
 
             val updatedAnswers = answers.copy(taxSituation = Some(TaxSituation.PAYE))
@@ -767,7 +646,6 @@ class TaxSituationControllerSpec
             inSequence {
               mockAuthWithNoRetrievals()
               mockGetSession(session)
-              mockTimeProviderToday(date)
               mockJourneyServiceUpdateAndNext(
                 routes.TaxSituationController.taxSituation(),
                 session,
@@ -793,7 +671,8 @@ class TaxSituationControllerSpec
             val session = Fixtures.individualHECSession(
               individualLoginData.copy(sautr = Some(SAUTR("utr"))),
               IndividualRetrievedJourneyData.empty,
-              answers
+              answers,
+              relevantIncomeTaxYear = TaxYear(2020).some
             )
 
             val updatedAnswers = Fixtures.incompleteIndividualUserAnswers(
@@ -809,7 +688,6 @@ class TaxSituationControllerSpec
             inSequence {
               mockAuthWithNoRetrievals()
               mockGetSession(session)
-              mockTimeProviderToday(date)
               mockJourneyServiceUpdateAndNext(
                 routes.TaxSituationController.taxSituation(),
                 session,
@@ -827,5 +705,4 @@ class TaxSituationControllerSpec
 
     }
   }
-
 }

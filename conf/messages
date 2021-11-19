@@ -86,7 +86,7 @@ date.11=November
 date.12=December
 
 # Licence type
-licenceType.title = What type of licence are you applying for?
+licenceType.title = What type of licence are you renewing or applying for?
 licenceType.hint = This is the licence type you’re doing a tax check for.
 licenceType.driverOfTaxis = Driver of taxis and private hires
 licenceType.driverOfTaxis.hint = Includes hackney carriage and dual licences.
@@ -94,8 +94,8 @@ licenceType.operatorOfPrivateHireVehicles = Operator of private hire vehicles
 licenceType.scrapMetalCollector = Scrap metal mobile collector
 licenceType.scrapMetalDealer = Scrap metal dealer site
 licenceType.link = Find out what to do if you cannot see your licence type
-licenceType.error.required = Select the type of licence you are applying for
-licenceType.error.invalid = Select the type of licence you are applying for
+licenceType.error.required = Select the type of licence you are renewing or applying for
+licenceType.error.invalid = Select the type of licence you are renewing or applying for
 
 # Licence type exit
 licenceTypeExit.title = You do not need to do a tax check
@@ -128,9 +128,7 @@ licenceValidityPeriod.error.required=Select the number of years your most recent
 licenceValidityPeriod.error.invalid=Select the number of years your most recent licence was valid for
 
 # Tax Situation
-taxSituation.title = Tax status for the tax year 6 April {0} to 5 April {1}
-taxSituation.p1 = This question relates to your tax status for any work carried out using the same type of licence you are doing a tax check for. This is for the tax year 6 April {0} to 5 April {1} only.
-taxSituation.label = What was your tax status for your {0} licence(s)?
+taxSituation.title = What was your tax status for work carried out using this type of licence?
 taxSituation.PA = An employee
 taxSituation.SA = Registered for Self Assessment
 taxSituation.SAPAYE = Registered for Self Assessment and an employee
@@ -139,6 +137,7 @@ taxSituation.NotChargeable.hint = For example, you may have had a licence but no
 taxSituation.link = Find out who needs to register for Self Assessment (open in new window)
 taxSituation.error.required = Select your tax status
 taxSituation.error.invalid = Select your tax status
+taxSituation.hint = This is for the tax year {0} to {1}.
 
 # Entity Type
 entityType.title=Who are you doing a tax check for?
@@ -174,7 +173,7 @@ checkYourAnswers.licenceExpiryDate.screenReaderText = the licence expiry date
 checkYourAnswers.licenceTimeTrading.screenReaderText = how many years ago you first got a licence for this activity
 checkYourAnswers.licenceValidityPeriod.screenReaderText = how long your most recent licence was valid for
 checkYourAnswers.entityType.screenReaderText = who the tax check is for
-checkYourAnswers.taxSituation.screenReaderText = your tax status for work carried out using your licence
+checkYourAnswers.taxSituation.screenReaderText = how you pay tax on any work carried out using your licence
 checkYourAnswers.saIncomeDeclared.screenReaderText = if you included income you earned using this type of licence in your tax return
 checkYourAnswers.crn.screenReaderText = your company registration number
 checkYourAnswers.ctutr.screenReaderText = your Corporation Tax Unique Taxpayer Reference
@@ -186,11 +185,10 @@ checkYourAnswers.ctIncomeDeclared.screenReaderText = if you included all income 
 taxCheckComplete.title = Tax Check Complete
 taxCheckComplete.subtitle = Your tax check code
 taxCheckComplete.p1 = Your tax check code is valid for 120 days.
-taxCheckComplete.p2 = The last day it can be used is: <strong>{0}</strong>.
+taxCheckComplete.p2 = The last day it is valid is: <strong>{0}</strong>.
 taxCheckComplete.whatNext = What you need to do next
-taxCheckComplete.list1 = Make a note of your tax check code. You can <span class="js-visible"><a class="govuk-link" href="#print-dialogue">print or save this page as a PDF</a>, or </span> <a href={0} class="govuk-link">see all of your tax check codes</a>.
+taxCheckComplete.list1 = Make a note of your tax check code. <span class="js-visible">You can <a class="govuk-link" href="#print-dialogue">print or save this page as a PDF</a>.</span>
 taxCheckComplete.list2 = Enter your tax check code in your licence application. Make sure you leave enough time for your application to be processed before your tax check code expires.
-taxCheckComplete.copyText = your tax check code
 
 # SAUTR Not Found
 sautrNotFound.title = You cannot use this service
@@ -300,3 +298,8 @@ dontHaveCtutr.title=If you do not have a UTR
 dontHaveCtutr.p1=If you do not have your UTR number you can <a href="{0}" class="govuk-link" target="_blank" rel="noopener noreferrer">find a lost UTR (opens in a new tab)</a>.
 dontHaveCtutr.p2=You need to <a href="{0}" class="govuk-link">register for Corporation Tax</a>, before you can do a tax check.
 dontHaveCtutr.p3=Once you have your UTR number, you can <a href="{0}" class="govuk-link">go back and try again</a>.
+
+# Too many CTUTR attempts
+tooManyCtutrAttempts.title=You cannot do a tax check at the moment
+tooManyCtutrAttempts.p1=This is because you have entered a UTR that does not match your company, too many times.
+tooManyCtutrAttempts.p2=You will not be able to use this service for the next 3 hours. After that, you will be able to <a href="{0}" class="govuk-link">do a new tax check</a>.
