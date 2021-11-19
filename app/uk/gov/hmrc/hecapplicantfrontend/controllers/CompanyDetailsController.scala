@@ -40,7 +40,7 @@ import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
-import java.time.LocalDate
+import java.time.{LocalDate, ZoneId}
 import scala.concurrent.{ExecutionContext, Future}
 
 class CompanyDetailsController @Inject() (
@@ -425,7 +425,8 @@ class CompanyDetailsController @Inject() (
             _.doThrow("Error fetching ctutr attempts"),
             {
               case Some(CtutrAttempts(_, _, companyName, _, Some(blockedUntil))) =>
-                val formattedDate = TimeUtils.govDateTimeDisplayFormat(blockedUntil)
+                val formattedDate =
+                  TimeUtils.govDateTimeDisplayFormat(blockedUntil.withZoneSameInstant(ZoneId.of("Europe/London")))
                 Ok(tooManyCTUTRAttemptsPage(back, crn.value, companyName.name, formattedDate))
               case _                                                             =>
                 sys.error("CTUTR attempts is not blocked")

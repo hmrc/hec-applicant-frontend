@@ -1898,7 +1898,7 @@ class CompanyDetailsControllerSpec
 
             val links = doc.select(".govuk-body > .govuk-link")
             links.get(0).attr("href") shouldBe routes.CRNController.companyRegistrationNumber().url
-            links.get(1).attr("href") shouldBe routes.StartController.start().url
+            links.get(1).attr("href") shouldBe appConfig.firstPageBackUrl
           }
         )
 
