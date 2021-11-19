@@ -38,7 +38,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import java.time.{LocalDate, ZoneId, ZonedDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class JourneyServiceSpec extends ControllerSpec with SessionSupport {
+class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
 
   val journeyService: JourneyServiceImpl = new JourneyServiceImpl(mockSessionStore)
 
@@ -741,12 +741,24 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
 
         "the company registration number page" when {
 
-          def testCrnNextpage(companyName: Option[CompanyHouseName], resultCall: Call) = {
+          "the CRN is blocked" in {
+            val sessionWithBlockedCrn = Fixtures.companyHECSession(companyLoginData, crnBlocked = true)
+
+            implicit val request: RequestWithSessionData[_] = requestWithSessionData(sessionWithBlockedCrn)
+
+            val result = journeyService.updateAndNext(
+              routes.CRNController.companyRegistrationNumber(),
+              sessionWithBlockedCrn
+            )
+            await(result.value) shouldBe Right(routes.CompanyDetailsController.tooManyCtutrAttempts())
+          }
+
+          "the company is found" in {
             val session        = CompanyHECSession.newSession(companyLoginData)
             val updatedSession =
               Fixtures.companyHECSession(
                 companyLoginData,
-                CompanyRetrievedJourneyData.empty.copy(companyName = companyName),
+                CompanyRetrievedJourneyData.empty.copy(companyName = Some(CompanyHouseName("Test tech Ltd"))),
                 CompanyUserAnswers.empty.copy(crn = Some(CRN("1234567")))
               )
 
@@ -759,18 +771,10 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
               routes.CRNController.companyRegistrationNumber(),
               updatedSession
             )
-            await(result.value) shouldBe Right(resultCall)
-          }
-
-          "the company is found" in {
-            testCrnNextpage(
-              Some(CompanyHouseName("Test tech Ltd")),
-              routes.CompanyDetailsController.confirmCompanyDetails()
-            )
+            await(result.value) shouldBe Right(routes.CompanyDetailsController.confirmCompanyDetails())
           }
 
           "the company is  not found" in {
-
             val session                                     = CompanyHECSession.newSession(companyLoginData)
             val updatedSession                              =
               Fixtures.companyHECSession(
@@ -791,7 +795,6 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
                   .value
               )
             )
-
           }
 
         }
@@ -2445,7 +2448,7 @@ class JourneyServiceSpec extends ControllerSpec with SessionSupport {
             routes.CompanyDetailsController.tooManyCtutrAttempts()
           )
 
-          result shouldBe routes.CompanyDetailsController.enterCtutr()
+          result shouldBe routes.CRNController.companyRegistrationNumber()
         }
 
         def buildIndividualSession(taxSituation: TaxSituation, saStatus: SAStatus): HECSession = {

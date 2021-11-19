@@ -17,7 +17,6 @@
 package uk.gov.hmrc.hecapplicantfrontend.controllers
 
 import cats.data.EitherT
-import cats.implicits.{catsKernelStdOrderForString, catsSyntaxEq}
 import cats.instances.future._
 import cats.syntax.option._
 import com.google.inject.Inject
@@ -31,7 +30,7 @@ import uk.gov.hmrc.hecapplicantfrontend.controllers.CRNController.crnForm
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.CRN
 import uk.gov.hmrc.hecapplicantfrontend.models.{Error, HECSession}
-import uk.gov.hmrc.hecapplicantfrontend.services.{CompanyDetailsService, JourneyService}
+import uk.gov.hmrc.hecapplicantfrontend.services.{CompanyDetailsService, CtutrAttemptsService, JourneyService}
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.hecapplicantfrontend.util.StringUtils.StringOps
 import uk.gov.hmrc.hecapplicantfrontend.views.html
@@ -45,6 +44,7 @@ class CRNController @Inject() (
   sessionDataAction: SessionDataAction,
   journeyService: JourneyService,
   companyDetailsService: CompanyDetailsService,
+  ctutrAttemptsService: CtutrAttemptsService,
   crnPage: html.CompanyRegistrationNumber,
   mcc: MessagesControllerComponents
 )(implicit ec: ExecutionContext, appConfig: AppConfig)
@@ -77,23 +77,27 @@ class CRNController @Inject() (
             .updateAndNext(routes.CRNController.companyRegistrationNumber(), updatedSession)
             .map(Right[Form[CRN], Call])
 
+        def updateAnswers(crn: CRN) =
+          companySession.userAnswers
+            .unset(_.crn)
+            .unset(_.companyDetailsConfirmed)
+            .unset(_.chargeableForCT)
+            .unset(_.ctIncomeDeclared)
+            .unset(_.recentlyStartedTrading)
+            .unset(_.ctutr)
+            .copy(crn = Some(crn))
+
         def fetchCompanyNameAndProceed(crn: CRN): EitherT[Future, Error, Either[Form[CRN], Call]] = for {
           companyHouseDetailsOpt <- companyDetailsService.findCompany(crn)
-          updatedAnswers          =
-            companySession.userAnswers
-              .unset(_.crn)
-              .unset(_.companyDetailsConfirmed)
-              .unset(_.chargeableForCT)
-              .unset(_.ctIncomeDeclared)
-              .unset(_.recentlyStartedTrading)
-              .unset(_.ctutr)
-              .copy(crn = Some(crn))
           updatedRetrievedData    =
             companySession.retrievedJourneyData.copy(
               companyName = companyHouseDetailsOpt.map(_.companyName)
             )
-          updatedSession          =
-            companySession.copy(retrievedJourneyData = updatedRetrievedData, userAnswers = updatedAnswers)
+          updatedSession          = companySession.copy(
+                                      retrievedJourneyData = updatedRetrievedData,
+                                      userAnswers = updateAnswers(crn),
+                                      crnBlocked = false
+                                    )
           formErrorOrNext        <- companyHouseDetailsOpt map { _ =>
                                       updateAndNext(updatedSession)
                                     } getOrElse {
@@ -104,14 +108,24 @@ class CRNController @Inject() (
         } yield formErrorOrNext
 
         def handleValidCrn(crn: CRN): Future[Result] = {
-          val sessionCrn                                              = companySession.userAnswers.fold(_.crn, _.crn.some)
-          val result: EitherT[Future, Error, Either[Form[CRN], Call]] = sessionCrn match {
-            //check if the submitted crn is equal to the crn in session
-            //then no need to call the companyDetailsService, pick company name from the session
-            //else fetch company name using the service
-            case Some(crnSession) if crn.value === crnSession.value => updateAndNext(companySession)
-            case _                                                  => fetchCompanyNameAndProceed(crn)
+
+          def crnsMatch: Boolean = {
+            val sessionCrn = companySession.userAnswers.fold(_.crn, _.crn.some)
+            sessionCrn.contains(crn)
           }
+
+          val result = for {
+            ctutrAttempts <- ctutrAttemptsService.getWithDefault(crn, companySession.loginData.ggCredId)
+            eitherResult  <- if (ctutrAttempts.isBlocked) {
+                               val updatedSession =
+                                 companySession.copy(userAnswers = updateAnswers(crn), crnBlocked = true)
+                               updateAndNext(updatedSession)
+                             } else if (crnsMatch) {
+                               updateAndNext(companySession.copy(crnBlocked = false))
+                             } else {
+                               fetchCompanyNameAndProceed(crn)
+                             }
+          } yield eitherResult
 
           result.fold(
             _.doThrow("Could not update session and proceed"),
