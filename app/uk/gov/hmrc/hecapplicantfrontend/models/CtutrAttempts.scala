@@ -25,6 +25,7 @@ import java.time.ZonedDateTime
 final case class CtutrAttempts(
   crn: CRN,
   ggCredId: GGCredId,
+  companyName: CompanyHouseName,
   attempts: Int,
   blockedUntil: Option[ZonedDateTime]
 ) {

@@ -36,7 +36,7 @@ import uk.gov.hmrc.hecapplicantfrontend.util.TimeProvider
 import uk.gov.hmrc.hecapplicantfrontend.utils.Fixtures
 import uk.gov.hmrc.http.HeaderCarrier
 
-import java.time.{LocalDate, ZonedDateTime}
+import java.time.{LocalDate, ZoneId, ZonedDateTime}
 import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -85,11 +85,19 @@ class CompanyDetailsControllerSpec
       .expects(attempts)
       .returning(EitherT.fromEither[Future](result))
 
-  def mockCtutrAttemptsServiceGet(crn: CRN, ggCredId: GGCredId)(
+  def mockCtutrAttemptsServiceGetWithDefault(crn: CRN, ggCredId: GGCredId, companyHouseName: CompanyHouseName)(
     result: Either[Error, CtutrAttempts]
   ) =
     (mockCtutrAttemptsService
-      .getWithDefault(_: CRN, _: GGCredId))
+      .getWithDefault(_: CRN, _: GGCredId, _: CompanyHouseName))
+      .expects(crn, ggCredId, companyHouseName)
+      .returning(EitherT.fromEither[Future](result))
+
+  def mockCtutrAttemptsServiceGet(crn: CRN, ggCredId: GGCredId)(
+    result: Either[Error, Option[CtutrAttempts]]
+  ) =
+    (mockCtutrAttemptsService
+      .get(_: CRN, _: GGCredId))
       .expects(crn, ggCredId)
       .returning(EitherT.fromEither[Future](result))
 
@@ -1372,6 +1380,7 @@ class CompanyDetailsControllerSpec
       val ctutr2          = "2222222222"
       val enterCtutrRoute = routes.CompanyDetailsController.enterCtutr()
       val crn             = CRN("crn")
+      val companyName     = CompanyHouseName("test company")
 
       def performAction(data: (String, String)*): Future[Result] =
         controller.enterCtutrSubmit(FakeRequest().withFormUrlEncodedBody(data: _*))
@@ -1382,16 +1391,17 @@ class CompanyDetailsControllerSpec
         val userAnswers   = Fixtures.incompleteCompanyUserAnswers(crn = Some(crn))
         val session       = Fixtures.companyHECSession(
           companyLoginData,
-          retrievedJourneyData = Fixtures.companyRetrievedJourneyData(desCtutr = Some(CTUTR(ctutr1))),
+          retrievedJourneyData =
+            Fixtures.companyRetrievedJourneyData(desCtutr = Some(CTUTR(ctutr1)), companyName = Some(companyName)),
           userAnswers = userAnswers
         )
-        val ctutrAttempts = CtutrAttempts(crn, GGCredId("ggCredId"), 1, None)
+        val ctutrAttempts = CtutrAttempts(crn, GGCredId("ggCredId"), companyName, 1, None)
 
         def test(errorMessageKey: String, formAnswer: (String, String)*) = {
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockCtutrAttemptsServiceGet(crn, session.loginData.ggCredId)(Right(ctutrAttempts))
+            mockCtutrAttemptsServiceGetWithDefault(crn, session.loginData.ggCredId, companyName)(Right(ctutrAttempts))
             mockJourneyServiceGetPrevious(enterCtutrRoute, session)(mockPreviousCall)
           }
 
@@ -1434,7 +1444,8 @@ class CompanyDetailsControllerSpec
           )
           val session        = Fixtures.companyHECSession(
             companyLoginData,
-            retrievedJourneyData = Fixtures.companyRetrievedJourneyData(desCtutr = Some(CTUTR(ctutr1))),
+            retrievedJourneyData =
+              Fixtures.companyRetrievedJourneyData(desCtutr = Some(CTUTR(ctutr1)), companyName = Some(companyName)),
             userAnswers = userAnswers,
             crnBlocked = true
           )
@@ -1445,14 +1456,14 @@ class CompanyDetailsControllerSpec
           )
 
           val ggCredId = session.loginData.ggCredId
-          val attempts = CtutrAttempts(crn, ggCredId, 1, None)
+          val attempts = CtutrAttempts(crn, ggCredId, companyName, 1, None)
 
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockCtutrAttemptsServiceGet(crn, session.loginData.ggCredId)(Right(attempts))
+            mockCtutrAttemptsServiceGetWithDefault(crn, session.loginData.ggCredId, companyName)(Right(attempts))
             mockCtutrAttemptsServiceUpdateAttempts(attempts)(
-              Right(CtutrAttempts(crn, ggCredId, 1, None))
+              Right(CtutrAttempts(crn, ggCredId, companyName, 1, None))
             )
             mockStoreSession(updatedSession)(Right(()))
             mockJourneyServiceGetPrevious(enterCtutrRoute, session)(mockPreviousCall)
@@ -1468,7 +1479,7 @@ class CompanyDetailsControllerSpec
 
       "return a technical error" when {
 
-        val attempts = CtutrAttempts(crn, GGCredId("ggCredId"), 1, None)
+        val attempts = CtutrAttempts(crn, GGCredId("ggCredId"), companyName, 1, None)
 
         "the applicant type is individual" in {
           inSequence {
@@ -1509,7 +1520,7 @@ class CompanyDetailsControllerSpec
 
         val companySessionWithCrn = Fixtures.companyHECSession(
           companyLoginData,
-          Fixtures.companyRetrievedJourneyData(desCtutr = Some(CTUTR(ctutr1))),
+          Fixtures.companyRetrievedJourneyData(desCtutr = Some(CTUTR(ctutr1)), companyName = Some(companyName)),
           userAnswers = Fixtures.incompleteCompanyUserAnswers(crn = Some(CRN("crn")))
         )
 
@@ -1517,7 +1528,9 @@ class CompanyDetailsControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(companySessionWithCrn)
-            mockCtutrAttemptsServiceGet(crn, companySessionWithCrn.loginData.ggCredId)(Left(Error("some error")))
+            mockCtutrAttemptsServiceGetWithDefault(crn, companySessionWithCrn.loginData.ggCredId, companyName)(
+              Left(Error("some error"))
+            )
           }
           assertThrows[RuntimeException](await(performAction("enterCtutr" -> ctutr1)))
         }
@@ -1526,7 +1539,9 @@ class CompanyDetailsControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(companySessionWithCrn)
-            mockCtutrAttemptsServiceGet(crn, companySessionWithCrn.loginData.ggCredId)(Right(attempts))
+            mockCtutrAttemptsServiceGetWithDefault(crn, companySessionWithCrn.loginData.ggCredId, companyName)(
+              Right(attempts)
+            )
             mockTimeProviderToday(LocalDate.now)
             mockCtutrAttemptsServiceDelete(crn, companySessionWithCrn.loginData.ggCredId)(Left(Error("some error")))
           }
@@ -1541,7 +1556,9 @@ class CompanyDetailsControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(companySessionWithCrn)
-            mockCtutrAttemptsServiceGet(crn, companySessionWithCrn.loginData.ggCredId)(Right(attempts))
+            mockCtutrAttemptsServiceGetWithDefault(crn, companySessionWithCrn.loginData.ggCredId, companyName)(
+              Right(attempts)
+            )
             mockTimeProviderToday(LocalDate.now)
             mockCtutrAttemptsServiceDelete(crn, companySessionWithCrn.loginData.ggCredId)(Right(()))
             mockTaxCheckServiceGetCtStatus(CTUTR(ctutr1), lookbackPeriodStartDate, lookbackPeriodEndDate)(
@@ -1556,7 +1573,7 @@ class CompanyDetailsControllerSpec
             val answers = Fixtures.incompleteCompanyUserAnswers(crn = Some(CRN("crn")))
             val session = Fixtures.companyHECSession(
               companyLoginData,
-              Fixtures.companyRetrievedJourneyData(desCtutr = Some(CTUTR(ctutr1))),
+              Fixtures.companyRetrievedJourneyData(desCtutr = Some(CTUTR(ctutr1)), companyName = Some(companyName)),
               userAnswers = answers
             )
 
@@ -1572,8 +1589,8 @@ class CompanyDetailsControllerSpec
             inSequence {
               mockAuthWithNoRetrievals()
               mockGetSession(session)
-              mockCtutrAttemptsServiceGet(crn, session.loginData.ggCredId)(
-                Right(CtutrAttempts(crn, GGCredId("ggCredId"), 1, None))
+              mockCtutrAttemptsServiceGetWithDefault(crn, session.loginData.ggCredId, companyName)(
+                Right(CtutrAttempts(crn, GGCredId("ggCredId"), companyName, 1, None))
               )
               mockTimeProviderToday(LocalDate.now)
               mockCtutrAttemptsServiceDelete(crn, session.loginData.ggCredId)(Right(()))
@@ -1594,17 +1611,17 @@ class CompanyDetailsControllerSpec
           "user answer does not match DES CTUTR & CRN has not been blocked yet but gets blocked on this attempt" in {
             val session = Fixtures.companyHECSession(
               companyLoginData,
-              Fixtures.companyRetrievedJourneyData(desCtutr = Some(CTUTR(ctutr1))),
+              Fixtures.companyRetrievedJourneyData(desCtutr = Some(CTUTR(ctutr1)), companyName = Some(companyName)),
               crnBlocked = true,
               userAnswers = Fixtures.incompleteCompanyUserAnswers(crn = Some(CRN("crn")))
             )
 
-            val attempts = CtutrAttempts(crn, companyLoginData.ggCredId, 1, None)
+            val attempts = CtutrAttempts(crn, companyLoginData.ggCredId, companyName, 1, None)
 
             inSequence {
               mockAuthWithNoRetrievals()
               mockGetSession(session)
-              mockCtutrAttemptsServiceGet(crn, companyLoginData.ggCredId)(Right(attempts))
+              mockCtutrAttemptsServiceGetWithDefault(crn, companyLoginData.ggCredId, companyName)(Right(attempts))
               mockCtutrAttemptsServiceUpdateAttempts(attempts)(
                 Right(attempts.copy(blockedUntil = Some(ZonedDateTime.now)))
               )
@@ -1631,13 +1648,14 @@ class CompanyDetailsControllerSpec
           )
           val session     = Fixtures.companyHECSession(
             companyLoginData,
-            retrievedJourneyData = Fixtures.companyRetrievedJourneyData(desCtutr = Some(CTUTR("des"))),
+            retrievedJourneyData =
+              Fixtures.companyRetrievedJourneyData(desCtutr = Some(CTUTR("des")), companyName = Some(companyName)),
             userAnswers = userAnswers,
             crnBlocked = true
           )
 
           val ggCredId = session.loginData.ggCredId
-          val attempts = CtutrAttempts(crn, ggCredId, 0, None)
+          val attempts = CtutrAttempts(crn, ggCredId, companyName, 0, None)
 
           val updatedSession = session.copy(
             userAnswers = userAnswers
@@ -1648,7 +1666,7 @@ class CompanyDetailsControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockCtutrAttemptsServiceGet(crn, session.loginData.ggCredId)(Right(attempts))
+            mockCtutrAttemptsServiceGetWithDefault(crn, session.loginData.ggCredId, companyName)(Right(attempts))
             mockCtutrAttemptsServiceUpdateAttempts(attempts)(Right(attempts.copy(attempts = 1)))
             mockStoreSession(updatedSession)(Left(Error("some error")))
           }
@@ -1675,7 +1693,10 @@ class CompanyDetailsControllerSpec
                 val answers = Fixtures.incompleteCompanyUserAnswers(crn = Some(crn))
                 val session = Fixtures.companyHECSession(
                   companyLoginData,
-                  Fixtures.companyRetrievedJourneyData(desCtutr = Some(CTUTR(strippedCtutrAnswer))),
+                  Fixtures.companyRetrievedJourneyData(
+                    desCtutr = Some(CTUTR(strippedCtutrAnswer)),
+                    companyName = Some(companyName)
+                  ),
                   answers
                 )
 
@@ -1692,8 +1713,8 @@ class CompanyDetailsControllerSpec
                 inSequence {
                   mockAuthWithNoRetrievals()
                   mockGetSession(session)
-                  mockCtutrAttemptsServiceGet(crn, companyLoginData.ggCredId)(
-                    Right(CtutrAttempts(crn, companyLoginData.ggCredId, 1, None))
+                  mockCtutrAttemptsServiceGetWithDefault(crn, companyLoginData.ggCredId, companyName)(
+                    Right(CtutrAttempts(crn, companyLoginData.ggCredId, companyName, 1, None))
                   )
                   mockTimeProviderToday(LocalDate.now)
                   mockCtutrAttemptsServiceDelete(crn, session.loginData.ggCredId)(Right(()))
@@ -1720,18 +1741,18 @@ class CompanyDetailsControllerSpec
         "CRN is blocked" in {
           val session        = Fixtures.companyHECSession(
             companyLoginData,
-            Fixtures.companyRetrievedJourneyData(desCtutr = Some(CTUTR(ctutr1))),
+            Fixtures.companyRetrievedJourneyData(desCtutr = Some(CTUTR(ctutr1)), companyName = Some(companyName)),
             userAnswers = Fixtures.incompleteCompanyUserAnswers(crn = Some(crn)),
             crnBlocked = false
           )
           val updatedSession = session.copy(crnBlocked = true)
 
-          val attempts = CtutrAttempts(crn, companyLoginData.ggCredId, 1, Some(ZonedDateTime.now))
+          val attempts = CtutrAttempts(crn, companyLoginData.ggCredId, companyName, 1, Some(ZonedDateTime.now))
 
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockCtutrAttemptsServiceGet(crn, companyLoginData.ggCredId)(Right(attempts))
+            mockCtutrAttemptsServiceGetWithDefault(crn, companyLoginData.ggCredId, companyName)(Right(attempts))
             mockJourneyServiceUpdateAndNext(
               enterCtutrRoute,
               session,
@@ -1746,18 +1767,18 @@ class CompanyDetailsControllerSpec
           val answers         = Fixtures.incompleteCompanyUserAnswers(crn = Some(CRN("crn")))
           val session         = Fixtures.companyHECSession(
             companyLoginData,
-            Fixtures.companyRetrievedJourneyData(desCtutr = Some(CTUTR(ctutr1))),
+            Fixtures.companyRetrievedJourneyData(desCtutr = Some(CTUTR(ctutr1)), companyName = Some(companyName)),
             crnBlocked = true,
             userAnswers = answers
           )
           val ggCredId        = session.loginData.ggCredId
-          val attempts        = CtutrAttempts(crn, ggCredId, maxCtutrAttempts, None)
-          val updatedAttempts = CtutrAttempts(crn, ggCredId, maxCtutrAttempts, Some(ZonedDateTime.now))
+          val attempts        = CtutrAttempts(crn, ggCredId, companyName, maxCtutrAttempts, None)
+          val updatedAttempts = CtutrAttempts(crn, ggCredId, companyName, maxCtutrAttempts, Some(ZonedDateTime.now))
 
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockCtutrAttemptsServiceGet(crn, companyLoginData.ggCredId)(Right(attempts))
+            mockCtutrAttemptsServiceGetWithDefault(crn, companyLoginData.ggCredId, companyName)(Right(attempts))
             mockCtutrAttemptsServiceUpdateAttempts(attempts)(Right(updatedAttempts))
             mockJourneyServiceUpdateAndNext(
               enterCtutrRoute,
@@ -1842,23 +1863,97 @@ class CompanyDetailsControllerSpec
 
       behave like authAndSessionDataBehaviour(performAction)
 
+      val crn                  = CRN("crn")
+      val companyName          = CompanyHouseName("test company")
+      val ctutrAttempts        = CtutrAttempts(crn, GGCredId(""), companyName, 1, None)
+      val blockedUntil         = ZonedDateTime.of(2020, 1, 1, 10, 5, 0, 0, ZoneId.of("Europe/London"))
+      val blockedCtutrAttempts = ctutrAttempts.copy(blockedUntil = Some(blockedUntil))
+
       "display the page" in {
-        val session = Fixtures.companyHECSession()
+        val answers = Fixtures.incompleteCompanyUserAnswers(crn = Some(crn))
+        val session = Fixtures.companyHECSession(userAnswers = answers)
         inSequence {
           mockAuthWithNoRetrievals()
           mockGetSession(session)
+          mockJourneyServiceGetPrevious(routes.CompanyDetailsController.tooManyCtutrAttempts(), session)(
+            mockPreviousCall
+          )
+          mockCtutrAttemptsServiceGet(crn, companyLoginData.ggCredId)(Right(Some(blockedCtutrAttempts)))
         }
 
         checkPageIsDisplayed(
           performAction(),
           messageFromMessageKey("tooManyCtutrAttempts.title"),
-          { doc =>
-            doc.select("#back").isEmpty shouldBe true
-            val link = doc.select(".govuk-body > .govuk-link")
-            link.attr("href") shouldBe appConfig.taxCheckGuidanceUrl
+          doc => {
+            doc.select("#back").attr("href") shouldBe mockPreviousCall.url
+
+            val rowValues = doc.select(".govuk-summary-list__value")
+            rowValues.get(0).text shouldBe companyName.name
+            rowValues.get(1).text shouldBe crn.value
+
+            doc.select("p.govuk-body").get(1).text() shouldBe messageFromMessageKey(
+              "tooManyCtutrAttempts.p2",
+              "1 January 2020 10:05am"
+            )
+
+            val links = doc.select(".govuk-body > .govuk-link")
+            links.get(0).attr("href") shouldBe routes.CRNController.companyRegistrationNumber().url
+            links.get(1).attr("href") shouldBe appConfig.firstPageBackUrl
           }
         )
 
+      }
+
+      "throw exception" when {
+        "session is for individual" in {
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(Fixtures.individualHECSession())
+          }
+
+          assertThrows[RuntimeException](await(performAction()))
+        }
+
+        "CRN is missing in session answers" in {
+          val answers = Fixtures.incompleteCompanyUserAnswers(crn = None)
+          val session = Fixtures.companyHECSession(userAnswers = answers)
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+          }
+
+          assertThrows[RuntimeException](await(performAction()))
+        }
+
+        "fetching ctutr attempts fails" in {
+          val answers = Fixtures.incompleteCompanyUserAnswers(crn = Some(crn))
+          val session = Fixtures.companyHECSession(userAnswers = answers)
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockJourneyServiceGetPrevious(routes.CompanyDetailsController.tooManyCtutrAttempts(), session)(
+              mockPreviousCall
+            )
+            mockCtutrAttemptsServiceGet(crn, companyLoginData.ggCredId)(Left(Error("some error")))
+          }
+
+          assertThrows[RuntimeException](await(performAction()))
+        }
+
+        "fetched ctutr attempts is not blocked" in {
+          val answers = Fixtures.incompleteCompanyUserAnswers(crn = Some(crn))
+          val session = Fixtures.companyHECSession(userAnswers = answers)
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockJourneyServiceGetPrevious(routes.CompanyDetailsController.tooManyCtutrAttempts(), session)(
+              mockPreviousCall
+            )
+            mockCtutrAttemptsServiceGet(crn, companyLoginData.ggCredId)(Right(Some(ctutrAttempts)))
+          }
+
+          assertThrows[RuntimeException](await(performAction()))
+        }
       }
 
     }

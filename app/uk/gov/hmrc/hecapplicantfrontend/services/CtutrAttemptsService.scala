@@ -20,7 +20,7 @@ import cats.data.EitherT
 import com.google.inject.{ImplementedBy, Inject, Singleton}
 import play.api.Configuration
 import uk.gov.hmrc.hecapplicantfrontend.models
-import uk.gov.hmrc.hecapplicantfrontend.models.CtutrAttempts
+import uk.gov.hmrc.hecapplicantfrontend.models.{CompanyHouseName, CtutrAttempts}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, GGCredId}
 import uk.gov.hmrc.hecapplicantfrontend.repos.CtutrAttemptsStore
 import uk.gov.hmrc.hecapplicantfrontend.util.TimeProvider
@@ -35,7 +35,16 @@ trait CtutrAttemptsService {
 
   def delete(crn: CRN, ggCredId: GGCredId): EitherT[Future, models.Error, Unit]
 
-  def getWithDefault(crn: CRN, ggCredId: GGCredId): EitherT[Future, models.Error, CtutrAttempts]
+  def getWithDefault(
+    crn: CRN,
+    ggCredId: GGCredId,
+    companyName: CompanyHouseName
+  ): EitherT[Future, models.Error, CtutrAttempts]
+
+  def get(
+    crn: CRN,
+    ggCredId: GGCredId
+  ): EitherT[Future, models.Error, Option[CtutrAttempts]]
 }
 
 @Singleton
@@ -74,9 +83,19 @@ class CtutrAttemptsServiceImpl @Inject() (
   /**
     * Fetch CTUTR attempts using CRN and GGCredId, if none found, return default with number of attempts set to 0
     */
-  def getWithDefault(crn: CRN, ggCredId: GGCredId): EitherT[Future, models.Error, CtutrAttempts] =
+  def getWithDefault(
+    crn: CRN,
+    ggCredId: GGCredId,
+    companyName: CompanyHouseName
+  ): EitherT[Future, models.Error, CtutrAttempts] =
     ctutrAttemptsStore.get(crn, ggCredId) map {
-      case None           => CtutrAttempts(crn, ggCredId, 0, None)
+      case None           => CtutrAttempts(crn, ggCredId, companyName, 0, None)
       case Some(attempts) => attempts
     }
+
+  def get(
+    crn: CRN,
+    ggCredId: GGCredId
+  ): EitherT[Future, models.Error, Option[CtutrAttempts]] =
+    ctutrAttemptsStore.get(crn, ggCredId)
 }

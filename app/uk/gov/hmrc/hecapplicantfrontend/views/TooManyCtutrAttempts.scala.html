@@ -15,28 +15,49 @@
  *@
 
 @import play.api.i18n.Messages
-@import play.api.mvc.Request
+@import play.api.mvc.{Call, Request}
 @import play.twirl.api.Html
+@import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
+@import uk.gov.hmrc.govukfrontend.views.html.components._
 @import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 
-@this(layout: Layout)
+@this(layout: Layout, govukSummaryList : GovukSummaryList)
 
-@()(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
+@(back: Call, crn: String, companyName: String, blockedUntil: String)(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
 @key = @{"tooManyCtutrAttempts"}
 @title = @{messages(s"$key.title")}
 
-@layout(pageTitle = Some(title)) {
+@layout(pageTitle = Some(title), backLocation = Some(back)) {
 
-    <h1 class="govuk-heading-xl">
-    @title
-    </h1>
+    <h1 class="govuk-heading-xl">@title</h1>
+
+    @govukSummaryList(SummaryList(
+        rows = Seq(
+            SummaryListRow(
+                key = Key(
+                    content = Text(messages("tooManyCtutrAttempts.companyName"))
+                ),
+                value = Value(
+                    content = Text(companyName)
+                )
+            ),
+            SummaryListRow(
+                key = Key(
+                    content = Text(messages("tooManyCtutrAttempts.crn"))
+                ),
+                value = Value(
+                    content = Text(crn)
+                )
+            )
+        )
+    ))
+
+    <p class="govuk-body">@messages(s"$key.p1")</p>
+
+    <p class="govuk-body">@messages(s"$key.p2", blockedUntil)</p>
 
     <p class="govuk-body">
-    @messages(s"$key.p1")
-    </p>
-
-    <p class="govuk-body">
-    @Html(messages(s"$key.p2", appConfig.taxCheckGuidanceUrl))
+        @Html(messages(s"$key.p3", routes.CRNController.companyRegistrationNumber().url, appConfig.firstPageBackUrl))
     </p>
 
 }

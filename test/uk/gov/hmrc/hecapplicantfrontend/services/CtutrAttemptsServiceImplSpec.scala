@@ -25,7 +25,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
 import play.api.test.Helpers._
 import uk.gov.hmrc.hecapplicantfrontend.models.ids._
-import uk.gov.hmrc.hecapplicantfrontend.models.{CtutrAttempts, Error}
+import uk.gov.hmrc.hecapplicantfrontend.models.{CompanyHouseName, CtutrAttempts, Error}
 import uk.gov.hmrc.hecapplicantfrontend.repos.CtutrAttemptsStore
 import uk.gov.hmrc.hecapplicantfrontend.util.TimeProvider
 
@@ -71,11 +71,12 @@ class CtutrAttemptsServiceImplSpec extends AnyWordSpec with Matchers with MockFa
 
   "CtutrAttemptsServiceImpl" when {
 
-    val crn      = CRN("crn")
-    val ggCredId = GGCredId("ggCredId")
+    val crn         = CRN("crn")
+    val ggCredId    = GGCredId("ggCredId")
+    val companyName = CompanyHouseName("test company")
 
-    val ctutrAttempts        = CtutrAttempts(crn, ggCredId, 1, None)
-    val blockedCtutrAttempts = CtutrAttempts(crn, ggCredId, 1, Some(now))
+    val ctutrAttempts        = CtutrAttempts(crn, ggCredId, companyName, 1, None)
+    val blockedCtutrAttempts = CtutrAttempts(crn, ggCredId, companyName, 1, Some(now))
 
     "handling requests to update ctutr attempts" must {
 
@@ -92,7 +93,7 @@ class CtutrAttemptsServiceImplSpec extends AnyWordSpec with Matchers with MockFa
       "return successfully" when {
 
         "number of attempts is one less than the maximum allowed" in {
-          val existingCtutrAttempts = CtutrAttempts(crn, ggCredId, maxAttempts - 1, None)
+          val existingCtutrAttempts = CtutrAttempts(crn, ggCredId, companyName, maxAttempts - 1, None)
           val updatedCtutrAttempts  = existingCtutrAttempts.copy(
             attempts = maxAttempts,
             blockedUntil = Some(now.plusHours(3))
@@ -109,7 +110,7 @@ class CtutrAttemptsServiceImplSpec extends AnyWordSpec with Matchers with MockFa
         "number of attempts is more than one less than the maximum allowed" in {
           Seq(0, 1).foreach { attempts =>
             withClue(s"attempts = $attempts") {
-              val existingCtutrAttempts = CtutrAttempts(crn, ggCredId, attempts, None)
+              val existingCtutrAttempts = CtutrAttempts(crn, ggCredId, companyName, attempts, None)
               val updatedCtutrAttempts  = existingCtutrAttempts.copy(attempts = attempts + 1)
 
               mockStore(updatedCtutrAttempts)(Right(()))
@@ -133,21 +134,21 @@ class CtutrAttemptsServiceImplSpec extends AnyWordSpec with Matchers with MockFa
       "return default if no data found" in {
         mockGet(crn, ggCredId)(Right(None))
 
-        val result = service.getWithDefault(crn, ggCredId)
-        await(result.value) shouldBe Right(CtutrAttempts(crn, ggCredId, 0, None))
+        val result = service.getWithDefault(crn, ggCredId, companyName)
+        await(result.value) shouldBe Right(CtutrAttempts(crn, ggCredId, companyName, 0, None))
       }
 
       "return fetched data if found" in {
         mockGet(crn, ggCredId)(Right(Some(ctutrAttempts)))
 
-        val result = service.getWithDefault(crn, ggCredId)
+        val result = service.getWithDefault(crn, ggCredId, companyName)
         await(result.value) shouldBe Right(ctutrAttempts)
       }
 
       "throw error when fetch fails" in {
         mockGet(crn, ggCredId)(Left(Error("")))
 
-        val result = service.getWithDefault(crn, ggCredId)
+        val result = service.getWithDefault(crn, ggCredId, companyName)
         await(result.value) shouldBe a[Left[_, _]]
       }
     }

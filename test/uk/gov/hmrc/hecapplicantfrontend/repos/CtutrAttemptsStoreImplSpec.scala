@@ -23,7 +23,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
 import play.api.libs.json.Json
 import play.api.test.Helpers._
-import uk.gov.hmrc.hecapplicantfrontend.models.CtutrAttempts
+import uk.gov.hmrc.hecapplicantfrontend.models.{CompanyHouseName, CtutrAttempts}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, GGCredId}
 import uk.gov.hmrc.mongo.cache.DataKey
 
@@ -47,7 +47,7 @@ class CtutrAttemptsStoreImplSpec extends AnyWordSpec with Matchers with MongoSup
     val ggCredId = GGCredId("ggCredId")
 
     "be able to insert ctutr attempts into mongo, read it back and delete it" in {
-      val ctutrAttempts = CtutrAttempts(crn, ggCredId, 1, None)
+      val ctutrAttempts = CtutrAttempts(crn, ggCredId, CompanyHouseName("test"), 1, None)
 
       // store a ctutr attempts object
       await(store.store(ctutrAttempts).value) shouldBe Right(())
