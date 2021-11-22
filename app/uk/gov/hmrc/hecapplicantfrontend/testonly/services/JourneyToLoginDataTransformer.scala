@@ -39,7 +39,7 @@ trait JourneyToLoginDataTransformer {
 class JourneyToLoginDataTransformerImpl @Inject() (uuidGenerator: UUIDGenerator, timeProvider: TimeProvider)
     extends JourneyToLoginDataTransformer {
 
-  private def newGGCredId(): GGCredId =
+  private def randomGGCredId(): GGCredId =
     GGCredId(uuidGenerator.randomUUID().toString)
 
   private def newExistingTaxCheck(ggCredId: GGCredId, verifier: Either[CRN, DateOfBirth]) =
@@ -87,19 +87,19 @@ class JourneyToLoginDataTransformerImpl @Inject() (uuidGenerator: UUIDGenerator,
 
   def toLoginData(journey: Journey, redirectUrl: String): LoginData = journey match {
     case IndividualNoSA =>
-      individualNoSA(newGGCredId(), redirectUrl)
+      individualNoSA(randomGGCredId(), redirectUrl)
 
     case IndividualSAReturnFound =>
-      individualNoSA(newGGCredId(), redirectUrl).copy(enrolment = Some(saEnrolment(SAUTR("1234567895"))))
+      individualNoSA(randomGGCredId(), redirectUrl).copy(enrolment = Some(saEnrolment(SAUTR("1234567895"))))
 
     case IndividualSANoticeToFileIssued =>
-      individualNoSA(newGGCredId(), redirectUrl).copy(enrolment = Some(saEnrolment(SAUTR("2222222222"))))
+      individualNoSA(randomGGCredId(), redirectUrl).copy(enrolment = Some(saEnrolment(SAUTR("2222222222"))))
 
     case IndividualSANoReturnFound =>
-      individualNoSA(newGGCredId(), redirectUrl).copy(enrolment = Some(saEnrolment(SAUTR("1111111111"))))
+      individualNoSA(randomGGCredId(), redirectUrl).copy(enrolment = Some(saEnrolment(SAUTR("1111111111"))))
 
     case IndividualSAReturnFoundExistingTaxCheck =>
-      val ggCredId         = newGGCredId()
+      val ggCredId         = randomGGCredId()
       val existingTaxCheck = newExistingTaxCheck(
         ggCredId,
         Right(DateOfBirth(LocalDate.of(2000, 1, 1)))
@@ -111,19 +111,19 @@ class JourneyToLoginDataTransformerImpl @Inject() (uuidGenerator: UUIDGenerator,
       )
 
     case CompanyNoCTEnrolment =>
-      companyNoCTEnrolment(newGGCredId(), redirectUrl)
+      companyNoCTEnrolment(randomGGCredId(), redirectUrl)
 
     case CompanyCTReturnFound =>
-      companyNoCTEnrolment(newGGCredId(), redirectUrl).copy(enrolment = Some(ctEnrolment(CTUTR("1111111111"))))
+      companyNoCTEnrolment(randomGGCredId(), redirectUrl).copy(enrolment = Some(ctEnrolment(CTUTR("1111111111"))))
 
     case CompanyCTNoticeToFileIssued =>
-      companyNoCTEnrolment(newGGCredId(), redirectUrl).copy(enrolment = Some(ctEnrolment(CTUTR("2222222222"))))
+      companyNoCTEnrolment(randomGGCredId(), redirectUrl).copy(enrolment = Some(ctEnrolment(CTUTR("2222222222"))))
 
     case CompanyCTNoReturnFound =>
-      companyNoCTEnrolment(newGGCredId(), redirectUrl).copy(enrolment = Some(ctEnrolment(CTUTR("3333333333"))))
+      companyNoCTEnrolment(randomGGCredId(), redirectUrl).copy(enrolment = Some(ctEnrolment(CTUTR("3333333333"))))
 
     case CompanyCTNoAccountingPeriods =>
-      companyNoCTEnrolment(newGGCredId(), redirectUrl).copy(enrolment = Some(ctEnrolment(CTUTR("4444444444"))))
+      companyNoCTEnrolment(randomGGCredId(), redirectUrl).copy(enrolment = Some(ctEnrolment(CTUTR("4444444444"))))
 
   }
 

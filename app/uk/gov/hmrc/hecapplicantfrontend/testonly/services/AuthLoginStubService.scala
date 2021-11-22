@@ -64,7 +64,7 @@ class AuthLoginStubServiceImpl @Inject() (
       else {
         val sessionOpt =
           for {
-            cookie   <- httpResponse.cookies.find(_.name === "mdtp")
+            cookie   <- httpResponse.cookie("mdtp")
             decrypted = Cookie(name = "mdtp", value = sessionCookieCrypto.crypto.decrypt(Crypted(cookie.value)).value)
             session   = sessionCookieBaker.decodeFromCookie(Some(decrypted))
           } yield session
