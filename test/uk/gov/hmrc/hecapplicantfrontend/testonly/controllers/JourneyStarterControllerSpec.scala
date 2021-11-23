@@ -18,6 +18,8 @@ package uk.gov.hmrc.hecapplicantfrontend.testonly.controllers
 
 import cats.data.EitherT
 import cats.instances.future._
+import com.typesafe.config.ConfigFactory
+import play.api.Configuration
 import play.api.inject.bind
 import play.api.mvc.{Result, Session}
 import play.api.test.FakeRequest
@@ -40,6 +42,17 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class JourneyStarterControllerSpec extends ControllerSpec {
+
+  override def additionalConfig = super.additionalConfig.withFallback(
+    Configuration(
+      ConfigFactory.parseString(
+        """
+          |  play.http.router = testOnlyDoNotUseInAppConf.Routes
+          |  application.router = testOnlyDoNotUseInAppConf.Routes
+          |""".stripMargin
+      )
+    )
+  )
 
   val mockJourneyToLoginDataTransformer = mock[JourneyToLoginDataTransformer]
 
