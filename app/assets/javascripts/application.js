@@ -1,4 +1,5 @@
 (function (document, window, navigator) {
+  // polyfill for when forEach is not supported e.g. IE11
   if ('NodeList' in window && !NodeList.prototype.forEach) {
     NodeList.prototype.forEach = function (callback, scope) {
       for (let i = 0; i < this.length; i++) {
@@ -6,23 +7,31 @@
       }
     }
   }
+
   // copy buttons
-  (function (document, navigator) {
+  (function (window, document, navigator) {
     const activeClassName = 'copied-to-clipboard'
-    function copy(event) {
+    function copy (event) {
       event.preventDefault()
       const el = event.currentTarget
-      return navigator.clipboard.writeText(el.dataset.clip).then(function () {
+      if (navigator.clipboard) {
+        return navigator.clipboard.writeText(el.dataset.clip).then(function () {
           resetCopyButtons()
           el.classList.add(activeClassName)
           el.blur()
         }, function (e) {
           console.error(e)
-        }
-      )
+        })
+      } else if (window.clipboardData) {
+        window.clipboardData.setData('Text', el.dataset.clip)
+        resetCopyButtons()
+        el.classList.add(activeClassName)
+        el.blur()
+      }
     }
-    function resetCopyButtons() {
-      document.querySelectorAll(`button.${activeClassName}`)
+
+    function resetCopyButtons () {
+      document.querySelectorAll('button.' + activeClassName)
         .forEach(function (el) {
           el.classList.remove(activeClassName)
         })
@@ -31,7 +40,7 @@
       .forEach(function (el) {
         el.addEventListener('click', copy)
       })
-  })(document, navigator)
+  })(window, document, navigator)
   // end copy buttons
 
   document.querySelectorAll('a[href="#print-dialogue"]')
