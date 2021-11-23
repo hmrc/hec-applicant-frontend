@@ -87,12 +87,12 @@ class JourneyStarterControllerSpec extends ControllerSpec {
               List(
                 "Individual, no SA UTR",
                 "Individual, SA return found",
-                "Individual, SA notice to file issued (but return found)",
+                "Individual, SA notice to file issued (but return not found)",
                 "Individual, SA no return found (and no notice to file issued)",
                 "Individual, SA return found with existing tax check",
                 "Company, no CT enrolment",
                 "Company, CT return found",
-                "Company, CT notice to file issued (but return found)",
+                "Company, CT notice to file issued (but return not found)",
                 "Company, CT no return found (and no notice to file issued)",
                 "Company, CT no accounting period found"
               )

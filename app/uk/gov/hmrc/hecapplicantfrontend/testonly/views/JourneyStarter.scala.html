@@ -42,12 +42,12 @@
     val content = journey match {
         case IndividualNoSA                          => "Individual, no SA UTR"
         case IndividualSAReturnFound                 => "Individual, SA return found"
-        case IndividualSANoticeToFileIssued          => "Individual, SA notice to file issued (but return found)"
+        case IndividualSANoticeToFileIssued          => "Individual, SA notice to file issued (but return not found)"
         case IndividualSANoReturnFound               => "Individual, SA no return found (and no notice to file issued)"
         case IndividualSAReturnFoundExistingTaxCheck => "Individual, SA return found with existing tax check"
         case CompanyNoCTEnrolment =>                    "Company, no CT enrolment"
         case CompanyCTReturnFound =>                    "Company, CT return found"
-        case CompanyCTNoticeToFileIssued =>             "Company, CT notice to file issued (but return found)"
+        case CompanyCTNoticeToFileIssued =>             "Company, CT notice to file issued (but return not found)"
         case CompanyCTNoReturnFound =>                  "Company, CT no return found (and no notice to file issued)"
         case CompanyCTNoAccountingPeriods =>            "Company, CT no accounting period found"
     }
