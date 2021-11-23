@@ -1,9 +1,16 @@
 (function (document, window, navigator) {
-
+  if ('NodeList' in window && !NodeList.prototype.forEach) {
+    NodeList.prototype.forEach = function (callback, scope) {
+      for (let i = 0; i < this.length; i++) {
+        callback.call(scope || window, this[i], i, this)
+      }
+    }
+  }
   // copy buttons
   (function (document, navigator) {
     const activeClassName = 'copied-to-clipboard'
     function copy(event) {
+      event.preventDefault()
       const el = event.currentTarget
       return navigator.clipboard.writeText(el.dataset.clip).then(function () {
           resetCopyButtons()
