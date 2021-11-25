@@ -22,7 +22,7 @@
           console.error(e)
         })
       } else if (window.clipboardData) {
-        window.clipboardData.setData('Text', el.dataset.clip)
+        window.clipboardData.setData('text/plain', el.dataset.clip)
         resetCopyButtons()
         el.classList.add(activeClassName)
       }
@@ -36,7 +36,10 @@
     }
     document.querySelectorAll('button.copy-to-clipboard')
       .forEach(function (el) {
-        el.addEventListener('click', copy)
+        if (!navigator.userAgent.match(/(MSIE|Trident)/)) {
+          el.classList.remove('not-supported')
+          el.addEventListener('click', copy)
+        }
       })
   })(window, document, navigator)
   // end copy buttons
