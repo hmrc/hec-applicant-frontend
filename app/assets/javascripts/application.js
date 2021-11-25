@@ -15,10 +15,9 @@
       event.preventDefault()
       const el = event.currentTarget
       if (navigator.clipboard) {
-        return navigator.clipboard.writeText(el.dataset.clip).then(function () {
+        navigator.clipboard.writeText(el.dataset.clip).then(function () {
           resetCopyButtons()
           el.classList.add(activeClassName)
-          el.blur()
         }, function (e) {
           console.error(e)
         })
@@ -26,7 +25,6 @@
         window.clipboardData.setData('Text', el.dataset.clip)
         resetCopyButtons()
         el.classList.add(activeClassName)
-        el.blur()
       }
     }
 
