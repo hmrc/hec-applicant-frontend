@@ -33,6 +33,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models._
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO, SAUTR}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType.DriverOfTaxisAndPrivateHires
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
+import uk.gov.hmrc.hecapplicantfrontend.models.views.LicenceTypeOption
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.{JourneyService, TaxCheckService}
 import uk.gov.hmrc.hecapplicantfrontend.util.{TimeProvider, TimeUtils}
@@ -163,7 +164,10 @@ class TaxSituationControllerSpec
 
                 val form = doc.select("form")
                 form
-                  .attr("action") shouldBe routes.TaxSituationController.taxSituationSubmit().url
+                  .attr("action")            shouldBe routes.TaxSituationController.taxSituationSubmit().url
+                form.select("legend").text() shouldBe messageFromMessageKey(
+                  s"taxSituation.label.${LicenceTypeOption.licenceTypeOption(LicenceType.DriverOfTaxisAndPrivateHires).messageKey}"
+                )
               }
             )
           }
@@ -207,7 +211,10 @@ class TaxSituationControllerSpec
 
               val form = doc.select("form")
               form
-                .attr("action") shouldBe routes.TaxSituationController.taxSituationSubmit().url
+                .attr("action")            shouldBe routes.TaxSituationController.taxSituationSubmit().url
+              form.select("legend").text() shouldBe messageFromMessageKey(
+                s"taxSituation.label.${LicenceTypeOption.licenceTypeOption(LicenceType.DriverOfTaxisAndPrivateHires).messageKey}"
+              )
             }
           )
         }
@@ -245,7 +252,10 @@ class TaxSituationControllerSpec
 
               val form = doc.select("form")
               form
-                .attr("action") shouldBe routes.TaxSituationController.taxSituationSubmit().url
+                .attr("action")            shouldBe routes.TaxSituationController.taxSituationSubmit().url
+              form.select("legend").text() shouldBe messageFromMessageKey(
+                s"taxSituation.label.${LicenceTypeOption.licenceTypeOption(LicenceType.DriverOfTaxisAndPrivateHires).messageKey}"
+              )
             }
           )
 
@@ -314,7 +324,10 @@ class TaxSituationControllerSpec
 
                   val form = doc.select("form")
                   form
-                    .attr("action") shouldBe routes.TaxSituationController.taxSituationSubmit().url
+                    .attr("action")            shouldBe routes.TaxSituationController.taxSituationSubmit().url
+                  form.select("legend").text() shouldBe messageFromMessageKey(
+                    s"taxSituation.label.${LicenceTypeOption.licenceTypeOption(LicenceType.DriverOfTaxisAndPrivateHires).messageKey}"
+                  )
                 }
               )
             }
@@ -358,7 +371,10 @@ class TaxSituationControllerSpec
 
                       val form = doc.select("form")
                       form
-                        .attr("action") shouldBe routes.TaxSituationController.taxSituationSubmit().url
+                        .attr("action")            shouldBe routes.TaxSituationController.taxSituationSubmit().url
+                      form.select("legend").text() shouldBe messageFromMessageKey(
+                        s"taxSituation.label.${LicenceTypeOption.licenceTypeOption(licenceType).messageKey}"
+                      )
                     }
                   )
                 }
