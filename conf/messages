@@ -90,25 +90,27 @@ date.beforeNoon = am
 date.afterNoon = pm
 
 # Licence type
-licenceType.title = What type of licence are you renewing or applying for?
-licenceType.hint = This is the licence type you’re doing a tax check for.
+licenceType.title = What type of licence are you applying for?
 licenceType.driverOfTaxis = Driver of taxis and private hires
 licenceType.driverOfTaxis.hint = Includes hackney carriage and dual licences.
 licenceType.operatorOfPrivateHireVehicles = Operator of private hire vehicles
 licenceType.scrapMetalCollector = Scrap metal mobile collector
 licenceType.scrapMetalDealer = Scrap metal dealer site
 licenceType.link = Find out what to do if you cannot see your licence type
-licenceType.error.required = Select the type of licence you are renewing or applying for
-licenceType.error.invalid = Select the type of licence you are renewing or applying for
+licenceType.error.required = Select the type of licence you are applying for
+licenceType.error.invalid = Select the type of licence you are applying for
 
 # Licence type exit
-licenceTypeExit.title = You do not need to do a tax check
-licenceTypeExit.p1 = This is because you only need to do a tax check if you are renewing or applying for one of these licence types:
+licenceTypeExit.title = You may not need to do a tax check
+licenceTypeExit.p1 = You only need to do a tax check if you are applying for one of these licence types:
 licenceTypeExit.driverOfTaxis = driver of taxis and private hires, includes hackney carriage and dual licences
 licenceTypeExit.operatorOfPrivateHireVehicles = operator of private hire vehicles
 licenceTypeExit.scrapMetalCollector = scrap metal mobile collector
 licenceTypeExit.scrapMetalDealer = scrap metal dealer site
 licenceTypeExit.link = Find out about tax checks
+licenceTypeExit.wrongAccount = Logged in with the wrong account
+licenceTypeExit.p2 = If you could not see your licence type on the previous page, you may be logged in with the wrong account.
+licenceTypeExit.signBackInLink = Sign in with the correct Government Gateway account
 
 # Licence time trading
 licenceTimeTrading.title = How many years ago did you first get a licence for this activity?
@@ -132,13 +134,19 @@ licenceValidityPeriod.error.required=Select the number of years your most recent
 licenceValidityPeriod.error.invalid=Select the number of years your most recent licence was valid for
 
 # Tax Situation
-taxSituation.title = What was your tax status for work carried out using this type of licence?
-taxSituation.PA = An employee
-taxSituation.SA = Registered for Self Assessment
-taxSituation.SAPAYE = Registered for Self Assessment and an employee
-taxSituation.NotChargeable = I did not need to tell HMRC about this income
+taxSituation.title = Tax status for the tax year {0} to {1}
+taxSituation.p1 = This question relates to your tax status for any work carried out using the same type of licence you are doing a tax check for. This is for the tax year {0} to {1} only.
+taxSituation.label.driverOfTaxis = For your driver of taxis and private hires licence(s), which of the following apply?
+taxSituation.label.operatorOfPrivateHireVehicles = For your operator of private hire vehicles licence(s), which of the following apply?
+taxSituation.label.scrapMetalCollector = For your scrap metal mobile collector licence(s), which of the following apply?
+taxSituation.label.scrapMetalDealer = For your scrap metal dealer site licence(s), which of the following apply?
+
+taxSituation.PA = I was an employee only
+taxSituation.SA = I was registered for Self Assessment only
+taxSituation.SAPAYE = I was both an employee and registered for Self Assessment
+taxSituation.NotChargeable = I had no tax to pay from using this licence during this tax year
 taxSituation.NotChargeable.hint = For example, you may have had a licence but not used it to generate income.
-taxSituation.link = Find out who needs to register for Self Assessment (open in new window)
+taxSituation.link = Find out who needs to register for Self Assessment
 taxSituation.error.required = Select your tax status
 taxSituation.error.invalid = Select your tax status
 taxSituation.hint = This is for the tax year {0} to {1}.
@@ -171,13 +179,12 @@ checkYourAnswers.title = Check your answers
 checkYourAnswers.p1 = Make sure your answers are correct. We will use these details to do a tax check.
 checkYourAnswers.change = Change
 checkYourAnswers.declaration.heading = Declaration
-checkYourAnswers.declaration.p1 = By continuing you are confirming that, to the best of your knowledge, the details you are providing are correct.
+checkYourAnswers.declaration.p1 = The information I have given to do this tax check is correct and complete to the best of my knowledge and belief.
 checkYourAnswers.licenceType.screenReaderText = the licence type
-checkYourAnswers.licenceExpiryDate.screenReaderText = the licence expiry date
 checkYourAnswers.licenceTimeTrading.screenReaderText = how many years ago you first got a licence for this activity
 checkYourAnswers.licenceValidityPeriod.screenReaderText = how long your most recent licence was valid for
 checkYourAnswers.entityType.screenReaderText = who the tax check is for
-checkYourAnswers.taxSituation.screenReaderText = how you pay tax on any work carried out using your licence
+checkYourAnswers.taxSituation.screenReaderText = your tax status for work carried out using this type of licence
 checkYourAnswers.saIncomeDeclared.screenReaderText = if you included income you earned using this type of licence in your tax return
 checkYourAnswers.crn.screenReaderText = your company registration number
 checkYourAnswers.ctutr.screenReaderText = your Corporation Tax Unique Taxpayer Reference
@@ -189,9 +196,10 @@ checkYourAnswers.ctIncomeDeclared.screenReaderText = if you included all income 
 taxCheckComplete.title = Tax Check Complete
 taxCheckComplete.subtitle = Your tax check code
 taxCheckComplete.p1 = Your tax check code is valid for 120 days.
-taxCheckComplete.p2 = The last day it is valid is: <strong>{0}</strong>.
+taxCheckComplete.p2 = The last day it can be used is: <strong>{0}</strong>.
 taxCheckComplete.whatNext = What you need to do next
-taxCheckComplete.list1 = Make a note of your tax check code. <span class="js-visible">You can <a class="govuk-link" href="#print-dialogue">print or save this page as a PDF</a>.</span>
+taxCheckComplete.list1 = Make a note of your tax check code. You can <span class="js-visible"><a class="govuk-link" href="#print-dialogue">print or save this page as a PDF</a>, or </span><a class="govuk-link" href="{0}">see all your tax check codes</a>.
+
 taxCheckComplete.list2 = Enter your tax check code in your licence application. Make sure you leave enough time for your application to be processed before your tax check code expires.
 
 # SAUTR Not Found
@@ -218,8 +226,8 @@ cannotDoTaxCheck.p1 = You will need to <a href="{0}" class="govuk-link">contact 
 saIncomeDeclared.title = Did you include income you earned using this type of licence in your tax return?
 saIncomeDeclared.yes = Yes
 saIncomeDeclared.no = No
-saIncomeDeclared.error.required = Select whether you included income you earned using this type of licence in your tax return
-saIncomeDeclared.error.invalid = Select whether you included income you earned using this type of licence in your tax return
+saIncomeDeclared.error.required = Select yes if you included income earned using this type of licence in your tax return
+saIncomeDeclared.error.invalid = Select yes if you included income earned using this type of licence in your tax return
 saIncomeDeclared.hint = This is your Self Assessment tax return for tax year 6 April {0} to 5 April {1}.
 
 # HMRC Timeout Dialog
@@ -235,19 +243,18 @@ crn.title = What is your company registration number?
 crn.hint = Companies House sent this to you when you set up your company. This is also called a company number. For example, SN898989 or 12345678.
 crn.link = Search for a company registration number
 crn.error.required = Enter your Company Registration Number
-crn.error.nonAlphanumericChars = The applicant’s company registration number must only include letters A to Z and numbers 0 to 9
-crn.error.crnInvalid = Enter the applicant’s company registration number in the correct format
+crn.error.nonAlphanumericChars = Your company registration number must only contain letters and numbers
+crn.error.crnInvalid = Enter a valid company registration number
 crn.error.notFoundInCompaniesHouse = Your company registration number does not match Companies House records
 
 # Tax Check Codes
-taxCheck.expiryKey = Last day this code is valid:
+taxCheck.expiryKey = Last day this code can be used is:
 taxCheck.codeKey = Tax check code:
 
 # Tax Checks List
 taxChecksList.title = Your tax check codes
 taxChecksList.button = Do a new tax check
-taxChecksList.p1 = Check if you have a valid tax check code, before you do another tax check.
-taxChecksList.p2 = If your tax check code expires before your application is likely to be processed, you should do another tax check.
+taxChecksList.p1 = If your tax check code expires before your application is processed, you will need to do another tax check.
 taxChecksList.link = Print or save this page as a PDF
 
 # Confirm company name
@@ -261,9 +268,6 @@ confirmCompanyName.error.invalid = Select yes if this is the company you want to
 ctutrNotMatched.title = We could not match your company details
 ctutrNotMatched.p1 = We could not match the details you entered about your company with the records we hold.
 ctutrNotMatched.p2 = This may be because you signed in with the wrong Government Gateway account. <a href="{0}" class="govuk-link">Sign in with the correct account</a> for this company or <a href="{1}" class="govuk-link">create a new Government Gateway account</a>.
-
-# No accounting period found
-noAccountingPeriodFound.title = Your Corporation Tax accounting period
 
 # Chargeable for corporation tax
 chargeableForCT.title = Was your company chargeable for Corporation Tax for the accounting period ending {0}?

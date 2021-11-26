@@ -19,11 +19,11 @@ package uk.gov.hmrc.hecapplicantfrontend.views.helpers
 import play.api.i18n.Messages
 import play.api.mvc.Call
 import uk.gov.hmrc.govukfrontend.views.html.components._
+import uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.getTaxPeriodStrings
 import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 import uk.gov.hmrc.hecapplicantfrontend.models.CompanyUserAnswers.CompleteCompanyUserAnswers
-import uk.gov.hmrc.hecapplicantfrontend.models.{CompleteUserAnswers, RetrievedJourneyData}
+import uk.gov.hmrc.hecapplicantfrontend.models.{CTStatusResponse, CompleteUserAnswers, RetrievedJourneyData, TaxYear}
 import uk.gov.hmrc.hecapplicantfrontend.models.views.{LicenceTimeTradingOption, LicenceTypeOption, LicenceValidityPeriodOption}
-import uk.gov.hmrc.hecapplicantfrontend.models.CTStatusResponse
 import uk.gov.hmrc.hecapplicantfrontend.models.IndividualUserAnswers.CompleteIndividualUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.CompanyRetrievedJourneyData
 import uk.gov.hmrc.hecapplicantfrontend.util.TimeUtils
@@ -38,7 +38,7 @@ class SummaryRows {
     messages: Messages
   ): SummaryListRow =
     SummaryListRow(
-      key = Key(content = Text(question)),
+      key = Key(content = Text(question), classes = "govuk-!-width-one-half"),
       value = Value(content = Text(answer)),
       actions = Some(
         Actions(
@@ -167,7 +167,8 @@ class SummaryRows {
   }
 
   def individualRows(
-    completeAnswers: CompleteIndividualUserAnswers
+    completeAnswers: CompleteIndividualUserAnswers,
+    relevantTaxYear: Option[TaxYear]
   )(implicit messages: Messages): List[SummaryListRow] = {
     val entityTypeRow       =
       completeAnswers.entityType.map { entityType =>
@@ -179,12 +180,15 @@ class SummaryRows {
         )
       }
     val taxSituationRow     =
-      summaryListRow(
-        messages("taxSituation.title"),
-        messages(s"taxSituation.${TaxSituationOption.taxSituationOption(completeAnswers.taxSituation).messageKey}"),
-        routes.TaxSituationController.taxSituation(),
-        messages(s"$messageKey.taxSituation.screenReaderText")
-      )
+      relevantTaxYear.map { taxYear =>
+        val (startDate, endDate) = getTaxPeriodStrings(taxYear)
+        summaryListRow(
+          messages("taxSituation.title", startDate, endDate),
+          messages(s"taxSituation.${TaxSituationOption.taxSituationOption(completeAnswers.taxSituation).messageKey}"),
+          routes.TaxSituationController.taxSituation(),
+          messages(s"$messageKey.taxSituation.screenReaderText")
+        )
+      }
     val saIncomeDeclaredRow =
       completeAnswers.saIncomeDeclared.map { saIncomeDeclared =>
         summaryListRow(
@@ -197,7 +201,7 @@ class SummaryRows {
 
     List(
       entityTypeRow,
-      Some(taxSituationRow),
+      taxSituationRow,
       saIncomeDeclaredRow
     ).collect { case Some(r) => r }
   }
