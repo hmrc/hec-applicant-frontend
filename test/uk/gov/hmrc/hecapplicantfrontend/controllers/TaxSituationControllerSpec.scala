@@ -33,6 +33,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models._
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO, SAUTR}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType.DriverOfTaxisAndPrivateHires
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
+import uk.gov.hmrc.hecapplicantfrontend.models.views.LicenceTypeOption
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.{JourneyService, TaxCheckService}
 import uk.gov.hmrc.hecapplicantfrontend.util.{TimeProvider, TimeUtils}
@@ -69,9 +70,6 @@ class TaxSituationControllerSpec
   )
 
   def mockTimeProviderToday(d: LocalDate) = (mockTimeProvider.currentDate _).expects().returning(d)
-
-  def taxYearMessage(startYear: String, endYear: String) =
-    messageFromMessageKey("taxSituation.hint", startYear, endYear)
 
   def mockStoreSession(individualSession: HECSession)(result: Either[Error, Unit]) = (mockSessionStore
     .store(_: HECSession)(_: Request[_]))
@@ -140,8 +138,8 @@ class TaxSituationControllerSpec
               )
             )
 
-            val updatedSession = session.copy(relevantIncomeTaxYear = TaxYear(2020).some)
-
+            val updatedSession       = session.copy(relevantIncomeTaxYear = TaxYear(2020).some)
+            val (startDate, endDate) = getTaxPeriodStrings(TaxYear(2020))
             inSequence {
               mockAuthWithNoRetrievals()
               mockGetSession(session)
@@ -154,7 +152,7 @@ class TaxSituationControllerSpec
 
             checkPageIsDisplayed(
               performAction(),
-              messageFromMessageKey("taxSituation.title"),
+              messageFromMessageKey("taxSituation.title", startDate, endDate),
               { doc =>
                 doc.select("#back").attr("href") shouldBe mockPreviousCall.url
 
@@ -166,7 +164,10 @@ class TaxSituationControllerSpec
 
                 val form = doc.select("form")
                 form
-                  .attr("action") shouldBe routes.TaxSituationController.taxSituationSubmit().url
+                  .attr("action")            shouldBe routes.TaxSituationController.taxSituationSubmit().url
+                form.select("legend").text() shouldBe messageFromMessageKey(
+                  s"taxSituation.label.${LicenceTypeOption.licenceTypeOption(LicenceType.DriverOfTaxisAndPrivateHires).messageKey}"
+                )
               }
             )
           }
@@ -174,7 +175,7 @@ class TaxSituationControllerSpec
         }
 
         "the user has previously answered the question" in {
-          val session        =
+          val session              =
             Fixtures.individualHECSession(
               individualLoginData,
               IndividualRetrievedJourneyData.empty,
@@ -186,7 +187,8 @@ class TaxSituationControllerSpec
                 Some(YesNoAnswer.Yes)
               )
             )
-          val updatedSession = session.copy(relevantIncomeTaxYear = TaxYear(2020).some)
+          val updatedSession       = session.copy(relevantIncomeTaxYear = TaxYear(2020).some)
+          val (startDate, endDate) = getTaxPeriodStrings(TaxYear(2020))
 
           inSequence {
             mockAuthWithNoRetrievals()
@@ -200,7 +202,7 @@ class TaxSituationControllerSpec
 
           checkPageIsDisplayed(
             performAction(),
-            messageFromMessageKey("taxSituation.title"),
+            messageFromMessageKey("taxSituation.title", startDate, endDate),
             { doc =>
               doc.select("#back").attr("href") shouldBe mockPreviousCall.url
 
@@ -209,21 +211,24 @@ class TaxSituationControllerSpec
 
               val form = doc.select("form")
               form
-                .attr("action") shouldBe routes.TaxSituationController.taxSituationSubmit().url
+                .attr("action")            shouldBe routes.TaxSituationController.taxSituationSubmit().url
+              form.select("legend").text() shouldBe messageFromMessageKey(
+                s"taxSituation.label.${LicenceTypeOption.licenceTypeOption(LicenceType.DriverOfTaxisAndPrivateHires).messageKey}"
+              )
             }
           )
         }
 
         def testPage(currentDate: LocalDate, taxYear: Int) = {
-          val session        = Fixtures.individualHECSession(
+          val session              = Fixtures.individualHECSession(
             individualLoginData,
             IndividualRetrievedJourneyData.empty,
             IndividualUserAnswers.empty.copy(
               licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)
             )
           )
-          val updatedSession = session.copy(relevantIncomeTaxYear = TaxYear(taxYear).some)
-
+          val updatedSession       = session.copy(relevantIncomeTaxYear = TaxYear(taxYear).some)
+          val (startDate, endDate) = getTaxPeriodStrings(TaxYear(taxYear))
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
@@ -236,11 +241,9 @@ class TaxSituationControllerSpec
 
           checkPageIsDisplayed(
             performAction(),
-            messageFromMessageKey("taxSituation.title"),
+            messageFromMessageKey("taxSituation.title", startDate, endDate),
             { doc =>
               doc.select("#back").attr("href") shouldBe mockPreviousCall.url
-              val (startDate, endDate) = getTaxPeriodStrings(TaxYear(taxYear))
-              doc.select("#taxSituation-hint").text shouldBe taxYearMessage(startDate, endDate)
 
               testAllTaxSituationsRadioOptions(doc)
 
@@ -249,7 +252,10 @@ class TaxSituationControllerSpec
 
               val form = doc.select("form")
               form
-                .attr("action") shouldBe routes.TaxSituationController.taxSituationSubmit().url
+                .attr("action")            shouldBe routes.TaxSituationController.taxSituationSubmit().url
+              form.select("legend").text() shouldBe messageFromMessageKey(
+                s"taxSituation.label.${LicenceTypeOption.licenceTypeOption(LicenceType.DriverOfTaxisAndPrivateHires).messageKey}"
+              )
             }
           )
 
@@ -288,13 +294,13 @@ class TaxSituationControllerSpec
           "display only relevant options" when {
 
             "licence type = DriverOfTaxisAndPrivateHires" in {
-              val session        = Fixtures.individualHECSession(
+              val session              = Fixtures.individualHECSession(
                 individualLoginData,
                 IndividualRetrievedJourneyData.empty,
                 IndividualUserAnswers.empty.copy(licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires))
               )
-              val updatedSession = session.copy(relevantIncomeTaxYear = TaxYear(2020).some)
-
+              val updatedSession       = session.copy(relevantIncomeTaxYear = TaxYear(2020).some)
+              val (startDate, endDate) = getTaxPeriodStrings(TaxYear(2020))
               inSequence {
                 mockAuthWithNoRetrievals()
                 mockGetSession(session)
@@ -307,7 +313,7 @@ class TaxSituationControllerSpec
 
               checkPageIsDisplayed(
                 performAction(),
-                messageFromMessageKey("taxSituation.title"),
+                messageFromMessageKey("taxSituation.title", startDate, endDate),
                 { doc =>
                   doc.select("#back").attr("href") shouldBe mockPreviousCall.url
 
@@ -318,7 +324,10 @@ class TaxSituationControllerSpec
 
                   val form = doc.select("form")
                   form
-                    .attr("action") shouldBe routes.TaxSituationController.taxSituationSubmit().url
+                    .attr("action")            shouldBe routes.TaxSituationController.taxSituationSubmit().url
+                  form.select("legend").text() shouldBe messageFromMessageKey(
+                    s"taxSituation.label.${LicenceTypeOption.licenceTypeOption(LicenceType.DriverOfTaxisAndPrivateHires).messageKey}"
+                  )
                 }
               )
             }
@@ -330,15 +339,15 @@ class TaxSituationControllerSpec
                 LicenceType.OperatorOfPrivateHireVehicles
               ).foreach { licenceType =>
                 withClue(s"For licence type $licenceType: ") {
-                  val session        = Fixtures.individualHECSession(
+                  val session              = Fixtures.individualHECSession(
                     individualLoginData,
                     IndividualRetrievedJourneyData.empty,
                     IndividualUserAnswers.empty.copy(
                       licenceType = Some(licenceType)
                     )
                   )
-                  val updatedSession = session.copy(relevantIncomeTaxYear = TaxYear(2020).some)
-
+                  val updatedSession       = session.copy(relevantIncomeTaxYear = TaxYear(2020).some)
+                  val (startDate, endDate) = getTaxPeriodStrings(TaxYear(2020))
                   inSequence {
                     mockAuthWithNoRetrievals()
                     mockGetSession(session)
@@ -351,7 +360,7 @@ class TaxSituationControllerSpec
 
                   checkPageIsDisplayed(
                     performAction(),
-                    messageFromMessageKey("taxSituation.title"),
+                    messageFromMessageKey("taxSituation.title", startDate, endDate),
                     { doc =>
                       doc.select("#back").attr("href") shouldBe mockPreviousCall.url
 
@@ -362,7 +371,10 @@ class TaxSituationControllerSpec
 
                       val form = doc.select("form")
                       form
-                        .attr("action") shouldBe routes.TaxSituationController.taxSituationSubmit().url
+                        .attr("action")            shouldBe routes.TaxSituationController.taxSituationSubmit().url
+                      form.select("legend").text() shouldBe messageFromMessageKey(
+                        s"taxSituation.label.${LicenceTypeOption.licenceTypeOption(licenceType).messageKey}"
+                      )
                     }
                   )
                 }
@@ -384,16 +396,17 @@ class TaxSituationControllerSpec
 
       "show a form error" when {
 
-        val answers        = IndividualUserAnswers.empty
-        val updatedAnswers = IndividualUserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
-        val session        =
+        val answers              = IndividualUserAnswers.empty
+        val updatedAnswers       = IndividualUserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
+        val session              =
           Fixtures.individualHECSession(
             individualLoginData,
             IndividualRetrievedJourneyData.empty,
             answers,
             relevantIncomeTaxYear = TaxYear(2020).some
           )
-        val updatedSession = session.copy(userAnswers = updatedAnswers)
+        val updatedSession       = session.copy(userAnswers = updatedAnswers)
+        val (startDate, endDate) = getTaxPeriodStrings(TaxYear(2020))
 
         "nothing is submitted" in {
           inSequence {
@@ -406,7 +419,7 @@ class TaxSituationControllerSpec
 
           checkFormErrorIsDisplayed(
             performAction(),
-            messageFromMessageKey("taxSituation.title"),
+            messageFromMessageKey("taxSituation.title", startDate, endDate),
             messageFromMessageKey("taxSituation.error.required")
           )
         }
@@ -422,7 +435,7 @@ class TaxSituationControllerSpec
 
           checkFormErrorIsDisplayed(
             performAction("taxSituation" -> Int.MaxValue.toString),
-            messageFromMessageKey("taxSituation.title"),
+            messageFromMessageKey("taxSituation.title", startDate, endDate),
             messageFromMessageKey("taxSituation.error.invalid")
           )
         }
@@ -438,7 +451,7 @@ class TaxSituationControllerSpec
 
           checkFormErrorIsDisplayed(
             performAction("taxSituation" -> "xyz"),
-            messageFromMessageKey("taxSituation.title"),
+            messageFromMessageKey("taxSituation.title", startDate, endDate),
             messageFromMessageKey("taxSituation.error.invalid")
           )
         }
