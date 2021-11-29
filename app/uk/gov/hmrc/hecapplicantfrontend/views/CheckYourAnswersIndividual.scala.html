@@ -24,7 +24,7 @@
 
 @this(layout: Layout, govukSummaryList : GovukSummaryList, govukButton: GovukButton, formWithCSRF: FormWithCSRF, summaryRows: SummaryRows)
 
-@(back: Call, completeAnswers: CompleteIndividualUserAnswers, relevantTaxYear: Option[TaxYear])(implicit request: Request[_], messages: Messages)
+@(back: Call, completeAnswers: CompleteIndividualUserAnswers, relevantTaxYear: TaxYear)(implicit request: Request[_], messages: Messages)
 
 @key = @{"checkYourAnswers"}
 @title = @{messages(s"$key.title")}

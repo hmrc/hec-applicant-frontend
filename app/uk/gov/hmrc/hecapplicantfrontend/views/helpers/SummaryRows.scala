@@ -168,9 +168,9 @@ class SummaryRows {
 
   def individualRows(
     completeAnswers: CompleteIndividualUserAnswers,
-    relevantTaxYear: Option[TaxYear]
+    relevantTaxYear: TaxYear
   )(implicit messages: Messages): List[SummaryListRow] = {
-    val entityTypeRow       =
+    val entityTypeRow =
       completeAnswers.entityType.map { entityType =>
         summaryListRow(
           messages("entityType.title"),
@@ -179,16 +179,16 @@ class SummaryRows {
           messages(s"$messageKey.entityType.screenReaderText")
         )
       }
-    val taxSituationRow     =
-      relevantTaxYear.map { taxYear =>
-        val (startDate, endDate) = getTaxPeriodStrings(taxYear)
-        summaryListRow(
-          messages("taxSituation.title", startDate, endDate),
-          messages(s"taxSituation.${TaxSituationOption.taxSituationOption(completeAnswers.taxSituation).messageKey}"),
-          routes.TaxSituationController.taxSituation(),
-          messages(s"$messageKey.taxSituation.screenReaderText")
-        )
-      }
+    val taxSituationRow = {
+      val (startDate, endDate) = getTaxPeriodStrings(relevantTaxYear)
+      summaryListRow(
+        messages("taxSituation.title", startDate, endDate),
+        messages(s"taxSituation.${TaxSituationOption.taxSituationOption(completeAnswers.taxSituation).messageKey}"),
+        routes.TaxSituationController.taxSituation(),
+        messages(s"$messageKey.taxSituation.screenReaderText")
+      )
+    }
+
     val saIncomeDeclaredRow =
       completeAnswers.saIncomeDeclared.map { saIncomeDeclared =>
         summaryListRow(
@@ -201,7 +201,7 @@ class SummaryRows {
 
     List(
       entityTypeRow,
-      taxSituationRow,
+      Some(taxSituationRow),
       saIncomeDeclaredRow
     ).collect { case Some(r) => r }
   }

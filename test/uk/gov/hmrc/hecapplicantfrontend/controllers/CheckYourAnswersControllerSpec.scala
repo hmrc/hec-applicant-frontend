@@ -97,6 +97,28 @@ class CheckYourAnswersControllerSpec
           assertThrows[RuntimeException](await(performAction()))
         }
 
+        "there are complete individual answers but a relevant income tax year cannot be found" in {
+          val answers = Fixtures.completeIndividualUserAnswers()
+
+          val session =
+            Fixtures.individualHECSession(
+              individualLoginData,
+              IndividualRetrievedJourneyData.empty,
+              answers,
+              relevantIncomeTaxYear = None
+            )
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockJourneyServiceGetPrevious(routes.CheckYourAnswersController.checkYourAnswers(), session)(
+              mockPreviousCall
+            )
+          }
+
+          assertThrows[RuntimeException](await(performAction()))
+        }
+
       }
 
       "display the page" when {

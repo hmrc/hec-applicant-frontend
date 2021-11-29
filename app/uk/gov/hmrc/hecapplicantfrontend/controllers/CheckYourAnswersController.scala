@@ -56,7 +56,9 @@ class CheckYourAnswersController @Inject() (
               checkYourAnswersIndividualPage(
                 back,
                 ci,
-                request.sessionData.mapAsIndividual(_.relevantIncomeTaxYear)
+                request.sessionData
+                  .mapAsIndividual(_.relevantIncomeTaxYear)
+                  .getOrElse(sys.error("Could not find relevant income tax year"))
               )
             )
           case cc: CompleteCompanyUserAnswers    =>
