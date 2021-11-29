@@ -18,7 +18,7 @@
 @import play.twirl.api.Html
 @this()
 
-@(clip: String, screenReaderText: Option[String] = None)(implicit messages: Messages)
+@(clip: String, screenReaderText: Option[String] = None, extraContent: Option[String] = None)(implicit messages: Messages)
 
 <span class="js-visible" aria-live="polite">
   <button
@@ -33,6 +33,7 @@
     <span class="copied-content">
       @messages("button.copied")
     </span>
+    @extraContent.getOrElse("")
     @screenReaderText.map(s => Html(s"""<span class="govuk-visually-hidden">${s} </span>"""))
     @clip
   </button>
