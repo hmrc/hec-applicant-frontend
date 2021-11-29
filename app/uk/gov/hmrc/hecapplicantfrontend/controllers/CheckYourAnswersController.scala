@@ -52,7 +52,15 @@ class CheckYourAnswersController @Inject() (
         val back = journeyService.previous(routes.CheckYourAnswersController.checkYourAnswers())
         complete match {
           case ci: CompleteIndividualUserAnswers =>
-            Ok(checkYourAnswersIndividualPage(back, ci))
+            Ok(
+              checkYourAnswersIndividualPage(
+                back,
+                ci,
+                request.sessionData
+                  .mapAsIndividual(_.relevantIncomeTaxYear)
+                  .getOrElse(sys.error("Could not find relevant income tax year"))
+              )
+            )
           case cc: CompleteCompanyUserAnswers    =>
             Ok(checkYourAnswersCompanyPage(back, cc, request.sessionData.retrievedJourneyData))
         }

@@ -69,7 +69,7 @@ class TaxSituationController @Inject() (
         individualSession.relevantIncomeTaxYear match {
           case Some(taxYear) =>
             val (startDate, endDate) = getTaxPeriodStrings(taxYear)
-            Ok(taxSituationPage(form, back, options, startDate, endDate))
+            Ok(taxSituationPage(form, back, options, startDate, endDate, licenceType))
           case None          =>
             val taxYear              = getTaxYear(timeProvider.currentDate)
             val (startDate, endDate) = getTaxPeriodStrings(taxYear)
@@ -78,7 +78,7 @@ class TaxSituationController @Inject() (
               .store(updatedSession)
               .fold(
                 _.doThrow("Could not update session with tax year"),
-                _ => Ok(taxSituationPage(form, back, options, startDate, endDate))
+                _ => Ok(taxSituationPage(form, back, options, startDate, endDate, licenceType))
               )
         }
 
@@ -138,7 +138,8 @@ class TaxSituationController @Inject() (
                   journeyService.previous(routes.TaxSituationController.taxSituation()),
                   options,
                   startDate,
-                  endDate
+                  endDate,
+                  licenceType
                 )
               )
             },

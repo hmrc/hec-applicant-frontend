@@ -23,6 +23,7 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.hecapplicantfrontend.controllers.CheckYourAnswersControllerSpec._
+import uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.getTaxPeriodStrings
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, IndividualHECSession}
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.IndividualLoginData
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.IndividualRetrievedJourneyData
@@ -114,8 +115,11 @@ class CheckYourAnswersControllerSpec
             Fixtures.individualHECSession(
               individualLoginData,
               IndividualRetrievedJourneyData.empty,
-              answers
+              answers,
+              relevantIncomeTaxYear = Some(TaxYear(2020))
             )
+
+          val (startDate, endDate) = getTaxPeriodStrings(TaxYear(2020))
 
           val expectedRows =
             List(
@@ -140,7 +144,7 @@ class CheckYourAnswersControllerSpec
                 routes.EntityTypeController.entityType().url
               ),
               CheckYourAnswersRow(
-                messageFromMessageKey("taxSituation.title"),
+                messageFromMessageKey("taxSituation.title", startDate, endDate),
                 messageFromMessageKey("taxSituation.PA"),
                 routes.TaxSituationController.taxSituation().url
               ),

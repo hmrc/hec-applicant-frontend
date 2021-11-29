@@ -1,0 +1,87 @@
+@*
+ * Copyright 2021 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import play.api.i18n.Messages
+@import play.api.mvc.Request
+@import play.api.data.Form
+@import uk.gov.hmrc.hecapplicantfrontend.testonly.controllers.routes
+@import uk.gov.hmrc.hecapplicantfrontend.testonly.models.Journey
+@import uk.gov.hmrc.hecapplicantfrontend.testonly.models.Journey._
+@import uk.gov.hmrc.hecapplicantfrontend.views.html.Layout
+@import uk.gov.hmrc.govukfrontend.views.html.components._
+
+@this(layout: Layout,
+        formWithCSRF: FormWithCSRF,
+        govukButton: GovukButton,
+        govukErrorSummary: GovukErrorSummary,
+        govukRadios: GovukRadios
+)
+
+@(form: Form[Journey], options: List[Journey])(implicit request: Request[_], messages: Messages)
+
+@key = @{ "journey" }
+
+@title = @{ "Start a journey" }
+
+@errorMessage = @{ "Choose an option" }
+
+@toRadioItem(journey: Journey, index: Int) = @{
+    val content = journey match {
+        case IndividualNoSA                          => "Individual, no SA UTR"
+        case IndividualSAReturnFound                 => "Individual, SA return found"
+        case IndividualSANoticeToFileIssued          => "Individual, SA notice to file issued (but return not found)"
+        case IndividualSANoReturnFound               => "Individual, SA no return found (and no notice to file issued)"
+        case IndividualSAReturnFoundExistingTaxCheck => "Individual, SA return found with existing tax check"
+        case CompanyNoCTEnrolment =>                    "Company, no CT enrolment"
+        case CompanyCTReturnFound =>                    "Company, CT return found"
+        case CompanyCTNoticeToFileIssued =>             "Company, CT notice to file issued (but return not found)"
+        case CompanyCTNoReturnFound =>                  "Company, CT no return found (and no notice to file issued)"
+        case CompanyCTNoAccountingPeriods =>            "Company, CT no accounting period found"
+    }
+    RadioItem(Text(content), value = Some(index.toString))
+}
+
+@radioOptions = @{ options.zipWithIndex.map{ case (j, i) => toRadioItem(j, i)} }
+
+@layout(pageTitle = Some(title), hasErrors = form.hasErrors, showSignOutLink = false) {
+    @if(form.errors.nonEmpty) {
+        @govukErrorSummary(ErrorSummary(errorList = form.errors.map(e => ErrorLink(
+            href = Some(s"#${e.key}"),
+            content = Text(errorMessage)
+        )), title = Text(messages("generic.errorSummary"))))
+    }
+    @formWithCSRF(action = routes.JourneyStarterController.journeyStarterSubmit()) {
+
+        @govukRadios(Radios(
+            fieldset = Some(Fieldset(
+                legend = Some(Legend(
+                    content = Text(title),
+                    classes = "govuk-fieldset__legend--xl",
+                    isPageHeading = true
+                ))
+            )),
+            idPrefix = Some(key),
+            name = key,
+            items = radioOptions,
+            errorMessage = form.error(key).map(_ => ErrorMessage(
+                content = Text(errorMessage)
+            ))
+        ))
+
+        @govukButton(Button(content = Text(messages("button.continue"))))
+    }
+
+}
