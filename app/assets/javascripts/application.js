@@ -34,13 +34,13 @@
           el.classList.remove(activeClassName)
         })
     }
-    document.querySelectorAll('button.copy-to-clipboard')
-      .forEach(function (el) {
-        if (!navigator.userAgent.match(/(MSIE|Trident)/)) {
-          el.classList.remove('not-supported')
-          el.addEventListener('click', copy)
-        }
-      })
+    if (!navigator.userAgent.match(/(MSIE|Trident)/)) {
+      document.querySelectorAll('button.copy-to-clipboard')
+        .forEach(function (el) {
+            el.classList.remove('not-supported')
+            el.addEventListener('click', copy)
+        })
+    }
   })(window, document, navigator)
   // end copy buttons
 
