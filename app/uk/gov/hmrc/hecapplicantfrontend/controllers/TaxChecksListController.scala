@@ -21,7 +21,8 @@ import com.google.inject.{Inject, Singleton}
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
-import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
+import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.TaxCheckCodesDisplayed
+import uk.gov.hmrc.hecapplicantfrontend.services.{AuditService, JourneyService}
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -34,6 +35,7 @@ class TaxChecksListController @Inject() (
   authAction: AuthAction,
   sessionDataAction: SessionDataAction,
   journeyService: JourneyService,
+  auditService: AuditService,
   taxChecksListPage: html.TaxChecksList,
   mcc: MessagesControllerComponents
 )(implicit ec: ExecutionContext)
@@ -53,6 +55,9 @@ class TaxChecksListController @Inject() (
       case taxChecks =>
         val sorted = taxChecks.sortBy(_.createDate)
         val back   = journeyService.previous(routes.TaxChecksListController.unexpiredTaxChecks())
+        auditService.sendEvent(
+          TaxCheckCodesDisplayed(request.sessionData.loginData.ggCredId, taxChecks.map(_.taxCheckCode))
+        )
         Ok(taxChecksListPage(back, sorted))
     }
   }

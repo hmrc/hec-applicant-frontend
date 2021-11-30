@@ -21,6 +21,7 @@ import play.api.inject.bind
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
+import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.TaxCheckCodesDisplayed
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.IndividualLoginData
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.IndividualRetrievedJourneyData
 import uk.gov.hmrc.hecapplicantfrontend.models._
@@ -28,7 +29,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
 import uk.gov.hmrc.hecapplicantfrontend.models.views.LicenceTypeOption
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
-import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
+import uk.gov.hmrc.hecapplicantfrontend.services.{AuditService, AuditServiceSupport, JourneyService}
 import uk.gov.hmrc.hecapplicantfrontend.utils.Fixtures
 
 import java.time.{LocalDate, ZonedDateTime}
@@ -39,12 +40,14 @@ class TaxChecksListControllerSpec
     with JourneyServiceSupport
     with AuthSupport
     with SessionSupport
-    with AuthAndSessionDataBehaviour {
+    with AuthAndSessionDataBehaviour
+    with AuditServiceSupport {
 
   override def overrideBindings = List(
     bind[AuthConnector].toInstance(mockAuthConnector),
     bind[SessionStore].toInstance(mockSessionStore),
-    bind[JourneyService].toInstance(mockJourneyService)
+    bind[JourneyService].toInstance(mockJourneyService),
+    bind[AuditService].toInstance(mockAuditService)
   )
 
   val controller = instanceOf[TaxChecksListController]
@@ -120,6 +123,9 @@ class TaxChecksListControllerSpec
           mockAuthWithNoRetrievals()
           mockGetSession(session)
           mockJourneyServiceGetPrevious(routes.TaxChecksListController.unexpiredTaxChecks(), session)(mockPreviousCall)
+          mockSendAuditEvent(
+            TaxCheckCodesDisplayed(individualLoginData.ggCredId, unsortedTaxChecks.map(_.taxCheckCode))
+          )
         }
 
         def verifyTaxCheckListItem(element: Element, item: TaxCheckListItem) = {
