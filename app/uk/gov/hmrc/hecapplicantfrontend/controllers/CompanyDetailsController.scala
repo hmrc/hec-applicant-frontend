@@ -562,8 +562,10 @@ object CompanyDetailsController {
     * before the day on which the tax check is initiated. (These are the dates used when retrieving the Corporation tax
     * records for the Applicant's company using the Get Company Accounting Periods API.)
     */
-  def calculateLookBackPeriod(today: LocalDate): (LocalDate, LocalDate) =
-    today.minusYears(2).plusDays(1) -> today.minusYears(1)
+  def calculateLookBackPeriod(today: LocalDate): (LocalDate, LocalDate) = {
+    val currentDay = if (today.getMonth.getValue === 2 && today.getDayOfMonth === 29) today.plusDays(1) else today
+    currentDay.minusYears(2).plusDays(1) -> currentDay.minusYears(1)
+  }
 
   def enterCtutrForm(desCtrutr: CTUTR): Form[CTUTR] = {
     val validCtutr: Constraint[CTUTR] =

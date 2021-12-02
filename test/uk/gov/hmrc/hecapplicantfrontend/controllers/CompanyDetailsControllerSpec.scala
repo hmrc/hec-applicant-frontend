@@ -419,42 +419,61 @@ class CompanyDetailsControllerSpec
       "redirect to the next page" when {
 
         "user answers with a Yes and all data fetches are successful" when {
-          "the enrolment and DES CTUTRs match" in {
-            val answers = Fixtures.incompleteCompanyUserAnswers(crn = Some(CRN("crn")))
-            // session contains CTUTR from enrolments
-            val ctutr   = CTUTR("ctutr")
-            val session = Fixtures.companyHECSession(
-              Fixtures.companyLoginData(ctutr = Some(ctutr)),
-              retrievedJourneyDataWithCompanyName,
-              answers
-            )
 
-            val updatedAnswers   = answers.copy(companyDetailsConfirmed = Some(YesNoAnswer.Yes))
-            val ctStatusResponse = CTStatusResponse(ctutr, date, date, None)
-            val updatedSession   = session.copy(
-              userAnswers = updatedAnswers,
-              retrievedJourneyData = retrievedJourneyDataWithCompanyName.copy(
-                desCtutr = Some(ctutr),
-                ctStatus = Some(ctStatusResponse)
-              )
-            )
+          "the enrolment and DES CTUTRs match" when {
 
-            inSequence {
-              mockAuthWithNoRetrievals()
-              mockGetSession(session)
-              mockTaxCheckServiceGetCtutr(CRN("crn"))(Right(Some(ctutr)))
-              mockTimeProviderToday(date)
-              mockTaxCheckServiceGetCtStatus(ctutr, startDate, endDate)(
-                Right(Some(ctStatusResponse))
+            def test(currentDate: LocalDate, lookBackStartDate: LocalDate, lookBackEndDate: LocalDate) = {
+              val answers = Fixtures.incompleteCompanyUserAnswers(crn = Some(CRN("crn")))
+              // session contains CTUTR from enrolments
+              val ctutr   = CTUTR("ctutr")
+              val session = Fixtures.companyHECSession(
+                Fixtures.companyLoginData(ctutr = Some(ctutr)),
+                retrievedJourneyDataWithCompanyName,
+                answers
               )
-              mockJourneyServiceUpdateAndNext(
-                routes.CompanyDetailsController.confirmCompanyDetails(),
-                session,
-                updatedSession
-              )(Right(mockNextCall))
+
+              val updatedAnswers   = answers.copy(companyDetailsConfirmed = Some(YesNoAnswer.Yes))
+              val ctStatusResponse = CTStatusResponse(ctutr, currentDate, currentDate, None)
+              val updatedSession   = session.copy(
+                userAnswers = updatedAnswers,
+                retrievedJourneyData = retrievedJourneyDataWithCompanyName.copy(
+                  desCtutr = Some(ctutr),
+                  ctStatus = Some(ctStatusResponse)
+                )
+              )
+
+              inSequence {
+                mockAuthWithNoRetrievals()
+                mockGetSession(session)
+                mockTaxCheckServiceGetCtutr(CRN("crn"))(Right(Some(ctutr)))
+                mockTimeProviderToday(currentDate)
+                mockTaxCheckServiceGetCtStatus(ctutr, lookBackStartDate, lookBackEndDate)(
+                  Right(Some(ctStatusResponse))
+                )
+                mockJourneyServiceUpdateAndNext(
+                  routes.CompanyDetailsController.confirmCompanyDetails(),
+                  session,
+                  updatedSession
+                )(Right(mockNextCall))
+              }
+
+              checkIsRedirect(performAction("confirmCompanyName" -> "0"), mockNextCall)
             }
 
-            checkIsRedirect(performAction("confirmCompanyName" -> "0"), mockNextCall)
+            "today is not 29 feb " in {
+              val currentDate       = LocalDate.of(2021, 10, 9)
+              val lookBackStartDate = LocalDate.of(2019, 10, 10)
+              val lookBackEndDate   = LocalDate.of(2020, 10, 9)
+              test(currentDate, lookBackStartDate, lookBackEndDate)
+            }
+
+            "today is  29 feb " in {
+              val currentDate       = LocalDate.of(2024, 2, 29)
+              val lookBackStartDate = LocalDate.of(2022, 3, 2)
+              val lookBackEndDate   = LocalDate.of(2023, 3, 1)
+              test(currentDate, lookBackStartDate, lookBackEndDate)
+            }
+
           }
 
           "the enrolment and DES CTUTRs do not match" in {
