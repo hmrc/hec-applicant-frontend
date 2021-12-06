@@ -317,3 +317,11 @@ tooManyCtutrAttempts.crn=Company Registration Number
 # Max tax checks limit exceeded
 maxTaxChecksLimitExceeded.title = Maximum number of tax checks allowed for chosen licence type has been exceeded
 maxTaxChecksLimitExceeded.p1 = Maximum number of tax checks allowed for chosen licence type has been exceeded.
+
+# Access Denied
+accessDenied.title = You cannot access this page
+accessDenied.p1 = If you have been sent this link and cannot access it, you may be logged in with the wrong Government Gateway account.
+accessDenied.p2 = If you need any assistance accessing this link, please email:
+accessDenied.p3 = <a href="mailto:zaynah.hawa@digital.hmrc.gov.uk?subject=Private Beta link assistance">zaynah.hawa@digital.hmrc.gov.uk</a>
+accessDenied.p4 = <a href="mailto:alex.porter@digital.hmrc.gov.uk?subject=Private Beta link assistance">alex.porter@digital.hmrc.gov.uk</a>
+
