@@ -305,7 +305,7 @@ class LicenceDetailsControllerSpec
 
       "redirect to the next page" when {
 
-        def nextpageRedirectTest(
+        def nextPageRedirectTest(
           session: HECSession,
           updatedSession: HECSession,
           radioIndex: String,
@@ -339,7 +339,7 @@ class LicenceDetailsControllerSpec
                 taxCheckStartDateTime = Some(now)
               )
             val updatedSession = session.copy(userAnswers = updatedAnswers)
-            nextpageRedirectTest(session, updatedSession, "1", None)
+            nextPageRedirectTest(session, updatedSession, "1", None)
           }
 
           "the user has previously completed answering questions" in {
@@ -360,7 +360,7 @@ class LicenceDetailsControllerSpec
                 answers
               )
             val updatedSession = session.copy(userAnswers = updatedAnswers, taxCheckStartDateTime = Some(now))
-            nextpageRedirectTest(session, updatedSession, "2", Some(() => mockTimeProviderNow(now)))
+            nextPageRedirectTest(session, updatedSession, "2", Some(() => mockTimeProviderNow(now)))
           }
 
           "a tax check start date time is already in session" in {
@@ -381,7 +381,7 @@ class LicenceDetailsControllerSpec
               taxCheckStartDateTime = Some(now)
             )
             val updatedSession = session.copy(userAnswers = updatedAnswers, taxCheckStartDateTime = Some(now))
-            nextpageRedirectTest(session, updatedSession, "2", None)
+            nextPageRedirectTest(session, updatedSession, "2", None)
           }
 
           "the user has not changed the licence type they have already submitted previously" in {
@@ -401,7 +401,7 @@ class LicenceDetailsControllerSpec
                 taxCheckStartDateTime = Some(now)
               )
 
-            nextpageRedirectTest(session, session, "0", None)
+            nextPageRedirectTest(session, session, "0", None)
 
           }
 
@@ -421,7 +421,7 @@ class LicenceDetailsControllerSpec
               )
             val updatedSession = session.copy(userAnswers = updatedAnswers, taxCheckStartDateTime = Some(now))
 
-            nextpageRedirectTest(session, updatedSession, "0", Some(() => mockTimeProviderNow(now)))
+            nextPageRedirectTest(session, updatedSession, "0", Some(() => mockTimeProviderNow(now)))
           }
 
           "the user has previously completed answering questions" in {
@@ -436,7 +436,7 @@ class LicenceDetailsControllerSpec
               Fixtures.companyHECSession(companyLoginData, CompanyRetrievedJourneyData.empty, answers)
             val updatedSession = session.copy(userAnswers = updatedAnswers, taxCheckStartDateTime = Some(now))
 
-            nextpageRedirectTest(session, updatedSession, "1", Some(() => mockTimeProviderNow(now)))
+            nextPageRedirectTest(session, updatedSession, "1", Some(() => mockTimeProviderNow(now)))
           }
 
           "a tax check start date time is already in session" in {
@@ -458,7 +458,7 @@ class LicenceDetailsControllerSpec
               )
             val updatedSession = session.copy(userAnswers = updatedAnswers, taxCheckStartDateTime = Some(now))
 
-            nextpageRedirectTest(session, updatedSession, "1", None)
+            nextPageRedirectTest(session, updatedSession, "1", None)
           }
 
           "the user has not changed the licence type they have already submitted previously" in {
@@ -476,7 +476,7 @@ class LicenceDetailsControllerSpec
                 Some(now),
                 List.empty
               )
-            nextpageRedirectTest(session, session, "0", None)
+            nextPageRedirectTest(session, session, "0", None)
 
           }
 

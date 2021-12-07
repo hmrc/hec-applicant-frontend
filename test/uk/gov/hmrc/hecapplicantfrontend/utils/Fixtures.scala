@@ -206,4 +206,16 @@ object Fixtures {
     endDate = endDate,
     ctStatus = ctStatus
   )
+
+  def taxCheckListItem(
+    licenceType: LicenceType = LicenceType.DriverOfTaxisAndPrivateHires,
+    taxCheckCode: HECTaxCheckCode = HECTaxCheckCode("code"),
+    expiresAfter: LocalDate = LocalDate.now,
+    createDate: ZonedDateTime = ZonedDateTime.now
+  ): TaxCheckListItem = TaxCheckListItem(
+    licenceType = licenceType,
+    taxCheckCode = taxCheckCode,
+    expiresAfter = expiresAfter,
+    createDate = createDate
+  )
 }

@@ -53,7 +53,8 @@ class LicenceDetailsController @Inject() (
   licenceTypePage: html.LicenceType,
   licenceTypeExitPage: html.LicenceTypeExit,
   licenceTimeTradingPage: html.LicenceTimeTrading,
-  licenceValidityPeriodPage: html.LicenceValidityPeriod
+  licenceValidityPeriodPage: html.LicenceValidityPeriod,
+  maxTaxChecksLimitExceededPage: html.MaxTaxChecksLimitExceeded
 )(implicit appConfig: AppConfig, ec: ExecutionContext)
     extends FrontendController(mcc)
     with I18nSupport
@@ -72,6 +73,11 @@ class LicenceDetailsController @Inject() (
       licenceType.fold(emptyForm)(emptyForm.fill)
     }
     Ok(licenceTypePage(form, back, licenceOptions))
+  }
+
+  val maxTaxChecksExceeded: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
+    val back = journeyService.previous(routes.LicenceDetailsController.maxTaxChecksExceeded())
+    Ok(maxTaxChecksLimitExceededPage(back))
   }
 
   val licenceTypeSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>

@@ -313,3 +313,7 @@ tooManyCtutrAttempts.p2=You will be unable to do a tax check for this company un
 tooManyCtutrAttempts.p3=You can go back and <a href="{0}" class="govuk-link">enter a different Company Registration Number</a>, or <a href="{1}" class="govuk-link">do a new tax check</a>.
 tooManyCtutrAttempts.companyName=Company name
 tooManyCtutrAttempts.crn=Company Registration Number
+
+# Max tax checks limit exceeded
+maxTaxChecksLimitExceeded.title = Maximum number of tax checks allowed for chosen licence type has been exceeded
+maxTaxChecksLimitExceeded.p1 = Maximum number of tax checks allowed for chosen licence type has been exceeded.

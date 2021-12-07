@@ -16,9 +16,12 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.services
 
+import com.typesafe.config.ConfigFactory
+import play.api.Configuration
 import play.api.mvc.Call
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
+import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthenticatedRequest, RequestWithSessionData}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.{ControllerSpec, SessionSupport, routes}
 import uk.gov.hmrc.hecapplicantfrontend.models.CompanyUserAnswers.CompleteCompanyUserAnswers
@@ -39,6 +42,12 @@ import java.time.{LocalDate, ZoneId, ZonedDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
+
+  val maxTaxChecksAllowed                           = 3
+  override lazy val additionalConfig: Configuration = Configuration(
+    ConfigFactory.parseString(s"max-tax-checks-allowed = $maxTaxChecksAllowed")
+  )
+  implicit val appConf: AppConfig                   = appConfig
 
   val journeyService: JourneyServiceImpl = new JourneyServiceImpl(mockSessionStore)
 
@@ -188,9 +197,9 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
           await(result.value) shouldBe Right(routes.LicenceDetailsController.licenceType())
         }
 
-        "the licence type page" when afterWord("the user is") {
+        "the licence type page" when {
 
-          "an Individual" in {
+          "the user is an Individual" in {
 
             val session        = IndividualHECSession.newSession(individualLoginData)
             val updatedSession =
@@ -212,7 +221,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
             await(result.value) shouldBe Right(routes.LicenceDetailsController.licenceTimeTrading())
           }
 
-          "a Company" in {
+          "the user is a Company" in {
 
             val session        = CompanyHECSession.newSession(companyLoginData)
             val updatedSession =
@@ -231,6 +240,42 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
               updatedSession
             )
             await(result.value) shouldBe Right(routes.LicenceDetailsController.licenceTimeTrading())
+          }
+
+          "max tax check limit is exceeded" in {
+            val taxiDriverLicenceType = LicenceType.DriverOfTaxisAndPrivateHires
+            val taxiDriverTaxCheck    = Fixtures.taxCheckListItem(taxiDriverLicenceType)
+            val otherTaxCheck         = Fixtures.taxCheckListItem(LicenceType.ScrapMetalDealerSite)
+
+            val taxChecks = List(
+              taxiDriverTaxCheck,
+              taxiDriverTaxCheck,
+              taxiDriverTaxCheck,
+              taxiDriverTaxCheck,
+              otherTaxCheck
+            )
+
+            val session        = IndividualHECSession
+              .newSession(individualLoginData)
+              .copy(unexpiredTaxChecks = taxChecks)
+            val updatedSession =
+              Fixtures.individualHECSession(
+                loginData = individualLoginData,
+                retrievedJourneyData = IndividualRetrievedJourneyData.empty,
+                userAnswers = IndividualUserAnswers.empty.copy(licenceType = Some(taxiDriverLicenceType)),
+                unexpiredTaxChecks = taxChecks
+              )
+
+            implicit val request: RequestWithSessionData[_] =
+              requestWithSessionData(session)
+
+            mockStoreSession(updatedSession)(Right(()))
+
+            val result = journeyService.updateAndNext(
+              routes.LicenceDetailsController.licenceType(),
+              updatedSession
+            )
+            await(result.value) shouldBe Right(routes.LicenceDetailsController.maxTaxChecksExceeded())
           }
 
         }
@@ -1973,6 +2018,37 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
             }
           }
 
+        }
+
+        "maximum tax checks limit exceeded page" in {
+          val taxiDriverLicenceType = LicenceType.DriverOfTaxisAndPrivateHires
+          val taxiDriverTaxCheck    = Fixtures.taxCheckListItem(taxiDriverLicenceType)
+          val otherTaxCheck         = Fixtures.taxCheckListItem(LicenceType.ScrapMetalDealerSite)
+
+          val taxChecks = List(
+            taxiDriverTaxCheck,
+            taxiDriverTaxCheck,
+            taxiDriverTaxCheck,
+            taxiDriverTaxCheck,
+            otherTaxCheck
+          )
+
+          val session = Fixtures.individualHECSession(
+            loginData = individualLoginData,
+            retrievedJourneyData = IndividualRetrievedJourneyData.empty,
+            userAnswers =
+              IndividualUserAnswers.empty.copy(licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)),
+            unexpiredTaxChecks = taxChecks
+          )
+
+          implicit val request: RequestWithSessionData[_] =
+            requestWithSessionData(session)
+
+          val result = journeyService.previous(
+            routes.LicenceDetailsController.maxTaxChecksExceeded()
+          )
+
+          result shouldBe routes.LicenceDetailsController.licenceType()
         }
 
         "the licence type exit page" in {
