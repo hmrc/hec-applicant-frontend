@@ -113,15 +113,6 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
     }
   }
 
-//  private def individualLoginDataRoute(session: HECSession) =
-//    if (session.mapAsIndividual(_.hasConfirmedDetails)) {
-//      if (session.unexpiredTaxChecks.size === 0)
-//        routes.LicenceDetailsController.licenceType()
-//      else routes.TaxChecksListController.unexpiredTaxChecks()
-//    } else {
-//      routes.ConfirmIndividualDetailsController.confirmIndividualDetails()
-//    }
-
   override def updateAndNext(current: Call, updatedSession: HECSession)(implicit
     r: RequestWithSessionData[_],
     hc: HeaderCarrier
