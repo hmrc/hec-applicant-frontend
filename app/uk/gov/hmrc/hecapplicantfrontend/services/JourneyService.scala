@@ -104,11 +104,20 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
   override def firstPage(session: HECSession): Call = {
     val hasTaxCheckCodes = session.unexpiredTaxChecks.nonEmpty
     session.loginData match {
-      case _: IndividualLoginData                  => routes.ConfirmIndividualDetailsController.confirmIndividualDetails()
+      case _: IndividualLoginData                  => individualLoginDataRoute(session)
       case _: CompanyLoginData if hasTaxCheckCodes => routes.TaxChecksListController.unexpiredTaxChecks()
       case _: CompanyLoginData                     => routes.LicenceDetailsController.licenceType()
     }
   }
+
+  private def individualLoginDataRoute(session: HECSession) =
+    if (session.mapAsIndividual(_.isConfirmDetailsInSession)) {
+      if (session.unexpiredTaxChecks.size === 0)
+        routes.LicenceDetailsController.licenceType()
+      else routes.TaxChecksListController.unexpiredTaxChecks()
+    } else {
+      routes.ConfirmIndividualDetailsController.confirmIndividualDetails()
+    }
 
   override def updateAndNext(current: Call, updatedSession: HECSession)(implicit
     r: RequestWithSessionData[_],
@@ -220,6 +229,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
                   saIncomeDeclared,
                   entityType
                 ),
+                _,
                 _,
                 _,
                 _,
