@@ -24,6 +24,7 @@ import cats.syntax.eq._
 import cats.syntax.option._
 import com.google.inject.{ImplementedBy, Inject, Singleton}
 import play.api.mvc.Call
+import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 import uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.saTaxSituations
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.RequestWithSessionData
 import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
@@ -58,7 +59,8 @@ trait JourneyService {
 }
 
 @Singleton
-class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: ExecutionContext) extends JourneyService {
+class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: ExecutionContext, appConfig: AppConfig)
+    extends JourneyService {
 
   implicit val callEq: Eq[Call] = Eq.instance(_.url === _.url)
 
@@ -69,7 +71,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
     routes.StartController.start()                                       -> firstPage,
     routes.ConfirmIndividualDetailsController.confirmIndividualDetails() -> confirmIndividualDetailsRoute,
     routes.TaxChecksListController.unexpiredTaxChecks()                  -> (_ => routes.LicenceDetailsController.licenceType()),
-    routes.LicenceDetailsController.licenceType()                        -> (_ => routes.LicenceDetailsController.licenceTimeTrading()),
+    routes.LicenceDetailsController.licenceType()                        -> licenceTypeRoute,
     routes.LicenceDetailsController.licenceTimeTrading                   -> (_ => routes.LicenceDetailsController.recentLicenceLength()),
     routes.LicenceDetailsController.recentLicenceLength()                -> licenceValidityPeriodRoute,
     routes.EntityTypeController.entityType()                             -> entityTypeRoute,
@@ -246,6 +248,28 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
     } else {
       routes.LicenceDetailsController.licenceType()
     }
+
+  private def licenceTypeRoute(session: HECSession): Call = {
+    val licenceTypeOpt = session.userAnswers.fold(
+      _.fold(_.licenceType, _.licenceType.some),
+      _.fold(_.licenceType, _.licenceType.some)
+    )
+
+    licenceTypeOpt match {
+      case Some(licenceType) =>
+        val taxCheckCountForLicenceType = session.unexpiredTaxChecks
+          .groupBy(_.licenceType)
+          .mapValues(_.length)
+          .getOrElse(licenceType, 0)
+
+        if (taxCheckCountForLicenceType > appConfig.maxTaxChecksPerLicenceType) {
+          routes.LicenceDetailsController.maxTaxChecksExceeded()
+        } else {
+          routes.LicenceDetailsController.licenceTimeTrading()
+        }
+      case None              => sys.error("Could not find licence type")
+    }
+  }
 
   private def licenceValidityPeriodRoute(session: HECSession): Call =
     session.userAnswers.fold(
