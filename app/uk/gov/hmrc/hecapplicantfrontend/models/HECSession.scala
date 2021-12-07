@@ -47,7 +47,7 @@ object HECSession {
     completedTaxCheck: Option[HECTaxCheck],
     taxCheckStartDateTime: Option[ZonedDateTime],
     unexpiredTaxChecks: List[TaxCheckListItem],
-    isConfirmDetailsInSession: Boolean,
+    hasConfirmedDetails: Boolean,
     relevantIncomeTaxYear: Option[TaxYear]
   ) extends HECSession {
     override val entityType: EntityType = EntityType.Individual

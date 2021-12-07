@@ -17,6 +17,7 @@
 package uk.gov.hmrc.hecapplicantfrontend.controllers
 
 import cats.data.EitherT
+import cats.implicits.catsSyntaxOptionId
 import cats.instances.future._
 import com.typesafe.config.ConfigFactory
 import play.api.Configuration
@@ -169,17 +170,54 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
 
       "proceed" when {
 
-        "existing session data is found" in {
-          val session = IndividualHECSession.newSession(completeIndividualLoginData)
-          inSequence {
-            mockAuthWithRetrievals(ConfidenceLevel.L50, None, None, None, None, Enrolments(Set.empty), None)
-            mockGetSession(session)
-            mockGetUnexpiredTaxCheckCodes(Right(List.empty))
-            mockStoreSession(session)(Right(()))
-            mockFirstPge(session)(mockNextCall)
+        "existing session data is found" when {
+
+          "it's individual session and hasConfirmedDetails = false, new session should have it as false" in {
+            val session = IndividualHECSession.newSession(completeIndividualLoginData)
+            inSequence {
+              mockAuthWithRetrievals(ConfidenceLevel.L50, None, None, None, None, Enrolments(Set.empty), None)
+              mockGetSession(session)
+              mockGetUnexpiredTaxCheckCodes(Right(List.empty))
+              mockStoreSession(session)(Right(()))
+              mockFirstPge(session)(mockNextCall)
+            }
+            checkIsRedirect(performAction(), mockNextCall)
           }
 
-          checkIsRedirect(performAction(), mockNextCall)
+          "it's individual session and hasConfirmedDetails = true, new session should have it as true" in {
+            val tempSession = IndividualHECSession.newSession(completeIndividualLoginData)
+            val session     = tempSession.copy(hasConfirmedDetails = true)
+            inSequence {
+              mockAuthWithRetrievals(ConfidenceLevel.L50, None, None, None, None, Enrolments(Set.empty), None)
+              mockGetSession(session)
+              mockGetUnexpiredTaxCheckCodes(Right(List.empty))
+              mockStoreSession(session)(Right(()))
+              mockFirstPge(session)(mockNextCall)
+            }
+            checkIsRedirect(performAction(), mockNextCall)
+          }
+
+          "it's company session" in {
+            val session = CompanyHECSession.newSession(completeCompanyLoginData)
+            inSequence {
+              mockAuthWithRetrievals(
+                ConfidenceLevel.L50,
+                Some(AffinityGroup.Organisation),
+                None,
+                None,
+                emailAddress.some,
+                Enrolments(Set(retrievedCtEnrolment(ctutr))),
+                Some(retrievedGGCredential(ggCredId))
+              )
+              mockGetSession(session)
+              mockGetUnexpiredTaxCheckCodes(Right(List.empty))
+              mockStoreSession(session)(Right(()))
+              mockFirstPge(session)(mockNextCall)
+            }
+            checkIsRedirect(performAction(), mockNextCall)
+
+          }
+
         }
 
         "no session data is found and" when {

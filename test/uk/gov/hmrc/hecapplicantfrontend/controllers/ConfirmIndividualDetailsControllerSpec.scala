@@ -152,7 +152,7 @@ class ConfirmIndividualDetailsControllerSpec
             mockJourneyServiceUpdateAndNext(
               routes.ConfirmIndividualDetailsController.confirmIndividualDetails(),
               session,
-              session.copy(isConfirmDetailsInSession = true)
+              session.copy(hasConfirmedDetails = true)
             )(Left(Error("")))
           }
 
@@ -181,7 +181,7 @@ class ConfirmIndividualDetailsControllerSpec
             mockJourneyServiceUpdateAndNext(
               routes.ConfirmIndividualDetailsController.confirmIndividualDetails(),
               session,
-              session.copy(isConfirmDetailsInSession = true)
+              session.copy(hasConfirmedDetails = true)
             )(Right(mockNextCall))
           }
 
