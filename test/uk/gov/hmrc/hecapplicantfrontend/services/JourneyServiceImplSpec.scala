@@ -43,9 +43,9 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
 
-  val maxTaxChecksAllowed                           = 3
+  val maxTaxChecksPerLicenceType                    = 3
   override lazy val additionalConfig: Configuration = Configuration(
-    ConfigFactory.parseString(s"max-tax-checks-allowed = $maxTaxChecksAllowed")
+    ConfigFactory.parseString(s"max-tax-checks-per-licence-type = $maxTaxChecksPerLicenceType")
   )
   implicit val appConf: AppConfig                   = appConfig
 

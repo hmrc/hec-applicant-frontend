@@ -262,7 +262,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
           .mapValues(_.length)
           .getOrElse(licenceType, 0)
 
-        if (taxCheckCountForLicenceType > appConfig.maxTaxChecksAllowed) {
+        if (taxCheckCountForLicenceType > appConfig.maxTaxChecksPerLicenceType) {
           routes.LicenceDetailsController.maxTaxChecksExceeded()
         } else {
           routes.LicenceDetailsController.licenceTimeTrading()
