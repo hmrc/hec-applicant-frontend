@@ -18,7 +18,8 @@ package uk.gov.hmrc.hecapplicantfrontend.testonly.services
 
 import com.google.inject.{ImplementedBy, Inject, Singleton}
 import uk.gov.hmrc.auth.core.{AffinityGroup, ConfidenceLevel, Enrolment, EnrolmentIdentifier}
-import uk.gov.hmrc.hecapplicantfrontend.models.{DateOfBirth, EmailAddress, HECTaxCheckCode, HECTaxCheckSource}
+import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.HECTaxCheckSource
+import uk.gov.hmrc.hecapplicantfrontend.models.{DateOfBirth, EmailAddress, HECTaxCheckCode}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR, GGCredId, NINO, SAUTR}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
 import uk.gov.hmrc.hecapplicantfrontend.testonly.models.Journey._

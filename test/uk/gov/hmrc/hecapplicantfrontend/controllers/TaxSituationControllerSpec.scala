@@ -30,6 +30,8 @@ import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, In
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.IndividualRetrievedJourneyData
 import uk.gov.hmrc.hecapplicantfrontend.models._
+import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.individual
+import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.individual.{SAStatus, SAStatusResponse}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO, SAUTR}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType.DriverOfTaxisAndPrivateHires
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
@@ -612,10 +614,10 @@ class TaxSituationControllerSpec
 
       "redirect to next page after fetching SA status" when {
         "tax situation = SA" in {
-          testSA(TaxSituation.SA, SAStatusResponse(SAUTR("utr"), TaxYear(2020), SAStatus.ReturnFound))
+          testSA(TaxSituation.SA, individual.SAStatusResponse(SAUTR("utr"), TaxYear(2020), SAStatus.ReturnFound))
         }
         "tax situation = SAPAYE" in {
-          testSA(TaxSituation.SAPAYE, SAStatusResponse(SAUTR("utr"), TaxYear(2020), SAStatus.ReturnFound))
+          testSA(TaxSituation.SAPAYE, individual.SAStatusResponse(SAUTR("utr"), TaxYear(2020), SAStatus.ReturnFound))
         }
       }
 

@@ -22,10 +22,11 @@ import uk.gov.hmrc.govukfrontend.views.html.components._
 import uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.getTaxPeriodStrings
 import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 import uk.gov.hmrc.hecapplicantfrontend.models.CompanyUserAnswers.CompleteCompanyUserAnswers
-import uk.gov.hmrc.hecapplicantfrontend.models.{CTStatusResponse, CompleteUserAnswers, RetrievedJourneyData, TaxYear}
+import uk.gov.hmrc.hecapplicantfrontend.models.{CompleteUserAnswers, RetrievedJourneyData, TaxYear}
 import uk.gov.hmrc.hecapplicantfrontend.models.views.{LicenceTimeTradingOption, LicenceTypeOption, LicenceValidityPeriodOption}
 import uk.gov.hmrc.hecapplicantfrontend.models.IndividualUserAnswers.CompleteIndividualUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.CompanyRetrievedJourneyData
+import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.company.CTStatusResponse
 import uk.gov.hmrc.hecapplicantfrontend.util.TimeUtils
 import uk.gov.hmrc.hecapplicantfrontend.models.views.EntityTypeOption
 import uk.gov.hmrc.hecapplicantfrontend.models.views.YesNoOption

@@ -22,7 +22,8 @@ import org.scalatest.wordspec.AnyWordSpecLike
 import uk.gov.hmrc.auth.core.AffinityGroup.{Individual, Organisation}
 import uk.gov.hmrc.auth.core.ConfidenceLevel.{L250, L50}
 import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier}
-import uk.gov.hmrc.hecapplicantfrontend.models.{DateOfBirth, EmailAddress, HECTaxCheckCode, HECTaxCheckSource}
+import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.HECTaxCheckSource
+import uk.gov.hmrc.hecapplicantfrontend.models.{DateOfBirth, EmailAddress, HECTaxCheckCode}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
 import uk.gov.hmrc.hecapplicantfrontend.testonly.models.Journey._

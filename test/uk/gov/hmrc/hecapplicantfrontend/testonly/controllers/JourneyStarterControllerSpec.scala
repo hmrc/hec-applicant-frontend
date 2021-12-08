@@ -28,7 +28,7 @@ import uk.gov.hmrc.auth.core.AffinityGroup.Individual
 import uk.gov.hmrc.auth.core.ConfidenceLevel.L250
 import uk.gov.hmrc.hecapplicantfrontend.controllers.{routes => nonTestOnlyRoutes}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.ControllerSpec
-import uk.gov.hmrc.hecapplicantfrontend.models.HECTaxCheckSource.Digital
+import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.HECTaxCheckSource.Digital
 import uk.gov.hmrc.hecapplicantfrontend.models.{DateOfBirth, EmailAddress, Error, HECTaxCheckCode}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.GGCredId
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType

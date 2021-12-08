@@ -14,24 +14,22 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hecapplicantfrontend.models
+package uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.company
 
-import ai.x.play.json.Jsonx
-import ai.x.play.json.SingletonEncoder.simpleName
-import ai.x.play.json.implicits.formatSingleton
-import play.api.libs.json.Format
+import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.hecapplicantfrontend.models.ids.CTUTR
 
-sealed trait SAStatus
+import java.time.LocalDate
 
-object SAStatus {
+final case class CTStatusResponse(
+  ctutr: CTUTR,
+  startDate: LocalDate,
+  endDate: LocalDate,
+  latestAccountingPeriod: Option[CTAccountingPeriod]
+)
 
-  case object ReturnFound extends SAStatus
+object CTStatusResponse {
 
-  case object NoticeToFileIssued extends SAStatus
-
-  case object NoReturnFound extends SAStatus
-
-  @SuppressWarnings(Array("org.wartremover.warts.All"))
-  implicit val format: Format[SAStatus] = Jsonx.formatSealed[SAStatus]
+  implicit val format: OFormat[CTStatusResponse] = Json.format
 
 }

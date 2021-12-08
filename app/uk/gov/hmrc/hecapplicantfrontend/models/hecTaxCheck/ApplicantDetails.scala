@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hecapplicantfrontend.models
+package uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck
 
 import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, GGCredId}
+import uk.gov.hmrc.hecapplicantfrontend.models.{CompanyHouseName, DateOfBirth, Name}
 
 sealed trait ApplicantDetails extends Product with Serializable
 

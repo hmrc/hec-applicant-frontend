@@ -25,14 +25,17 @@ import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.Json
 import play.api.test.Helpers._
 import uk.gov.hmrc.hecapplicantfrontend.connectors.HECConnector
-import uk.gov.hmrc.hecapplicantfrontend.models.ApplicantDetails.IndividualApplicantDetails
-import uk.gov.hmrc.hecapplicantfrontend.models.HECTaxCheckData.IndividualHECTaxCheckData
+import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.ApplicantDetails.IndividualApplicantDetails
+import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.HECTaxCheckData.IndividualHECTaxCheckData
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.IndividualLoginData
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.IndividualRetrievedJourneyData
-import uk.gov.hmrc.hecapplicantfrontend.models.TaxDetails.IndividualTaxDetails
+import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.TaxDetails.IndividualTaxDetails
+import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.{HECTaxCheckData, HECTaxCheckSource}
+import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.company.{CTAccountingPeriod, CTStatus, CTStatusResponse}
+import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.individual.{SAStatus, SAStatusResponse}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids._
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.hecapplicantfrontend.models.{CTAccountingPeriod, CTStatus, CTStatusResponse, DateOfBirth, EmailAddress, Error, HECTaxCheck, HECTaxCheckCode, HECTaxCheckData, HECTaxCheckSource, Name, SAStatus, SAStatusResponse, TaxCheckListItem, TaxSituation, TaxYear, YesNoAnswer}
+import uk.gov.hmrc.hecapplicantfrontend.models.{DateOfBirth, EmailAddress, Error, HECTaxCheck, HECTaxCheckCode, Name, TaxCheckListItem, TaxSituation, TaxYear, YesNoAnswer}
 import uk.gov.hmrc.hecapplicantfrontend.services.TaxCheckService._
 import uk.gov.hmrc.hecapplicantfrontend.utils.Fixtures
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
