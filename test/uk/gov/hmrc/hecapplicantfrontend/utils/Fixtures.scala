@@ -144,6 +144,7 @@ object Fixtures {
       completedTaxCheck = completedTaxCheck,
       taxCheckStartDateTime = taxCheckStartDateTime,
       unexpiredTaxChecks = unexpiredTaxChecks,
+      hasConfirmedDetails = false,
       relevantIncomeTaxYear = relevantIncomeTaxYear
     )
 

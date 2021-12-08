@@ -59,6 +59,7 @@ class HECSessionDataSpec extends AnyWordSpec with Matchers {
           |  "retrievedJourneyData" : { },
           |  "userAnswers" : { "type" : "Incomplete"  },
           |  "unexpiredTaxChecks" : [],
+          |  "hasConfirmedDetails" : false,
           |  "type":"Individual"
           |}""".stripMargin)
 

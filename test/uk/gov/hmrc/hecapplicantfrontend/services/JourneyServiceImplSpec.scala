@@ -71,7 +71,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
 
     "handling calls to 'firstPage'" when {
 
-      "tax checks list is not empty" must {
+      "tax checks list is not empty " must {
 
         val taxChecks = List(
           TaxCheckListItem(
@@ -84,8 +84,17 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
 
         "return the correct call" when afterWord("the user is") {
 
-          "an individual" in {
-            val session = IndividualHECSession.newSession(individualLoginData).copy(unexpiredTaxChecks = taxChecks)
+          "an individual and hasConfirmedDetails = true" in {
+            val session = IndividualHECSession
+              .newSession(individualLoginData)
+              .copy(unexpiredTaxChecks = taxChecks, hasConfirmedDetails = true)
+            journeyService.firstPage(session) shouldBe routes.TaxChecksListController.unexpiredTaxChecks()
+          }
+
+          "an individual and hasConfirmedDetails = false" in {
+            val session = IndividualHECSession
+              .newSession(individualLoginData)
+              .copy(unexpiredTaxChecks = taxChecks)
             journeyService.firstPage(session) shouldBe routes.ConfirmIndividualDetailsController
               .confirmIndividualDetails()
           }
@@ -101,7 +110,13 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
 
         "return the correct call" when afterWord("the user is") {
 
-          "an individual" in {
+          "an individual and hasConfirmedDetails = true" in {
+            val session = IndividualHECSession.newSession(individualLoginData).copy(hasConfirmedDetails = true)
+            journeyService.firstPage(session) shouldBe routes.LicenceDetailsController
+              .licenceType()
+          }
+
+          "an individual and hasConfirmedDetails = false" in {
             val session = IndividualHECSession.newSession(individualLoginData)
             journeyService.firstPage(session) shouldBe routes.ConfirmIndividualDetailsController
               .confirmIndividualDetails()
@@ -1957,6 +1972,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
           )
 
           "an individual" when {
+
             "there are preexisting tax check codes" in {
               val session                                     = Fixtures.individualHECSession(
                 individualLoginData,

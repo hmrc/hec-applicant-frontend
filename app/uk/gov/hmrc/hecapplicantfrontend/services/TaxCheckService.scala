@@ -135,6 +135,7 @@ class TaxCheckServiceImpl @Inject() (hecConnector: HECConnector)(implicit ec: Ex
             _,
             taxCheckStartDateTime,
             _,
+            _,
             relevantIncomeTaxYear
           ),
           answers: CompleteIndividualUserAnswers

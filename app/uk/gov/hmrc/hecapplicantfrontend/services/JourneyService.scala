@@ -32,7 +32,6 @@ import uk.gov.hmrc.hecapplicantfrontend.models.CompanyUserAnswers.{CompleteCompa
 import uk.gov.hmrc.hecapplicantfrontend.models.EntityType.{Company, Individual}
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, IndividualHECSession}
 import uk.gov.hmrc.hecapplicantfrontend.models.IndividualUserAnswers.{CompleteIndividualUserAnswers, IncompleteIndividualUserAnswers}
-import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.{CompanyRetrievedJourneyData, IndividualRetrievedJourneyData}
 import uk.gov.hmrc.hecapplicantfrontend.models.SAStatus.ReturnFound
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
@@ -103,10 +102,14 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
 
   override def firstPage(session: HECSession): Call = {
     val hasTaxCheckCodes = session.unexpiredTaxChecks.nonEmpty
-    session.loginData match {
-      case _: IndividualLoginData                  => routes.ConfirmIndividualDetailsController.confirmIndividualDetails()
-      case _: CompanyLoginData if hasTaxCheckCodes => routes.TaxChecksListController.unexpiredTaxChecks()
-      case _: CompanyLoginData                     => routes.LicenceDetailsController.licenceType()
+    session match {
+      case i: IndividualHECSession if i.hasConfirmedDetails && !hasTaxCheckCodes =>
+        routes.LicenceDetailsController.licenceType()
+      case i: IndividualHECSession if i.hasConfirmedDetails && hasTaxCheckCodes  =>
+        routes.TaxChecksListController.unexpiredTaxChecks()
+      case _: IndividualHECSession                                               => routes.ConfirmIndividualDetailsController.confirmIndividualDetails()
+      case _: CompanyHECSession if hasTaxCheckCodes                              => routes.TaxChecksListController.unexpiredTaxChecks()
+      case _: CompanyHECSession                                                  => routes.LicenceDetailsController.licenceType()
     }
   }
 
@@ -220,6 +223,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
                   saIncomeDeclared,
                   entityType
                 ),
+                _,
                 _,
                 _,
                 _,

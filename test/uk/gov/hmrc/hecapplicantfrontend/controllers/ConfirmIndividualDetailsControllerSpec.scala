@@ -134,10 +134,6 @@ class ConfirmIndividualDetailsControllerSpec
           assertThrows[RuntimeException](await(performAction()))
         }
 
-      }
-
-      "return an InternalServerError" when {
-
         "there is a problem getting the next page" in {
           val session = IndividualHECSession.newSession(
             IndividualLoginData(
@@ -156,7 +152,7 @@ class ConfirmIndividualDetailsControllerSpec
             mockJourneyServiceUpdateAndNext(
               routes.ConfirmIndividualDetailsController.confirmIndividualDetails(),
               session,
-              session
+              session.copy(hasConfirmedDetails = true)
             )(Left(Error("")))
           }
 
@@ -185,7 +181,7 @@ class ConfirmIndividualDetailsControllerSpec
             mockJourneyServiceUpdateAndNext(
               routes.ConfirmIndividualDetailsController.confirmIndividualDetails(),
               session,
-              session
+              session.copy(hasConfirmedDetails = true)
             )(Right(mockNextCall))
           }
 
