@@ -20,3 +20,16 @@ body:not(.js-enabled) .js-visible {
     }
   }
 }
+
+.govuk-panel__title {
+  padding: 0;
+  @include govuk-media-query($from: 358px, $until: 484px) {
+    padding: 0 60px;
+  }
+  @include govuk-media-query($from: 485px, $until: tablet) {
+    padding: 0 130px;
+  }
+  @include govuk-media-query($from: desktop) {
+    padding: 0 60px;
+  }
+}
