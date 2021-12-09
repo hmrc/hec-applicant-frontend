@@ -44,7 +44,9 @@ class EmailAllowedListFilter @Inject() (
   val userEmailAllowedList: List[String] = config.underlying.get[List[String]]("email-allow-list.list").value
 
   private def isExcludedEndpoint(rh: RequestHeader): Boolean =
-    rh.uri.contains(routes.AccessDeniedController.accessDenied().url)
+    rh.uri.contains(routes.AccessDeniedController.accessDenied().url) ||
+      rh.uri.contains("hmrc-frontend") ||
+      rh.uri.contains("assets")
 
   override def apply(f: RequestHeader => Future[Result])(rh: RequestHeader): Future[Result] =
     if (userEmailListEnabled) {
