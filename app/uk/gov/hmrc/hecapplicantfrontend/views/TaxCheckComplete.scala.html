@@ -31,6 +31,7 @@
 @layout(pageTitle = Some(title)) {
     @govukPanel(Panel(
         title = Text(title),
+        classes = "govuk-!-margin-bottom-7",
         content = HtmlContent(s"""${messages(s"$key.subtitle")}<br><strong>${hecTaxCheck.taxCheckCode.value.grouped(3).mkString(" ")}</strong>""")
     ))
 
@@ -39,7 +40,7 @@
 
     <h2 class="govuk-heading-m">@messages(s"$key.whatNext")</h2>
 
-    <ul class="govuk-list govuk-list--number">
+    <ul class="govuk-list govuk-list--number govuk-!-margin-bottom-7">
         <li>@Html(messages(s"$key.list1", routes.StartController.start.url))</li>
         <li>@messages(s"$key.list2")</li>
     </ul>
