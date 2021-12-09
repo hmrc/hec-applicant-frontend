@@ -23,7 +23,7 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.test.Helpers._
 import uk.gov.hmrc.hecapplicantfrontend.models.{DateOfBirth, Error, HECTaxCheckCode}
-import uk.gov.hmrc.hecapplicantfrontend.models.HECTaxCheckSource.Digital
+import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.HECTaxCheckSource.Digital
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.GGCredId
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
 import uk.gov.hmrc.hecapplicantfrontend.testonly.connectors.HECConnector

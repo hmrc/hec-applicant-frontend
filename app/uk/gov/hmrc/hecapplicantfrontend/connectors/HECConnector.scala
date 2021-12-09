@@ -18,8 +18,9 @@ package uk.gov.hmrc.hecapplicantfrontend.connectors
 
 import cats.data.EitherT
 import com.google.inject.{ImplementedBy, Inject, Singleton}
+import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.HECTaxCheckData
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR, SAUTR}
-import uk.gov.hmrc.hecapplicantfrontend.models.{Error, HECTaxCheckData, TaxYear}
+import uk.gov.hmrc.hecapplicantfrontend.models.{Error, TaxYear}
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig

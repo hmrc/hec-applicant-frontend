@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hecapplicantfrontend.models
+package uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.company
 
 import ai.x.play.json.Jsonx
 import ai.x.play.json.SingletonEncoder.simpleName

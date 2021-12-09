@@ -22,7 +22,7 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
 import uk.gov.hmrc.hecapplicantfrontend.connectors.{ConnectorSpec, HttpSupport}
-import uk.gov.hmrc.hecapplicantfrontend.models.HECTaxCheckSource.Digital
+import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.HECTaxCheckSource.Digital
 import uk.gov.hmrc.hecapplicantfrontend.models.HECTaxCheckCode
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, GGCredId}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType

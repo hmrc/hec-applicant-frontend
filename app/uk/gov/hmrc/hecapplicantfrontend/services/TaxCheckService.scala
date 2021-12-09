@@ -26,15 +26,18 @@ import play.api.http.Status.OK
 import play.api.libs.json.{Json, OFormat}
 import play.mvc.Http.Status.{CREATED, NOT_FOUND}
 import uk.gov.hmrc.hecapplicantfrontend.connectors.HECConnector
-import uk.gov.hmrc.hecapplicantfrontend.models.ApplicantDetails.{CompanyApplicantDetails, IndividualApplicantDetails}
 import uk.gov.hmrc.hecapplicantfrontend.models.CompanyUserAnswers.CompleteCompanyUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, IndividualHECSession}
-import uk.gov.hmrc.hecapplicantfrontend.models.HECTaxCheckData.{CompanyHECTaxCheckData, IndividualHECTaxCheckData}
 import uk.gov.hmrc.hecapplicantfrontend.models.IndividualUserAnswers.CompleteIndividualUserAnswers
-import uk.gov.hmrc.hecapplicantfrontend.models.TaxDetails.{CompanyTaxDetails, IndividualTaxDetails}
+import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.ApplicantDetails.{CompanyApplicantDetails, IndividualApplicantDetails}
+import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.HECTaxCheckData.{CompanyHECTaxCheckData, IndividualHECTaxCheckData}
+import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.TaxDetails.{CompanyTaxDetails, IndividualTaxDetails}
+import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.company.CTStatusResponse
+import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.individual.SAStatusResponse
+import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.{HECTaxCheckData, HECTaxCheckSource}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR, SAUTR}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceDetails
-import uk.gov.hmrc.hecapplicantfrontend.models.{CTStatusResponse, CompleteUserAnswers, Error, HECSession, HECTaxCheck, HECTaxCheckData, HECTaxCheckSource, SAStatusResponse, TaxCheckListItem, TaxYear}
+import uk.gov.hmrc.hecapplicantfrontend.models.{CompleteUserAnswers, Error, HECSession, HECTaxCheck, TaxCheckListItem, TaxYear}
 import uk.gov.hmrc.hecapplicantfrontend.services.TaxCheckService._
 import uk.gov.hmrc.hecapplicantfrontend.util.HttpResponseOps._
 import uk.gov.hmrc.http.HeaderCarrier

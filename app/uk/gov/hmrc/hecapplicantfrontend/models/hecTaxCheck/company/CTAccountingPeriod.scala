@@ -14,19 +14,18 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hecapplicantfrontend.models
+package uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.company
 
 import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.hecapplicantfrontend.models.ids.SAUTR
 
-final case class SAStatusResponse(
-  sautr: SAUTR,
-  taxYear: TaxYear,
-  status: SAStatus
+import java.time.LocalDate
+
+final case class CTAccountingPeriod(
+  startDate: LocalDate,
+  endDate: LocalDate,
+  ctStatus: CTStatus
 )
 
-object SAStatusResponse {
-
-  implicit val format: OFormat[SAStatusResponse] = Json.format
-
+object CTAccountingPeriod {
+  implicit val format: OFormat[CTAccountingPeriod] = Json.format
 }

@@ -31,6 +31,9 @@ import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, Indi
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.{CompanyRetrievedJourneyData, IndividualRetrievedJourneyData}
 import uk.gov.hmrc.hecapplicantfrontend.models.TaxSituation.PAYE
 import uk.gov.hmrc.hecapplicantfrontend.models._
+import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.company.{CTAccountingPeriod, CTStatus, CTStatusResponse}
+import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.individual
+import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.individual.{SAStatus, SAStatusResponse}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids._
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType.DriverOfTaxisAndPrivateHires
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceValidityPeriod.UpToOneYear
@@ -1511,7 +1514,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
             val individualData = individualLoginData.copy(sautr = Some(SAUTR("utr")))
             val journeyData    =
               IndividualRetrievedJourneyData(
-                saStatus = Some(SAStatusResponse(SAUTR("utr"), TaxYear(2020), SAStatus.NoticeToFileIssued))
+                saStatus = Some(individual.SAStatusResponse(SAUTR("utr"), TaxYear(2020), SAStatus.NoticeToFileIssued))
               )
 
             val session = Fixtures.individualHECSession(individualData, journeyData, incompleteAnswers)
@@ -1640,7 +1643,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
                 )
 
                 val journeyData = IndividualRetrievedJourneyData(
-                  saStatus = Some(SAStatusResponse(SAUTR("utr"), TaxYear(2020), SAStatus.ReturnFound))
+                  saStatus = Some(individual.SAStatusResponse(SAUTR("utr"), TaxYear(2020), SAStatus.ReturnFound))
                 )
                 val session     =
                   Fixtures.individualHECSession(
@@ -1684,7 +1687,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
                 )
 
                 val journeyData = IndividualRetrievedJourneyData(
-                  saStatus = Some(SAStatusResponse(SAUTR("utr"), TaxYear(2020), SAStatus.NoReturnFound))
+                  saStatus = Some(individual.SAStatusResponse(SAUTR("utr"), TaxYear(2020), SAStatus.NoReturnFound))
                 )
                 val session     =
                   Fixtures.individualHECSession(
@@ -2223,7 +2226,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
             individualLoginData.copy(sautr = Some(SAUTR("utr")))
 
           val journeyDataWithSaStatus = IndividualRetrievedJourneyData(saStatus =
-            Some(SAStatusResponse(SAUTR(""), TaxYear(2020), SAStatus.NoticeToFileIssued))
+            Some(individual.SAStatusResponse(SAUTR(""), TaxYear(2020), SAStatus.NoticeToFileIssued))
           )
 
           def userAnswers(licenceType: LicenceType, taxSituation: TaxSituation, entityType: Option[EntityType]) =
@@ -2555,7 +2558,9 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
             )
 
           val journeyData =
-            IndividualRetrievedJourneyData(saStatus = Some(SAStatusResponse(SAUTR(""), TaxYear(2020), saStatus)))
+            IndividualRetrievedJourneyData(saStatus =
+              Some(individual.SAStatusResponse(SAUTR(""), TaxYear(2020), saStatus))
+            )
 
           Fixtures.individualHECSession(
             individualLoginData,
@@ -2648,7 +2653,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
           ) foreach { taxSituation =>
             withClue(s"for $taxSituation") {
               val journeyData = IndividualRetrievedJourneyData(
-                saStatus = Some(SAStatusResponse(SAUTR("utr"), TaxYear(2020), SAStatus.ReturnFound))
+                saStatus = Some(individual.SAStatusResponse(SAUTR("utr"), TaxYear(2020), SAStatus.ReturnFound))
               )
 
               val session =
@@ -2721,7 +2726,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
             withClue(s"for $taxSituation & $saStatus") {
               val journeyData =
                 IndividualRetrievedJourneyData(
-                  saStatus = Some(SAStatusResponse(SAUTR("utr"), TaxYear(2020), saStatus))
+                  saStatus = Some(individual.SAStatusResponse(SAUTR("utr"), TaxYear(2020), saStatus))
                 )
 
               val session =
@@ -2755,7 +2760,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
           ) foreach { taxSituation =>
             withClue(s"for $taxSituation") {
               val journeyData = IndividualRetrievedJourneyData(
-                saStatus = Some(SAStatusResponse(SAUTR("utr"), TaxYear(2020), SAStatus.ReturnFound))
+                saStatus = Some(individual.SAStatusResponse(SAUTR("utr"), TaxYear(2020), SAStatus.ReturnFound))
               )
 
               val session =

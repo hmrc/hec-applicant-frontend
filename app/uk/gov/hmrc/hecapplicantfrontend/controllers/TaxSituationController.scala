@@ -29,8 +29,9 @@ import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, Session
 import uk.gov.hmrc.hecapplicantfrontend.models
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.IndividualLoginData
 import uk.gov.hmrc.hecapplicantfrontend.models.TaxSituation._
+import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.individual.SAStatusResponse
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
-import uk.gov.hmrc.hecapplicantfrontend.models.{Error, SAStatusResponse, TaxSituation, TaxYear}
+import uk.gov.hmrc.hecapplicantfrontend.models.{Error, TaxSituation, TaxYear}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.{JourneyService, TaxCheckService}
 import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging, TimeProvider, TimeUtils}

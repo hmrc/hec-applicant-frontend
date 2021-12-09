@@ -21,11 +21,12 @@ import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
-import uk.gov.hmrc.hecapplicantfrontend.models.ApplicantDetails.IndividualApplicantDetails
-import uk.gov.hmrc.hecapplicantfrontend.models.HECTaxCheckData.IndividualHECTaxCheckData
-import uk.gov.hmrc.hecapplicantfrontend.models.{DateOfBirth, HECTaxCheckData, HECTaxCheckSource, Name, TaxSituation, TaxYear, YesNoAnswer}
-import uk.gov.hmrc.hecapplicantfrontend.models.TaxDetails.IndividualTaxDetails
-import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR, GGCredId, NINO, SAUTR}
+import uk.gov.hmrc.hecapplicantfrontend.models._
+import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.ApplicantDetails.IndividualApplicantDetails
+import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.HECTaxCheckData.IndividualHECTaxCheckData
+import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.TaxDetails.IndividualTaxDetails
+import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.{HECTaxCheckData, HECTaxCheckSource}
+import uk.gov.hmrc.hecapplicantfrontend.models.ids._
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig

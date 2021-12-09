@@ -17,9 +17,10 @@
 package uk.gov.hmrc.hecapplicantfrontend.testonly.models
 
 import play.api.libs.json.{Json, Writes}
+import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.HECTaxCheckSource
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, GGCredId}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
-import uk.gov.hmrc.hecapplicantfrontend.models.{DateOfBirth, HECTaxCheckCode, HECTaxCheckSource}
+import uk.gov.hmrc.hecapplicantfrontend.models.{DateOfBirth, HECTaxCheckCode}
 import uk.gov.hmrc.hecapplicantfrontend.testonly.models.EitherUtils.eitherFormat
 
 import java.time.format.DateTimeFormatter

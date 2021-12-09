@@ -33,9 +33,11 @@ import uk.gov.hmrc.hecapplicantfrontend.models.EntityType.{Company, Individual}
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, IndividualHECSession}
 import uk.gov.hmrc.hecapplicantfrontend.models.IndividualUserAnswers.{CompleteIndividualUserAnswers, IncompleteIndividualUserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.{CompanyRetrievedJourneyData, IndividualRetrievedJourneyData}
-import uk.gov.hmrc.hecapplicantfrontend.models.SAStatus.ReturnFound
+import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.company.CTStatus
+import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.individual.SAStatus.ReturnFound
+import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.individual.{SAStatus, SAStatusResponse}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
-import uk.gov.hmrc.hecapplicantfrontend.models.{CTStatus, EntityType, Error, HECSession, SAStatus, SAStatusResponse, TaxSituation, YesNoAnswer}
+import uk.gov.hmrc.hecapplicantfrontend.models.{EntityType, Error, HECSession, TaxSituation, YesNoAnswer}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyServiceImpl._
 import uk.gov.hmrc.http.HeaderCarrier
