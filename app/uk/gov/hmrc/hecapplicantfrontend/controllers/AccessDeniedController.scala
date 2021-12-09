@@ -22,15 +22,17 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.AuthAction
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
+import uk.gov.hmrc.hecapplicantfrontend.views.html
 
 @Singleton
 class AccessDeniedController @Inject() (
   authAction: AuthAction,
-  mcc: MessagesControllerComponents
+  mcc: MessagesControllerComponents,
+  accessDeniedPage: html.AccessDenied
 ) extends FrontendController(mcc)
     with I18nSupport
     with Logging {
-  val accessDenied: Action[AnyContent] = authAction { _ =>
-    Ok("access denied")
+  val accessDenied: Action[AnyContent] = authAction { implicit request =>
+    Ok(accessDeniedPage())
   }
 }
