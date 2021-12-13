@@ -31,6 +31,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, Indi
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.{CompanyRetrievedJourneyData, IndividualRetrievedJourneyData}
 import uk.gov.hmrc.hecapplicantfrontend.models.TaxSituation.PAYE
 import uk.gov.hmrc.hecapplicantfrontend.models._
+import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.company.CTAccountingPeriod.CTAccountingPeriodDigital
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.company.{CTAccountingPeriod, CTStatus, CTStatusResponse}
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.individual
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.individual.{SAStatus, SAStatusResponse}
@@ -962,7 +963,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
           def ctStatusResponseWithStatus(status: CTStatus) =
             anyCTStatusResponse.copy(latestAccountingPeriod =
               Some(
-                CTAccountingPeriod(
+                CTAccountingPeriodDigital(
                   startDate = LocalDate.now(),
                   endDate = LocalDate.now(),
                   ctStatus = status
@@ -1219,8 +1220,9 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
             ).foreach { status =>
               withClue(s"for $status") {
                 val journeyData    = CompanyRetrievedJourneyData.empty.copy(
-                  ctStatus =
-                    Some(CTStatusResponse(CTUTR("utr"), date, date, Some(CTAccountingPeriod(date, date, status))))
+                  ctStatus = Some(
+                    CTStatusResponse(CTUTR("utr"), date, date, Some(CTAccountingPeriodDigital(date, date, status)))
+                  )
                 )
                 val session        =
                   Fixtures.companyHECSession(companyLoginData, journeyData, CompanyUserAnswers.empty)
@@ -1248,7 +1250,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
                   CTUTR("utr"),
                   date,
                   date,
-                  Some(CTAccountingPeriod(date, date, status))
+                  Some(CTAccountingPeriodDigital(date, date, status))
                 )
               )
             )
@@ -1790,7 +1792,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
                   Some(YesNoAnswer.Yes),
                   Some(YesNoAnswer.Yes),
                   Some(YesNoAnswer.Yes),
-                  Some(createCTStatus(Some(CTAccountingPeriod(startDate, endDate, CTStatus.ReturnFound))))
+                  Some(createCTStatus(Some(CTAccountingPeriodDigital(startDate, endDate, CTStatus.ReturnFound))))
                 )
                 nextPageIsCYA(session, completeAnswers)
 
@@ -1820,8 +1822,9 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
               val (completeAnswers, session) = getCompanySessionData(
                 LicenceType.ScrapMetalMobileCollector,
                 recentlyStartedTradingOpt = None,
-                ctStatusResponse =
-                  Some(createCTStatus(Some(CTAccountingPeriod(startDate, endDate, CTStatus.NoticeToFileIssued)))),
+                ctStatusResponse = Some(
+                  createCTStatus(Some(CTAccountingPeriodDigital(startDate, endDate, CTStatus.NoticeToFileIssued)))
+                ),
                 ctIncomeDeclaredOpt = None,
                 chargeableForCTOpt = Some(yesNo)
               )
@@ -1834,7 +1837,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
               LicenceType.ScrapMetalMobileCollector,
               recentlyStartedTradingOpt = None,
               ctStatusResponse =
-                Some(createCTStatus(Some(CTAccountingPeriod(startDate, endDate, CTStatus.NoReturnFound)))),
+                Some(createCTStatus(Some(CTAccountingPeriodDigital(startDate, endDate, CTStatus.NoReturnFound)))),
               ctIncomeDeclaredOpt = None,
               chargeableForCTOpt = Some(YesNoAnswer.No)
             )
@@ -2864,7 +2867,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
               Some(YesNoAnswer.Yes),
               None,
               None,
-              Some(CTAccountingPeriod(date, date, CTStatus.ReturnFound))
+              Some(CTAccountingPeriodDigital(date, date, CTStatus.ReturnFound))
             ) shouldBe false
           }
 
@@ -2873,7 +2876,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
               Some(YesNoAnswer.Yes),
               None,
               None,
-              Some(CTAccountingPeriod(date, date, CTStatus.NoReturnFound))
+              Some(CTAccountingPeriodDigital(date, date, CTStatus.NoReturnFound))
             ) shouldBe false
           }
 
@@ -2882,7 +2885,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
               None,
               None,
               None,
-              Some(CTAccountingPeriod(date, date, CTStatus.NoReturnFound))
+              Some(CTAccountingPeriodDigital(date, date, CTStatus.NoReturnFound))
             ) shouldBe false
           }
 
@@ -2895,7 +2898,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
               Some(YesNoAnswer.Yes),
               None,
               Some(YesNoAnswer.No),
-              Some(CTAccountingPeriod(date, date, CTStatus.ReturnFound))
+              Some(CTAccountingPeriodDigital(date, date, CTStatus.ReturnFound))
             ) shouldBe false
           }
 
@@ -2904,7 +2907,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
               Some(YesNoAnswer.Yes),
               None,
               Some(YesNoAnswer.No),
-              Some(CTAccountingPeriod(date, date, CTStatus.NoReturnFound))
+              Some(CTAccountingPeriodDigital(date, date, CTStatus.NoReturnFound))
             ) shouldBe false
           }
 
@@ -2913,7 +2916,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
               None,
               None,
               Some(YesNoAnswer.No),
-              Some(CTAccountingPeriod(date, date, CTStatus.NoReturnFound))
+              Some(CTAccountingPeriodDigital(date, date, CTStatus.NoReturnFound))
             ) shouldBe false
           }
 
@@ -2947,7 +2950,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
                   Some(YesNoAnswer.No),
                   None,
                   None,
-                  Some(CTAccountingPeriod(date, date, ctStatus)),
+                  Some(CTAccountingPeriodDigital(date, date, ctStatus)),
                   Some(licenceType)
                 ) shouldBe true
               }
@@ -2959,7 +2962,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
               Some(YesNoAnswer.Yes),
               None,
               None,
-              Some(CTAccountingPeriod(date, date, CTStatus.NoticeToFileIssued))
+              Some(CTAccountingPeriodDigital(date, date, CTStatus.NoticeToFileIssued))
             ) shouldBe true
           }
 
@@ -2969,7 +2972,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
               Some(YesNoAnswer.Yes),
               Some(YesNoAnswer.Yes),
               None,
-              Some(CTAccountingPeriod(date, date, CTStatus.ReturnFound))
+              Some(CTAccountingPeriodDigital(date, date, CTStatus.ReturnFound))
             ) shouldBe true
 
           }

@@ -22,7 +22,8 @@ import play.api.libs.json.Json
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.ApplicantDetails.{CompanyApplicantDetails, IndividualApplicantDetails}
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.HECTaxCheckData.{CompanyHECTaxCheckData, IndividualHECTaxCheckData}
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.TaxDetails.{CompanyTaxDetails, IndividualTaxDetails}
-import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.company.{CTAccountingPeriod, CTStatus, CTStatusResponse}
+import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.company.CTAccountingPeriod.CTAccountingPeriodDigital
+import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.company.{CTStatus, CTStatusResponse}
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.individual.SAStatus.ReturnFound
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.individual.SAStatusResponse
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.{HECTaxCheckData, HECTaxCheckSource}
@@ -110,8 +111,9 @@ class HECTaxCheckDataSpec extends AnyWordSpec with Matchers {
               ctutr = CTUTR("1111111111"),
               startDate = LocalDate.of(2020, 10, 9),
               endDate = LocalDate.of(2021, 10, 9),
-              latestAccountingPeriod =
-                Some(CTAccountingPeriod(LocalDate.of(2020, 10, 9), LocalDate.of(2021, 10, 9), CTStatus.ReturnFound))
+              latestAccountingPeriod = Some(
+                CTAccountingPeriodDigital(LocalDate.of(2020, 10, 9), LocalDate.of(2021, 10, 9), CTStatus.ReturnFound)
+              )
             ),
             recentlyStaredTrading = None,
             Some(YesNoAnswer.Yes)
@@ -142,7 +144,8 @@ class HECTaxCheckDataSpec extends AnyWordSpec with Matchers {
                                      |      "latestAccountingPeriod" : {
                                      |          "startDate":"2020-10-09",
                                      |           "endDate":"2021-10-09",
-                                     |           "ctStatus":"ReturnFound"
+                                     |           "ctStatus":"ReturnFound",
+                                     |           "type" : "Digital"
                                      |      }
                                      |   },
                                      |   "chargeableForCT" : "Yes"

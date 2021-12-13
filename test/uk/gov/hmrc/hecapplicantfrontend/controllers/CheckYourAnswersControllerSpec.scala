@@ -28,6 +28,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, In
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.IndividualLoginData
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.IndividualRetrievedJourneyData
 import uk.gov.hmrc.hecapplicantfrontend.models._
+import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.company.CTAccountingPeriod.CTAccountingPeriodDigital
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.company.{CTAccountingPeriod, CTStatus, CTStatusResponse}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR, GGCredId, NINO}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
@@ -276,7 +277,11 @@ class CheckYourAnswersControllerSpec
                   desCtutr = Some(CTUTR("1111111111")),
                   ctStatus = createCTStatus(
                     Some(
-                      CTAccountingPeriod(LocalDate.of(2020, 10, 9), LocalDate.of(2021, 10, 9), CTStatus.ReturnFound)
+                      CTAccountingPeriodDigital(
+                        LocalDate.of(2020, 10, 9),
+                        LocalDate.of(2021, 10, 9),
+                        CTStatus.ReturnFound
+                      )
                     )
                   )
                 ),
@@ -374,7 +379,11 @@ class CheckYourAnswersControllerSpec
                   desCtutr = Some(CTUTR("1111111111")),
                   ctStatus = createCTStatus(
                     Some(
-                      CTAccountingPeriod(LocalDate.of(2020, 10, 9), LocalDate.of(2021, 10, 9), CTStatus.ReturnFound)
+                      CTAccountingPeriodDigital(
+                        LocalDate.of(2020, 10, 9),
+                        LocalDate.of(2021, 10, 9),
+                        CTStatus.ReturnFound
+                      )
                     )
                   )
                 ),
