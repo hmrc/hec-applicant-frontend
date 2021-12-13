@@ -218,13 +218,17 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
         "the licence type page" when {
 
           "the user is an Individual" in {
+            val taxiDriverTaxCheck = Fixtures.taxCheckListItem(LicenceType.DriverOfTaxisAndPrivateHires)
 
-            val session        = IndividualHECSession.newSession(individualLoginData)
+            val taxChecks = List.fill(maxTaxChecksPerLicenceType - 1)(taxiDriverTaxCheck)
+
+            val session        = IndividualHECSession.newSession(individualLoginData).copy(unexpiredTaxChecks = taxChecks)
             val updatedSession =
               Fixtures.individualHECSession(
                 individualLoginData,
                 IndividualRetrievedJourneyData.empty,
-                IndividualUserAnswers.empty.copy(licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires))
+                IndividualUserAnswers.empty.copy(licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)),
+                unexpiredTaxChecks = taxChecks
               )
 
             implicit val request: RequestWithSessionData[_] =
@@ -260,18 +264,12 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
             await(result.value) shouldBe Right(routes.LicenceDetailsController.licenceTimeTrading())
           }
 
-          "max tax check limit is exceeded" in {
+          "max tax check limit has already been exceeded" in {
             val taxiDriverLicenceType = LicenceType.DriverOfTaxisAndPrivateHires
             val taxiDriverTaxCheck    = Fixtures.taxCheckListItem(taxiDriverLicenceType)
             val otherTaxCheck         = Fixtures.taxCheckListItem(LicenceType.ScrapMetalDealerSite)
 
-            val taxChecks = List(
-              taxiDriverTaxCheck,
-              taxiDriverTaxCheck,
-              taxiDriverTaxCheck,
-              taxiDriverTaxCheck,
-              otherTaxCheck
-            )
+            val taxChecks = otherTaxCheck :: List.fill(maxTaxChecksPerLicenceType)(taxiDriverTaxCheck)
 
             val session        = IndividualHECSession
               .newSession(individualLoginData)
