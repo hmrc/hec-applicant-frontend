@@ -260,13 +260,12 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
             await(result.value) shouldBe Right(routes.LicenceDetailsController.licenceTimeTrading())
           }
 
-          "max tax check limit is exceeded" in {
+          "max tax check limit has already been exceeded" in {
             val taxiDriverLicenceType = LicenceType.DriverOfTaxisAndPrivateHires
             val taxiDriverTaxCheck    = Fixtures.taxCheckListItem(taxiDriverLicenceType)
             val otherTaxCheck         = Fixtures.taxCheckListItem(LicenceType.ScrapMetalDealerSite)
 
             val taxChecks = List(
-              taxiDriverTaxCheck,
               taxiDriverTaxCheck,
               taxiDriverTaxCheck,
               taxiDriverTaxCheck,
