@@ -19,7 +19,11 @@ package uk.gov.hmrc.hecapplicantfrontend.models
 import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CTUTR, GGCredId, NINO, SAUTR}
 
-sealed trait LoginData extends Product with Serializable
+sealed trait LoginData extends Product with Serializable {
+
+  val ggCredId: GGCredId
+
+}
 
 object LoginData {
 
