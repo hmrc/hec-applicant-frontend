@@ -16,16 +16,41 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.company
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json.{JsObject, JsResult, JsValue, Json, OFormat}
+import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.HECTaxCheckSource
 
 import java.time.LocalDate
 
-final case class CTAccountingPeriod(
-  startDate: LocalDate,
-  endDate: LocalDate,
-  ctStatus: CTStatus
-)
+sealed trait CTAccountingPeriod {
+  val endDate: LocalDate
+  val accountingTypePeriodFor: HECTaxCheckSource
+  val ctStatus: CTStatus
+}
 
 object CTAccountingPeriod {
-  implicit val format: OFormat[CTAccountingPeriod] = Json.format
+
+  final case class CTAccountingPeriodDigital(
+    startDate: LocalDate,
+    endDate: LocalDate,
+    ctStatus: CTStatus
+  ) extends CTAccountingPeriod {
+    val accountingTypePeriodFor = HECTaxCheckSource.Digital
+  }
+
+  implicit val format: OFormat[CTAccountingPeriod] = new OFormat[CTAccountingPeriod] {
+    override def reads(json: JsValue): JsResult[CTAccountingPeriod] =
+      (json \ "type")
+        .validate[HECTaxCheckSource]
+        .flatMap { case HECTaxCheckSource.Digital =>
+          Json.reads[CTAccountingPeriodDigital].reads(json)
+        }
+
+    override def writes(accountingPeriod: CTAccountingPeriod): JsObject = {
+      val json = accountingPeriod match {
+        case d: CTAccountingPeriodDigital => Json.writes[CTAccountingPeriodDigital].writes(d)
+      }
+      json ++ Json.obj("type" -> accountingPeriod.accountingTypePeriodFor)
+    }
+  }
+
 }

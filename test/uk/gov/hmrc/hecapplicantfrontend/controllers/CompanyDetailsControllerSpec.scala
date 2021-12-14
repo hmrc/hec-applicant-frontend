@@ -28,7 +28,8 @@ import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.hecapplicantfrontend.models.CompanyUserAnswers.IncompleteCompanyUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.CompanyHECSession
 import uk.gov.hmrc.hecapplicantfrontend.models._
-import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.company.{CTAccountingPeriod, CTStatus, CTStatusResponse}
+import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.company.CTAccountingPeriod.CTAccountingPeriodDigital
+import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.company.{CTStatus, CTStatusResponse}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR, GGCredId}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
@@ -546,7 +547,7 @@ class CompanyDetailsControllerSpec
               CTUTR("utr"),
               date,
               date,
-              Some(CTAccountingPeriod(date, date, CTStatus.ReturnFound))
+              Some(CTAccountingPeriodDigital(date, date, CTStatus.ReturnFound))
             )
           )
         )
@@ -661,7 +662,7 @@ class CompanyDetailsControllerSpec
       val date                 = LocalDate.of(2020, 10, 5)
       val validJourneyData     = retrievedJourneyDataWithCompanyName.copy(
         ctStatus = Some(
-          CTStatusResponse(CTUTR("utr"), date, date, Some(CTAccountingPeriod(date, date, CTStatus.ReturnFound)))
+          CTStatusResponse(CTUTR("utr"), date, date, Some(CTAccountingPeriodDigital(date, date, CTStatus.ReturnFound)))
         )
       )
 
@@ -831,7 +832,7 @@ class CompanyDetailsControllerSpec
               CTUTR("utr"),
               date,
               date,
-              Some(CTAccountingPeriod(date, date, CTStatus.ReturnFound))
+              Some(CTAccountingPeriodDigital(date, date, CTStatus.ReturnFound))
             )
           )
         )
@@ -1016,7 +1017,7 @@ class CompanyDetailsControllerSpec
             retrievedJourneyDataWithCompanyName.copy(
               ctStatus = Some(
                 Fixtures.ctStatusResponse(latestAccountingPeriod =
-                  Some(CTAccountingPeriod(date, date, CTStatus.ReturnFound))
+                  Some(CTAccountingPeriodDigital(date, date, CTStatus.ReturnFound))
                 )
               )
             ),
@@ -1239,7 +1240,12 @@ class CompanyDetailsControllerSpec
             companyLoginData,
             retrievedJourneyDataWithCompanyName.copy(
               ctStatus = Some(
-                CTStatusResponse(CTUTR("utr"), date, date, Some(CTAccountingPeriod(date, date, CTStatus.ReturnFound)))
+                CTStatusResponse(
+                  CTUTR("utr"),
+                  date,
+                  date,
+                  Some(CTAccountingPeriodDigital(date, date, CTStatus.ReturnFound))
+                )
               )
             ),
             answers,

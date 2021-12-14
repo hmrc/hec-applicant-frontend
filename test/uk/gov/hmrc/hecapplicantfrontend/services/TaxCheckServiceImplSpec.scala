@@ -30,8 +30,9 @@ import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.HECTaxCheckData.Indiv
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.IndividualLoginData
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.IndividualRetrievedJourneyData
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.TaxDetails.IndividualTaxDetails
+import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.company.CTAccountingPeriod.CTAccountingPeriodDigital
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.{HECTaxCheckData, HECTaxCheckSource}
-import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.company.{CTAccountingPeriod, CTStatus, CTStatusResponse}
+import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.company.{CTStatus, CTStatusResponse}
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.individual.{SAStatus, SAStatusResponse}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids._
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
@@ -271,7 +272,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         ctutr,
         startDate,
         endDate,
-        Some(CTAccountingPeriod(LocalDate.now.plusDays(2L), LocalDate.now().plusDays(3L), CTStatus.ReturnFound))
+        Some(CTAccountingPeriodDigital(LocalDate.now.plusDays(2L), LocalDate.now().plusDays(3L), CTStatus.ReturnFound))
       )
 
       val ctStatusResponseJson = Json.toJson(ctStatusResponse)
