@@ -76,8 +76,7 @@ class LicenceDetailsController @Inject() (
   }
 
   val maxTaxChecksExceeded: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
-    val back = journeyService.previous(routes.LicenceDetailsController.maxTaxChecksExceeded())
-    Ok(maxTaxChecksLimitExceededPage(back))
+    Ok(maxTaxChecksLimitExceededPage())
   }
 
   val licenceTypeSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
