@@ -28,7 +28,7 @@ import uk.gov.hmrc.play.http.HeaderCarrierConverter
 import scala.concurrent.{ExecutionContext, Future}
 
 final case class AuthenticatedRequest[A](
-  request: Request[A]
+  request: MessagesRequest[A]
 ) extends WrappedRequest[A](request)
 
 @Singleton
@@ -37,7 +37,7 @@ class AuthAction @Inject() (
   mcc: MessagesControllerComponents,
   appConfig: AppConfig
 )(implicit val executionContext: ExecutionContext)
-    extends ActionFunction[Request, AuthenticatedRequest]
+    extends ActionFunction[MessagesRequest, AuthenticatedRequest]
     with ActionBuilder[AuthenticatedRequest, AnyContent]
     with AuthorisedFunctions
     with Logging {
@@ -49,7 +49,7 @@ class AuthAction @Inject() (
     implicit val hc: HeaderCarrier =
       HeaderCarrierConverter.fromRequestAndSession(request, request.session)
 
-    authorised()(block(AuthenticatedRequest(request)))
+    authorised()(block(AuthenticatedRequest(new MessagesRequest(request, mcc.messagesApi))))
       .recover {
         case _: NoActiveSession =>
           Redirect(appConfig.signInUrl)
@@ -61,4 +61,5 @@ class AuthAction @Inject() (
   }
 
   override def parser: BodyParser[AnyContent] = mcc.parsers.defaultBodyParser
+
 }
