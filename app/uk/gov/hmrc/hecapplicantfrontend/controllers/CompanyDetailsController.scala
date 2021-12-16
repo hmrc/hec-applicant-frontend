@@ -25,8 +25,10 @@ import play.api.data.validation.{Constraint, Invalid, Valid}
 import play.api.i18n.I18nSupport
 import play.api.mvc._
 import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
-import uk.gov.hmrc.hecapplicantfrontend.controllers.CompanyDetailsController.enterCtutrForm
+import uk.gov.hmrc.hecapplicantfrontend.controllers.CompanyDetailsController.{enterCtutrForm, enterCtutrFormKey}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, RequestWithSessionData, SessionDataAction}
+import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.CompanyMatchFailure.{EnrolmentCTUTRCompanyMatchFailure, EnterCTUTRCompanyMatchFailure}
+import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.CompanyMatchSuccess.{EnrolmentCTUTRCompanyMatchSuccess, EnterCTUTRCompanyMatchSuccess}
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.CompanyHECSession
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.CompanyLoginData
 import uk.gov.hmrc.hecapplicantfrontend.models._
@@ -34,7 +36,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.company.{CTAccounting
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR}
 import uk.gov.hmrc.hecapplicantfrontend.models.views.YesNoOption
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
-import uk.gov.hmrc.hecapplicantfrontend.services.{CtutrAttemptsService, JourneyService, TaxCheckService}
+import uk.gov.hmrc.hecapplicantfrontend.services.{AuditService, CtutrAttemptsService, JourneyService, TaxCheckService}
 import uk.gov.hmrc.hecapplicantfrontend.util.StringUtils.StringOps
 import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging, TimeProvider, TimeUtils}
 import uk.gov.hmrc.hecapplicantfrontend.views.html
@@ -49,6 +51,7 @@ class CompanyDetailsController @Inject() (
   sessionDataAction: SessionDataAction,
   journeyService: JourneyService,
   taxCheckService: TaxCheckService,
+  auditService: AuditService,
   timeProvider: TimeProvider,
   confirmCompanyNamePage: html.ConfirmCompanyName,
   cannotDoTaxCheckPage: html.CannotDoTaxCheck,
@@ -106,14 +109,19 @@ class CompanyDetailsController @Inject() (
 
       def fetchCTStatus(
         desCtutrOpt: Option[CTUTR],
-        companyLoginData: CompanyLoginData
+        companyLoginData: CompanyLoginData,
+        crn: CRN
       ): EitherT[Future, Error, Option[CTStatusResponse]] =
         companyLoginData.ctutr flatTraverse [EitherT[Future, Error, *], CTStatusResponse] { ctutr =>
           desCtutrOpt match {
             case Some(desCtutr) if desCtutr.value === ctutr.value =>
+              auditService.sendEvent(EnrolmentCTUTRCompanyMatchSuccess(crn, desCtutr, ctutr))
               val (start, end) = CompanyDetailsController.calculateLookBackPeriod(timeProvider.currentDate)
               taxCheckService.getCTStatus(desCtutr, start, end)
-            case _                                                =>
+
+            case _ =>
+              desCtutrOpt
+                .foreach(desCtutr => auditService.sendEvent(EnrolmentCTUTRCompanyMatchFailure(crn, desCtutr, ctutr)))
               EitherT.fromEither[Future](Right[Error, Option[CTStatusResponse]](None))
           }
         }
@@ -125,7 +133,7 @@ class CompanyDetailsController @Inject() (
       ): Future[Result] = {
         val result = for {
           desCtutr            <- taxCheckService.getCtutr(crn)
-          ctStatusOpt         <- fetchCTStatus(desCtutr, session.loginData)
+          ctStatusOpt         <- fetchCTStatus(desCtutr, session.loginData, crn)
           updatedRetrievedData = session.retrievedJourneyData.copy(desCtutr = desCtutr, ctStatus = ctStatusOpt)
           updatedUserAnswers   = session.userAnswers
                                    .unset(_.companyDetailsConfirmed)
@@ -327,6 +335,8 @@ class CompanyDetailsController @Inject() (
                 _                   <- ctutrAttemptsDeleteFut
                 ctStatus            <- ctStatusFut
                 updatedRetrievedData = companySession.retrievedJourneyData.copy(ctStatus = ctStatus)
+                _                    = auditService
+                                         .sendEvent(EnterCTUTRCompanyMatchSuccess(crn, ctutr, ctutr.strippedCtutr, desCtutr))
                 next                <-
                   journeyService.updateAndNext(
                     routes.CompanyDetailsController.enterCtutr(),
@@ -360,13 +370,25 @@ class CompanyDetailsController @Inject() (
                   .updateAttempts(ctutrAttempts)
                   .foldF(
                     _.doThrow("Could not create/update ctutr attempts"),
-                    {
-                      case ctutrAttempts if ctutrAttempts.isBlocked =>
+                    { ctutrAttempts =>
+                      val submittedCTUTR = formWithErrors.data.getOrElse(enterCtutrFormKey, "")
+
+                      auditService.sendEvent(
+                        EnterCTUTRCompanyMatchFailure(
+                          crn,
+                          CTUTR(submittedCTUTR),
+                          CTUTR(submittedCTUTR).strippedCtutr,
+                          desCtutr,
+                          ctutrAttempts.isBlocked
+                        )
+                      )
+
+                      if (ctutrAttempts.isBlocked)
                         updateAndNextJourneyData(
                           routes.CompanyDetailsController.enterCtutr(),
                           companySession.copy(crnBlocked = ctutrAttempts.isBlocked)
                         )
-                      case ctutrAttempts                            =>
+                      else {
                         val updatedAnswers = companySession.userAnswers
                           .unset(_.ctutr)
                           .unset(_.ctIncomeDeclared)
@@ -381,6 +403,7 @@ class CompanyDetailsController @Inject() (
                             _.doThrow("Could not save session"),
                             _ => displayFormError
                           )
+                      }
                     }
                   )
 
@@ -568,6 +591,8 @@ object CompanyDetailsController {
     currentDay.minusYears(2).plusDays(1) -> currentDay.minusYears(1)
   }
 
+  val enterCtutrFormKey: String = "enterCtutr"
+
   def enterCtutrForm(desCtrutr: CTUTR): Form[CTUTR] = {
     val validCtutr: Constraint[CTUTR] =
       Constraint { ctutr =>
@@ -584,7 +609,7 @@ object CompanyDetailsController {
 
     Form(
       mapping(
-        "enterCtutr" -> nonEmptyText
+        enterCtutrFormKey -> nonEmptyText
           .transform[CTUTR](
             s => CTUTR(s.removeWhitespace),
             _.value

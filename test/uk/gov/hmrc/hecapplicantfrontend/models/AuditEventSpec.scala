@@ -19,8 +19,10 @@ package uk.gov.hmrc.hecapplicantfrontend.models
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.libs.json.Json
+import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.CompanyMatchFailure.{EnrolmentCTUTRCompanyMatchFailure, EnterCTUTRCompanyMatchFailure}
+import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.CompanyMatchSuccess.{EnrolmentCTUTRCompanyMatchSuccess, EnterCTUTRCompanyMatchSuccess}
 import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.TaxCheckCodesDisplayed
-import uk.gov.hmrc.hecapplicantfrontend.models.ids.GGCredId
+import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR, GGCredId}
 
 class AuditEventSpec extends Matchers with AnyWordSpecLike {
 
@@ -46,6 +48,108 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
           |""".stripMargin
       )
 
+    }
+
+  }
+
+  "EnterCTUTRCompanyMatchFailure" must {
+
+    "have the correct JSON" in {
+      val auditEvent = EnterCTUTRCompanyMatchFailure(
+        CRN("12345678"),
+        CTUTR("1111111111"),
+        CTUTR("2222222222"),
+        CTUTR("3333333333"),
+        true
+      )
+
+      auditEvent.auditType       shouldBe "CompanyMatchFailure"
+      auditEvent.transactionName shouldBe "company-match-failure"
+      Json.toJson(auditEvent)    shouldBe Json.parse(
+        """
+          |{
+          |  "companyRegistrationNumber": "12345678",
+          |  "submittedCTUTR": "1111111111",
+          |  "submittedCTUTRStandardised": "2222222222",
+          |  "hmrcCTUTR": "3333333333",
+          |  "tooManyAttempts": true
+          |}
+          |""".stripMargin
+      )
+    }
+
+  }
+
+  "EnrolmentCTUTRCompanyMatchFailure" must {
+
+    "have the correct JSON" in {
+      val auditEvent = EnrolmentCTUTRCompanyMatchFailure(
+        CRN("12345678"),
+        CTUTR("3333333333"),
+        CTUTR("4444444444")
+      )
+
+      auditEvent.auditType       shouldBe "CompanyMatchFailure"
+      auditEvent.transactionName shouldBe "company-match-failure"
+      Json.toJson(auditEvent)    shouldBe Json.parse(
+        """
+          |{
+          |  "companyRegistrationNumber": "12345678",
+          |  "hmrcCTUTR": "3333333333",
+          |  "enrolmentCTUTR": "4444444444"
+          |}
+          |""".stripMargin
+      )
+    }
+
+  }
+
+  "EnterCTUTRCompanyMatchSuccess" must {
+
+    "have the correct JSON" in {
+      val auditEvent = EnterCTUTRCompanyMatchSuccess(
+        CRN("12345678"),
+        CTUTR("1111111111"),
+        CTUTR("2222222222"),
+        CTUTR("3333333333")
+      )
+
+      auditEvent.auditType       shouldBe "CompanyMatchSuccess"
+      auditEvent.transactionName shouldBe "company-match-success"
+      Json.toJson(auditEvent)    shouldBe Json.parse(
+        """
+          |{
+          |  "companyRegistrationNumber": "12345678",
+          |  "submittedCTUTR": "1111111111",
+          |  "submittedCTUTRStandardised": "2222222222",
+          |  "hmrcCTUTR": "3333333333"
+          |}
+          |""".stripMargin
+      )
+    }
+
+  }
+
+  "EnrolmentCTUTRCompanyMatchSuccess" must {
+
+    "have the correct JSON" in {
+      val auditEvent = EnrolmentCTUTRCompanyMatchSuccess(
+        CRN("12345678"),
+        CTUTR("3333333333"),
+        CTUTR("4444444444")
+      )
+
+      auditEvent.auditType       shouldBe "CompanyMatchSuccess"
+      auditEvent.transactionName shouldBe "company-match-success"
+      Json.toJson(auditEvent)    shouldBe Json.parse(
+        """
+          |{
+          |  "companyRegistrationNumber": "12345678",
+          |  "hmrcCTUTR": "3333333333",
+          |  "enrolmentCTUTR": "4444444444"
+          |}
+          |""".stripMargin
+      )
     }
 
   }
