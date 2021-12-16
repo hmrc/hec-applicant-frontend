@@ -13,7 +13,7 @@ POST       /confirm-details         uk.gov.hmrc.hecapplicantfrontend.controllers
 GET        /not-right-details       uk.gov.hmrc.hecapplicantfrontend.controllers.ConfirmIndividualDetailsController.confirmIndividualDetailsExit
 
 GET        /licence-type            uk.gov.hmrc.hecapplicantfrontend.controllers.LicenceDetailsController.licenceType
-GET        /max-tax-checks-exceeded uk.gov.hmrc.hecapplicantfrontend.controllers.LicenceDetailsController.maxTaxChecksExceeded
+GET        /too-many-tax-checks     uk.gov.hmrc.hecapplicantfrontend.controllers.LicenceDetailsController.maxTaxChecksExceeded
 POST       /licence-type            uk.gov.hmrc.hecapplicantfrontend.controllers.LicenceDetailsController.licenceTypeSubmit
 
 GET        /wrong-licence-type      uk.gov.hmrc.hecapplicantfrontend.controllers.LicenceDetailsController.licenceTypeExit

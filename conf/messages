@@ -315,8 +315,11 @@ tooManyCtutrAttempts.companyName=Company name
 tooManyCtutrAttempts.crn=Company Registration Number
 
 # Max tax checks limit exceeded
-maxTaxChecksLimitExceeded.title = Maximum number of tax checks allowed for chosen licence type has been exceeded
-maxTaxChecksLimitExceeded.p1 = Maximum number of tax checks allowed for chosen licence type has been exceeded.
+maxTaxChecksLimitExceeded.title = You cannot do another tax check for this licence type
+maxTaxChecksLimitExceeded.p1 = You have tried to do a tax check too many times for this licence type.
+maxTaxChecksLimitExceeded.link = <a href="{0}" class="govuk-link">View your existing tax check codes</a> or <a href="{1}" class="govuk-link">go back and select a different licence type</a>
+
+
 
 # Access Denied
 accessDenied.title = You cannot access this page

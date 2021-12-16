@@ -1059,6 +1059,62 @@ class LicenceDetailsControllerSpec
 
     }
 
+    "handling request on the max tax check code attempt exceeded for a licence type page" must {
+      def performAction(): Future[Result] = controller.maxTaxChecksExceeded(FakeRequest())
+
+      def unexpiredTaxCheckList(licenceType: LicenceType) = List(
+        TaxCheckListItem(
+          licenceType,
+          HECTaxCheckCode("ABC 123 ABC"),
+          LocalDate.now().plusDays(1),
+          ZonedDateTime.now()
+        ),
+        TaxCheckListItem(
+          licenceType,
+          HECTaxCheckCode("ABE 123 ABE"),
+          LocalDate.now().plusDays(1),
+          ZonedDateTime.now()
+        )
+      )
+
+      def test(session: HECSession) = {
+        inSequence {
+          mockAuthWithNoRetrievals()
+          mockGetSession(session)
+        }
+
+        checkPageIsDisplayed(
+          performAction(),
+          messageFromMessageKey("maxTaxChecksLimitExceeded.title"),
+          { doc =>
+            doc.select(".govuk-body").get(0).text shouldBe messageFromMessageKey("maxTaxChecksLimitExceeded.p1")
+
+            val links = doc.select(".govuk-body > .govuk-link")
+            links.get(0).attr("href") shouldBe routes.TaxChecksListController.unexpiredTaxChecks().url
+            links.get(1).attr("href") shouldBe routes.LicenceDetailsController.licenceType().url
+          }
+        )
+      }
+
+      "display the page" when {
+        " user is an Individual" in {
+          val session = Fixtures.individualHECSession(
+            userAnswers = Fixtures.completeIndividualUserAnswers(),
+            unexpiredTaxChecks = unexpiredTaxCheckList(LicenceType.DriverOfTaxisAndPrivateHires)
+          )
+          test(session)
+        }
+
+        " user is a Company" in {
+          val session = Fixtures.companyHECSession(
+            userAnswers = Fixtures.completeCompanyUserAnswers(),
+            unexpiredTaxChecks = unexpiredTaxCheckList(LicenceType.OperatorOfPrivateHireVehicles)
+          )
+          test(session)
+        }
+      }
+    }
+
   }
 
 }
