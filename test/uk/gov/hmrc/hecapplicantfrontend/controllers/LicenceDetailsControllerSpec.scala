@@ -1090,7 +1090,7 @@ class LicenceDetailsControllerSpec
             doc.select(".govuk-body").get(0).text shouldBe messageFromMessageKey("maxTaxChecksLimitExceeded.p1")
 
             val links = doc.select(".govuk-body > .govuk-link")
-            links.get(0).attr("href") shouldBe routes.TaxChecksListController.unexpiredTaxChecks().url
+            links.get(0).attr("href") shouldBe routes.StartController.start().url
             links.get(1).attr("href") shouldBe routes.LicenceDetailsController.licenceType().url
           }
         )
