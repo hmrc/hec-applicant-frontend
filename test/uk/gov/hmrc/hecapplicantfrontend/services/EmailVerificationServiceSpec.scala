@@ -17,9 +17,11 @@
 package uk.gov.hmrc.hecapplicantfrontend.services
 
 import cats.data.EitherT
+import com.typesafe.config.ConfigFactory
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import play.api.Configuration
 import play.api.http.Status.{BAD_GATEWAY, FORBIDDEN}
 import play.api.libs.json.Json
 import play.api.mvc.{AnyContentAsEmpty, Cookie, MessagesRequest}
@@ -53,9 +55,19 @@ class EmailVerificationServiceSpec extends AnyWordSpec with Matchers with MockFa
       .expects(PasscodeVerificationRequest(passcode, emailAddress), *)
       .returning(EitherT.fromEither(result))
 
-  val service                       = new EmailVerificationServiceImpl(mockEmailVerificationConnector)
-  val emptyHeaders                  = Map.empty[String, Seq[String]]
-  implicit val hc: HeaderCarrier    = HeaderCarrier()
+  val service                    = new EmailVerificationServiceImpl(mockEmailVerificationConnector)
+  val emptyHeaders               = Map.empty[String, Seq[String]]
+  implicit val hc: HeaderCarrier = HeaderCarrier()
+
+  override def additionalConfig     = super.additionalConfig.withFallback(
+    Configuration(
+      ConfigFactory.parseString(
+        s"""
+           | play.i18n.langs = ["en", "cy", "fr"]
+           |""".stripMargin
+      )
+    )
+  )
   implicit val authenticatedRequest = AuthenticatedRequest(new MessagesRequest(FakeRequest(), messagesApi))
 
   "EmailVerificationServiceSpec" when {
@@ -64,138 +76,66 @@ class EmailVerificationServiceSpec extends AnyWordSpec with Matchers with MockFa
     "handling request to requestPasscode" must {
       val passcodeRequest = PasscodeRequest(emailAddress, "hec", Language.English)
 
-      "return a technical  error, Authenticated request has English language " when {
+      "return a technical  error " when {
 
-        "the http call fails" in {
-          mockRequestPasscode(passcodeRequest)(Left(Error("")))
-
-          val result = service.requestPasscode(emailAddress)
-          await(result.value) shouldBe a[Left[_, _]]
-        }
-
-        "the http response comes back with a Bad request (400) response with code other than BAD_EMAIL_REQUEST " in {
-          val json = Json.toJson(ErrorResponse("RANDOM_MESSAGE", "some random message"))
-          mockRequestPasscode(passcodeRequest)(Right(HttpResponse(BAD_REQUEST, json, emptyHeaders)))
-
-          val result = service.requestPasscode(emailAddress)
-          await(result.value) shouldBe a[Left[_, _]]
-        }
-
-        "the http response comes back with a non-201 " in {
-
-          mockRequestPasscode(passcodeRequest)(Right(HttpResponse(OK, "", emptyHeaders)))
-
-          val result = service.requestPasscode(emailAddress)
-          await(result.value) shouldBe a[Left[_, _]]
-        }
-
-        "the http response came back with  401 (unauthorized)" in {
-          mockRequestPasscode(passcodeRequest)(Right(HttpResponse(UNAUTHORIZED, "", emptyHeaders)))
-          val result = service.requestPasscode(emailAddress)
-          await(result.value) shouldBe a[Left[_, _]]
-        }
-
-        "the http response came back with  502 (Bad Gateway)" in {
-          mockRequestPasscode(passcodeRequest)(Right(HttpResponse(BAD_GATEWAY, "", emptyHeaders)))
-          val result = service.requestPasscode(emailAddress)
-          await(result.value) shouldBe a[Left[_, _]]
-        }
-
-      }
-
-      "return a technical  error, Authenticated request has Welsh language " when {
-
-        implicit val authenticatedRequest: AuthenticatedRequest[AnyContentAsEmpty.type] = AuthenticatedRequest(
-          new MessagesRequest(FakeRequest().withCookies(Cookie("PLAY_LANG", "cy")), messagesApi)
-        )
-        val passcodeRequest                                                             = PasscodeRequest(emailAddress, "hec", Language.Welsh)
-
-        "the http call fails" in {
-          mockRequestPasscode(passcodeRequest)(Left(Error("")))
-
-          val result = service.requestPasscode(emailAddress)
-          await(result.value) shouldBe a[Left[_, _]]
-        }
-
-        "the http response comes back with a Bad request (400) response with code other than BAD_EMAIL_REQUEST " in {
-          val json = Json.toJson(ErrorResponse("RANDOM_MESSAGE", "some random message"))
-          mockRequestPasscode(passcodeRequest)(Right(HttpResponse(BAD_REQUEST, json, emptyHeaders)))
-
-          val result = service.requestPasscode(emailAddress)
-          await(result.value) shouldBe a[Left[_, _]]
-        }
-
-        "the http response comes back with a non-201 " in {
-
-          mockRequestPasscode(passcodeRequest)(Right(HttpResponse(OK, "", emptyHeaders)))
-
-          val result = service.requestPasscode(emailAddress)
-          await(result.value) shouldBe a[Left[_, _]]
-        }
-
-        "the http response came back with  401 (unauthorized)" in {
-          mockRequestPasscode(passcodeRequest)(Right(HttpResponse(UNAUTHORIZED, "", emptyHeaders)))
-          val result = service.requestPasscode(emailAddress)
-          await(result.value) shouldBe a[Left[_, _]]
-        }
-
-        "the http response came back with  502 (Bad Gateway)" in {
-          mockRequestPasscode(passcodeRequest)(Right(HttpResponse(BAD_GATEWAY, "", emptyHeaders)))
-          val result = service.requestPasscode(emailAddress)
-          await(result.value) shouldBe a[Left[_, _]]
-        }
-
-      }
-
-      "return Error Response, Authenticated request has English language" when {
-
-        "http response came back with status 403 (Forbidden)" in {
-
-          val emailAddress    = EmailAddress("max_emails_exceeded@email.com")
-          val passcodeRequest = PasscodeRequest(emailAddress, "hec", Language.English)
-          val errorResponse   = ErrorResponse("MAX_EMAILS_EXCEEDED", "Too many emails or email addresses")
-          mockRequestPasscode(passcodeRequest)(Right(HttpResponse(FORBIDDEN, Json.toJson(errorResponse), emptyHeaders)))
-
-          val result = service.requestPasscode(emailAddress)
-          await(result.value) shouldBe Right(MaximumNumberOfEmailsExceeded)
-        }
-
-        "http response came back with status 409 (Conflict)" in {
-
-          val emailAddress    = EmailAddress("email_verified_already@email.com")
-          val passcodeRequest = PasscodeRequest(emailAddress, "hec", Language.English)
-          val errorResponse   = ErrorResponse("EMAIL_VERIFIED_ALREADY", "Email has already been verified")
-          mockRequestPasscode(passcodeRequest)(Right(HttpResponse(CONFLICT, Json.toJson(errorResponse), emptyHeaders)))
-
-          val result = service.requestPasscode(emailAddress)
-          await(result.value) shouldBe Right(EmailAddressAlreadyVerified)
-        }
-
-        "http response came back with status Bad request (400) and error response code is BAD_EMAIL_REQUEST" in {
-
-          val emailAddress    = EmailAddress("bad_email_request@email.com")
-          val passcodeRequest = PasscodeRequest(emailAddress, "hec", Language.English)
-          val errorResponse   =
-            ErrorResponse("BAD_EMAIL_REQUEST", "email-verification had a problem, sendEmail returned bad request")
-          mockRequestPasscode(passcodeRequest)(
-            Right(HttpResponse(BAD_REQUEST, Json.toJson(errorResponse), emptyHeaders))
+        "Language in the session is not either en or cy" in {
+          implicit val authenticatedRequest: AuthenticatedRequest[AnyContentAsEmpty.type] = AuthenticatedRequest(
+            new MessagesRequest(FakeRequest().withCookies(Cookie("PLAY_LANG", "fr")), messagesApi)
           )
+          val result                                                                      = service.requestPasscode(emailAddress)
+          await(result.value) shouldBe a[Left[_, _]]
+        }
+
+        "the http call fails" in {
+          mockRequestPasscode(passcodeRequest)(Left(Error("")))
 
           val result = service.requestPasscode(emailAddress)
-          await(result.value) shouldBe Right(BadEmailAddress)
+          await(result.value) shouldBe a[Left[_, _]]
         }
+
+        "the http response comes back with a Bad request (400) response with code other than BAD_EMAIL_REQUEST " in {
+          val json = Json.toJson(ErrorResponse("RANDOM_MESSAGE", "some random message"))
+          mockRequestPasscode(passcodeRequest)(Right(HttpResponse(BAD_REQUEST, json, emptyHeaders)))
+
+          val result = service.requestPasscode(emailAddress)
+          await(result.value) shouldBe a[Left[_, _]]
+        }
+
+        "the http response comes back with a non-201 " in {
+          implicit val authenticatedRequest: AuthenticatedRequest[AnyContentAsEmpty.type] = AuthenticatedRequest(
+            new MessagesRequest(FakeRequest().withCookies(Cookie("PLAY_LANG", "cy")), messagesApi)
+          )
+          val passcodeRequest                                                             = PasscodeRequest(emailAddress, "hec", Language.Welsh)
+          mockRequestPasscode(passcodeRequest)(Right(HttpResponse(OK, "", emptyHeaders)))
+
+          val result = service.requestPasscode(emailAddress)
+          await(result.value) shouldBe a[Left[_, _]]
+        }
+
+        "the http response came back with  401 (unauthorized)" in {
+          mockRequestPasscode(passcodeRequest)(Right(HttpResponse(UNAUTHORIZED, "", emptyHeaders)))
+          val result = service.requestPasscode(emailAddress)
+          await(result.value) shouldBe a[Left[_, _]]
+        }
+
+        "the http response came back with  502 (Bad Gateway)" in {
+          implicit val authenticatedRequest: AuthenticatedRequest[AnyContentAsEmpty.type] = AuthenticatedRequest(
+            new MessagesRequest(FakeRequest().withCookies(Cookie("PLAY_LANG", "cy")), messagesApi)
+          )
+          val passcodeRequest                                                             = PasscodeRequest(emailAddress, "hec", Language.Welsh)
+          mockRequestPasscode(passcodeRequest)(Right(HttpResponse(BAD_GATEWAY, "", emptyHeaders)))
+          val result                                                                      = service.requestPasscode(emailAddress)
+          await(result.value) shouldBe a[Left[_, _]]
+        }
+
       }
 
-      "return Error Response, Authenticated request has Welsh language" when {
-
-        implicit val authenticatedRequest: AuthenticatedRequest[AnyContentAsEmpty.type] = AuthenticatedRequest(
-          new MessagesRequest(FakeRequest().withCookies(Cookie("PLAY_LANG", "cy")), messagesApi)
-        )
+      "return Error Response" when {
 
         "http response came back with status 403 (Forbidden)" in {
 
           val emailAddress    = EmailAddress("max_emails_exceeded@email.com")
-          val passcodeRequest = PasscodeRequest(emailAddress, "hec", Language.Welsh)
+          val passcodeRequest = PasscodeRequest(emailAddress, "hec", Language.English)
           val errorResponse   = ErrorResponse("MAX_EMAILS_EXCEEDED", "Too many emails or email addresses")
           mockRequestPasscode(passcodeRequest)(Right(HttpResponse(FORBIDDEN, Json.toJson(errorResponse), emptyHeaders)))
 
@@ -204,10 +144,12 @@ class EmailVerificationServiceSpec extends AnyWordSpec with Matchers with MockFa
         }
 
         "http response came back with status 409 (Conflict)" in {
-
-          val emailAddress    = EmailAddress("email_verified_already@email.com")
-          val passcodeRequest = PasscodeRequest(emailAddress, "hec", Language.Welsh)
-          val errorResponse   = ErrorResponse("EMAIL_VERIFIED_ALREADY", "Email has already been verified")
+          implicit val authenticatedRequest: AuthenticatedRequest[AnyContentAsEmpty.type] = AuthenticatedRequest(
+            new MessagesRequest(FakeRequest().withCookies(Cookie("PLAY_LANG", "cy")), messagesApi)
+          )
+          val emailAddress                                                                = EmailAddress("email_verified_already@email.com")
+          val passcodeRequest                                                             = PasscodeRequest(emailAddress, "hec", Language.Welsh)
+          val errorResponse                                                               = ErrorResponse("EMAIL_VERIFIED_ALREADY", "Email has already been verified")
           mockRequestPasscode(passcodeRequest)(Right(HttpResponse(CONFLICT, Json.toJson(errorResponse), emptyHeaders)))
 
           val result = service.requestPasscode(emailAddress)
@@ -217,7 +159,7 @@ class EmailVerificationServiceSpec extends AnyWordSpec with Matchers with MockFa
         "http response came back with status Bad request (400) and error response code is BAD_EMAIL_REQUEST" in {
 
           val emailAddress    = EmailAddress("bad_email_request@email.com")
-          val passcodeRequest = PasscodeRequest(emailAddress, "hec", Language.Welsh)
+          val passcodeRequest = PasscodeRequest(emailAddress, "hec", Language.English)
           val errorResponse   =
             ErrorResponse("BAD_EMAIL_REQUEST", "email-verification had a problem, sendEmail returned bad request")
           mockRequestPasscode(passcodeRequest)(

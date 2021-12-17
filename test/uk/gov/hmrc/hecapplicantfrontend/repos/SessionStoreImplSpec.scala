@@ -18,7 +18,6 @@ package uk.gov.hmrc.hecapplicantfrontend.repos
 
 import com.typesafe.config.ConfigFactory
 import org.scalatest.concurrent.Eventually
-
 import play.api.Configuration
 import play.api.mvc.{AnyContentAsEmpty, MessagesRequest, Request}
 import play.api.test.FakeRequest
@@ -29,6 +28,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.CompanyHECSession
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.CompanyLoginData
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CTUTR, GGCredId}
 import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, HECSession}
+import uk.gov.hmrc.hecapplicantfrontend.utils.PlaySupport
 import uk.gov.hmrc.http.SessionId
 
 import java.util.UUID
