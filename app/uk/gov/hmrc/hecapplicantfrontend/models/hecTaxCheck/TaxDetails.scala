@@ -36,7 +36,7 @@ object TaxDetails {
   ) extends TaxDetails
 
   final case class CompanyTaxDetails(
-    desCTUTR: CTUTR,
+    hmrcCTUTR: CTUTR,
     userSuppliedCTUTR: Option[CTUTR],
     ctIncomeDeclared: Option[YesNoAnswer],
     ctStatus: CTStatusResponse,
