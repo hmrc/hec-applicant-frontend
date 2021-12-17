@@ -18,7 +18,7 @@ package uk.gov.hmrc.hecapplicantfrontend.services
 
 import com.typesafe.config.ConfigFactory
 import play.api.Configuration
-import play.api.mvc.Call
+import play.api.mvc.{Call, MessagesRequest}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
@@ -56,9 +56,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
   val journeyService: JourneyServiceImpl = new JourneyServiceImpl(mockSessionStore)
 
   val taxCheckStartDateTime = ZonedDateTime.of(2021, 10, 9, 9, 12, 34, 0, ZoneId.of("Europe/London"))
+  val fakeRequest           = new MessagesRequest(FakeRequest(), messagesApi)
 
   def requestWithSessionData(s: HECSession): RequestWithSessionData[_] =
-    RequestWithSessionData(AuthenticatedRequest(FakeRequest()), s)
+    RequestWithSessionData(AuthenticatedRequest(fakeRequest), s)
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
