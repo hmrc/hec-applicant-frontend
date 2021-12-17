@@ -21,9 +21,10 @@ import org.scalatest.concurrent.Eventually
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
-import play.api.mvc.Request
+import play.api.mvc.{AnyContentAsEmpty, MessagesRequest, Request}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
+import uk.gov.hmrc.hecapplicantfrontend.controllers.ControllerSpec
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthenticatedRequest, RequestWithSessionData}
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.CompanyHECSession
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.CompanyLoginData
@@ -34,7 +35,7 @@ import uk.gov.hmrc.http.SessionId
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class SessionStoreImplSpec extends AnyWordSpec with Matchers with MongoSupportSpec with Eventually {
+class SessionStoreImplSpec extends AnyWordSpec with Matchers with MongoSupportSpec with Eventually with ControllerSpec {
 
   val config = Configuration(
     ConfigFactory.parseString(
@@ -48,9 +49,11 @@ class SessionStoreImplSpec extends AnyWordSpec with Matchers with MongoSupportSp
 
   class TestEnvironment(sessionData: HECSession) {
 
-    val sessionId                    = SessionId(UUID.randomUUID().toString)
-    val fakeRequest                  = AuthenticatedRequest(FakeRequest().withSession(("sessionId", sessionId.toString)))
-    implicit val request: Request[_] =
+    val sessionId                                                 = SessionId(UUID.randomUUID().toString)
+    val fakeRequest: AuthenticatedRequest[AnyContentAsEmpty.type] = AuthenticatedRequest(
+      new MessagesRequest(FakeRequest().withSession(("sessionId", sessionId.toString)), messagesApi)
+    )
+    implicit val request: Request[_]                              =
       RequestWithSessionData(fakeRequest, sessionData)
   }
 
