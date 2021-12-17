@@ -17,75 +17,18 @@
 package uk.gov.hmrc.hecapplicantfrontend.controllers
 
 import com.google.inject.{Inject, Singleton}
-import com.typesafe.config.ConfigFactory
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
-import org.scalamock.scalatest.MockFactory
-import org.scalatest.BeforeAndAfterAll
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpec
 import play.api.http.HttpConfiguration
 import play.api.i18n._
-import play.api.inject.bind
-import play.api.inject.guice.{GuiceApplicationBuilder, GuiceableModule}
 import play.api.mvc.{Call, Result}
 import play.api.test.Helpers._
 import play.api._
-import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
+import uk.gov.hmrc.hecapplicantfrontend.repos.PlaySupport
 
 import scala.concurrent.Future
-import scala.reflect.ClassTag
 
-trait ControllerSpec extends AnyWordSpec with Matchers with BeforeAndAfterAll with MockFactory {
-
-  implicit val lang: Lang = Lang("en")
-
-  def overrideBindings: List[GuiceableModule] = List.empty[GuiceableModule]
-
-  def additionalConfig = Configuration(
-    ConfigFactory.parseString(
-      """
-      | userAllowedList.enabled = false
-      | 
-      | """.stripMargin
-    )
-  )
-
-  def buildFakeApplication(): Application =
-    new GuiceApplicationBuilder()
-      .configure(
-        Configuration(
-          ConfigFactory.parseString(
-            """
-            | microservice.metrics.graphite.enabled = false 
-            | 
-      | """.stripMargin
-          )
-        ).withFallback(additionalConfig)
-      )
-      .disable[uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore]
-      .overrides(overrideBindings: _*)
-      .overrides(bind[MessagesApi].toProvider[TestMessagesApiProvider])
-      .build()
-
-  lazy val fakeApplication: Application = buildFakeApplication()
-
-  lazy val appConfig: AppConfig = instanceOf[AppConfig]
-
-  abstract override def beforeAll(): Unit = {
-    Play.start(fakeApplication)
-    super.beforeAll()
-  }
-
-  override def afterAll(): Unit = {
-    Play.stop(fakeApplication)
-    super.afterAll()
-  }
-  implicit lazy val messagesApi = instanceOf[MessagesApi]
-
-  implicit lazy val messages = MessagesImpl(lang, messagesApi)
-
-  def instanceOf[A : ClassTag]: A = fakeApplication.injector.instanceOf[A]
+trait ControllerSpec extends PlaySupport {
 
   def checkIsRedirect(result: Future[Result], expectedRedirectLocation: String): Unit = {
     status(result) shouldBe SEE_OTHER

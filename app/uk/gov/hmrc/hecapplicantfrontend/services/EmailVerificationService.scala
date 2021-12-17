@@ -70,7 +70,7 @@ class EmailVerificationServiceImpl @Inject() (emailVerificationConnector: EmailV
         case CREATED     => Right(PasscodeSent)
         case BAD_REQUEST => evalRequestPasscodeBadRequest(response)
         case _           =>
-          errorMessage(response.status, response.body)
+          errorMessage(response.status)
       }
     }
   }
@@ -82,27 +82,27 @@ class EmailVerificationServiceImpl @Inject() (emailVerificationConnector: EmailV
       .verifyPasscode(PasscodeVerificationRequest(passcode, emailAddress))
       .subflatMap { response =>
         response.status match {
-          case FORBIDDEN => Right(TooManyAttempts)
-          case NOT_FOUND => evalVerifyPasscodeNotFound(response)
-          case CREATED   => Right(Match)
-          case _         =>
-            errorMessage(response.status, response.body)
+          case FORBIDDEN            => Right(TooManyAttempts)
+          case NOT_FOUND            => evalVerifyPasscodeNotFound(response)
+          case CREATED | NO_CONTENT => Right(Match)
+          case _                    =>
+            errorMessage(response.status)
         }
       }
 
   private def evalRequestPasscodeBadRequest(response: HttpResponse) = response.parseJSON[ErrorResponse] match {
     case Right(ErrorResponse(BAD_EMAIL_REQUEST, _)) => Right(BadEmailAddress)
-    case _                                          => errorMessage(response.status, response.body)
+    case _                                          => errorMessage(response.status)
   }
 
   private def evalVerifyPasscodeNotFound(response: HttpResponse) = response.parseJSON[ErrorResponse] match {
     case Right(ErrorResponse(PASSCODE_NOT_FOUND, _)) => Right(Expired)
     case Right(ErrorResponse(PASSCODE_MISMATCH, _))  => Right(NoMatch)
-    case _                                           => errorMessage(response.status, response.body)
+    case _                                           => errorMessage(response.status)
   }
 
-  private def errorMessage(status: Int, body: String) = Left(
-    Error(s"Call to verifyPasscode came back with status $status and body is $body")
+  private def errorMessage(status: Int) = Left(
+    Error(s"Call to verifyPasscode came back with status $status")
   )
 
 }

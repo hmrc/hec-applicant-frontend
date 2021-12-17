@@ -22,7 +22,7 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.http.Status.{BAD_GATEWAY, FORBIDDEN}
 import play.api.libs.json.Json
-import play.api.mvc.MessagesRequest
+import play.api.mvc.{AnyContentAsEmpty, Cookie, MessagesRequest}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.hecapplicantfrontend.connectors.EmailVerificationConnector
@@ -64,7 +64,7 @@ class EmailVerificationServiceSpec extends AnyWordSpec with Matchers with MockFa
     "handling request to requestPasscode" must {
       val passcodeRequest = PasscodeRequest(emailAddress, "hec", Language.English)
 
-      "return a technical  error" when {
+      "return a technical  error, Authenticated request has English language " when {
 
         "the http call fails" in {
           mockRequestPasscode(passcodeRequest)(Left(Error("")))
@@ -103,7 +103,51 @@ class EmailVerificationServiceSpec extends AnyWordSpec with Matchers with MockFa
 
       }
 
-      "return Error Response" when {
+      "return a technical  error, Authenticated request has Welsh language " when {
+
+        implicit val authenticatedRequest: AuthenticatedRequest[AnyContentAsEmpty.type] = AuthenticatedRequest(
+          new MessagesRequest(FakeRequest().withCookies(Cookie("PLAY_LANG", "cy")), messagesApi)
+        )
+        val passcodeRequest                                                             = PasscodeRequest(emailAddress, "hec", Language.Welsh)
+
+        "the http call fails" in {
+          mockRequestPasscode(passcodeRequest)(Left(Error("")))
+
+          val result = service.requestPasscode(emailAddress)
+          await(result.value) shouldBe a[Left[_, _]]
+        }
+
+        "the http response comes back with a Bad request (400) response with code other than BAD_EMAIL_REQUEST " in {
+          val json = Json.toJson(ErrorResponse("RANDOM_MESSAGE", "some random message"))
+          mockRequestPasscode(passcodeRequest)(Right(HttpResponse(BAD_REQUEST, json, emptyHeaders)))
+
+          val result = service.requestPasscode(emailAddress)
+          await(result.value) shouldBe a[Left[_, _]]
+        }
+
+        "the http response comes back with a non-201 " in {
+
+          mockRequestPasscode(passcodeRequest)(Right(HttpResponse(OK, "", emptyHeaders)))
+
+          val result = service.requestPasscode(emailAddress)
+          await(result.value) shouldBe a[Left[_, _]]
+        }
+
+        "the http response came back with  401 (unauthorized)" in {
+          mockRequestPasscode(passcodeRequest)(Right(HttpResponse(UNAUTHORIZED, "", emptyHeaders)))
+          val result = service.requestPasscode(emailAddress)
+          await(result.value) shouldBe a[Left[_, _]]
+        }
+
+        "the http response came back with  502 (Bad Gateway)" in {
+          mockRequestPasscode(passcodeRequest)(Right(HttpResponse(BAD_GATEWAY, "", emptyHeaders)))
+          val result = service.requestPasscode(emailAddress)
+          await(result.value) shouldBe a[Left[_, _]]
+        }
+
+      }
+
+      "return Error Response, Authenticated request has English language" when {
 
         "http response came back with status 403 (Forbidden)" in {
 
@@ -142,9 +186,64 @@ class EmailVerificationServiceSpec extends AnyWordSpec with Matchers with MockFa
         }
       }
 
+      "return Error Response, Authenticated request has Welsh language" when {
+
+        implicit val authenticatedRequest: AuthenticatedRequest[AnyContentAsEmpty.type] = AuthenticatedRequest(
+          new MessagesRequest(FakeRequest().withCookies(Cookie("PLAY_LANG", "cy")), messagesApi)
+        )
+
+        "http response came back with status 403 (Forbidden)" in {
+
+          val emailAddress    = EmailAddress("max_emails_exceeded@email.com")
+          val passcodeRequest = PasscodeRequest(emailAddress, "hec", Language.Welsh)
+          val errorResponse   = ErrorResponse("MAX_EMAILS_EXCEEDED", "Too many emails or email addresses")
+          mockRequestPasscode(passcodeRequest)(Right(HttpResponse(FORBIDDEN, Json.toJson(errorResponse), emptyHeaders)))
+
+          val result = service.requestPasscode(emailAddress)
+          await(result.value) shouldBe Right(MaximumNumberOfEmailsExceeded)
+        }
+
+        "http response came back with status 409 (Conflict)" in {
+
+          val emailAddress    = EmailAddress("email_verified_already@email.com")
+          val passcodeRequest = PasscodeRequest(emailAddress, "hec", Language.Welsh)
+          val errorResponse   = ErrorResponse("EMAIL_VERIFIED_ALREADY", "Email has already been verified")
+          mockRequestPasscode(passcodeRequest)(Right(HttpResponse(CONFLICT, Json.toJson(errorResponse), emptyHeaders)))
+
+          val result = service.requestPasscode(emailAddress)
+          await(result.value) shouldBe Right(EmailAddressAlreadyVerified)
+        }
+
+        "http response came back with status Bad request (400) and error response code is BAD_EMAIL_REQUEST" in {
+
+          val emailAddress    = EmailAddress("bad_email_request@email.com")
+          val passcodeRequest = PasscodeRequest(emailAddress, "hec", Language.Welsh)
+          val errorResponse   =
+            ErrorResponse("BAD_EMAIL_REQUEST", "email-verification had a problem, sendEmail returned bad request")
+          mockRequestPasscode(passcodeRequest)(
+            Right(HttpResponse(BAD_REQUEST, Json.toJson(errorResponse), emptyHeaders))
+          )
+
+          val result = service.requestPasscode(emailAddress)
+          await(result.value) shouldBe Right(BadEmailAddress)
+        }
+      }
+
       "return successfully" when {
 
-        "the passcode has been successfully requested " in {
+        "the passcode has been successfully requested , Authenticated request has English language" in {
+
+          mockRequestPasscode(passcodeRequest)(Right(HttpResponse(CREATED, "")))
+          val result = service.requestPasscode(emailAddress)
+          await(result.value) shouldBe Right(PasscodeSent)
+        }
+
+        "the passcode has been successfully requested, Authenticated request has Welsh language" in {
+
+          implicit val authenticatedRequest: AuthenticatedRequest[AnyContentAsEmpty.type] = AuthenticatedRequest(
+            new MessagesRequest(FakeRequest().withCookies(Cookie("PLAY_LANG", "cy")), messagesApi)
+          )
+          val passcodeRequest                                                             = PasscodeRequest(emailAddress, "hec", Language.Welsh)
 
           mockRequestPasscode(passcodeRequest)(Right(HttpResponse(CREATED, "")))
           val result = service.requestPasscode(emailAddress)
@@ -176,13 +275,6 @@ class EmailVerificationServiceSpec extends AnyWordSpec with Matchers with MockFa
 
         "the http response came back with  401 (unauthorized)" in {
           mockVerifyPasscode(passcode, emailAddress)(Right(HttpResponse(UNAUTHORIZED, "", emptyHeaders)))
-
-          val result = service.verifyPasscode(passcode, emailAddress)
-          await(result.value) shouldBe a[Left[_, _]]
-        }
-
-        "the http response came back with  204 (No COntent)" in {
-          mockVerifyPasscode(passcode, emailAddress)(Right(HttpResponse(NO_CONTENT, "", emptyHeaders)))
 
           val result = service.verifyPasscode(passcode, emailAddress)
           await(result.value) shouldBe a[Left[_, _]]
@@ -230,9 +322,18 @@ class EmailVerificationServiceSpec extends AnyWordSpec with Matchers with MockFa
 
       }
 
-      "return status 201" when {
-        "passcode has been successfully verified" in {
+      "return success" when {
+
+        "http response came back with status 201" in {
           mockVerifyPasscode(passcode, emailAddress)(Right(HttpResponse(CREATED, "", emptyHeaders)))
+
+          val result = service.verifyPasscode(passcode, emailAddress)
+          await(result.value) shouldBe Right(Match)
+
+        }
+
+        "http response came back with status 204 (NO_CONTENT)" in {
+          mockVerifyPasscode(passcode, emailAddress)(Right(HttpResponse(NO_CONTENT, "", emptyHeaders)))
 
           val result = service.verifyPasscode(passcode, emailAddress)
           await(result.value) shouldBe Right(Match)

@@ -18,8 +18,7 @@ package uk.gov.hmrc.hecapplicantfrontend.repos
 
 import com.typesafe.config.ConfigFactory
 import org.scalatest.concurrent.Eventually
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpec
+
 import play.api.Configuration
 import play.api.mvc.{AnyContentAsEmpty, MessagesRequest, Request}
 import play.api.test.FakeRequest
@@ -35,7 +34,7 @@ import uk.gov.hmrc.http.SessionId
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class SessionStoreImplSpec extends AnyWordSpec with Matchers with MongoSupportSpec with Eventually with ControllerSpec {
+class SessionStoreImplSpec extends PlaySupport with MongoSupportSpec with Eventually with ControllerSpec {
 
   val config = Configuration(
     ConfigFactory.parseString(
