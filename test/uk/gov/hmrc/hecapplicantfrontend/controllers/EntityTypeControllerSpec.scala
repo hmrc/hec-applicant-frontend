@@ -248,7 +248,7 @@ class EntityTypeControllerSpec
             val answers        = CompanyUserAnswers.empty
             val updatedAnswers = CompanyUserAnswers.empty.copy(entityType = Some(EntityType.Company))
             val session        =
-              CompanyHECSession(companyLoginData, CompanyRetrievedJourneyData.empty, answers, None, None, List.empty)
+              Fixtures.companyHECSession(companyLoginData, CompanyRetrievedJourneyData.empty, answers)
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 
             inSequence {
@@ -306,7 +306,7 @@ class EntityTypeControllerSpec
               .fromCompleteAnswers(answers)
               .copy(entityType = Some(EntityType.Company))
             val session        =
-              CompanyHECSession(companyLoginData, CompanyRetrievedJourneyData.empty, answers, None, None, List.empty)
+              Fixtures.companyHECSession(companyLoginData, CompanyRetrievedJourneyData.empty, answers)
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 
             inSequence {

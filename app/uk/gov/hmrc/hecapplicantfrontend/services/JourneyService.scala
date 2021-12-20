@@ -24,6 +24,7 @@ import cats.syntax.eq._
 import cats.syntax.option._
 import com.google.inject.{ImplementedBy, Inject, Singleton}
 import play.api.mvc.Call
+import uk.gov.hmrc.emailaddress.EmailAddress
 import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 import uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.saTaxSituations
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.RequestWithSessionData
@@ -84,7 +85,8 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
     routes.CompanyDetailsController.chargeableForCorporationTax()        -> chargeableForCTRoute,
     routes.CompanyDetailsController.ctIncomeStatement()                  -> (_ => routes.CheckYourAnswersController.checkYourAnswers()),
     routes.CompanyDetailsController.recentlyStartedTrading()             -> recentlyStartedTradingRoute,
-    routes.CompanyDetailsController.enterCtutr()                         -> enterCtutrRoute
+    routes.CompanyDetailsController.enterCtutr()                         -> enterCtutrRoute,
+    routes.TaxCheckCompleteController.taxCheckComplete()                 -> emailVerificationRoute
   )
 
   // map which describes routes from an exit page to their previous page. The keys are the exit page and the values are
@@ -118,6 +120,23 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
   override def updateAndNext(current: Call, updatedSession: HECSession)(implicit
     r: RequestWithSessionData[_],
     hc: HeaderCarrier
+  ): EitherT[Future, Error, Call] =
+    //if isEmailRequested, then no need to uplift data and no logic needed to go to CYA page
+    if (updatedSession.isEmailRequested) getNextCallAfterTaxCheckPage(current, updatedSession)
+    else getNextCallBeforeTaxCheckPage(current, updatedSession)
+
+  private def getNextCallAfterTaxCheckPage(current: Call, updatedSession: HECSession)(implicit
+    r: RequestWithSessionData[_]
+  ): EitherT[Future, Error, Call] =
+    for {
+      next <-
+        EitherT
+          .fromOption[Future](paths.get(current).map(_(updatedSession)), Error(s"Could not find next for $current"))
+      _    <- storeSession(r.sessionData, updatedSession, next)
+    } yield next
+
+  private def getNextCallBeforeTaxCheckPage(current: Call, updatedSession: HECSession)(implicit
+    r: RequestWithSessionData[_]
   ): EitherT[Future, Error, Call] = {
     val currentPageIsCYA: Boolean = current === routes.CheckYourAnswersController.checkYourAnswers()
     for {
@@ -133,12 +152,16 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
                            ),
                            Error(s"Could not find next for $current")
                          )
-      _               <- if (r.sessionData === upliftedSession)
-                           EitherT.pure[Future, Error](next)
-                         else
-                           sessionStore.store(upliftedSession).map(_ => next)
+      _               <- storeSession(r.sessionData, upliftedSession, next)
     } yield next
   }
+
+  private def storeSession(currentSession: HECSession, updatedSession: HECSession, next: Call)(implicit
+    r: RequestWithSessionData[_]
+  ): EitherT[Future, Error, Call] =
+    if (currentSession === updatedSession) EitherT.pure[Future, Error](next)
+    else
+      sessionStore.store(updatedSession).map(_ => next)
 
   override def previous(current: Call)(implicit
     r: RequestWithSessionData[_]
@@ -155,15 +178,21 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
 
     lazy val hasCompletedAnswers = r.sessionData.userAnswers.foldByCompleteness(_ => false, _ => true)
 
-    if (current === routes.StartController.start())
-      current
-    else if (current =!= routes.CheckYourAnswersController.checkYourAnswers() && hasCompletedAnswers)
-      routes.CheckYourAnswersController.checkYourAnswers()
-    else
-      exitPageToPreviousPage
-        .get(current)
-        .orElse(loop(routes.StartController.start()))
+    if (r.sessionData.isEmailRequested) {
+      loop(routes.TaxCheckCompleteController.taxCheckComplete())
         .getOrElse(sys.error(s"Could not find previous for $current"))
+    } else {
+      if (current === routes.StartController.start())
+        current
+      else if (current =!= routes.CheckYourAnswersController.checkYourAnswers() && hasCompletedAnswers)
+        routes.CheckYourAnswersController.checkYourAnswers()
+      else
+        exitPageToPreviousPage
+          .get(current)
+          .orElse(loop(routes.StartController.start()))
+          .getOrElse(sys.error(s"Could not find previous for $current"))
+    }
+
   }
 
   private def upliftToCompleteAnswersIfComplete(session: HECSession, current: Call): Either[Error, HECSession] =
@@ -197,6 +226,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
                 _,
                 _,
                 _,
+                _,
                 _
               ) if allCompanyAnswersComplete(companyAnswers, companySession) =>
             val completeAnswers =
@@ -225,6 +255,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
                   saIncomeDeclared,
                   entityType
                 ),
+                _,
                 _,
                 _,
                 _,
@@ -434,6 +465,15 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
         }
       }
     }
+
+  def emailVerificationRoute(session: HECSession): Call = {
+    val emailOpt = session.fold(_.loginData.emailAddress, _.loginData.emailAddress)
+    emailOpt match {
+      case Some(email) if EmailAddress.isValid(email.value) =>
+        routes.ConfirmEmailAddressController.confirmEmailAddress()
+      case _                                                => routes.EnterEmailAddressController.enterEmailAddress()
+    }
+  }
 
 }
 

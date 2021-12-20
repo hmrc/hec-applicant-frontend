@@ -17,51 +17,28 @@
 package uk.gov.hmrc.hecapplicantfrontend.controllers
 
 import com.google.inject.{Inject, Singleton}
-import cats.instances.future._
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import uk.gov.hmrc.hecapplicantfrontend.views.html
-
-import scala.concurrent.{ExecutionContext}
 
 @Singleton
-class TaxCheckCompleteController @Inject() (
+class ConfirmEmailAddressController @Inject() (
   authAction: AuthAction,
   sessionDataAction: SessionDataAction,
   journeyService: JourneyService,
-  mcc: MessagesControllerComponents,
-  taxCheckCompletePage: html.TaxCheckComplete
-)(implicit ec: ExecutionContext)
-    extends FrontendController(mcc)
+  mcc: MessagesControllerComponents
+) extends FrontendController(mcc)
     with I18nSupport
     with Logging {
 
-  /**
-    * Fetches tax check data (code & expiry date) for authenticated user
-    */
-  val taxCheckComplete: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
-    request.sessionData.completedTaxCheck match {
-      case Some(taxCheck) => Ok(taxCheckCompletePage(taxCheck))
-      case None           =>
-        sys.error("Tax check code not found")
-    }
+  val confirmEmailAddress: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
+    Ok(
+      s"session: ${request.sessionData}, back :: ${journeyService.previous(routes.ConfirmEmailAddressController.confirmEmailAddress)}"
+    )
+
   }
 
-  val emailTaxCheckCode: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
-    val session        = request.sessionData
-    val updatedSession = session.fold(_.copy(isEmailRequested = true), _.copy(isEmailRequested = true))
-    journeyService
-      .updateAndNext(
-        routes.TaxCheckCompleteController.taxCheckComplete(),
-        updatedSession
-      )
-      .fold(
-        _.doThrow("Could not update session and proceed"),
-        Redirect
-      )
-  }
 }

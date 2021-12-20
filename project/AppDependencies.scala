@@ -12,11 +12,12 @@ object AppDependencies {
     "uk.gov.hmrc.mongo"          %% "hmrc-mongo-play-28"         % hmrcMongoVersion,
     "uk.gov.hmrc"                %% "play-frontend-hmrc"         % "1.31.0-play-28",
     "uk.gov.hmrc"                %% "domain"                     % "6.2.0-play-28",
-    "org.typelevel"              %% "cats-core"                  % "2.6.1",
+    "org.typelevel"              %% "cats-core"                  % "2.7.0",
     "ai.x"                       %% "play-json-extensions"       % "0.42.0",
     "com.github.kxbmap"          %% "configs"                    % "0.6.1",
     "com.github.julien-truffaut" %% "monocle-core"               % monocleVersion,
-    "com.github.julien-truffaut" %% "monocle-macro"              % monocleVersion
+    "com.github.julien-truffaut" %% "monocle-macro"              % monocleVersion,
+    "uk.gov.hmrc"                %% "emailaddress"               % "3.5.0"
   )
 
   val test = Seq(

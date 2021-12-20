@@ -24,8 +24,7 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.hecapplicantfrontend.controllers.CheckYourAnswersControllerSpec._
 import uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.getTaxPeriodStrings
-import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, IndividualHECSession}
-import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.IndividualLoginData
+import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.IndividualHECSession
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.IndividualRetrievedJourneyData
 import uk.gov.hmrc.hecapplicantfrontend.models._
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.company.CTAccountingPeriod.CTAccountingPeriodDigital
@@ -63,7 +62,7 @@ class CheckYourAnswersControllerSpec
   val controller = instanceOf[CheckYourAnswersController]
 
   val individualLoginData =
-    IndividualLoginData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None)
+    Fixtures.individualLoginData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None)
 
   val companyLoginData = Fixtures.companyLoginData(ctutr = Some(CTUTR("1111111111")))
 
@@ -270,7 +269,7 @@ class CheckYourAnswersControllerSpec
             val answers = createCompleteAnswers(Some(YesNoAnswer.Yes), Some(YesNoAnswer.Yes), None)
 
             val session =
-              CompanyHECSession(
+              Fixtures.companyHECSession(
                 companyLoginData,
                 Fixtures.companyRetrievedJourneyData(
                   companyName = Some(CompanyHouseName("Test Tech Ltd")),
@@ -285,10 +284,7 @@ class CheckYourAnswersControllerSpec
                     )
                   )
                 ),
-                answers,
-                None,
-                None,
-                List.empty
+                answers
               )
 
             inSequence {
@@ -324,7 +320,7 @@ class CheckYourAnswersControllerSpec
             val answers = createCompleteAnswers(None, None, Some(YesNoAnswer.Yes))
 
             val session =
-              CompanyHECSession(
+              Fixtures.companyHECSession(
                 companyLoginData,
                 Fixtures.companyRetrievedJourneyData(
                   companyName = Some(CompanyHouseName("Test Tech Ltd")),
@@ -333,10 +329,7 @@ class CheckYourAnswersControllerSpec
                     None
                   )
                 ),
-                answers,
-                None,
-                None,
-                List.empty
+                answers
               )
 
             inSequence {
@@ -372,7 +365,7 @@ class CheckYourAnswersControllerSpec
               createCompleteAnswers(Some(YesNoAnswer.Yes), Some(YesNoAnswer.Yes), None, Some(CTUTR("1111111111")))
 
             val session =
-              CompanyHECSession(
+              Fixtures.companyHECSession(
                 companyLoginData,
                 Fixtures.companyRetrievedJourneyData(
                   companyName = Some(CompanyHouseName("Test Tech Ltd")),
@@ -387,10 +380,7 @@ class CheckYourAnswersControllerSpec
                     )
                   )
                 ),
-                answers,
-                None,
-                None,
-                List.empty
+                answers
               )
 
             inSequence {

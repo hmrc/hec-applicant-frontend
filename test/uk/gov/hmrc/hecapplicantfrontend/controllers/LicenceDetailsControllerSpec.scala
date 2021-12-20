@@ -467,15 +467,13 @@ class LicenceDetailsControllerSpec
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToOneYear
             )
-            val session =
-              CompanyHECSession(
-                companyLoginData,
-                CompanyRetrievedJourneyData.empty,
-                answers,
-                None,
-                Some(now),
-                List.empty
-              )
+            val session = Fixtures.companyHECSession(
+              companyLoginData,
+              CompanyRetrievedJourneyData.empty,
+              answers,
+              taxCheckStartDateTime = Some(now)
+            )
+
             nextPageRedirectTest(session, session, "0", None)
 
           }
