@@ -60,7 +60,8 @@ class HECSessionDataSpec extends AnyWordSpec with Matchers {
           |  "userAnswers" : { "type" : "Incomplete"  },
           |  "unexpiredTaxChecks" : [],
           |  "hasConfirmedDetails" : false,
-          |  "type":"Individual"
+          |  "type":"Individual",
+          |  "isEmailRequested" : false
           |}""".stripMargin)
 
       val companyLoginData =
@@ -82,7 +83,8 @@ class HECSessionDataSpec extends AnyWordSpec with Matchers {
           |  "userAnswers" : { "type" : "Incomplete" },
           |  "unexpiredTaxChecks" : [],
           |  "crnBlocked" : false,
-          |  "type":"Company"
+          |  "type":"Company",
+          |  "isEmailRequested" : false
           |}""".stripMargin)
 
       "serialize Individual session data" in {

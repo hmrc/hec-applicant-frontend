@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.services
 
+import cats.implicits.catsSyntaxOptionId
 import com.typesafe.config.ConfigFactory
 import play.api.Configuration
 import play.api.mvc.{Call, MessagesRequest}
@@ -1490,6 +1491,93 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
           }
         }
 
+        "tax check complete page" when {
+
+          def testIndividual(emailAddress: Option[EmailAddress], nextCall: Call) = {
+            val session                                     = Fixtures.individualHECSession(
+              individualLoginData.copy(emailAddress = emailAddress),
+              IndividualRetrievedJourneyData.empty,
+              Fixtures.completeIndividualUserAnswers(
+                licenceType = DriverOfTaxisAndPrivateHires,
+                licenceTimeTrading = LicenceTimeTrading.TwoToFourYears,
+                licenceValidityPeriod = UpToOneYear,
+                taxSituation = PAYE,
+                saIncomeDeclared = Some(YesNoAnswer.Yes),
+                entityType = Some(Individual)
+              ),
+              Some(HECTaxCheck(HECTaxCheckCode("code"), LocalDate.now.plusDays(1))),
+              Some(taxCheckStartDateTime),
+              isEmailRequested = true
+            )
+            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+
+            val result = journeyService.updateAndNext(
+              routes.TaxCheckCompleteController.taxCheckComplete(),
+              session
+            )
+            await(result.value) shouldBe Right(nextCall)
+          }
+
+          def testCompany(emailAddress: Option[EmailAddress], nextCall: Call) = {
+
+            val session                                     = Fixtures.companyHECSession(
+              companyLoginData.copy(emailAddress = emailAddress),
+              CompanyRetrievedJourneyData.empty,
+              Fixtures.completeCompanyUserAnswers(recentlyStartedTrading = YesNoAnswer.Yes.some),
+              taxCheckStartDateTime = Some(taxCheckStartDateTime),
+              isEmailRequested = true
+            )
+            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+
+            val result = journeyService.updateAndNext(
+              routes.TaxCheckCompleteController.taxCheckComplete(),
+              session
+            )
+            await(result.value) shouldBe Right(nextCall)
+          }
+
+          "tax check code is generated for an Individual" when {
+            "User has email id in GG account" in {
+              testIndividual(
+                Some(EmailAddress("user@test.com")),
+                routes.ConfirmEmailAddressController.confirmEmailAddress()
+              )
+            }
+
+            "User don't has email id in GG account" in {
+              testIndividual(None, routes.EnterEmailAddressController.enterEmailAddress())
+            }
+
+            "User  has email id in GG account but is invalid" in {
+              testIndividual(
+                Some(EmailAddress("user@123@test.com")),
+                routes.EnterEmailAddressController.enterEmailAddress()
+              )
+            }
+          }
+
+          "tax check code is generated for a company" when {
+            "company has email id in GG account" in {
+              testCompany(
+                Some(EmailAddress("user@test.com")),
+                routes.ConfirmEmailAddressController.confirmEmailAddress()
+              )
+            }
+
+            "company don't has email id in GG account" in {
+              testCompany(None, routes.EnterEmailAddressController.enterEmailAddress())
+            }
+
+            "company has email id in GG account but is invalid" in {
+              testCompany(
+                Some(EmailAddress("user@123@test.com")),
+                routes.EnterEmailAddressController.enterEmailAddress()
+              )
+            }
+          }
+
+        }
+
       }
 
       "convert incomplete answers to complete answers when all questions have been answered and" when {
@@ -1753,17 +1841,12 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
               recentlyStartedTrading = recentlyStartedTradingOpt
             )
 
-            val session =
-              CompanyHECSession(
-                Fixtures.companyLoginData(ctutr = Some(CTUTR("1111111111"))),
-                Fixtures.companyRetrievedJourneyData(ctStatus = ctStatusResponse),
-                incompleteAnswers,
-                None,
-                None,
-                List.empty
-              )
+            val session = Fixtures.companyHECSession(
+              Fixtures.companyLoginData(ctutr = Some(CTUTR("1111111111"))),
+              Fixtures.companyRetrievedJourneyData(ctStatus = ctStatusResponse),
+              userAnswers = incompleteAnswers
+            )
             (completeAnswers, session)
-
           }
 
           def nextPageIsCYA(session: CompanyHECSession, completeAnswers: CompanyUserAnswers) = {
@@ -2546,6 +2629,60 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
           )
 
           result shouldBe routes.CRNController.companyRegistrationNumber()
+        }
+
+        "the Confirm Email Address page" in {
+
+          val journeyDataWithSaStatus                     = IndividualRetrievedJourneyData(saStatus =
+            Some(individual.SAStatusResponse(SAUTR(""), TaxYear(2020), SAStatus.NoticeToFileIssued))
+          )
+          val session                                     = Fixtures.individualHECSession(
+            individualLoginData.copy(emailAddress = EmailAddress("user@test.com").some),
+            retrievedJourneyData = journeyDataWithSaStatus,
+            Fixtures.completeIndividualUserAnswers(),
+            Some(HECTaxCheck(HECTaxCheckCode("code1"), LocalDate.now.plusDays(1))),
+            taxCheckStartDateTime = taxCheckStartDateTime.some,
+            isEmailRequested = true
+          )
+          implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+
+          val result = journeyService.previous(
+            routes.ConfirmEmailAddressController.confirmEmailAddress()
+          )
+          result shouldBe routes.TaxCheckCompleteController.taxCheckComplete()
+        }
+
+        "the Enter Email Address page" when {
+
+          def test(emailAddress: Option[EmailAddress]) = {
+            val journeyDataWithSaStatus                     = IndividualRetrievedJourneyData(saStatus =
+              Some(individual.SAStatusResponse(SAUTR(""), TaxYear(2020), SAStatus.NoticeToFileIssued))
+            )
+            val session                                     = Fixtures.individualHECSession(
+              individualLoginData.copy(emailAddress = emailAddress),
+              retrievedJourneyData = journeyDataWithSaStatus,
+              Fixtures.completeIndividualUserAnswers(),
+              Some(HECTaxCheck(HECTaxCheckCode("code1"), LocalDate.now.plusDays(1))),
+              taxCheckStartDateTime = taxCheckStartDateTime.some,
+              isEmailRequested = true
+            )
+            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+
+            val result = journeyService.previous(
+              routes.EnterEmailAddressController.enterEmailAddress()
+            )
+            result shouldBe routes.TaxCheckCompleteController.taxCheckComplete()
+
+          }
+
+          "the email id is invalid " in {
+            test(Some(EmailAddress("user@test@test.com")))
+          }
+
+          "the email id is not in GG login data" in {
+            test(None)
+          }
+
         }
 
         def buildIndividualSession(taxSituation: TaxSituation, saStatus: SAStatus): HECSession = {

@@ -139,7 +139,8 @@ class TaxCheckServiceImpl @Inject() (hecConnector: HECConnector)(implicit ec: Ex
             taxCheckStartDateTime,
             _,
             _,
-            relevantIncomeTaxYear
+            relevantIncomeTaxYear,
+            _
           ),
           answers: CompleteIndividualUserAnswers
         ) =>
@@ -181,6 +182,7 @@ class TaxCheckServiceImpl @Inject() (hecConnector: HECConnector)(implicit ec: Ex
             _,
             _,
             taxCheckStartDateTime,
+            _,
             _,
             _
           ),

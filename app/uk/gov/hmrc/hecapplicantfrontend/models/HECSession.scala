@@ -35,7 +35,7 @@ trait HECSession extends Product with Serializable {
   val completedTaxCheck: Option[HECTaxCheck]
   val taxCheckStartDateTime: Option[ZonedDateTime]
   val unexpiredTaxChecks: List[TaxCheckListItem]
-
+  val isEmailRequested: Boolean
 }
 
 object HECSession {
@@ -48,7 +48,8 @@ object HECSession {
     taxCheckStartDateTime: Option[ZonedDateTime],
     unexpiredTaxChecks: List[TaxCheckListItem],
     hasConfirmedDetails: Boolean,
-    relevantIncomeTaxYear: Option[TaxYear]
+    relevantIncomeTaxYear: Option[TaxYear],
+    isEmailRequested: Boolean
   ) extends HECSession {
     override val entityType: EntityType = EntityType.Individual
   }
@@ -64,7 +65,8 @@ object HECSession {
         None,
         List.empty,
         false,
-        None
+        None,
+        false
       )
 
   }
@@ -76,7 +78,8 @@ object HECSession {
     completedTaxCheck: Option[HECTaxCheck],
     taxCheckStartDateTime: Option[ZonedDateTime],
     unexpiredTaxChecks: List[TaxCheckListItem],
-    crnBlocked: Boolean = false
+    crnBlocked: Boolean = false,
+    isEmailRequested: Boolean
   ) extends HECSession {
     override val entityType: EntityType = EntityType.Company
   }
@@ -84,7 +87,15 @@ object HECSession {
   object CompanyHECSession {
 
     def newSession(loginData: CompanyLoginData): CompanyHECSession =
-      CompanyHECSession(loginData, CompanyRetrievedJourneyData.empty, CompanyUserAnswers.empty, None, None, List.empty)
+      CompanyHECSession(
+        loginData,
+        CompanyRetrievedJourneyData.empty,
+        CompanyUserAnswers.empty,
+        None,
+        None,
+        List.empty,
+        isEmailRequested = false
+      )
 
   }
 

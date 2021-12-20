@@ -17,20 +17,26 @@
 package uk.gov.hmrc.hecapplicantfrontend.controllers
 
 import com.google.inject.{Inject, Singleton}
+import cats.instances.future._
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
+import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.hecapplicantfrontend.views.html
+
+import scala.concurrent.{ExecutionContext}
 
 @Singleton
 class TaxCheckCompleteController @Inject() (
   authAction: AuthAction,
   sessionDataAction: SessionDataAction,
+  journeyService: JourneyService,
   mcc: MessagesControllerComponents,
   taxCheckCompletePage: html.TaxCheckComplete
-) extends FrontendController(mcc)
+)(implicit ec: ExecutionContext)
+    extends FrontendController(mcc)
     with I18nSupport
     with Logging {
 
@@ -43,5 +49,19 @@ class TaxCheckCompleteController @Inject() (
       case None           =>
         sys.error("Tax check code not found")
     }
+  }
+
+  val emailTaxCheckCode: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
+    val session        = request.sessionData
+    val updatedSession = session.fold(_.copy(isEmailRequested = true), _.copy(isEmailRequested = true))
+    journeyService
+      .updateAndNext(
+        routes.TaxCheckCompleteController.taxCheckComplete(),
+        updatedSession
+      )
+      .fold(
+        _.doThrow("Could not update session and proceed"),
+        Redirect
+      )
   }
 }

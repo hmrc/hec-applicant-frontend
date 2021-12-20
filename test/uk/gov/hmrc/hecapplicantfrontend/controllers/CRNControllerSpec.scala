@@ -132,7 +132,7 @@ class CRNControllerSpec
             .fromCompleteAnswers(answers)
             .copy(crn = Some(validCRN))
           val session        =
-            CompanyHECSession(companyLoginData, CompanyRetrievedJourneyData.empty, answers, None, None, List.empty)
+            Fixtures.companyHECSession(companyLoginData, CompanyRetrievedJourneyData.empty, answers)
           val updatedSession = session.copy(userAnswers = updatedAnswers)
 
           inSequence {
