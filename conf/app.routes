@@ -71,6 +71,8 @@ GET        /cannot-do-tax-check            uk.gov.hmrc.hecapplicantfrontend.cont
 GET        /denied-access                  uk.gov.hmrc.hecapplicantfrontend.controllers.AccessDeniedController.accessDenied
 
 GET        /confirm-email-address          uk.gov.hmrc.hecapplicantfrontend.controllers.ConfirmEmailAddressController.confirmEmailAddress
+POST       /confirm-email-address          uk.gov.hmrc.hecapplicantfrontend.controllers.ConfirmEmailAddressController.confirmEmailAddressSubmit
+
 GET        /enter-email-address            uk.gov.hmrc.hecapplicantfrontend.controllers.EnterEmailAddressController.enterEmailAddress
 
 # IV

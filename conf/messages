@@ -331,3 +331,9 @@ accessDenied.p2 = If you need any assistance accessing this link, please email:
 accessDenied.p3 = <a href="mailto:zaynah.hawa@digital.hmrc.gov.uk?subject=Private Beta link assistance">zaynah.hawa@digital.hmrc.gov.uk</a>
 accessDenied.p4 = <a href="mailto:alex.porter@digital.hmrc.gov.uk?subject=Private Beta link assistance">alex.porter@digital.hmrc.gov.uk</a>
 
+
+# Confirm email address
+confirmEmailAddress.title = Which email address would you like to use?
+confirmEmailAddress.p1 = Your tax check code will be sent to this email, any other email addresses you have saved with us will not be changed
+confirmEmailAddress.different = A different email address
+

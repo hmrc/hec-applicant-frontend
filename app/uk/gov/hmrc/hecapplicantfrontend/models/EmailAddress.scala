@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models
 
+import cats.Eq
 import play.api.libs.json.{Format, Json}
 
 final case class EmailAddress(value: String) extends AnyVal
@@ -23,5 +24,6 @@ final case class EmailAddress(value: String) extends AnyVal
 object EmailAddress {
 
   implicit val format: Format[EmailAddress] = Json.valueFormat[EmailAddress]
+  implicit val eq: Eq[EmailAddress]         = Eq.fromUniversalEquals
 
 }
