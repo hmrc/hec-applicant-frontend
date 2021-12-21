@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hecapplicantfrontend.models.emailVerification
+package uk.gov.hmrc.hecapplicantfrontend.models
 
 import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.Passcode
 
-final case class Passcode(value: String) extends AnyVal
+final case class UserEmailAnswers(emailAddress: EmailAddress, passcode: Option[Passcode])
 
-object Passcode {
-
-  implicit val format: OFormat[Passcode] = Json.format[Passcode]
-
+object UserEmailAnswers {
+  implicit val formats: OFormat[UserEmailAnswers] = Json.format[UserEmailAnswers]
 }

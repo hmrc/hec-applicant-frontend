@@ -86,7 +86,8 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
     routes.CompanyDetailsController.ctIncomeStatement()                  -> (_ => routes.CheckYourAnswersController.checkYourAnswers()),
     routes.CompanyDetailsController.recentlyStartedTrading()             -> recentlyStartedTradingRoute,
     routes.CompanyDetailsController.enterCtutr()                         -> enterCtutrRoute,
-    routes.TaxCheckCompleteController.taxCheckComplete()                 -> emailVerificationRoute
+    routes.TaxCheckCompleteController.taxCheckComplete()                 -> emailVerificationRoute,
+    routes.ConfirmEmailAddressController.confirmEmailAddress()           -> (_ => routes.EnterPasscodeController.enterPasscode)
   )
 
   // map which describes routes from an exit page to their previous page. The keys are the exit page and the values are
@@ -227,6 +228,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
                 _,
                 _,
                 _,
+                _,
                 _
               ) if allCompanyAnswersComplete(companyAnswers, companySession) =>
             val completeAnswers =
@@ -255,6 +257,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
                   saIncomeDeclared,
                   entityType
                 ),
+                _,
                 _,
                 _,
                 _,
