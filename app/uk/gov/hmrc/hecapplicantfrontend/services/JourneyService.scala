@@ -34,6 +34,8 @@ import uk.gov.hmrc.hecapplicantfrontend.models.EntityType.{Company, Individual}
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, IndividualHECSession}
 import uk.gov.hmrc.hecapplicantfrontend.models.IndividualUserAnswers.{CompleteIndividualUserAnswers, IncompleteIndividualUserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.{CompanyRetrievedJourneyData, IndividualRetrievedJourneyData}
+import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeRequestResult
+import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeRequestResult._
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.company.CTStatus
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.individual.SAStatus.ReturnFound
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.individual.{SAStatus, SAStatusResponse}
@@ -87,7 +89,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
     routes.CompanyDetailsController.recentlyStartedTrading()             -> recentlyStartedTradingRoute,
     routes.CompanyDetailsController.enterCtutr()                         -> enterCtutrRoute,
     routes.TaxCheckCompleteController.taxCheckComplete()                 -> emailVerificationRoute,
-    routes.ConfirmEmailAddressController.confirmEmailAddress()           -> (_ => routes.EnterPasscodeController.enterPasscode)
+    routes.ConfirmEmailAddressController.confirmEmailAddress()           -> confirmEmailAddressRoute
   )
 
   // map which describes routes from an exit page to their previous page. The keys are the exit page and the values are
@@ -475,6 +477,25 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
       case Some(email) if EmailAddress.isValid(email.value) =>
         routes.ConfirmEmailAddressController.confirmEmailAddress()
       case _                                                => routes.EnterEmailAddressController.enterEmailAddress()
+    }
+  }
+
+  def confirmEmailAddressRoute(session: HECSession): Call = {
+    val m: Option[PasscodeRequestResult] = session.fold(
+      _.userEmailAnswers.flatMap(_.passcodeRequestResult),
+      _.userEmailAnswers.flatMap(_.passcodeRequestResult)
+    )
+
+    println(" m is ::" + m.toString)
+    session.fold(
+      _.userEmailAnswers.flatMap(_.passcodeRequestResult),
+      _.userEmailAnswers.flatMap(_.passcodeRequestResult)
+    ) match {
+      case Some(PasscodeSent)                  => routes.VerifyPasscodeController.verifyPasscode
+      case Some(EmailAddressAlreadyVerified)   => routes.EmailAddressConfirmedController.emailAddressConfirmed
+      case Some(MaximumNumberOfEmailsExceeded) =>
+        routes.TooManyEmailVerificationAttemptController.tooManyEmaiVerificationAttempts
+      case _                                   => sys.error("Passcode Result is  invalid/missing from the response")
     }
   }
 
