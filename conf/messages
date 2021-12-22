@@ -334,10 +334,11 @@ accessDenied.p4 = <a href="mailto:alex.porter@digital.hmrc.gov.uk?subject=Privat
 
 # Confirm email address
 confirmEmailAddress.title = Which email address would you like to use?
-confirmEmailAddress.p1 = Your tax check code will be sent to this email, any other email addresses you have saved with us will not be changed
+confirmEmailAddress.hint = Your tax check code will be sent to this email, any other email addresses you have saved with us will not be changed
 confirmEmailAddress.different = A different email address
 confirmEmailAddress.error.required = Select which email address you would like to use
 differentEmail.label = Enter email address
 differentEmail.error.required = Enter email address
 differentEmail.error.invalidFormat = Enter an email address in the correct format, like name@example.com
+differentEmail.error.tooManyChar = Email address has too many characters, it should be less or equal to 256
 

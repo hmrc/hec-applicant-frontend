@@ -17,9 +17,13 @@
 package uk.gov.hmrc.hecapplicantfrontend.models
 
 import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.Passcode
+import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{Passcode, PasscodeRequestResult}
 
-final case class UserEmailAnswers(emailAddress: EmailAddress, passcode: Option[Passcode])
+final case class UserEmailAnswers(
+  emailAddress: EmailAddress,
+  passcodeRequestResult: Option[PasscodeRequestResult],
+  passcode: Option[Passcode]
+)
 
 object UserEmailAnswers {
   implicit val formats: OFormat[UserEmailAnswers] = Json.format[UserEmailAnswers]

@@ -24,7 +24,7 @@ import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
-class EnterPasscodeController @Inject() (
+class EmailAddressConfirmedController @Inject() (
   authAction: AuthAction,
   sessionDataAction: SessionDataAction,
   journeyService: JourneyService,
@@ -33,8 +33,11 @@ class EnterPasscodeController @Inject() (
     with I18nSupport
     with Logging {
 
-  val enterPasscode: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
-    Ok(s"${request.sessionData}, back:: ${journeyService.previous(routes.EnterPasscodeController.enterPasscode)}")
+  val emailAddressConfirmed: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
+    Ok(
+      s"session: ${request.sessionData}, back :: ${journeyService.previous(routes.EmailAddressConfirmedController.emailAddressConfirmed)}"
+    )
+
   }
 
 }

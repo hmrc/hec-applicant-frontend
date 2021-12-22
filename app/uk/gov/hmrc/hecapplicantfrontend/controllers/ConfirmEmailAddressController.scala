@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.controllers
 
+import cats.implicits.catsSyntaxOptionId
 import cats.instances.future._
 import com.google.inject.{Inject, Singleton}
 import play.api.data.{Form, Mapping}
@@ -23,23 +24,25 @@ import uk.gov.hmrc.emailaddress.{EmailAddress => EmailAddressValidation}
 import play.api.i18n.I18nSupport
 import play.api.mvc._
 import uk.gov.hmrc.hecapplicantfrontend.controllers.ConfirmEmailAddressController.{emailAddressForm, getEmailOptions}
-import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, RequestWithSessionData, SessionDataAction}
-import uk.gov.hmrc.hecapplicantfrontend.models.{ConfirmUserEmail, EmailAddress, HECSession, UserEmailAnswers}
-import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
+import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, AuthenticatedRequest, SessionDataAction}
+import uk.gov.hmrc.hecapplicantfrontend.models.{ConfirmUserEmail, EmailAddress, UserEmailAnswers}
+import uk.gov.hmrc.hecapplicantfrontend.services.{EmailVerificationService, JourneyService}
 import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging}
 import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import uk.gov.voa.play.form.ConditionalMappings.{mandatoryIfEqual}
+import uk.gov.hmrc.play.http.HeaderCarrierConverter
+import uk.gov.voa.play.form.ConditionalMappings.mandatoryIfEqual
 
 import java.util.Locale
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 @Singleton
 class ConfirmEmailAddressController @Inject() (
   authAction: AuthAction,
   sessionDataAction: SessionDataAction,
   journeyService: JourneyService,
+  emailVerificationService: EmailVerificationService,
   confirmEmailAddressPage: html.ConfirmEmailAddress,
   mcc: MessagesControllerComponents
 )(implicit ec: ExecutionContext)
@@ -67,15 +70,26 @@ class ConfirmEmailAddressController @Inject() (
     val emailOptions = getEmailOptions(ggEmail)
 
     def handleValidEmail(confirmUserEmail: ConfirmUserEmail) = {
-      val emailAns: Option[UserEmailAnswers] = request.sessionData.fold(_.userEmailAnswers, _.userEmailAnswers)
-      val updatedEmailAnswers                = confirmUserEmail.differentEmail match {
-        case Some(email) => emailAns.map(_.copy(emailAddress = email))
-        case None        => emailAns.map(_.copy(emailAddress = confirmUserEmail.ggEmail))
-      }
-      val updatedSession                     = request.sessionData
-        .fold(_.copy(userEmailAnswers = updatedEmailAnswers), _.copy(userEmailAnswers = updatedEmailAnswers))
 
-      updateAndNextJourneyData(routes.ConfirmEmailAddressController.confirmEmailAddress(), updatedSession)
+      val userSelectedEmail                         = confirmUserEmail.differentEmail.getOrElse(confirmUserEmail.ggEmail)
+      val authReq: AuthenticatedRequest[AnyContent] = request.request
+      val headerCarrier: HeaderCarrier              =
+        HeaderCarrierConverter.fromRequestAndSession(request, request.session)
+
+      val result = for {
+        passcodeResult     <- emailVerificationService.requestPasscode(userSelectedEmail)(headerCarrier, authReq)
+        updatedEmailAnswers = Some(UserEmailAnswers(userSelectedEmail, passcodeResult.some, None))
+        updatedSession      =
+          request.sessionData
+            .fold(_.copy(userEmailAnswers = updatedEmailAnswers), _.copy(userEmailAnswers = updatedEmailAnswers))
+        next               <-
+          journeyService.updateAndNext(routes.ConfirmEmailAddressController.confirmEmailAddress(), updatedSession)
+      } yield next
+
+      result.fold(
+        _.doThrow("Could not update session and proceed"),
+        Redirect
+      )
     }
 
     emailAddressForm(emailOptions)
@@ -94,20 +108,6 @@ class ConfirmEmailAddressController @Inject() (
 
   }
 
-  private def updateAndNextJourneyData(current: Call, updatedSession: HECSession)(implicit
-    r: RequestWithSessionData[_],
-    hc: HeaderCarrier
-  ): Future[Result] =
-    journeyService
-      .updateAndNext(
-        current,
-        updatedSession
-      )
-      .fold(
-        _.doThrow("Could not update session and proceed"),
-        Redirect
-      )
-
 }
 
 object ConfirmEmailAddressController {
@@ -124,7 +124,8 @@ object ConfirmEmailAddressController {
     )
     .verifying(
       Constraint[EmailAddress]((email: EmailAddress) =>
-        if (EmailAddressValidation.isValid(email.value)) Valid
+        if (EmailAddressValidation.isValid(email.value) && email.value.length <= 256) Valid
+        else if (email.value.length > 256) Invalid("error.tooManyChar")
         else Invalid("error.invalidFormat")
       )
     )
