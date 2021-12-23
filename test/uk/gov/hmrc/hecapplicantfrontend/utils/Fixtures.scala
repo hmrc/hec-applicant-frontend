@@ -139,7 +139,8 @@ object Fixtures {
     taxCheckStartDateTime: Option[ZonedDateTime] = None,
     unexpiredTaxChecks: List[TaxCheckListItem] = List.empty,
     relevantIncomeTaxYear: Option[TaxYear] = None,
-    isEmailRequested: Boolean = false
+    isEmailRequested: Boolean = false,
+    userEmailAnswers: Option[UserEmailAnswers] = None
   ): IndividualHECSession =
     IndividualHECSession(
       loginData = loginData,
@@ -150,7 +151,8 @@ object Fixtures {
       unexpiredTaxChecks = unexpiredTaxChecks,
       hasConfirmedDetails = false,
       relevantIncomeTaxYear = relevantIncomeTaxYear,
-      isEmailRequested = isEmailRequested
+      isEmailRequested = isEmailRequested,
+      userEmailAnswers = userEmailAnswers
     )
 
   def companyLoginData(
@@ -181,7 +183,8 @@ object Fixtures {
     taxCheckStartDateTime: Option[ZonedDateTime] = None,
     unexpiredTaxChecks: List[TaxCheckListItem] = List.empty,
     crnBlocked: Boolean = false,
-    isEmailRequested: Boolean = false
+    isEmailRequested: Boolean = false,
+    userEmailAnswers: Option[UserEmailAnswers] = None
   ): CompanyHECSession = CompanyHECSession(
     loginData = loginData,
     retrievedJourneyData = retrievedJourneyData,
@@ -190,7 +193,8 @@ object Fixtures {
     taxCheckStartDateTime = taxCheckStartDateTime,
     unexpiredTaxChecks = unexpiredTaxChecks,
     crnBlocked = crnBlocked,
-    isEmailRequested = isEmailRequested
+    isEmailRequested = isEmailRequested,
+    userEmailAnswers = userEmailAnswers
   )
 
   def ctStatusResponse(

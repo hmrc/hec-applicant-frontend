@@ -14,18 +14,17 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hecapplicantfrontend.models
+package uk.gov.hmrc.hecapplicantfrontend.models.views
 
-import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{Passcode, PasscodeRequestResult}
+import uk.gov.hmrc.hecapplicantfrontend.models.EmailType
 
-final case class UserEmailAnswers(
-  emailType: EmailType,
-  emailAddress: Option[EmailAddress],
-  passcodeRequestResult: Option[PasscodeRequestResult],
-  passcode: Option[Passcode]
-)
+final case class EmailTypeOptions(messageKey: String)
+object EmailTypeOptions {
 
-object UserEmailAnswers {
-  implicit val formats: OFormat[UserEmailAnswers] = Json.format[UserEmailAnswers]
+  def emailTypeOptions(emailType: EmailType): EmailTypeOptions =
+    emailType match {
+      case EmailType.GGEmail        => EmailTypeOptions("ggEmail")
+      case EmailType.DifferentEmail => EmailTypeOptions("differentEmail")
+    }
+
 }

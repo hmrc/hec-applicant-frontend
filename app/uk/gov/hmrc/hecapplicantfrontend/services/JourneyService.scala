@@ -34,7 +34,6 @@ import uk.gov.hmrc.hecapplicantfrontend.models.EntityType.{Company, Individual}
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, IndividualHECSession}
 import uk.gov.hmrc.hecapplicantfrontend.models.IndividualUserAnswers.{CompleteIndividualUserAnswers, IncompleteIndividualUserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.{CompanyRetrievedJourneyData, IndividualRetrievedJourneyData}
-import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeRequestResult
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeRequestResult._
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.company.CTStatus
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.individual.SAStatus.ReturnFound
@@ -480,13 +479,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
     }
   }
 
-  def confirmEmailAddressRoute(session: HECSession): Call = {
-    val m: Option[PasscodeRequestResult] = session.fold(
-      _.userEmailAnswers.flatMap(_.passcodeRequestResult),
-      _.userEmailAnswers.flatMap(_.passcodeRequestResult)
-    )
-
-    println(" m is ::" + m.toString)
+  def confirmEmailAddressRoute(session: HECSession): Call =
     session.fold(
       _.userEmailAnswers.flatMap(_.passcodeRequestResult),
       _.userEmailAnswers.flatMap(_.passcodeRequestResult)
@@ -497,7 +490,6 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
         routes.TooManyEmailVerificationAttemptController.tooManyEmaiVerificationAttempts
       case _                                   => sys.error("Passcode Result is  invalid/missing from the response")
     }
-  }
 
 }
 

@@ -17,6 +17,7 @@
 package uk.gov.hmrc.hecapplicantfrontend.controllers
 
 import cats.implicits.catsSyntaxOptionId
+import uk.gov.hmrc.hecapplicantfrontend.services.EmailVerificationService
 import cats.instances.future._
 import com.google.inject.{Inject, Singleton}
 import play.api.data.{Form, Mapping}
@@ -25,8 +26,8 @@ import play.api.i18n.I18nSupport
 import play.api.mvc._
 import uk.gov.hmrc.hecapplicantfrontend.controllers.ConfirmEmailAddressController.{emailAddressForm, getEmailOptions}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, AuthenticatedRequest, SessionDataAction}
-import uk.gov.hmrc.hecapplicantfrontend.models.{ConfirmUserEmail, EmailAddress, UserEmailAnswers}
-import uk.gov.hmrc.hecapplicantfrontend.services.{EmailVerificationService, JourneyService}
+import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, EmailType, UserEmail, UserEmailAnswers}
+import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
 import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging}
 import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.http.HeaderCarrier
@@ -51,34 +52,36 @@ class ConfirmEmailAddressController @Inject() (
     with Logging {
 
   val confirmEmailAddress: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
-    val back               = journeyService.previous(routes.ConfirmEmailAddressController.confirmEmailAddress)
-    val ggEmailOpt         = request.sessionData.fold(_.loginData.emailAddress, _.loginData.emailAddress)
-    val userEmailAnswerOpt = request.sessionData.userEmailAnswers.map(_.emailAddress)
-    val emailOptions       = getEmailOptions(ggEmailOpt.getOrElse(sys.error(" Email Address is not present in session")))
+    val ggEmail                                      = request.sessionData
+      .fold(_.loginData.emailAddress, _.loginData.emailAddress)
+      .getOrElse(sys.error(" Email Address is not present in session"))
+    val emailOptions                                 = getEmailOptions
+    val userEmailAnswerOpt: Option[UserEmailAnswers] = request.sessionData.userEmailAnswers
+    val back                                         = journeyService.previous(routes.ConfirmEmailAddressController.confirmEmailAddress)
 
     val form = {
       val emptyForm = emailAddressForm(emailOptions)
-      userEmailAnswerOpt.fold(emptyForm)(email => emptyForm.fill(ConfirmUserEmail(email, None)))
+      userEmailAnswerOpt.fold(emptyForm)(i => emptyForm.fill(UserEmail(i.emailType, i.emailAddress)))
     }
-    Ok(confirmEmailAddressPage(form, back, emailOptions))
+    Ok(confirmEmailAddressPage(form, back, emailOptions, ggEmail.value))
   }
 
   val confirmEmailAddressSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     val ggEmail      = request.sessionData
       .fold(_.loginData.emailAddress, _.loginData.emailAddress)
       .getOrElse(sys.error("No  Email Address found in GG account"))
-    val emailOptions = getEmailOptions(ggEmail)
+    val emailOptions = getEmailOptions
 
-    def handleValidEmail(confirmUserEmail: ConfirmUserEmail) = {
-
-      val userSelectedEmail                         = confirmUserEmail.differentEmail.getOrElse(confirmUserEmail.ggEmail)
+    def handleValidEmail(userEmail: UserEmail) = {
+      val userSelectedEmail                         = userEmail.emailAddress.getOrElse(ggEmail)
       val authReq: AuthenticatedRequest[AnyContent] = request.request
       val headerCarrier: HeaderCarrier              =
         HeaderCarrierConverter.fromRequestAndSession(request, request.session)
 
       val result = for {
         passcodeResult     <- emailVerificationService.requestPasscode(userSelectedEmail)(headerCarrier, authReq)
-        updatedEmailAnswers = Some(UserEmailAnswers(userSelectedEmail, passcodeResult.some, None))
+        updatedEmailAnswers =
+          Some(UserEmailAnswers(userEmail.emailType, userEmail.emailAddress, passcodeResult.some, None))
         updatedSession      =
           request.sessionData
             .fold(_.copy(userEmailAnswers = updatedEmailAnswers), _.copy(userEmailAnswers = updatedEmailAnswers))
@@ -100,7 +103,8 @@ class ConfirmEmailAddressController @Inject() (
             confirmEmailAddressPage(
               formWithErrors,
               journeyService.previous(routes.ConfirmEmailAddressController.confirmEmailAddress()),
-              emailOptions
+              emailOptions,
+              ggEmail.value
             )
           ),
         handleValidEmail
@@ -115,7 +119,7 @@ object ConfirmEmailAddressController {
   import play.api.data.validation.{Constraint, Invalid, Valid}
   import play.api.data.Forms.{mapping, nonEmptyText, of}
 
-  def getEmailOptions(emailAddress: EmailAddress): List[EmailAddress] = List(emailAddress, EmailAddress("different"))
+  val getEmailOptions: List[EmailType] = List(EmailType.GGEmail, EmailType.DifferentEmail)
 
   def differentEmailAddressMapping: Mapping[EmailAddress] = nonEmptyText
     .transform[EmailAddress](
@@ -124,16 +128,26 @@ object ConfirmEmailAddressController {
     )
     .verifying(
       Constraint[EmailAddress]((email: EmailAddress) =>
-        if (EmailAddressValidation.isValid(email.value) && email.value.length <= 256) Valid
-        else if (email.value.length > 256) Invalid("error.tooManyChar")
+        if (email.value.length > 256) Invalid("error.tooManyChar")
+        else if (EmailAddressValidation.isValid(email.value)) Valid
         else Invalid("error.invalidFormat")
       )
     )
 
-  def emailAddressForm(options: List[EmailAddress]): Form[ConfirmUserEmail] = Form(
+  def emailAddressForm(options: List[EmailType]): Form[UserEmail] = Form(
     mapping(
       "confirmEmailAddress" -> of(FormUtils.radioFormFormatter(options)),
       "differentEmail"      -> mandatoryIfEqual("confirmEmailAddress", "1", differentEmailAddressMapping)
-    )((ggEmail, optionalEmail) => ConfirmUserEmail(ggEmail, optionalEmail))(i => Some((i.ggEmail, i.differentEmail)))
+    ) { (_, optionalEmail) =>
+      optionalEmail match {
+        case Some(email) => UserEmail(EmailType.DifferentEmail, email.some)
+        case _           => UserEmail(EmailType.GGEmail, None)
+      }
+    } { ue =>
+      ue.emailType match {
+        case EmailType.GGEmail        => (EmailType.GGEmail, None).some
+        case EmailType.DifferentEmail => (EmailType.DifferentEmail, ue.emailAddress).some
+      }
+    }
   )
 }
