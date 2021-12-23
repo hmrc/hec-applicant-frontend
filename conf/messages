@@ -338,6 +338,7 @@ confirmEmailAddress.hint = Your tax check code will be sent to this email, any o
 confirmEmailAddress.ggEmail = {0}
 confirmEmailAddress.differentEmail = A different email address
 confirmEmailAddress.error.required = Select which email address you would like to use
+confirmEmailAddress.error.invalid = Select which email address you would like to use
 differentEmail.label = Enter email address
 differentEmail.error.required = Enter email address
 differentEmail.error.invalidFormat = Enter an email address in the correct format, like name@example.com
