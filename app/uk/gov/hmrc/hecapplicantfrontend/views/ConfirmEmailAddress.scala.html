@@ -19,18 +19,20 @@
 @import play.api.mvc.{Call, Request}
 @import uk.gov.hmrc.govukfrontend.views.html.components._
 @import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
-@import uk.gov.hmrc.hecapplicantfrontend.models.EmailAddress
+@import uk.gov.hmrc.hecapplicantfrontend.models.views.EmailTypeOptions
+@import uk.gov.hmrc.hecapplicantfrontend.models.EmailType
 @import cats.implicits.catsSyntaxEq
-@import uk.gov.hmrc.hecapplicantfrontend.models.ConfirmUserEmail
+@import uk.gov.hmrc.hecapplicantfrontend.models.UserEmail
 
 @this(layout: Layout, govukErrorSummary: GovukErrorSummary, govukRadios: GovukRadios, govukButton: GovukButton, formWithCSRF: FormWithCSRF, govukInput: GovukInput)
 
 
-@(form: Form[ConfirmUserEmail], back: Call, options: List[EmailAddress])(implicit request: Request[_], messages: Messages)
+@(form: Form[UserEmail], back: Call, options: List[EmailType], ggEmail: String)(implicit request: Request[_], messages: Messages)
+
 @key = @{"confirmEmailAddress"}
 @differentEmailKey = @{"differentEmail"}
 @title = @{messages(s"$key.title")}
-@optionViewModels = @{options.map(_.value)}
+@optionViewModels = @{options.map(EmailTypeOptions.emailTypeOptions)}
 @conditionalHtml = @{
   govukInput(Input(
     id = differentEmailKey,
@@ -50,12 +52,12 @@
 @radioOptions = @{optionViewModels.zipWithIndex.map{ case (option, index) =>
   if(index === 0)
     RadioItem(
-        content = Text(option),
+        content = Text(messages(s"$key.${option.messageKey}", ggEmail)),
         value = Some(index.toString),
-        checked = form.data.values.toList.contains(option)
+        checked = form.data.values.toList.contains(index.toString)
     ) else {
       RadioItem(
-          content = Text(messages(s"$key.${option}")),
+          content = Text(messages(s"$key.${option.messageKey}")),
           value = Some(index.toString),
           checked = form.data.values.toList.contains(index.toString),
           conditionalHtml = Some(conditionalHtml)

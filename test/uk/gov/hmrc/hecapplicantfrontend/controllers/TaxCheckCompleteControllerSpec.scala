@@ -103,7 +103,7 @@ class TaxCheckCompleteControllerSpec
             messageFromMessageKey("taxCheckComplete.title"),
             doc => {
               doc.select(".govuk-panel__body").text should include regex "LXB 7G6 DX7"
-              val list = doc.select(".govuk-list--number").html
+              val list = doc.select(".govuk-list--bullet").html
               list                           should include regex messageFromMessageKey(
                 "taxCheckComplete.list2",
                 routes.TaxCheckCompleteController.emailTaxCheckCode().url
