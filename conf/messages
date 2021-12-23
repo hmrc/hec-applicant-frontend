@@ -344,3 +344,11 @@ differentEmail.error.required = Enter email address
 differentEmail.error.invalidFormat = Enter an email address in the correct format, like name@example.com
 differentEmail.error.tooManyChar = Email address has too many characters, it should be less or equal to 256
 
+#Verify passcode
+verifyPasscode.title = Confirm your email address
+verifyPasscode.p1 = You must confirm your email address before we can send your tax check code to you.
+verifyPasscode.p2 = An email confirmation code has been sent to {0}. Enter this confirmation code below.
+verifyPasscode.p3 = If you use a browser to access your email, you may need to open a new window or tab.
+verifyPasscode.label = Email confirmation code:
+verifyPasscode.hint = For example, DNCLRK
+
