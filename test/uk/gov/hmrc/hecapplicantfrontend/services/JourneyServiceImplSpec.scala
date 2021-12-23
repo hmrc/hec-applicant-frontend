@@ -32,6 +32,8 @@ import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, Indi
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.{CompanyRetrievedJourneyData, IndividualRetrievedJourneyData}
 import uk.gov.hmrc.hecapplicantfrontend.models.TaxSituation.PAYE
 import uk.gov.hmrc.hecapplicantfrontend.models._
+import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeRequestResult
+import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeRequestResult.{EmailAddressAlreadyVerified, MaximumNumberOfEmailsExceeded, PasscodeSent}
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.company.CTAccountingPeriod.CTAccountingPeriodDigital
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.company.{CTAccountingPeriod, CTStatus, CTStatusResponse}
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.individual
@@ -72,6 +74,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
 
   val companyLoginData1: CompanyLoginData =
     CompanyLoginData(GGCredId(""), Some(CTUTR("4444444444")), None)
+
+  val ggEmailId = EmailAddress("user@test.com")
+
+  val otherEmailId = EmailAddress("user1@test.com")
 
   "JourneyServiceImpl" when {
 
@@ -1578,6 +1584,82 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
 
         }
 
+        "the confirm email address page" when {
+
+          def test(userEmailAnswers: UserEmailAnswers, nextCall: Call) = {
+            val session                                     = Fixtures.individualHECSession(
+              individualLoginData.copy(emailAddress = ggEmailId.some),
+              IndividualRetrievedJourneyData.empty,
+              Fixtures.completeIndividualUserAnswers(
+                licenceType = DriverOfTaxisAndPrivateHires,
+                licenceTimeTrading = LicenceTimeTrading.TwoToFourYears,
+                licenceValidityPeriod = UpToOneYear,
+                taxSituation = PAYE,
+                saIncomeDeclared = Some(YesNoAnswer.Yes),
+                entityType = Some(Individual)
+              ),
+              Some(HECTaxCheck(HECTaxCheckCode("code"), LocalDate.now.plusDays(1))),
+              Some(taxCheckStartDateTime),
+              isEmailRequested = true,
+              userEmailAnswers = userEmailAnswers.some
+            )
+            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+
+            val result = journeyService.updateAndNext(
+              routes.ConfirmEmailAddressController.confirmEmailAddress(),
+              session
+            )
+            await(result.value) shouldBe Right(nextCall)
+          }
+
+          "the valid ggEmailId is selected or valid different email id is entered and " when {
+
+            " Email Verification Service response = Passcode Sent" in {
+              List(
+                UserEmailAnswers(EmailType.GGEmail, None, PasscodeSent.some, None),
+                UserEmailAnswers(EmailType.DifferentEmail, otherEmailId.some, PasscodeSent.some, None)
+              ).foreach { eachUserEmailAddress =>
+                withClue(s"For user email address : $eachUserEmailAddress") {
+                  test(
+                    eachUserEmailAddress,
+                    routes.VerifyEmailPasscodeController.verifyEmailPasscode()
+                  )
+                }
+              }
+
+            }
+
+            " Email Verification Service response = Email Already Verified " in {
+
+              List(
+                UserEmailAnswers(EmailType.GGEmail, None, EmailAddressAlreadyVerified.some, None),
+                UserEmailAnswers(EmailType.DifferentEmail, otherEmailId.some, EmailAddressAlreadyVerified.some, None)
+              ).foreach { eachUserEmailAddress =>
+                withClue(s"For user email address : $eachUserEmailAddress") {
+                  test(
+                    eachUserEmailAddress,
+                    routes.EmailAddressConfirmedController.emailAddressConfirmed()
+                  )
+                }
+              }
+            }
+
+            " Email Verification Service response = Too Many Email attempts in session " in {
+
+              List(
+                UserEmailAnswers(EmailType.GGEmail, None, MaximumNumberOfEmailsExceeded.some, None),
+                UserEmailAnswers(EmailType.DifferentEmail, otherEmailId.some, MaximumNumberOfEmailsExceeded.some, None)
+              ).foreach { eachUserEmailAddress =>
+                withClue(s"For user email address : $eachUserEmailAddress") {
+                  test(
+                    eachUserEmailAddress,
+                    routes.TooManyEmailVerificationAttemptController.tooManyEmaiVerificationAttempts()
+                  )
+                }
+              }
+            }
+          }
+        }
       }
 
       "convert incomplete answers to complete answers when all questions have been answered and" when {
@@ -2681,6 +2763,46 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
 
           "the email id is not in GG login data" in {
             test(None)
+          }
+
+        }
+
+        def previousIsConfirmEmailPage(passcodeRequestResult: PasscodeRequestResult, existingRoute: Call) = {
+          val session = Fixtures.individualHECSession(
+            individualLoginData.copy(emailAddress = ggEmailId.some),
+            IndividualRetrievedJourneyData.empty,
+            Fixtures.completeIndividualUserAnswers(
+              licenceType = DriverOfTaxisAndPrivateHires,
+              licenceTimeTrading = LicenceTimeTrading.TwoToFourYears,
+              licenceValidityPeriod = UpToOneYear,
+              taxSituation = PAYE,
+              saIncomeDeclared = Some(YesNoAnswer.Yes),
+              entityType = Some(Individual)
+            ),
+            Some(HECTaxCheck(HECTaxCheckCode("code"), LocalDate.now.plusDays(1))),
+            Some(taxCheckStartDateTime),
+            isEmailRequested = true,
+            userEmailAnswers = UserEmailAnswers(EmailType.GGEmail, None, passcodeRequestResult.some, None).some
+          )
+
+          implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+
+          val result = journeyService.previous(existingRoute)
+          result shouldBe routes.ConfirmEmailAddressController.confirmEmailAddress()
+        }
+
+        "the Verify email passcode controller" in {
+          previousIsConfirmEmailPage(PasscodeSent, routes.VerifyEmailPasscodeController.verifyEmailPasscode())
+
+        }
+
+        "the Email address confirmed page" when {
+
+          "user selected en email on confirm email page, which is already verified" in {
+            previousIsConfirmEmailPage(
+              EmailAddressAlreadyVerified,
+              routes.EmailAddressConfirmedController.emailAddressConfirmed()
+            )
           }
 
         }

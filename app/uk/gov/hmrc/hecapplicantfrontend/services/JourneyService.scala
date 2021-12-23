@@ -484,7 +484,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
       _.userEmailAnswers.flatMap(_.passcodeRequestResult),
       _.userEmailAnswers.flatMap(_.passcodeRequestResult)
     ) match {
-      case Some(PasscodeSent)                  => routes.VerifyPasscodeController.verifyPasscode
+      case Some(PasscodeSent)                  => routes.VerifyEmailPasscodeController.verifyEmailPasscode
       case Some(EmailAddressAlreadyVerified)   => routes.EmailAddressConfirmedController.emailAddressConfirmed
       case Some(MaximumNumberOfEmailsExceeded) =>
         routes.TooManyEmailVerificationAttemptController.tooManyEmaiVerificationAttempts
