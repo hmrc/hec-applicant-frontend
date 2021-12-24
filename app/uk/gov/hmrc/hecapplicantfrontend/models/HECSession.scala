@@ -176,6 +176,12 @@ object HECSession {
       }
     }
 
+    def ensureGGEmailIdPresent[A](f: EmailAddress => A): A =
+      s.fold(_.loginData.emailAddress, _.loginData.emailAddress) match {
+        case Some(email) => f(email)
+        case None        => sys.error("No Email Address found in user's login session")
+      }
+
   }
 
   implicit val eq: Eq[HECSession] = Eq.fromUniversalEquals

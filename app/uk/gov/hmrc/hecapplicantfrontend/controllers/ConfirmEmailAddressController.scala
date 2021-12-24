@@ -36,7 +36,7 @@ import uk.gov.hmrc.play.http.HeaderCarrierConverter
 import uk.gov.voa.play.form.ConditionalMappings.mandatoryIfEqual
 
 import java.util.Locale
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class ConfirmEmailAddressController @Inject() (
@@ -51,65 +51,61 @@ class ConfirmEmailAddressController @Inject() (
     with I18nSupport
     with Logging {
 
-  val confirmEmailAddress: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
-    val ggEmail                                      = request.sessionData
-      .fold(_.loginData.emailAddress, _.loginData.emailAddress)
-      .getOrElse(sys.error(" Email Address is not present in session"))
-    val emailOptions                                 = getEmailOptions
-    val userEmailAnswerOpt: Option[UserEmailAnswers] = request.sessionData.userEmailAnswers
-    val back                                         = journeyService.previous(routes.ConfirmEmailAddressController.confirmEmailAddress)
+  val confirmEmailAddress: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
+    request.sessionData.ensureGGEmailIdPresent { ggEmail =>
+      val emailOptions                                 = getEmailOptions
+      val userEmailAnswerOpt: Option[UserEmailAnswers] = request.sessionData.userEmailAnswers
+      val back                                         = journeyService.previous(routes.ConfirmEmailAddressController.confirmEmailAddress)
 
-    val form = {
-      val emptyForm = emailAddressForm(emailOptions)
-      userEmailAnswerOpt.fold(emptyForm)(i => emptyForm.fill(UserEmail(i.emailType, i.emailAddress)))
+      val form = {
+        val emptyForm = emailAddressForm(emailOptions)
+        userEmailAnswerOpt.fold(emptyForm)(i => emptyForm.fill(UserEmail(i.emailType, i.emailAddress)))
+      }
+      Ok(confirmEmailAddressPage(form, back, emailOptions, ggEmail.value))
     }
-    Ok(confirmEmailAddressPage(form, back, emailOptions, ggEmail.value))
   }
 
   val confirmEmailAddressSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
-    val ggEmail      = request.sessionData
-      .fold(_.loginData.emailAddress, _.loginData.emailAddress)
-      .getOrElse(sys.error("No  Email Address found in GG account"))
     val emailOptions = getEmailOptions
+    request.sessionData.ensureGGEmailIdPresent { ggEmail =>
+      def handleValidEmail(userEmail: UserEmail): Future[Result] = {
+        val userSelectedEmail                         = userEmail.emailAddress.getOrElse(ggEmail)
+        val authReq: AuthenticatedRequest[AnyContent] = request.request
+        val headerCarrier: HeaderCarrier              =
+          HeaderCarrierConverter.fromRequestAndSession(request, request.session)
 
-    def handleValidEmail(userEmail: UserEmail) = {
-      val userSelectedEmail                         = userEmail.emailAddress.getOrElse(ggEmail)
-      val authReq: AuthenticatedRequest[AnyContent] = request.request
-      val headerCarrier: HeaderCarrier              =
-        HeaderCarrierConverter.fromRequestAndSession(request, request.session)
+        val result = for {
+          passcodeResult     <- emailVerificationService.requestPasscode(userSelectedEmail)(headerCarrier, authReq)
+          updatedEmailAnswers =
+            Some(UserEmailAnswers(userEmail.emailType, userEmail.emailAddress, passcodeResult.some, None, None))
+          updatedSession      =
+            request.sessionData
+              .fold(_.copy(userEmailAnswers = updatedEmailAnswers), _.copy(userEmailAnswers = updatedEmailAnswers))
+          next               <-
+            journeyService.updateAndNext(routes.ConfirmEmailAddressController.confirmEmailAddress(), updatedSession)
+        } yield next
 
-      val result = for {
-        passcodeResult     <- emailVerificationService.requestPasscode(userSelectedEmail)(headerCarrier, authReq)
-        updatedEmailAnswers =
-          Some(UserEmailAnswers(userEmail.emailType, userEmail.emailAddress, passcodeResult.some, None))
-        updatedSession      =
-          request.sessionData
-            .fold(_.copy(userEmailAnswers = updatedEmailAnswers), _.copy(userEmailAnswers = updatedEmailAnswers))
-        next               <-
-          journeyService.updateAndNext(routes.ConfirmEmailAddressController.confirmEmailAddress(), updatedSession)
-      } yield next
+        result.fold(
+          _.doThrow("Could not update session and proceed"),
+          Redirect
+        )
+      }
 
-      result.fold(
-        _.doThrow("Could not update session and proceed"),
-        Redirect
-      )
+      emailAddressForm(emailOptions)
+        .bindFromRequest()
+        .fold(
+          formWithErrors =>
+            Ok(
+              confirmEmailAddressPage(
+                formWithErrors,
+                journeyService.previous(routes.ConfirmEmailAddressController.confirmEmailAddress()),
+                emailOptions,
+                ggEmail.value
+              )
+            ),
+          handleValidEmail
+        )
     }
-
-    emailAddressForm(emailOptions)
-      .bindFromRequest()
-      .fold(
-        formWithErrors =>
-          Ok(
-            confirmEmailAddressPage(
-              formWithErrors,
-              journeyService.previous(routes.ConfirmEmailAddressController.confirmEmailAddress()),
-              emailOptions,
-              ggEmail.value
-            )
-          ),
-        handleValidEmail
-      )
-
   }
 
 }

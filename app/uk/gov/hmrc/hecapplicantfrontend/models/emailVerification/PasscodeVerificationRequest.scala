@@ -19,7 +19,7 @@ package uk.gov.hmrc.hecapplicantfrontend.models.emailVerification
 import play.api.libs.json.{Json, OWrites}
 import uk.gov.hmrc.hecapplicantfrontend.models.EmailAddress
 
-final case class PasscodeVerificationRequest(passcode: Passcode, emailAddress: EmailAddress)
+final case class PasscodeVerificationRequest(passcode: Passcode, email: EmailAddress)
 
 object PasscodeVerificationRequest {
 

@@ -1616,8 +1616,8 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
 
             " Email Verification Service response = Passcode Sent" in {
               List(
-                UserEmailAnswers(EmailType.GGEmail, None, PasscodeSent.some, None),
-                UserEmailAnswers(EmailType.DifferentEmail, otherEmailId.some, PasscodeSent.some, None)
+                UserEmailAnswers(EmailType.GGEmail, None, PasscodeSent.some, None, None),
+                UserEmailAnswers(EmailType.DifferentEmail, otherEmailId.some, PasscodeSent.some, None, None)
               ).foreach { eachUserEmailAddress =>
                 withClue(s"For user email address : $eachUserEmailAddress") {
                   test(
@@ -1632,8 +1632,14 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
             " Email Verification Service response = Email Already Verified " in {
 
               List(
-                UserEmailAnswers(EmailType.GGEmail, None, EmailAddressAlreadyVerified.some, None),
-                UserEmailAnswers(EmailType.DifferentEmail, otherEmailId.some, EmailAddressAlreadyVerified.some, None)
+                UserEmailAnswers(EmailType.GGEmail, None, EmailAddressAlreadyVerified.some, None, None),
+                UserEmailAnswers(
+                  EmailType.DifferentEmail,
+                  otherEmailId.some,
+                  EmailAddressAlreadyVerified.some,
+                  None,
+                  None
+                )
               ).foreach { eachUserEmailAddress =>
                 withClue(s"For user email address : $eachUserEmailAddress") {
                   test(
@@ -1647,13 +1653,19 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
             " Email Verification Service response = Too Many Email attempts in session " in {
 
               List(
-                UserEmailAnswers(EmailType.GGEmail, None, MaximumNumberOfEmailsExceeded.some, None),
-                UserEmailAnswers(EmailType.DifferentEmail, otherEmailId.some, MaximumNumberOfEmailsExceeded.some, None)
+                UserEmailAnswers(EmailType.GGEmail, None, MaximumNumberOfEmailsExceeded.some, None, None),
+                UserEmailAnswers(
+                  EmailType.DifferentEmail,
+                  otherEmailId.some,
+                  MaximumNumberOfEmailsExceeded.some,
+                  None,
+                  None
+                )
               ).foreach { eachUserEmailAddress =>
                 withClue(s"For user email address : $eachUserEmailAddress") {
                   test(
                     eachUserEmailAddress,
-                    routes.TooManyEmailVerificationAttemptController.tooManyEmaiVerificationAttempts()
+                    routes.TooManyEmailVerificationAttemptController.tooManyEmailVerificationAttempts()
                   )
                 }
               }
@@ -2782,7 +2794,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
             Some(HECTaxCheck(HECTaxCheckCode("code"), LocalDate.now.plusDays(1))),
             Some(taxCheckStartDateTime),
             isEmailRequested = true,
-            userEmailAnswers = UserEmailAnswers(EmailType.GGEmail, None, passcodeRequestResult.some, None).some
+            userEmailAnswers = UserEmailAnswers(EmailType.GGEmail, None, passcodeRequestResult.some, None, None).some
           )
 
           implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)

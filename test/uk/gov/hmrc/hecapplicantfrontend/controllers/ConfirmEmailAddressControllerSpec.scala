@@ -128,11 +128,11 @@ class ConfirmEmailAddressControllerSpec
         }
 
         "User's GG account has a valid email id and user has previously selected ggEmail id  " in {
-          test(UserEmailAnswers(EmailType.GGEmail, None, None, None).some, Some("0"))
+          test(UserEmailAnswers(EmailType.GGEmail, None, None, None, None).some, Some("0"))
         }
 
         "User's GG account has a valid email id and user has previously selected different email id option" in {
-          test(UserEmailAnswers(EmailType.DifferentEmail, otherEmailId.some, None, None).some, Some("1"))
+          test(UserEmailAnswers(EmailType.DifferentEmail, otherEmailId.some, None, None, None).some, Some("1"))
 
         }
       }
@@ -248,7 +248,9 @@ class ConfirmEmailAddressControllerSpec
           )
 
           val updatedSession =
-            session.copy(userEmailAnswers = UserEmailAnswers(EmailType.GGEmail, None, PasscodeSent.some, None).some)
+            session.copy(userEmailAnswers =
+              UserEmailAnswers(EmailType.GGEmail, None, PasscodeSent.some, None, None).some
+            )
 
           inSequence {
             mockAuthWithNoRetrievals()
@@ -303,7 +305,7 @@ class ConfirmEmailAddressControllerSpec
 
           test(
             existingUserEmailAnswers = None,
-            updatedUserEmailAnswers = UserEmailAnswers(EmailType.GGEmail, None, PasscodeSent.some, None),
+            updatedUserEmailAnswers = UserEmailAnswers(EmailType.GGEmail, None, PasscodeSent.some, None, None),
             answers = List("confirmEmailAddress" -> "0")
           )
 
@@ -312,9 +314,14 @@ class ConfirmEmailAddressControllerSpec
         "user has previously answered the questions" in {
 
           test(
-            existingUserEmailAnswers = UserEmailAnswers(EmailType.GGEmail, None, PasscodeSent.some, None).some,
-            updatedUserEmailAnswers =
-              UserEmailAnswers(EmailType.DifferentEmail, otherEmailId.some, EmailAddressAlreadyVerified.some, None),
+            existingUserEmailAnswers = UserEmailAnswers(EmailType.GGEmail, None, PasscodeSent.some, None, None).some,
+            updatedUserEmailAnswers = UserEmailAnswers(
+              EmailType.DifferentEmail,
+              otherEmailId.some,
+              EmailAddressAlreadyVerified.some,
+              None,
+              None
+            ),
             answers = List("confirmEmailAddress" -> "1", "differentEmail" -> otherEmailId.value)
           )
 

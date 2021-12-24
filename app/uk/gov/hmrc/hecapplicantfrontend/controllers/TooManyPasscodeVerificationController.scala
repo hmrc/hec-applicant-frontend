@@ -24,7 +24,7 @@ import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
-class TooManyEmailVerificationAttemptController @Inject() (
+class TooManyPasscodeVerificationController @Inject() (
   authAction: AuthAction,
   sessionDataAction: SessionDataAction,
   journeyService: JourneyService,
@@ -33,11 +33,11 @@ class TooManyEmailVerificationAttemptController @Inject() (
     with I18nSupport
     with Logging {
 
-  val tooManyEmailVerificationAttempts: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
-    Ok(
-      s"session: ${request.sessionData}, back :: ${journeyService.previous(routes.TooManyEmailVerificationAttemptController.tooManyEmailVerificationAttempts)}"
-    )
-
-  }
+  val tooManyPasscodeVerification: Action[AnyContent] =
+    authAction.andThen(sessionDataAction).async { implicit request =>
+      Ok(
+        s"session ${request.sessionData}, back : ${journeyService.previous(routes.TooManyPasscodeVerificationController.tooManyPasscodeVerification)} "
+      )
+    }
 
 }

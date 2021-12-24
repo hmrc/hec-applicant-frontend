@@ -351,4 +351,5 @@ verifyPasscode.p2 = An email confirmation code has been sent to {0}. Enter this 
 verifyPasscode.p3 = If you use a browser to access your email, you may need to open a new window or tab.
 verifyPasscode.label = Email confirmation code:
 verifyPasscode.hint = For example, DNCLRK
+passcode.error.required = Enter your email confirmation code
 

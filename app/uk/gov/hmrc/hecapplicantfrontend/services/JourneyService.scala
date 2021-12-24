@@ -35,6 +35,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, In
 import uk.gov.hmrc.hecapplicantfrontend.models.IndividualUserAnswers.{CompleteIndividualUserAnswers, IncompleteIndividualUserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.{CompanyRetrievedJourneyData, IndividualRetrievedJourneyData}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeRequestResult._
+import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeVerificationResult
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.company.CTStatus
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.individual.SAStatus.ReturnFound
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.individual.{SAStatus, SAStatusResponse}
@@ -88,7 +89,8 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
     routes.CompanyDetailsController.recentlyStartedTrading()             -> recentlyStartedTradingRoute,
     routes.CompanyDetailsController.enterCtutr()                         -> enterCtutrRoute,
     routes.TaxCheckCompleteController.taxCheckComplete()                 -> emailVerificationRoute,
-    routes.ConfirmEmailAddressController.confirmEmailAddress()           -> confirmEmailAddressRoute
+    routes.ConfirmEmailAddressController.confirmEmailAddress()           -> confirmEmailAddressRoute,
+    routes.VerifyEmailPasscodeController.verifyEmailPasscode             -> verifyEmailPasscodeRoute
   )
 
   // map which describes routes from an exit page to their previous page. The keys are the exit page and the values are
@@ -487,8 +489,23 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
       case Some(PasscodeSent)                  => routes.VerifyEmailPasscodeController.verifyEmailPasscode
       case Some(EmailAddressAlreadyVerified)   => routes.EmailAddressConfirmedController.emailAddressConfirmed
       case Some(MaximumNumberOfEmailsExceeded) =>
-        routes.TooManyEmailVerificationAttemptController.tooManyEmaiVerificationAttempts
+        routes.TooManyEmailVerificationAttemptController.tooManyEmailVerificationAttempts
       case _                                   => sys.error("Passcode Result is  invalid/missing from the response")
+    }
+
+  def verifyEmailPasscodeRoute(session: HECSession): Call =
+    session.fold(
+      _.userEmailAnswers.flatMap(_.passcodeVerificationResult),
+      _.userEmailAnswers.flatMap(_.passcodeVerificationResult)
+    ) match {
+      case Some(PasscodeVerificationResult.Match)           => routes.EmailAddressConfirmedController.emailAddressConfirmed()
+      case Some(PasscodeVerificationResult.NoMatch)         =>
+        routes.VerificationPasscodeNotFoundController.verificationPasscodeNotFound
+      case Some(PasscodeVerificationResult.Expired)         =>
+        routes.VerificationPasscodeExpiredController.verificationPasscodeExpired
+      case Some(PasscodeVerificationResult.TooManyAttempts) =>
+        routes.TooManyPasscodeVerificationController.tooManyPasscodeVerification
+      case _                                                => sys.error("Passcode Verification Result is  invalid/missing from the response")
     }
 
 }
