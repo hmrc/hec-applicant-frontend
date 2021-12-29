@@ -85,6 +85,8 @@ GET       /passcode-expired                uk.gov.hmrc.hecapplicantfrontend.cont
 GET       /too-many-email-verification     uk.gov.hmrc.hecapplicantfrontend.controllers.TooManyEmailVerificationAttemptController.tooManyEmailVerificationAttempts
 GET       /too-many-passcode-verification  uk.gov.hmrc.hecapplicantfrontend.controllers.TooManyPasscodeVerificationController.tooManyPasscodeVerification
 
+GET       /resend-email                    uk.gov.hmrc.hecapplicantfrontend.controllers.ResendEmailConfirmationController.resendEmail
+
 # IV
 GET  /failed-iv/callback                         uk.gov.hmrc.hecapplicantfrontend.controllers.IvFailureController.ivFailure(journeyId: java.util.UUID)
 GET  /failed-iv/retry                            uk.gov.hmrc.hecapplicantfrontend.controllers.IvFailureController.retry

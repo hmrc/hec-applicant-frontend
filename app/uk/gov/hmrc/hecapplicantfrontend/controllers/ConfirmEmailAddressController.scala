@@ -58,7 +58,7 @@ class ConfirmEmailAddressController @Inject() (
       val back                                         = journeyService.previous(routes.ConfirmEmailAddressController.confirmEmailAddress)
 
       val form = {
-        val emptyForm = emailAddressForm(emailOptions)
+        val emptyForm = emailAddressForm(emailOptions, ggEmail.some)
         userEmailAnswerOpt.fold(emptyForm)(i => emptyForm.fill(UserEmail(i.emailType, i.emailAddress)))
       }
       Ok(confirmEmailAddressPage(form, back, emailOptions, ggEmail.value))
@@ -91,7 +91,7 @@ class ConfirmEmailAddressController @Inject() (
         )
       }
 
-      emailAddressForm(emailOptions)
+      emailAddressForm(emailOptions, ggEmail.some)
         .bindFromRequest()
         .fold(
           formWithErrors =>
@@ -130,18 +130,18 @@ object ConfirmEmailAddressController {
       )
     )
 
-  def emailAddressForm(options: List[EmailType]): Form[UserEmail] = Form(
+  def emailAddressForm(options: List[EmailType], ggEmailId: Option[EmailAddress]): Form[UserEmail] = Form(
     mapping(
       "confirmEmailAddress" -> of(FormUtils.radioFormFormatter(options)),
       "differentEmail"      -> mandatoryIfEqual("confirmEmailAddress", "1", differentEmailAddressMapping)
     ) { (_, optionalEmail) =>
       optionalEmail match {
         case Some(email) => UserEmail(EmailType.DifferentEmail, email.some)
-        case _           => UserEmail(EmailType.GGEmail, None)
+        case _           => UserEmail(EmailType.GGEmail, ggEmailId)
       }
     } { ue =>
       ue.emailType match {
-        case EmailType.GGEmail        => (EmailType.GGEmail, None).some
+        case EmailType.GGEmail        => (EmailType.GGEmail, ggEmailId).some
         case EmailType.DifferentEmail => (EmailType.DifferentEmail, ue.emailAddress).some
       }
     }

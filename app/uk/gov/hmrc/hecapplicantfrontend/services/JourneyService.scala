@@ -481,17 +481,21 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
     }
   }
 
-  def confirmEmailAddressRoute(session: HECSession): Call =
-    session.fold(
+  def confirmEmailAddressRoute(session: HECSession): Call = {
+    val passcodeRequestResult = session.fold(
       _.userEmailAnswers.flatMap(_.passcodeRequestResult),
       _.userEmailAnswers.flatMap(_.passcodeRequestResult)
-    ) match {
+    )
+
+    passcodeRequestResult match {
       case Some(PasscodeSent)                  => routes.VerifyEmailPasscodeController.verifyEmailPasscode
-      case Some(EmailAddressAlreadyVerified)   => routes.EmailAddressConfirmedController.emailAddressConfirmed
+      case Some(EmailAddressAlreadyVerified)   =>
+        routes.EmailAddressConfirmedController.emailAddressConfirmed
       case Some(MaximumNumberOfEmailsExceeded) =>
         routes.TooManyEmailVerificationAttemptController.tooManyEmailVerificationAttempts
       case _                                   => sys.error("Passcode Result is  invalid/missing from the response")
     }
+  }
 
   def verifyEmailPasscodeRoute(session: HECSession): Call =
     session.fold(

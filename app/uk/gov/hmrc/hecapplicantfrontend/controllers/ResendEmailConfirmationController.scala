@@ -23,7 +23,7 @@ import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, Session
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
-class EnterEmailAddressController @Inject() (
+class ResendEmailConfirmationController @Inject() (
   authAction: AuthAction,
   sessionDataAction: SessionDataAction,
   mcc: MessagesControllerComponents
@@ -31,11 +31,11 @@ class EnterEmailAddressController @Inject() (
     with I18nSupport
     with Logging {
 
-  val enterEmailAddress: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
-    Ok(
-      s"session: ${request.sessionData}, back :: }"
-    )
-
-  }
+  val resendEmail: Action[AnyContent] =
+    authAction.andThen(sessionDataAction).async { implicit request =>
+      Ok(
+        s"session ${request.sessionData}, back } "
+      )
+    }
 
 }

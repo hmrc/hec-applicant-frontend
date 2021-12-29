@@ -17,6 +17,7 @@
 @import play.api.i18n.Messages
 @import play.api.data.Form
 @import play.api.mvc.{Call, Request}
+@import play.twirl.api.Html
 @import uk.gov.hmrc.govukfrontend.views.html.components._
 @import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 @import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.Passcode
@@ -54,7 +55,7 @@ Request[_], messages: Messages)
   </p>
 
   <p class="govuk-body">
-  @messages(s"$key.p3")
+ @messages(s"$key.p3")
   </p>
 
     @formWithCSRF(action = routes.VerifyEmailPasscodeController.verifyEmailPasscodeSubmit()) {
@@ -76,6 +77,13 @@ Request[_], messages: Messages)
         ))
       ))
 
+        <div class="govuk-details__text">
+        <p class="govuk-body">@messages(s"$key.p4")</p>
+        <p class="govuk-body">@Html(messages(s"$key.p5", routes.ResendEmailConfirmationController.resendEmail().url, routes.EnterEmailAddressController.enterEmailAddress().url))</p>
+        </div>
+
       @govukButton(Button(content = Text(messages("button.continue"))))
     }
+
+
 }

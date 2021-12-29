@@ -16,12 +16,14 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.utils
 
+import cats.implicits.catsSyntaxOptionId
 import uk.gov.hmrc.hecapplicantfrontend.models.CompanyUserAnswers.{CompleteCompanyUserAnswers, IncompleteCompanyUserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, IndividualHECSession}
 import uk.gov.hmrc.hecapplicantfrontend.models.IndividualUserAnswers.{CompleteIndividualUserAnswers, IncompleteIndividualUserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.{CompanyRetrievedJourneyData, IndividualRetrievedJourneyData}
 import uk.gov.hmrc.hecapplicantfrontend.models._
+import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{Passcode, PasscodeRequestResult, PasscodeVerificationResult}
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.company.CTAccountingPeriod.CTAccountingPeriodDigital
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.company.{CTAccountingPeriod, CTStatus, CTStatusResponse}
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.individual.SAStatusResponse
@@ -230,4 +232,13 @@ object Fixtures {
     expiresAfter = expiresAfter,
     createDate = createDate
   )
+
+  def userEmailAnswers(
+    emailType: EmailType = EmailType.GGEmail,
+    emailAddress: Option[EmailAddress] = EmailAddress("user@test.com").some,
+    passcodeRequestResult: Option[PasscodeRequestResult] = None,
+    passcode: Option[Passcode] = None,
+    passcodeVerificationResult: Option[PasscodeVerificationResult] = None
+  ): UserEmailAnswers =
+    UserEmailAnswers(emailType, emailAddress, passcodeRequestResult, passcode, passcodeVerificationResult)
 }
