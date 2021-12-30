@@ -69,7 +69,7 @@ class SendEmailServiceImplSpec extends AnyWordSpec with Matchers with MockFactor
   implicit val hc: HeaderCarrier = HeaderCarrier()
   val emailAddress               = EmailAddress("user@test.com")
   val emailParameter             =
-    EmailParameters("kevin McKevin", "6 july 2021", HECTaxCheckCode("ABC 123 GRD"), "6 September 2021")
+    EmailParameters("6 july 2021", HECTaxCheckCode("ABC 123 GRD"), "6 September 2021")
   val emptyHeaders               = Map.empty[String, Seq[String]]
 
   "SendEmailServiceImplSpec" when {

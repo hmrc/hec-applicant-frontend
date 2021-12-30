@@ -80,23 +80,14 @@ class EmailAddressConfirmedController @Inject() (
     }
 
   private def getEmailParameters(session: HECSession)(implicit request: RequestWithSessionData[_]) = {
-
-    //TODO Should we do a default 'customer' or error out that customer's name is not there or blank?
-    val customerName           = (session
-      .fold(
-        i => (s"${i.loginData.name.firstName} ${i.loginData.name.lastName}".some),
-        _.retrievedJourneyData.companyName.map(_.name)
-      ))
-      .getOrElse("")
-    val hecTaxCheckCode        = request.sessionData.completedTaxCheck
+    val hecTaxCheckCode        = session.completedTaxCheck
       .map(_.taxCheckCode)
       .getOrElse(sys.error(" Tax check code is not in session"))
-    val taxCheckCodeExpiryDate = request.sessionData.completedTaxCheck
+    val taxCheckCodeExpiryDate = session.completedTaxCheck
       .map(_.expiresAfter)
       .getOrElse(sys.error(" Tax check code expiry date is not in session"))
 
     EmailParameters(
-      customerName,
       TimeUtils.govDisplayFormat(timeProvider.currentDate),
       hecTaxCheckCode,
       TimeUtils.govDisplayFormat(taxCheckCodeExpiryDate)

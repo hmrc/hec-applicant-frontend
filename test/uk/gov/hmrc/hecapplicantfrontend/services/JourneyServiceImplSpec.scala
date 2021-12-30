@@ -32,6 +32,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, Indi
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.{CompanyRetrievedJourneyData, IndividualRetrievedJourneyData}
 import uk.gov.hmrc.hecapplicantfrontend.models.TaxSituation.PAYE
 import uk.gov.hmrc.hecapplicantfrontend.models._
+import uk.gov.hmrc.hecapplicantfrontend.models.emailSend.EmailSendResult
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{Passcode, PasscodeRequestResult, PasscodeVerificationResult}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeRequestResult.{EmailAddressAlreadyVerified, MaximumNumberOfEmailsExceeded, PasscodeSent}
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.company.CTAccountingPeriod.CTAccountingPeriodDigital
@@ -1729,6 +1730,42 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
           }
 
         }
+
+        "email address confirmed page" when {
+
+          def test(emailSendResult: Option[EmailSendResult], nextCall: Call) = {
+            val session                                     = Fixtures.companyHECSession(
+              loginData = Fixtures.companyLoginData(emailAddress = ggEmailId.some),
+              userAnswers = Fixtures.completeCompanyUserAnswers(),
+              isEmailRequested = true,
+              userEmailAnswers = Fixtures
+                .userEmailAnswers(
+                  passcodeRequestResult = PasscodeRequestResult.PasscodeSent.some,
+                  passcode = Passcode("HHHHHH").some,
+                  passcodeVerificationResult = PasscodeVerificationResult.Match.some,
+                  emailSendResult = emailSendResult
+                )
+                .some
+            )
+            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+
+            val result = journeyService.updateAndNext(
+              routes.EmailAddressConfirmedController.emailAddressConfirmed(),
+              session
+            )
+            await(result.value) shouldBe Right(nextCall)
+
+          }
+
+          "the email is send" in {
+            test(EmailSendResult.EmailSent.some, routes.EmailSentController.emailSent)
+          }
+
+          "the email is not send due to any failures" in {
+            test(None, routes.ProblemSendingEmailController.problemSendingEmail)
+          }
+
+        }
       }
 
       "convert incomplete answers to complete answers when all questions have been answered and" when {
@@ -2801,6 +2838,34 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
             routes.ConfirmEmailAddressController.confirmEmailAddress()
           )
           result shouldBe routes.TaxCheckCompleteController.taxCheckComplete()
+        }
+
+        "the Email sent page" in {
+
+          val hecTaxCheckCode                             = HECTaxCheckCode("ABC 123 DER")
+          val expiryDate                                  = LocalDate.of(2021, 10, 9)
+          val hecTaxCheck                                 = HECTaxCheck(hecTaxCheckCode, expiryDate)
+          val userEmailAnswer                             = Fixtures
+            .userEmailAnswers(
+              passcodeRequestResult = PasscodeRequestResult.PasscodeSent.some,
+              passcode = Passcode("HHHHHH").some,
+              passcodeVerificationResult = PasscodeVerificationResult.Match.some,
+              emailSendResult = EmailSendResult.EmailSent.some
+            )
+          val session                                     = Fixtures.companyHECSession(
+            loginData = Fixtures.companyLoginData(emailAddress = ggEmailId.some),
+            userAnswers = Fixtures.completeCompanyUserAnswers(),
+            isEmailRequested = true,
+            completedTaxCheck = hecTaxCheck.some,
+            userEmailAnswers = userEmailAnswer.some
+          )
+          implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+
+          val result = journeyService.previous(
+            routes.EmailSentController.emailSent()
+          )
+          result shouldBe routes.EmailAddressConfirmedController.emailAddressConfirmed()
+
         }
 
         "the Enter Email Address page" when {

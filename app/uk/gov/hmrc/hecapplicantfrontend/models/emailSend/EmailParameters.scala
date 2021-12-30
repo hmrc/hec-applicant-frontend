@@ -21,7 +21,6 @@ import uk.gov.hmrc.hecapplicantfrontend.models.HECTaxCheckCode
 
 //TODO discussion on data model for email parameters
 final case class EmailParameters(
-  name: String,
   currentDate: String,
   hecTaxCheckCode: HECTaxCheckCode,
   expiresAfter: String
