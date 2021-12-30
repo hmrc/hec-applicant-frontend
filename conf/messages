@@ -360,3 +360,10 @@ verifyPasscode.p5 = Check your spam or junk folder – if it still has not arriv
 #Email Address Confirmed
 emailAddressConfirmed.title = Email address confirmed
 emailAddressConfirmed.p1 = Your email address has been confirmed. Your tax check code will be sent to {0}
+
+
+#Email Sent
+emailSent.title = Your tax check code has been emailed to you
+emailSent.p1 = We have sent your tax check code to <b>{0}</b>
+emailSent.p2 = Enter your tax check code in your licence application. Make sure you leave enough time for your application to be processed before your tax check code expires.
+emailSent.p3 = <a href="{0}" class="govuk-link">See my tax check codes</a>
