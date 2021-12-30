@@ -128,14 +128,15 @@ class ConfirmEmailAddressControllerSpec
         }
 
         "User's GG account has a valid email id and user has previously selected ggEmail id  " in {
-          test(UserEmailAnswers(EmailType.GGEmail, ggEmailId.some, None, None, None).some, Some("0"))
+          test(Fixtures.userEmailAnswers(EmailType.GGEmail, ggEmailId.some).some, Some("0"))
         }
 
         "User's GG account has a valid email id and user has previously selected different email id option" in {
-          test(UserEmailAnswers(EmailType.DifferentEmail, otherEmailId.some, None, None, None).some, Some("1"))
+          test(Fixtures.userEmailAnswers(EmailType.DifferentEmail, otherEmailId.some).some, Some("1"))
 
         }
       }
+
     }
 
     "handling submit to confirm email address page" must {
@@ -249,7 +250,7 @@ class ConfirmEmailAddressControllerSpec
 
           val updatedSession =
             session.copy(userEmailAnswers =
-              UserEmailAnswers(EmailType.GGEmail, ggEmailId.some, PasscodeSent.some, None, None).some
+              Fixtures.userEmailAnswers(EmailType.GGEmail, ggEmailId.some, PasscodeSent.some).some
             )
 
           inSequence {
@@ -305,8 +306,7 @@ class ConfirmEmailAddressControllerSpec
 
           test(
             existingUserEmailAnswers = None,
-            updatedUserEmailAnswers =
-              UserEmailAnswers(EmailType.GGEmail, ggEmailId.some, PasscodeSent.some, None, None),
+            updatedUserEmailAnswers = Fixtures.userEmailAnswers(EmailType.GGEmail, ggEmailId.some, PasscodeSent.some),
             answers = List("confirmEmailAddress" -> "0")
           )
 
@@ -316,13 +316,11 @@ class ConfirmEmailAddressControllerSpec
 
           test(
             existingUserEmailAnswers =
-              UserEmailAnswers(EmailType.GGEmail, ggEmailId.some, PasscodeSent.some, None, None).some,
-            updatedUserEmailAnswers = UserEmailAnswers(
+              Fixtures.userEmailAnswers(EmailType.GGEmail, ggEmailId.some, PasscodeSent.some).some,
+            updatedUserEmailAnswers = Fixtures.userEmailAnswers(
               EmailType.DifferentEmail,
               otherEmailId.some,
-              EmailAddressAlreadyVerified.some,
-              None,
-              None
+              EmailAddressAlreadyVerified.some
             ),
             answers = List("confirmEmailAddress" -> "1", "differentEmail" -> otherEmailId.value)
           )
@@ -331,6 +329,5 @@ class ConfirmEmailAddressControllerSpec
 
       }
     }
-
   }
 }

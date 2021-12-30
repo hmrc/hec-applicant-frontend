@@ -17,6 +17,7 @@
 package uk.gov.hmrc.hecapplicantfrontend.models
 
 import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.hecapplicantfrontend.models.emailSend.EmailSendResult
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{Passcode, PasscodeRequestResult, PasscodeVerificationResult}
 
 final case class UserEmailAnswers(
@@ -24,7 +25,8 @@ final case class UserEmailAnswers(
   emailAddress: Option[EmailAddress],
   passcodeRequestResult: Option[PasscodeRequestResult],
   passcode: Option[Passcode],
-  passcodeVerificationResult: Option[PasscodeVerificationResult]
+  passcodeVerificationResult: Option[PasscodeVerificationResult],
+  emailSendResult: Option[EmailSendResult]
 )
 
 object UserEmailAnswers {

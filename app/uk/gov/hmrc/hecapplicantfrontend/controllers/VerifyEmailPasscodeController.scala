@@ -22,7 +22,7 @@ import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.Passcode
-import play.api.data.Form
+import play.api.data.{Form}
 import play.api.data.Forms.{mapping, nonEmptyText}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.VerifyEmailPasscodeController.{fetchUserSelectedEmail, verifyPasscodeForm}
 import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, HECSession}
@@ -30,6 +30,7 @@ import uk.gov.hmrc.hecapplicantfrontend.services.{EmailVerificationService, Jour
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.hecapplicantfrontend.views.html.VerifyPasscode
+
 import java.util.Locale
 import scala.concurrent.ExecutionContext
 
@@ -105,7 +106,7 @@ object VerifyEmailPasscodeController {
     )(identity)(Some(_))
   )
 
-  private def fetchUserSelectedEmail(session: HECSession): EmailAddress =
+  def fetchUserSelectedEmail(session: HECSession): EmailAddress =
     session.userEmailAnswers.flatMap(_.emailAddress).getOrElse(sys.error(" No user selected email id in session"))
 
 }

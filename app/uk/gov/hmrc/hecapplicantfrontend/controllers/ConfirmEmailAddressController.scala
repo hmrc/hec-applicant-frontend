@@ -77,7 +77,7 @@ class ConfirmEmailAddressController @Inject() (
         val result = for {
           passcodeResult     <- emailVerificationService.requestPasscode(userSelectedEmail)(headerCarrier, authReq)
           updatedEmailAnswers =
-            Some(UserEmailAnswers(userEmail.emailType, userEmail.emailAddress, passcodeResult.some, None, None))
+            Some(UserEmailAnswers(userEmail.emailType, userEmail.emailAddress, passcodeResult.some, None, None, None))
           updatedSession      =
             request.sessionData
               .fold(_.copy(userEmailAnswers = updatedEmailAnswers), _.copy(userEmailAnswers = updatedEmailAnswers))

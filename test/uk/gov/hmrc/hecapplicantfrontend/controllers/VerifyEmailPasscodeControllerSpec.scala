@@ -75,7 +75,7 @@ class VerifyEmailPasscodeControllerSpec
             loginData = Fixtures.individualLoginData(emailAddress = ggEmailId.some),
             userAnswers = Fixtures.completeIndividualUserAnswers(),
             isEmailRequested = true,
-            userEmailAnswers = UserEmailAnswers(EmailType.DifferentEmail, None, None, None, None).some
+            userEmailAnswers = Fixtures.userEmailAnswers(EmailType.DifferentEmail, None).some
           )
 
           inSequence {
@@ -198,7 +198,7 @@ class VerifyEmailPasscodeControllerSpec
             loginData = Fixtures.individualLoginData(emailAddress = ggEmailId.some),
             userAnswers = Fixtures.completeIndividualUserAnswers(),
             isEmailRequested = true,
-            userEmailAnswers = UserEmailAnswers(EmailType.DifferentEmail, None, None, None, None).some
+            userEmailAnswers = Fixtures.userEmailAnswers(EmailType.DifferentEmail, None).some
           )
 
           inSequence {

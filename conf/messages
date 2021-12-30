@@ -15,6 +15,7 @@ button.confirm=Confirm
 button.continue=Continue
 button.copy=Copy
 button.copied=Copied
+button.sendEmail =Send email
 
 # Failed IV
 iv.failedIv.title=We could not confirm your identity
@@ -355,3 +356,7 @@ passcode.error.required = Enter your email confirmation code
 verifyPasscode.p4 = The email may take a few minutes to arrive. Its subject line is: ‘Confirm your email address’.
 verifyPasscode.p5 = Check your spam or junk folder – if it still has not arrived, you can <a href="{0}" class="govuk-link">request a new confirmation code</a> or <a href="{1}" class="govuk-link">provide another email address</a?.
 
+
+#Email Address Confirmed
+emailAddressConfirmed.title = Email address confirmed
+emailAddressConfirmed.p1 = Your email address has been confirmed. Your tax check code will be sent to {0}

@@ -23,6 +23,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.IndividualUserAnswers.{CompleteIn
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.{CompanyRetrievedJourneyData, IndividualRetrievedJourneyData}
 import uk.gov.hmrc.hecapplicantfrontend.models._
+import uk.gov.hmrc.hecapplicantfrontend.models.emailSend.EmailSendResult
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{Passcode, PasscodeRequestResult, PasscodeVerificationResult}
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.company.CTAccountingPeriod.CTAccountingPeriodDigital
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.company.{CTAccountingPeriod, CTStatus, CTStatusResponse}
@@ -238,7 +239,15 @@ object Fixtures {
     emailAddress: Option[EmailAddress] = EmailAddress("user@test.com").some,
     passcodeRequestResult: Option[PasscodeRequestResult] = None,
     passcode: Option[Passcode] = None,
-    passcodeVerificationResult: Option[PasscodeVerificationResult] = None
+    passcodeVerificationResult: Option[PasscodeVerificationResult] = None,
+    emailSendResult: Option[EmailSendResult] = None
   ): UserEmailAnswers =
-    UserEmailAnswers(emailType, emailAddress, passcodeRequestResult, passcode, passcodeVerificationResult)
+    UserEmailAnswers(
+      emailType,
+      emailAddress,
+      passcodeRequestResult,
+      passcode,
+      passcodeVerificationResult,
+      emailSendResult
+    )
 }
