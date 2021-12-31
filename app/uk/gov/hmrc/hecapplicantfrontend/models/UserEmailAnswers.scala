@@ -21,8 +21,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.emailSend.EmailSendResult
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{Passcode, PasscodeRequestResult, PasscodeVerificationResult}
 
 final case class UserEmailAnswers(
-  emailType: EmailType,
-  emailAddress: Option[EmailAddress],
+  userSelectedEmail: UserSelectedEmail,
   passcodeRequestResult: Option[PasscodeRequestResult],
   passcode: Option[Passcode],
   passcodeVerificationResult: Option[PasscodeVerificationResult],

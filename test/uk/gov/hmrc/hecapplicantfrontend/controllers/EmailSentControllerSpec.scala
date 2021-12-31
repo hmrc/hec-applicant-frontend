@@ -62,7 +62,7 @@ class EmailSentControllerSpec
           val session = Fixtures.individualHECSession(
             userAnswers = Fixtures.completeIndividualUserAnswers(),
             isEmailRequested = true,
-            userEmailAnswers = Fixtures.userEmailAnswers(emailAddress = None).some
+            userEmailAnswers = None
           )
 
           inSequence {

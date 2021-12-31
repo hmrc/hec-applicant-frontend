@@ -26,7 +26,7 @@ import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeRequestResult.PasscodeSent
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeVerificationResult.Match
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{Passcode, PasscodeRequestResult, PasscodeVerificationResult}
-import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, EmailType, Error, UserEmailAnswers}
+import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, Error, UserEmailAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.{EmailVerificationService, JourneyService}
 import uk.gov.hmrc.hecapplicantfrontend.utils.Fixtures
@@ -75,7 +75,7 @@ class VerifyEmailPasscodeControllerSpec
             loginData = Fixtures.individualLoginData(emailAddress = ggEmailId.some),
             userAnswers = Fixtures.completeIndividualUserAnswers(),
             isEmailRequested = true,
-            userEmailAnswers = Fixtures.userEmailAnswers(EmailType.DifferentEmail, None).some
+            userEmailAnswers = None
           )
 
           inSequence {
@@ -113,7 +113,7 @@ class VerifyEmailPasscodeControllerSpec
               val htmlBody = doc.select(".govuk-body").html()
 
               textBody should include regex userEmailAnswers
-                .flatMap(_.emailAddress.map(_.value))
+                .map(_.userSelectedEmail.emailAddress.value)
                 .getOrElse("")
               htmlBody should include regex messageFromMessageKey(
                 "verifyPasscode.p5",
@@ -198,7 +198,7 @@ class VerifyEmailPasscodeControllerSpec
             loginData = Fixtures.individualLoginData(emailAddress = ggEmailId.some),
             userAnswers = Fixtures.completeIndividualUserAnswers(),
             isEmailRequested = true,
-            userEmailAnswers = Fixtures.userEmailAnswers(EmailType.DifferentEmail, None).some
+            userEmailAnswers = None
           )
 
           inSequence {

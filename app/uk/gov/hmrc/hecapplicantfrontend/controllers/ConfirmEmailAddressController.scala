@@ -26,7 +26,7 @@ import play.api.i18n.I18nSupport
 import play.api.mvc._
 import uk.gov.hmrc.hecapplicantfrontend.controllers.ConfirmEmailAddressController.{emailAddressForm, getEmailOptions}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, AuthenticatedRequest, SessionDataAction}
-import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, EmailType, UserEmail, UserEmailAnswers}
+import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, EmailType, UserEmailAnswers, UserSelectedEmail}
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
 import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging}
 import uk.gov.hmrc.hecapplicantfrontend.views.html
@@ -53,13 +53,16 @@ class ConfirmEmailAddressController @Inject() (
 
   val confirmEmailAddress: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     request.sessionData.ensureGGEmailIdPresent { ggEmail =>
-      val emailOptions                                 = getEmailOptions
+      val emailOptions: List[EmailType]                = getEmailOptions
       val userEmailAnswerOpt: Option[UserEmailAnswers] = request.sessionData.userEmailAnswers
       val back                                         = journeyService.previous(routes.ConfirmEmailAddressController.confirmEmailAddress)
 
       val form = {
-        val emptyForm = emailAddressForm(emailOptions, ggEmail.some)
-        userEmailAnswerOpt.fold(emptyForm)(i => emptyForm.fill(UserEmail(i.emailType, i.emailAddress)))
+        val emptyForm = emailAddressForm(emailOptions, ggEmail)
+        userEmailAnswerOpt.fold(emptyForm)(userEmail =>
+          emptyForm
+            .fill(UserSelectedEmail(userEmail.userSelectedEmail.emailType, userEmail.userSelectedEmail.emailAddress))
+        )
       }
       Ok(confirmEmailAddressPage(form, back, emailOptions, ggEmail.value))
     }
@@ -68,16 +71,16 @@ class ConfirmEmailAddressController @Inject() (
   val confirmEmailAddressSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     val emailOptions = getEmailOptions
     request.sessionData.ensureGGEmailIdPresent { ggEmail =>
-      def handleValidEmail(userEmail: UserEmail): Future[Result] = {
-        val userSelectedEmail                         = userEmail.emailAddress.getOrElse(ggEmail)
+      def handleValidEmail(userSelectedEmail: UserSelectedEmail): Future[Result] = {
         val authReq: AuthenticatedRequest[AnyContent] = request.request
         val headerCarrier: HeaderCarrier              =
           HeaderCarrierConverter.fromRequestAndSession(request, request.session)
 
         val result = for {
-          passcodeResult     <- emailVerificationService.requestPasscode(userSelectedEmail)(headerCarrier, authReq)
+          passcodeResult     <-
+            emailVerificationService.requestPasscode(userSelectedEmail.emailAddress)(headerCarrier, authReq)
           updatedEmailAnswers =
-            Some(UserEmailAnswers(userEmail.emailType, userEmail.emailAddress, passcodeResult.some, None, None, None))
+            Some(UserEmailAnswers(userSelectedEmail, passcodeResult.some, None, None, None))
           updatedSession      =
             request.sessionData
               .fold(_.copy(userEmailAnswers = updatedEmailAnswers), _.copy(userEmailAnswers = updatedEmailAnswers))
@@ -91,7 +94,7 @@ class ConfirmEmailAddressController @Inject() (
         )
       }
 
-      emailAddressForm(emailOptions, ggEmail.some)
+      emailAddressForm(emailOptions, ggEmail)
         .bindFromRequest()
         .fold(
           formWithErrors =>
@@ -130,19 +133,19 @@ object ConfirmEmailAddressController {
       )
     )
 
-  def emailAddressForm(options: List[EmailType], ggEmailId: Option[EmailAddress]): Form[UserEmail] = Form(
+  def emailAddressForm(options: List[EmailType], ggEmailId: EmailAddress): Form[UserSelectedEmail] = Form(
     mapping(
       "confirmEmailAddress" -> of(FormUtils.radioFormFormatter(options)),
       "differentEmail"      -> mandatoryIfEqual("confirmEmailAddress", "1", differentEmailAddressMapping)
     ) { (_, optionalEmail) =>
       optionalEmail match {
-        case Some(email) => UserEmail(EmailType.DifferentEmail, email.some)
-        case _           => UserEmail(EmailType.GGEmail, ggEmailId)
+        case Some(email) => UserSelectedEmail(EmailType.DifferentEmail, email)
+        case _           => UserSelectedEmail(EmailType.GGEmail, ggEmailId)
       }
     } { ue =>
       ue.emailType match {
-        case EmailType.GGEmail        => (EmailType.GGEmail, ggEmailId).some
-        case EmailType.DifferentEmail => (EmailType.DifferentEmail, ue.emailAddress).some
+        case EmailType.GGEmail        => (EmailType.GGEmail, ggEmailId.some).some
+        case EmailType.DifferentEmail => (EmailType.DifferentEmail, ue.emailAddress.some).some
       }
     }
   )

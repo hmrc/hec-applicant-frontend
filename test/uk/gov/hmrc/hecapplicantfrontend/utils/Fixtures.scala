@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.utils
 
-import cats.implicits.catsSyntaxOptionId
 import uk.gov.hmrc.hecapplicantfrontend.models.CompanyUserAnswers.{CompleteCompanyUserAnswers, IncompleteCompanyUserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, IndividualHECSession}
 import uk.gov.hmrc.hecapplicantfrontend.models.IndividualUserAnswers.{CompleteIndividualUserAnswers, IncompleteIndividualUserAnswers}
@@ -236,15 +235,14 @@ object Fixtures {
 
   def userEmailAnswers(
     emailType: EmailType = EmailType.GGEmail,
-    emailAddress: Option[EmailAddress] = EmailAddress("user@test.com").some,
+    emailAddress: EmailAddress = EmailAddress("user@test.com"),
     passcodeRequestResult: Option[PasscodeRequestResult] = None,
     passcode: Option[Passcode] = None,
     passcodeVerificationResult: Option[PasscodeVerificationResult] = None,
     emailSendResult: Option[EmailSendResult] = None
   ): UserEmailAnswers =
     UserEmailAnswers(
-      emailType,
-      emailAddress,
+      UserSelectedEmail(emailType, emailAddress),
       passcodeRequestResult,
       passcode,
       passcodeVerificationResult,

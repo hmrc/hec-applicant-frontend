@@ -107,6 +107,8 @@ object VerifyEmailPasscodeController {
   )
 
   def fetchUserSelectedEmail(session: HECSession): EmailAddress =
-    session.userEmailAnswers.flatMap(_.emailAddress).getOrElse(sys.error(" No user selected email id in session"))
+    session.userEmailAnswers
+      .map(_.userSelectedEmail.emailAddress)
+      .getOrElse(sys.error(" No user selected email id in session"))
 
 }

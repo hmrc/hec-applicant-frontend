@@ -36,8 +36,8 @@ object EmailType {
 
 }
 
-final case class UserEmail(emailType: EmailType, emailAddress: Option[EmailAddress])
+final case class UserSelectedEmail(emailType: EmailType, emailAddress: EmailAddress)
 
-object UserEmail {
-  implicit val format: OFormat[UserEmail] = Json.format[UserEmail]
+object UserSelectedEmail {
+  implicit val format: OFormat[UserSelectedEmail] = Json.format[UserSelectedEmail]
 }
