@@ -118,7 +118,7 @@ class VerifyEmailPasscodeControllerSpec
               htmlBody should include regex messageFromMessageKey(
                 "verifyPasscode.p5",
                 routes.ResendEmailConfirmationController.resendEmail().url,
-                routes.EnterEmailAddressController.enterEmailAddress().url
+                routes.TaxCheckCompleteController.taxCheckComplete().url
               )
 
               doc.select("#passcode").attr("value") shouldBe userEmailAnswers

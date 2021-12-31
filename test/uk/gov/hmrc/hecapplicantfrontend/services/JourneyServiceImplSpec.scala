@@ -1766,6 +1766,55 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
           }
 
         }
+
+        "the enter email address page" when {
+          def test(userEmailAnswers: UserEmailAnswers, nextCall: Call) = {
+            val session                                     = Fixtures.individualHECSession(
+              individualLoginData,
+              IndividualRetrievedJourneyData.empty,
+              Fixtures.completeIndividualUserAnswers(
+                licenceType = DriverOfTaxisAndPrivateHires,
+                licenceTimeTrading = LicenceTimeTrading.TwoToFourYears,
+                licenceValidityPeriod = UpToOneYear,
+                taxSituation = PAYE,
+                saIncomeDeclared = Some(YesNoAnswer.Yes),
+                entityType = Some(Individual)
+              ),
+              Some(HECTaxCheck(HECTaxCheckCode("code"), LocalDate.now.plusDays(1))),
+              Some(taxCheckStartDateTime),
+              isEmailRequested = true,
+              userEmailAnswers = userEmailAnswers.some
+            )
+            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+
+            val result = journeyService.updateAndNext(
+              routes.ConfirmEmailAddressController.confirmEmailAddress(),
+              session
+            )
+            await(result.value) shouldBe Right(nextCall)
+          }
+          "valid email id is entered and Email Verification Service response = Passcode Sent" in {
+            test(
+              Fixtures.userEmailAnswers(EmailType.DifferentEmail, otherEmailId, PasscodeSent.some),
+              routes.VerifyEmailPasscodeController.verifyEmailPasscode()
+            )
+          }
+
+          "valid email id is entered and Email Verification Service response = Email Already Verified" in {
+            test(
+              Fixtures.userEmailAnswers(EmailType.DifferentEmail, otherEmailId, EmailAddressAlreadyVerified.some),
+              routes.EmailAddressConfirmedController.emailAddressConfirmed()
+            )
+          }
+
+          "valid email id is entered and Email Verification Service response = Too Many Email attempts in session " in {
+            test(
+              Fixtures.userEmailAnswers(EmailType.DifferentEmail, otherEmailId, MaximumNumberOfEmailsExceeded.some),
+              routes.TooManyEmailVerificationAttemptController.tooManyEmailVerificationAttempts()
+            )
+          }
+
+        }
       }
 
       "convert incomplete answers to complete answers when all questions have been answered and" when {

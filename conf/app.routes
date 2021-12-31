@@ -74,6 +74,7 @@ GET        /confirm-email-address          uk.gov.hmrc.hecapplicantfrontend.cont
 POST       /confirm-email-address          uk.gov.hmrc.hecapplicantfrontend.controllers.ConfirmEmailAddressController.confirmEmailAddressSubmit
 
 GET        /enter-email-address            uk.gov.hmrc.hecapplicantfrontend.controllers.EnterEmailAddressController.enterEmailAddress
+POST       /enter-email-address            uk.gov.hmrc.hecapplicantfrontend.controllers.EnterEmailAddressController.enterEmailAddressSubmit
 
 GET       /verify-email-passcode           uk.gov.hmrc.hecapplicantfrontend.controllers.VerifyEmailPasscodeController.verifyEmailPasscode
 POST      /verify-email-passcode           uk.gov.hmrc.hecapplicantfrontend.controllers.VerifyEmailPasscodeController.verifyEmailPasscodeSubmit

@@ -21,12 +21,13 @@ import cats.instances.future._
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
+import uk.gov.hmrc.hecapplicantfrontend.models.HECSession
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.hecapplicantfrontend.views.html
 
-import scala.concurrent.{ExecutionContext}
+import scala.concurrent.ExecutionContext
 
 @Singleton
 class TaxCheckCompleteController @Inject() (
@@ -43,12 +44,28 @@ class TaxCheckCompleteController @Inject() (
   /**
     * Fetches tax check data (code & expiry date) for authenticated user
     */
-  val taxCheckComplete: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
+  val taxCheckComplete: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     request.sessionData.completedTaxCheck match {
-      case Some(taxCheck) => Ok(taxCheckCompletePage(taxCheck))
-      case None           =>
+      case Some(taxCheck) if request.sessionData.userEmailAnswers.isEmpty => Ok(taxCheckCompletePage(taxCheck))
+      case Some(_)                                                        =>
+        val updatedSession: HECSession = request.sessionData.fold(
+          i => i.copy(loginData = i.loginData.copy(emailAddress = None)),
+          c => c.copy(loginData = c.loginData.copy(emailAddress = None))
+        )
+
+        journeyService
+          .updateAndNext(
+            routes.TaxCheckCompleteController.taxCheckComplete(),
+            updatedSession
+          )
+          .fold(
+            _.doThrow("Could not update session and proceed"),
+            Redirect
+          )
+      case None                                                           =>
         sys.error("Tax check code not found")
     }
+
   }
 
   val emailTaxCheckCode: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>

@@ -92,7 +92,8 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
     routes.TaxCheckCompleteController.taxCheckComplete()                 -> emailVerificationRoute,
     routes.ConfirmEmailAddressController.confirmEmailAddress()           -> confirmEmailAddressRoute,
     routes.VerifyEmailPasscodeController.verifyEmailPasscode             -> verifyEmailPasscodeRoute,
-    routes.EmailAddressConfirmedController.emailAddressConfirmed()       -> emailAddressConfirmedRoute
+    routes.EmailAddressConfirmedController.emailAddressConfirmed()       -> emailAddressConfirmedRoute,
+    routes.EnterEmailAddressController.enterEmailAddress()               -> confirmEmailAddressRoute
   )
 
   // map which describes routes from an exit page to their previous page. The keys are the exit page and the values are
@@ -101,13 +102,15 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
   lazy val exitPageToPreviousPage: Map[Call, Call] =
     Map(
       routes.ConfirmIndividualDetailsController
-        .confirmIndividualDetailsExit()                 -> routes.ConfirmIndividualDetailsController.confirmIndividualDetails(),
-      routes.LicenceDetailsController.licenceTypeExit() ->
+        .confirmIndividualDetailsExit()                      -> routes.ConfirmIndividualDetailsController.confirmIndividualDetails(),
+      routes.LicenceDetailsController.licenceTypeExit()      ->
         routes.LicenceDetailsController.licenceType(),
-      routes.EntityTypeController.wrongEntityType()     ->
+      routes.EntityTypeController.wrongEntityType()          ->
         routes.EntityTypeController.entityType(),
-      routes.CompanyDetailsController.dontHaveUtr()     ->
-        routes.CompanyDetailsController.enterCtutr()
+      routes.CompanyDetailsController.dontHaveUtr()          ->
+        routes.CompanyDetailsController.enterCtutr(),
+      routes.ResendEmailConfirmationController.resendEmail() -> routes.VerifyEmailPasscodeController
+        .verifyEmailPasscode()
     )
 
   override def firstPage(session: HECSession): Call = {
