@@ -77,7 +77,7 @@ class EmailAddressConfirmedControllerSpec
 
   val hecTaxCheck = HECTaxCheck(hecTaxCheckCode, expiryDate)
 
-  val emailParameters = EmailParameters(currentDateString, hecTaxCheckCode, expiryDateString)
+  val emailParameters = EmailParameters("Dummy name", "10 July 2021, ABC 123 DER, 9 October 2021")
 
   def mockSendEmail(emailAddress: EmailAddress, emailParameters: EmailParameters)(
     result: Either[Error, EmailSendResult]
@@ -213,7 +213,7 @@ class EmailAddressConfirmedControllerSpec
 
       }
 
-      "redirect to the next page" when {
+      "redirect to the next page" in {
         val session = Fixtures.companyHECSession(
           loginData = Fixtures.companyLoginData(emailAddress = ggEmailId.some),
           userAnswers = Fixtures.completeCompanyUserAnswers(),

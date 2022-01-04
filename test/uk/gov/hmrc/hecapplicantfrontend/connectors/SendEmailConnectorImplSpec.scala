@@ -21,7 +21,7 @@ import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
-import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, HECTaxCheckCode}
+import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailSend.{EmailParameters, EmailSendRequest}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -48,7 +48,7 @@ class SendEmailConnectorImplSpec
 
   val connector        = new SendEmailConnectorImpl(mockHttp, new ServicesConfig(config))
   val emailParameter   =
-    EmailParameters("6 july 2021", HECTaxCheckCode("ABC 123 GRD"), "6 September 2021")
+    EmailParameters("Dummy name", "ABC 123 GRD")
   val emailSendRequest = EmailSendRequest(List(EmailAddress("user@test.com")), "templateId1", emailParameter)
 
   "SendEmailConnectorImplSpec" when {

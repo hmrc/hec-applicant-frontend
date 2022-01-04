@@ -31,7 +31,7 @@ import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
 
-import scala.concurrent.{ExecutionContext}
+import scala.concurrent.ExecutionContext
 
 class EmailAddressConfirmedController @Inject() (
   authAction: AuthAction,
@@ -88,9 +88,9 @@ class EmailAddressConfirmedController @Inject() (
       .getOrElse(sys.error(" Tax check code expiry date is not in session"))
 
     EmailParameters(
-      TimeUtils.govDisplayFormat(timeProvider.currentDate),
-      hecTaxCheckCode,
-      TimeUtils.govDisplayFormat(taxCheckCodeExpiryDate)
+      verificationLink = s"${TimeUtils.govDisplayFormat(timeProvider.currentDate)}, " +
+        s"${hecTaxCheckCode.value}, " +
+        s"${TimeUtils.govDisplayFormat(taxCheckCodeExpiryDate)}"
     )
 
   }

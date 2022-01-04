@@ -29,7 +29,7 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.hecapplicantfrontend.connectors.SendEmailConnector
 import uk.gov.hmrc.hecapplicantfrontend.controllers.ControllerSpec
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.AuthenticatedRequest
-import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, Error, HECTaxCheckCode}
+import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, Error}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailSend.{EmailParameters, EmailSendRequest, EmailSendResult}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.Language.{English, Welsh}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
@@ -69,7 +69,7 @@ class SendEmailServiceImplSpec extends AnyWordSpec with Matchers with MockFactor
   implicit val hc: HeaderCarrier = HeaderCarrier()
   val emailAddress               = EmailAddress("user@test.com")
   val emailParameter             =
-    EmailParameters("6 july 2021", HECTaxCheckCode("ABC 123 GRD"), "6 September 2021")
+    EmailParameters("Dummy name", "ABC 123 GRD")
   val emptyHeaders               = Map.empty[String, Seq[String]]
 
   "SendEmailServiceImplSpec" when {
