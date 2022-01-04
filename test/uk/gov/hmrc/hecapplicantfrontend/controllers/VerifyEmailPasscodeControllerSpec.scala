@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -88,9 +88,9 @@ class VerifyEmailPasscodeControllerSpec
 
       "display the page" when {
 
-        def test(userEmailAnswers: Option[UserEmailAnswers]) = {
+        def test(userEmailAnswers: Option[UserEmailAnswers], emailAddress: Option[EmailAddress]) = {
           val session = Fixtures.companyHECSession(
-            loginData = Fixtures.companyLoginData(emailAddress = ggEmailId.some),
+            loginData = Fixtures.companyLoginData(emailAddress = emailAddress),
             userAnswers = Fixtures.completeCompanyUserAnswers(),
             isEmailRequested = true,
             userEmailAnswers = userEmailAnswers
@@ -115,11 +115,20 @@ class VerifyEmailPasscodeControllerSpec
               textBody should include regex userEmailAnswers
                 .map(_.userSelectedEmail.emailAddress.value)
                 .getOrElse("")
-              htmlBody should include regex messageFromMessageKey(
-                "verifyPasscode.p5",
-                routes.ResendEmailConfirmationController.resendEmail().url,
-                routes.TaxCheckCompleteController.taxCheckComplete().url
-              )
+
+              if (emailAddress.isDefined) {
+                htmlBody should include regex messageFromMessageKey(
+                  "verifyPasscode.p5",
+                  routes.ResendEmailConfirmationController.resendEmail().url,
+                  routes.ConfirmEmailAddressController.confirmEmailAddress().url
+                )
+              } else {
+                htmlBody should include regex messageFromMessageKey(
+                  "verifyPasscode.p5",
+                  routes.ResendEmailConfirmationController.resendEmail().url,
+                  routes.EnterEmailAddressController.enterEmailAddress().url
+                )
+              }
 
               doc.select("#passcode").attr("value") shouldBe userEmailAnswers
                 .flatMap(_.passcode.map(_.value))
@@ -133,21 +142,27 @@ class VerifyEmailPasscodeControllerSpec
 
         }
 
-        "User hasn't  previously entered the passcode" in {
+        "User hasn't  previously entered the passcode and session has ggEmail Id" in {
 
-          test(userEmailAnswers = Fixtures.userEmailAnswers().some)
+          test(userEmailAnswers = Fixtures.userEmailAnswers().some, ggEmailId.some)
+
+        }
+        "User hasn't  previously entered the passcode and session has no ggEmail Id" in {
+
+          test(userEmailAnswers = Fixtures.userEmailAnswers().some, None)
 
         }
 
-        "User has previously entered the passcode" in {
+        "User has previously entered the passcode and session has ggEmail Id" in {
 
-          test(userEmailAnswers =
-            Fixtures
+          test(
+            userEmailAnswers = Fixtures
               .userEmailAnswers(
                 passcodeRequestResult = PasscodeRequestResult.PasscodeSent.some,
                 passcode = validPasscode.some
               )
-              .some
+              .some,
+            ggEmailId.some
           )
 
         }

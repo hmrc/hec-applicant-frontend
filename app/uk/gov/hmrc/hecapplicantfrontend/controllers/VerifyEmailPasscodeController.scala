@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,10 +22,10 @@ import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.Passcode
-import play.api.data.{Form}
+import play.api.data.Form
 import play.api.data.Forms.{mapping, nonEmptyText}
-import uk.gov.hmrc.hecapplicantfrontend.controllers.VerifyEmailPasscodeController.{fetchUserSelectedEmail, verifyPasscodeForm}
-import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, HECSession}
+import uk.gov.hmrc.hecapplicantfrontend.controllers.VerifyEmailPasscodeController.{fetchUserSelectedEmail, verifyGGEmailInSession, verifyPasscodeForm}
+import uk.gov.hmrc.hecapplicantfrontend.models.{HECSession, UserSelectedEmail}
 import uk.gov.hmrc.hecapplicantfrontend.services.{EmailVerificationService, JourneyService}
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -47,22 +47,25 @@ class VerifyEmailPasscodeController @Inject() (
     with Logging {
 
   val verifyEmailPasscode: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
-    val userSelectedEmail             = fetchUserSelectedEmail(request.sessionData)
+    val session                       = request.sessionData
+    val userSelectedEmail             = fetchUserSelectedEmail(session)
+    val isGGEmailInSession            = verifyGGEmailInSession(session)
     val passcodeOpt: Option[Passcode] =
-      request.sessionData.fold(_.userEmailAnswers.flatMap(_.passcode), _.userEmailAnswers.flatMap(_.passcode))
+      session.fold(_.userEmailAnswers.flatMap(_.passcode), _.userEmailAnswers.flatMap(_.passcode))
     val form                          = passcodeOpt.fold(verifyPasscodeForm)(verifyPasscodeForm.fill)
     val back                          = journeyService.previous(routes.VerifyEmailPasscodeController.verifyEmailPasscode())
 
-    Ok(verifyPasscodePage(form, back, userSelectedEmail))
+    Ok(verifyPasscodePage(form, back, userSelectedEmail.emailAddress, isGGEmailInSession))
 
   }
 
   val verifyEmailPasscodeSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
-    val session           = request.sessionData
-    val userSelectedEmail = fetchUserSelectedEmail(request.sessionData)
+    val session            = request.sessionData
+    val userSelectedEmail  = fetchUserSelectedEmail(request.sessionData)
+    val isGGEmailInSession = verifyGGEmailInSession(session)
     def handleValidPasscode(passcode: Passcode) = {
       val result = for {
-        passcodeVerificationResult <- emailVerificationService.verifyPasscode(passcode, userSelectedEmail)
+        passcodeVerificationResult <- emailVerificationService.verifyPasscode(passcode, userSelectedEmail.emailAddress)
         currentEmailAnswers         = session.userEmailAnswers
         updatedEmailAnswers         =
           currentEmailAnswers
@@ -88,7 +91,8 @@ class VerifyEmailPasscodeController @Inject() (
             verifyPasscodePage(
               formWithErrors,
               journeyService.previous(routes.VerifyEmailPasscodeController.verifyEmailPasscode()),
-              userSelectedEmail
+              userSelectedEmail.emailAddress,
+              isGGEmailInSession
             )
           ),
         handleValidPasscode
@@ -106,9 +110,13 @@ object VerifyEmailPasscodeController {
     )(identity)(Some(_))
   )
 
-  def fetchUserSelectedEmail(session: HECSession): EmailAddress =
+  def fetchUserSelectedEmail(session: HECSession): UserSelectedEmail =
     session.userEmailAnswers
-      .map(_.userSelectedEmail.emailAddress)
+      .map(_.userSelectedEmail)
       .getOrElse(sys.error(" No user selected email id in session"))
+
+  private def verifyGGEmailInSession(session: HECSession) = session
+    .fold(_.loginData.emailAddress, _.loginData.emailAddress)
+    .isDefined
 
 }

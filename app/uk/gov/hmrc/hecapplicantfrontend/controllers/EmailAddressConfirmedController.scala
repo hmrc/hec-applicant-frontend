@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,7 +49,7 @@ class EmailAddressConfirmedController @Inject() (
   val emailAddressConfirmed: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
     val userSelectedEmail = fetchUserSelectedEmail(request.sessionData)
     val previous          = journeyService.previous(routes.EmailAddressConfirmedController.emailAddressConfirmed())
-    Ok(emailAddressConfirmedPage(userSelectedEmail, previous))
+    Ok(emailAddressConfirmedPage(userSelectedEmail.emailAddress, previous))
 
   }
 
@@ -64,7 +64,7 @@ class EmailAddressConfirmedController @Inject() (
       val emailParameters          = getEmailParameters(request.sessionData)
 
       val result = for {
-        result             <- sendEmailService.sendEmail(userSelectedEmail, emailParameters)(headerCarrier, authReq)
+        result             <- sendEmailService.sendEmail(userSelectedEmail.emailAddress, emailParameters)(headerCarrier, authReq)
         updatedEmailAnswers = existingUserEmailAnswers.map(_.copy(emailSendResult = result.some))
         updatedSession      =
           request.sessionData
