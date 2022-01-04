@@ -115,8 +115,10 @@ object VerifyEmailPasscodeController {
       .map(_.userSelectedEmail)
       .getOrElse(sys.error(" No user selected email id in session"))
 
-  private def verifyGGEmailInSession(session: HECSession) = session
-    .fold(_.loginData.emailAddress, _.loginData.emailAddress)
-    .isDefined
+  private def verifyGGEmailInSession(session: HECSession) =
+    session.fold(_.loginData.emailAddress, _.loginData.emailAddress) match {
+      case Some(email) if email.value.nonEmpty => true
+      case _                                   => false
+    }
 
 }
