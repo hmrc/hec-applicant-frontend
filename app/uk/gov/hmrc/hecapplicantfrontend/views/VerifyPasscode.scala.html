@@ -23,7 +23,7 @@
 @import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.Passcode
 @import uk.gov.hmrc.hecapplicantfrontend.models.EmailAddress
 
-@this(layout: Layout, govukErrorSummary: GovukErrorSummary, govukInput: GovukInput, govukButton: GovukButton, formWithCSRF: FormWithCSRF)
+@this(layout: Layout, govukErrorSummary: GovukErrorSummary, govukInput: GovukInput, govukButton: GovukButton, formWithCSRF: FormWithCSRF, govukDetails : GovukDetails)
 
 
 @(form: Form[Passcode], back: Call, email: EmailAddress, isGGEmailInSession: Boolean)(implicit request:
@@ -32,7 +32,10 @@ Request[_], messages: Messages)
 @fieldKey = @{"passcode"}
 @title = @{messages(s"$key.title")}
 @linkURL = @{if(isGGEmailInSession) routes.ConfirmEmailAddressController.confirmEmailAddress().url else routes.EnterEmailAddressController.enterEmailAddress().url }
-
+@detailsContent = {
+  <p class="govuk-body">@messages(s"$key.p4")</p>
+  <p class="govuk-body">@Html(messages(s"$key.p5", routes.ResendEmailConfirmationController.resendEmail().url, linkURL))</p>
+}
 @layout(pageTitle = Some(title), hasErrors = form.hasErrors, backLocation = Some(back)) {
     @if(form.errors.nonEmpty) {
         @govukErrorSummary(ErrorSummary(errorList = form.errors.map(e =>
@@ -79,10 +82,10 @@ Request[_], messages: Messages)
         ))
       ))
 
-        <div class="govuk-details__text">
-        <p class="govuk-body">@messages(s"$key.p4")</p>
-        <p class="govuk-body">@Html(messages(s"$key.p5", routes.ResendEmailConfirmationController.resendEmail().url, linkURL))</p>
-        </div>
+      @govukDetails(Details(
+        summary = Text(messages(s"$key.summaryLink")),
+        content = HtmlContent(detailsContent)
+      ))
 
       @govukButton(Button(content = Text(messages("button.continue"))))
     }

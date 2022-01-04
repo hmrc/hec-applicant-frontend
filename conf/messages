@@ -353,6 +353,7 @@ verifyPasscode.p3 = If you use a browser to access your email, you may need to o
 verifyPasscode.label = Email confirmation code:
 verifyPasscode.hint = For example, DNCLRK
 passcode.error.required = Enter your email confirmation code
+verifyPasscode.summaryLink = I have not received the email
 verifyPasscode.p4 = The email may take a few minutes to arrive. Its subject line is: ‘Confirm your email address’.
 verifyPasscode.p5 = Check your spam or junk folder – if it still has not arrived, you can <a href="{0}" class="govuk-link">request a new confirmation code</a> or <a href="{1}" class="govuk-link">provide another email address</a?.
 
