@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,8 @@ import uk.gov.hmrc.hecapplicantfrontend.models.IndividualUserAnswers.{CompleteIn
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.{CompanyRetrievedJourneyData, IndividualRetrievedJourneyData}
 import uk.gov.hmrc.hecapplicantfrontend.models._
+import uk.gov.hmrc.hecapplicantfrontend.models.emailSend.EmailSendResult
+import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{Passcode, PasscodeRequestResult, PasscodeVerificationResult}
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.company.CTAccountingPeriod.CTAccountingPeriodDigital
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.company.{CTAccountingPeriod, CTStatus, CTStatusResponse}
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.individual.SAStatusResponse
@@ -230,4 +232,20 @@ object Fixtures {
     expiresAfter = expiresAfter,
     createDate = createDate
   )
+
+  def userEmailAnswers(
+    emailType: EmailType = EmailType.GGEmail,
+    emailAddress: EmailAddress = EmailAddress("user@test.com"),
+    passcodeRequestResult: Option[PasscodeRequestResult] = None,
+    passcode: Option[Passcode] = None,
+    passcodeVerificationResult: Option[PasscodeVerificationResult] = None,
+    emailSendResult: Option[EmailSendResult] = None
+  ): UserEmailAnswers =
+    UserEmailAnswers(
+      UserSelectedEmail(emailType, emailAddress),
+      passcodeRequestResult,
+      passcode,
+      passcodeVerificationResult,
+      emailSendResult
+    )
 }

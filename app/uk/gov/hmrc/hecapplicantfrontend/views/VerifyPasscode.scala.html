@@ -1,5 +1,5 @@
 @*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 @import play.api.i18n.Messages
 @import play.api.data.Form
 @import play.api.mvc.{Call, Request}
+@import play.twirl.api.Html
 @import uk.gov.hmrc.govukfrontend.views.html.components._
 @import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 @import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.Passcode
@@ -24,11 +25,13 @@
 
 @this(layout: Layout, govukErrorSummary: GovukErrorSummary, govukInput: GovukInput, govukButton: GovukButton, formWithCSRF: FormWithCSRF)
 
-@(form: Form[Passcode], back: Call, email: EmailAddress)(implicit request:
+
+@(form: Form[Passcode], back: Call, email: EmailAddress, isGGEmailInSession: Boolean)(implicit request:
 Request[_], messages: Messages)
 @key = @{"verifyPasscode"}
 @fieldKey = @{"passcode"}
 @title = @{messages(s"$key.title")}
+@linkURL = @{if(isGGEmailInSession) routes.ConfirmEmailAddressController.confirmEmailAddress().url else routes.EnterEmailAddressController.enterEmailAddress().url }
 
 @layout(pageTitle = Some(title), hasErrors = form.hasErrors, backLocation = Some(back)) {
     @if(form.errors.nonEmpty) {
@@ -54,7 +57,7 @@ Request[_], messages: Messages)
   </p>
 
   <p class="govuk-body">
-  @messages(s"$key.p3")
+ @messages(s"$key.p3")
   </p>
 
     @formWithCSRF(action = routes.VerifyEmailPasscodeController.verifyEmailPasscodeSubmit()) {
@@ -76,6 +79,13 @@ Request[_], messages: Messages)
         ))
       ))
 
+        <div class="govuk-details__text">
+        <p class="govuk-body">@messages(s"$key.p4")</p>
+        <p class="govuk-body">@Html(messages(s"$key.p5", routes.ResendEmailConfirmationController.resendEmail().url, linkURL))</p>
+        </div>
+
       @govukButton(Button(content = Text(messages("button.continue"))))
     }
+
+
 }

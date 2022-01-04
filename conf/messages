@@ -15,6 +15,7 @@ button.confirm=Confirm
 button.continue=Continue
 button.copy=Copy
 button.copied=Copied
+button.sendEmail =Send email
 
 # Failed IV
 iv.failedIv.title=We could not confirm your identity
@@ -351,4 +352,25 @@ verifyPasscode.p2 = An email confirmation code has been sent to {0}. Enter this 
 verifyPasscode.p3 = If you use a browser to access your email, you may need to open a new window or tab.
 verifyPasscode.label = Email confirmation code:
 verifyPasscode.hint = For example, DNCLRK
+passcode.error.required = Enter your email confirmation code
+verifyPasscode.p4 = The email may take a few minutes to arrive. Its subject line is: ‘Confirm your email address’.
+verifyPasscode.p5 = Check your spam or junk folder – if it still has not arrived, you can <a href="{0}" class="govuk-link">request a new confirmation code</a> or <a href="{1}" class="govuk-link">provide another email address</a?.
 
+
+#Email Address Confirmed
+emailAddressConfirmed.title = Email address confirmed
+emailAddressConfirmed.p1 = Your email address has been confirmed. Your tax check code will be sent to {0}
+
+
+#Email Sent
+emailSent.title = Your tax check code has been emailed to you
+emailSent.p1 = We have sent your tax check code to <b>{0}</b>
+emailSent.p2 = Enter your tax check code in your licence application. Make sure you leave enough time for your application to be processed before your tax check code expires.
+emailSent.p3 = <a href="{0}" class="govuk-link">See my tax check codes</a>
+
+
+#Enter Email Address
+enterEmailAddress.title = What email address do you want to use?
+enterEmailAddress.error.required = Enter email address
+enterEmailAddress.error.invalidFormat = Enter an email address in the correct format, like name@example.com
+enterEmailAddress.error.tooManyChar = Email address has too many characters, it should be less or equal to 256

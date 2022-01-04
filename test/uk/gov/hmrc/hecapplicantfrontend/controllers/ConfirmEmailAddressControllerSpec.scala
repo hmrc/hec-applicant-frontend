@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -113,7 +113,7 @@ class ConfirmEmailAddressControllerSpec
                 case None        => selectedOptions.isEmpty       shouldBe true
               }
               doc.select("#differentEmail").attr("value") shouldBe userEmailAnswers
-                .flatMap(_.emailAddress.map(_.value))
+                .map(_.userSelectedEmail.emailAddress.value)
                 .getOrElse("")
 
               val form = doc.select("form")
@@ -128,14 +128,15 @@ class ConfirmEmailAddressControllerSpec
         }
 
         "User's GG account has a valid email id and user has previously selected ggEmail id  " in {
-          test(UserEmailAnswers(EmailType.GGEmail, None, None, None).some, Some("0"))
+          test(Fixtures.userEmailAnswers(EmailType.GGEmail, ggEmailId).some, Some("0"))
         }
 
         "User's GG account has a valid email id and user has previously selected different email id option" in {
-          test(UserEmailAnswers(EmailType.DifferentEmail, otherEmailId.some, None, None).some, Some("1"))
+          test(Fixtures.userEmailAnswers(EmailType.DifferentEmail, otherEmailId).some, Some("1"))
 
         }
       }
+
     }
 
     "handling submit to confirm email address page" must {
@@ -248,7 +249,9 @@ class ConfirmEmailAddressControllerSpec
           )
 
           val updatedSession =
-            session.copy(userEmailAnswers = UserEmailAnswers(EmailType.GGEmail, None, PasscodeSent.some, None).some)
+            session.copy(userEmailAnswers =
+              Fixtures.userEmailAnswers(EmailType.GGEmail, ggEmailId, PasscodeSent.some).some
+            )
 
           inSequence {
             mockAuthWithNoRetrievals()
@@ -287,7 +290,7 @@ class ConfirmEmailAddressControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockRequestPasscode(updatedUserEmailAnswers.emailAddress.getOrElse(ggEmailId))(
+            mockRequestPasscode(updatedUserEmailAnswers.userSelectedEmail.emailAddress)(
               Right(updatedUserEmailAnswers.passcodeRequestResult.getOrElse(PasscodeSent))
             )
             mockJourneyServiceUpdateAndNext(
@@ -303,7 +306,7 @@ class ConfirmEmailAddressControllerSpec
 
           test(
             existingUserEmailAnswers = None,
-            updatedUserEmailAnswers = UserEmailAnswers(EmailType.GGEmail, None, PasscodeSent.some, None),
+            updatedUserEmailAnswers = Fixtures.userEmailAnswers(EmailType.GGEmail, ggEmailId, PasscodeSent.some),
             answers = List("confirmEmailAddress" -> "0")
           )
 
@@ -312,9 +315,12 @@ class ConfirmEmailAddressControllerSpec
         "user has previously answered the questions" in {
 
           test(
-            existingUserEmailAnswers = UserEmailAnswers(EmailType.GGEmail, None, PasscodeSent.some, None).some,
-            updatedUserEmailAnswers =
-              UserEmailAnswers(EmailType.DifferentEmail, otherEmailId.some, EmailAddressAlreadyVerified.some, None),
+            existingUserEmailAnswers = Fixtures.userEmailAnswers(EmailType.GGEmail, ggEmailId, PasscodeSent.some).some,
+            updatedUserEmailAnswers = Fixtures.userEmailAnswers(
+              EmailType.DifferentEmail,
+              otherEmailId,
+              EmailAddressAlreadyVerified.some
+            ),
             answers = List("confirmEmailAddress" -> "1", "differentEmail" -> otherEmailId.value)
           )
 
@@ -322,6 +328,5 @@ class ConfirmEmailAddressControllerSpec
 
       }
     }
-
   }
 }

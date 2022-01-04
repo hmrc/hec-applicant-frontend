@@ -1,5 +1,5 @@
 @*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,12 +22,12 @@
 @import uk.gov.hmrc.hecapplicantfrontend.models.views.EmailTypeOptions
 @import uk.gov.hmrc.hecapplicantfrontend.models.EmailType
 @import cats.implicits.catsSyntaxEq
-@import uk.gov.hmrc.hecapplicantfrontend.models.UserEmail
+@import uk.gov.hmrc.hecapplicantfrontend.models.UserSelectedEmail
 
 @this(layout: Layout, govukErrorSummary: GovukErrorSummary, govukRadios: GovukRadios, govukButton: GovukButton, formWithCSRF: FormWithCSRF, govukInput: GovukInput)
 
 
-@(form: Form[UserEmail], back: Call, options: List[EmailType], ggEmail: String)(implicit request: Request[_], messages: Messages)
+@(form: Form[UserSelectedEmail], back: Call, options: List[EmailType], ggEmail: String)(implicit request: Request[_], messages: Messages)
 
 @key = @{"confirmEmailAddress"}
 @differentEmailKey = @{"differentEmail"}

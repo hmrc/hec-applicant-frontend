@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,12 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models.emailVerification
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json.{Format, Json}
 
 final case class Passcode(value: String) extends AnyVal
 
 object Passcode {
 
-  implicit val format: OFormat[Passcode] = Json.format[Passcode]
+  implicit val format: Format[Passcode] = Json.valueFormat[Passcode]
 
 }

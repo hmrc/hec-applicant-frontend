@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,9 +33,9 @@ class TooManyEmailVerificationAttemptController @Inject() (
     with I18nSupport
     with Logging {
 
-  val tooManyEmaiVerificationAttempts: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
+  val tooManyEmailVerificationAttempts: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
     Ok(
-      s"session: ${request.sessionData}, back :: ${journeyService.previous(routes.TooManyEmailVerificationAttemptController.tooManyEmaiVerificationAttempts)}"
+      s"session: ${request.sessionData}, back :: ${journeyService.previous(routes.TooManyEmailVerificationAttemptController.tooManyEmailVerificationAttempts)}"
     )
 
   }

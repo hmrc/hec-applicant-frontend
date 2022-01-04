@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +34,9 @@ import uk.gov.hmrc.hecapplicantfrontend.models.EntityType.{Company, Individual}
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, IndividualHECSession}
 import uk.gov.hmrc.hecapplicantfrontend.models.IndividualUserAnswers.{CompleteIndividualUserAnswers, IncompleteIndividualUserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.{CompanyRetrievedJourneyData, IndividualRetrievedJourneyData}
+import uk.gov.hmrc.hecapplicantfrontend.models.emailSend.EmailSendResult
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeRequestResult._
+import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeVerificationResult
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.company.CTStatus
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.individual.SAStatus.ReturnFound
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.individual.{SAStatus, SAStatusResponse}
@@ -88,7 +90,10 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
     routes.CompanyDetailsController.recentlyStartedTrading()             -> recentlyStartedTradingRoute,
     routes.CompanyDetailsController.enterCtutr()                         -> enterCtutrRoute,
     routes.TaxCheckCompleteController.taxCheckComplete()                 -> emailVerificationRoute,
-    routes.ConfirmEmailAddressController.confirmEmailAddress()           -> confirmEmailAddressRoute
+    routes.ConfirmEmailAddressController.confirmEmailAddress()           -> confirmEmailAddressRoute,
+    routes.VerifyEmailPasscodeController.verifyEmailPasscode             -> verifyEmailPasscodeRoute,
+    routes.EmailAddressConfirmedController.emailAddressConfirmed()       -> emailAddressConfirmedRoute,
+    routes.EnterEmailAddressController.enterEmailAddress()               -> confirmEmailAddressRoute
   )
 
   // map which describes routes from an exit page to their previous page. The keys are the exit page and the values are
@@ -97,13 +102,15 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
   lazy val exitPageToPreviousPage: Map[Call, Call] =
     Map(
       routes.ConfirmIndividualDetailsController
-        .confirmIndividualDetailsExit()                 -> routes.ConfirmIndividualDetailsController.confirmIndividualDetails(),
-      routes.LicenceDetailsController.licenceTypeExit() ->
+        .confirmIndividualDetailsExit()                      -> routes.ConfirmIndividualDetailsController.confirmIndividualDetails(),
+      routes.LicenceDetailsController.licenceTypeExit()      ->
         routes.LicenceDetailsController.licenceType(),
-      routes.EntityTypeController.wrongEntityType()     ->
+      routes.EntityTypeController.wrongEntityType()          ->
         routes.EntityTypeController.entityType(),
-      routes.CompanyDetailsController.dontHaveUtr()     ->
-        routes.CompanyDetailsController.enterCtutr()
+      routes.CompanyDetailsController.dontHaveUtr()          ->
+        routes.CompanyDetailsController.enterCtutr(),
+      routes.ResendEmailConfirmationController.resendEmail() -> routes.VerifyEmailPasscodeController
+        .verifyEmailPasscode()
     )
 
   override def firstPage(session: HECSession): Call = {
@@ -479,16 +486,38 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
     }
   }
 
-  def confirmEmailAddressRoute(session: HECSession): Call =
-    session.fold(
+  def confirmEmailAddressRoute(session: HECSession): Call = {
+    val passcodeRequestResult = session.fold(
       _.userEmailAnswers.flatMap(_.passcodeRequestResult),
       _.userEmailAnswers.flatMap(_.passcodeRequestResult)
-    ) match {
+    )
+
+    passcodeRequestResult match {
       case Some(PasscodeSent)                  => routes.VerifyEmailPasscodeController.verifyEmailPasscode
-      case Some(EmailAddressAlreadyVerified)   => routes.EmailAddressConfirmedController.emailAddressConfirmed
+      case Some(EmailAddressAlreadyVerified)   =>
+        routes.EmailAddressConfirmedController.emailAddressConfirmed
       case Some(MaximumNumberOfEmailsExceeded) =>
-        routes.TooManyEmailVerificationAttemptController.tooManyEmaiVerificationAttempts
+        routes.TooManyEmailVerificationAttemptController.tooManyEmailVerificationAttempts
       case _                                   => sys.error("Passcode Result is  invalid/missing from the response")
+    }
+  }
+
+  def verifyEmailPasscodeRoute(session: HECSession): Call =
+    session.userEmailAnswers.flatMap(_.passcodeVerificationResult) match {
+      case Some(PasscodeVerificationResult.Match)           => routes.EmailAddressConfirmedController.emailAddressConfirmed()
+      case Some(PasscodeVerificationResult.NoMatch)         =>
+        routes.VerificationPasscodeNotFoundController.verificationPasscodeNotFound
+      case Some(PasscodeVerificationResult.Expired)         =>
+        routes.VerificationPasscodeExpiredController.verificationPasscodeExpired
+      case Some(PasscodeVerificationResult.TooManyAttempts) =>
+        routes.TooManyPasscodeVerificationController.tooManyPasscodeVerification
+      case _                                                => sys.error("Passcode Verification Result is  invalid/missing from the response")
+    }
+
+  def emailAddressConfirmedRoute(session: HECSession): Call =
+    session.userEmailAnswers.flatMap(_.emailSendResult) match {
+      case Some(EmailSendResult.EmailSent) => routes.EmailSentController.emailSent
+      case _                               => routes.ProblemSendingEmailController.problemSendingEmail
     }
 
 }

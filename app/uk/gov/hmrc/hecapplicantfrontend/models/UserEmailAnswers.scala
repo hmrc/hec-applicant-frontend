@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,13 +17,15 @@
 package uk.gov.hmrc.hecapplicantfrontend.models
 
 import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{Passcode, PasscodeRequestResult}
+import uk.gov.hmrc.hecapplicantfrontend.models.emailSend.EmailSendResult
+import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{Passcode, PasscodeRequestResult, PasscodeVerificationResult}
 
 final case class UserEmailAnswers(
-  emailType: EmailType,
-  emailAddress: Option[EmailAddress],
+  userSelectedEmail: UserSelectedEmail,
   passcodeRequestResult: Option[PasscodeRequestResult],
-  passcode: Option[Passcode]
+  passcode: Option[Passcode],
+  passcodeVerificationResult: Option[PasscodeVerificationResult],
+  emailSendResult: Option[EmailSendResult]
 )
 
 object UserEmailAnswers {
