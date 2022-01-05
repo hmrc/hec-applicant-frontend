@@ -142,6 +142,7 @@ object Fixtures {
     unexpiredTaxChecks: List[TaxCheckListItem] = List.empty,
     relevantIncomeTaxYear: Option[TaxYear] = None,
     isEmailRequested: Boolean = false,
+    hasResendEmailConfirmation: Boolean = false,
     userEmailAnswers: Option[UserEmailAnswers] = None
   ): IndividualHECSession =
     IndividualHECSession(
@@ -154,6 +155,7 @@ object Fixtures {
       hasConfirmedDetails = false,
       relevantIncomeTaxYear = relevantIncomeTaxYear,
       isEmailRequested = isEmailRequested,
+      hasResendEmailConfirmation = hasResendEmailConfirmation,
       userEmailAnswers = userEmailAnswers
     )
 
@@ -186,6 +188,7 @@ object Fixtures {
     unexpiredTaxChecks: List[TaxCheckListItem] = List.empty,
     crnBlocked: Boolean = false,
     isEmailRequested: Boolean = false,
+    hasResendEmailConfirmation: Boolean = false,
     userEmailAnswers: Option[UserEmailAnswers] = None
   ): CompanyHECSession = CompanyHECSession(
     loginData = loginData,
@@ -196,6 +199,7 @@ object Fixtures {
     unexpiredTaxChecks = unexpiredTaxChecks,
     crnBlocked = crnBlocked,
     isEmailRequested = isEmailRequested,
+    hasResendEmailConfirmation = hasResendEmailConfirmation,
     userEmailAnswers = userEmailAnswers
   )
 

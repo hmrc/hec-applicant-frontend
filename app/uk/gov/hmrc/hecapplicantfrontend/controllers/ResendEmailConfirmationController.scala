@@ -16,26 +16,73 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.controllers
 
+import cats.implicits.catsSyntaxOptionId
 import com.google.inject.Inject
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
+import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
+import uk.gov.hmrc.hecapplicantfrontend.services.{EmailVerificationService, JourneyService}
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
+import uk.gov.hmrc.hecapplicantfrontend.views.html
+
+import scala.concurrent.ExecutionContext
 
 class ResendEmailConfirmationController @Inject() (
   authAction: AuthAction,
   sessionDataAction: SessionDataAction,
+  journeyService: JourneyService,
+  sessionStore: SessionStore,
+  emailVerificationService: EmailVerificationService,
+  resendEmailConfirmationPage: html.ResendEmailConfirmationPage,
   mcc: MessagesControllerComponents
-) extends FrontendController(mcc)
+)(implicit ec: ExecutionContext)
+    extends FrontendController(mcc)
     with I18nSupport
     with Logging {
 
   val resendEmail: Action[AnyContent] =
     authAction.andThen(sessionDataAction).async { implicit request =>
-      Ok(
-        s"session ${request.sessionData}, back } "
-      )
+      request.sessionData.ensureUserSelectedEmailPresent { userSelectedEmail =>
+        val back           = journeyService.previous(routes.ResendEmailConfirmationController.resendEmail())
+        val updatedSession = request.sessionData.fold(
+          _.copy(hasResendEmailConfirmation = false),
+          _.copy(
+            hasResendEmailConfirmation = false
+          )
+        )
+        sessionStore
+          .store(updatedSession)
+          .fold(
+            _.doThrow("Could not update session and proceed"),
+            _ => Ok(resendEmailConfirmationPage(userSelectedEmail.emailAddress, back))
+          )
+
+      }
+    }
+
+  val resendEmailSubmit: Action[AnyContent] =
+    authAction.andThen(sessionDataAction).async { implicit request =>
+      request.sessionData.ensureUserSelectedEmailPresent { userSelectedEmail =>
+        val result = for {
+          passcodeResult      <- emailVerificationService.requestPasscode(userSelectedEmail.emailAddress)
+          existingEmailAnswers = request.sessionData.userEmailAnswers
+          updatedEmailAnswers  = existingEmailAnswers.map(_.copy(passcodeRequestResult = passcodeResult.some))
+          updatedSession       =
+            request.sessionData
+              .fold(
+                _.copy(userEmailAnswers = updatedEmailAnswers, hasResendEmailConfirmation = true),
+                _.copy(userEmailAnswers = updatedEmailAnswers, hasResendEmailConfirmation = true)
+              )
+          next                <- journeyService.updateAndNext(routes.ResendEmailConfirmationController.resendEmail(), updatedSession)
+        } yield next
+        result.fold(
+          _.doThrow("Could not update session and proceed"),
+          Redirect
+        )
+      }
+
     }
 
 }

@@ -88,6 +88,9 @@ GET       /too-many-email-verification     uk.gov.hmrc.hecapplicantfrontend.cont
 GET       /too-many-passcode-verification  uk.gov.hmrc.hecapplicantfrontend.controllers.TooManyPasscodeVerificationController.tooManyPasscodeVerification
 
 GET       /resend-email                    uk.gov.hmrc.hecapplicantfrontend.controllers.ResendEmailConfirmationController.resendEmail
+POST      /resend-email                    uk.gov.hmrc.hecapplicantfrontend.controllers.ResendEmailConfirmationController.resendEmailSubmit
+
+GET       /email-verification-code-resent  uk.gov.hmrc.hecapplicantfrontend.controllers.VerifyResentEmailPasscodeController.verifyResentEmailPasscode
 
 GET       /email-sent                      uk.gov.hmrc.hecapplicantfrontend.controllers.EmailSentController.emailSent
 

@@ -24,7 +24,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.CompanyUserAnswers.IncompleteComp
 import uk.gov.hmrc.hecapplicantfrontend.models.IndividualUserAnswers.IncompleteIndividualUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.{CompanyRetrievedJourneyData, IndividualRetrievedJourneyData}
-import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeVerificationResult
+import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{PasscodeRequestResult, PasscodeVerificationResult}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
 
 import java.time.ZonedDateTime
@@ -38,6 +38,7 @@ trait HECSession extends Product with Serializable {
   val taxCheckStartDateTime: Option[ZonedDateTime]
   val unexpiredTaxChecks: List[TaxCheckListItem]
   val isEmailRequested: Boolean
+  val hasResendEmailConfirmation: Boolean
   val userEmailAnswers: Option[UserEmailAnswers]
 
 }
@@ -54,6 +55,7 @@ object HECSession {
     hasConfirmedDetails: Boolean,
     relevantIncomeTaxYear: Option[TaxYear],
     isEmailRequested: Boolean,
+    hasResendEmailConfirmation: Boolean,
     userEmailAnswers: Option[UserEmailAnswers]
   ) extends HECSession {
     override val entityType: EntityType = EntityType.Individual
@@ -72,6 +74,7 @@ object HECSession {
         false,
         None,
         false,
+        false,
         None
       )
 
@@ -86,6 +89,7 @@ object HECSession {
     unexpiredTaxChecks: List[TaxCheckListItem],
     crnBlocked: Boolean = false,
     isEmailRequested: Boolean,
+    hasResendEmailConfirmation: Boolean,
     userEmailAnswers: Option[UserEmailAnswers]
   ) extends HECSession {
     override val entityType: EntityType = EntityType.Company
@@ -102,6 +106,7 @@ object HECSession {
         None,
         List.empty,
         isEmailRequested = false,
+        hasResendEmailConfirmation = false,
         userEmailAnswers = None
       )
 
@@ -190,10 +195,14 @@ object HECSession {
       case None                    => sys.error(" No user selected email id in session")
     }
 
-    def ensurePasscodeVerificationResultIsMatch[A](f: PasscodeVerificationResult => A): A =
-      s.userEmailAnswers.flatMap(_.passcodeVerificationResult) match {
-        case Some(pvr) if pvr === PasscodeVerificationResult.Match => f(pvr)
-        case None                                                  => sys.error(" Passcode verification result other than match is not expected")
+    def verifyPasscodeVerificationResultAndPasscodeRequestResult[A](f: Unit => A): A =
+      (
+        s.userEmailAnswers.flatMap(_.passcodeVerificationResult),
+        s.userEmailAnswers.flatMap(_.passcodeRequestResult)
+      ) match {
+        case (Some(pvr), Some(_)) if pvr === PasscodeVerificationResult.Match               => f(())
+        case (None, Some(prr)) if prr === PasscodeRequestResult.EmailAddressAlreadyVerified => f(())
+        case _                                                                              => sys.error(" Passcode verification result other than match is not expected")
       }
 
   }

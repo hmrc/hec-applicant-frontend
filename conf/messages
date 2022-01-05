@@ -16,6 +16,7 @@ button.continue=Continue
 button.copy=Copy
 button.copied=Copied
 button.sendEmail =Send email
+button.resend =Resend
 
 # Failed IV
 iv.failedIv.title=We could not confirm your identity
@@ -374,3 +375,7 @@ enterEmailAddress.title = What email address do you want to use?
 enterEmailAddress.error.required = Enter email address
 enterEmailAddress.error.invalidFormat = Enter an email address in the correct format, like name@example.com
 enterEmailAddress.error.tooManyChar = Email address has too many characters, it should be less or equal to 256
+
+#Resend email confirmation code
+resendEmailConfirmation.title = Resend email confirmation code
+resendEmailConfirmation.p1 = Send a new email confirmation code to <b>{0}</b>
