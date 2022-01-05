@@ -49,8 +49,8 @@ trait JourneyServiceSupport { this: ControllerSpec =>
 
   def mockJourneyServiceGetPrevious(currentPage: Call, currentSession: HECSession)(result: Call) =
     (mockJourneyService
-      .previous(_: Call)(_: RequestWithSessionData[_]))
-      .expects(where { case (c, r) =>
+      .previous(_: Call)(_: RequestWithSessionData[_], _: HeaderCarrier))
+      .expects(where { case (c, r, _) =>
         assert(c === currentPage)
         assert(r.sessionData === currentSession)
         true

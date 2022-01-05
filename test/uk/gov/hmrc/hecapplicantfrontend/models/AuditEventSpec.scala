@@ -18,11 +18,16 @@ package uk.gov.hmrc.hecapplicantfrontend.models
 
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
-import play.api.libs.json.Json
+import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.CompanyMatchFailure.{EnrolmentCTUTRCompanyMatchFailure, EnterCTUTRCompanyMatchFailure}
 import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.CompanyMatchSuccess.{EnrolmentCTUTRCompanyMatchSuccess, EnterCTUTRCompanyMatchSuccess}
-import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.TaxCheckCodesDisplayed
-import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR, GGCredId}
+import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.{TaxCheckCodesDisplayed, TaxCheckExit}
+import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.IndividualHECSession
+import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.IndividualLoginData
+import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.IndividualRetrievedJourneyData
+import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR, GGCredId, NINO}
+
+import java.time.{LocalDate, ZoneId, ZonedDateTime}
 
 class AuditEventSpec extends Matchers with AnyWordSpecLike {
 
@@ -149,6 +154,150 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
           |  "enrolmentCTUTR": "4444444444"
           |}
           |""".stripMargin
+      )
+    }
+
+  }
+
+  "TaxCheckExit" must afterWord("have the correct JSON for") {
+
+    def test(auditEvent: TaxCheckExit, expectedJson: JsValue) = {
+      auditEvent.auditType       shouldBe "TaxCheckExit"
+      auditEvent.transactionName shouldBe "tax-check-exit"
+      Json.toJson(auditEvent)    shouldBe expectedJson
+    }
+
+    val session = IndividualHECSession(
+      IndividualLoginData(
+        GGCredId("credId"),
+        NINO("nino"),
+        None,
+        Name("First", "Last"),
+        DateOfBirth(LocalDate.of(2000, 1, 2)),
+        None
+      ),
+      IndividualRetrievedJourneyData(None),
+      IndividualUserAnswers.empty,
+      None,
+      Some(ZonedDateTime.of(2021, 12, 17, 16, 32, 33, 368000000, ZoneId.of("Europe/London"))),
+      List.empty,
+      hasConfirmedDetails = true,
+      None,
+      isEmailRequested = false,
+      None
+    )
+
+    val sessionJson =
+      """
+        |{
+        |  "loginData" : {
+        |        "ggCredId" : "credId",
+        |        "nino" : "nino",
+        |        "name" : {
+        |            "firstName" : "First",
+        |            "lastName" : "Last"
+        |        },
+        |        "dateOfBirth" : "20000102"
+        |    },
+        |    "retrievedJourneyData" : {},
+        |    "userAnswers" : {
+        |        "type" : "Incomplete"
+        |    },
+        |    "taxCheckStartDateTime" : "2021-12-17T16:32:33.368Z[Europe/London]",
+        |    "unexpiredTaxChecks" : [],
+        |    "hasConfirmedDetails" : true,
+        |    "isEmailRequested": false,
+        |    "type" : "Individual"
+        |}
+        |""".stripMargin
+
+    "SAUTRNotFound" in {
+      test(
+        TaxCheckExit.SAUTRNotFound(session),
+        Json.parse(
+          s"""
+            |{
+            |  "serviceExitReason": "SAUTRNotFound",
+            |  "serviceExitDescription": "SA UTR not found for the Applicant's NINO",
+            |  "taxCheckSessionData": $sessionJson
+            |}
+            |""".stripMargin
+        )
+      )
+    }
+
+    "SANoNoticeToFileOrTaxReturn" in {
+      test(
+        TaxCheckExit.SANoNoticeToFileOrTaxReturn(session),
+        Json.parse(
+          s"""
+             |{
+             |  "serviceExitReason": "SANoNoticeToFileOrTaxReturn",
+             |  "serviceExitDescription": "For relevant income tax year, Self Assessment Notice to File not found, Self Assessment Tax Return not found",
+             |  "taxCheckSessionData": $sessionJson
+             |}
+             |""".stripMargin
+        )
+      )
+    }
+
+    "CTEnteredCTUTRNotMatchingBlocked" in {
+      test(
+        TaxCheckExit.CTEnteredCTUTRNotMatchingBlocked(session),
+        Json.parse(
+          s"""
+             |{
+             |  "serviceExitReason": "CTEnteredCTUTRNotMatchingBlocked",
+             |  "serviceExitDescription": "Applicant has made repeated attempts to provide a matching CT UTR. Attempts limit reached, so Applicant temporarily blocked from making an Application for that CRN",
+             |  "taxCheckSessionData": $sessionJson
+             |}
+             |""".stripMargin
+        )
+      )
+    }
+
+    "CTNoNoticeToFileOrTaxReturn" in {
+      test(
+        TaxCheckExit.CTNoNoticeToFileOrTaxReturn(session),
+        Json.parse(
+          s"""
+             |{
+             |  "serviceExitReason": "CTNoNoticeToFileOrTaxReturn",
+             |  "serviceExitDescription": "For relevant accounting period, Corporation Tax Notice to File not found, Corporation Tax Return not found",
+             |  "taxCheckSessionData": $sessionJson
+             |}
+             |""".stripMargin
+        )
+      )
+    }
+
+    "CTNoAccountingPeriodNotRecentlyStartedTrading" in {
+      test(
+        TaxCheckExit.CTNoAccountingPeriodNotRecentlyStartedTrading(session),
+        Json.parse(
+          s"""
+             |{
+             |  "serviceExitReason": "CTNoAccountingPeriodNotRecentlyStartedTrading",
+             |  "serviceExitDescription": "No relevant accounting period was found on tax summary record for the lookback period, and the Applicant's Company has not recently started trading",
+             |  "taxCheckSessionData": $sessionJson
+             |}
+             |""".stripMargin
+        )
+      )
+    }
+
+    "AllowedTaxChecksExceeded" in {
+      test(
+        TaxCheckExit.AllowedTaxChecksExceeded(session),
+        Json.parse(
+          s"""
+             |{
+             |  "serviceExitReason": "AllowedTaxChecksExceeded",
+             |  "serviceExitDescription": "Attempted tax check for Licence Type exceeded number of permitted existing tax check codes, for a particular Applicant",
+             |  "taxCheckSessionData": $sessionJson
+             |}
+             |""".stripMargin
+        )
       )
     }
 
