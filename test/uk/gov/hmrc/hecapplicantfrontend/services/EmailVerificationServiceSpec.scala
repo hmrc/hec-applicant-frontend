@@ -17,6 +17,7 @@
 package uk.gov.hmrc.hecapplicantfrontend.services
 
 import cats.data.EitherT
+import cats.implicits.catsSyntaxOptionId
 import com.typesafe.config.ConfigFactory
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
@@ -29,12 +30,14 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.hecapplicantfrontend.connectors.EmailVerificationConnector
 import uk.gov.hmrc.hecapplicantfrontend.controllers.ControllerSpec
-import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.AuthenticatedRequest
+import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthenticatedRequest, RequestWithSessionData}
+import uk.gov.hmrc.hecapplicantfrontend.models.emailSend.EmailSendResult.EmailSent
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeRequestResult._
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeVerificationResult._
-import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, Error}
-import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{Language, Passcode, PasscodeRequest, PasscodeVerificationRequest}
+import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, Error, HECSession}
+import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{Language, Passcode, PasscodeRequest, PasscodeRequestResult, PasscodeVerificationRequest, PasscodeVerificationResult}
 import uk.gov.hmrc.hecapplicantfrontend.services.EmailVerificationService.ErrorResponse
+import uk.gov.hmrc.hecapplicantfrontend.utils.Fixtures
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -55,8 +58,25 @@ class EmailVerificationServiceSpec extends AnyWordSpec with Matchers with MockFa
       .expects(PasscodeVerificationRequest(passcode, emailAddress), *)
       .returning(EitherT.fromEither(result))
 
-  val service                    = new EmailVerificationServiceImpl(mockEmailVerificationConnector)
-  val emptyHeaders               = Map.empty[String, Seq[String]]
+  val service      = new EmailVerificationServiceImpl(mockEmailVerificationConnector)
+  val emptyHeaders = Map.empty[String, Seq[String]]
+
+  val ggEmailId = EmailAddress("user@test.com")
+
+  val userEmailAnswer = Fixtures
+    .userEmailAnswers(
+      passcodeRequestResult = PasscodeRequestResult.PasscodeSent.some,
+      passcode = Passcode("HHHHHH").some,
+      passcodeVerificationResult = PasscodeVerificationResult.Match.some,
+      emailSendResult = EmailSent.some
+    )
+
+  val session: HECSession        = Fixtures.companyHECSession(
+    loginData = Fixtures.companyLoginData(emailAddress = ggEmailId.some),
+    userAnswers = Fixtures.completeCompanyUserAnswers(),
+    isEmailRequested = true,
+    userEmailAnswers = userEmailAnswer.some
+  )
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
   override def additionalConfig     = super.additionalConfig.withFallback(
@@ -69,6 +89,7 @@ class EmailVerificationServiceSpec extends AnyWordSpec with Matchers with MockFa
     )
   )
   implicit val authenticatedRequest = AuthenticatedRequest(new MessagesRequest(FakeRequest(), messagesApi))
+  implicit val requestWithSession   = RequestWithSessionData(authenticatedRequest, session)
 
   "EmailVerificationServiceSpec" when {
     val emailAddress = EmailAddress("user@test.com")
@@ -79,9 +100,12 @@ class EmailVerificationServiceSpec extends AnyWordSpec with Matchers with MockFa
       "return a technical  error " when {
 
         "Language in the session is not either en or cy" in {
-          implicit val authenticatedRequest: AuthenticatedRequest[AnyContentAsEmpty.type] = AuthenticatedRequest(
+          val authenticatedRequest: AuthenticatedRequest[AnyContentAsEmpty.type] = AuthenticatedRequest(
             new MessagesRequest(FakeRequest().withCookies(Cookie("PLAY_LANG", "fr")), messagesApi)
           )
+
+          implicit val requestWithSession: RequestWithSessionData[AnyContentAsEmpty.type] =
+            RequestWithSessionData(authenticatedRequest, session)
           val result                                                                      = service.requestPasscode(emailAddress)
           await(result.value) shouldBe a[Left[_, _]]
         }
@@ -102,9 +126,11 @@ class EmailVerificationServiceSpec extends AnyWordSpec with Matchers with MockFa
         }
 
         "the http response comes back with a non-201 " in {
-          implicit val authenticatedRequest: AuthenticatedRequest[AnyContentAsEmpty.type] = AuthenticatedRequest(
+          val authenticatedRequest: AuthenticatedRequest[AnyContentAsEmpty.type]          = AuthenticatedRequest(
             new MessagesRequest(FakeRequest().withCookies(Cookie("PLAY_LANG", "cy")), messagesApi)
           )
+          implicit val requestWithSession: RequestWithSessionData[AnyContentAsEmpty.type] =
+            RequestWithSessionData(authenticatedRequest, session)
           val passcodeRequest                                                             = PasscodeRequest(emailAddress, "hec", Language.Welsh)
           mockRequestPasscode(passcodeRequest)(Right(HttpResponse(OK, "", emptyHeaders)))
 
@@ -119,9 +145,11 @@ class EmailVerificationServiceSpec extends AnyWordSpec with Matchers with MockFa
         }
 
         "the http response came back with  502 (Bad Gateway)" in {
-          implicit val authenticatedRequest: AuthenticatedRequest[AnyContentAsEmpty.type] = AuthenticatedRequest(
+          val authenticatedRequest: AuthenticatedRequest[AnyContentAsEmpty.type]          = AuthenticatedRequest(
             new MessagesRequest(FakeRequest().withCookies(Cookie("PLAY_LANG", "cy")), messagesApi)
           )
+          implicit val requestWithSession: RequestWithSessionData[AnyContentAsEmpty.type] =
+            RequestWithSessionData(authenticatedRequest, session)
           val passcodeRequest                                                             = PasscodeRequest(emailAddress, "hec", Language.Welsh)
           mockRequestPasscode(passcodeRequest)(Right(HttpResponse(BAD_GATEWAY, "", emptyHeaders)))
           val result                                                                      = service.requestPasscode(emailAddress)
@@ -144,9 +172,11 @@ class EmailVerificationServiceSpec extends AnyWordSpec with Matchers with MockFa
         }
 
         "http response came back with status 409 (Conflict)" in {
-          implicit val authenticatedRequest: AuthenticatedRequest[AnyContentAsEmpty.type] = AuthenticatedRequest(
+          val authenticatedRequest: AuthenticatedRequest[AnyContentAsEmpty.type]          = AuthenticatedRequest(
             new MessagesRequest(FakeRequest().withCookies(Cookie("PLAY_LANG", "cy")), messagesApi)
           )
+          implicit val requestWithSession: RequestWithSessionData[AnyContentAsEmpty.type] =
+            RequestWithSessionData(authenticatedRequest, session)
           val emailAddress                                                                = EmailAddress("email_verified_already@email.com")
           val passcodeRequest                                                             = PasscodeRequest(emailAddress, "hec", Language.Welsh)
           val errorResponse                                                               = ErrorResponse("EMAIL_VERIFIED_ALREADY", "Email has already been verified")
@@ -182,9 +212,11 @@ class EmailVerificationServiceSpec extends AnyWordSpec with Matchers with MockFa
 
         "the passcode has been successfully requested, Authenticated request has Welsh language" in {
 
-          implicit val authenticatedRequest: AuthenticatedRequest[AnyContentAsEmpty.type] = AuthenticatedRequest(
+          val authenticatedRequest: AuthenticatedRequest[AnyContentAsEmpty.type]          = AuthenticatedRequest(
             new MessagesRequest(FakeRequest().withCookies(Cookie("PLAY_LANG", "cy")), messagesApi)
           )
+          implicit val requestWithSession: RequestWithSessionData[AnyContentAsEmpty.type] =
+            RequestWithSessionData(authenticatedRequest, session)
           val passcodeRequest                                                             = PasscodeRequest(emailAddress, "hec", Language.Welsh)
 
           mockRequestPasscode(passcodeRequest)(Right(HttpResponse(CREATED, "")))

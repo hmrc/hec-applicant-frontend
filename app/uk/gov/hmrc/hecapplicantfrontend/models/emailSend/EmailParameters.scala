@@ -14,15 +14,20 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hecapplicantfrontend.models.emailVerification
+package uk.gov.hmrc.hecapplicantfrontend.models.emailSend
 
 import play.api.libs.json.{Json, OWrites}
-import uk.gov.hmrc.hecapplicantfrontend.models.EmailAddress
 
-final case class PasscodeVerificationRequest(passcode: Passcode, email: EmailAddress)
+//TODO discussion on data model for email parameters
+final case class EmailParameters(
+  name: String = "Dummy name",
+  verificationLink: String //added to call dummy  template
+  //currentDate: String, TODO uncomment for the real template
+  //licenceTYpe: LicenceType, TODO uncomment for the real template
+  //hecTaxCheckCode: String, TODO uncomment for the real template
+  //expiresAfter: String TODO uncomment for the real template
+)
 
-object PasscodeVerificationRequest {
-
-  implicit val writes: OWrites[PasscodeVerificationRequest] = Json.writes
-
+object EmailParameters {
+  implicit val writes: OWrites[EmailParameters] = Json.writes
 }

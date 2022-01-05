@@ -24,6 +24,7 @@ import cats.instances.string._
 import cats.syntax.eq._
 import cats.syntax.option._
 import cats.syntax.traverse._
+import uk.gov.hmrc.emailaddress.{EmailAddress => EmailAdd}
 import com.google.inject.{Inject, Singleton}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Request}
 import uk.gov.hmrc.auth.core.retrieve.Credentials
@@ -40,7 +41,6 @@ import uk.gov.hmrc.hecapplicantfrontend.services.{CitizenDetailsService, Journey
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
@@ -176,7 +176,7 @@ class StartController @Inject() (
               sautr,
               citizenDetails.name,
               citizenDetails.dateOfBirth,
-              maybeEmail.map(EmailAddress(_))
+              validateEmail(maybeEmail)
             )
         )
         .toEither
@@ -223,12 +223,15 @@ class StartController @Inject() (
     val eitherResult = ctutrValidation
       .bimap[StartError, LoginData](
         DataError,
-        ctutrOpt => CompanyLoginData(GGCredId(ggCredId.value), ctutrOpt, maybeEmail.map(EmailAddress(_)))
+        ctutrOpt => CompanyLoginData(GGCredId(ggCredId.value), ctutrOpt, validateEmail(maybeEmail))
       )
       .toEither
 
     EitherT.fromEither[Future](eitherResult)
   }
+
+  private def validateEmail(emailOpt: Option[String]): Option[EmailAddress] =
+    emailOpt.filter(EmailAdd.isValid(_)).map(EmailAddress(_))
 
   private def withGGCredentials[A](
     credentials: Option[Credentials]

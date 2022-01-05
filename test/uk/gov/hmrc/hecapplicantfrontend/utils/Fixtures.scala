@@ -22,6 +22,8 @@ import uk.gov.hmrc.hecapplicantfrontend.models.IndividualUserAnswers.{CompleteIn
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.{CompanyRetrievedJourneyData, IndividualRetrievedJourneyData}
 import uk.gov.hmrc.hecapplicantfrontend.models._
+import uk.gov.hmrc.hecapplicantfrontend.models.emailSend.EmailSendResult
+import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{Passcode, PasscodeRequestResult, PasscodeVerificationResult}
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.company.CTAccountingPeriod.CTAccountingPeriodDigital
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.company.{CTAccountingPeriod, CTStatus, CTStatusResponse}
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.individual.SAStatusResponse
@@ -138,7 +140,9 @@ object Fixtures {
     completedTaxCheck: Option[HECTaxCheck] = None,
     taxCheckStartDateTime: Option[ZonedDateTime] = None,
     unexpiredTaxChecks: List[TaxCheckListItem] = List.empty,
-    relevantIncomeTaxYear: Option[TaxYear] = None
+    relevantIncomeTaxYear: Option[TaxYear] = None,
+    isEmailRequested: Boolean = false,
+    userEmailAnswers: Option[UserEmailAnswers] = None
   ): IndividualHECSession =
     IndividualHECSession(
       loginData = loginData,
@@ -148,7 +152,9 @@ object Fixtures {
       taxCheckStartDateTime = taxCheckStartDateTime,
       unexpiredTaxChecks = unexpiredTaxChecks,
       hasConfirmedDetails = false,
-      relevantIncomeTaxYear = relevantIncomeTaxYear
+      relevantIncomeTaxYear = relevantIncomeTaxYear,
+      isEmailRequested = isEmailRequested,
+      userEmailAnswers = userEmailAnswers
     )
 
   def companyLoginData(
@@ -178,7 +184,9 @@ object Fixtures {
     completedTaxCheck: Option[HECTaxCheck] = None,
     taxCheckStartDateTime: Option[ZonedDateTime] = None,
     unexpiredTaxChecks: List[TaxCheckListItem] = List.empty,
-    crnBlocked: Boolean = false
+    crnBlocked: Boolean = false,
+    isEmailRequested: Boolean = false,
+    userEmailAnswers: Option[UserEmailAnswers] = None
   ): CompanyHECSession = CompanyHECSession(
     loginData = loginData,
     retrievedJourneyData = retrievedJourneyData,
@@ -186,7 +194,9 @@ object Fixtures {
     completedTaxCheck = completedTaxCheck,
     taxCheckStartDateTime = taxCheckStartDateTime,
     unexpiredTaxChecks = unexpiredTaxChecks,
-    crnBlocked = crnBlocked
+    crnBlocked = crnBlocked,
+    isEmailRequested = isEmailRequested,
+    userEmailAnswers = userEmailAnswers
   )
 
   def ctStatusResponse(
@@ -222,4 +232,20 @@ object Fixtures {
     expiresAfter = expiresAfter,
     createDate = createDate
   )
+
+  def userEmailAnswers(
+    emailType: EmailType = EmailType.GGEmail,
+    emailAddress: EmailAddress = EmailAddress("user@test.com"),
+    passcodeRequestResult: Option[PasscodeRequestResult] = None,
+    passcode: Option[Passcode] = None,
+    passcodeVerificationResult: Option[PasscodeVerificationResult] = None,
+    emailSendResult: Option[EmailSendResult] = None
+  ): UserEmailAnswers =
+    UserEmailAnswers(
+      UserSelectedEmail(emailType, emailAddress),
+      passcodeRequestResult,
+      passcode,
+      passcodeVerificationResult,
+      emailSendResult
+    )
 }

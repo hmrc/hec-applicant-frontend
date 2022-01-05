@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hecapplicantfrontend.models.emailVerification
+package uk.gov.hmrc.hecapplicantfrontend.models
 
-import play.api.libs.json.{Json, OWrites}
-import uk.gov.hmrc.hecapplicantfrontend.models.EmailAddress
+import play.api.libs.json.{Json, OFormat}
 
-final case class PasscodeVerificationRequest(passcode: Passcode, email: EmailAddress)
+final case class ConfirmUserEmail(
+  ggEmail: EmailAddress,
+  differentEmail: Option[EmailAddress]
+)
 
-object PasscodeVerificationRequest {
-
-  implicit val writes: OWrites[PasscodeVerificationRequest] = Json.writes
-
+object ConfirmUserEmail {
+  implicit val formats: OFormat[ConfirmUserEmail] = Json.format[ConfirmUserEmail]
 }

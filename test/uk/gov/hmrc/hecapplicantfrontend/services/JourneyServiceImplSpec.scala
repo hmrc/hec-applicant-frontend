@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.services
 
+import cats.implicits.catsSyntaxOptionId
 import com.typesafe.config.ConfigFactory
 import play.api.Configuration
 import play.api.mvc.{Call, MessagesRequest}
@@ -31,6 +32,9 @@ import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, Indi
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.{CompanyRetrievedJourneyData, IndividualRetrievedJourneyData}
 import uk.gov.hmrc.hecapplicantfrontend.models.TaxSituation.PAYE
 import uk.gov.hmrc.hecapplicantfrontend.models._
+import uk.gov.hmrc.hecapplicantfrontend.models.emailSend.EmailSendResult
+import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{Passcode, PasscodeRequestResult, PasscodeVerificationResult}
+import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeRequestResult.{EmailAddressAlreadyVerified, MaximumNumberOfEmailsExceeded, PasscodeSent}
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.company.CTAccountingPeriod.CTAccountingPeriodDigital
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.company.{CTAccountingPeriod, CTStatus, CTStatusResponse}
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.individual
@@ -71,6 +75,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
 
   val companyLoginData1: CompanyLoginData =
     CompanyLoginData(GGCredId(""), Some(CTUTR("4444444444")), None)
+
+  val ggEmailId = EmailAddress("user@test.com")
+
+  val otherEmailId = EmailAddress("user1@test.com")
 
   "JourneyServiceImpl" when {
 
@@ -1490,6 +1498,323 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
           }
         }
 
+        "tax check complete page" when {
+
+          def testIndividual(emailAddress: Option[EmailAddress], nextCall: Call) = {
+            val session                                     = Fixtures.individualHECSession(
+              individualLoginData.copy(emailAddress = emailAddress),
+              IndividualRetrievedJourneyData.empty,
+              Fixtures.completeIndividualUserAnswers(
+                licenceType = DriverOfTaxisAndPrivateHires,
+                licenceTimeTrading = LicenceTimeTrading.TwoToFourYears,
+                licenceValidityPeriod = UpToOneYear,
+                taxSituation = PAYE,
+                saIncomeDeclared = Some(YesNoAnswer.Yes),
+                entityType = Some(Individual)
+              ),
+              Some(HECTaxCheck(HECTaxCheckCode("code"), LocalDate.now.plusDays(1))),
+              Some(taxCheckStartDateTime),
+              isEmailRequested = true
+            )
+            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+
+            val result = journeyService.updateAndNext(
+              routes.TaxCheckCompleteController.taxCheckComplete(),
+              session
+            )
+            await(result.value) shouldBe Right(nextCall)
+          }
+
+          def testCompany(emailAddress: Option[EmailAddress], nextCall: Call) = {
+
+            val session                                     = Fixtures.companyHECSession(
+              companyLoginData.copy(emailAddress = emailAddress),
+              CompanyRetrievedJourneyData.empty,
+              Fixtures.completeCompanyUserAnswers(recentlyStartedTrading = YesNoAnswer.Yes.some),
+              taxCheckStartDateTime = Some(taxCheckStartDateTime),
+              isEmailRequested = true
+            )
+            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+
+            val result = journeyService.updateAndNext(
+              routes.TaxCheckCompleteController.taxCheckComplete(),
+              session
+            )
+            await(result.value) shouldBe Right(nextCall)
+          }
+
+          "tax check code is generated for an Individual" when {
+            "User has email id in GG account" in {
+              testIndividual(
+                Some(EmailAddress("user@test.com")),
+                routes.ConfirmEmailAddressController.confirmEmailAddress()
+              )
+            }
+
+            "User don't has email id in GG account" in {
+              testIndividual(None, routes.EnterEmailAddressController.enterEmailAddress())
+            }
+
+            "User  has email id in GG account but is invalid" in {
+              testIndividual(
+                Some(EmailAddress("user@123@test.com")),
+                routes.EnterEmailAddressController.enterEmailAddress()
+              )
+            }
+          }
+
+          "tax check code is generated for a company" when {
+            "company has email id in GG account" in {
+              testCompany(
+                Some(EmailAddress("user@test.com")),
+                routes.ConfirmEmailAddressController.confirmEmailAddress()
+              )
+            }
+
+            "company don't has email id in GG account" in {
+              testCompany(None, routes.EnterEmailAddressController.enterEmailAddress())
+            }
+
+            "company has email id in GG account but is invalid" in {
+              testCompany(
+                Some(EmailAddress("user@123@test.com")),
+                routes.EnterEmailAddressController.enterEmailAddress()
+              )
+            }
+          }
+
+        }
+
+        "the confirm email address page" when {
+
+          def test(userEmailAnswers: UserEmailAnswers, nextCall: Call) = {
+            val session                                     = Fixtures.individualHECSession(
+              individualLoginData.copy(emailAddress = ggEmailId.some),
+              IndividualRetrievedJourneyData.empty,
+              Fixtures.completeIndividualUserAnswers(
+                licenceType = DriverOfTaxisAndPrivateHires,
+                licenceTimeTrading = LicenceTimeTrading.TwoToFourYears,
+                licenceValidityPeriod = UpToOneYear,
+                taxSituation = PAYE,
+                saIncomeDeclared = Some(YesNoAnswer.Yes),
+                entityType = Some(Individual)
+              ),
+              Some(HECTaxCheck(HECTaxCheckCode("code"), LocalDate.now.plusDays(1))),
+              Some(taxCheckStartDateTime),
+              isEmailRequested = true,
+              userEmailAnswers = userEmailAnswers.some
+            )
+            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+
+            val result = journeyService.updateAndNext(
+              routes.ConfirmEmailAddressController.confirmEmailAddress(),
+              session
+            )
+            await(result.value) shouldBe Right(nextCall)
+          }
+
+          "the valid ggEmailId is selected or valid different email id is entered and " when {
+
+            " Email Verification Service response = Passcode Sent" in {
+              List(
+                Fixtures.userEmailAnswers(EmailType.GGEmail, ggEmailId, PasscodeSent.some),
+                Fixtures.userEmailAnswers(EmailType.DifferentEmail, otherEmailId, PasscodeSent.some)
+              ).foreach { eachUserEmailAddress =>
+                withClue(s"For user email address : $eachUserEmailAddress") {
+                  test(
+                    eachUserEmailAddress,
+                    routes.VerifyEmailPasscodeController.verifyEmailPasscode()
+                  )
+                }
+              }
+
+            }
+
+            " Email Verification Service response = Email Already Verified " in {
+
+              List(
+                Fixtures.userEmailAnswers(EmailType.GGEmail, ggEmailId, EmailAddressAlreadyVerified.some),
+                Fixtures.userEmailAnswers(
+                  EmailType.DifferentEmail,
+                  otherEmailId,
+                  EmailAddressAlreadyVerified.some
+                )
+              ).foreach { eachUserEmailAddress =>
+                withClue(s"For user email address : $eachUserEmailAddress") {
+                  test(
+                    eachUserEmailAddress,
+                    routes.EmailAddressConfirmedController.emailAddressConfirmed()
+                  )
+                }
+              }
+            }
+
+            " Email Verification Service response = Too Many Email attempts in session " in {
+
+              List(
+                Fixtures.userEmailAnswers(EmailType.GGEmail, ggEmailId, MaximumNumberOfEmailsExceeded.some),
+                Fixtures.userEmailAnswers(
+                  EmailType.DifferentEmail,
+                  otherEmailId,
+                  MaximumNumberOfEmailsExceeded.some
+                )
+              ).foreach { eachUserEmailAddress =>
+                withClue(s"For user email address : $eachUserEmailAddress") {
+                  test(
+                    eachUserEmailAddress,
+                    routes.TooManyEmailVerificationAttemptController.tooManyEmailVerificationAttempts()
+                  )
+                }
+              }
+            }
+          }
+        }
+
+        "the confirm email passcode page" when {
+
+          def test(passcodeVerificationResult: PasscodeVerificationResult, nextCall: Call) = {
+            val session                                     = Fixtures.individualHECSession(
+              individualLoginData.copy(emailAddress = ggEmailId.some),
+              IndividualRetrievedJourneyData.empty,
+              Fixtures.completeIndividualUserAnswers(
+                licenceType = DriverOfTaxisAndPrivateHires,
+                licenceTimeTrading = LicenceTimeTrading.TwoToFourYears,
+                licenceValidityPeriod = UpToOneYear,
+                taxSituation = PAYE,
+                saIncomeDeclared = Some(YesNoAnswer.Yes),
+                entityType = Some(Individual)
+              ),
+              Some(HECTaxCheck(HECTaxCheckCode("code"), LocalDate.now.plusDays(1))),
+              Some(taxCheckStartDateTime),
+              isEmailRequested = true,
+              userEmailAnswers = Fixtures
+                .userEmailAnswers(
+                  passcodeRequestResult = PasscodeSent.some,
+                  passcode = Passcode("HHHHHH").some,
+                  passcodeVerificationResult = passcodeVerificationResult.some
+                )
+                .some
+            )
+            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+
+            val result = journeyService.updateAndNext(
+              routes.VerifyEmailPasscodeController.verifyEmailPasscode(),
+              session
+            )
+            await(result.value) shouldBe Right(nextCall)
+          }
+
+          "passcode is a match and verified" in {
+            test(PasscodeVerificationResult.Match, routes.EmailAddressConfirmedController.emailAddressConfirmed())
+          }
+
+          "passcode is not verified and is a No match" in {
+            test(
+              PasscodeVerificationResult.NoMatch,
+              routes.VerificationPasscodeNotFoundController.verificationPasscodeNotFound
+            )
+          }
+
+          "passcode is expired" in {
+            test(
+              PasscodeVerificationResult.Expired,
+              routes.VerificationPasscodeExpiredController.verificationPasscodeExpired
+            )
+          }
+
+          "passcode has been attempted too many times" in {
+            test(
+              PasscodeVerificationResult.TooManyAttempts,
+              routes.TooManyPasscodeVerificationController.tooManyPasscodeVerification
+            )
+          }
+
+        }
+
+        "email address confirmed page" when {
+
+          def test(emailSendResult: Option[EmailSendResult], nextCall: Call) = {
+            val session                                     = Fixtures.companyHECSession(
+              loginData = Fixtures.companyLoginData(emailAddress = ggEmailId.some),
+              userAnswers = Fixtures.completeCompanyUserAnswers(),
+              isEmailRequested = true,
+              userEmailAnswers = Fixtures
+                .userEmailAnswers(
+                  passcodeRequestResult = PasscodeRequestResult.PasscodeSent.some,
+                  passcode = Passcode("HHHHHH").some,
+                  passcodeVerificationResult = PasscodeVerificationResult.Match.some,
+                  emailSendResult = emailSendResult
+                )
+                .some
+            )
+            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+
+            val result = journeyService.updateAndNext(
+              routes.EmailAddressConfirmedController.emailAddressConfirmed(),
+              session
+            )
+            await(result.value) shouldBe Right(nextCall)
+
+          }
+
+          "the email is send" in {
+            test(EmailSendResult.EmailSent.some, routes.EmailSentController.emailSent)
+          }
+
+          "the email is not send due to any failures" in {
+            test(None, routes.ProblemSendingEmailController.problemSendingEmail)
+          }
+
+        }
+
+        "the enter email address page" when {
+          def test(userEmailAnswers: UserEmailAnswers, nextCall: Call) = {
+            val session                                     = Fixtures.individualHECSession(
+              individualLoginData,
+              IndividualRetrievedJourneyData.empty,
+              Fixtures.completeIndividualUserAnswers(
+                licenceType = DriverOfTaxisAndPrivateHires,
+                licenceTimeTrading = LicenceTimeTrading.TwoToFourYears,
+                licenceValidityPeriod = UpToOneYear,
+                taxSituation = PAYE,
+                saIncomeDeclared = Some(YesNoAnswer.Yes),
+                entityType = Some(Individual)
+              ),
+              Some(HECTaxCheck(HECTaxCheckCode("code"), LocalDate.now.plusDays(1))),
+              Some(taxCheckStartDateTime),
+              isEmailRequested = true,
+              userEmailAnswers = userEmailAnswers.some
+            )
+            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+
+            val result = journeyService.updateAndNext(
+              routes.ConfirmEmailAddressController.confirmEmailAddress(),
+              session
+            )
+            await(result.value) shouldBe Right(nextCall)
+          }
+          "valid email id is entered and Email Verification Service response = Passcode Sent" in {
+            test(
+              Fixtures.userEmailAnswers(EmailType.DifferentEmail, otherEmailId, PasscodeSent.some),
+              routes.VerifyEmailPasscodeController.verifyEmailPasscode()
+            )
+          }
+
+          "valid email id is entered and Email Verification Service response = Email Already Verified" in {
+            test(
+              Fixtures.userEmailAnswers(EmailType.DifferentEmail, otherEmailId, EmailAddressAlreadyVerified.some),
+              routes.EmailAddressConfirmedController.emailAddressConfirmed()
+            )
+          }
+
+          "valid email id is entered and Email Verification Service response = Too Many Email attempts in session " in {
+            test(
+              Fixtures.userEmailAnswers(EmailType.DifferentEmail, otherEmailId, MaximumNumberOfEmailsExceeded.some),
+              routes.TooManyEmailVerificationAttemptController.tooManyEmailVerificationAttempts()
+            )
+          }
+
+        }
       }
 
       "convert incomplete answers to complete answers when all questions have been answered and" when {
@@ -1753,17 +2078,12 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
               recentlyStartedTrading = recentlyStartedTradingOpt
             )
 
-            val session =
-              CompanyHECSession(
-                Fixtures.companyLoginData(ctutr = Some(CTUTR("1111111111"))),
-                Fixtures.companyRetrievedJourneyData(ctStatus = ctStatusResponse),
-                incompleteAnswers,
-                None,
-                None,
-                List.empty
-              )
+            val session = Fixtures.companyHECSession(
+              Fixtures.companyLoginData(ctutr = Some(CTUTR("1111111111"))),
+              Fixtures.companyRetrievedJourneyData(ctStatus = ctStatusResponse),
+              userAnswers = incompleteAnswers
+            )
             (completeAnswers, session)
-
           }
 
           def nextPageIsCYA(session: CompanyHECSession, completeAnswers: CompanyUserAnswers) = {
@@ -2546,6 +2866,190 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
           )
 
           result shouldBe routes.CRNController.companyRegistrationNumber()
+        }
+
+        "the Confirm Email Address page" in {
+
+          val journeyDataWithSaStatus                     = IndividualRetrievedJourneyData(saStatus =
+            Some(individual.SAStatusResponse(SAUTR(""), TaxYear(2020), SAStatus.NoticeToFileIssued))
+          )
+          val session                                     = Fixtures.individualHECSession(
+            individualLoginData.copy(emailAddress = EmailAddress("user@test.com").some),
+            retrievedJourneyData = journeyDataWithSaStatus,
+            Fixtures.completeIndividualUserAnswers(),
+            Some(HECTaxCheck(HECTaxCheckCode("code1"), LocalDate.now.plusDays(1))),
+            taxCheckStartDateTime = taxCheckStartDateTime.some,
+            isEmailRequested = true
+          )
+          implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+
+          val result = journeyService.previous(
+            routes.ConfirmEmailAddressController.confirmEmailAddress()
+          )
+          result shouldBe routes.TaxCheckCompleteController.taxCheckComplete()
+        }
+
+        "the Email sent page" in {
+
+          val hecTaxCheckCode                             = HECTaxCheckCode("ABC 123 DER")
+          val expiryDate                                  = LocalDate.of(2021, 10, 9)
+          val hecTaxCheck                                 = HECTaxCheck(hecTaxCheckCode, expiryDate)
+          val userEmailAnswer                             = Fixtures
+            .userEmailAnswers(
+              passcodeRequestResult = PasscodeRequestResult.PasscodeSent.some,
+              passcode = Passcode("HHHHHH").some,
+              passcodeVerificationResult = PasscodeVerificationResult.Match.some,
+              emailSendResult = EmailSendResult.EmailSent.some
+            )
+          val session                                     = Fixtures.companyHECSession(
+            loginData = Fixtures.companyLoginData(emailAddress = ggEmailId.some),
+            userAnswers = Fixtures.completeCompanyUserAnswers(),
+            isEmailRequested = true,
+            completedTaxCheck = hecTaxCheck.some,
+            userEmailAnswers = userEmailAnswer.some
+          )
+          implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+
+          val result = journeyService.previous(
+            routes.EmailSentController.emailSent()
+          )
+          result shouldBe routes.EmailAddressConfirmedController.emailAddressConfirmed()
+
+        }
+
+        "the Enter Email Address page" when {
+
+          def test(emailAddress: Option[EmailAddress]) = {
+            val journeyDataWithSaStatus                     = IndividualRetrievedJourneyData(saStatus =
+              Some(individual.SAStatusResponse(SAUTR(""), TaxYear(2020), SAStatus.NoticeToFileIssued))
+            )
+            val session                                     = Fixtures.individualHECSession(
+              individualLoginData.copy(emailAddress = emailAddress),
+              retrievedJourneyData = journeyDataWithSaStatus,
+              Fixtures.completeIndividualUserAnswers(),
+              Some(HECTaxCheck(HECTaxCheckCode("code1"), LocalDate.now.plusDays(1))),
+              taxCheckStartDateTime = taxCheckStartDateTime.some,
+              isEmailRequested = true
+            )
+            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+
+            val result = journeyService.previous(
+              routes.EnterEmailAddressController.enterEmailAddress()
+            )
+            result shouldBe routes.TaxCheckCompleteController.taxCheckComplete()
+
+          }
+
+          "the email id is invalid " in {
+            test(Some(EmailAddress("user@test@test.com")))
+          }
+
+          "the email id is not in GG login data" in {
+            test(None)
+          }
+
+        }
+
+        def previousIsConfirmEmailPage(passcodeRequestResult: PasscodeRequestResult, existingRoute: Call) = {
+          val session = Fixtures.individualHECSession(
+            individualLoginData.copy(emailAddress = ggEmailId.some),
+            IndividualRetrievedJourneyData.empty,
+            Fixtures.completeIndividualUserAnswers(
+              licenceType = DriverOfTaxisAndPrivateHires,
+              licenceTimeTrading = LicenceTimeTrading.TwoToFourYears,
+              licenceValidityPeriod = UpToOneYear,
+              taxSituation = PAYE,
+              saIncomeDeclared = Some(YesNoAnswer.Yes),
+              entityType = Some(Individual)
+            ),
+            Some(HECTaxCheck(HECTaxCheckCode("code"), LocalDate.now.plusDays(1))),
+            Some(taxCheckStartDateTime),
+            isEmailRequested = true,
+            userEmailAnswers = Fixtures.userEmailAnswers(EmailType.GGEmail, ggEmailId, passcodeRequestResult.some).some
+          )
+
+          implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+
+          val result = journeyService.previous(existingRoute)
+          result shouldBe routes.ConfirmEmailAddressController.confirmEmailAddress()
+        }
+
+        def previousIsVerificationEmailPage(
+          passcodeVerificationResult: PasscodeVerificationResult,
+          currentCall: Call
+        ) = {
+          val session = Fixtures.individualHECSession(
+            individualLoginData.copy(emailAddress = ggEmailId.some),
+            IndividualRetrievedJourneyData.empty,
+            Fixtures.completeIndividualUserAnswers(
+              licenceType = DriverOfTaxisAndPrivateHires,
+              licenceTimeTrading = LicenceTimeTrading.TwoToFourYears,
+              licenceValidityPeriod = UpToOneYear,
+              taxSituation = PAYE,
+              saIncomeDeclared = Some(YesNoAnswer.Yes),
+              entityType = Some(Individual)
+            ),
+            Some(HECTaxCheck(HECTaxCheckCode("code"), LocalDate.now.plusDays(1))),
+            Some(taxCheckStartDateTime),
+            isEmailRequested = true,
+            userEmailAnswers = Fixtures
+              .userEmailAnswers(
+                passcodeRequestResult = PasscodeSent.some,
+                passcode = Passcode("HHHHHH").some,
+                passcodeVerificationResult = passcodeVerificationResult.some
+              )
+              .some
+          )
+
+          implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+
+          val result = journeyService.previous(currentCall)
+          result shouldBe routes.VerifyEmailPasscodeController.verifyEmailPasscode()
+
+        }
+
+        "the Verify email passcode controller" in {
+          previousIsConfirmEmailPage(PasscodeSent, routes.VerifyEmailPasscodeController.verifyEmailPasscode())
+
+        }
+
+        "the Email address confirmed page" when {
+
+          "user selected an email on confirm email page, which is already verified" in {
+            previousIsConfirmEmailPage(
+              EmailAddressAlreadyVerified,
+              routes.EmailAddressConfirmedController.emailAddressConfirmed()
+            )
+          }
+
+          "user selected an email which was not confirmed already , but got it confirmed by verifying passcode" in {
+            previousIsVerificationEmailPage(
+              PasscodeVerificationResult.Match,
+              routes.EmailAddressConfirmedController.emailAddressConfirmed()
+            )
+          }
+
+        }
+
+        "the passcode not found page" in {
+          previousIsVerificationEmailPage(
+            PasscodeVerificationResult.NoMatch,
+            routes.VerificationPasscodeNotFoundController.verificationPasscodeNotFound()
+          )
+        }
+
+        "the passcode has  expired page" in {
+          previousIsVerificationEmailPage(
+            PasscodeVerificationResult.Expired,
+            routes.VerificationPasscodeExpiredController.verificationPasscodeExpired()
+          )
+        }
+
+        "the Too many passcode attempts page" in {
+          previousIsVerificationEmailPage(
+            PasscodeVerificationResult.TooManyAttempts,
+            routes.TooManyPasscodeVerificationController.tooManyPasscodeVerification()
+          )
         }
 
         def buildIndividualSession(taxSituation: TaxSituation, saStatus: SAStatus): HECSession = {

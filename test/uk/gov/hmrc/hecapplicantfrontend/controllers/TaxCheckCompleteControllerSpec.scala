@@ -16,7 +16,9 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.controllers
 
-import java.time.LocalDate
+import cats.implicits.catsSyntaxOptionId
+
+import java.time.{LocalDate, ZonedDateTime}
 import play.api.inject.bind
 import play.api.mvc.Result
 import play.api.test.FakeRequest
@@ -24,11 +26,12 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.IndividualHECSession
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
-import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.IndividualRetrievedJourneyData
+import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.{CompanyRetrievedJourneyData, IndividualRetrievedJourneyData}
 import uk.gov.hmrc.hecapplicantfrontend.models._
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO}
-import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
+import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
+import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
 import uk.gov.hmrc.hecapplicantfrontend.utils.Fixtures
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -43,7 +46,8 @@ class TaxCheckCompleteControllerSpec
 
   override def overrideBindings = List(
     bind[AuthConnector].toInstance(mockAuthConnector),
-    bind[SessionStore].toInstance(mockSessionStore)
+    bind[SessionStore].toInstance(mockSessionStore),
+    bind[JourneyService].toInstance(mockJourneyService)
   )
 
   val controller = instanceOf[TaxCheckCompleteController]
@@ -99,12 +103,110 @@ class TaxCheckCompleteControllerSpec
             messageFromMessageKey("taxCheckComplete.title"),
             doc => {
               doc.select(".govuk-panel__body").text should include regex "LXB 7G6 DX7"
+              val list = doc.select(".govuk-list--bullet").html
+              list                           should include regex messageFromMessageKey(
+                "taxCheckComplete.list2",
+                routes.TaxCheckCompleteController.emailTaxCheckCode().url
+              )
+              list                           should include regex messageFromMessageKey(
+                "taxCheckComplete.list3",
+                routes.StartController.start().url
+              )
+              doc.select(".govuk-body").html should include regex messageFromMessageKey(
+                "taxCheckComplete.p2",
+                "8 January 2020"
+              )
 
-              doc
-                .select(".govuk-body")
-                .html should include regex messageFromMessageKey("taxCheckComplete.p2", "8 January 2020")
             }
           )
+        }
+
+      }
+
+    }
+
+    "handling request to show email options after tax check code has been generated" must {
+
+      def performAction(): Future[Result] =
+        controller.emailTaxCheckCode(FakeRequest())
+
+      val now = ZonedDateTime.now()
+
+      "return a technical error" when {
+
+        "the call to update and next fails" in {
+          val session        = Fixtures.individualHECSession()
+          val updatedSession = session.copy(isEmailRequested = true)
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockJourneyServiceUpdateAndNext(
+              routes.TaxCheckCompleteController.taxCheckComplete(),
+              session,
+              updatedSession
+            )(
+              Left(Error(new Exception))
+            )
+          }
+          assertThrows[RuntimeException](await(performAction()))
+        }
+
+      }
+
+      "redirect to the next page" when {
+
+        def nextPageRedirectTest(
+          session: HECSession,
+          updatedSession: HECSession
+        ) = {
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockJourneyServiceUpdateAndNext(
+              routes.TaxCheckCompleteController.taxCheckComplete(),
+              session,
+              updatedSession
+            )(
+              Right(mockNextCall)
+            )
+          }
+
+          checkIsRedirect(performAction(), mockNextCall)
+        }
+
+        "valid Individual tax check code has been generated" in {
+          val answers = Fixtures.completeIndividualUserAnswers(
+            LicenceType.DriverOfTaxisAndPrivateHires,
+            LicenceTimeTrading.ZeroToTwoYears,
+            LicenceValidityPeriod.UpToOneYear,
+            TaxSituation.SA,
+            Some(YesNoAnswer.Yes),
+            Some(EntityType.Individual)
+          )
+          val session =
+            Fixtures.individualHECSession(
+              individualLoginData,
+              IndividualRetrievedJourneyData.empty,
+              answers,
+              taxCheckStartDateTime = Some(now)
+            )
+          nextPageRedirectTest(session, session.copy(isEmailRequested = true))
+        }
+
+        "valid Company data is submitted and" in {
+          val answers = Fixtures.completeCompanyUserAnswers(
+            LicenceType.OperatorOfPrivateHireVehicles,
+            LicenceTimeTrading.ZeroToTwoYears,
+            LicenceValidityPeriod.UpToOneYear,
+            recentlyStartedTrading = YesNoAnswer.Yes.some
+          )
+          val session = Fixtures.companyHECSession(
+            companyLoginData,
+            CompanyRetrievedJourneyData.empty,
+            answers,
+            taxCheckStartDateTime = Some(now)
+          )
+          nextPageRedirectTest(session, session.copy(isEmailRequested = true))
         }
 
       }

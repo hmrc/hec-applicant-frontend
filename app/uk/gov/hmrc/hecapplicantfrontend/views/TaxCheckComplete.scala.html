@@ -40,13 +40,18 @@
 
     <h2 class="govuk-heading-m">@messages(s"$key.whatNext")</h2>
 
-    <ul class="govuk-list govuk-list--number govuk-!-margin-bottom-7">
-        <li>@Html(messages(s"$key.list1", routes.StartController.start.url))</li>
-        <li>@messages(s"$key.list2")</li>
-    </ul>
+    <p class="govuk-body">@messages(s"$key.p3")</p>
 
     <div class="govuk-!-margin-top-2">
-      @copyButton(hecTaxCheck.taxCheckCode.value, None, Some(messages(s"$key.copyText")))
+    @copyButton(hecTaxCheck.taxCheckCode.value, None, Some(messages(s"$key.copyText")))
     </div>
+
+    <ul class="govuk-list govuk-list--bullet govuk-!-margin-bottom-7">
+        <li class="js-visible">@Html(messages(s"$key.list1"))</li>
+        <li>@Html(messages(s"$key.list2", routes.TaxCheckCompleteController.emailTaxCheckCode().url))</li>
+        <li>@Html(messages(s"$key.list3", routes.StartController.start().url))</li>
+    </ul>
+
+
 
 }

@@ -139,7 +139,7 @@ class LicenceDetailsController @Inject() (
       _.fold(_.licenceTimeTrading, _.licenceTimeTrading.some)
     )
     val form = {
-      val emptyForm = licenceTimeTradingForm(licenceTimeTradingOptions)
+      val emptyForm: Form[LicenceTimeTrading] = licenceTimeTradingForm(licenceTimeTradingOptions)
       timeTrading.fold(emptyForm)(emptyForm.fill)
     }
     Ok(licenceTimeTradingPage(form, back, licenceTimeTradingOptions))

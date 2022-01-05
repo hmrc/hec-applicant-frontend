@@ -15,6 +15,7 @@ button.confirm=Confirm
 button.continue=Continue
 button.copy=Copy
 button.copied=Copied
+button.sendEmail =Send email
 
 # Failed IV
 iv.failedIv.title=We could not confirm your identity
@@ -197,8 +198,11 @@ taxCheckComplete.subtitle = Your tax check code
 taxCheckComplete.p1 = Your tax check code is valid for 120 days.
 taxCheckComplete.p2 = The last day it can be used is: <strong>{0}</strong>.
 taxCheckComplete.whatNext = What you need to do next
-taxCheckComplete.list1 = Make a note of your tax check code. You can <span class="js-visible"><a class="govuk-link" href="#print-dialogue">print or save this page as a PDF</a>, or </span><a class="govuk-link" href="{0}">see all your tax check codes</a>.
-taxCheckComplete.list2 = Enter your tax check code in your licence application. Make sure you leave enough time for your application to be processed before your tax check code expires.
+taxCheckComplete.p3 = Enter your tax check code in your licence application. Make sure you leave enough time for your application to be processed before your tax check code expires.
+taxCheckComplete.p4 = You can also:
+taxCheckComplete.list1 = <a class="govuk-link" href="#print-dialogue">print or save this page as a PDF</a>
+taxCheckComplete.list2 = <a class="govuk-link" href="{0}">get your tax check code sent to an email address</a>
+taxCheckComplete.list3 = <a class="govuk-link" href="{0}">see all your tax check codes</a>
 taxCheckComplete.copyText = your tax check code:
 
 # SAUTR Not Found
@@ -328,3 +332,45 @@ accessDenied.p2 = If you need any assistance accessing this link, please email:
 accessDenied.p3 = <a href="mailto:zaynah.hawa@digital.hmrc.gov.uk?subject=Private Beta link assistance">zaynah.hawa@digital.hmrc.gov.uk</a>
 accessDenied.p4 = <a href="mailto:alex.porter@digital.hmrc.gov.uk?subject=Private Beta link assistance">alex.porter@digital.hmrc.gov.uk</a>
 
+
+# Confirm email address
+confirmEmailAddress.title = Which email address would you like to use?
+confirmEmailAddress.hint = Your tax check code will be sent to this email, any other email addresses you have saved with us will not be changed
+confirmEmailAddress.differentEmail = A different email address
+confirmEmailAddress.error.required = Select which email address you would like to use
+confirmEmailAddress.error.invalid = Select which email address you would like to use
+differentEmail.label = Enter email address
+differentEmail.error.required = Enter email address
+differentEmail.error.invalidFormat = Enter an email address in the correct format, like name@example.com
+differentEmail.error.tooManyChar = Email address has too many characters, it should be less or equal to 256
+
+#Verify passcode
+verifyPasscode.title = Confirm your email address
+verifyPasscode.p1 = You must confirm your email address before we can send your tax check code to you.
+verifyPasscode.p2 = An email confirmation code has been sent to {0}. Enter this confirmation code below.
+verifyPasscode.p3 = If you use a browser to access your email, you may need to open a new window or tab.
+verifyPasscode.label = Email confirmation code:
+verifyPasscode.hint = For example, DNCLRK
+passcode.error.required = Enter your email confirmation code
+verifyPasscode.summaryLink = I have not received the email
+verifyPasscode.p4 = The email may take a few minutes to arrive. Its subject line is: ‘Confirm your email address’.
+verifyPasscode.p5 = Check your spam or junk folder – if it still has not arrived, you can <a href="{0}" class="govuk-link">request a new confirmation code</a> or <a href="{1}" class="govuk-link">provide another email address</a>.
+
+
+#Email Address Confirmed
+emailAddressConfirmed.title = Email address confirmed
+emailAddressConfirmed.p1 = Your email address has been confirmed. Your tax check code will be sent to {0}
+
+
+#Email Sent
+emailSent.title = Your tax check code has been emailed to you
+emailSent.p1 = We have sent your tax check code to <b>{0}</b>
+emailSent.p2 = Enter your tax check code in your licence application. Make sure you leave enough time for your application to be processed before your tax check code expires.
+emailSent.p3 = <a href="{0}" class="govuk-link">See my tax check codes</a>
+
+
+#Enter Email Address
+enterEmailAddress.title = What email address do you want to use?
+enterEmailAddress.error.required = Enter email address
+enterEmailAddress.error.invalidFormat = Enter an email address in the correct format, like name@example.com
+enterEmailAddress.error.tooManyChar = Email address has too many characters, it should be less or equal to 256

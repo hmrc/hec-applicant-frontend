@@ -16,12 +16,12 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models.emailVerification
 
-import play.api.libs.json.{Json, Writes}
+import play.api.libs.json.{Format, Json}
 
 final case class Passcode(value: String) extends AnyVal
 
 object Passcode {
 
-  implicit val writes: Writes[Passcode] = Json.valueWrites
+  implicit val format: Format[Passcode] = Json.valueFormat[Passcode]
 
 }

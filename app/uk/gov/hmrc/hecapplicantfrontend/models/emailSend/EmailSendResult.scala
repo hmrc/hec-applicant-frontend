@@ -14,15 +14,22 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hecapplicantfrontend.models.emailVerification
+package uk.gov.hmrc.hecapplicantfrontend.models.emailSend
 
-import play.api.libs.json.{Json, OWrites}
-import uk.gov.hmrc.hecapplicantfrontend.models.EmailAddress
+import ai.x.play.json.Jsonx
+import cats.Eq
+import play.api.libs.json.Format
+import ai.x.play.json.SingletonEncoder.simpleName
+import ai.x.play.json.implicits.formatSingleton
 
-final case class PasscodeVerificationRequest(passcode: Passcode, email: EmailAddress)
+sealed trait EmailSendResult extends Product with Serializable
 
-object PasscodeVerificationRequest {
+object EmailSendResult {
 
-  implicit val writes: OWrites[PasscodeVerificationRequest] = Json.writes
+  case object EmailSent extends EmailSendResult
 
+  implicit val eq: Eq[EmailSendResult] = Eq.fromUniversalEquals
+
+  @SuppressWarnings(Array("org.wartremover.warts.All"))
+  implicit val format: Format[EmailSendResult] = Jsonx.formatSealed[EmailSendResult]
 }

@@ -28,7 +28,6 @@ import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.CompanyMatchFailure.{EnrolmentCTUTRCompanyMatchFailure, EnterCTUTRCompanyMatchFailure}
 import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.CompanyMatchSuccess.{EnrolmentCTUTRCompanyMatchSuccess, EnterCTUTRCompanyMatchSuccess}
 import uk.gov.hmrc.hecapplicantfrontend.models.CompanyUserAnswers.IncompleteCompanyUserAnswers
-import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.CompanyHECSession
 import uk.gov.hmrc.hecapplicantfrontend.models._
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.company.CTAccountingPeriod.CTAccountingPeriodDigital
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.company.{CTStatus, CTStatusResponse}
@@ -490,7 +489,7 @@ class CompanyDetailsControllerSpec
             // session contains CTUTR from enrolments
             val companyData = companyLoginData.copy(ctutr = Some(CTUTR("ctutr")))
             val session     =
-              CompanyHECSession(companyData, retrievedJourneyDataWithCompanyName, answers, None, None, List.empty)
+              Fixtures.companyHECSession(companyData, retrievedJourneyDataWithCompanyName, answers)
 
             val updatedAnswers = answers.copy(companyDetailsConfirmed = Some(YesNoAnswer.Yes))
             val desCtutr       = CTUTR("des-ctutr")
@@ -563,7 +562,7 @@ class CompanyDetailsControllerSpec
         "the user has not previously answered the question " in {
 
           val session =
-            CompanyHECSession(companyLoginData, companyData, CompanyUserAnswers.empty, None, None, List.empty)
+            Fixtures.companyHECSession(companyLoginData, companyData, CompanyUserAnswers.empty)
 
           inSequence {
             mockAuthWithNoRetrievals()
@@ -598,7 +597,7 @@ class CompanyDetailsControllerSpec
             chargeableForCT = Some(YesNoAnswer.Yes),
             ctIncomeDeclared = Some(YesNoAnswer.No)
           )
-          val session = CompanyHECSession(companyLoginData, companyData, answers, None, None, List.empty)
+          val session = Fixtures.companyHECSession(companyLoginData, companyData, answers)
 
           val updatedAnswers = IncompleteCompanyUserAnswers
             .fromCompleteAnswers(answers)
@@ -643,15 +642,12 @@ class CompanyDetailsControllerSpec
         }
 
         "CT status accounting period is not populated" in {
-          val session = CompanyHECSession(
+          val session = Fixtures.companyHECSession(
             companyLoginData,
             retrievedJourneyDataWithCompanyName.copy(
               ctStatus = Some(CTStatusResponse(CTUTR("utr"), date, date, None))
             ),
-            CompanyUserAnswers.empty,
-            None,
-            None,
-            List.empty
+            CompanyUserAnswers.empty
           )
 
           inSequence {
@@ -1103,7 +1099,7 @@ class CompanyDetailsControllerSpec
         "the user has not previously answered the question " in {
 
           val session =
-            CompanyHECSession(companyLoginData, companyData, CompanyUserAnswers.empty, None, None, List.empty)
+            Fixtures.companyHECSession(companyLoginData, companyData, CompanyUserAnswers.empty)
 
           inSequence {
             mockAuthWithNoRetrievals()
@@ -1136,7 +1132,7 @@ class CompanyDetailsControllerSpec
             companyDetailsConfirmed = YesNoAnswer.Yes,
             recentlyStartedTrading = Some(YesNoAnswer.Yes)
           )
-          val session = CompanyHECSession(companyLoginData, companyData, answers, None, None, List.empty)
+          val session = Fixtures.companyHECSession(companyLoginData, companyData, answers)
 
           val updatedAnswers = IncompleteCompanyUserAnswers
             .fromCompleteAnswers(answers)
@@ -1195,13 +1191,10 @@ class CompanyDetailsControllerSpec
       behave like authAndSessionDataBehaviour(() => performAction())
 
       "show a form error" when {
-        val session = CompanyHECSession(
+        val session = Fixtures.companyHECSession(
           companyLoginData,
           validJourneyData,
-          CompanyUserAnswers.empty.copy(crn = Some(CRN("crn"))),
-          None,
-          None,
-          List.empty
+          CompanyUserAnswers.empty.copy(crn = Some(CRN("crn")))
         )
 
         def test(formAnswer: (String, String)*) = {
@@ -1244,7 +1237,7 @@ class CompanyDetailsControllerSpec
 
         "the call to update and next fails" in {
           val answers = CompanyUserAnswers.empty.copy(crn = Some(CRN("crn")))
-          val session = CompanyHECSession(
+          val session = Fixtures.companyHECSession(
             companyLoginData,
             retrievedJourneyDataWithCompanyName.copy(
               ctStatus = Some(
@@ -1256,10 +1249,7 @@ class CompanyDetailsControllerSpec
                 )
               )
             ),
-            answers,
-            None,
-            None,
-            List.empty
+            answers
           )
 
           val updatedAnswers = answers.copy(recentlyStartedTrading = Some(YesNoAnswer.Yes))
@@ -1286,7 +1276,7 @@ class CompanyDetailsControllerSpec
 
         "user gives a valid answer" in {
           val answers = CompanyUserAnswers.empty.copy(crn = Some(CRN("crn")))
-          val session = CompanyHECSession(companyLoginData, validJourneyData, answers, None, None, List.empty)
+          val session = Fixtures.companyHECSession(companyLoginData, validJourneyData, answers)
 
           val updatedAnswers = answers.copy(recentlyStartedTrading = Some(YesNoAnswer.No))
           val updatedSession = session.copy(userAnswers = updatedAnswers)

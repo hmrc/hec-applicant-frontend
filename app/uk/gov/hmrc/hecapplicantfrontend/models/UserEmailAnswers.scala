@@ -16,14 +16,18 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models
 
-import cats.Eq
-import play.api.libs.json.{Format, Json}
+import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.hecapplicantfrontend.models.emailSend.EmailSendResult
+import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{Passcode, PasscodeRequestResult, PasscodeVerificationResult}
 
-final case class EmailAddress(value: String) extends AnyVal
+final case class UserEmailAnswers(
+  userSelectedEmail: UserSelectedEmail,
+  passcodeRequestResult: Option[PasscodeRequestResult],
+  passcode: Option[Passcode],
+  passcodeVerificationResult: Option[PasscodeVerificationResult],
+  emailSendResult: Option[EmailSendResult]
+)
 
-object EmailAddress {
-
-  implicit val format: Format[EmailAddress] = Json.valueFormat[EmailAddress]
-  implicit val eq: Eq[EmailAddress]         = Eq.fromUniversalEquals
-
+object UserEmailAnswers {
+  implicit val formats: OFormat[UserEmailAnswers] = Json.format[UserEmailAnswers]
 }

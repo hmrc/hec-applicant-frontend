@@ -24,6 +24,7 @@ import cats.syntax.eq._
 import cats.syntax.option._
 import com.google.inject.{ImplementedBy, Inject, Singleton}
 import play.api.mvc.Call
+import uk.gov.hmrc.emailaddress.EmailAddress
 import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 import uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.saTaxSituations
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.RequestWithSessionData
@@ -33,6 +34,9 @@ import uk.gov.hmrc.hecapplicantfrontend.models.EntityType.{Company, Individual}
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, IndividualHECSession}
 import uk.gov.hmrc.hecapplicantfrontend.models.IndividualUserAnswers.{CompleteIndividualUserAnswers, IncompleteIndividualUserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.{CompanyRetrievedJourneyData, IndividualRetrievedJourneyData}
+import uk.gov.hmrc.hecapplicantfrontend.models.emailSend.EmailSendResult
+import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeRequestResult._
+import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeVerificationResult
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.company.CTStatus
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.individual.SAStatus.ReturnFound
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.individual.{SAStatus, SAStatusResponse}
@@ -84,7 +88,12 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
     routes.CompanyDetailsController.chargeableForCorporationTax()        -> chargeableForCTRoute,
     routes.CompanyDetailsController.ctIncomeStatement()                  -> (_ => routes.CheckYourAnswersController.checkYourAnswers()),
     routes.CompanyDetailsController.recentlyStartedTrading()             -> recentlyStartedTradingRoute,
-    routes.CompanyDetailsController.enterCtutr()                         -> enterCtutrRoute
+    routes.CompanyDetailsController.enterCtutr()                         -> enterCtutrRoute,
+    routes.TaxCheckCompleteController.taxCheckComplete()                 -> emailVerificationRoute,
+    routes.ConfirmEmailAddressController.confirmEmailAddress()           -> confirmEmailAddressRoute,
+    routes.VerifyEmailPasscodeController.verifyEmailPasscode             -> verifyEmailPasscodeRoute,
+    routes.EmailAddressConfirmedController.emailAddressConfirmed()       -> emailAddressConfirmedRoute,
+    routes.EnterEmailAddressController.enterEmailAddress()               -> confirmEmailAddressRoute
   )
 
   // map which describes routes from an exit page to their previous page. The keys are the exit page and the values are
@@ -93,13 +102,15 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
   lazy val exitPageToPreviousPage: Map[Call, Call] =
     Map(
       routes.ConfirmIndividualDetailsController
-        .confirmIndividualDetailsExit()                 -> routes.ConfirmIndividualDetailsController.confirmIndividualDetails(),
-      routes.LicenceDetailsController.licenceTypeExit() ->
+        .confirmIndividualDetailsExit()                      -> routes.ConfirmIndividualDetailsController.confirmIndividualDetails(),
+      routes.LicenceDetailsController.licenceTypeExit()      ->
         routes.LicenceDetailsController.licenceType(),
-      routes.EntityTypeController.wrongEntityType()     ->
+      routes.EntityTypeController.wrongEntityType()          ->
         routes.EntityTypeController.entityType(),
-      routes.CompanyDetailsController.dontHaveUtr()     ->
-        routes.CompanyDetailsController.enterCtutr()
+      routes.CompanyDetailsController.dontHaveUtr()          ->
+        routes.CompanyDetailsController.enterCtutr(),
+      routes.ResendEmailConfirmationController.resendEmail() -> routes.VerifyEmailPasscodeController
+        .verifyEmailPasscode()
     )
 
   override def firstPage(session: HECSession): Call = {
@@ -115,7 +126,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
     }
   }
 
-  override def updateAndNext(current: Call, updatedSession: HECSession)(implicit
+  def updateAndNext(current: Call, updatedSession: HECSession)(implicit
     r: RequestWithSessionData[_],
     hc: HeaderCarrier
   ): EitherT[Future, Error, Call] = {
@@ -128,17 +139,21 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
                                if (currentPageIsCYA) sys.error("All user answers are not complete")
                                else paths.get(current).map(_(upliftedSession)),
                              _ =>
-                               if (currentPageIsCYA) paths.get(current).map(_(upliftedSession))
+                               if (currentPageIsCYA || upliftedSession.isEmailRequested) paths.get(current).map(_(upliftedSession))
                                else Some(routes.CheckYourAnswersController.checkYourAnswers())
                            ),
                            Error(s"Could not find next for $current")
                          )
-      _               <- if (r.sessionData === upliftedSession)
-                           EitherT.pure[Future, Error](next)
-                         else
-                           sessionStore.store(upliftedSession).map(_ => next)
+      _               <- storeSession(r.sessionData, upliftedSession, next)
     } yield next
   }
+
+  private def storeSession(currentSession: HECSession, updatedSession: HECSession, next: Call)(implicit
+    r: RequestWithSessionData[_]
+  ): EitherT[Future, Error, Call] =
+    if (currentSession === updatedSession) EitherT.pure[Future, Error](next)
+    else
+      sessionStore.store(updatedSession).map(_ => next)
 
   override def previous(current: Call)(implicit
     r: RequestWithSessionData[_]
@@ -155,15 +170,21 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
 
     lazy val hasCompletedAnswers = r.sessionData.userAnswers.foldByCompleteness(_ => false, _ => true)
 
-    if (current === routes.StartController.start())
-      current
-    else if (current =!= routes.CheckYourAnswersController.checkYourAnswers() && hasCompletedAnswers)
-      routes.CheckYourAnswersController.checkYourAnswers()
-    else
-      exitPageToPreviousPage
-        .get(current)
-        .orElse(loop(routes.StartController.start()))
+    if (r.sessionData.isEmailRequested) {
+      loop(routes.TaxCheckCompleteController.taxCheckComplete())
         .getOrElse(sys.error(s"Could not find previous for $current"))
+    } else {
+      if (current === routes.StartController.start())
+        current
+      else if (current =!= routes.CheckYourAnswersController.checkYourAnswers() && hasCompletedAnswers)
+        routes.CheckYourAnswersController.checkYourAnswers()
+      else
+        exitPageToPreviousPage
+          .get(current)
+          .orElse(loop(routes.StartController.start()))
+          .getOrElse(sys.error(s"Could not find previous for $current"))
+    }
+
   }
 
   private def upliftToCompleteAnswersIfComplete(session: HECSession, current: Call): Either[Error, HECSession] =
@@ -177,7 +198,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
           !paths.contains(next) && next =!= routes.TaxCheckCompleteController.taxCheckComplete()
 
         val updatedSession = session match {
-          case _ if isExitPageNext => session
+          case _ if isExitPageNext || session.isEmailRequested => session
 
           case companySession @ CompanyHECSession(
                 _,
@@ -194,6 +215,8 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
                   recentlyStartedTrading,
                   ctutr
                 ),
+                _,
+                _,
                 _,
                 _,
                 _,
@@ -225,6 +248,8 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
                   saIncomeDeclared,
                   entityType
                 ),
+                _,
+                _,
                 _,
                 _,
                 _,
@@ -433,6 +458,49 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
           sys.error("CTUTR is missing from user answers")
         }
       }
+    }
+
+  def emailVerificationRoute(session: HECSession): Call = {
+    val emailOpt = session.fold(_.loginData.emailAddress, _.loginData.emailAddress)
+    emailOpt match {
+      case Some(email) if EmailAddress.isValid(email.value) =>
+        routes.ConfirmEmailAddressController.confirmEmailAddress()
+      case _                                                => routes.EnterEmailAddressController.enterEmailAddress()
+    }
+  }
+
+  def confirmEmailAddressRoute(session: HECSession): Call = {
+    val passcodeRequestResult = session.fold(
+      _.userEmailAnswers.flatMap(_.passcodeRequestResult),
+      _.userEmailAnswers.flatMap(_.passcodeRequestResult)
+    )
+
+    passcodeRequestResult match {
+      case Some(PasscodeSent)                  => routes.VerifyEmailPasscodeController.verifyEmailPasscode
+      case Some(EmailAddressAlreadyVerified)   =>
+        routes.EmailAddressConfirmedController.emailAddressConfirmed
+      case Some(MaximumNumberOfEmailsExceeded) =>
+        routes.TooManyEmailVerificationAttemptController.tooManyEmailVerificationAttempts
+      case _                                   => sys.error("Passcode Result is  invalid/missing from the response")
+    }
+  }
+
+  def verifyEmailPasscodeRoute(session: HECSession): Call =
+    session.userEmailAnswers.flatMap(_.passcodeVerificationResult) match {
+      case Some(PasscodeVerificationResult.Match)           => routes.EmailAddressConfirmedController.emailAddressConfirmed()
+      case Some(PasscodeVerificationResult.NoMatch)         =>
+        routes.VerificationPasscodeNotFoundController.verificationPasscodeNotFound
+      case Some(PasscodeVerificationResult.Expired)         =>
+        routes.VerificationPasscodeExpiredController.verificationPasscodeExpired
+      case Some(PasscodeVerificationResult.TooManyAttempts) =>
+        routes.TooManyPasscodeVerificationController.tooManyPasscodeVerification
+      case _                                                => sys.error("Passcode Verification Result is  invalid/missing from the response")
+    }
+
+  def emailAddressConfirmedRoute(session: HECSession): Call =
+    session.userEmailAnswers.flatMap(_.emailSendResult) match {
+      case Some(EmailSendResult.EmailSent) => routes.EmailSentController.emailSent
+      case _                               => routes.ProblemSendingEmailController.problemSendingEmail
     }
 
 }
