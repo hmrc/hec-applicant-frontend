@@ -24,15 +24,13 @@ import play.api.data.{Form, Mapping}
 import uk.gov.hmrc.emailaddress.{EmailAddress => EmailAddressValidation}
 import play.api.i18n.I18nSupport
 import play.api.mvc._
-import uk.gov.hmrc.hecapplicantfrontend.controllers.ConfirmEmailAddressController.{emailAddressForm, getEmailOptions}
-import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, AuthenticatedRequest, SessionDataAction}
+import uk.gov.hmrc.hecapplicantfrontend.controllers.ConfirmEmailAddressController.{emailAddressForm, emailTypeOptions}
+import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
 import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, EmailType, UserEmailAnswers, UserSelectedEmail}
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
 import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging}
 import uk.gov.hmrc.hecapplicantfrontend.views.html
-import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import uk.gov.hmrc.play.http.HeaderCarrierConverter
 import uk.gov.voa.play.form.ConditionalMappings.mandatoryIfEqual
 
 import java.util.Locale
@@ -53,32 +51,30 @@ class ConfirmEmailAddressController @Inject() (
 
   val confirmEmailAddress: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     request.sessionData.ensureGGEmailIdPresent { ggEmail =>
-      val emailOptions: List[EmailType]                = getEmailOptions
       val userEmailAnswerOpt: Option[UserEmailAnswers] = request.sessionData.userEmailAnswers
       val back                                         = journeyService.previous(routes.ConfirmEmailAddressController.confirmEmailAddress)
 
       val form = {
-        val emptyForm = emailAddressForm(emailOptions, ggEmail)
+        val emptyForm = emailAddressForm(emailTypeOptions, ggEmail)
         userEmailAnswerOpt.fold(emptyForm)(userEmail =>
           emptyForm
             .fill(UserSelectedEmail(userEmail.userSelectedEmail.emailType, userEmail.userSelectedEmail.emailAddress))
         )
       }
-      Ok(confirmEmailAddressPage(form, back, emailOptions, ggEmail.value))
+      Ok(confirmEmailAddressPage(form, back, emailTypeOptions, ggEmail.value))
     }
   }
 
   val confirmEmailAddressSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
-    val emailOptions = getEmailOptions
     request.sessionData.ensureGGEmailIdPresent { ggEmail =>
       def handleValidEmail(userSelectedEmail: UserSelectedEmail): Future[Result] = {
-        val authReq: AuthenticatedRequest[AnyContent] = request.request
-        val headerCarrier: HeaderCarrier              =
-          HeaderCarrierConverter.fromRequestAndSession(request, request.session)
+        //val authReq: AuthenticatedRequest[AnyContent] = request.request
+//        val headerCarrier: HeaderCarrier              =
+//          HeaderCarrierConverter.fromRequestAndSession(request, request.session)
 
         val result = for {
           passcodeResult     <-
-            emailVerificationService.requestPasscode(userSelectedEmail.emailAddress)(headerCarrier, authReq)
+            emailVerificationService.requestPasscode(userSelectedEmail.emailAddress)
           updatedEmailAnswers =
             Some(UserEmailAnswers(userSelectedEmail, passcodeResult.some, None, None, None))
           updatedSession      =
@@ -94,7 +90,7 @@ class ConfirmEmailAddressController @Inject() (
         )
       }
 
-      emailAddressForm(emailOptions, ggEmail)
+      emailAddressForm(emailTypeOptions, ggEmail)
         .bindFromRequest()
         .fold(
           formWithErrors =>
@@ -102,7 +98,7 @@ class ConfirmEmailAddressController @Inject() (
               confirmEmailAddressPage(
                 formWithErrors,
                 journeyService.previous(routes.ConfirmEmailAddressController.confirmEmailAddress()),
-                emailOptions,
+                emailTypeOptions,
                 ggEmail.value
               )
             ),
@@ -118,9 +114,9 @@ object ConfirmEmailAddressController {
   import play.api.data.validation.{Constraint, Invalid, Valid}
   import play.api.data.Forms.{mapping, nonEmptyText, of}
 
-  val getEmailOptions: List[EmailType] = List(EmailType.GGEmail, EmailType.DifferentEmail)
+  val emailTypeOptions: List[EmailType] = List(EmailType.GGEmail, EmailType.DifferentEmail)
 
-  def differentEmailAddressMapping: Mapping[EmailAddress] = nonEmptyText
+  val differentEmailAddressMapping: Mapping[EmailAddress] = nonEmptyText
     .transform[EmailAddress](
       email => EmailAddress(email.toLowerCase(Locale.UK)),
       _.value

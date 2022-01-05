@@ -336,7 +336,6 @@ accessDenied.p4 = <a href="mailto:alex.porter@digital.hmrc.gov.uk?subject=Privat
 # Confirm email address
 confirmEmailAddress.title = Which email address would you like to use?
 confirmEmailAddress.hint = Your tax check code will be sent to this email, any other email addresses you have saved with us will not be changed
-confirmEmailAddress.ggEmail = {0}
 confirmEmailAddress.differentEmail = A different email address
 confirmEmailAddress.error.required = Select which email address you would like to use
 confirmEmailAddress.error.invalid = Select which email address you would like to use

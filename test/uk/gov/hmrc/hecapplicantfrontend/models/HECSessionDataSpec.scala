@@ -39,7 +39,7 @@ class HECSessionDataSpec extends AnyWordSpec with Matchers {
           Some(SAUTR("utr")),
           Name("first", "last"),
           DateOfBirth(dateOfBirth),
-          Some(EmailAddress("email"))
+          Some(EmailAddress("user@test.com"))
         )
 
       val individualSession: HECSession = IndividualHECSession.newSession(individualLoginData)
@@ -54,7 +54,7 @@ class HECSessionDataSpec extends AnyWordSpec with Matchers {
           |       "lastName":"last"
           |    },
           |    "dateOfBirth":"$dateOfBirthStr",
-          |    "emailAddress":"email"
+          |    "emailAddress":"user@test.com"
           |  },
           |  "retrievedJourneyData" : { },
           |  "userAnswers" : { "type" : "Incomplete"  },
@@ -68,7 +68,7 @@ class HECSessionDataSpec extends AnyWordSpec with Matchers {
         CompanyLoginData(
           GGCredId("ggCredId"),
           Some(CTUTR("utr")),
-          Some(EmailAddress("email"))
+          Some(EmailAddress("user@test.com"))
         )
 
       val companySession: HECSession = CompanyHECSession.newSession(companyLoginData)
@@ -77,7 +77,7 @@ class HECSessionDataSpec extends AnyWordSpec with Matchers {
           |  "loginData" : {
           |    "ggCredId":"ggCredId",
           |    "ctutr":"utr",
-          |    "emailAddress":"email"
+          |    "emailAddress":"user@test.com"
           |    },
           |  "retrievedJourneyData" : { },
           |  "userAnswers" : { "type" : "Incomplete" },

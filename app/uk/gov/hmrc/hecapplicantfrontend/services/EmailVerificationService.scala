@@ -22,7 +22,7 @@ import com.google.inject.{ImplementedBy, Inject}
 import play.api.http.Status._
 import play.api.libs.json.{JsValue, Json, OFormat}
 import uk.gov.hmrc.hecapplicantfrontend.connectors.EmailVerificationConnector
-import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.AuthenticatedRequest
+import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{RequestWithSessionData}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeRequestResult._
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeVerificationResult._
 import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, Error}
@@ -39,7 +39,7 @@ trait EmailVerificationService {
 
   def requestPasscode(
     emailAddress: EmailAddress
-  )(implicit hc: HeaderCarrier, r: AuthenticatedRequest[_]): EitherT[Future, Error, PasscodeRequestResult]
+  )(implicit hc: HeaderCarrier, r: RequestWithSessionData[_]): EitherT[Future, Error, PasscodeRequestResult]
 
   def verifyPasscode(passcode: Passcode, emailAddress: EmailAddress)(implicit
     hc: HeaderCarrier
@@ -59,10 +59,10 @@ class EmailVerificationServiceImpl @Inject() (emailVerificationConnector: EmailV
 
   override def requestPasscode(
     emailAddress: EmailAddress
-  )(implicit hc: HeaderCarrier, r: AuthenticatedRequest[_]): EitherT[Future, Error, PasscodeRequestResult] = {
+  )(implicit hc: HeaderCarrier, r: RequestWithSessionData[_]): EitherT[Future, Error, PasscodeRequestResult] = {
 
     val result: EitherT[Future, Error, HttpResponse] = for {
-      lang   <- EitherT.fromEither[Future](Language.fromRequest(r)).leftMap(Error(_))
+      lang   <- EitherT.fromEither[Future](Language.fromRequest(r.request)).leftMap(Error(_))
       result <- emailVerificationConnector.requestPasscode(PasscodeRequest(emailAddress, serviceName, lang))
     } yield result
 

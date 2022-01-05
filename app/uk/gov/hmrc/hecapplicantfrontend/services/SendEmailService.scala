@@ -17,16 +17,15 @@
 package uk.gov.hmrc.hecapplicantfrontend.services
 
 import cats.data.EitherT
-import cats.implicits.catsSyntaxEq
 import com.google.inject.{ImplementedBy, Inject, Singleton}
 import play.api.Configuration
 import play.api.http.Status.ACCEPTED
 import uk.gov.hmrc.hecapplicantfrontend.connectors.SendEmailConnector
-import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.AuthenticatedRequest
+import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{RequestWithSessionData}
 import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, Error}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailSend.{EmailParameters, EmailSendRequest, EmailSendResult}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.Language
-import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.Language.English
+import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.Language.{English, Welsh}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -35,7 +34,7 @@ import scala.concurrent.{ExecutionContext, Future}
 trait SendEmailService {
   def sendEmail(emailAddress: EmailAddress, emailParameters: EmailParameters)(implicit
     hc: HeaderCarrier,
-    r: AuthenticatedRequest[_]
+    r: RequestWithSessionData[_]
   ): EitherT[Future, Error, EmailSendResult]
 
 }
@@ -44,14 +43,17 @@ trait SendEmailService {
 class SendEmailServiceImpl @Inject() (emailSendConnector: SendEmailConnector, configuration: Configuration)(implicit
   ec: ExecutionContext
 ) extends SendEmailService {
+
+  val templateIdEN: String = configuration.get[String]("email-send.template-id-en")
+  val templateIdCY: String = configuration.get[String]("email-send.template-id-cy")
+
   override def sendEmail(emailAddress: EmailAddress, emailParameters: EmailParameters)(implicit
     hc: HeaderCarrier,
-    r: AuthenticatedRequest[_]
+    r: RequestWithSessionData[_]
   ): EitherT[Future, Error, EmailSendResult] = {
     val result: EitherT[Future, Error, HttpResponse] = for {
-      lang      <- EitherT.fromEither[Future](Language.fromRequest(r)).leftMap(Error(_))
-      templateId = if (lang.code === English.code) configuration.get[String]("email-send.template-id-en")
-                   else configuration.get[String]("email-send.template-id-cy")
+      lang      <- EitherT.fromEither[Future](Language.fromRequest(r.request)).leftMap(Error(_))
+      templateId = getTemplateId(lang)
       result    <- emailSendConnector.sendEmail(EmailSendRequest(List(emailAddress), templateId, emailParameters))
     } yield result
 
@@ -66,5 +68,10 @@ class SendEmailServiceImpl @Inject() (emailSendConnector: SendEmailConnector, co
 
     }
 
+  }
+
+  private def getTemplateId(lang: Language) = lang match {
+    case English => templateIdEN
+    case Welsh   => templateIdCY
   }
 }

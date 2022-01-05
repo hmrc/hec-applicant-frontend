@@ -17,12 +17,14 @@
 package uk.gov.hmrc.hecapplicantfrontend.models
 
 import cats.Eq
+import cats.implicits.catsSyntaxEq
 import monocle.Lens
 import play.api.libs.json.{JsObject, JsResult, JsValue, Json, OFormat}
 import uk.gov.hmrc.hecapplicantfrontend.models.CompanyUserAnswers.IncompleteCompanyUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.IndividualUserAnswers.IncompleteIndividualUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.{CompanyRetrievedJourneyData, IndividualRetrievedJourneyData}
+import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeVerificationResult
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
 
 import java.time.ZonedDateTime
@@ -180,6 +182,18 @@ object HECSession {
       s.fold(_.loginData.emailAddress, _.loginData.emailAddress) match {
         case Some(email) => f(email)
         case None        => sys.error("No Email Address found in user's login session")
+      }
+
+    def ensureUserSelectedEmailPresent[A](f: UserSelectedEmail => A): A = s.userEmailAnswers
+      .map(_.userSelectedEmail) match {
+      case Some(userSelectedEmail) => f(userSelectedEmail)
+      case None                    => sys.error(" No user selected email id in session")
+    }
+
+    def ensurePasscodeVerificationResultIsMatch[A](f: PasscodeVerificationResult => A): A =
+      s.userEmailAnswers.flatMap(_.passcodeVerificationResult) match {
+        case Some(pvr) if pvr === PasscodeVerificationResult.Match => f(pvr)
+        case None                                                  => sys.error(" Passcode verification result other than match is not expected")
       }
 
   }

@@ -52,7 +52,7 @@
 @radioOptions = @{optionViewModels.zipWithIndex.map{ case (option, index) =>
   if(index === 0)
     RadioItem(
-        content = Text(messages(s"$key.${option.messageKey}", ggEmail)),
+        content = Text(ggEmail),
         value = Some(index.toString),
         checked = form.data.values.toList.contains(index.toString)
     ) else {

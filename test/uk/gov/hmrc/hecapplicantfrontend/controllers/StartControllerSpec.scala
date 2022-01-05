@@ -144,7 +144,7 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
 
       val sautr = SAUTR("1234567895")
 
-      val emailAddress = EmailAddress("email")
+      val emailAddress = EmailAddress("user@test.com")
 
       val ctutr = CTUTR("1234567895")
 
@@ -223,7 +223,7 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
         "no session data is found and" when {
 
           "all the necessary data is retrieved for an individual with affinity group " +
-            "'Individaul' and CL250" in {
+            "'Individaul' and CL250 and email address is valid" in {
               List(
                 completeIndividualLoginData,
                 completeIndividualLoginData.copy(emailAddress = None),
@@ -255,6 +255,40 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
 
                 checkIsRedirect(performAction(), mockNextCall)
               }
+            }
+
+          "all the necessary data is retrieved for an individual with affinity group " +
+            "'Individaul' and CL250 and  email address is not  valid" in {
+              val individualRetrievedData = completeIndividualLoginData.copy(emailAddress = EmailAddress("email").some)
+              val citizenDetails          = CitizenDetails(
+                individualRetrievedData.name,
+                individualRetrievedData.dateOfBirth,
+                individualRetrievedData.sautr
+              )
+
+              val loginData = IndividualHECSession.newSession(individualRetrievedData).loginData
+              val session   = IndividualHECSession
+                .newSession(individualRetrievedData)
+                .copy(loginData = loginData.copy(emailAddress = None))
+              inSequence {
+                mockAuthWithRetrievals(
+                  ConfidenceLevel.L250,
+                  Some(AffinityGroup.Individual),
+                  Some(individualRetrievedData.nino),
+                  None,
+                  individualRetrievedData.emailAddress,
+                  Enrolments(Set.empty),
+                  Some(retrievedGGCredential(individualRetrievedData.ggCredId))
+                )
+                mockGetSession(Right(None))
+                mockGetCitizenDetails(individualRetrievedData.nino)(Right(citizenDetails))
+                mockGetUnexpiredTaxCheckCodes(Right(List.empty))
+                mockStoreSession(session)(Right(()))
+                mockFirstPge(session)(mockNextCall)
+              }
+
+              checkIsRedirect(performAction(), mockNextCall)
+
             }
 
           "no SAUTR is returned in citizen details but one is retrieved from the GG cred" in {

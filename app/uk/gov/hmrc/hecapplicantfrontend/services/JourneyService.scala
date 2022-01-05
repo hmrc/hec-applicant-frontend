@@ -126,26 +126,9 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
     }
   }
 
-  override def updateAndNext(current: Call, updatedSession: HECSession)(implicit
+  def updateAndNext(current: Call, updatedSession: HECSession)(implicit
     r: RequestWithSessionData[_],
     hc: HeaderCarrier
-  ): EitherT[Future, Error, Call] =
-    //if isEmailRequested, then no need to uplift data and no logic needed to go to CYA page
-    if (updatedSession.isEmailRequested) getNextCallAfterTaxCheckPage(current, updatedSession)
-    else getNextCallBeforeTaxCheckPage(current, updatedSession)
-
-  private def getNextCallAfterTaxCheckPage(current: Call, updatedSession: HECSession)(implicit
-    r: RequestWithSessionData[_]
-  ): EitherT[Future, Error, Call] =
-    for {
-      next <-
-        EitherT
-          .fromOption[Future](paths.get(current).map(_(updatedSession)), Error(s"Could not find next for $current"))
-      _    <- storeSession(r.sessionData, updatedSession, next)
-    } yield next
-
-  private def getNextCallBeforeTaxCheckPage(current: Call, updatedSession: HECSession)(implicit
-    r: RequestWithSessionData[_]
   ): EitherT[Future, Error, Call] = {
     val currentPageIsCYA: Boolean = current === routes.CheckYourAnswersController.checkYourAnswers()
     for {
@@ -156,7 +139,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
                                if (currentPageIsCYA) sys.error("All user answers are not complete")
                                else paths.get(current).map(_(upliftedSession)),
                              _ =>
-                               if (currentPageIsCYA) paths.get(current).map(_(upliftedSession))
+                               if (currentPageIsCYA || upliftedSession.isEmailRequested) paths.get(current).map(_(upliftedSession))
                                else Some(routes.CheckYourAnswersController.checkYourAnswers())
                            ),
                            Error(s"Could not find next for $current")
@@ -215,7 +198,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore)(implicit ex: Exe
           !paths.contains(next) && next =!= routes.TaxCheckCompleteController.taxCheckComplete()
 
         val updatedSession = session match {
-          case _ if isExitPageNext => session
+          case _ if isExitPageNext || session.isEmailRequested => session
 
           case companySession @ CompanyHECSession(
                 _,

@@ -23,7 +23,7 @@ import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.AuthenticatedRequest
+import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{RequestWithSessionData}
 import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, Error, HECSession, HECTaxCheck, HECTaxCheckCode}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailSend.{EmailParameters, EmailSendResult}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{Passcode, PasscodeRequestResult, PasscodeVerificationResult}
@@ -83,7 +83,7 @@ class EmailAddressConfirmedControllerSpec
     result: Either[Error, EmailSendResult]
   ) =
     (mockSendEmailService
-      .sendEmail(_: EmailAddress, _: EmailParameters)(_: HeaderCarrier, _: AuthenticatedRequest[_]))
+      .sendEmail(_: EmailAddress, _: EmailParameters)(_: HeaderCarrier, _: RequestWithSessionData[_]))
       .expects(emailAddress, emailParameters, *, *)
       .returning(EitherT.fromEither[Future](result))
 

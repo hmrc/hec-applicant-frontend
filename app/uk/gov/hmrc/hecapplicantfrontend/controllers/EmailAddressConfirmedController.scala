@@ -20,16 +20,13 @@ import cats.implicits.catsSyntaxOptionId
 import com.google.inject.Inject
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
-import uk.gov.hmrc.hecapplicantfrontend.controllers.VerifyEmailPasscodeController.fetchUserSelectedEmail
-import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, AuthenticatedRequest, RequestWithSessionData, SessionDataAction}
+import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, RequestWithSessionData, SessionDataAction}
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession
 import uk.gov.hmrc.hecapplicantfrontend.models.emailSend.EmailParameters
 import uk.gov.hmrc.hecapplicantfrontend.services.{JourneyService, SendEmailService}
 import uk.gov.hmrc.hecapplicantfrontend.util.{Logging, TimeProvider, TimeUtils}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.hecapplicantfrontend.views.html
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.http.HeaderCarrierConverter
 
 import scala.concurrent.ExecutionContext
 
@@ -47,36 +44,39 @@ class EmailAddressConfirmedController @Inject() (
     with Logging {
 
   val emailAddressConfirmed: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
-    val userSelectedEmail = fetchUserSelectedEmail(request.sessionData)
-    val previous          = journeyService.previous(routes.EmailAddressConfirmedController.emailAddressConfirmed())
-    Ok(emailAddressConfirmedPage(userSelectedEmail.emailAddress, previous))
-
+    request.sessionData.ensureUserSelectedEmailPresent { userSelectedEmail =>
+      request.sessionData.ensurePasscodeVerificationResultIsMatch { _ =>
+        val previous = journeyService.previous(routes.EmailAddressConfirmedController.emailAddressConfirmed())
+        Ok(emailAddressConfirmedPage(userSelectedEmail.emailAddress, previous))
+      }
+    }
   }
 
   val emailAddressConfirmedSubmit: Action[AnyContent] =
     authAction.andThen(sessionDataAction).async { implicit request =>
-      val userSelectedEmail                         = fetchUserSelectedEmail(request.sessionData)
-      val authReq: AuthenticatedRequest[AnyContent] = request.request
-      val headerCarrier: HeaderCarrier              =
-        HeaderCarrierConverter.fromRequestAndSession(request, request.session)
+      request.sessionData.ensureUserSelectedEmailPresent { userSelectedEmail =>
+        request.sessionData.ensurePasscodeVerificationResultIsMatch { _ =>
+          val existingUserEmailAnswers = request.sessionData.userEmailAnswers
+          val emailParameters          = getEmailParameters(request.sessionData)
 
-      val existingUserEmailAnswers = request.sessionData.userEmailAnswers
-      val emailParameters          = getEmailParameters(request.sessionData)
+          val result = for {
+            result             <-
+              sendEmailService.sendEmail(userSelectedEmail.emailAddress, emailParameters)
+            updatedEmailAnswers = existingUserEmailAnswers.map(_.copy(emailSendResult = result.some))
+            updatedSession      =
+              request.sessionData
+                .fold(_.copy(userEmailAnswers = updatedEmailAnswers), _.copy(userEmailAnswers = updatedEmailAnswers))
+            next               <-
+              journeyService
+                .updateAndNext(routes.EmailAddressConfirmedController.emailAddressConfirmed(), updatedSession)
+          } yield next
 
-      val result = for {
-        result             <- sendEmailService.sendEmail(userSelectedEmail.emailAddress, emailParameters)(headerCarrier, authReq)
-        updatedEmailAnswers = existingUserEmailAnswers.map(_.copy(emailSendResult = result.some))
-        updatedSession      =
-          request.sessionData
-            .fold(_.copy(userEmailAnswers = updatedEmailAnswers), _.copy(userEmailAnswers = updatedEmailAnswers))
-        next               <-
-          journeyService.updateAndNext(routes.EmailAddressConfirmedController.emailAddressConfirmed(), updatedSession)
-      } yield next
-
-      result.fold(
-        _.doThrow("Could not update session and proceed"),
-        Redirect
-      )
+          result.fold(
+            _.doThrow("Could not update session and proceed"),
+            Redirect
+          )
+        }
+      }
     }
 
   private def getEmailParameters(session: HECSession)(implicit request: RequestWithSessionData[_]) = {

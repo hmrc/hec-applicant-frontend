@@ -19,7 +19,6 @@ package uk.gov.hmrc.hecapplicantfrontend.controllers
 import com.google.inject.Inject
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
-import uk.gov.hmrc.hecapplicantfrontend.controllers.VerifyEmailPasscodeController.fetchUserSelectedEmail
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
 import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
@@ -35,8 +34,9 @@ class EmailSentController @Inject() (
     with Logging {
 
   val emailSent: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
-    val userSelectedEmail = fetchUserSelectedEmail(request.sessionData)
-    Ok(emailSentPage(userSelectedEmail.emailAddress))
+    request.sessionData.ensureUserSelectedEmailPresent { userSelectedEmail =>
+      Ok(emailSentPage(userSelectedEmail.emailAddress))
+    }
   }
 
 }
