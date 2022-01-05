@@ -27,6 +27,7 @@ import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.CompanyMatchFailure.{EnrolmentCTUTRCompanyMatchFailure, EnterCTUTRCompanyMatchFailure}
 import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.CompanyMatchSuccess.{EnrolmentCTUTRCompanyMatchSuccess, EnterCTUTRCompanyMatchSuccess}
+import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.TaxCheckExit
 import uk.gov.hmrc.hecapplicantfrontend.models.CompanyUserAnswers.IncompleteCompanyUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models._
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.company.CTAccountingPeriod.CTAccountingPeriodDigital
@@ -1654,7 +1655,7 @@ class CompanyDetailsControllerSpec
 
             val attempts = CtutrAttempts(crn, companyLoginData.ggCredId, companyName, 1, None)
 
-            val expectedAuditEvent =
+            val expectedMatchFailureAuditEvent =
               EnterCTUTRCompanyMatchFailure(
                 crn,
                 CTUTR(ctutr2),
@@ -1663,6 +1664,9 @@ class CompanyDetailsControllerSpec
                 true
               )
 
+            val expectedTaxCheckExitAuditEvent =
+              TaxCheckExit.CTEnteredCTUTRNotMatchingBlocked(session)
+
             inSequence {
               mockAuthWithNoRetrievals()
               mockGetSession(session)
@@ -1670,7 +1674,8 @@ class CompanyDetailsControllerSpec
               mockCtutrAttemptsServiceUpdateAttempts(attempts)(
                 Right(attempts.copy(blockedUntil = Some(ZonedDateTime.now)))
               )
-              mockSendAuditEvent(expectedAuditEvent)
+              mockSendAuditEvent(expectedMatchFailureAuditEvent)
+              mockSendAuditEvent(expectedTaxCheckExitAuditEvent)
               mockJourneyServiceUpdateAndNext(
                 enterCtutrRoute,
                 session,
@@ -1829,17 +1834,17 @@ class CompanyDetailsControllerSpec
         }
 
         "user's answer and DES CTUTR do not match & CRN gets blocked on this attempt" in {
-          val answers            = Fixtures.incompleteCompanyUserAnswers(crn = Some(CRN("crn")))
-          val session            = Fixtures.companyHECSession(
+          val answers                        = Fixtures.incompleteCompanyUserAnswers(crn = Some(CRN("crn")))
+          val session                        = Fixtures.companyHECSession(
             companyLoginData,
             Fixtures.companyRetrievedJourneyData(desCtutr = Some(CTUTR(ctutr1)), companyName = Some(companyName)),
             crnBlocked = true,
             userAnswers = answers
           )
-          val ggCredId           = session.loginData.ggCredId
-          val attempts           = CtutrAttempts(crn, ggCredId, companyName, maxCtutrAttempts, None)
-          val updatedAttempts    = CtutrAttempts(crn, ggCredId, companyName, maxCtutrAttempts, Some(ZonedDateTime.now))
-          val expectedAuditEvent =
+          val ggCredId                       = session.loginData.ggCredId
+          val attempts                       = CtutrAttempts(crn, ggCredId, companyName, maxCtutrAttempts, None)
+          val updatedAttempts                = CtutrAttempts(crn, ggCredId, companyName, maxCtutrAttempts, Some(ZonedDateTime.now))
+          val expectedMatchFailureAuditEvent =
             EnterCTUTRCompanyMatchFailure(
               crn,
               CTUTR(ctutr2),
@@ -1847,13 +1852,16 @@ class CompanyDetailsControllerSpec
               CTUTR(ctutr1),
               true
             )
+          val expectedTaxCheckExitAuditEvent =
+            TaxCheckExit.CTEnteredCTUTRNotMatchingBlocked(session)
 
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
             mockCtutrAttemptsServiceGetWithDefault(crn, companyLoginData.ggCredId, companyName)(Right(attempts))
             mockCtutrAttemptsServiceUpdateAttempts(attempts)(Right(updatedAttempts))
-            mockSendAuditEvent(expectedAuditEvent)
+            mockSendAuditEvent(expectedMatchFailureAuditEvent)
+            mockSendAuditEvent(expectedTaxCheckExitAuditEvent)
             mockJourneyServiceUpdateAndNext(
               enterCtutrRoute,
               session,

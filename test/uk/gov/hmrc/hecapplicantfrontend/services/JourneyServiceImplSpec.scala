@@ -25,6 +25,7 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthenticatedRequest, RequestWithSessionData}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.{ControllerSpec, SessionSupport, routes}
+import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.TaxCheckExit
 import uk.gov.hmrc.hecapplicantfrontend.models.CompanyUserAnswers.CompleteCompanyUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.EntityType.{Company, Individual}
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, IndividualHECSession}
@@ -49,7 +50,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import java.time.{LocalDate, ZoneId, ZonedDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
+class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with AuditServiceSupport {
 
   val maxTaxChecksPerLicenceType                    = 3
   override lazy val additionalConfig: Configuration = Configuration(
@@ -57,7 +58,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
   )
   implicit val appConf: AppConfig                   = appConfig
 
-  val journeyService: JourneyServiceImpl = new JourneyServiceImpl(mockSessionStore)
+  val journeyService: JourneyServiceImpl = new JourneyServiceImpl(mockSessionStore, mockAuditService)
 
   val taxCheckStartDateTime = ZonedDateTime.of(2021, 10, 9, 9, 12, 34, 0, ZoneId.of("Europe/London"))
   val fakeRequest           = new MessagesRequest(FakeRequest(), messagesApi)
@@ -295,7 +296,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
             implicit val request: RequestWithSessionData[_] =
               requestWithSessionData(session)
 
-            mockStoreSession(updatedSession)(Right(()))
+            inSequence {
+              mockSendAuditEvent(TaxCheckExit.AllowedTaxChecksExceeded(updatedSession))
+              mockStoreSession(updatedSession)(Right(()))
+            }
 
             val result = journeyService.updateAndNext(
               routes.LicenceDetailsController.licenceType(),
@@ -645,7 +649,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
               implicit val request: RequestWithSessionData[_] =
                 requestWithSessionData(session)
 
-              mockStoreSession(updatedSession)(Right(()))
+              inSequence {
+                mockSendAuditEvent(TaxCheckExit.SAUTRNotFound(updatedSession))
+                mockStoreSession(updatedSession)(Right(()))
+              }
 
               val result = journeyService.updateAndNext(
                 routes.TaxSituationController.taxSituation(),
@@ -711,7 +718,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
               implicit val request: RequestWithSessionData[_] =
                 requestWithSessionData(session)
 
-              mockStoreSession(updatedSession)(Right(()))
+              inSequence {
+                mockSendAuditEvent(TaxCheckExit.SANoNoticeToFileOrTaxReturn(updatedSession))
+                mockStoreSession(updatedSession)(Right(()))
+              }
               val result = journeyService.updateAndNext(
                 routes.TaxSituationController.taxSituation(),
                 updatedSession
@@ -1269,13 +1279,17 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
               chargeableForCT = Some(YesNoAnswer.Yes)
             )
 
-            def test(status: CTStatus, destination: Call) = {
+            def test(status: CTStatus, destination: Call, auditEvent: Option[HECSession => AuditEvent]) = {
               val session        =
                 Fixtures.companyHECSession(companyLoginData, companyData(status), CompanyUserAnswers.empty)
               val updatedSession = session.copy(userAnswers = yesUserAnswers)
 
               implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
-              mockStoreSession(updatedSession)(Right(()))
+
+              inSequence {
+                auditEvent.foreach(event => mockSendAuditEvent(event(updatedSession)))
+                mockStoreSession(updatedSession)(Right(()))
+              }
 
               val result = journeyService.updateAndNext(chargeableForCorporationTaxRoute, updatedSession)
               await(result.value) shouldBe Right(destination)
@@ -1284,21 +1298,24 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
             "status = NoticeToFileIssued" in {
               test(
                 status = CTStatus.NoticeToFileIssued,
-                destination = routes.CheckYourAnswersController.checkYourAnswers()
+                destination = routes.CheckYourAnswersController.checkYourAnswers(),
+                None
               )
             }
 
             "status = ReturnFound" in {
               test(
                 status = CTStatus.ReturnFound,
-                destination = routes.CompanyDetailsController.ctIncomeStatement()
+                destination = routes.CompanyDetailsController.ctIncomeStatement(),
+                None
               )
             }
 
             "status = NoReturnFound" in {
               test(
                 status = CTStatus.NoReturnFound,
-                destination = routes.CompanyDetailsController.cannotDoTaxCheck()
+                destination = routes.CompanyDetailsController.cannotDoTaxCheck(),
+                Some(TaxCheckExit.CTNoNoticeToFileOrTaxReturn(_))
               )
             }
           }
@@ -1337,7 +1354,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
             }
           }
 
-          def testStartTrading(answer: YesNoAnswer, nextCall: Call) = {
+          def testStartTrading(answer: YesNoAnswer, nextCall: Call, auditEvent: Option[HECSession => AuditEvent]) = {
             val companyRetrievedJourneyData = CompanyRetrievedJourneyData(
               Some(CompanyHouseName("Test Tech Ltd")),
               Some(CTUTR("4444444444")),
@@ -1358,7 +1375,11 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
             val updatedSession = session.copy(userAnswers = updatedUserAnswer)
 
             implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
-            mockStoreSession(updatedSession)(Right(()))
+
+            inSequence {
+              auditEvent.foreach(event => mockSendAuditEvent(event(updatedSession)))
+              mockStoreSession(updatedSession)(Right(()))
+            }
 
             val result =
               journeyService.updateAndNext(routes.CompanyDetailsController.recentlyStartedTrading(), updatedSession)
@@ -1366,11 +1387,15 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport {
           }
 
           "applicant select yes" in {
-            testStartTrading(YesNoAnswer.Yes, routes.CheckYourAnswersController.checkYourAnswers())
+            testStartTrading(YesNoAnswer.Yes, routes.CheckYourAnswersController.checkYourAnswers(), None)
           }
 
           "applicant select no" in {
-            testStartTrading(YesNoAnswer.No, routes.CompanyDetailsController.cannotDoTaxCheck())
+            testStartTrading(
+              YesNoAnswer.No,
+              routes.CompanyDetailsController.cannotDoTaxCheck(),
+              Some(TaxCheckExit.CTNoAccountingPeriodNotRecentlyStartedTrading(_))
+            )
           }
 
         }

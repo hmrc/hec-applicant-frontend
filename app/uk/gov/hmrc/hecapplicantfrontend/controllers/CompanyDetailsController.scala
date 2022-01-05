@@ -29,6 +29,7 @@ import uk.gov.hmrc.hecapplicantfrontend.controllers.CompanyDetailsController.{en
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, RequestWithSessionData, SessionDataAction}
 import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.CompanyMatchFailure.{EnrolmentCTUTRCompanyMatchFailure, EnterCTUTRCompanyMatchFailure}
 import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.CompanyMatchSuccess.{EnrolmentCTUTRCompanyMatchSuccess, EnterCTUTRCompanyMatchSuccess}
+import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.TaxCheckExit
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.CompanyHECSession
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.CompanyLoginData
 import uk.gov.hmrc.hecapplicantfrontend.models._
@@ -383,12 +384,13 @@ class CompanyDetailsController @Inject() (
                         )
                       )
 
-                      if (ctutrAttempts.isBlocked)
+                      if (ctutrAttempts.isBlocked) {
+                        auditService.sendEvent(TaxCheckExit.CTEnteredCTUTRNotMatchingBlocked(companySession))
                         updateAndNextJourneyData(
                           routes.CompanyDetailsController.enterCtutr(),
                           companySession.copy(crnBlocked = ctutrAttempts.isBlocked)
                         )
-                      else {
+                      } else {
                         val updatedAnswers = companySession.userAnswers
                           .unset(_.ctutr)
                           .unset(_.ctIncomeDeclared)
