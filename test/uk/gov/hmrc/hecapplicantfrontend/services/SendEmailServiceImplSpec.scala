@@ -28,19 +28,18 @@ import play.api.mvc.{AnyContentAsEmpty, Cookie, MessagesRequest}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.hecapplicantfrontend.connectors.SendEmailConnector
-import uk.gov.hmrc.hecapplicantfrontend.controllers.ControllerSpec
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthenticatedRequest, RequestWithSessionData}
 import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, Error, HECSession}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailSend.{EmailParameters, EmailSendRequest, EmailSendResult}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.Language.{English, Welsh}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{Passcode, PasscodeRequestResult, PasscodeVerificationResult}
-import uk.gov.hmrc.hecapplicantfrontend.utils.Fixtures
+import uk.gov.hmrc.hecapplicantfrontend.utils.{Fixtures, PlaySupport}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class SendEmailServiceImplSpec extends AnyWordSpec with Matchers with MockFactory with ControllerSpec {
+class SendEmailServiceImplSpec extends AnyWordSpec with Matchers with MockFactory with PlaySupport {
 
   val mockSendEmailConnector: SendEmailConnector = mock[SendEmailConnector]
   val config                                     = Configuration(
