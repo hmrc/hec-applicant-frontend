@@ -68,10 +68,6 @@ class ConfirmEmailAddressController @Inject() (
   val confirmEmailAddressSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     request.sessionData.ensureGGEmailIdPresent { ggEmail =>
       def handleValidEmail(userSelectedEmail: UserSelectedEmail): Future[Result] = {
-        //val authReq: AuthenticatedRequest[AnyContent] = request.request
-//        val headerCarrier: HeaderCarrier              =
-//          HeaderCarrierConverter.fromRequestAndSession(request, request.session)
-
         val result = for {
           passcodeResult     <-
             emailVerificationService.requestPasscode(userSelectedEmail.emailAddress)
