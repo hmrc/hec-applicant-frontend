@@ -23,7 +23,7 @@ import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{RequestWithSessionData}
+import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.RequestWithSessionData
 import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, Error, HECSession, HECTaxCheck, HECTaxCheckCode}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailSend.{EmailParameters, EmailSendResult}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{Passcode, PasscodeRequestResult, PasscodeVerificationResult}
@@ -109,6 +109,35 @@ class EmailAddressConfirmedControllerSpec
           assertThrows[RuntimeException](await(performAction()))
         }
 
+        "passcode verification code is other than match" in {
+          List(
+            PasscodeVerificationResult.NoMatch,
+            PasscodeVerificationResult.Expired,
+            PasscodeVerificationResult.TooManyAttempts
+          ).foreach { passcodeVerificationResult =>
+            withClue(s" For passcode verification result $passcodeVerificationResult") {
+              val session = Fixtures.individualHECSession(
+                userAnswers = Fixtures.completeIndividualUserAnswers(),
+                isEmailRequested = true,
+                userEmailAnswers = Fixtures
+                  .userEmailAnswers(
+                    passcodeRequestResult = PasscodeRequestResult.PasscodeSent.some,
+                    passcode = Passcode("HHHHHH").some,
+                    passcodeVerificationResult = passcodeVerificationResult.some,
+                    emailSendResult = None
+                  )
+                  .some
+              )
+              inSequence {
+                mockAuthWithNoRetrievals()
+                mockGetSession(session)
+              }
+              assertThrows[RuntimeException](await(performAction()))
+            }
+          }
+
+        }
+
       }
 
       "display the page" in {
@@ -163,6 +192,35 @@ class EmailAddressConfirmedControllerSpec
             mockGetSession(session)
           }
           assertThrows[RuntimeException](await(performAction()))
+        }
+
+        "passcode verification code is other than match" in {
+          List(
+            PasscodeVerificationResult.NoMatch,
+            PasscodeVerificationResult.Expired,
+            PasscodeVerificationResult.TooManyAttempts
+          ).foreach { passcodeVerificationResult =>
+            withClue(s" For passcode verification result $passcodeVerificationResult") {
+              val session = Fixtures.individualHECSession(
+                userAnswers = Fixtures.completeIndividualUserAnswers(),
+                isEmailRequested = true,
+                userEmailAnswers = Fixtures
+                  .userEmailAnswers(
+                    passcodeRequestResult = PasscodeRequestResult.PasscodeSent.some,
+                    passcode = Passcode("HHHHHH").some,
+                    passcodeVerificationResult = passcodeVerificationResult.some,
+                    emailSendResult = None
+                  )
+                  .some
+              )
+              inSequence {
+                mockAuthWithNoRetrievals()
+                mockGetSession(session)
+              }
+              assertThrows[RuntimeException](await(performAction()))
+            }
+          }
+
         }
 
         "Call to send email fails" in {

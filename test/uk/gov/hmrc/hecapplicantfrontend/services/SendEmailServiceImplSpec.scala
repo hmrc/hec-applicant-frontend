@@ -73,7 +73,6 @@ class SendEmailServiceImplSpec extends AnyWordSpec with Matchers with MockFactor
   val emailParameter             =
     EmailParameters("Dummy name", "ABC 123 GRD")
   val emptyHeaders               = Map.empty[String, Seq[String]]
-  val ggEmailId                  = EmailAddress("user@test.com")
 
   val userEmailAnswer = Fixtures
     .userEmailAnswers(
@@ -83,7 +82,7 @@ class SendEmailServiceImplSpec extends AnyWordSpec with Matchers with MockFactor
     )
 
   val session: HECSession = Fixtures.companyHECSession(
-    loginData = Fixtures.companyLoginData(emailAddress = ggEmailId.some),
+    loginData = Fixtures.companyLoginData(emailAddress = emailAddress.some),
     userAnswers = Fixtures.completeCompanyUserAnswers(),
     isEmailRequested = true,
     userEmailAnswers = userEmailAnswer.some
