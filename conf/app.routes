@@ -90,6 +90,7 @@ GET       /resend-email                    uk.gov.hmrc.hecapplicantfrontend.cont
 POST      /resend-email                    uk.gov.hmrc.hecapplicantfrontend.controllers.ResendEmailConfirmationController.resendEmailSubmit
 
 GET       /email-verification-code-resent  uk.gov.hmrc.hecapplicantfrontend.controllers.VerifyResentEmailPasscodeController.verifyResentEmailPasscode
+POST      /email-verification-code-resent  uk.gov.hmrc.hecapplicantfrontend.controllers.VerifyResentEmailPasscodeController.verifyResentEmailPasscodeSubmit
 
 GET       /email-sent                      uk.gov.hmrc.hecapplicantfrontend.controllers.EmailSentController.emailSent
 

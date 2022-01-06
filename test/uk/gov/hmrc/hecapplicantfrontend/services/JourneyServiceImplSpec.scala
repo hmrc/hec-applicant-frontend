@@ -3201,6 +3201,61 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
           )
         }
 
+        "the too many email verification attempt page" when {
+
+          def test(emailAddress: Option[EmailAddress], hasResentEmailConfirmation: Boolean, previousRoute: Call) = {
+            val session = Fixtures.individualHECSession(
+              individualLoginData.copy(emailAddress = emailAddress),
+              IndividualRetrievedJourneyData.empty,
+              Fixtures.completeIndividualUserAnswers(
+                licenceType = DriverOfTaxisAndPrivateHires,
+                licenceTimeTrading = LicenceTimeTrading.TwoToFourYears,
+                licenceValidityPeriod = UpToOneYear,
+                taxSituation = PAYE,
+                saIncomeDeclared = Some(YesNoAnswer.Yes),
+                entityType = Some(Individual)
+              ),
+              Some(HECTaxCheck(HECTaxCheckCode("code"), LocalDate.now.plusDays(1))),
+              Some(taxCheckStartDateTime),
+              isEmailRequested = true,
+              hasResentEmailConfirmation = hasResentEmailConfirmation,
+              userEmailAnswers = Fixtures
+                .userEmailAnswers(passcodeRequestResult = PasscodeRequestResult.MaximumNumberOfEmailsExceeded.some)
+                .some
+            )
+
+            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+
+            val result = journeyService.previous(
+              routes.TooManyEmailVerificationAttemptController.tooManyEmailVerificationAttempts()
+            )
+            result shouldBe previousRoute
+          }
+
+          "there is email Id in ggAccount" when {
+
+            "page is achieved via confirm email address page " in {
+              test(ggEmailId.some, false, routes.ConfirmEmailAddressController.confirmEmailAddress())
+            }
+
+            "page is achieved via resend  email confirmation page " in {
+              test(ggEmailId.some, true, routes.ResendEmailConfirmationController.resendEmail())
+            }
+          }
+
+          "there is no email Id in ggAccount" when {
+
+            "page is achieved via enter email address page " in {
+              test(None, false, routes.EnterEmailAddressController.enterEmailAddress())
+            }
+
+            "page is achieved via resend  email confirmation page " in {
+              test(None, true, routes.ResendEmailConfirmationController.resendEmail())
+            }
+          }
+
+        }
+
         def buildIndividualSession(taxSituation: TaxSituation, saStatus: SAStatus): HECSession = {
           val individualLoginData =
             IndividualLoginData(

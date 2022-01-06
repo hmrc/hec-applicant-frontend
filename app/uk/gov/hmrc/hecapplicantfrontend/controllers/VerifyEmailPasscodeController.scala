@@ -32,7 +32,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.HECSession
 import uk.gov.hmrc.hecapplicantfrontend.services.{EmailVerificationService, JourneyService}
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import uk.gov.hmrc.hecapplicantfrontend.views.html.VerifyPasscode
+import uk.gov.hmrc.hecapplicantfrontend.views.html
 
 import java.util.Locale
 import scala.concurrent.{ExecutionContext, Future}
@@ -42,7 +42,7 @@ class VerifyEmailPasscodeController @Inject() (
   sessionDataAction: SessionDataAction,
   journeyService: JourneyService,
   emailVerificationService: EmailVerificationService,
-  verifyPasscodePage: VerifyPasscode,
+  verifyPasscodePage: html.VerifyPasscode,
   mcc: MessagesControllerComponents
 )(implicit ec: ExecutionContext)
     extends FrontendController(mcc)
@@ -138,7 +138,7 @@ object VerifyEmailPasscodeController {
     )(identity)(Some(_))
   )
 
-  private def verifyGGEmailInSession(session: HECSession) =
+  def verifyGGEmailInSession(session: HECSession): Boolean =
     session.fold(_.loginData.emailAddress, _.loginData.emailAddress) match {
       case Some(email) if email.value.nonEmpty => true
       case _                                   => false

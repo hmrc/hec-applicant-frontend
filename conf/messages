@@ -380,3 +380,7 @@ enterEmailAddress.error.tooManyChar = Email address has too many characters, it 
 #Resend email confirmation code
 resendEmailConfirmation.title = Resend email confirmation code
 resendEmailConfirmation.p1 = Send a new email confirmation code to <b>{0}</b>
+
+#Verify Resent Email passcode
+verifyPasscode.label1 = New confirmation code sent
+verifyPasscode.label2 = Email confirmation code:
