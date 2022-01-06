@@ -100,7 +100,8 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
     routes.ConfirmEmailAddressController.confirmEmailAddress()           -> confirmEmailAddressRoute,
     routes.VerifyEmailPasscodeController.verifyEmailPasscode             -> verifyEmailPasscodeRoute,
     routes.EmailAddressConfirmedController.emailAddressConfirmed()       -> emailAddressConfirmedRoute,
-    routes.EnterEmailAddressController.enterEmailAddress()               -> confirmEmailAddressRoute
+    routes.EnterEmailAddressController.enterEmailAddress()               -> confirmEmailAddressRoute,
+    routes.ResendEmailConfirmationController.resendEmail()               -> resendEmailConfirmationRoute
   )
 
   // map which describes routes from an exit page to their previous page. The keys are the exit page and the values are
@@ -183,8 +184,18 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
     lazy val hasCompletedAnswers = r.sessionData.userAnswers.foldByCompleteness(_ => false, _ => true)
 
     if (r.sessionData.isEmailRequested) {
-      loop(routes.TaxCheckCompleteController.taxCheckComplete())
-        .getOrElse(sys.error(s"Could not find previous for $current"))
+      //checks if resend flag is on, then the journey start point is ResendEmailConfirmationController else TaxCheckCompleteController
+      if (r.sessionData.hasResentEmailConfirmation) {
+        exitPageToPreviousPage
+          .get(current)
+          .orElse(loop(routes.ResendEmailConfirmationController.resendEmail()))
+          .getOrElse(sys.error(s"Could not find previous for $current"))
+      } else {
+        exitPageToPreviousPage
+          .get(current)
+          .orElse(loop(routes.TaxCheckCompleteController.taxCheckComplete()))
+          .getOrElse(sys.error(s"Could not find previous for $current"))
+      }
     } else {
       if (current === routes.StartController.start())
         current
@@ -234,6 +245,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
                 _,
                 _,
                 _,
+                _,
                 _
               ) if allCompanyAnswersComplete(companyAnswers, companySession) =>
             val completeAnswers =
@@ -262,6 +274,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
                   saIncomeDeclared,
                   entityType
                 ),
+                _,
                 _,
                 _,
                 _,
@@ -509,6 +522,22 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
 
     passcodeRequestResult match {
       case Some(PasscodeSent)                  => routes.VerifyEmailPasscodeController.verifyEmailPasscode
+      case Some(EmailAddressAlreadyVerified)   =>
+        routes.EmailAddressConfirmedController.emailAddressConfirmed
+      case Some(MaximumNumberOfEmailsExceeded) =>
+        routes.TooManyEmailVerificationAttemptController.tooManyEmailVerificationAttempts
+      case _                                   => sys.error("Passcode Result is  invalid/missing from the response")
+    }
+  }
+
+  def resendEmailConfirmationRoute(session: HECSession): Call = {
+    val passcodeRequestResult = session.fold(
+      _.userEmailAnswers.flatMap(_.passcodeRequestResult),
+      _.userEmailAnswers.flatMap(_.passcodeRequestResult)
+    )
+
+    passcodeRequestResult match {
+      case Some(PasscodeSent)                  => routes.VerifyResentEmailPasscodeController.verifyResentEmailPasscode
       case Some(EmailAddressAlreadyVerified)   =>
         routes.EmailAddressConfirmedController.emailAddressConfirmed
       case Some(MaximumNumberOfEmailsExceeded) =>

@@ -1840,6 +1840,90 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
           }
 
         }
+
+        "resend email confirmation page" when {
+
+          def test(userEmailAnswers: UserEmailAnswers, nextCall: Call) = {
+            val session                                     = Fixtures.individualHECSession(
+              individualLoginData.copy(emailAddress = ggEmailId.some),
+              IndividualRetrievedJourneyData.empty,
+              Fixtures.completeIndividualUserAnswers(
+                licenceType = DriverOfTaxisAndPrivateHires,
+                licenceTimeTrading = LicenceTimeTrading.TwoToFourYears,
+                licenceValidityPeriod = UpToOneYear,
+                taxSituation = PAYE,
+                saIncomeDeclared = Some(YesNoAnswer.Yes),
+                entityType = Some(Individual)
+              ),
+              Some(HECTaxCheck(HECTaxCheckCode("code"), LocalDate.now.plusDays(1))),
+              Some(taxCheckStartDateTime),
+              isEmailRequested = true,
+              hasResentEmailConfirmation = true,
+              userEmailAnswers = userEmailAnswers.some
+            )
+            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+
+            val result = journeyService.updateAndNext(
+              routes.ResendEmailConfirmationController.resendEmail(),
+              session
+            )
+            await(result.value) shouldBe Right(nextCall)
+          }
+
+          " Email Verification Service response = Passcode Sent" in {
+            List(
+              Fixtures.userEmailAnswers(EmailType.GGEmail, ggEmailId, PasscodeSent.some),
+              Fixtures.userEmailAnswers(EmailType.DifferentEmail, otherEmailId, PasscodeSent.some)
+            ).foreach { eachUserEmailAddress =>
+              withClue(s"For user email address : $eachUserEmailAddress") {
+                test(
+                  eachUserEmailAddress,
+                  routes.VerifyResentEmailPasscodeController.verifyResentEmailPasscode()
+                )
+              }
+            }
+
+          }
+
+          " Email Verification Service response = Email Already Verified " in {
+
+            List(
+              Fixtures.userEmailAnswers(EmailType.GGEmail, ggEmailId, EmailAddressAlreadyVerified.some),
+              Fixtures.userEmailAnswers(
+                EmailType.DifferentEmail,
+                otherEmailId,
+                EmailAddressAlreadyVerified.some
+              )
+            ).foreach { eachUserEmailAddress =>
+              withClue(s"For user email address : $eachUserEmailAddress") {
+                test(
+                  eachUserEmailAddress,
+                  routes.EmailAddressConfirmedController.emailAddressConfirmed()
+                )
+              }
+            }
+          }
+
+          " Email Verification Service response = Too Many Email attempts in session " in {
+
+            List(
+              Fixtures.userEmailAnswers(EmailType.GGEmail, ggEmailId, MaximumNumberOfEmailsExceeded.some),
+              Fixtures.userEmailAnswers(
+                EmailType.DifferentEmail,
+                otherEmailId,
+                MaximumNumberOfEmailsExceeded.some
+              )
+            ).foreach { eachUserEmailAddress =>
+              withClue(s"For user email address : $eachUserEmailAddress") {
+                test(
+                  eachUserEmailAddress,
+                  routes.TooManyEmailVerificationAttemptController.tooManyEmailVerificationAttempts()
+                )
+              }
+            }
+          }
+
+        }
       }
 
       "convert incomplete answers to complete answers when all questions have been answered and" when {
@@ -2975,6 +3059,61 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
 
         }
 
+        "resend email confirmation page" in {
+
+          val session                                     = Fixtures.individualHECSession(
+            individualLoginData.copy(emailAddress = ggEmailId.some),
+            IndividualRetrievedJourneyData.empty,
+            Fixtures.completeIndividualUserAnswers(
+              licenceType = DriverOfTaxisAndPrivateHires,
+              licenceTimeTrading = LicenceTimeTrading.TwoToFourYears,
+              licenceValidityPeriod = UpToOneYear,
+              taxSituation = PAYE,
+              saIncomeDeclared = Some(YesNoAnswer.Yes),
+              entityType = Some(Individual)
+            ),
+            Some(HECTaxCheck(HECTaxCheckCode("code"), LocalDate.now.plusDays(1))),
+            Some(taxCheckStartDateTime),
+            isEmailRequested = true,
+            userEmailAnswers = Fixtures.userEmailAnswers().some
+          )
+          implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+
+          val result = journeyService.previous(
+            routes.ResendEmailConfirmationController.resendEmail()
+          )
+          result shouldBe routes.VerifyEmailPasscodeController.verifyEmailPasscode()
+
+        }
+
+        "verify passcode by resend email confirmation " in {
+
+          val session                                     = Fixtures.individualHECSession(
+            individualLoginData.copy(emailAddress = ggEmailId.some),
+            IndividualRetrievedJourneyData.empty,
+            Fixtures.completeIndividualUserAnswers(
+              licenceType = DriverOfTaxisAndPrivateHires,
+              licenceTimeTrading = LicenceTimeTrading.TwoToFourYears,
+              licenceValidityPeriod = UpToOneYear,
+              taxSituation = PAYE,
+              saIncomeDeclared = Some(YesNoAnswer.Yes),
+              entityType = Some(Individual)
+            ),
+            Some(HECTaxCheck(HECTaxCheckCode("code"), LocalDate.now.plusDays(1))),
+            Some(taxCheckStartDateTime),
+            isEmailRequested = true,
+            hasResentEmailConfirmation = true,
+            userEmailAnswers = Fixtures.userEmailAnswers(passcodeRequestResult = PasscodeSent.some).some
+          )
+          implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+
+          val result = journeyService.previous(
+            routes.VerifyResentEmailPasscodeController.verifyResentEmailPasscode()
+          )
+          result shouldBe routes.ResendEmailConfirmationController.resendEmail()
+
+        }
+
         def previousIsConfirmEmailPage(passcodeRequestResult: PasscodeRequestResult, existingRoute: Call) = {
           val session = Fixtures.individualHECSession(
             individualLoginData.copy(emailAddress = ggEmailId.some),
@@ -3053,7 +3192,6 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               routes.EmailAddressConfirmedController.emailAddressConfirmed()
             )
           }
-
         }
 
         "the passcode not found page" in {

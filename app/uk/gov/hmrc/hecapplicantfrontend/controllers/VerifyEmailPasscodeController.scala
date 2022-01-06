@@ -25,7 +25,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.Passcode
 import play.api.data.Form
 import play.api.data.Forms.{mapping, nonEmptyText}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.VerifyEmailPasscodeController.{verifyGGEmailInSession, verifyPasscodeForm}
-import uk.gov.hmrc.hecapplicantfrontend.models.{HECSession}
+import uk.gov.hmrc.hecapplicantfrontend.models.HECSession
 import uk.gov.hmrc.hecapplicantfrontend.services.{EmailVerificationService, JourneyService}
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -54,7 +54,6 @@ class VerifyEmailPasscodeController @Inject() (
         session.fold(_.userEmailAnswers.flatMap(_.passcode), _.userEmailAnswers.flatMap(_.passcode))
       val form                          = passcodeOpt.fold(verifyPasscodeForm)(verifyPasscodeForm.fill)
       val back                          = journeyService.previous(routes.VerifyEmailPasscodeController.verifyEmailPasscode())
-
       Ok(verifyPasscodePage(form, back, userSelectedEmail.emailAddress, isGGEmailInSession))
     }
 
