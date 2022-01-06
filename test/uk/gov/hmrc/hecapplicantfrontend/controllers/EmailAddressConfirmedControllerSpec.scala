@@ -24,7 +24,7 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.RequestWithSessionData
-import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, Error, HECSession, HECTaxCheck, HECTaxCheckCode}
+import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, Error, HECSession, HECTaxCheck, HECTaxCheckCode, UserEmailAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailSend.{EmailParameters, EmailSendResult}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{Passcode, PasscodeRequestResult, PasscodeVerificationResult}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
@@ -60,11 +60,18 @@ class EmailAddressConfirmedControllerSpec
 
   val ggEmailId = EmailAddress("user@test.com")
 
-  val userEmailAnswer = Fixtures
+  val passcodeSentAndMatchedUserEmailAnswer = Fixtures
     .userEmailAnswers(
       passcodeRequestResult = PasscodeRequestResult.PasscodeSent.some,
       passcode = Passcode("HHHHHH").some,
       passcodeVerificationResult = PasscodeVerificationResult.Match.some
+    )
+
+  val emailAlreadyVerifiedUserEmailAnswers = Fixtures
+    .userEmailAnswers(
+      passcodeRequestResult = PasscodeRequestResult.EmailAddressAlreadyVerified.some,
+      passcode = None,
+      passcodeVerificationResult = None
     )
 
   val hecTaxCheckCode = HECTaxCheckCode("ABC 123 DER")
@@ -109,11 +116,11 @@ class EmailAddressConfirmedControllerSpec
           assertThrows[RuntimeException](await(performAction()))
         }
 
-        "passcode verification code is other than match" in {
+        "passcode verification code is other than match and passcodeRequestResult = PasscodeSent" in {
           List(
-            PasscodeVerificationResult.NoMatch,
-            PasscodeVerificationResult.Expired,
-            PasscodeVerificationResult.TooManyAttempts
+            PasscodeVerificationResult.NoMatch.some,
+            PasscodeVerificationResult.Expired.some,
+            PasscodeVerificationResult.TooManyAttempts.some
           ).foreach { passcodeVerificationResult =>
             withClue(s" For passcode verification result $passcodeVerificationResult") {
               val session = Fixtures.individualHECSession(
@@ -123,7 +130,7 @@ class EmailAddressConfirmedControllerSpec
                   .userEmailAnswers(
                     passcodeRequestResult = PasscodeRequestResult.PasscodeSent.some,
                     passcode = Passcode("HHHHHH").some,
-                    passcodeVerificationResult = passcodeVerificationResult.some,
+                    passcodeVerificationResult = passcodeVerificationResult,
                     emailSendResult = None
                   )
                   .some
@@ -138,37 +145,104 @@ class EmailAddressConfirmedControllerSpec
 
         }
 
+        "passcodeVerificationCode ==  Match and passcodeRequestResult != PasscodeSent/'Already Verified'" in {
+          List(
+            PasscodeRequestResult.BadEmailAddress.some,
+            PasscodeRequestResult.MaximumNumberOfEmailsExceeded.some
+          ).foreach { passcodeRequestResult =>
+            withClue(s" For passcode verification result $passcodeRequestResult") {
+              val session = Fixtures.individualHECSession(
+                userAnswers = Fixtures.completeIndividualUserAnswers(),
+                isEmailRequested = true,
+                userEmailAnswers = Fixtures
+                  .userEmailAnswers(
+                    passcodeRequestResult = passcodeRequestResult,
+                    passcode = Passcode("HHHHHH").some,
+                    passcodeVerificationResult = PasscodeVerificationResult.Match.some,
+                    emailSendResult = None
+                  )
+                  .some
+              )
+              inSequence {
+                mockAuthWithNoRetrievals()
+                mockGetSession(session)
+              }
+              assertThrows[RuntimeException](await(performAction()))
+            }
+          }
+
+        }
+
+        "passcodeVerificationCode ==  None and passcodeRequestResult != 'Already Verified'" in {
+          List(
+            PasscodeRequestResult.PasscodeSent.some,
+            PasscodeRequestResult.BadEmailAddress.some,
+            PasscodeRequestResult.MaximumNumberOfEmailsExceeded.some
+          ).foreach { passcodeRequestResult =>
+            withClue(s" For passcode verification result $passcodeRequestResult") {
+              val session = Fixtures.individualHECSession(
+                userAnswers = Fixtures.completeIndividualUserAnswers(),
+                isEmailRequested = true,
+                userEmailAnswers = Fixtures
+                  .userEmailAnswers(
+                    passcodeRequestResult = passcodeRequestResult,
+                    passcode = Passcode("HHHHHH").some,
+                    passcodeVerificationResult = None,
+                    emailSendResult = None
+                  )
+                  .some
+              )
+              inSequence {
+                mockAuthWithNoRetrievals()
+                mockGetSession(session)
+              }
+              assertThrows[RuntimeException](await(performAction()))
+            }
+          }
+        }
+
       }
 
-      "display the page" in {
-        val session: HECSession = Fixtures.companyHECSession(
-          loginData = Fixtures.companyLoginData(emailAddress = ggEmailId.some),
-          userAnswers = Fixtures.completeCompanyUserAnswers(),
-          isEmailRequested = true,
-          userEmailAnswers = userEmailAnswer.some
-        )
+      "display the page" when {
 
-        inSequence {
-          mockAuthWithNoRetrievals()
-          mockGetSession(session)
-          mockJourneyServiceGetPrevious(routes.EmailAddressConfirmedController.emailAddressConfirmed, session)(
-            mockPreviousCall
+        def test(userEmailAnswers: UserEmailAnswers) = {
+          val session: HECSession = Fixtures.companyHECSession(
+            loginData = Fixtures.companyLoginData(emailAddress = ggEmailId.some),
+            userAnswers = Fixtures.completeCompanyUserAnswers(),
+            isEmailRequested = true,
+            userEmailAnswers = userEmailAnswers.some
+          )
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockJourneyServiceGetPrevious(routes.EmailAddressConfirmedController.emailAddressConfirmed, session)(
+              mockPreviousCall
+            )
+          }
+
+          checkPageIsDisplayed(
+            performAction(),
+            messageFromMessageKey("emailAddressConfirmed.title"),
+            { doc =>
+              doc.select("#back").attr("href") shouldBe mockPreviousCall.url
+
+              doc.select(".govuk-body").text() should include regex "user@test.com"
+
+              val form = doc.select("form")
+              form
+                .attr("action") shouldBe routes.EmailAddressConfirmedController.emailAddressConfirmedSubmit().url
+            }
           )
         }
 
-        checkPageIsDisplayed(
-          performAction(),
-          messageFromMessageKey("emailAddressConfirmed.title"),
-          { doc =>
-            doc.select("#back").attr("href") shouldBe mockPreviousCall.url
+        "the passcode has been sent and the passcode verification result is a match" in {
+          test(passcodeSentAndMatchedUserEmailAnswer)
+        }
 
-            doc.select(".govuk-body").text() should include regex "user@test.com"
-
-            val form = doc.select("form")
-            form
-              .attr("action") shouldBe routes.EmailAddressConfirmedController.emailAddressConfirmedSubmit().url
-          }
-        )
+        "the email addres had already been verified" in {
+          test(emailAlreadyVerifiedUserEmailAnswers)
+        }
       }
 
     }
@@ -194,11 +268,11 @@ class EmailAddressConfirmedControllerSpec
           assertThrows[RuntimeException](await(performAction()))
         }
 
-        "passcode verification code is other than match" in {
+        "passcode verification code is other than match and passcodeRequestResult = PasscodeSent" in {
           List(
-            PasscodeVerificationResult.NoMatch,
-            PasscodeVerificationResult.Expired,
-            PasscodeVerificationResult.TooManyAttempts
+            PasscodeVerificationResult.NoMatch.some,
+            PasscodeVerificationResult.Expired.some,
+            PasscodeVerificationResult.TooManyAttempts.some
           ).foreach { passcodeVerificationResult =>
             withClue(s" For passcode verification result $passcodeVerificationResult") {
               val session = Fixtures.individualHECSession(
@@ -208,7 +282,7 @@ class EmailAddressConfirmedControllerSpec
                   .userEmailAnswers(
                     passcodeRequestResult = PasscodeRequestResult.PasscodeSent.some,
                     passcode = Passcode("HHHHHH").some,
-                    passcodeVerificationResult = passcodeVerificationResult.some,
+                    passcodeVerificationResult = passcodeVerificationResult,
                     emailSendResult = None
                   )
                   .some
@@ -223,13 +297,69 @@ class EmailAddressConfirmedControllerSpec
 
         }
 
+        "passcodeVerificationCode ==  Match and passcodeRequestResult != PasscodeSent/'Already Verified'" in {
+          List(
+            PasscodeRequestResult.BadEmailAddress.some,
+            PasscodeRequestResult.MaximumNumberOfEmailsExceeded.some
+          ).foreach { passcodeRequestResult =>
+            withClue(s" For passcode verification result $passcodeRequestResult") {
+              val session = Fixtures.individualHECSession(
+                userAnswers = Fixtures.completeIndividualUserAnswers(),
+                isEmailRequested = true,
+                userEmailAnswers = Fixtures
+                  .userEmailAnswers(
+                    passcodeRequestResult = passcodeRequestResult,
+                    passcode = Passcode("HHHHHH").some,
+                    passcodeVerificationResult = PasscodeVerificationResult.Match.some,
+                    emailSendResult = None
+                  )
+                  .some
+              )
+              inSequence {
+                mockAuthWithNoRetrievals()
+                mockGetSession(session)
+              }
+              assertThrows[RuntimeException](await(performAction()))
+            }
+          }
+
+        }
+
+        "passcodeVerificationCode ==  None and passcodeRequestResult != 'Already Verified'" in {
+          List(
+            PasscodeRequestResult.PasscodeSent.some,
+            PasscodeRequestResult.BadEmailAddress.some,
+            PasscodeRequestResult.MaximumNumberOfEmailsExceeded.some
+          ).foreach { passcodeRequestResult =>
+            withClue(s" For passcode verification result $passcodeRequestResult") {
+              val session = Fixtures.individualHECSession(
+                userAnswers = Fixtures.completeIndividualUserAnswers(),
+                isEmailRequested = true,
+                userEmailAnswers = Fixtures
+                  .userEmailAnswers(
+                    passcodeRequestResult = passcodeRequestResult,
+                    passcode = Passcode("HHHHHH").some,
+                    passcodeVerificationResult = None,
+                    emailSendResult = None
+                  )
+                  .some
+              )
+              inSequence {
+                mockAuthWithNoRetrievals()
+                mockGetSession(session)
+              }
+              assertThrows[RuntimeException](await(performAction()))
+            }
+          }
+        }
+
         "Call to send email fails" in {
           val session = Fixtures.companyHECSession(
             loginData = Fixtures.companyLoginData(emailAddress = ggEmailId.some),
             userAnswers = Fixtures.completeCompanyUserAnswers(),
             isEmailRequested = true,
             completedTaxCheck = hecTaxCheck.some,
-            userEmailAnswers = userEmailAnswer.some
+            userEmailAnswers = passcodeSentAndMatchedUserEmailAnswer.some
           )
 
           inSequence {
@@ -248,11 +378,13 @@ class EmailAddressConfirmedControllerSpec
             userAnswers = Fixtures.completeCompanyUserAnswers(),
             isEmailRequested = true,
             completedTaxCheck = hecTaxCheck.some,
-            userEmailAnswers = userEmailAnswer.some
+            userEmailAnswers = passcodeSentAndMatchedUserEmailAnswer.some
           )
 
           val updatedSession =
-            session.copy(userEmailAnswers = userEmailAnswer.copy(emailSendResult = EmailSendResult.EmailSent.some).some)
+            session.copy(userEmailAnswers =
+              passcodeSentAndMatchedUserEmailAnswer.copy(emailSendResult = EmailSendResult.EmailSent.some).some
+            )
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
@@ -277,11 +409,13 @@ class EmailAddressConfirmedControllerSpec
           userAnswers = Fixtures.completeCompanyUserAnswers(),
           isEmailRequested = true,
           completedTaxCheck = hecTaxCheck.some,
-          userEmailAnswers = userEmailAnswer.some
+          userEmailAnswers = passcodeSentAndMatchedUserEmailAnswer.some
         )
 
         val updatedSession =
-          session.copy(userEmailAnswers = userEmailAnswer.copy(emailSendResult = EmailSendResult.EmailSent.some).some)
+          session.copy(userEmailAnswers =
+            passcodeSentAndMatchedUserEmailAnswer.copy(emailSendResult = EmailSendResult.EmailSent.some).some
+          )
         inSequence {
           mockAuthWithNoRetrievals()
           mockGetSession(session)

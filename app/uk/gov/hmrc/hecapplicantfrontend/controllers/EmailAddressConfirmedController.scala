@@ -45,7 +45,7 @@ class EmailAddressConfirmedController @Inject() (
 
   val emailAddressConfirmed: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
     request.sessionData.ensureUserSelectedEmailPresent { userSelectedEmail =>
-      request.sessionData.verifyPasscodeVerificationResultAndPasscodeRequestResult { _ =>
+      request.sessionData.verifyPasscodeVerificationResultAndPasscodeRequestResult {
         val previous = journeyService.previous(routes.EmailAddressConfirmedController.emailAddressConfirmed())
         Ok(emailAddressConfirmedPage(userSelectedEmail.emailAddress, previous))
       }
@@ -55,7 +55,7 @@ class EmailAddressConfirmedController @Inject() (
   val emailAddressConfirmedSubmit: Action[AnyContent] =
     authAction.andThen(sessionDataAction).async { implicit request =>
       request.sessionData.ensureUserSelectedEmailPresent { userSelectedEmail =>
-        request.sessionData.verifyPasscodeVerificationResultAndPasscodeRequestResult { _ =>
+        request.sessionData.verifyPasscodeVerificationResultAndPasscodeRequestResult {
           val existingUserEmailAnswers = request.sessionData.userEmailAnswers
           val emailParameters          = getEmailParameters(request.sessionData)
 

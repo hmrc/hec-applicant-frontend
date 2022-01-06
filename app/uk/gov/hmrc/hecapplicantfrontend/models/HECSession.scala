@@ -24,6 +24,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.CompanyUserAnswers.IncompleteComp
 import uk.gov.hmrc.hecapplicantfrontend.models.IndividualUserAnswers.IncompleteIndividualUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.{CompanyRetrievedJourneyData, IndividualRetrievedJourneyData}
+import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeRequestResult.PasscodeSent
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{PasscodeRequestResult, PasscodeVerificationResult}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
 
@@ -195,14 +196,14 @@ object HECSession {
       case None                    => sys.error(" No user selected email id in session")
     }
 
-    def verifyPasscodeVerificationResultAndPasscodeRequestResult[A](f: Unit => A): A =
+    def verifyPasscodeVerificationResultAndPasscodeRequestResult[A](f: => A): A =
       (
         s.userEmailAnswers.flatMap(_.passcodeVerificationResult),
         s.userEmailAnswers.flatMap(_.passcodeRequestResult)
       ) match {
-        case (Some(pvr), Some(_)) if pvr === PasscodeVerificationResult.Match               => f(())
-        case (None, Some(prr)) if prr === PasscodeRequestResult.EmailAddressAlreadyVerified => f(())
-        case _                                                                              => sys.error(" Passcode verification result other than match is not expected")
+        case (Some(pvr), Some(PasscodeSent)) if pvr === PasscodeVerificationResult.Match    => f
+        case (None, Some(prr)) if prr === PasscodeRequestResult.EmailAddressAlreadyVerified => f
+        case (other, _)                                                                     => sys.error(s"Expected passcode verification result 'Match' expected but got '$other'")
       }
 
   }
