@@ -136,7 +136,7 @@ object ConfirmEmailAddressController {
       }
     } { ue =>
       ue.emailType match {
-        case EmailType.GGEmail        => (EmailType.GGEmail, ggEmailId.some).some
+        case EmailType.GGEmail        => (EmailType.GGEmail, None).some
         case EmailType.DifferentEmail => (EmailType.DifferentEmail, ue.emailAddress.some).some
       }
     }

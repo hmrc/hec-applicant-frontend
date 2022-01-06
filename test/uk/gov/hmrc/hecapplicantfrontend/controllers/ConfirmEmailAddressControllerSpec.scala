@@ -23,10 +23,10 @@ import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{RequestWithSessionData}
+import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.RequestWithSessionData
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeRequestResult
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeRequestResult.{EmailAddressAlreadyVerified, PasscodeSent}
-import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, EmailType, Error, UserEmailAnswers}
+import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, EmailType, Error, UserEmailAnswers, UserSelectedEmail}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.{EmailVerificationService, JourneyService}
 import uk.gov.hmrc.hecapplicantfrontend.utils.Fixtures
@@ -107,14 +107,22 @@ class ConfirmEmailAddressControllerSpec
             { doc =>
               doc.select("#back").attr("href") shouldBe mockPreviousCall.url
 
-              val selectedOptions = doc.select(".govuk-radios__input[checked]")
+              val selectedOptions            = doc.select(".govuk-radios__input[checked]")
               selected match {
                 case Some(value) => selectedOptions.attr("value") shouldBe value
                 case None        => selectedOptions.isEmpty       shouldBe true
               }
-              doc.select("#differentEmail").attr("value") shouldBe userEmailAnswers
-                .map(_.userSelectedEmail.emailAddress.value)
+              val differentEmailAddressValue = doc.select("#differentEmail").attr("value")
+              val expectedEmailAddressValue  = userEmailAnswers
+                .flatMap { emailAnswers =>
+                  emailAnswers.userSelectedEmail match {
+                    case UserSelectedEmail(EmailType.GGEmail, _)                     => None
+                    case UserSelectedEmail(EmailType.DifferentEmail, differentEmail) => Some(differentEmail.value)
+                  }
+                }
                 .getOrElse("")
+
+              differentEmailAddressValue shouldBe expectedEmailAddressValue
 
               val form = doc.select("form")
               form
