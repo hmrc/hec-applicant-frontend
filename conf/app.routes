@@ -82,7 +82,6 @@ POST      /verify-email-passcode           uk.gov.hmrc.hecapplicantfrontend.cont
 GET       /email-address-confirmed        uk.gov.hmrc.hecapplicantfrontend.controllers.EmailAddressConfirmedController.emailAddressConfirmed
 POST      /email-address-confirmed        uk.gov.hmrc.hecapplicantfrontend.controllers.EmailAddressConfirmedController.emailAddressConfirmedSubmit
 
-GET       /passcode-not-found              uk.gov.hmrc.hecapplicantfrontend.controllers.VerificationPasscodeNotFoundController.verificationPasscodeNotFound
 GET       /passcode-expired                uk.gov.hmrc.hecapplicantfrontend.controllers.VerificationPasscodeExpiredController.verificationPasscodeExpired
 GET       /too-many-email-verification     uk.gov.hmrc.hecapplicantfrontend.controllers.TooManyEmailVerificationAttemptController.tooManyEmailVerificationAttempts
 GET       /too-many-passcode-verification  uk.gov.hmrc.hecapplicantfrontend.controllers.TooManyPasscodeVerificationController.tooManyPasscodeVerification

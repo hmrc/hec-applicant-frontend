@@ -549,8 +549,6 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
   def verifyEmailPasscodeRoute(session: HECSession): Call =
     session.userEmailAnswers.flatMap(_.passcodeVerificationResult) match {
       case Some(PasscodeVerificationResult.Match)           => routes.EmailAddressConfirmedController.emailAddressConfirmed()
-      case Some(PasscodeVerificationResult.NoMatch)         =>
-        routes.VerificationPasscodeNotFoundController.verificationPasscodeNotFound
       case Some(PasscodeVerificationResult.Expired)         =>
         routes.VerificationPasscodeExpiredController.verificationPasscodeExpired
       case Some(PasscodeVerificationResult.TooManyAttempts) =>
