@@ -1733,13 +1733,6 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             test(PasscodeVerificationResult.Match, routes.EmailAddressConfirmedController.emailAddressConfirmed())
           }
 
-          "passcode is not verified and is a No match" in {
-            test(
-              PasscodeVerificationResult.NoMatch,
-              routes.VerificationPasscodeNotFoundController.verificationPasscodeNotFound
-            )
-          }
-
           "passcode is expired" in {
             test(
               PasscodeVerificationResult.Expired,
@@ -3192,13 +3185,6 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               routes.EmailAddressConfirmedController.emailAddressConfirmed()
             )
           }
-        }
-
-        "the passcode not found page" in {
-          previousIsVerificationEmailPage(
-            PasscodeVerificationResult.NoMatch,
-            routes.VerificationPasscodeNotFoundController.verificationPasscodeNotFound()
-          )
         }
 
         "the passcode has  expired page" in {

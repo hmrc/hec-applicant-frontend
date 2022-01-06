@@ -204,6 +204,37 @@ class VerifyEmailPasscodeControllerSpec
 
         }
 
+        "No match passcode is entered" in {
+          val passcode         = Passcode("FFFFFF")
+          val emailAddress     = EmailAddress("user@test.com")
+          val userEmailAnswers = Fixtures
+            .userEmailAnswers(
+              passcodeRequestResult = PasscodeRequestResult.PasscodeSent.some
+            )
+
+          val session = Fixtures.individualHECSession(
+            loginData = Fixtures.individualLoginData(emailAddress = ggEmailId.some),
+            userAnswers = Fixtures.completeIndividualUserAnswers(),
+            isEmailRequested = true,
+            userEmailAnswers = userEmailAnswers.some
+          )
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockVerifyPasscode(passcode, emailAddress)(Right(PasscodeVerificationResult.NoMatch))
+            mockJourneyServiceGetPrevious(routes.VerifyEmailPasscodeController.verifyEmailPasscode(), session)(
+              mockPreviousCall
+            )
+          }
+
+          checkFormErrorIsDisplayed(
+            performAction("passcode" -> "FFFFFF"),
+            messageFromMessageKey("verifyPasscode.title"),
+            messageFromMessageKey("passcode.error.noMatch")
+          )
+        }
+
       }
 
       "return a technical error" when {
@@ -285,7 +316,6 @@ class VerifyEmailPasscodeControllerSpec
 
         val passcodeVerificationList = List(
           PasscodeVerificationResult.Match,
-          PasscodeVerificationResult.NoMatch,
           PasscodeVerificationResult.Expired,
           PasscodeVerificationResult.TooManyAttempts
         )
