@@ -39,7 +39,7 @@ trait HECSession extends Product with Serializable {
   val taxCheckStartDateTime: Option[ZonedDateTime]
   val unexpiredTaxChecks: List[TaxCheckListItem]
   val isEmailRequested: Boolean
-  val hasResendEmailConfirmation: Boolean
+  val hasResendEmailConfirmation: Boolean //flag added to separate the resend email confirmaation journey
   val userEmailAnswers: Option[UserEmailAnswers]
 
 }

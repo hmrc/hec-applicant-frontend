@@ -184,6 +184,7 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
       hasConfirmedDetails = true,
       None,
       isEmailRequested = false,
+      false,
       None
     )
 
@@ -207,6 +208,7 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
         |    "unexpiredTaxChecks" : [],
         |    "hasConfirmedDetails" : true,
         |    "isEmailRequested": false,
+        |    "hasResendEmailConfirmation" : false,
         |    "type" : "Individual"
         |}
         |""".stripMargin

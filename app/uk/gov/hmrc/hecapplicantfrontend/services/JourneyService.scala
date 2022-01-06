@@ -184,7 +184,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
     lazy val hasCompletedAnswers = r.sessionData.userAnswers.foldByCompleteness(_ => false, _ => true)
 
     if (r.sessionData.isEmailRequested) {
-
+      //checks if resend flag is on, then the journey start point is ResendEmailConfirmationController else TaxCheckCompleteController
       if (r.sessionData.hasResendEmailConfirmation) {
         exitPageToPreviousPage
           .get(current)

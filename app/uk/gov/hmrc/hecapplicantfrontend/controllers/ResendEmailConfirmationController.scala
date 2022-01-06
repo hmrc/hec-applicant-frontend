@@ -46,6 +46,8 @@ class ResendEmailConfirmationController @Inject() (
     authAction.andThen(sessionDataAction).async { implicit request =>
       request.sessionData.ensureUserSelectedEmailPresent { userSelectedEmail =>
         val updatedSession = request.sessionData.fold(
+          //sets the resend flag to false since we are going back to normal email journey bbefore this page.
+          //other wise the previous method in journey service don't work
           _.copy(hasResendEmailConfirmation = false),
           _.copy(
             hasResendEmailConfirmation = false
@@ -74,6 +76,7 @@ class ResendEmailConfirmationController @Inject() (
           updatedSession       =
             request.sessionData
               .fold(
+                //Sets the resend flag true as soon as Resend button is clicked
                 _.copy(userEmailAnswers = updatedEmailAnswers, hasResendEmailConfirmation = true),
                 _.copy(userEmailAnswers = updatedEmailAnswers, hasResendEmailConfirmation = true)
               )
