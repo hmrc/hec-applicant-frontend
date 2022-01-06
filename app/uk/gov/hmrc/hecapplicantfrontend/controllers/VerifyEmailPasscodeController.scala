@@ -67,6 +67,19 @@ class VerifyEmailPasscodeController @Inject() (
     session.ensureUserSelectedEmailPresent { userSelectedEmail =>
       val isGGEmailInSession = verifyGGEmailInSession(session)
 
+      def getNextOrNoMatch(passcodeVerificationResult: PasscodeVerificationResult, updatedSession: HECSession)
+        : EitherT[Future, Error, Either[PasscodeVerificationResult, Call]] = passcodeVerificationResult match {
+
+        case PasscodeVerificationResult.NoMatch => EitherT.pure[Future, Error](Left(PasscodeVerificationResult.NoMatch))
+        case _                                  =>
+          journeyService
+            .updateAndNext(
+              routes.VerifyEmailPasscodeController.verifyEmailPasscode(),
+              updatedSession
+            )
+            .map(Right(_))
+      }
+
       def handleValidPasscode(passcode: Passcode): Future[Result] = {
         val result = for {
           passcodeVerificationResult <-
@@ -77,22 +90,7 @@ class VerifyEmailPasscodeController @Inject() (
               .map(_.copy(passcode = passcode.some, passcodeVerificationResult = passcodeVerificationResult.some))
           updatedSession              =
             session.fold(_.copy(userEmailAnswers = updatedEmailAnswers), _.copy(userEmailAnswers = updatedEmailAnswers))
-          nextOrNoMatch              <- passcodeVerificationResult match {
-                                          case PasscodeVerificationResult.NoMatch =>
-                                            val noMatch
-                                              : EitherT[Future, Error, Either[PasscodeVerificationResult.NoMatch.type, Call]] =
-                                              EitherT.pure[Future, Error](Left(PasscodeVerificationResult.NoMatch))
-                                            noMatch
-                                          case _                                  =>
-                                            val call: EitherT[Future, Error, Either[PasscodeVerificationResult.NoMatch.type, Call]] =
-                                              journeyService
-                                                .updateAndNext(
-                                                  routes.VerifyEmailPasscodeController.verifyEmailPasscode(),
-                                                  updatedSession
-                                                )
-                                                .map(Right(_))
-                                            call
-                                        }
+          nextOrNoMatch              <- getNextOrNoMatch(passcodeVerificationResult, updatedSession)
         } yield nextOrNoMatch
 
         result.fold(
