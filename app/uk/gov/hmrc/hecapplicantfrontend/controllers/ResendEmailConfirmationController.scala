@@ -48,9 +48,9 @@ class ResendEmailConfirmationController @Inject() (
         val updatedSession = request.sessionData.fold(
           //sets the resend flag to false since we are going back to normal email journey bbefore this page.
           //other wise the previous method in journey service don't work
-          _.copy(hasResendEmailConfirmation = false),
+          _.copy(hasResentEmailConfirmation = false),
           _.copy(
-            hasResendEmailConfirmation = false
+            hasResentEmailConfirmation = false
           )
         )
         sessionStore
@@ -77,8 +77,8 @@ class ResendEmailConfirmationController @Inject() (
             request.sessionData
               .fold(
                 //Sets the resend flag true as soon as Resend button is clicked
-                _.copy(userEmailAnswers = updatedEmailAnswers, hasResendEmailConfirmation = true),
-                _.copy(userEmailAnswers = updatedEmailAnswers, hasResendEmailConfirmation = true)
+                _.copy(userEmailAnswers = updatedEmailAnswers, hasResentEmailConfirmation = true),
+                _.copy(userEmailAnswers = updatedEmailAnswers, hasResentEmailConfirmation = true)
               )
           next                <- journeyService.updateAndNext(routes.ResendEmailConfirmationController.resendEmail(), updatedSession)
         } yield next

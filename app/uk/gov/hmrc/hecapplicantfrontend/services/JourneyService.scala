@@ -185,7 +185,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
 
     if (r.sessionData.isEmailRequested) {
       //checks if resend flag is on, then the journey start point is ResendEmailConfirmationController else TaxCheckCompleteController
-      if (r.sessionData.hasResendEmailConfirmation) {
+      if (r.sessionData.hasResentEmailConfirmation) {
         exitPageToPreviousPage
           .get(current)
           .orElse(loop(routes.ResendEmailConfirmationController.resendEmail()))

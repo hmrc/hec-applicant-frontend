@@ -87,9 +87,9 @@ class ResendEmailConfirmationControllerSpec
                 passcodeRequestResult = PasscodeRequestResult.PasscodeSent.some
               )
               .some,
-            hasResendEmailConfirmation = true
+            hasResentEmailConfirmation = true
           )
-          val updatedSession = session.copy(hasResendEmailConfirmation = false)
+          val updatedSession = session.copy(hasResentEmailConfirmation = false)
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
@@ -109,9 +109,9 @@ class ResendEmailConfirmationControllerSpec
               passcodeRequestResult = PasscodeRequestResult.PasscodeSent.some
             )
             .some,
-          hasResendEmailConfirmation = true
+          hasResentEmailConfirmation = true
         )
-        val updatedSession = session.copy(hasResendEmailConfirmation = false)
+        val updatedSession = session.copy(hasResentEmailConfirmation = false)
 
         inSequence {
           mockAuthWithNoRetrievals()
@@ -188,7 +188,7 @@ class ResendEmailConfirmationControllerSpec
           val updatedSession =
             session.copy(
               userEmailAnswers = Fixtures.userEmailAnswers(passcodeRequestResult = PasscodeSent.some).some,
-              hasResendEmailConfirmation = true
+              hasResentEmailConfirmation = true
             )
 
           inSequence {
@@ -219,7 +219,7 @@ class ResendEmailConfirmationControllerSpec
         val updatedSession =
           session.copy(
             userEmailAnswers = Fixtures.userEmailAnswers(passcodeRequestResult = PasscodeSent.some).some,
-            hasResendEmailConfirmation = true
+            hasResentEmailConfirmation = true
           )
 
         inSequence {

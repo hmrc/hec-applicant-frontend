@@ -1858,7 +1858,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               Some(HECTaxCheck(HECTaxCheckCode("code"), LocalDate.now.plusDays(1))),
               Some(taxCheckStartDateTime),
               isEmailRequested = true,
-              hasResendEmailConfirmation = true,
+              hasResentEmailConfirmation = true,
               userEmailAnswers = userEmailAnswers.some
             )
             implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
@@ -3102,7 +3102,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             Some(HECTaxCheck(HECTaxCheckCode("code"), LocalDate.now.plusDays(1))),
             Some(taxCheckStartDateTime),
             isEmailRequested = true,
-            hasResendEmailConfirmation = true,
+            hasResentEmailConfirmation = true,
             userEmailAnswers = Fixtures.userEmailAnswers(passcodeRequestResult = PasscodeSent.some).some
           )
           implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)

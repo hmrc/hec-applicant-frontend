@@ -62,7 +62,7 @@ class HECSessionDataSpec extends AnyWordSpec with Matchers {
           |  "hasConfirmedDetails" : false,
           |  "type":"Individual",
           |  "isEmailRequested" : false,
-          |  "hasResendEmailConfirmation" : false
+          |  "hasResentEmailConfirmation" : false
           |}""".stripMargin)
 
       val companyLoginData =
@@ -86,7 +86,7 @@ class HECSessionDataSpec extends AnyWordSpec with Matchers {
           |  "crnBlocked" : false,
           |  "type":"Company",
           |  "isEmailRequested" : false,
-          |  "hasResendEmailConfirmation" : false
+          |  "hasResentEmailConfirmation" : false
           |}""".stripMargin)
 
       "serialize Individual session data" in {

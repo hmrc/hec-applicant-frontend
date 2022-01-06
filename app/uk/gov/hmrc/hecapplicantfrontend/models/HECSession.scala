@@ -39,7 +39,7 @@ trait HECSession extends Product with Serializable {
   val taxCheckStartDateTime: Option[ZonedDateTime]
   val unexpiredTaxChecks: List[TaxCheckListItem]
   val isEmailRequested: Boolean
-  val hasResendEmailConfirmation: Boolean //flag added to separate the resend email confirmaation journey
+  val hasResentEmailConfirmation: Boolean //flag added to separate the resend email confirmaation journey
   val userEmailAnswers: Option[UserEmailAnswers]
 
 }
@@ -56,7 +56,7 @@ object HECSession {
     hasConfirmedDetails: Boolean,
     relevantIncomeTaxYear: Option[TaxYear],
     isEmailRequested: Boolean,
-    hasResendEmailConfirmation: Boolean,
+    hasResentEmailConfirmation: Boolean,
     userEmailAnswers: Option[UserEmailAnswers]
   ) extends HECSession {
     override val entityType: EntityType = EntityType.Individual
@@ -90,7 +90,7 @@ object HECSession {
     unexpiredTaxChecks: List[TaxCheckListItem],
     crnBlocked: Boolean = false,
     isEmailRequested: Boolean,
-    hasResendEmailConfirmation: Boolean,
+    hasResentEmailConfirmation: Boolean,
     userEmailAnswers: Option[UserEmailAnswers]
   ) extends HECSession {
     override val entityType: EntityType = EntityType.Company
@@ -107,7 +107,7 @@ object HECSession {
         None,
         List.empty,
         isEmailRequested = false,
-        hasResendEmailConfirmation = false,
+        hasResentEmailConfirmation = false,
         userEmailAnswers = None
       )
 
@@ -203,7 +203,10 @@ object HECSession {
       ) match {
         case (Some(pvr), Some(PasscodeSent)) if pvr === PasscodeVerificationResult.Match    => f
         case (None, Some(prr)) if prr === PasscodeRequestResult.EmailAddressAlreadyVerified => f
-        case (other, _)                                                                     => sys.error(s"Expected passcode verification result 'Match' expected but got '$other'")
+        case (other, otherPrr)                                                              =>
+          sys.error(
+            s"Passcode verification result 'Match' is expected but got '$other', Passcode Request Result is '$otherPrr' "
+          )
       }
 
   }
