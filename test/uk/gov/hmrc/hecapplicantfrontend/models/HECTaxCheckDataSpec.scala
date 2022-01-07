@@ -37,7 +37,7 @@ class HECTaxCheckDataSpec extends AnyWordSpec with Matchers {
   "HECTaxCheckData" must {
     val taxCheckStartDateTime = ZonedDateTime.of(2021, 10, 9, 9, 12, 34, 0, ZoneId.of("Europe/London"))
     "perform JSON de/serialisation correctly" must {
-      val dateOfBirthStr = "20001010"
+      val dateOfBirthStr = "2000-10-10"
       val dateOfBirth    = LocalDate.of(2000, 10, 10)
 
       val individualTaxCheckData: HECTaxCheckData =

@@ -29,7 +29,7 @@ class HECSessionDataSpec extends AnyWordSpec with Matchers {
   "HECSessionData" must {
 
     "perform JSON de/serialisation correctly" must {
-      val dateOfBirthStr = "20001010"
+      val dateOfBirthStr = "2000-10-10"
       val dateOfBirth    = LocalDate.of(2000, 10, 10)
 
       val individualLoginData =

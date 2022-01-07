@@ -198,7 +198,7 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
         |            "firstName" : "First",
         |            "lastName" : "Last"
         |        },
-        |        "dateOfBirth" : "20000102"
+        |        "dateOfBirth" : "2000-01-02"
         |    },
         |    "retrievedJourneyData" : {},
         |    "userAnswers" : {
@@ -220,7 +220,7 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
           s"""
             |{
             |  "serviceExitReason": "SAUTRNotFound",
-            |  "serviceExitDescription": "SA UTR not found for the Applicant's NINO",
+            |  "serviceExitDescription": "SA UTR not found for the Applicant's NINO.",
             |  "taxCheckSessionData": $sessionJson
             |}
             |""".stripMargin
@@ -235,7 +235,7 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
           s"""
              |{
              |  "serviceExitReason": "SANoNoticeToFileOrTaxReturn",
-             |  "serviceExitDescription": "For relevant income tax year, Self Assessment Notice to File not found, Self Assessment Tax Return not found",
+             |  "serviceExitDescription": "For relevant income tax year, Self Assessment Notice to File not found, Self Assessment Tax Return not found.",
              |  "taxCheckSessionData": $sessionJson
              |}
              |""".stripMargin
@@ -250,7 +250,7 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
           s"""
              |{
              |  "serviceExitReason": "CTEnteredCTUTRNotMatchingBlocked",
-             |  "serviceExitDescription": "Applicant has made repeated attempts to provide a matching CT UTR. Attempts limit reached, so Applicant temporarily blocked from making an Application for that CRN",
+             |  "serviceExitDescription": "Applicant has made repeated attempts to provide a matching CT UTR. Attempts limit reached, so Applicant temporarily blocked from making an Application for that CRN.",
              |  "taxCheckSessionData": $sessionJson
              |}
              |""".stripMargin
@@ -265,7 +265,7 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
           s"""
              |{
              |  "serviceExitReason": "CTNoNoticeToFileOrTaxReturn",
-             |  "serviceExitDescription": "For relevant accounting period, Corporation Tax Notice to File not found, Corporation Tax Return not found",
+             |  "serviceExitDescription": "For relevant accounting period, Corporation Tax Notice to File not found, Corporation Tax Return not found.",
              |  "taxCheckSessionData": $sessionJson
              |}
              |""".stripMargin
@@ -280,7 +280,7 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
           s"""
              |{
              |  "serviceExitReason": "CTNoAccountingPeriodNotRecentlyStartedTrading",
-             |  "serviceExitDescription": "No relevant accounting period was found on tax summary record for the lookback period, and the Applicant's Company has not recently started trading",
+             |  "serviceExitDescription": "No relevant accounting period was found on tax summary record for the lookback period, and the Applicant's Company has not recently started trading.",
              |  "taxCheckSessionData": $sessionJson
              |}
              |""".stripMargin
@@ -295,7 +295,7 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
           s"""
              |{
              |  "serviceExitReason": "AllowedTaxChecksExceeded",
-             |  "serviceExitDescription": "Attempted tax check for Licence Type exceeded number of permitted existing tax check codes, for a particular Applicant",
+             |  "serviceExitDescription": "Attempted tax check for Licence Type exceeded number of permitted existing tax check codes, for a particular Applicant.",
              |  "taxCheckSessionData": $sessionJson
              |}
              |""".stripMargin
