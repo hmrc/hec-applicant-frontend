@@ -16,20 +16,22 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.controllers
 
+import cats.data.EitherT
 import cats.implicits.catsSyntaxOptionId
 import com.google.inject.Inject
 import play.api.i18n.I18nSupport
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import play.api.mvc.{Action, AnyContent, Call, MessagesControllerComponents, Result}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.VerifyEmailPasscodeController.{verifyGGEmailInSession, verifyPasscodeForm}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
-import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.Passcode
+import uk.gov.hmrc.hecapplicantfrontend.models.{Error, HECSession}
+import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{Passcode, PasscodeVerificationResult}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.{EmailVerificationService, JourneyService}
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 class VerifyResentEmailPasscodeController @Inject() (
   authAction: AuthAction,
@@ -81,7 +83,18 @@ class VerifyResentEmailPasscodeController @Inject() (
       session.ensureUserSelectedEmailPresent { userSelectedEmail =>
         val isGGEmailInSession = verifyGGEmailInSession(session)
 
-        def handleValidPasscode(passcode: Passcode) = {
+        def getNextOrNoMatch(passcodeVerificationResult: PasscodeVerificationResult, updatedSession: HECSession)
+          : EitherT[Future, Error, Either[PasscodeVerificationResult, Call]] = passcodeVerificationResult match {
+
+          case PasscodeVerificationResult.NoMatch =>
+            EitherT.pure[Future, Error](Left(PasscodeVerificationResult.NoMatch))
+          case _                                  =>
+            journeyService
+              .updateAndNext(routes.VerifyResentEmailPasscodeController.verifyResentEmailPasscode(), updatedSession)
+              .map(Right(_))
+        }
+
+        def handleValidPasscode(passcode: Passcode): Future[Result] = {
           val result = for {
             passcodeVerificationResult <-
               emailVerificationService.verifyPasscode(passcode, userSelectedEmail.emailAddress)
@@ -95,15 +108,26 @@ class VerifyResentEmailPasscodeController @Inject() (
                   _.copy(userEmailAnswers = updatedEmailAnswers, hasResentEmailConfirmation = true),
                   _.copy(userEmailAnswers = updatedEmailAnswers, hasResentEmailConfirmation = true)
                 )
-            next                       <-
-              journeyService
-                .updateAndNext(routes.VerifyResentEmailPasscodeController.verifyResentEmailPasscode(), updatedSession)
 
-          } yield next
+            nextOrNoMatch <- getNextOrNoMatch(passcodeVerificationResult, updatedSession)
+
+          } yield nextOrNoMatch
 
           result.fold(
             _.doThrow("Could not update session and proceed"),
-            Redirect
+            _.fold(
+              _ =>
+                Ok(
+                  verifyResentPasscodePage(
+                    verifyPasscodeForm()
+                      .withError("passcode", "error.noMatch"),
+                    journeyService.previous(routes.VerifyResentEmailPasscodeController.verifyResentEmailPasscode()),
+                    userSelectedEmail.emailAddress,
+                    isGGEmailInSession
+                  )
+                ),
+              Redirect
+            )
           )
         }
 

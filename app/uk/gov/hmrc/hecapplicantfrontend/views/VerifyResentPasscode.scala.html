@@ -67,7 +67,7 @@ Request[_], messages: Messages)
     @messages(s"$key.p3")
     </p>
 
-    @formWithCSRF(action = routes.VerifyEmailPasscodeController.verifyEmailPasscodeSubmit()) {
+    @formWithCSRF(action = routes.VerifyResentEmailPasscodeController.verifyResentEmailPasscodeSubmit()) {
         @govukInput(Input(
             id = fieldKey,
             name = fieldKey,
