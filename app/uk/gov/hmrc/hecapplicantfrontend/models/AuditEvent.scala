@@ -124,14 +124,14 @@ object AuditEvent {
     final case class SAUTRNotFound(taxCheckSessionData: HECSession) extends TaxCheckExit {
       val serviceExitReason: String = "SAUTRNotFound"
 
-      val serviceExitDescription: String = "SA UTR not found for the Applicant's NINO"
+      val serviceExitDescription: String = "SA UTR not found for the Applicant's NINO."
     }
 
     final case class SANoNoticeToFileOrTaxReturn(taxCheckSessionData: HECSession) extends TaxCheckExit {
       val serviceExitReason: String = "SANoNoticeToFileOrTaxReturn"
 
       val serviceExitDescription: String =
-        "For relevant income tax year, Self Assessment Notice to File not found, Self Assessment Tax Return not found"
+        "For relevant income tax year, Self Assessment Notice to File not found, Self Assessment Tax Return not found."
     }
 
     final case class CTEnteredCTUTRNotMatchingBlocked(taxCheckSessionData: HECSession) extends TaxCheckExit {
@@ -139,14 +139,14 @@ object AuditEvent {
 
       val serviceExitDescription: String =
         "Applicant has made repeated attempts to provide a matching CT UTR. Attempts limit reached, " +
-          "so Applicant temporarily blocked from making an Application for that CRN"
+          "so Applicant temporarily blocked from making an Application for that CRN."
     }
 
     final case class CTNoNoticeToFileOrTaxReturn(taxCheckSessionData: HECSession) extends TaxCheckExit {
       val serviceExitReason: String = "CTNoNoticeToFileOrTaxReturn"
 
       val serviceExitDescription: String =
-        "For relevant accounting period, Corporation Tax Notice to File not found, Corporation Tax Return not found"
+        "For relevant accounting period, Corporation Tax Notice to File not found, Corporation Tax Return not found."
     }
 
     final case class CTNoAccountingPeriodNotRecentlyStartedTrading(taxCheckSessionData: HECSession)
@@ -155,7 +155,7 @@ object AuditEvent {
 
       val serviceExitDescription: String =
         "No relevant accounting period was found on tax summary record for the lookback period, and the " +
-          "Applicant's Company has not recently started trading"
+          "Applicant's Company has not recently started trading."
     }
 
     final case class AllowedTaxChecksExceeded(taxCheckSessionData: HECSession) extends TaxCheckExit {
@@ -163,7 +163,7 @@ object AuditEvent {
 
       val serviceExitDescription: String =
         "Attempted tax check for Licence Type exceeded number of permitted existing tax check codes, " +
-          "for a particular Applicant"
+          "for a particular Applicant."
     }
 
   }

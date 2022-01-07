@@ -30,7 +30,7 @@ class DateOfBirthSpec extends AnyWordSpec with Matchers {
       val dob = DateOfBirth(LocalDate.of(2012, 5, 31))
 
       val json = Json.toJson(dob)
-      json                             shouldBe JsString("20120531")
+      json                             shouldBe JsString("2012-05-31")
       Json.fromJson[DateOfBirth](json) shouldBe JsSuccess(dob)
     }
 
