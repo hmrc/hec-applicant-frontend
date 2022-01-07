@@ -69,6 +69,20 @@ class ConfirmEmailAddressControllerSpec
 
       "return a technical error" when {
 
+        "an email has not been requested" in {
+          val session = Fixtures.individualHECSession(
+            loginData = Fixtures.individualLoginData(emailAddress = EmailAddress("user@test.com").some),
+            userAnswers = Fixtures.completeIndividualUserAnswers(),
+            isEmailRequested = false
+          )
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+          }
+          assertThrows[RuntimeException](await(performAction()))
+        }
+
         "GG account email id is not in session" in {
           val session = Fixtures.individualHECSession(
             userAnswers = Fixtures.completeIndividualUserAnswers(),
@@ -238,6 +252,20 @@ class ConfirmEmailAddressControllerSpec
       }
 
       "return a technical error" when {
+
+        "an email has not been requested" in {
+          val session = Fixtures.individualHECSession(
+            loginData = Fixtures.individualLoginData(emailAddress = ggEmailId.some),
+            userAnswers = Fixtures.completeIndividualUserAnswers(),
+            isEmailRequested = false
+          )
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+          }
+          assertThrows[RuntimeException](await(performAction()))
+        }
 
         "no ggEmail is found in the session" in {
           val session = Fixtures.individualHECSession(

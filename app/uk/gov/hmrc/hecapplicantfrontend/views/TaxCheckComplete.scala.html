@@ -19,12 +19,13 @@
 @import play.api.mvc.Request
 @import play.twirl.api.Html
 @import uk.gov.hmrc.govukfrontend.views.html.components._
+@import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 @import uk.gov.hmrc.hecapplicantfrontend.util.TimeUtils
 @import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 
 @this(layout: Layout, govukPanel : GovukPanel, copyButton: components.CopyButton)
 
-@(hecTaxCheck: HECTaxCheck)(implicit request: Request[_], messages: Messages)
+@(hecTaxCheck: HECTaxCheck)(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
 @key = @{"taxCheckComplete"}
 @title = @{messages(s"$key.title")}
 
@@ -48,7 +49,7 @@
 
     <ul class="govuk-list govuk-list--bullet govuk-!-margin-bottom-7">
         <li class="js-visible">@Html(messages(s"$key.list1"))</li>
-        <li>@Html(messages(s"$key.list2", routes.TaxCheckCompleteController.emailTaxCheckCode().url))</li>
+        @if(appConfig.sendEmailEnabled){ <li>@Html(messages(s"$key.list2", routes.TaxCheckCompleteController.emailTaxCheckCode().url))</li> }
         <li>@Html(messages(s"$key.list3", routes.StartController.start().url))</li>
     </ul>
 

@@ -48,59 +48,63 @@ class EnterEmailAddressController @Inject() (
     with Logging {
 
   val enterEmailAddress: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
-    val userEmailAnswerOpt: Option[UserEmailAnswers] = request.sessionData.userEmailAnswers
+    request.sessionData.ensureEmailHasBeenRequested {
+      val userEmailAnswerOpt: Option[UserEmailAnswers] = request.sessionData.userEmailAnswers
 
-    val updatedSession =
-      request.sessionData.fold(_.copy(hasResentEmailConfirmation = false), _.copy(hasResentEmailConfirmation = false))
+      val updatedSession =
+        request.sessionData.fold(_.copy(hasResentEmailConfirmation = false), _.copy(hasResentEmailConfirmation = false))
 
-    sessionStore
-      .store(updatedSession)
-      .fold(
-        _.doThrow("Could not update session and proceed"),
-        _ => {
-          val req  = RequestWithSessionData(request.request, updatedSession)
-          //reason for explicitly passing req and hc is same as mentioned in ConfirmEmailAddressController
-          val back = journeyService.previous(routes.EnterEmailAddressController.enterEmailAddress())(req, hc)
-          val form =
-            userEmailAnswerOpt.fold(enterEmailAddressForm)(uea => enterEmailAddressForm.fill(uea.userSelectedEmail))
-          Ok(enterEmailAddressPage(form, back))
-        }
-      )
-
+      sessionStore
+        .store(updatedSession)
+        .fold(
+          _.doThrow("Could not update session and proceed"),
+          _ => {
+            val req  = RequestWithSessionData(request.request, updatedSession)
+            //reason for explicitly passing req and hc is same as mentioned in ConfirmEmailAddressController
+            val back = journeyService.previous(routes.EnterEmailAddressController.enterEmailAddress())(req, hc)
+            val form =
+              userEmailAnswerOpt.fold(enterEmailAddressForm)(uea => enterEmailAddressForm.fill(uea.userSelectedEmail))
+            Ok(enterEmailAddressPage(form, back))
+          }
+        )
+    }
   }
 
   val enterEmailAddressSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
-    def handleValidEmail(userSelectedEmail: UserSelectedEmail) = {
-      val result = for {
-        passcodeResult     <-
-          emailVerificationService.requestPasscode(userSelectedEmail.emailAddress)
-        updatedEmailAnswers =
-          Some(UserEmailAnswers(userSelectedEmail, passcodeResult.some, None, None, None))
-        updatedSession      =
-          request.sessionData
-            .fold(_.copy(userEmailAnswers = updatedEmailAnswers), _.copy(userEmailAnswers = updatedEmailAnswers))
-        next               <-
-          journeyService.updateAndNext(routes.EnterEmailAddressController.enterEmailAddress(), updatedSession)
-      } yield next
+    request.sessionData.ensureEmailHasBeenRequested {
+      def handleValidEmail(userSelectedEmail: UserSelectedEmail) = {
+        val result = for {
+          passcodeResult     <-
+            emailVerificationService.requestPasscode(userSelectedEmail.emailAddress)
+          updatedEmailAnswers =
+            Some(UserEmailAnswers(userSelectedEmail, passcodeResult.some, None, None, None))
+          updatedSession      =
+            request.sessionData
+              .fold(_.copy(userEmailAnswers = updatedEmailAnswers), _.copy(userEmailAnswers = updatedEmailAnswers))
+          next               <-
+            journeyService.updateAndNext(routes.EnterEmailAddressController.enterEmailAddress(), updatedSession)
+        } yield next
 
-      result.fold(
-        _.doThrow("Could not update session and proceed"),
-        Redirect
-      )
+        result.fold(
+          _.doThrow("Could not update session and proceed"),
+          Redirect
+        )
 
+      }
+
+      enterEmailAddressForm
+        .bindFromRequest()
+        .fold(
+          formWithErrors =>
+            Ok(
+              enterEmailAddressPage(
+                formWithErrors,
+                journeyService.previous(routes.EnterEmailAddressController.enterEmailAddress())
+              )
+            ),
+          handleValidEmail
+        )
     }
-    enterEmailAddressForm
-      .bindFromRequest()
-      .fold(
-        formWithErrors =>
-          Ok(
-            enterEmailAddressPage(
-              formWithErrors,
-              journeyService.previous(routes.EnterEmailAddressController.enterEmailAddress())
-            )
-          ),
-        handleValidEmail
-      )
   }
 
 }

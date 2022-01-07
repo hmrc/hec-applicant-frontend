@@ -122,4 +122,7 @@ class AppConfig @Inject() (config: Configuration, contactFrontendConfig: Contact
   val maxCtutrAnswerAttempts: Int = config.get[Int]("ctutr-attempts.maximum-attempts")
 
   val maxTaxChecksPerLicenceType: Int = config.get[Int]("max-tax-checks-per-licence-type")
+
+  val sendEmailEnabled: Boolean = config.get[Boolean]("email-send.enabled")
+
 }
