@@ -175,31 +175,4 @@ object VerifyEmailPasscodeController {
         _.copy(userEmailAnswers = updatedEmailAnswers),
         _.copy(userEmailAnswers = updatedEmailAnswers)
       )
-
-//  def handleValidPasscode(
-//    pageResult: Result,
-//    passcode: Passcode,
-//    emailAddress: EmailAddress,
-//    currentCall: Call,
-//    emailVerificationService: EmailVerificationService,
-//    journeyService: JourneyService
-//  )(implicit
-//    hc: HeaderCarrier,
-//    ec: ExecutionContext,
-//    request: RequestWithSessionData[_]
-//  ): Future[Result] =
-//    getNextOrNoMatchResult(
-//      passcode,
-//      emailAddress,
-//      currentCall,
-//      emailVerificationService,
-//      journeyService
-//    ).fold(
-//      _.doThrow("Could not update session and proceed"),
-//      _.fold(
-//        _ => pageResult,
-//        Redirect
-//      )
-//    )
-
 }
