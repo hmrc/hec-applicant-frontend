@@ -16,15 +16,12 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.controllers
 
-//import cats.data.EitherT
-//import cats.implicits.catsSyntaxOptionId
 import com.google.inject.Inject
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.VerifyEmailPasscodeController.{getNextOrNoMatchResult, verifyGGEmailInSession, verifyPasscodeForm}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
-//import uk.gov.hmrc.hecapplicantfrontend.models.{Error, HECSession}
-import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{Passcode}
+import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.Passcode
 import uk.gov.hmrc.hecapplicantfrontend.services.{EmailVerificationService, JourneyService}
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.hecapplicantfrontend.views.html
@@ -65,42 +62,13 @@ class VerifyResentEmailPasscodeController @Inject() (
         val isGGEmailInSession = verifyGGEmailInSession(session)
         val currentCall        = routes.VerifyResentEmailPasscodeController.verifyResentEmailPasscode()
 
-//        def getNextOrNoMatch(passcodeVerificationResult: PasscodeVerificationResult, updatedSession: HECSession)
-//          : EitherT[Future, Error, Either[PasscodeVerificationResult, Call]] = passcodeVerificationResult match {
-//
-//          case PasscodeVerificationResult.NoMatch =>
-//            EitherT.pure[Future, Error](Left(PasscodeVerificationResult.NoMatch))
-//          case _                                  =>
-//            journeyService
-//              .updateAndNext(routes.VerifyResentEmailPasscodeController.verifyResentEmailPasscode(), updatedSession)
-//              .map(Right(_))
-//        }
-
         def handleValidPasscode(passcode: Passcode): Future[Result] =
-//          val result = for {
-//            passcodeVerificationResult <-
-//              emailVerificationService.verifyPasscode(passcode, userSelectedEmail.emailAddress)
-//            currentEmailAnswers         = session.userEmailAnswers
-//            updatedEmailAnswers         =
-//              currentEmailAnswers
-//                .map(_.copy(passcode = passcode.some, passcodeVerificationResult = passcodeVerificationResult.some))
-//            updatedSession              =
-//              session
-//                .fold(
-//                  _.copy(userEmailAnswers = updatedEmailAnswers),
-//                  _.copy(userEmailAnswers = updatedEmailAnswers)
-//                )
-//
-//            nextOrNoMatch <- getNextOrNoMatch(passcodeVerificationResult, updatedSession)
-//
-//          } yield nextOrNoMatch
           getNextOrNoMatchResult(
             passcode,
             userSelectedEmail.emailAddress,
             currentCall,
             emailVerificationService,
-            journeyService,
-            false
+            journeyService
           ).fold(
             _.doThrow("Could not update session and proceed"),
             _.fold(

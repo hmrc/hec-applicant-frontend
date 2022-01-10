@@ -66,6 +66,21 @@ class EnterEmailAddressControllerSpec
     "handling request to enter email address page" must {
       def performAction(): Future[Result] = controller.enterEmailAddress(FakeRequest())
 
+      "throw technical error " when {
+
+        "call to update session fails" in {
+          val session = Fixtures.individualHECSession(isEmailRequested = true, hasResentEmailConfirmation = true)
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockStoreSession(session.copy(hasResentEmailConfirmation = false))(Left(Error("")))
+          }
+          assertThrows[RuntimeException](await(performAction()))
+        }
+
+      }
+
       "display the page" when {
 
         def test(userEmailAnswers: Option[UserEmailAnswers]) = {
@@ -79,6 +94,7 @@ class EnterEmailAddressControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
+            mockStoreSession(session.copy(hasResentEmailConfirmation = false))(Right(()))
             mockJourneyServiceGetPrevious(routes.EnterEmailAddressController.enterEmailAddress(), session)(
               mockPreviousCall
             )

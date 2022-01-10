@@ -58,7 +58,6 @@ class ConfirmEmailAddressController @Inject() (
       //and we need flag true there in order to load the page properly (previous route calculation)
       val updatedSession =
         request.sessionData.fold(_.copy(hasResentEmailConfirmation = false), _.copy(hasResentEmailConfirmation = false))
-
       sessionStore
         .store(updatedSession)
         .fold(

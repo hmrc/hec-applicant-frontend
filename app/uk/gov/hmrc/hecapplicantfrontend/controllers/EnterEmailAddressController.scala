@@ -24,8 +24,9 @@ import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.ConfirmEmailAddressController.differentEmailAddressMapping
 import uk.gov.hmrc.hecapplicantfrontend.controllers.EnterEmailAddressController.enterEmailAddressForm
-import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
+import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, RequestWithSessionData, SessionDataAction}
 import uk.gov.hmrc.hecapplicantfrontend.models.{EmailType, UserEmailAnswers, UserSelectedEmail}
+import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.{EmailVerificationService, JourneyService}
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.hecapplicantfrontend.views.html
@@ -38,6 +39,7 @@ class EnterEmailAddressController @Inject() (
   sessionDataAction: SessionDataAction,
   journeyService: JourneyService,
   emailVerificationService: EmailVerificationService,
+  sessionStore: SessionStore,
   enterEmailAddressPage: html.EnterEmailaddress,
   mcc: MessagesControllerComponents
 )(implicit ec: ExecutionContext)
@@ -47,10 +49,24 @@ class EnterEmailAddressController @Inject() (
 
   val enterEmailAddress: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     val userEmailAnswerOpt: Option[UserEmailAnswers] = request.sessionData.userEmailAnswers
-    val back                                         = journeyService.previous(routes.EnterEmailAddressController.enterEmailAddress())
-    val form                                         =
-      userEmailAnswerOpt.fold(enterEmailAddressForm)(uea => enterEmailAddressForm.fill(uea.userSelectedEmail))
-    Ok(enterEmailAddressPage(form, back))
+
+    val updatedSession =
+      request.sessionData.fold(_.copy(hasResentEmailConfirmation = false), _.copy(hasResentEmailConfirmation = false))
+
+    sessionStore
+      .store(updatedSession)
+      .fold(
+        _.doThrow("Could not update session and proceed"),
+        _ => {
+          val req  = RequestWithSessionData(request.request, updatedSession)
+          //reason for explicitly passing req and hc is same as mentioned in ConfirmEmailAddressController
+          val back = journeyService.previous(routes.EnterEmailAddressController.enterEmailAddress())(req, hc)
+          val form =
+            userEmailAnswerOpt.fold(enterEmailAddressForm)(uea => enterEmailAddressForm.fill(uea.userSelectedEmail))
+          Ok(enterEmailAddressPage(form, back))
+        }
+      )
+
   }
 
   val enterEmailAddressSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>

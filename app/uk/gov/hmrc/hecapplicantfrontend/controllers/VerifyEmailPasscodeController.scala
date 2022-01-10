@@ -66,16 +66,16 @@ class VerifyEmailPasscodeController @Inject() (
   val verifyEmailPasscodeSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     val session = request.sessionData
     session.ensureUserSelectedEmailPresent { userSelectedEmail =>
-      val isGGEmailInSession                                      = verifyGGEmailInSession(session)
-      val currentCall                                             = routes.VerifyEmailPasscodeController.verifyEmailPasscode()
+      val isGGEmailInSession = verifyGGEmailInSession(session)
+      val currentCall        = routes.VerifyEmailPasscodeController.verifyEmailPasscode()
+
       def handleValidPasscode(passcode: Passcode): Future[Result] =
         getNextOrNoMatchResult(
           passcode,
           userSelectedEmail.emailAddress,
           currentCall,
           emailVerificationService,
-          journeyService,
-          false
+          journeyService
         ).fold(
           _.doThrow("Could not update session and proceed"),
           _.fold(
@@ -153,8 +153,7 @@ object VerifyEmailPasscodeController {
     emailAddress: EmailAddress,
     currentCall: Call,
     emailVerificationService: EmailVerificationService,
-    journeyService: JourneyService,
-    isResent: Boolean
+    journeyService: JourneyService
   )(implicit
     hc: HeaderCarrier,
     ec: ExecutionContext,
@@ -166,23 +165,41 @@ object VerifyEmailPasscodeController {
     updatedEmailAnswers         =
       currentEmailAnswers
         .map(_.copy(passcode = passcode.some, passcodeVerificationResult = passcodeVerificationResult.some))
-    updatedSession              = getUpdatedSession(isResent, request.sessionData, updatedEmailAnswers)
+    updatedSession              = getUpdatedSession(request.sessionData, updatedEmailAnswers)
     nextOrNoMatch              <- getNextOrNoMatch(passcodeVerificationResult, updatedSession, journeyService, currentCall)
   } yield nextOrNoMatch
 
-  private def getUpdatedSession(isResent: Boolean, session: HECSession, updatedEmailAnswers: Option[UserEmailAnswers]) =
-    if (isResent) {
-      session
-        .fold(
-          _.copy(userEmailAnswers = updatedEmailAnswers, hasResentEmailConfirmation = true),
-          _.copy(userEmailAnswers = updatedEmailAnswers, hasResentEmailConfirmation = true)
-        )
-    } else {
-      session
-        .fold(
-          _.copy(userEmailAnswers = updatedEmailAnswers),
-          _.copy(userEmailAnswers = updatedEmailAnswers)
-        )
-    }
+  private def getUpdatedSession(session: HECSession, updatedEmailAnswers: Option[UserEmailAnswers]) =
+    session
+      .fold(
+        _.copy(userEmailAnswers = updatedEmailAnswers),
+        _.copy(userEmailAnswers = updatedEmailAnswers)
+      )
+
+//  def handleValidPasscode(
+//    pageResult: Result,
+//    passcode: Passcode,
+//    emailAddress: EmailAddress,
+//    currentCall: Call,
+//    emailVerificationService: EmailVerificationService,
+//    journeyService: JourneyService
+//  )(implicit
+//    hc: HeaderCarrier,
+//    ec: ExecutionContext,
+//    request: RequestWithSessionData[_]
+//  ): Future[Result] =
+//    getNextOrNoMatchResult(
+//      passcode,
+//      emailAddress,
+//      currentCall,
+//      emailVerificationService,
+//      journeyService
+//    ).fold(
+//      _.doThrow("Could not update session and proceed"),
+//      _.fold(
+//        _ => pageResult,
+//        Redirect
+//      )
+//    )
 
 }
