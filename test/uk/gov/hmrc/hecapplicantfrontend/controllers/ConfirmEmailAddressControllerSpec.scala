@@ -81,6 +81,22 @@ class ConfirmEmailAddressControllerSpec
           }
           assertThrows[RuntimeException](await(performAction()))
         }
+
+        "session failed tp get updated" in {
+          val session = Fixtures.individualHECSession(
+            loginData = Fixtures.individualLoginData(emailAddress = EmailAddress("user@test.com").some),
+            userAnswers = Fixtures.completeIndividualUserAnswers(),
+            isEmailRequested = true,
+            hasResentEmailConfirmation = true
+          )
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockStoreSession(session.copy(hasResentEmailConfirmation = false))(Left(Error("")))
+          }
+          assertThrows[RuntimeException](await(performAction()))
+        }
       }
 
       "display the page" when {
@@ -93,10 +109,12 @@ class ConfirmEmailAddressControllerSpec
             userEmailAnswers = userEmailAnswers
           )
 
+          val updatedSession = session.copy(hasResentEmailConfirmation = false)
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockJourneyServiceGetPrevious(routes.ConfirmEmailAddressController.confirmEmailAddress(), session)(
+            mockStoreSession(updatedSession)(Right(()))
+            mockJourneyServiceGetPrevious(routes.ConfirmEmailAddressController.confirmEmailAddress(), updatedSession)(
               mockPreviousCall
             )
           }

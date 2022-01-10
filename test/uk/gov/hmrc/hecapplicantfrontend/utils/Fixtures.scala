@@ -188,7 +188,7 @@ object Fixtures {
     unexpiredTaxChecks: List[TaxCheckListItem] = List.empty,
     crnBlocked: Boolean = false,
     isEmailRequested: Boolean = false,
-    hasResendEmailConfirmation: Boolean = false,
+    hasResentEmailConfirmation: Boolean = false,
     userEmailAnswers: Option[UserEmailAnswers] = None
   ): CompanyHECSession = CompanyHECSession(
     loginData = loginData,
@@ -199,7 +199,7 @@ object Fixtures {
     unexpiredTaxChecks = unexpiredTaxChecks,
     crnBlocked = crnBlocked,
     isEmailRequested = isEmailRequested,
-    hasResentEmailConfirmation = hasResendEmailConfirmation,
+    hasResentEmailConfirmation = hasResentEmailConfirmation,
     userEmailAnswers = userEmailAnswers
   )
 

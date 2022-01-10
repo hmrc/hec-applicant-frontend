@@ -25,8 +25,9 @@ import uk.gov.hmrc.emailaddress.{EmailAddress => EmailAddressValidation}
 import play.api.i18n.I18nSupport
 import play.api.mvc._
 import uk.gov.hmrc.hecapplicantfrontend.controllers.ConfirmEmailAddressController.{emailAddressForm, emailTypeOptions}
-import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
+import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, RequestWithSessionData, SessionDataAction}
 import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, EmailType, UserEmailAnswers, UserSelectedEmail}
+import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
 import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging}
 import uk.gov.hmrc.hecapplicantfrontend.views.html
@@ -42,6 +43,7 @@ class ConfirmEmailAddressController @Inject() (
   sessionDataAction: SessionDataAction,
   journeyService: JourneyService,
   emailVerificationService: EmailVerificationService,
+  sessionStore: SessionStore,
   confirmEmailAddressPage: html.ConfirmEmailAddress,
   mcc: MessagesControllerComponents
 )(implicit ec: ExecutionContext)
@@ -51,17 +53,34 @@ class ConfirmEmailAddressController @Inject() (
 
   val confirmEmailAddress: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     request.sessionData.ensureGGEmailIdPresent { ggEmail =>
-      val userEmailAnswerOpt: Option[UserEmailAnswers] = request.sessionData.userEmailAnswers
-      val back                                         = journeyService.previous(routes.ConfirmEmailAddressController.confirmEmailAddress)
+      //updating the session to false here and enter email address page, cause this is the main email journey but sometime this page has to reach via the resend journey
+      //This hasResentEmailConfirmation flag can't be set to false in previous page because it's verify resend confirmation email
+      //and we need flag true there in order to load the page properly (previous route calculation)
+      val updatedSession =
+        request.sessionData.fold(_.copy(hasResentEmailConfirmation = false), _.copy(hasResentEmailConfirmation = false))
+      sessionStore
+        .store(updatedSession)
+        .fold(
+          _.doThrow("Could not update session and proceed"),
+          _ => {
 
-      val form = {
-        val emptyForm = emailAddressForm(emailTypeOptions, ggEmail)
-        userEmailAnswerOpt.fold(emptyForm)(userEmail =>
-          emptyForm
-            .fill(UserSelectedEmail(userEmail.userSelectedEmail.emailType, userEmail.userSelectedEmail.emailAddress))
+            val req                                          = RequestWithSessionData(request.request, updatedSession)
+            val userEmailAnswerOpt: Option[UserEmailAnswers] = request.sessionData.userEmailAnswers
+            val back                                         = journeyService.previous(routes.ConfirmEmailAddressController.confirmEmailAddress)(req, hc)
+
+            val form = {
+              val emptyForm = emailAddressForm(emailTypeOptions, ggEmail)
+              userEmailAnswerOpt.fold(emptyForm)(userEmail =>
+                emptyForm
+                  .fill(
+                    UserSelectedEmail(userEmail.userSelectedEmail.emailType, userEmail.userSelectedEmail.emailAddress)
+                  )
+              )
+            }
+            Ok(confirmEmailAddressPage(form, back, emailTypeOptions, ggEmail.value))
+          }
         )
-      }
-      Ok(confirmEmailAddressPage(form, back, emailTypeOptions, ggEmail.value))
+
     }
   }
 

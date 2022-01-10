@@ -18,26 +18,89 @@ package uk.gov.hmrc.hecapplicantfrontend.controllers
 
 import com.google.inject.Inject
 import play.api.i18n.I18nSupport
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
+import uk.gov.hmrc.hecapplicantfrontend.controllers.VerifyEmailPasscodeController.{getNextOrNoMatchResult, verifyGGEmailInSession, verifyPasscodeForm}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
-import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
+import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.Passcode
+import uk.gov.hmrc.hecapplicantfrontend.services.{EmailVerificationService, JourneyService}
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
+import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
+
+import scala.concurrent.{ExecutionContext, Future}
 
 class VerifyResentEmailPasscodeController @Inject() (
   authAction: AuthAction,
   sessionDataAction: SessionDataAction,
   journeyService: JourneyService,
+  emailVerificationService: EmailVerificationService,
+  verifyResentPasscodePage: html.VerifyResentPasscode,
   mcc: MessagesControllerComponents
-) extends FrontendController(mcc)
+)(implicit ec: ExecutionContext)
+    extends FrontendController(mcc)
     with I18nSupport
     with Logging {
 
   val verifyResentEmailPasscode: Action[AnyContent] =
     authAction.andThen(sessionDataAction).async { implicit request =>
-      Ok(
-        s"session ${request.sessionData}, back : ${journeyService.previous(routes.VerifyResentEmailPasscodeController.verifyResentEmailPasscode)} "
-      )
+      val session = request.sessionData
+      session.ensureUserSelectedEmailPresent { userSelectedEmail =>
+        val isGGEmailInSession            = verifyGGEmailInSession(session)
+        val passcodeOpt: Option[Passcode] =
+          session.fold(_.userEmailAnswers.flatMap(_.passcode), _.userEmailAnswers.flatMap(_.passcode))
+        val form                          = passcodeOpt.fold(verifyPasscodeForm)(verifyPasscodeForm.fill)
+        val back                          = journeyService.previous(routes.VerifyResentEmailPasscodeController.verifyResentEmailPasscode())
+        Ok(verifyResentPasscodePage(form, back, userSelectedEmail.emailAddress, isGGEmailInSession))
+
+      }
+    }
+
+  val verifyResentEmailPasscodeSubmit: Action[AnyContent] =
+    authAction.andThen(sessionDataAction).async { implicit request =>
+      val session = request.sessionData
+      session.ensureUserSelectedEmailPresent { userSelectedEmail =>
+        val isGGEmailInSession = verifyGGEmailInSession(session)
+        val currentCall        = routes.VerifyResentEmailPasscodeController.verifyResentEmailPasscode()
+
+        def handleValidPasscode(passcode: Passcode): Future[Result] =
+          getNextOrNoMatchResult(
+            passcode,
+            userSelectedEmail.emailAddress,
+            currentCall,
+            emailVerificationService,
+            journeyService
+          ).fold(
+            _.doThrow("Could not update session and proceed"),
+            _.fold(
+              _ =>
+                Ok(
+                  verifyResentPasscodePage(
+                    verifyPasscodeForm()
+                      .withError("passcode", "error.noMatch"),
+                    journeyService.previous(currentCall),
+                    userSelectedEmail.emailAddress,
+                    isGGEmailInSession
+                  )
+                ),
+              Redirect
+            )
+          )
+
+        verifyPasscodeForm()
+          .bindFromRequest()
+          .fold(
+            formWithErrors =>
+              Ok(
+                verifyResentPasscodePage(
+                  formWithErrors,
+                  journeyService.previous(currentCall),
+                  userSelectedEmail.emailAddress,
+                  isGGEmailInSession
+                )
+              ),
+            handleValidPasscode
+          )
+      }
     }
 
 }
