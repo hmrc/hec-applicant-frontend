@@ -93,10 +93,12 @@ class ConfirmEmailAddressControllerSpec
             userEmailAnswers = userEmailAnswers
           )
 
+          val updatedSession = session.copy(hasResentEmailConfirmation = false)
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockJourneyServiceGetPrevious(routes.ConfirmEmailAddressController.confirmEmailAddress(), session)(
+            mockStoreSession(updatedSession)(Right(()))
+            mockJourneyServiceGetPrevious(routes.ConfirmEmailAddressController.confirmEmailAddress(), updatedSession)(
               mockPreviousCall
             )
           }

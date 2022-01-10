@@ -88,22 +88,6 @@ class VerifyResentEmailPasscodeControllerSpec
           assertThrows[RuntimeException](await(performAction()))
         }
 
-        "update to session fails" in {
-          val session = Fixtures.individualHECSession(
-            loginData = Fixtures.individualLoginData(emailAddress = ggEmailId.some),
-            userAnswers = Fixtures.completeIndividualUserAnswers(),
-            isEmailRequested = true,
-            hasResentEmailConfirmation = true,
-            userEmailAnswers = userEmailAnswers.some
-          )
-
-          inSequence {
-            mockAuthWithNoRetrievals()
-            mockGetSession(session)
-            mockStoreSession(session.copy(hasResentEmailConfirmation = false))(Left(Error("")))
-          }
-          assertThrows[RuntimeException](await(performAction()))
-        }
       }
 
       "display the page" when {
@@ -113,14 +97,13 @@ class VerifyResentEmailPasscodeControllerSpec
             loginData = Fixtures.companyLoginData(emailAddress = emailAddress),
             userAnswers = Fixtures.completeCompanyUserAnswers(),
             isEmailRequested = true,
-            hasResendEmailConfirmation = true,
+            hasResentEmailConfirmation = true,
             userEmailAnswers = userEmailAnswers
           )
 
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockStoreSession(session.copy(hasResentEmailConfirmation = false))(Right(()))
             mockJourneyServiceGetPrevious(
               routes.VerifyResentEmailPasscodeController.verifyResentEmailPasscode(),
               session
@@ -302,14 +285,14 @@ class VerifyResentEmailPasscodeControllerSpec
             loginData = Fixtures.individualLoginData(emailAddress = ggEmailId.some),
             userAnswers = Fixtures.completeIndividualUserAnswers(),
             isEmailRequested = true,
+            hasResentEmailConfirmation = true,
             userEmailAnswers = Fixtures.userEmailAnswers(passcodeRequestResult = PasscodeSent.some).some
           )
 
           val updatedSession =
             session.copy(
               userEmailAnswers = session.userEmailAnswers
-                .map(_.copy(passcodeVerificationResult = Match.some, passcode = validPasscode.some)),
-              hasResentEmailConfirmation = true
+                .map(_.copy(passcodeVerificationResult = Match.some, passcode = validPasscode.some))
             )
 
           inSequence {
@@ -344,11 +327,12 @@ class VerifyResentEmailPasscodeControllerSpec
             loginData = Fixtures.companyLoginData(emailAddress = ggEmailId.some),
             userAnswers = Fixtures.completeCompanyUserAnswers(),
             isEmailRequested = true,
+            hasResentEmailConfirmation = true,
             userEmailAnswers = existingUserEmailAnswers.some
           )
 
           val updatedSession =
-            session.copy(userEmailAnswers = updatedUserEmailAnswers.some, hasResentEmailConfirmation = true)
+            session.copy(userEmailAnswers = updatedUserEmailAnswers.some)
 
           inSequence {
             mockAuthWithNoRetrievals()
