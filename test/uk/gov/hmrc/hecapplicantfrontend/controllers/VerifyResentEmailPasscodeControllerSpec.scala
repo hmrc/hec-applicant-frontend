@@ -88,6 +88,23 @@ class VerifyResentEmailPasscodeControllerSpec
           assertThrows[RuntimeException](await(performAction()))
         }
 
+        "session failed to updated" in {
+          val session = Fixtures.individualHECSession(
+            loginData = Fixtures.individualLoginData(emailAddress = ggEmailId.some),
+            userAnswers = Fixtures.completeIndividualUserAnswers(),
+            isEmailRequested = true,
+            userEmailAnswers =
+              Fixtures.userEmailAnswers(passcodeRequestResult = PasscodeRequestResult.PasscodeSent.some).some
+          )
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockStoreSession(session.copy(hasResentEmailConfirmation = true))(Left(Error("")))
+          }
+          assertThrows[RuntimeException](await(performAction()))
+        }
+
       }
 
       "display the page" when {
@@ -104,6 +121,7 @@ class VerifyResentEmailPasscodeControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
+            mockStoreSession(session.copy(hasResentEmailConfirmation = true))(Right(()))
             mockJourneyServiceGetPrevious(
               routes.VerifyResentEmailPasscodeController.verifyResentEmailPasscode(),
               session

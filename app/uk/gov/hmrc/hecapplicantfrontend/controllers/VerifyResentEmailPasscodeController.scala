@@ -20,8 +20,9 @@ import com.google.inject.Inject
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.VerifyEmailPasscodeController.{getNextOrNoMatchResult, verifyGGEmailInSession, verifyPasscodeForm}
-import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
+import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, RequestWithSessionData, SessionDataAction}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.Passcode
+import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.{EmailVerificationService, JourneyService}
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.hecapplicantfrontend.views.html
@@ -33,6 +34,7 @@ class VerifyResentEmailPasscodeController @Inject() (
   authAction: AuthAction,
   sessionDataAction: SessionDataAction,
   journeyService: JourneyService,
+  sessionStore: SessionStore,
   emailVerificationService: EmailVerificationService,
   verifyResentPasscodePage: html.VerifyResentPasscode,
   mcc: MessagesControllerComponents
@@ -45,13 +47,23 @@ class VerifyResentEmailPasscodeController @Inject() (
     authAction.andThen(sessionDataAction).async { implicit request =>
       val session = request.sessionData
       session.ensureUserSelectedEmailPresent { userSelectedEmail =>
-        val isGGEmailInSession            = verifyGGEmailInSession(session)
-        val passcodeOpt: Option[Passcode] =
-          session.fold(_.userEmailAnswers.flatMap(_.passcode), _.userEmailAnswers.flatMap(_.passcode))
-        val form                          = passcodeOpt.fold(verifyPasscodeForm)(verifyPasscodeForm.fill)
-        val back                          = journeyService.previous(routes.VerifyResentEmailPasscodeController.verifyResentEmailPasscode())
-        Ok(verifyResentPasscodePage(form, back, userSelectedEmail.emailAddress, isGGEmailInSession))
-
+        val isGGEmailInSession = verifyGGEmailInSession(session)
+        val updatedSession     =
+          request.sessionData.fold(_.copy(hasResentEmailConfirmation = true), _.copy(hasResentEmailConfirmation = true))
+        sessionStore
+          .store(updatedSession)
+          .fold(
+            _.doThrow("Could not update session and proceed"),
+            _ => {
+              val req                           = RequestWithSessionData(request.request, updatedSession)
+              val passcodeOpt: Option[Passcode] =
+                session.fold(_.userEmailAnswers.flatMap(_.passcode), _.userEmailAnswers.flatMap(_.passcode))
+              val form                          = passcodeOpt.fold(verifyPasscodeForm)(verifyPasscodeForm.fill)
+              val back                          =
+                journeyService.previous(routes.VerifyResentEmailPasscodeController.verifyResentEmailPasscode())(req, hc)
+              Ok(verifyResentPasscodePage(form, back, userSelectedEmail.emailAddress, isGGEmailInSession))
+            }
+          )
       }
     }
 

@@ -106,20 +106,20 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
   )
 
   // map which describes routes from an exit page to their previous page. The keys are the exit page and the values are
-  // the pages previous to them. These routes are ones which should not be described in `path` as they are typically not
+  // function, which takes input as session give the  pages previous to them. These routes are ones which should not be described in `path` as they are typically not
   // triggered by a submit, but rather by clicking a link on the source page for instance.
-  lazy val exitPageToPreviousPage: Map[Call, Call] =
+
+  lazy val exitPageToPreviousPage: Map[Call, HECSession => Call] =
     Map(
       routes.ConfirmIndividualDetailsController
-        .confirmIndividualDetailsExit()                      -> routes.ConfirmIndividualDetailsController.confirmIndividualDetails(),
+        .confirmIndividualDetailsExit()                      -> (_ => routes.ConfirmIndividualDetailsController.confirmIndividualDetails()),
       routes.LicenceDetailsController.licenceTypeExit()      ->
-        routes.LicenceDetailsController.licenceType(),
+        (_ => routes.LicenceDetailsController.licenceType()),
       routes.EntityTypeController.wrongEntityType()          ->
-        routes.EntityTypeController.entityType(),
+        (_ => routes.EntityTypeController.entityType()),
       routes.CompanyDetailsController.dontHaveUtr()          ->
-        routes.CompanyDetailsController.enterCtutr(),
-      routes.ResendEmailConfirmationController.resendEmail() -> routes.VerifyEmailPasscodeController
-        .verifyEmailPasscode()
+        (_ => routes.CompanyDetailsController.enterCtutr()),
+      routes.ResendEmailConfirmationController.resendEmail() -> resendEmailPreviousRoute
     )
 
   override def firstPage(session: HECSession): Call = {
@@ -189,11 +189,13 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
       if (r.sessionData.hasResentEmailConfirmation) {
         exitPageToPreviousPage
           .get(current)
+          .map(_(r.sessionData))
           .orElse(loop(routes.ResendEmailConfirmationController.resendEmail()))
           .getOrElse(sys.error(s"Could not find previous for $current"))
       } else {
         exitPageToPreviousPage
           .get(current)
+          .map(_(r.sessionData))
           .orElse(loop(routes.TaxCheckCompleteController.taxCheckComplete()))
           .getOrElse(sys.error(s"Could not find previous for $current"))
       }
@@ -205,6 +207,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
       else
         exitPageToPreviousPage
           .get(current)
+          .map(_(r.sessionData))
           .orElse(loop(routes.StartController.start()))
           .getOrElse(sys.error(s"Could not find previous for $current"))
     }
@@ -563,6 +566,13 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
       case _                               => routes.ProblemSendingEmailController.problemSendingEmail
     }
 
+  def resendEmailPreviousRoute(session: HECSession): Call =
+    (session.userEmailAnswers.flatMap(_.passcodeVerificationResult), session.hasResentEmailConfirmation) match {
+      case (Some(PasscodeVerificationResult.Expired), _) =>
+        routes.VerificationPasscodeExpiredController.verificationPasscodeExpired()
+      case (_, true)                                     => routes.VerifyResentEmailPasscodeController.verifyResentEmailPasscode()
+      case (_, false)                                    => routes.VerifyEmailPasscodeController.verifyEmailPasscode()
+    }
 }
 
 object JourneyServiceImpl {

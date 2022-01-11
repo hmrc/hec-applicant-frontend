@@ -21,7 +21,6 @@ import com.google.inject.Inject
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
-import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.{EmailVerificationService, JourneyService}
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -33,7 +32,6 @@ class ResendEmailConfirmationController @Inject() (
   authAction: AuthAction,
   sessionDataAction: SessionDataAction,
   journeyService: JourneyService,
-  sessionStore: SessionStore,
   emailVerificationService: EmailVerificationService,
   resendEmailConfirmationPage: html.ResendEmailConfirmationPage,
   mcc: MessagesControllerComponents
@@ -45,24 +43,8 @@ class ResendEmailConfirmationController @Inject() (
   val resendEmail: Action[AnyContent] =
     authAction.andThen(sessionDataAction).async { implicit request =>
       request.sessionData.ensureUserSelectedEmailPresent { userSelectedEmail =>
-        val updatedSession = request.sessionData.fold(
-          //sets the resend flag to false since we are going back to normal email journey bbefore this page.
-          //other wise the previous method in journey service don't work
-          _.copy(hasResentEmailConfirmation = false),
-          _.copy(
-            hasResentEmailConfirmation = false
-          )
-        )
-        sessionStore
-          .store(updatedSession)
-          .fold(
-            _.doThrow("Could not update session and proceed"),
-            _ => {
-              val back = journeyService.previous(routes.ResendEmailConfirmationController.resendEmail())
-              Ok(resendEmailConfirmationPage(userSelectedEmail.emailAddress, back))
-            }
-          )
-
+        val back = journeyService.previous(routes.ResendEmailConfirmationController.resendEmail())
+        Ok(resendEmailConfirmationPage(userSelectedEmail.emailAddress, back))
       }
     }
 
