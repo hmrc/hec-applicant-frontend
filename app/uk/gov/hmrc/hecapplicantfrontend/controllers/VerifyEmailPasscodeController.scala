@@ -29,6 +29,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models._
 import play.api.data.Forms.{mapping, nonEmptyText}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.VerifyEmailPasscodeController.{getNextOrNoMatchResult, verifyGGEmailInSession, verifyPasscodeForm}
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession
+import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.{EmailVerificationService, JourneyService}
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -43,6 +44,7 @@ class VerifyEmailPasscodeController @Inject() (
   sessionDataAction: SessionDataAction,
   journeyService: JourneyService,
   emailVerificationService: EmailVerificationService,
+  sessionStore: SessionStore,
   verifyPasscodePage: html.VerifyPasscode,
   mcc: MessagesControllerComponents
 )(implicit ec: ExecutionContext)
@@ -53,12 +55,26 @@ class VerifyEmailPasscodeController @Inject() (
   val verifyEmailPasscode: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     val session = request.sessionData
     session.ensureUserSelectedEmailPresent { userSelectedEmail =>
-      val isGGEmailInSession            = verifyGGEmailInSession(session)
-      val passcodeOpt: Option[Passcode] =
-        session.fold(_.userEmailAnswers.flatMap(_.passcode), _.userEmailAnswers.flatMap(_.passcode))
-      val form                          = passcodeOpt.fold(verifyPasscodeForm)(verifyPasscodeForm.fill)
-      val back                          = journeyService.previous(routes.VerifyEmailPasscodeController.verifyEmailPasscode())
-      Ok(verifyPasscodePage(form, back, userSelectedEmail.emailAddress, isGGEmailInSession))
+      val isGGEmailInSession = verifyGGEmailInSession(session)
+      val updatedSession     =
+        request.sessionData.fold(_.copy(hasResentEmailConfirmation = false), _.copy(hasResentEmailConfirmation = false))
+
+      //update the hasResentEmailConfirmation here cause the flag set at Resend confirmation flag was not working as expected.
+
+      sessionStore
+        .store(updatedSession)
+        .fold(
+          _.doThrow("Could not update session and proceed"),
+          _ => {
+            val req                           = RequestWithSessionData(request.request, updatedSession)
+            val passcodeOpt: Option[Passcode] =
+              session.fold(_.userEmailAnswers.flatMap(_.passcode), _.userEmailAnswers.flatMap(_.passcode))
+            val form                          = passcodeOpt.fold(verifyPasscodeForm)(verifyPasscodeForm.fill)
+            val back                          = journeyService.previous(routes.VerifyEmailPasscodeController.verifyEmailPasscode())(req, hc)
+            Ok(verifyPasscodePage(form, back, userSelectedEmail.emailAddress, isGGEmailInSession))
+          }
+        )
+
     }
 
   }

@@ -3105,30 +3105,58 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
 
         }
 
-        "resend email confirmation page" in {
+        "resend email confirmation page" when {
 
-          val session                                     = Fixtures.individualHECSession(
-            individualLoginData.copy(emailAddress = ggEmailId.some),
-            IndividualRetrievedJourneyData.empty,
-            Fixtures.completeIndividualUserAnswers(
-              licenceType = DriverOfTaxisAndPrivateHires,
-              licenceTimeTrading = LicenceTimeTrading.TwoToFourYears,
-              licenceValidityPeriod = UpToOneYear,
-              taxSituation = PAYE,
-              saIncomeDeclared = Some(YesNoAnswer.Yes),
-              entityType = Some(Individual)
-            ),
-            Some(HECTaxCheck(HECTaxCheckCode("code"), LocalDate.now.plusDays(1))),
-            Some(taxCheckStartDateTime),
-            isEmailRequested = true,
-            userEmailAnswers = Fixtures.userEmailAnswers().some
-          )
-          implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+          def test(
+            hasResendFlag: Boolean,
+            passcodeVerificationResult: Option[PasscodeVerificationResult],
+            previousRoute: Call
+          ) = {
+            val session                                     = Fixtures.individualHECSession(
+              individualLoginData.copy(emailAddress = ggEmailId.some),
+              IndividualRetrievedJourneyData.empty,
+              Fixtures.completeIndividualUserAnswers(
+                licenceType = DriverOfTaxisAndPrivateHires,
+                licenceTimeTrading = LicenceTimeTrading.TwoToFourYears,
+                licenceValidityPeriod = UpToOneYear,
+                taxSituation = PAYE,
+                saIncomeDeclared = Some(YesNoAnswer.Yes),
+                entityType = Some(Individual)
+              ),
+              Some(HECTaxCheck(HECTaxCheckCode("code"), LocalDate.now.plusDays(1))),
+              Some(taxCheckStartDateTime),
+              isEmailRequested = true,
+              userEmailAnswers = Fixtures
+                .userEmailAnswers(
+                  passcodeRequestResult = PasscodeRequestResult.PasscodeSent.some,
+                  passcodeVerificationResult = passcodeVerificationResult
+                )
+                .some,
+              hasResentEmailConfirmation = hasResendFlag
+            )
+            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
 
-          val result = journeyService.previous(
-            routes.ResendEmailConfirmationController.resendEmail()
-          )
-          result shouldBe routes.VerifyEmailPasscodeController.verifyEmailPasscode()
+            val result = journeyService.previous(
+              routes.ResendEmailConfirmationController.resendEmail()
+            )
+            result shouldBe previousRoute
+          }
+
+          "the page is reached via verify passcode page" in {
+            test(false, None, routes.VerifyEmailPasscodeController.verifyEmailPasscode())
+          }
+
+          "the page is reached via verify resend passcode page" in {
+            test(true, None, routes.VerifyResentEmailPasscodeController.verifyResentEmailPasscode())
+          }
+
+          "the page is reached via Email passcode confirmation expired" in {
+            test(
+              true,
+              PasscodeVerificationResult.Expired.some,
+              routes.VerificationPasscodeExpiredController.verificationPasscodeExpired()
+            )
+          }
 
         }
 

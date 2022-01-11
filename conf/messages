@@ -384,4 +384,8 @@ enterEmailAddress.error.tooManyChar = Email address has too many characters, it 
 resendEmailConfirmation.title = Resend email confirmation code
 resendEmailConfirmation.p1 = Send a new email confirmation code to <b>{0}</b>
 
+#verifyPasscodeExpired
+verifyPasscodeExpired.title = Email confirmation code expired
+verifyPasscodeExpired.p1 = The email confirmation code entered has expired
+verifyPasscodeExpired.p2 = You need to <a href="{0}" class="govuk-link">request a new email confirmation code</a> to confirm your email address, or you can <a href="{1}" class="govuk-link">see all your tax check codes</a>
 

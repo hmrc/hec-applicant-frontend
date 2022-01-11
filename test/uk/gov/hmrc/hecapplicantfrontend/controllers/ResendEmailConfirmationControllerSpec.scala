@@ -78,30 +78,11 @@ class ResendEmailConfirmationControllerSpec
           assertThrows[RuntimeException](await(performAction()))
         }
 
-        "error in updating the session " in {
-          val session        = Fixtures.individualHECSession(
-            userAnswers = Fixtures.completeIndividualUserAnswers(),
-            isEmailRequested = true,
-            userEmailAnswers = Fixtures
-              .userEmailAnswers(
-                passcodeRequestResult = PasscodeRequestResult.PasscodeSent.some
-              )
-              .some,
-            hasResentEmailConfirmation = true
-          )
-          val updatedSession = session.copy(hasResentEmailConfirmation = false)
-          inSequence {
-            mockAuthWithNoRetrievals()
-            mockGetSession(session)
-            mockStoreSession(updatedSession)(Left(Error("")))
-          }
-          assertThrows[RuntimeException](await(performAction()))
-        }
       }
 
       "display the page" in {
 
-        val session        = Fixtures.individualHECSession(
+        val session = Fixtures.individualHECSession(
           userAnswers = Fixtures.completeIndividualUserAnswers(),
           isEmailRequested = true,
           userEmailAnswers = Fixtures
@@ -111,12 +92,10 @@ class ResendEmailConfirmationControllerSpec
             .some,
           hasResentEmailConfirmation = true
         )
-        val updatedSession = session.copy(hasResentEmailConfirmation = false)
 
         inSequence {
           mockAuthWithNoRetrievals()
           mockGetSession(session)
-          mockStoreSession(updatedSession)(Right(()))
           mockJourneyServiceGetPrevious(routes.ResendEmailConfirmationController.resendEmail(), session)(
             mockPreviousCall
           )
