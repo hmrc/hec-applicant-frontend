@@ -77,7 +77,7 @@
     ))
     @{
         backLocation map { back =>
-            val url = if (back.url === routes.StartController.start().url) appConfig.firstPageBackUrl else back.url
+            val url = if (back.url === routes.StartController.start().url) appConfig.taxCheckGuidanceUrl else back.url
             govukBackLink(BackLink(href = url, attributes = Map("id" -> "back")))
         }
     }
