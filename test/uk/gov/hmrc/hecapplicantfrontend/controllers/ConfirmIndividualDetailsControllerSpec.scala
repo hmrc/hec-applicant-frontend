@@ -85,7 +85,7 @@ class ConfirmIndividualDetailsControllerSpec
             mockJourneyServiceGetPrevious(
               routes.ConfirmIndividualDetailsController.confirmIndividualDetails(),
               session
-            )(mockPreviousCall)
+            )(routes.StartController.start())
           }
 
           checkPageIsDisplayed(
@@ -104,7 +104,7 @@ class ConfirmIndividualDetailsControllerSpec
               form
                 .attr("action") shouldBe routes.ConfirmIndividualDetailsController.confirmIndividualDetailsSubmit().url
 
-              doc.select("#back").attr("href") shouldBe mockPreviousCall.url
+              doc.select("#back").attr("href") shouldBe appConfig.taxCheckGuidanceUrl
             }
           )
 
