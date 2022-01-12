@@ -3,9 +3,9 @@ import sbt._
 
 object AppDependencies {
 
-  val bootStrapVersion = "5.17.0"
+  val bootStrapVersion = "5.18.0"
   val monocleVersion   = "2.1.0"
-  val hmrcMongoVersion = "0.58.0"
+  val hmrcMongoVersion = "0.59.0"
 
   val compile = Seq(
     "uk.gov.hmrc"                %% "bootstrap-frontend-play-28"    % bootStrapVersion,
@@ -27,7 +27,7 @@ object AppDependencies {
     "org.scalatest"          %% "scalatest"               % "3.2.10"            % Test,
     "org.jsoup"               % "jsoup"                   % "1.14.3"            % Test,
     "com.typesafe.play"      %% "play-test"               % PlayVersion.current % Test,
-    "org.scalamock"          %% "scalamock"               % "4.2.0"             % Test,
+    "org.scalamock"          %% "scalamock"               % "5.2.0"             % Test,
     "org.scalatestplus.play" %% "scalatestplus-play"      % "5.1.0"             % "test, it",
     "com.vladsch.flexmark"    % "flexmark-all"            % "0.62.2"            % "test, it"
   )
