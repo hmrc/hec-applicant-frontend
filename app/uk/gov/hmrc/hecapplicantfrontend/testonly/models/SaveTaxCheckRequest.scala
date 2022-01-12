@@ -23,7 +23,6 @@ import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
 import uk.gov.hmrc.hecapplicantfrontend.models.{DateOfBirth, HECTaxCheckCode}
 import uk.gov.hmrc.hecapplicantfrontend.testonly.models.EitherUtils.eitherFormat
 
-import java.time.format.DateTimeFormatter
 import java.time.{LocalDate, ZonedDateTime}
 
 final case class SaveTaxCheckRequest(
@@ -39,9 +38,6 @@ final case class SaveTaxCheckRequest(
 )
 
 object SaveTaxCheckRequest {
-
-  implicit val localDateWrites: Writes[LocalDate] =
-    Writes.temporalWrites[LocalDate, DateTimeFormatter](DateTimeFormatter.BASIC_ISO_DATE)
 
   implicit val writes: Writes[SaveTaxCheckRequest] = Json.writes
 
