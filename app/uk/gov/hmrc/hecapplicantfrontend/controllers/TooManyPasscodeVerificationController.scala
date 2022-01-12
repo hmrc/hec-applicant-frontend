@@ -45,7 +45,7 @@ class TooManyPasscodeVerificationController @Inject() (
           val previous           =
             journeyService.previous(routes.TooManyPasscodeVerificationController.tooManyPasscodeVerification())
           Ok(passcodeEnteredTooManyTimesPage(previous, isGGEmailInSession))
-        case other                                            => sys.error(s" Passcode Verification result found $other but the expected is  Expired")
+        case other                                            => sys.error(s" Passcode Verification result found $other but the expected is Too many Attempts")
       }
     }
 
