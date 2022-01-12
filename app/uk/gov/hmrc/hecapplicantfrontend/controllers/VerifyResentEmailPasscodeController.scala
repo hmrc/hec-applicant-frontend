@@ -47,9 +47,13 @@ class VerifyResentEmailPasscodeController @Inject() (
     authAction.andThen(sessionDataAction).async { implicit request =>
       val session = request.sessionData
       session.ensureUserSelectedEmailPresent { userSelectedEmail =>
-        val isGGEmailInSession = verifyGGEmailInSession(session)
-        val updatedSession     =
-          request.sessionData.fold(_.copy(hasResentEmailConfirmation = true), _.copy(hasResentEmailConfirmation = true))
+        val isGGEmailInSession  = verifyGGEmailInSession(session)
+        val updatedEmailAddress = session.userEmailAnswers.map(_.copy(passcodeVerificationResult = None))
+        val updatedSession      =
+          request.sessionData.fold(
+            _.copy(hasResentEmailConfirmation = true, userEmailAnswers = updatedEmailAddress),
+            _.copy(hasResentEmailConfirmation = true, userEmailAnswers = updatedEmailAddress)
+          )
         sessionStore
           .store(updatedSession)
           .fold(
