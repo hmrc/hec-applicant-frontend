@@ -55,9 +55,13 @@ class VerifyEmailPasscodeController @Inject() (
   val verifyEmailPasscode: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     val session = request.sessionData
     session.ensureUserSelectedEmailPresent { userSelectedEmail =>
-      val isGGEmailInSession = verifyGGEmailInSession(session)
-      val updatedSession     =
-        request.sessionData.fold(_.copy(hasResentEmailConfirmation = false), _.copy(hasResentEmailConfirmation = false))
+      val isGGEmailInSession  = verifyGGEmailInSession(session)
+      val updatedEmailAddress = session.userEmailAnswers.map(_.copy(passcodeVerificationResult = None))
+      val updatedSession      =
+        request.sessionData.fold(
+          _.copy(hasResentEmailConfirmation = false, userEmailAnswers = updatedEmailAddress),
+          _.copy(hasResentEmailConfirmation = false, userEmailAnswers = updatedEmailAddress)
+        )
 
       //update the hasResentEmailConfirmation here cause the flag set at Resend confirmation flag was not working as expected.
 

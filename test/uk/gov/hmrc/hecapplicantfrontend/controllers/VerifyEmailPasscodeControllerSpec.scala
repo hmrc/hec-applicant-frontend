@@ -107,19 +107,27 @@ class VerifyEmailPasscodeControllerSpec
 
       "display the page" when {
 
-        def test(userEmailAnswers: Option[UserEmailAnswers], emailAddress: Option[EmailAddress]) = {
-          val session = Fixtures.companyHECSession(
+        def test(
+          userEmailAnswers: Option[UserEmailAnswers],
+          emailAddress: Option[EmailAddress],
+          hasResentEmailConfirmation: Boolean
+        ) = {
+          val session                 = Fixtures.companyHECSession(
             loginData = Fixtures.companyLoginData(emailAddress = emailAddress),
             userAnswers = Fixtures.completeCompanyUserAnswers(),
             isEmailRequested = true,
-            userEmailAnswers = userEmailAnswers
+            userEmailAnswers = userEmailAnswers,
+            hasResentEmailConfirmation = hasResentEmailConfirmation
           )
+          val updatedUserEmailAnswers = userEmailAnswers.map(_.copy(passcodeVerificationResult = None))
+          val updatedSession          =
+            session.copy(hasResentEmailConfirmation = false, userEmailAnswers = updatedUserEmailAnswers)
 
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockStoreSession(session.copy(hasResentEmailConfirmation = false))(Right(()))
-            mockJourneyServiceGetPrevious(routes.VerifyEmailPasscodeController.verifyEmailPasscode(), session)(
+            mockStoreSession(updatedSession)(Right(()))
+            mockJourneyServiceGetPrevious(routes.VerifyEmailPasscodeController.verifyEmailPasscode(), updatedSession)(
               mockPreviousCall
             )
           }
@@ -164,13 +172,19 @@ class VerifyEmailPasscodeControllerSpec
 
         "User hasn't  previously entered the passcode and session has ggEmail Id" in {
 
-          test(userEmailAnswers = Fixtures.userEmailAnswers().some, ggEmailId.some)
+          test(
+            userEmailAnswers = Fixtures
+              .userEmailAnswers(passcodeVerificationResult = PasscodeVerificationResult.TooManyAttempts.some)
+              .some,
+            ggEmailId.some,
+            true
+          )
 
         }
 
         "User hasn't  previously entered the passcode and session has no ggEmail Id" in {
 
-          test(userEmailAnswers = Fixtures.userEmailAnswers().some, None)
+          test(userEmailAnswers = Fixtures.userEmailAnswers().some, None, false)
 
         }
 
@@ -183,7 +197,8 @@ class VerifyEmailPasscodeControllerSpec
                 passcode = validPasscode.some
               )
               .some,
-            ggEmailId.some
+            ggEmailId.some,
+            true
           )
 
         }

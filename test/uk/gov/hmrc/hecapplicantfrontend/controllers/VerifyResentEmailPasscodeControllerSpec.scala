@@ -109,22 +109,31 @@ class VerifyResentEmailPasscodeControllerSpec
 
       "display the page" when {
 
-        def test(userEmailAnswers: Option[UserEmailAnswers], emailAddress: Option[EmailAddress]) = {
+        def test(
+          userEmailAnswers: Option[UserEmailAnswers],
+          emailAddress: Option[EmailAddress],
+          hasResentEmailConfirmation: Boolean
+        ) = {
           val session = Fixtures.companyHECSession(
             loginData = Fixtures.companyLoginData(emailAddress = emailAddress),
             userAnswers = Fixtures.completeCompanyUserAnswers(),
             isEmailRequested = true,
-            hasResentEmailConfirmation = true,
+            hasResentEmailConfirmation = hasResentEmailConfirmation,
             userEmailAnswers = userEmailAnswers
           )
+
+          val updatedUserEmailAnswers = userEmailAnswers.map(_.copy(passcodeVerificationResult = None))
+
+          val updatedSession =
+            session.copy(hasResentEmailConfirmation = true, userEmailAnswers = updatedUserEmailAnswers)
 
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockStoreSession(session.copy(hasResentEmailConfirmation = true))(Right(()))
+            mockStoreSession(updatedSession)(Right(()))
             mockJourneyServiceGetPrevious(
               routes.VerifyResentEmailPasscodeController.verifyResentEmailPasscode(),
-              session
+              updatedSession
             )(
               mockPreviousCall
             )
@@ -172,7 +181,13 @@ class VerifyResentEmailPasscodeControllerSpec
 
           List(ggEmailId.some, None).foreach { email =>
             withClue(s"For email id :: $email") {
-              test(userEmailAnswers = Fixtures.userEmailAnswers().some, email)
+              test(
+                userEmailAnswers = Fixtures
+                  .userEmailAnswers(passcodeVerificationResult = PasscodeVerificationResult.Expired.some)
+                  .some,
+                email,
+                true
+              )
             }
           }
         }
@@ -187,7 +202,8 @@ class VerifyResentEmailPasscodeControllerSpec
                     passcode = validPasscode.some
                   )
                   .some,
-                email
+                email,
+                false
               )
             }
           }

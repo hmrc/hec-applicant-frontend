@@ -112,14 +112,16 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
   lazy val exitPageToPreviousPage: Map[Call, HECSession => Call] =
     Map(
       routes.ConfirmIndividualDetailsController
-        .confirmIndividualDetailsExit()                      -> (_ => routes.ConfirmIndividualDetailsController.confirmIndividualDetails()),
-      routes.LicenceDetailsController.licenceTypeExit()      ->
+        .confirmIndividualDetailsExit()                          -> (_ => routes.ConfirmIndividualDetailsController.confirmIndividualDetails()),
+      routes.LicenceDetailsController.licenceTypeExit()          ->
         (_ => routes.LicenceDetailsController.licenceType()),
-      routes.EntityTypeController.wrongEntityType()          ->
+      routes.EntityTypeController.wrongEntityType()              ->
         (_ => routes.EntityTypeController.entityType()),
-      routes.CompanyDetailsController.dontHaveUtr()          ->
+      routes.CompanyDetailsController.dontHaveUtr()              ->
         (_ => routes.CompanyDetailsController.enterCtutr()),
-      routes.ResendEmailConfirmationController.resendEmail() -> resendEmailPreviousRoute
+      routes.ResendEmailConfirmationController.resendEmail()     -> resendEmailPreviousRoute,
+      routes.ConfirmEmailAddressController.confirmEmailAddress() -> confirmEnterEmailAddressPreviousRoute,
+      routes.EnterEmailAddressController.enterEmailAddress()     -> confirmEnterEmailAddressPreviousRoute
     )
 
   override def firstPage(session: HECSession): Call = {
@@ -568,10 +570,19 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
 
   def resendEmailPreviousRoute(session: HECSession): Call =
     (session.userEmailAnswers.flatMap(_.passcodeVerificationResult), session.hasResentEmailConfirmation) match {
-      case (Some(PasscodeVerificationResult.Expired), _) =>
+      case (Some(PasscodeVerificationResult.Expired), _)         =>
         routes.VerificationPasscodeExpiredController.verificationPasscodeExpired()
-      case (_, true)                                     => routes.VerifyResentEmailPasscodeController.verifyResentEmailPasscode()
-      case (_, false)                                    => routes.VerifyEmailPasscodeController.verifyEmailPasscode()
+      case (Some(PasscodeVerificationResult.TooManyAttempts), _) =>
+        routes.TooManyPasscodeVerificationController.tooManyPasscodeVerification()
+      case (_, true)                                             => routes.VerifyResentEmailPasscodeController.verifyResentEmailPasscode()
+      case (_, false)                                            => routes.VerifyEmailPasscodeController.verifyEmailPasscode()
+    }
+
+  def confirmEnterEmailAddressPreviousRoute(session: HECSession): Call =
+    session.userEmailAnswers.flatMap(_.passcodeVerificationResult) match {
+      case Some(PasscodeVerificationResult.TooManyAttempts) =>
+        routes.TooManyPasscodeVerificationController.tooManyPasscodeVerification()
+      case _                                                => routes.TaxCheckCompleteController.taxCheckComplete()
     }
 }
 

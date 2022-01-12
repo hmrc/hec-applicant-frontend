@@ -389,3 +389,8 @@ verifyPasscodeExpired.title = Email confirmation code expired
 verifyPasscodeExpired.p1 = The email confirmation code entered has expired
 verifyPasscodeExpired.p2 = You need to <a href="{0}" class="govuk-link">request a new email confirmation code</a> to confirm your email address, or you can <a href="{1}" class="govuk-link">see all your tax check codes</a>
 
+#verifyPasscodeTooManyAttempts
+verifyPasscodeTooManyAttempts.title = Email confirmation code entered too many times
+verifyPasscodeTooManyAttempts.p1 = You have entered an email confirmation code too many times.
+verifyPasscodeTooManyAttempts.p2 = You can <a href="{0}" class="govuk-link">go back and enter a new email address</a>, or <a href="{1}" class="govuk-link">request a new email confirmation code</a>
+verifyPasscodeTooManyAttempts.p3 = <a href="{0}" class="govuk-link">see all your tax check codes</a>

@@ -3023,25 +3023,45 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
           result shouldBe routes.CRNController.companyRegistrationNumber()
         }
 
-        "the Confirm Email Address page" in {
+        "the Confirm Email Address page" when {
 
-          val journeyDataWithSaStatus                     = IndividualRetrievedJourneyData(saStatus =
-            Some(individual.SAStatusResponse(SAUTR(""), TaxYear(2020), SAStatus.NoticeToFileIssued))
-          )
-          val session                                     = Fixtures.individualHECSession(
-            individualLoginData.copy(emailAddress = EmailAddress("user@test.com").some),
-            retrievedJourneyData = journeyDataWithSaStatus,
-            Fixtures.completeIndividualUserAnswers(),
-            Some(HECTaxCheck(HECTaxCheckCode("code1"), LocalDate.now.plusDays(1))),
-            taxCheckStartDateTime = taxCheckStartDateTime.some,
-            isEmailRequested = true
-          )
-          implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+          def test(userEmailAnswers: Option[UserEmailAnswers], previousRoute: Call) = {
+            val journeyDataWithSaStatus                     = IndividualRetrievedJourneyData(saStatus =
+              Some(individual.SAStatusResponse(SAUTR(""), TaxYear(2020), SAStatus.NoticeToFileIssued))
+            )
+            val session                                     = Fixtures.individualHECSession(
+              individualLoginData.copy(emailAddress = EmailAddress("user@test.com").some),
+              retrievedJourneyData = journeyDataWithSaStatus,
+              Fixtures.completeIndividualUserAnswers(),
+              Some(HECTaxCheck(HECTaxCheckCode("code1"), LocalDate.now.plusDays(1))),
+              taxCheckStartDateTime = taxCheckStartDateTime.some,
+              isEmailRequested = true,
+              userEmailAnswers = userEmailAnswers
+            )
+            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
 
-          val result = journeyService.previous(
-            routes.ConfirmEmailAddressController.confirmEmailAddress()
-          )
-          result shouldBe routes.TaxCheckCompleteController.taxCheckComplete()
+            val result = journeyService.previous(
+              routes.ConfirmEmailAddressController.confirmEmailAddress()
+            )
+            result shouldBe previousRoute
+          }
+
+          "the page is reached via too many passcode attempts page" in {
+
+            test(
+              userEmailAnswers = Fixtures
+                .userEmailAnswers(passcodeVerificationResult = PasscodeVerificationResult.TooManyAttempts.some)
+                .some,
+              routes.TooManyPasscodeVerificationController.tooManyPasscodeVerification()
+            )
+
+          }
+
+          "the page is reached via tax check complete page" in {
+
+            test(userEmailAnswers = None, routes.TaxCheckCompleteController.taxCheckComplete())
+
+          }
         }
 
         "the Email sent page" in {
@@ -3074,7 +3094,12 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
 
         "the Enter Email Address page" when {
 
-          def test(emailAddress: Option[EmailAddress]) = {
+          def test(
+            emailAddress: Option[EmailAddress],
+            userEmailAnswers: Option[UserEmailAnswers],
+            previousRoute: Call,
+            isResendFlag: Boolean
+          ) = {
             val journeyDataWithSaStatus                     = IndividualRetrievedJourneyData(saStatus =
               Some(individual.SAStatusResponse(SAUTR(""), TaxYear(2020), SAStatus.NoticeToFileIssued))
             )
@@ -3084,23 +3109,48 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               Fixtures.completeIndividualUserAnswers(),
               Some(HECTaxCheck(HECTaxCheckCode("code1"), LocalDate.now.plusDays(1))),
               taxCheckStartDateTime = taxCheckStartDateTime.some,
-              isEmailRequested = true
+              isEmailRequested = true,
+              userEmailAnswers = userEmailAnswers,
+              hasResentEmailConfirmation = isResendFlag
             )
             implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
 
             val result = journeyService.previous(
               routes.EnterEmailAddressController.enterEmailAddress()
             )
-            result shouldBe routes.TaxCheckCompleteController.taxCheckComplete()
+            result shouldBe previousRoute
 
           }
 
-          "the email id is invalid " in {
-            test(Some(EmailAddress("user@test@test.com")))
+          "the page is reached via tax check complete page" when {
+
+            "the email id is invalid " in {
+              test(
+                Some(EmailAddress("user@test@test.com")),
+                None,
+                routes.TaxCheckCompleteController.taxCheckComplete(),
+                false
+              )
+            }
+
+            "the email id is not in GG login data" in {
+              test(None, None, routes.TaxCheckCompleteController.taxCheckComplete(), false)
+            }
           }
 
-          "the email id is not in GG login data" in {
-            test(None)
+          "the page is reached via too many passcode attempts page" in {
+            test(
+              None,
+              Fixtures
+                .userEmailAnswers(
+                  passcodeVerificationResult = PasscodeVerificationResult.TooManyAttempts.some,
+                  passcodeRequestResult = PasscodeRequestResult.PasscodeSent.some,
+                  passcode = Passcode("HHHHHH").some
+                )
+                .some,
+              routes.TooManyPasscodeVerificationController.tooManyPasscodeVerification(),
+              true
+            )
           }
 
         }
@@ -3129,6 +3179,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               userEmailAnswers = Fixtures
                 .userEmailAnswers(
                   passcodeRequestResult = PasscodeRequestResult.PasscodeSent.some,
+                  passcode = Passcode("HHHHHH").some,
                   passcodeVerificationResult = passcodeVerificationResult
                 )
                 .some,
@@ -3155,6 +3206,14 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               true,
               PasscodeVerificationResult.Expired.some,
               routes.VerificationPasscodeExpiredController.verificationPasscodeExpired()
+            )
+          }
+
+          "the page is reached via Too many passcode confirmation attempts" in {
+            test(
+              true,
+              PasscodeVerificationResult.TooManyAttempts.some,
+              routes.TooManyPasscodeVerificationController.tooManyPasscodeVerification()
             )
           }
 
