@@ -16,7 +16,8 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models
 
-import play.api.libs.json.{JsString, Json, OWrites, Writes}
+import play.api.libs.json.{JsObject, JsString, Json, OWrites, Writes}
+import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.CompanyMatch.{CTUTRType, MatchResult}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR, GGCredId}
 
 sealed trait AuditEvent {
@@ -44,10 +45,48 @@ object AuditEvent {
 
   }
 
-  sealed trait CompanyMatchFailure extends AuditEvent {
-    val auditType: String = "CompanyMatchFailure"
+  sealed trait CompanyMatch extends AuditEvent {
+    val auditType: String = "CompanyMatch"
 
-    val transactionName: String = "company-match-failure"
+    val transactionName: String = "company-match"
+
+    val ctutrType: CTUTRType
+
+    val matchResult: MatchResult
+  }
+
+  object CompanyMatch {
+
+    sealed trait CTUTRType extends Product with Serializable
+
+    object CTUTRType {
+
+      case object Enrolment extends CTUTRType
+
+      case object Submitted extends CTUTRType
+
+    }
+
+    sealed trait MatchResult extends Product with Serializable
+
+    object MatchResult {
+
+      case object Match extends MatchResult
+
+      case object NoMatch extends MatchResult
+
+    }
+
+    def companyMatchWrites[A <: CompanyMatch](writes: OWrites[A]): OWrites[A] = OWrites { c =>
+      writes.writes(c) ++ JsObject(
+        Map("ctutrType" -> JsString(c.ctutrType.toString), "matchResult" -> JsString(c.matchResult.toString))
+      )
+    }
+
+  }
+
+  sealed trait CompanyMatchFailure extends CompanyMatch {
+    override val matchResult: MatchResult = MatchResult.NoMatch
   }
 
   object CompanyMatchFailure {
@@ -58,24 +97,28 @@ object AuditEvent {
       submittedCTUTRStandardised: CTUTR,
       hmrcCTUTR: CTUTR,
       tooManyAttempts: Boolean
-    ) extends CompanyMatchFailure
+    ) extends CompanyMatchFailure {
+      override val ctutrType: CTUTRType = CTUTRType.Submitted
+    }
 
     final case class EnrolmentCTUTRCompanyMatchFailure(
       companyRegistrationNumber: CRN,
       hmrcCTUTR: CTUTR,
       enrolmentCTUTR: CTUTR
-    ) extends CompanyMatchFailure
+    ) extends CompanyMatchFailure {
+      override val ctutrType: CTUTRType = CTUTRType.Enrolment
+    }
 
-    implicit val enterCTUTRMatchFailureWrites: OWrites[EnterCTUTRCompanyMatchFailure] = Json.writes
+    implicit val enterCTUTRMatchFailureWrites: OWrites[EnterCTUTRCompanyMatchFailure] =
+      CompanyMatch.companyMatchWrites(Json.writes[EnterCTUTRCompanyMatchFailure])
 
-    implicit val enrolmentCTUTRMatchFailureWrites: OWrites[EnrolmentCTUTRCompanyMatchFailure] = Json.writes
+    implicit val enrolmentCTUTRMatchFailureWrites: OWrites[EnrolmentCTUTRCompanyMatchFailure] =
+      CompanyMatch.companyMatchWrites(Json.writes[EnrolmentCTUTRCompanyMatchFailure])
 
   }
 
-  sealed trait CompanyMatchSuccess extends AuditEvent {
-    val auditType: String = "CompanyMatchSuccess"
-
-    val transactionName: String = "company-match-success"
+  sealed trait CompanyMatchSuccess extends CompanyMatch {
+    override val matchResult: MatchResult = MatchResult.Match
   }
 
   object CompanyMatchSuccess {
@@ -85,17 +128,23 @@ object AuditEvent {
       submittedCTUTR: CTUTR,
       submittedCTUTRStandardised: CTUTR,
       hmrcCTUTR: CTUTR
-    ) extends CompanyMatchSuccess
+    ) extends CompanyMatchSuccess {
+      override val ctutrType: CTUTRType = CTUTRType.Submitted
+    }
 
     final case class EnrolmentCTUTRCompanyMatchSuccess(
       companyRegistrationNumber: CRN,
       hmrcCTUTR: CTUTR,
       enrolmentCTUTR: CTUTR
-    ) extends CompanyMatchSuccess
+    ) extends CompanyMatchSuccess {
+      override val ctutrType: CTUTRType = CTUTRType.Enrolment
+    }
 
-    implicit val enterCTUTRMatchSuccessWrites: OWrites[EnterCTUTRCompanyMatchSuccess] = Json.writes
+    implicit val enterCTUTRMatchSuccessWrites: OWrites[EnterCTUTRCompanyMatchSuccess] =
+      CompanyMatch.companyMatchWrites(Json.writes[EnterCTUTRCompanyMatchSuccess])
 
-    implicit val enrolmentCTUTRMatchSuccessWrites: OWrites[EnrolmentCTUTRCompanyMatchSuccess] = Json.writes
+    implicit val enrolmentCTUTRMatchSuccessWrites: OWrites[EnrolmentCTUTRCompanyMatchSuccess] =
+      CompanyMatch.companyMatchWrites(Json.writes[EnrolmentCTUTRCompanyMatchSuccess])
 
   }
 
