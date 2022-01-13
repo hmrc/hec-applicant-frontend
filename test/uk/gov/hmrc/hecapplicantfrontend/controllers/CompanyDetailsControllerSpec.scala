@@ -25,6 +25,7 @@ import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.auth.core.AuthConnector
+import uk.gov.hmrc.hecapplicantfrontend.controllers.CompanyDetailsController.calculateLookBackPeriod
 import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.CompanyMatchFailure.{EnrolmentCTUTRCompanyMatchFailure, EnterCTUTRCompanyMatchFailure}
 import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.CompanyMatchSuccess.{EnrolmentCTUTRCompanyMatchSuccess, EnterCTUTRCompanyMatchSuccess}
 import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.TaxCheckExit
@@ -140,12 +141,7 @@ class CompanyDetailsControllerSpec
 
       "display the page" when {
 
-        "the user has not previously answered the question " in {
-
-          val session = Fixtures.companyHECSession(
-            companyLoginData,
-            retrievedJourneyDataWithCompanyName
-          )
+        def test(session: HECSession, value: Option[String]) = {
 
           inSequence {
             mockAuthWithNoRetrievals()
@@ -162,12 +158,25 @@ class CompanyDetailsControllerSpec
               doc.select("#back").attr("href") shouldBe mockPreviousCall.url
 
               val selectedOptions = doc.select(".govuk-radios__input[checked]")
-              selectedOptions.isEmpty shouldBe true
+              value match {
+                case Some(index) => selectedOptions.attr("value") shouldBe index
+                case None        => selectedOptions.isEmpty       shouldBe true
+              }
 
               val button = doc.select("form")
               button.attr("action") shouldBe routes.CompanyDetailsController.confirmCompanyDetailsSubmit().url
             }
           )
+
+        }
+
+        "the user has not previously answered the question " in {
+
+          val session = Fixtures.companyHECSession(
+            companyLoginData,
+            retrievedJourneyDataWithCompanyName
+          )
+          test(session, None)
 
         }
 
@@ -186,27 +195,7 @@ class CompanyDetailsControllerSpec
             .copy(companyDetailsConfirmed = Some(YesNoAnswer.No))
           val updatedSession = session.copy(userAnswers = updatedAnswers)
 
-          inSequence {
-            mockAuthWithNoRetrievals()
-            mockGetSession(updatedSession)
-            mockJourneyServiceGetPrevious(
-              routes.CompanyDetailsController.confirmCompanyDetails(),
-              updatedSession
-            )(mockPreviousCall)
-          }
-          checkPageIsDisplayed(
-            performAction(),
-            messageFromMessageKey("confirmCompanyName.title"),
-            { doc =>
-              doc.select("#back").attr("href") shouldBe mockPreviousCall.url
-
-              val selectedOptions = doc.select(".govuk-radios__input[checked]")
-              selectedOptions.attr("value") shouldBe "1"
-
-              val button = doc.select("form")
-              button.attr("action") shouldBe routes.CompanyDetailsController.confirmCompanyDetailsSubmit().url
-            }
-          )
+          test(updatedSession, Some("1"))
 
         }
 
@@ -214,9 +203,7 @@ class CompanyDetailsControllerSpec
 
       "return a technical error" when {
 
-        "company name is not populated" in {
-          val session = Fixtures.companyHECSession()
-
+        def test(session: HECSession) = {
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
@@ -224,15 +211,13 @@ class CompanyDetailsControllerSpec
           assertThrows[RuntimeException](await(performAction()))
         }
 
+        "company name is not populated" in {
+          test(Fixtures.companyHECSession())
+        }
+
         "applicant is individual" in {
-          val session = Fixtures.individualHECSession()
+          test(Fixtures.individualHECSession())
 
-          inSequence {
-            mockAuthWithNoRetrievals()
-            mockGetSession(session)
-          }
-
-          assertThrows[RuntimeException](await(performAction()))
         }
       }
     }
@@ -302,36 +287,35 @@ class CompanyDetailsControllerSpec
       }
 
       val date                 = LocalDate.now
-      val (startDate, endDate) = (date.minusYears(2).plusDays(1), date.minusYears(1))
+      val (startDate, endDate) = calculateLookBackPeriod(date)
 
       "return a technical error" when {
+
+        def test(session: HECSession, value: String) = {
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+          }
+          assertThrows[RuntimeException](await(performAction("confirmCompanyName" -> value)))
+        }
 
         "user answers with a Yes" when {
 
           "CRN is not populated" in {
             // session contains CTUTR from enrolments
-            val session = Fixtures.companyHECSession(
-              Fixtures.companyLoginData(ctutr = Some(CTUTR("ctutr"))),
-              retrievedJourneyDataWithCompanyName
+            test(
+              Fixtures.companyHECSession(
+                Fixtures.companyLoginData(ctutr = Some(CTUTR("ctutr"))),
+                retrievedJourneyDataWithCompanyName
+              ),
+              "0"
             )
-
-            inSequence {
-              mockAuthWithNoRetrievals()
-              mockGetSession(session)
-            }
-            assertThrows[RuntimeException](await(performAction("confirmCompanyName" -> "0")))
 
           }
 
           "the applicant type is individual" in {
-            val session = Fixtures.individualHECSession()
 
-            inSequence {
-              mockAuthWithNoRetrievals()
-              mockGetSession(session)
-            }
-
-            assertThrows[RuntimeException](await(performAction("confirmCompanyName" -> "0")))
+            test(Fixtures.individualHECSession(), "0")
           }
 
           "the call to fetch CT status fails" in {
@@ -400,6 +384,7 @@ class CompanyDetailsControllerSpec
         }
 
         "user answers with a No" when {
+
           "the call to update and next fails" in {
             val answers = Fixtures.incompleteCompanyUserAnswers(crn = Some(CRN("crn")))
             val session = Fixtures.companyHECSession(companyLoginData, retrievedJourneyDataWithCompanyName, answers)
@@ -469,17 +454,38 @@ class CompanyDetailsControllerSpec
               checkIsRedirect(performAction("confirmCompanyName" -> "0"), mockNextCall)
             }
 
-            "today is not 29 feb " in {
-              val currentDate       = LocalDate.of(2021, 10, 9)
-              val lookBackStartDate = LocalDate.of(2019, 10, 10)
-              val lookBackEndDate   = LocalDate.of(2020, 10, 9)
+            "today is 7 april 2021 " in {
+              val currentDate       = LocalDate.of(2021, 4, 7)
+              val lookBackStartDate = LocalDate.of(2019, 4, 7)
+              val lookBackEndDate   = LocalDate.of(2020, 4, 6)
               test(currentDate, lookBackStartDate, lookBackEndDate)
             }
 
-            "today is  29 feb " in {
+            "today is 1 march 2022 " in {
+              val currentDate       = LocalDate.of(2022, 3, 1)
+              val lookBackStartDate = LocalDate.of(2020, 3, 1)
+              val lookBackEndDate   = LocalDate.of(2021, 2, 28)
+              test(currentDate, lookBackStartDate, lookBackEndDate)
+            }
+
+            "today is  1 march 2024(leap year) " in {
+              val currentDate       = LocalDate.of(2024, 3, 1)
+              val lookBackStartDate = LocalDate.of(2022, 3, 1)
+              val lookBackEndDate   = LocalDate.of(2023, 2, 28)
+              test(currentDate, lookBackStartDate, lookBackEndDate)
+            }
+
+            "today is  29 feb 2024(leap year) " in {
               val currentDate       = LocalDate.of(2024, 2, 29)
-              val lookBackStartDate = LocalDate.of(2022, 3, 2)
-              val lookBackEndDate   = LocalDate.of(2023, 3, 1)
+              val lookBackStartDate = LocalDate.of(2022, 3, 1)
+              val lookBackEndDate   = LocalDate.of(2023, 2, 28)
+              test(currentDate, lookBackStartDate, lookBackEndDate)
+            }
+
+            "today is  1 march 2021 (1 year after leap year)  " in {
+              val currentDate       = LocalDate.of(2021, 3, 1)
+              val lookBackStartDate = LocalDate.of(2019, 3, 1)
+              val lookBackEndDate   = LocalDate.of(2020, 2, 29)
               test(currentDate, lookBackStartDate, lookBackEndDate)
             }
 
@@ -560,11 +566,7 @@ class CompanyDetailsControllerSpec
           )
         )
 
-        "the user has not previously answered the question " in {
-
-          val session =
-            Fixtures.companyHECSession(companyLoginData, companyData, CompanyUserAnswers.empty)
-
+        def test(session: HECSession, value: Option[String]) = {
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
@@ -580,12 +582,24 @@ class CompanyDetailsControllerSpec
               doc.select("#back").attr("href") shouldBe mockPreviousCall.url
 
               val selectedOptions = doc.select(".govuk-radios__input[checked]")
-              selectedOptions.isEmpty shouldBe true
+
+              value match {
+                case Some(index) => selectedOptions.attr("value") shouldBe index
+                case None        => selectedOptions.isEmpty       shouldBe true
+              }
 
               val button = doc.select("form")
               button.attr("action") shouldBe routes.CompanyDetailsController.chargeableForCorporationTaxSubmit().url
             }
           )
+        }
+
+        "the user has not previously answered the question " in {
+
+          val session =
+            Fixtures.companyHECSession(companyLoginData, companyData, CompanyUserAnswers.empty)
+
+          test(session, None)
 
         }
 
@@ -605,27 +619,7 @@ class CompanyDetailsControllerSpec
             .copy(chargeableForCT = Some(YesNoAnswer.Yes))
           val updatedSession = session.copy(userAnswers = updatedAnswers)
 
-          inSequence {
-            mockAuthWithNoRetrievals()
-            mockGetSession(updatedSession)
-            mockJourneyServiceGetPrevious(
-              routes.CompanyDetailsController.chargeableForCorporationTax(),
-              updatedSession
-            )(mockPreviousCall)
-          }
-          checkPageIsDisplayed(
-            performAction(),
-            messageFromMessageKey("chargeableForCT.title", "5 October 2020"),
-            { doc =>
-              doc.select("#back").attr("href") shouldBe mockPreviousCall.url
-
-              val selectedOptions = doc.select(".govuk-radios__input[checked]")
-              selectedOptions.attr("value") shouldBe "0"
-
-              val button = doc.select("form")
-              button.attr("action") shouldBe routes.CompanyDetailsController.chargeableForCorporationTaxSubmit().url
-            }
-          )
+          test(updatedSession, Some("0"))
 
         }
 
@@ -768,6 +762,20 @@ class CompanyDetailsControllerSpec
 
         "user gives a valid answer and" when {
 
+          def test(currentSession: HECSession, updatedSession: HECSession, data: String) = {
+            inSequence {
+              mockAuthWithNoRetrievals()
+              mockGetSession(currentSession)
+              mockJourneyServiceUpdateAndNext(
+                routes.CompanyDetailsController.chargeableForCorporationTax(),
+                currentSession,
+                updatedSession
+              )(Right(mockNextCall))
+            }
+
+            checkIsRedirect(performAction("chargeableForCT" -> data), mockNextCall)
+          }
+
           "the answer has not changed from an answer found in session" in {
             val answers = Fixtures.incompleteCompanyUserAnswers(
               crn = Some(CRN("crn")),
@@ -776,17 +784,7 @@ class CompanyDetailsControllerSpec
             )
             val session = Fixtures.companyHECSession(companyLoginData, validJourneyData, answers)
 
-            inSequence {
-              mockAuthWithNoRetrievals()
-              mockGetSession(session)
-              mockJourneyServiceUpdateAndNext(
-                routes.CompanyDetailsController.chargeableForCorporationTax(),
-                session,
-                session
-              )(Right(mockNextCall))
-            }
-
-            checkIsRedirect(performAction("chargeableForCT" -> "0"), mockNextCall)
+            test(session, session, "0")
           }
 
           "the answer has changed from an answer found in session" in {
@@ -802,17 +800,7 @@ class CompanyDetailsControllerSpec
               .copy(chargeableForCT = Some(YesNoAnswer.No), ctIncomeDeclared = None)
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 
-            inSequence {
-              mockAuthWithNoRetrievals()
-              mockGetSession(session)
-              mockJourneyServiceUpdateAndNext(
-                routes.CompanyDetailsController.chargeableForCorporationTax(),
-                session,
-                updatedSession
-              )(Right(mockNextCall))
-            }
-
-            checkIsRedirect(performAction("chargeableForCT" -> "1"), mockNextCall)
+            test(session, updatedSession, "1")
           }
         }
 
@@ -842,10 +830,7 @@ class CompanyDetailsControllerSpec
           )
         )
 
-        "the user has not previously answered the question " in {
-
-          val session = Fixtures.companyHECSession(companyLoginData, companyData)
-
+        def test(session: HECSession, value: Option[String]) = {
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
@@ -862,12 +847,21 @@ class CompanyDetailsControllerSpec
                 .text()                        shouldBe "This is your Company Tax Return for the accounting period ending 5 October 2020."
 
               val selectedOptions = doc.select(".govuk-radios__input[checked]")
-              selectedOptions.isEmpty shouldBe true
+              value match {
+                case Some(index) => selectedOptions.attr("value") shouldBe index
+                case None        => selectedOptions.isEmpty       shouldBe true
+              }
 
               val button = doc.select("form")
               button.attr("action") shouldBe ctIncomeStatementSubmitRoute.url
             }
           )
+        }
+
+        "the user has not previously answered the question " in {
+
+          val session = Fixtures.companyHECSession(companyLoginData, companyData)
+          test(session, None)
 
         }
 
@@ -888,27 +882,7 @@ class CompanyDetailsControllerSpec
             .copy(ctIncomeDeclared = Some(YesNoAnswer.No))
           val updatedSession = session.copy(userAnswers = updatedAnswers)
 
-          inSequence {
-            mockAuthWithNoRetrievals()
-            mockGetSession(updatedSession)
-            mockJourneyServiceGetPrevious(ctIncomeStatementRoute, updatedSession)(mockPreviousCall)
-          }
-          checkPageIsDisplayed(
-            performAction(),
-            messageFromMessageKey("ctIncomeDeclared.title"),
-            { doc =>
-              doc.select("#back").attr("href") shouldBe mockPreviousCall.url
-              doc
-                .select("#ctIncomeDeclared-hint")
-                .text()                        shouldBe "This is your Company Tax Return for the accounting period ending 5 October 2020."
-
-              val selectedOptions = doc.select(".govuk-radios__input[checked]")
-              selectedOptions.attr("value") shouldBe "1"
-
-              val button = doc.select("form")
-              button.attr("action") shouldBe ctIncomeStatementSubmitRoute.url
-            }
-          )
+          test(updatedSession, Some("1"))
 
         }
 
@@ -1583,9 +1557,9 @@ class CompanyDetailsControllerSpec
         }
 
         "the call to fetch CT status fails" in {
-          val today                   = LocalDate.now
-          val lookbackPeriodStartDate = today.minusYears(2).plusDays(1)
-          val lookbackPeriodEndDate   = today.minusYears(1)
+          val today                   = LocalDate.of(2021, 1, 13)
+          val lookbackPeriodStartDate = today.minusYears(2)
+          val lookbackPeriodEndDate   = today.minusYears(1).minusDays(1)
 
           inSequence {
             mockAuthWithNoRetrievals()
@@ -1593,7 +1567,7 @@ class CompanyDetailsControllerSpec
             mockCtutrAttemptsServiceGetWithDefault(crn, companySessionWithCrn.loginData.ggCredId, companyName)(
               Right(attempts)
             )
-            mockTimeProviderToday(LocalDate.now)
+            mockTimeProviderToday(today)
             mockCtutrAttemptsServiceDelete(crn, companySessionWithCrn.loginData.ggCredId)(Right(()))
             mockTaxCheckServiceGetCtStatus(CTUTR(ctutr1), lookbackPeriodStartDate, lookbackPeriodEndDate)(
               Left(Error("fetch CT status failed"))
@@ -1611,9 +1585,9 @@ class CompanyDetailsControllerSpec
               userAnswers = answers
             )
 
-            val today                   = LocalDate.now
-            val lookbackPeriodStartDate = today.minusYears(2).plusDays(1)
-            val lookbackPeriodEndDate   = today.minusYears(1)
+            val today                   = LocalDate.of(2021, 1, 13)
+            val lookbackPeriodStartDate = today.minusYears(2)
+            val lookbackPeriodEndDate   = today.minusYears(1).minusDays(1)
             val ctStatusResponse        = CTStatusResponse(CTUTR(ctutr1), today, today, None)
 
             val updatedAnswers       = answers.copy(ctutr = Some(CTUTR(ctutr1)))
@@ -1628,7 +1602,7 @@ class CompanyDetailsControllerSpec
               mockCtutrAttemptsServiceGetWithDefault(crn, session.loginData.ggCredId, companyName)(
                 Right(CtutrAttempts(crn, GGCredId("ggCredId"), companyName, 1, None))
               )
-              mockTimeProviderToday(LocalDate.now)
+              mockTimeProviderToday(today)
               mockCtutrAttemptsServiceDelete(crn, session.loginData.ggCredId)(Right(()))
               mockTaxCheckServiceGetCtStatus(CTUTR(ctutr1), lookbackPeriodStartDate, lookbackPeriodEndDate)(
                 Right(Some(ctStatusResponse))
@@ -1751,8 +1725,8 @@ class CompanyDetailsControllerSpec
               s"${_13DigitCtutr}k" -> ctutr1
             ).foreach { case (ctutrAnswer, strippedCtutrAnswer) =>
               withClue(s"for CTUTR = $ctutrAnswer") {
-                val answers = Fixtures.incompleteCompanyUserAnswers(crn = Some(crn))
-                val session = Fixtures.companyHECSession(
+                val answers                 = Fixtures.incompleteCompanyUserAnswers(crn = Some(crn))
+                val session                 = Fixtures.companyHECSession(
                   companyLoginData,
                   Fixtures.companyRetrievedJourneyData(
                     desCtutr = Some(CTUTR(strippedCtutrAnswer)),
@@ -1760,10 +1734,9 @@ class CompanyDetailsControllerSpec
                   ),
                   answers
                 )
-
-                val today                   = LocalDate.now
-                val lookbackPeriodStartDate = today.minusYears(2).plusDays(1)
-                val lookbackPeriodEndDate   = today.minusYears(1)
+                val today                   = LocalDate.of(2021, 1, 13)
+                val lookbackPeriodStartDate = today.minusYears(2)
+                val lookbackPeriodEndDate   = today.minusYears(1).minusDays(1)
                 val ctStatusResponse        = CTStatusResponse(CTUTR(strippedCtutrAnswer), today, today, None)
 
                 val updatedAnswers       = answers.copy(ctutr = Some(CTUTR(ctutrAnswer)))
@@ -1785,7 +1758,7 @@ class CompanyDetailsControllerSpec
                   mockCtutrAttemptsServiceGetWithDefault(crn, companyLoginData.ggCredId, companyName)(
                     Right(CtutrAttempts(crn, companyLoginData.ggCredId, companyName, 1, None))
                   )
-                  mockTimeProviderToday(LocalDate.now)
+                  mockTimeProviderToday(today)
                   mockCtutrAttemptsServiceDelete(crn, session.loginData.ggCredId)(Right(()))
                   mockTaxCheckServiceGetCtStatus(
                     CTUTR(strippedCtutrAnswer),
