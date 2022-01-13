@@ -68,11 +68,13 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
         true
       )
 
-      auditEvent.auditType       shouldBe "CompanyMatchFailure"
-      auditEvent.transactionName shouldBe "company-match-failure"
+      auditEvent.auditType       shouldBe "CompanyMatch"
+      auditEvent.transactionName shouldBe "company-match"
       Json.toJson(auditEvent)    shouldBe Json.parse(
         """
           |{
+          |  "ctutrType": "Submitted",
+          |  "matchResult": "NoMatch",
           |  "companyRegistrationNumber": "12345678",
           |  "submittedCTUTR": "1111111111",
           |  "submittedCTUTRStandardised": "2222222222",
@@ -94,11 +96,13 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
         CTUTR("4444444444")
       )
 
-      auditEvent.auditType       shouldBe "CompanyMatchFailure"
-      auditEvent.transactionName shouldBe "company-match-failure"
+      auditEvent.auditType       shouldBe "CompanyMatch"
+      auditEvent.transactionName shouldBe "company-match"
       Json.toJson(auditEvent)    shouldBe Json.parse(
         """
           |{
+          |  "ctutrType": "Enrolment",
+          |  "matchResult": "NoMatch",
           |  "companyRegistrationNumber": "12345678",
           |  "hmrcCTUTR": "3333333333",
           |  "enrolmentCTUTR": "4444444444"
@@ -119,11 +123,13 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
         CTUTR("3333333333")
       )
 
-      auditEvent.auditType       shouldBe "CompanyMatchSuccess"
-      auditEvent.transactionName shouldBe "company-match-success"
+      auditEvent.auditType       shouldBe "CompanyMatch"
+      auditEvent.transactionName shouldBe "company-match"
       Json.toJson(auditEvent)    shouldBe Json.parse(
         """
           |{
+          |  "ctutrType": "Submitted",
+          |  "matchResult": "Match",
           |  "companyRegistrationNumber": "12345678",
           |  "submittedCTUTR": "1111111111",
           |  "submittedCTUTRStandardised": "2222222222",
@@ -144,11 +150,13 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
         CTUTR("4444444444")
       )
 
-      auditEvent.auditType       shouldBe "CompanyMatchSuccess"
-      auditEvent.transactionName shouldBe "company-match-success"
+      auditEvent.auditType       shouldBe "CompanyMatch"
+      auditEvent.transactionName shouldBe "company-match"
       Json.toJson(auditEvent)    shouldBe Json.parse(
         """
           |{
+          |  "ctutrType": "Enrolment",
+          |  "matchResult": "Match",
           |  "companyRegistrationNumber": "12345678",
           |  "hmrcCTUTR": "3333333333",
           |  "enrolmentCTUTR": "4444444444"
