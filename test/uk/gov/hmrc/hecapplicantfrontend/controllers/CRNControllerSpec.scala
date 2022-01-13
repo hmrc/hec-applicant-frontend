@@ -29,7 +29,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.CompanyLoginData
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.CompanyRetrievedJourneyData
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR, GGCredId}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.hecapplicantfrontend.models.{CompanyHouseDetails, CompanyHouseName, CtutrAttempts, Error, YesNoAnswer}
+import uk.gov.hmrc.hecapplicantfrontend.models.{CompanyHouseDetails, CompanyHouseName, CtutrAttempts, Error, HECSession, YesNoAnswer}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.{CompanyDetailsService, CtutrAttemptsService, JourneyService}
 import uk.gov.hmrc.hecapplicantfrontend.util.StringUtils.StringOps
@@ -93,10 +93,7 @@ class CRNControllerSpec
 
       "display the page" when {
 
-        "the user has not previously answered the question " in {
-
-          val session = CompanyHECSession.newSession(companyLoginData)
-
+        def test(session: HECSession, inputValue: Option[String]) = {
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
@@ -115,8 +112,17 @@ class CRNControllerSpec
               val link = doc.select("p > .govuk-link")
               link.text should startWith(messageFromMessageKey("crn.link"))
 
+              val input = doc.select(".govuk-input")
+              input.attr("value") shouldBe inputValue.getOrElse("")
+
             }
           )
+        }
+
+        "the user has not previously answered the question " in {
+
+          val session = CompanyHECSession.newSession(companyLoginData)
+          test(session, None)
 
         }
 
@@ -134,32 +140,7 @@ class CRNControllerSpec
           val session        =
             Fixtures.companyHECSession(companyLoginData, CompanyRetrievedJourneyData.empty, answers)
           val updatedSession = session.copy(userAnswers = updatedAnswers)
-
-          inSequence {
-            mockAuthWithNoRetrievals()
-            mockGetSession(updatedSession)
-            mockJourneyServiceGetPrevious(
-              routes.CRNController.companyRegistrationNumber(),
-              updatedSession
-            )(mockPreviousCall)
-          }
-          checkPageIsDisplayed(
-            performAction(),
-            messageFromMessageKey("crn.title"),
-            { doc =>
-              doc.select("#back").attr("href") shouldBe mockPreviousCall.url
-
-              val button = doc.select("form")
-              button.attr("action") shouldBe routes.CRNController.companyRegistrationNumberSubmit().url
-
-              val link = doc.select("p > .govuk-link")
-              link.text should startWith(messageFromMessageKey("crn.link"))
-
-              val input = doc.select(".govuk-input")
-              input.attr("value") shouldBe validCRN.value
-
-            }
-          )
+          test(updatedSession, Some(validCRN.value))
 
         }
 
@@ -180,7 +161,7 @@ class CRNControllerSpec
 
         val session = CompanyHECSession.newSession(companyLoginData)
 
-        "nothing has been submitted" in {
+        def test(input: (String, String)*)(errorMessageKey: String) = {
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
@@ -190,60 +171,29 @@ class CRNControllerSpec
           }
 
           checkFormErrorIsDisplayed(
-            performAction(),
+            performAction(input: _*),
             messageFromMessageKey("crn.title"),
-            messageFromMessageKey("crn.error.required")
+            messageFromMessageKey(errorMessageKey)
           )
+        }
+
+        "nothing has been submitted" in {
+          test()("crn.error.required")
         }
 
         "the submitted value is too long" in {
-          inSequence {
-            mockAuthWithNoRetrievals()
-            mockGetSession(session)
-            mockJourneyServiceGetPrevious(routes.CRNController.companyRegistrationNumber(), session)(
-              mockPreviousCall
-            )
-          }
-
-          checkFormErrorIsDisplayed(
-            performAction("crn" -> "1234567890"),
-            messageFromMessageKey("crn.title"),
-            messageFromMessageKey("crn.error.crnInvalid")
-          )
+          test("crn" -> "1234567890")("crn.error.crnInvalid")
         }
 
         "the submitted value is too short" in {
-          inSequence {
-            mockAuthWithNoRetrievals()
-            mockGetSession(session)
-            mockJourneyServiceGetPrevious(routes.CRNController.companyRegistrationNumber(), session)(
-              mockPreviousCall
-            )
-          }
-
-          checkFormErrorIsDisplayed(
-            performAction("crn" -> "12345"),
-            messageFromMessageKey("crn.title"),
-            messageFromMessageKey("crn.error.crnInvalid")
-          )
+          test("crn" -> "12345")("crn.error.crnInvalid")
         }
 
         "the submitted value contains characters which are not letters or digits" in {
 
           nonAlphaNumCRN.foreach { crn =>
             withClue(s"For CRN $crn: ") {
-              inSequence {
-                mockAuthWithNoRetrievals()
-                mockGetSession(session)
-                mockJourneyServiceGetPrevious(routes.CRNController.companyRegistrationNumber(), session)(
-                  mockPreviousCall
-                )
-              }
-
-              checkFormErrorIsDisplayed(
-                performAction("crn" -> crn.value),
-                messageFromMessageKey("crn.title"),
-                messageFromMessageKey("crn.error.nonAlphanumericChars")
+             test("crn" -> crn.value)("crn.error.nonAlphanumericChars")
               )
 
             }

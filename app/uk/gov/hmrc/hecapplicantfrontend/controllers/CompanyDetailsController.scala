@@ -593,6 +593,7 @@ object CompanyDetailsController {
     currentDay.minusYears(2) -> currentDay.minusYears(1).minusDays(1)
   }
 
+
   val enterCtutrFormKey: String = "enterCtutr"
 
   def enterCtutrForm(desCtrutr: CTUTR): Form[CTUTR] = {
