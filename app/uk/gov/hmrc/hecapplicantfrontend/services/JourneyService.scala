@@ -564,8 +564,9 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
 
   def emailAddressConfirmedRoute(session: HECSession): Call =
     session.userEmailAnswers.flatMap(_.emailSendResult) match {
-      case Some(EmailSendResult.EmailSent) => routes.EmailSentController.emailSent
-      case _                               => routes.ProblemSendingEmailController.problemSendingEmail
+      case Some(EmailSendResult.EmailSent)        => routes.EmailSentController.emailSent
+      case Some(EmailSendResult.EmailSentFailure) => routes.ProblemSendingEmailController.problemSendingEmail
+      case _                                      => sys.error("Email send Result is  invalid/missing from the response")
     }
 
   def resendEmailPreviousRoute(session: HECSession): Call =

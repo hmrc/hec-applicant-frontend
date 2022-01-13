@@ -101,8 +101,6 @@ class SendEmailServiceImplSpec extends AnyWordSpec with Matchers with MockFactor
         implicit val requestWithSessionData: RequestWithSessionData[AnyContentAsEmpty.type] =
           RequestWithSessionData(authenticatedRequest, session)
 
-        val emailSendRequestJson = Json.toJson(emailSendRequest)
-
         def testError() = {
           val result = sendEmailService.sendEmail(emailAddress, emailParameter)
           await(result.value) shouldBe a[Left[_, _]]
@@ -110,22 +108,6 @@ class SendEmailServiceImplSpec extends AnyWordSpec with Matchers with MockFactor
 
         "the http call fails" in {
           mockSendEmail(emailSendRequest)(Left(Error("")))
-          testError()
-        }
-
-        "the http response does not come back with status 202 (Accepted)" in {
-          mockSendEmail(emailSendRequest)(Right(HttpResponse(OK, emailSendRequestJson, emptyHeaders)))
-          testError()
-        }
-
-        "there is no json in the response" in {
-          mockSendEmail(emailSendRequest)(Right(HttpResponse(CREATED, "hi")))
-          testError()
-        }
-
-        "the json in the response cannot be parsed" in {
-          val json = Json.parse("""{ "a" : 1 }""")
-          mockSendEmail(emailSendRequest)(Right(HttpResponse(CREATED, json, emptyHeaders)))
           testError()
         }
 
@@ -165,6 +147,38 @@ class SendEmailServiceImplSpec extends AnyWordSpec with Matchers with MockFactor
             }
           }
 
+        }
+
+        "request json is not parsed and email is not send" when {
+
+          val emailSendRequest                                                                = EmailSendRequest(List(emailAddress), "template_EN", emailParameter)
+          val authenticatedRequest                                                            = AuthenticatedRequest(
+            new MessagesRequest(FakeRequest().withCookies(Cookie("PLAY_LANG", "en")), messagesApi)
+          )
+          implicit val requestWithSessionData: RequestWithSessionData[AnyContentAsEmpty.type] =
+            RequestWithSessionData(authenticatedRequest, session)
+
+          def emailSendFailure() = {
+            val result = sendEmailService.sendEmail(emailAddress, emailParameter)
+            await(result.value) shouldBe Right(EmailSendResult.EmailSentFailure)
+          }
+
+          val emailSendRequestJson = Json.toJson(emailSendRequest)
+          "the http response does not come back with status 202 (Accepted)" in {
+            mockSendEmail(emailSendRequest)(Right(HttpResponse(OK, emailSendRequestJson, emptyHeaders)))
+            emailSendFailure()
+          }
+
+          "there is no json in the response" in {
+            mockSendEmail(emailSendRequest)(Right(HttpResponse(CREATED, "hi")))
+            emailSendFailure()
+          }
+
+          "the json in the response cannot be parsed" in {
+            val json = Json.parse("""{ "a" : 1 }""")
+            mockSendEmail(emailSendRequest)(Right(HttpResponse(BAD_REQUEST, json, emptyHeaders)))
+            emailSendFailure()
+          }
         }
 
       }

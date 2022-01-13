@@ -60,10 +60,7 @@ class SendEmailServiceImpl @Inject() (emailSendConnector: SendEmailConnector, co
     result.subflatMap { response =>
       response.status match {
         case ACCEPTED => Right(EmailSendResult.EmailSent)
-        case other    =>
-          Left(
-            Error(s"Call to sendEmail came back with status $other")
-          )
+        case _        => Right(EmailSendResult.EmailSentFailure)
       }
 
     }
