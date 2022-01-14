@@ -93,7 +93,7 @@ class ConfirmIndividualDetailsControllerSpecCYSpec
               val rowValues = doc.select(".govuk-summary-list__value")
               rowValues.get(0).text shouldBe name.firstName
               rowValues.get(1).text shouldBe name.lastName
-              rowValues.get(2).text shouldBe "3 December 2000"
+              rowValues.get(2).text shouldBe "3 Rhagfyr 2000"
 
               val link = doc.select(".govuk-body > .govuk-link")
               link.attr("href") shouldBe routes.ConfirmIndividualDetailsController.confirmIndividualDetailsExit().url
