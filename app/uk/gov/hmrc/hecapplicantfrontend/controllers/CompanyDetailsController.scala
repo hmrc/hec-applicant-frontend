@@ -590,7 +590,7 @@ object CompanyDetailsController {
     */
   def calculateLookBackPeriod(today: LocalDate): (LocalDate, LocalDate) = {
     val currentDay = if (today.getMonth.getValue === 2 && today.getDayOfMonth === 29) today.plusDays(1) else today
-    currentDay.minusYears(2).plusDays(1) -> currentDay.minusYears(1)
+    currentDay.minusYears(2) -> currentDay.minusYears(1).minusDays(1)
   }
 
   val enterCtutrFormKey: String = "enterCtutr"
