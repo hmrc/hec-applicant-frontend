@@ -23,8 +23,9 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, RequestWithSessionData, SessionDataAction}
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession
 import uk.gov.hmrc.hecapplicantfrontend.models.emailSend.EmailParameters
+import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
 import uk.gov.hmrc.hecapplicantfrontend.services.{JourneyService, SendEmailService}
-import uk.gov.hmrc.hecapplicantfrontend.util.{Logging, TimeProvider, TimeUtils}
+import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging, TimeUtils}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.hecapplicantfrontend.views.html
 
@@ -35,7 +36,6 @@ class EmailAddressConfirmedController @Inject() (
   sessionDataAction: SessionDataAction,
   journeyService: JourneyService,
   sendEmailService: SendEmailService,
-  timeProvider: TimeProvider,
   emailAddressConfirmedPage: html.EmailAddressConfirmed,
   mcc: MessagesControllerComponents
 )(implicit ec: ExecutionContext)
@@ -80,17 +80,25 @@ class EmailAddressConfirmedController @Inject() (
     }
 
   private def getEmailParameters(session: HECSession)(implicit request: RequestWithSessionData[_]) = {
-    val hecTaxCheckCode        = session.completedTaxCheck
+    val hecTaxCheckCode          = session.completedTaxCheck
       .map(_.taxCheckCode)
       .getOrElse(sys.error(" Tax check code is not in session"))
-    val taxCheckCodeExpiryDate = session.completedTaxCheck
+    val taxCheckCodeExpiryDate   = session.completedTaxCheck
       .map(_.expiresAfter)
       .getOrElse(sys.error(" Tax check code expiry date is not in session"))
-
+    val taxCheckCodeCreatedDate  = session.completedTaxCheck
+      .map(_.createDate)
+      .getOrElse(
+        sys.error(" Tax check code created date is not in session")
+      )
+    val licenceType: LicenceType = session.userAnswers
+      .fold(_.fold(_.licenceType, _.licenceType.some), _.fold(_.licenceType, _.licenceType.some))
+      .getOrElse(sys.error("Licence Type is not in session"))
     EmailParameters(
-      verificationLink = s"${TimeUtils.govDisplayFormat(timeProvider.currentDate)}, " +
-        s"${hecTaxCheckCode.value}, " +
-        s"${TimeUtils.govDisplayFormat(taxCheckCodeExpiryDate)}"
+      currentDate = s"${TimeUtils.govDisplayFormat(taxCheckCodeCreatedDate.toLocalDate)}",
+      licenceType = s"${FormUtils.licenceTypeFormat(licenceType)}",
+      hecTaxCheckCode = s"${hecTaxCheckCode.value}",
+      expiresAfter = s"${TimeUtils.govDisplayFormat(taxCheckCodeExpiryDate)}"
     )
 
   }

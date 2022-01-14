@@ -22,6 +22,9 @@ import cats.syntax.either._
 import cats.syntax.eq._
 import play.api.data.FormError
 import play.api.data.format.Formatter
+import play.api.i18n.Messages
+import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
+import uk.gov.hmrc.hecapplicantfrontend.models.views.LicenceTypeOption
 
 import scala.util.Try
 
@@ -67,5 +70,10 @@ object FormUtils {
             Map(key -> i.toString)
           }
     }
+
+  def licenceTypeFormat(licenceType: LicenceType)(implicit messages: Messages): String = {
+    val licenceTypeMessage = LicenceTypeOption.licenceTypeOption(licenceType)
+    messages(s"licenceType.$licenceTypeMessage")
+  }
 
 }

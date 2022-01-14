@@ -33,7 +33,7 @@ import uk.gov.hmrc.hecapplicantfrontend.util.{TimeProvider, TimeUtils}
 import uk.gov.hmrc.hecapplicantfrontend.utils.Fixtures
 import uk.gov.hmrc.http.HeaderCarrier
 
-import java.time.LocalDate
+import java.time.{LocalDate, ZoneId, ZonedDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -44,19 +44,16 @@ class EmailAddressConfirmedControllerSpec
     with AuthAndSessionDataBehaviour
     with JourneyServiceSupport {
 
-  val mockTimeProvider     = mock[TimeProvider]
   val mockSendEmailService = mock[SendEmailService]
 
   override def overrideBindings = List(
     bind[AuthConnector].toInstance(mockAuthConnector),
     bind[SessionStore].toInstance(mockSessionStore),
     bind[JourneyService].toInstance(mockJourneyService),
-    bind[TimeProvider].toInstance(mockTimeProvider),
     bind[SendEmailService].toInstance(mockSendEmailService)
   )
 
   val controller                          = instanceOf[EmailAddressConfirmedController]
-  def mockTimeProviderToday(d: LocalDate) = (mockTimeProvider.currentDate _).expects().returning(d)
 
   val ggEmailId = EmailAddress("user@test.com")
 
@@ -76,15 +73,16 @@ class EmailAddressConfirmedControllerSpec
 
   val hecTaxCheckCode = HECTaxCheckCode("ABC 123 DER")
 
-  val currentDate = LocalDate.of(2021, 7, 10)
   val expiryDate  = LocalDate.of(2021, 10, 9)
+  val createDate = ZonedDateTime.of(2021, 7,9,0,0,0,0, ZoneId.of("Europe/London"))
 
-  val currentDateString = TimeUtils.govDisplayFormat(currentDate)
+  val createDateString = TimeUtils.govDisplayFormat(createDate.toLocalDate)
   val expiryDateString  = TimeUtils.govDisplayFormat(expiryDate)
 
-  val hecTaxCheck = HECTaxCheck(hecTaxCheckCode, expiryDate)
+  val hecTaxCheck = HECTaxCheck(hecTaxCheckCode, expiryDate, createDate)
 
-  val emailParameters = EmailParameters("Dummy name", "10 July 2021, ABC 123 DER, 9 October 2021")
+  val emailParametersEN = EmailParameters("9 July 2021", "ABC 123 DER","Driver of taxis and private hires", "9 October 2021")
+  val emailParametersCY = EmailParameters("9 Gorffennaf 2021", "ABC 123 DER","Yn cynnwys trwyddedau cerbydau hacni a deuol.", "9 Hydref 2021")
 
   def mockSendEmail(emailAddress: EmailAddress, emailParameters: EmailParameters)(
     result: Either[Error, EmailSendResult]
@@ -102,18 +100,22 @@ class EmailAddressConfirmedControllerSpec
 
       "return a technical error" when {
 
+        def isError(session:HECSession) = {
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+          }
+          assertThrows[RuntimeException](await(performAction()))
+        }
+
         "user selected email is not in session" in {
           val session = Fixtures.individualHECSession(
             userAnswers = Fixtures.completeIndividualUserAnswers(),
             isEmailRequested = true,
             userEmailAnswers = None
           )
+          isError(session)
 
-          inSequence {
-            mockAuthWithNoRetrievals()
-            mockGetSession(session)
-          }
-          assertThrows[RuntimeException](await(performAction()))
         }
 
         "passcode verification code is other than match and passcodeRequestResult = PasscodeSent" in {
@@ -135,11 +137,7 @@ class EmailAddressConfirmedControllerSpec
                   )
                   .some
               )
-              inSequence {
-                mockAuthWithNoRetrievals()
-                mockGetSession(session)
-              }
-              assertThrows[RuntimeException](await(performAction()))
+              isError(session)
             }
           }
 
@@ -163,11 +161,7 @@ class EmailAddressConfirmedControllerSpec
                   )
                   .some
               )
-              inSequence {
-                mockAuthWithNoRetrievals()
-                mockGetSession(session)
-              }
-              assertThrows[RuntimeException](await(performAction()))
+              isError(session)
             }
           }
 
@@ -192,11 +186,7 @@ class EmailAddressConfirmedControllerSpec
                   )
                   .some
               )
-              inSequence {
-                mockAuthWithNoRetrievals()
-                mockGetSession(session)
-              }
-              assertThrows[RuntimeException](await(performAction()))
+              isError(session)
             }
           }
         }
@@ -356,8 +346,7 @@ class EmailAddressConfirmedControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockTimeProviderToday(currentDate)
-            mockSendEmail(ggEmailId, emailParameters = emailParameters)(Left(Error("")))
+            mockSendEmail(ggEmailId, emailParameters = emailParametersEN)(Left(Error("")))
           }
 
           assertThrows[RuntimeException](await(performAction()))
@@ -379,8 +368,7 @@ class EmailAddressConfirmedControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockTimeProviderToday(currentDate)
-            mockSendEmail(ggEmailId, emailParameters = emailParameters)(Right(EmailSendResult.EmailSent))
+            mockSendEmail(ggEmailId, emailParameters = emailParametersEN)(Right(EmailSendResult.EmailSent))
             mockJourneyServiceUpdateAndNext(
               routes.EmailAddressConfirmedController.emailAddressConfirmed(),
               session,
@@ -395,30 +383,59 @@ class EmailAddressConfirmedControllerSpec
       }
 
       "redirect to the next page" in {
-        val session = Fixtures.companyHECSession(
-          loginData = Fixtures.companyLoginData(emailAddress = ggEmailId.some),
-          userAnswers = Fixtures.completeCompanyUserAnswers(),
-          isEmailRequested = true,
-          completedTaxCheck = hecTaxCheck.some,
-          userEmailAnswers = passcodeSentAndMatchedUserEmailAnswer.some
-        )
 
-        val updatedSession =
-          session.copy(userEmailAnswers =
-            passcodeSentAndMatchedUserEmailAnswer.copy(emailSendResult = EmailSendResult.EmailSent.some).some
+        "when the user has selected  English language" in {
+          val session = Fixtures.companyHECSession(
+            loginData = Fixtures.companyLoginData(emailAddress = ggEmailId.some),
+            userAnswers = Fixtures.completeCompanyUserAnswers(),
+            isEmailRequested = true,
+            completedTaxCheck = hecTaxCheck.some,
+            userEmailAnswers = passcodeSentAndMatchedUserEmailAnswer.some
           )
-        inSequence {
-          mockAuthWithNoRetrievals()
-          mockGetSession(session)
-          mockTimeProviderToday(currentDate)
-          mockSendEmail(ggEmailId, emailParameters = emailParameters)(Right(EmailSendResult.EmailSent))
-          mockJourneyServiceUpdateAndNext(
-            routes.EmailAddressConfirmedController.emailAddressConfirmed(),
-            session,
-            updatedSession
-          )(Right(mockNextCall))
+
+          val updatedSession =
+            session.copy(userEmailAnswers =
+              passcodeSentAndMatchedUserEmailAnswer.copy(emailSendResult = EmailSendResult.EmailSent.some).some
+            )
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockSendEmail(ggEmailId, emailParameters = emailParametersEN)(Right(EmailSendResult.EmailSent))
+            mockJourneyServiceUpdateAndNext(
+              routes.EmailAddressConfirmedController.emailAddressConfirmed(),
+              session,
+              updatedSession
+            )(Right(mockNextCall))
+          }
+          checkIsRedirect(performAction(), mockNextCall)
         }
-        checkIsRedirect(performAction(), mockNextCall)
+
+        "when the user has selected  welsh language" in {
+          val session = Fixtures.companyHECSession(
+            loginData = Fixtures.companyLoginData(emailAddress = ggEmailId.some),
+            userAnswers = Fixtures.completeCompanyUserAnswers(),
+            isEmailRequested = true,
+            completedTaxCheck = hecTaxCheck.some,
+            userEmailAnswers = passcodeSentAndMatchedUserEmailAnswer.some
+          )
+
+          val updatedSession =
+            session.copy(userEmailAnswers =
+              passcodeSentAndMatchedUserEmailAnswer.copy(emailSendResult = EmailSendResult.EmailSent.some).some
+            )
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockSendEmail(ggEmailId, emailParameters = emailParametersEN)(Right(EmailSendResult.EmailSent))
+            mockJourneyServiceUpdateAndNext(
+              routes.EmailAddressConfirmedController.emailAddressConfirmed(),
+              session,
+              updatedSession
+            )(Right(mockNextCall))
+          }
+          checkIsRedirect(performAction(), mockNextCall)
+        }
+
       }
 
     }
