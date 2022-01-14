@@ -63,7 +63,7 @@ class SendEmailServiceImpl @Inject() (emailSendConnector: SendEmailConnector, co
       response.status match {
         case ACCEPTED => Right(EmailSendResult.EmailSent)
         case other    =>
-          logger.info(s"Response for send email call came back with status : $other")
+          logger.warn(s"Response for send email call came back with status : $other")
           Right(EmailSendResult.EmailSentFailure)
       }
 
