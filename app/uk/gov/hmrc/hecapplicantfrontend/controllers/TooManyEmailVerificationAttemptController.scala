@@ -20,24 +20,21 @@ import com.google.inject.Inject
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
-import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
+import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
 class TooManyEmailVerificationAttemptController @Inject() (
   authAction: AuthAction,
   sessionDataAction: SessionDataAction,
-  journeyService: JourneyService,
-  mcc: MessagesControllerComponents
+  mcc: MessagesControllerComponents,
+  tooManyEmailVerificationAttemptsPage: html.TooManyEmailVerificationAttempts
 ) extends FrontendController(mcc)
     with I18nSupport
     with Logging {
 
   val tooManyEmailVerificationAttempts: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
-    Ok(
-      s"session: ${request.sessionData}, back :: ${journeyService.previous(routes.TooManyEmailVerificationAttemptController.tooManyEmailVerificationAttempts)}"
-    )
-
+    Ok(tooManyEmailVerificationAttemptsPage())
   }
 
 }
