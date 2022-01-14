@@ -193,9 +193,7 @@ class CRNControllerSpec
 
           nonAlphaNumCRN.foreach { crn =>
             withClue(s"For CRN $crn: ") {
-             test("crn" -> crn.value)("crn.error.nonAlphanumericChars")
-              )
-
+              test("crn" -> crn.value)("crn.error.nonAlphanumericChars")
             }
 
           }
@@ -205,20 +203,7 @@ class CRNControllerSpec
         "the submitted value contains alphanumeric characters but in wrong format" in {
           inValidCRN.foreach { crn =>
             withClue(s"For CRN $crn: ") {
-              inSequence {
-                mockAuthWithNoRetrievals()
-                mockGetSession(session)
-                mockJourneyServiceGetPrevious(routes.CRNController.companyRegistrationNumber(), session)(
-                  mockPreviousCall
-                )
-              }
-
-              checkFormErrorIsDisplayed(
-                performAction("crn" -> crn.value),
-                messageFromMessageKey("crn.title"),
-                messageFromMessageKey("crn.error.crnInvalid")
-              )
-
+              test("crn" -> crn.value)("crn.error.crnInvalid")
             }
           }
         }
@@ -332,12 +317,11 @@ class CRNControllerSpec
 
       "redirect to the next page" when {
 
-        "a blocked CRN is submitted" in {
-          val crn                  = validCRN
+        def test(crn: CRN, currentSession: HECSession, updatedSession: HECSession, blockedUntil: Option[ZonedDateTime], findCompany: Boolean) = {
           val answers              = Fixtures.completeCompanyUserAnswers()
           val session              = Fixtures.companyHECSession(companyLoginData, CompanyRetrievedJourneyData.empty, answers)
           val blockedCtutrAttempts =
-            CtutrAttempts(crn, session.loginData.ggCredId, companyName, 1, Some(ZonedDateTime.now))
+            CtutrAttempts(crn, session.loginData.ggCredId, companyName, 1, blockedUntil)
 
           // CRN dependent answers are reset
           val updatedAnswers = IncompleteCompanyUserAnswers
@@ -352,7 +336,6 @@ class CRNControllerSpec
             )
 
           val updatedSession = session.copy(userAnswers = updatedAnswers, crnBlocked = true)
-
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
@@ -366,6 +349,10 @@ class CRNControllerSpec
             )
           }
           checkIsRedirect(performAction("crn" -> crn.value), mockNextCall)
+        }
+
+        "a blocked CRN is submitted" in {
+
         }
 
         "a valid & unblocked CRN is submitted and company is found" in {
