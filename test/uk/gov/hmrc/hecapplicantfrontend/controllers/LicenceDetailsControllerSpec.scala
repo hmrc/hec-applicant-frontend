@@ -231,7 +231,7 @@ class LicenceDetailsControllerSpec
 
         val session = IndividualHECSession.newSession(individualLoginData)
 
-        "nothing is submitted" in {
+        def testFormError(data: (String, String)*)(errorMessageKey: String) = {
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
@@ -239,38 +239,22 @@ class LicenceDetailsControllerSpec
           }
 
           checkFormErrorIsDisplayed(
-            performAction(),
+            performAction(data: _*),
             messageFromMessageKey("licenceType.title"),
-            messageFromMessageKey("licenceType.error.required")
+            messageFromMessageKey(errorMessageKey)
           )
+        }
+
+        "nothing is submitted" in {
+          testFormError()("licenceType.error.required")
         }
 
         "an index is submitted which is too large" in {
-          inSequence {
-            mockAuthWithNoRetrievals()
-            mockGetSession(session)
-            mockJourneyServiceGetPrevious(routes.LicenceDetailsController.licenceType(), session)(mockPreviousCall)
-          }
-
-          checkFormErrorIsDisplayed(
-            performAction("licenceType" -> Int.MaxValue.toString),
-            messageFromMessageKey("licenceType.title"),
-            messageFromMessageKey("licenceType.error.invalid")
-          )
+          testFormError("licenceType" -> Int.MaxValue.toString)("licenceType.error.invalid")
         }
 
         "a value is submitted which is not a number" in {
-          inSequence {
-            mockAuthWithNoRetrievals()
-            mockGetSession(session)
-            mockJourneyServiceGetPrevious(routes.LicenceDetailsController.licenceType(), session)(mockPreviousCall)
-          }
-
-          checkFormErrorIsDisplayed(
-            performAction("licenceType" -> "xyz"),
-            messageFromMessageKey("licenceType.title"),
-            messageFromMessageKey("licenceType.error.invalid")
-          )
+          testFormError("licenceType" -> "xyz")("licenceType.error.invalid")
         }
 
       }
@@ -516,9 +500,7 @@ class LicenceDetailsControllerSpec
 
       "display the page" when {
 
-        "the user has not previously answered the question" in {
-          val session = IndividualHECSession.newSession(individualLoginData)
-
+        def testDisplayPage(session: HECSession, value: Option[String]) = {
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
@@ -534,13 +516,21 @@ class LicenceDetailsControllerSpec
               doc.select("#back").attr("href") shouldBe mockPreviousCall.url
 
               val selectedOptions = doc.select(".govuk-radios__input[checked]")
-              selectedOptions.isEmpty shouldBe true
+              value match {
+                case Some(index) => selectedOptions.attr("value") shouldBe index
+                case None        => selectedOptions.isEmpty       shouldBe true
+              }
 
               val form = doc.select("form")
               form
                 .attr("action") shouldBe routes.LicenceDetailsController.licenceTimeTradingSubmit().url
             }
           )
+        }
+
+        "the user has not previously answered the question" in {
+          val session = IndividualHECSession.newSession(individualLoginData)
+          testDisplayPage(session, None)
 
         }
 
@@ -558,29 +548,7 @@ class LicenceDetailsControllerSpec
                 Some(EntityType.Company)
               )
             )
-
-          inSequence {
-            mockAuthWithNoRetrievals()
-            mockGetSession(session)
-            mockJourneyServiceGetPrevious(routes.LicenceDetailsController.licenceTimeTrading(), session)(
-              mockPreviousCall
-            )
-          }
-
-          checkPageIsDisplayed(
-            performAction(),
-            messageFromMessageKey("licenceTimeTrading.title"),
-            { doc =>
-              doc.select("#back").attr("href") shouldBe mockPreviousCall.url
-
-              val selectedOptions = doc.select(".govuk-radios__input[checked]")
-              selectedOptions.attr("value") shouldBe "1"
-
-              val form = doc.select("form")
-              form
-                .attr("action") shouldBe routes.LicenceDetailsController.licenceTimeTradingSubmit().url
-            }
-          )
+          testDisplayPage(session, Some("1"))
         }
 
       }
@@ -598,7 +566,7 @@ class LicenceDetailsControllerSpec
 
         val session = IndividualHECSession.newSession(individualLoginData)
 
-        "nothing is submitted" in {
+        def testFormError(data: (String, String)*)(errorMessageKey: String) = {
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
@@ -608,42 +576,22 @@ class LicenceDetailsControllerSpec
           }
 
           checkFormErrorIsDisplayed(
-            performAction(),
+            performAction(data: _*),
             messageFromMessageKey("licenceTimeTrading.title"),
-            messageFromMessageKey("licenceTimeTrading.error.required")
+            messageFromMessageKey(errorMessageKey)
           )
+        }
+
+        "nothing is submitted" in {
+          testFormError()("licenceTimeTrading.error.required")
         }
 
         "an index is submitted which is too large" in {
-          inSequence {
-            mockAuthWithNoRetrievals()
-            mockGetSession(session)
-            mockJourneyServiceGetPrevious(routes.LicenceDetailsController.licenceTimeTrading(), session)(
-              mockPreviousCall
-            )
-          }
-
-          checkFormErrorIsDisplayed(
-            performAction("licenceTimeTrading" -> Int.MaxValue.toString),
-            messageFromMessageKey("licenceTimeTrading.title"),
-            messageFromMessageKey("licenceTimeTrading.error.invalid")
-          )
+          testFormError("licenceTimeTrading" -> Int.MaxValue.toString)("licenceTimeTrading.error.invalid")
         }
 
         "a value is submitted which is not a number" in {
-          inSequence {
-            mockAuthWithNoRetrievals()
-            mockGetSession(session)
-            mockJourneyServiceGetPrevious(routes.LicenceDetailsController.licenceTimeTrading(), session)(
-              mockPreviousCall
-            )
-          }
-
-          checkFormErrorIsDisplayed(
-            performAction("licenceTimeTrading" -> "xyz"),
-            messageFromMessageKey("licenceTimeTrading.title"),
-            messageFromMessageKey("licenceTimeTrading.error.invalid")
-          )
+          testFormError("licenceTimeTrading" -> "xyz")("licenceTimeTrading.error.invalid")
         }
 
       }
@@ -683,18 +631,7 @@ class LicenceDetailsControllerSpec
 
         "valid data is submitted and" when {
 
-          "the user has not previously completed answering questions" in {
-            val answers        = IndividualUserAnswers.empty
-            val updatedAnswers =
-              IndividualUserAnswers.empty.copy(licenceTimeTrading = Some(LicenceTimeTrading.FourToEightYears))
-            val session        =
-              Fixtures.individualHECSession(
-                individualLoginData,
-                IndividualRetrievedJourneyData.empty,
-                answers
-              )
-            val updatedSession = session.copy(userAnswers = updatedAnswers)
-
+          def redirectTest(session: HECSession, updatedSession: HECSession, data: String) = {
             inSequence {
               mockAuthWithNoRetrievals()
               mockGetSession(session)
@@ -707,7 +644,22 @@ class LicenceDetailsControllerSpec
               )
             }
 
-            checkIsRedirect(performAction("licenceTimeTrading" -> "2"), mockNextCall)
+            checkIsRedirect(performAction("licenceTimeTrading" -> data), mockNextCall)
+          }
+
+          "the user has not previously completed answering questions" in {
+            val answers        = IndividualUserAnswers.empty
+            val updatedAnswers =
+              IndividualUserAnswers.empty.copy(licenceTimeTrading = Some(LicenceTimeTrading.FourToEightYears))
+            val session        =
+              Fixtures.individualHECSession(
+                individualLoginData,
+                IndividualRetrievedJourneyData.empty,
+                answers
+              )
+            val updatedSession = session.copy(userAnswers = updatedAnswers)
+            redirectTest(session, updatedSession, "2")
+
           }
 
           "the user has previously completed answering questions" in {
@@ -734,20 +686,8 @@ class LicenceDetailsControllerSpec
                 answers
               )
             val updatedSession = session.copy(userAnswers = updatedAnswers)
+            redirectTest(session, updatedSession, "3")
 
-            inSequence {
-              mockAuthWithNoRetrievals()
-              mockGetSession(session)
-              mockJourneyServiceUpdateAndNext(
-                routes.LicenceDetailsController.licenceTimeTrading(),
-                session,
-                updatedSession
-              )(
-                Right(mockNextCall)
-              )
-            }
-
-            checkIsRedirect(performAction("licenceTimeTrading" -> "3"), mockNextCall)
           }
         }
 
@@ -778,15 +718,7 @@ class LicenceDetailsControllerSpec
 
       "display the page" when {
 
-        "the user has selected a licence type of 'operator of private hire vehicles'" in {
-          val session = Fixtures.individualHECSession(
-            individualLoginData,
-            IndividualRetrievedJourneyData.empty,
-            IndividualUserAnswers.empty.copy(
-              licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles)
-            )
-          )
-
+        def displayPageTest(session: HECSession, value: Option[String], isPrivateHire: Boolean) = {
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
@@ -802,16 +734,34 @@ class LicenceDetailsControllerSpec
               doc.select("#back").attr("href") shouldBe mockPreviousCall.url
 
               val options = doc.select(".govuk-radios__item")
-              options.size() shouldBe 5
+              if (isPrivateHire)
+                options.size()    shouldBe 5
+              else options.size() shouldBe 3
 
               val selectedOptions = doc.select(".govuk-radios__input[checked]")
-              selectedOptions.isEmpty shouldBe true
+
+              value match {
+                case Some(index) => selectedOptions.attr("value") shouldBe index
+                case None        => selectedOptions.isEmpty       shouldBe true
+              }
 
               val form = doc.select("form")
               form
                 .attr("action") shouldBe routes.LicenceDetailsController.recentLicenceLengthSubmit().url
             }
           )
+        }
+
+        "the user has selected a licence type of 'operator of private hire vehicles'" in {
+          val session = Fixtures.individualHECSession(
+            individualLoginData,
+            IndividualRetrievedJourneyData.empty,
+            IndividualUserAnswers.empty.copy(
+              licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles)
+            )
+          )
+
+          displayPageTest(session, None, true)
 
         }
 
@@ -836,31 +786,7 @@ class LicenceDetailsControllerSpec
                   )
                 )
 
-              inSequence {
-                mockAuthWithNoRetrievals()
-                mockGetSession(session)
-                mockJourneyServiceGetPrevious(routes.LicenceDetailsController.recentLicenceLength(), session)(
-                  mockPreviousCall
-                )
-              }
-
-              checkPageIsDisplayed(
-                performAction(),
-                messageFromMessageKey("licenceValidityPeriod.title"),
-                { doc =>
-                  doc.select("#back").attr("href") shouldBe mockPreviousCall.url
-
-                  val options = doc.select(".govuk-radios__item")
-                  options.size() shouldBe 3
-
-                  val selectedOptions = doc.select(".govuk-radios__input[checked]")
-                  selectedOptions.attr("value") shouldBe "2"
-
-                  val form = doc.select("form")
-                  form
-                    .attr("action") shouldBe routes.LicenceDetailsController.recentLicenceLengthSubmit().url
-                }
-              )
+              displayPageTest(session, Some("2"), false)
             }
           }
 
@@ -931,7 +857,7 @@ class LicenceDetailsControllerSpec
           )
         val updatedSession = session.copy(userAnswers = updatedAnswers)
 
-        "nothing is submitted" in {
+        def formErrorTest(data: (String, String)*)(errorMessageKey: String) = {
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(updatedSession)
@@ -941,42 +867,22 @@ class LicenceDetailsControllerSpec
           }
 
           checkFormErrorIsDisplayed(
-            performAction(),
+            performAction(data: _*),
             messageFromMessageKey("licenceValidityPeriod.title"),
-            messageFromMessageKey("licenceValidityPeriod.error.required")
+            messageFromMessageKey(errorMessageKey)
           )
+        }
+
+        "nothing is submitted" in {
+          formErrorTest()("licenceValidityPeriod.error.required")
         }
 
         "an index is submitted which is too large" in {
-          inSequence {
-            mockAuthWithNoRetrievals()
-            mockGetSession(updatedSession)
-            mockJourneyServiceGetPrevious(routes.LicenceDetailsController.recentLicenceLength(), updatedSession)(
-              mockPreviousCall
-            )
-          }
-
-          checkFormErrorIsDisplayed(
-            performAction("licenceValidityPeriod" -> Int.MaxValue.toString),
-            messageFromMessageKey("licenceValidityPeriod.title"),
-            messageFromMessageKey("licenceValidityPeriod.error.invalid")
-          )
+          formErrorTest("licenceValidityPeriod" -> Int.MaxValue.toString)("licenceValidityPeriod.error.invalid")
         }
 
         "a value is submitted which is not a number" in {
-          inSequence {
-            mockAuthWithNoRetrievals()
-            mockGetSession(updatedSession)
-            mockJourneyServiceGetPrevious(routes.LicenceDetailsController.recentLicenceLength(), updatedSession)(
-              mockPreviousCall
-            )
-          }
-
-          checkFormErrorIsDisplayed(
-            performAction("licenceValidityPeriod" -> "xyz"),
-            messageFromMessageKey("licenceValidityPeriod.title"),
-            messageFromMessageKey("licenceValidityPeriod.error.invalid")
-          )
+          formErrorTest("licenceValidityPeriod" -> "xyz")("licenceValidityPeriod.error.invalid")
         }
 
       }
@@ -985,17 +891,7 @@ class LicenceDetailsControllerSpec
 
         "valid data is submitted and" when {
 
-          "the user has not previously completed answering questions" in {
-            val answers = IndividualUserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
-            val session = Fixtures.individualHECSession(
-              individualLoginData,
-              IndividualRetrievedJourneyData.empty,
-              answers
-            )
-
-            val updatedAnswers = answers.copy(licenceValidityPeriod = Some(UpToOneYear))
-            val updatedSession = session.copy(userAnswers = updatedAnswers)
-
+          def testRedirect(session: HECSession, updatedSession: HECSession, value: String) = {
             inSequence {
               mockAuthWithNoRetrievals()
               mockGetSession(session)
@@ -1008,7 +904,22 @@ class LicenceDetailsControllerSpec
               )
             }
 
-            checkIsRedirect(performAction("licenceValidityPeriod" -> "0"), mockNextCall)
+            checkIsRedirect(performAction("licenceValidityPeriod" -> value), mockNextCall)
+
+          }
+
+          "the user has not previously completed answering questions" in {
+            val answers = IndividualUserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
+            val session = Fixtures.individualHECSession(
+              individualLoginData,
+              IndividualRetrievedJourneyData.empty,
+              answers
+            )
+
+            val updatedAnswers = answers.copy(licenceValidityPeriod = Some(UpToOneYear))
+            val updatedSession = session.copy(userAnswers = updatedAnswers)
+
+            testRedirect(session, updatedSession, "0")
 
           }
 
@@ -1037,19 +948,7 @@ class LicenceDetailsControllerSpec
               )
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 
-            inSequence {
-              mockAuthWithNoRetrievals()
-              mockGetSession(session)
-              mockJourneyServiceUpdateAndNext(
-                routes.LicenceDetailsController.recentLicenceLength(),
-                session,
-                updatedSession
-              )(
-                Right(mockNextCall)
-              )
-            }
-
-            checkIsRedirect(performAction("licenceValidityPeriod" -> "4"), mockNextCall)
+            testRedirect(session, updatedSession, "4")
           }
         }
 

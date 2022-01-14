@@ -254,18 +254,21 @@ class EmailAddressConfirmedControllerSpec
 
       "return a technical error" when {
 
+        def testTechnicalError(session: HECSession) = {
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+          }
+          assertThrows[RuntimeException](await(performAction()))
+        }
+
         "user selected email is not in session" in {
           val session = Fixtures.individualHECSession(
             userAnswers = Fixtures.completeIndividualUserAnswers(),
             isEmailRequested = true,
             userEmailAnswers = None
           )
-
-          inSequence {
-            mockAuthWithNoRetrievals()
-            mockGetSession(session)
-          }
-          assertThrows[RuntimeException](await(performAction()))
+          testTechnicalError(session)
         }
 
         "passcode verification code is other than match and passcodeRequestResult = PasscodeSent" in {
@@ -287,11 +290,7 @@ class EmailAddressConfirmedControllerSpec
                   )
                   .some
               )
-              inSequence {
-                mockAuthWithNoRetrievals()
-                mockGetSession(session)
-              }
-              assertThrows[RuntimeException](await(performAction()))
+              testTechnicalError(session)
             }
           }
 
@@ -315,11 +314,7 @@ class EmailAddressConfirmedControllerSpec
                   )
                   .some
               )
-              inSequence {
-                mockAuthWithNoRetrievals()
-                mockGetSession(session)
-              }
-              assertThrows[RuntimeException](await(performAction()))
+              testTechnicalError(session)
             }
           }
 
@@ -344,11 +339,7 @@ class EmailAddressConfirmedControllerSpec
                   )
                   .some
               )
-              inSequence {
-                mockAuthWithNoRetrievals()
-                mockGetSession(session)
-              }
-              assertThrows[RuntimeException](await(performAction()))
+              testTechnicalError(session)
             }
           }
         }

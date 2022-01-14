@@ -23,7 +23,7 @@ import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.hecapplicantfrontend.models.CompanyUserAnswers.IncompleteCompanyUserAnswers
+import uk.gov.hmrc.hecapplicantfrontend.models.CompanyUserAnswers.{IncompleteCompanyUserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.CompanyHECSession
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.CompanyLoginData
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.CompanyRetrievedJourneyData
@@ -317,11 +317,12 @@ class CRNControllerSpec
 
       "redirect to the next page" when {
 
-        def test(crn: CRN, currentSession: HECSession, updatedSession: HECSession, blockedUntil: Option[ZonedDateTime], findCompany: Boolean) = {
+        "a blocked CRN is submitted" in {
+          val crn                  = validCRN
           val answers              = Fixtures.completeCompanyUserAnswers()
           val session              = Fixtures.companyHECSession(companyLoginData, CompanyRetrievedJourneyData.empty, answers)
           val blockedCtutrAttempts =
-            CtutrAttempts(crn, session.loginData.ggCredId, companyName, 1, blockedUntil)
+            CtutrAttempts(crn, session.loginData.ggCredId, companyName, 1, Some(ZonedDateTime.now))
 
           // CRN dependent answers are reset
           val updatedAnswers = IncompleteCompanyUserAnswers
@@ -336,6 +337,7 @@ class CRNControllerSpec
             )
 
           val updatedSession = session.copy(userAnswers = updatedAnswers, crnBlocked = true)
+
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
@@ -349,10 +351,6 @@ class CRNControllerSpec
             )
           }
           checkIsRedirect(performAction("crn" -> crn.value), mockNextCall)
-        }
-
-        "a blocked CRN is submitted" in {
-
         }
 
         "a valid & unblocked CRN is submitted and company is found" in {
