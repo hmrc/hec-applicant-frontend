@@ -71,8 +71,15 @@ class SendEmailServiceImplSpec extends AnyWordSpec with Matchers with MockFactor
   implicit val hc: HeaderCarrier = HeaderCarrier()
   val emailAddress               = EmailAddress("user@test.com")
   val emailParameter             =
-    EmailParameters("Dummy name", "ABC 123 GRD")
-  val emptyHeaders               = Map.empty[String, Seq[String]]
+    EmailParameters("9 July 2021", "ABC 123 GRD", "Driver of taxis and private hires", "9 October 2021")
+
+  val emailParametersCY = EmailParameters(
+    "9 Gorffennaf 2021",
+    "Gyrrwr tacsis a hurio preifat",
+    "ABC 123 DER",
+    "9 Hydref 2021"
+  )
+  val emptyHeaders      = Map.empty[String, Seq[String]]
 
   val userEmailAnswer = Fixtures
     .userEmailAnswers(
@@ -127,7 +134,10 @@ class SendEmailServiceImplSpec extends AnyWordSpec with Matchers with MockFactor
           new MessagesRequest(FakeRequest().withCookies(Cookie("PLAY_LANG", lang)), messagesApi)
         )
 
-        def getEmailSendRequest(templateId: String) = EmailSendRequest(List(emailAddress), templateId, emailParameter)
+        def getEmailSendRequest(templateId: String) = if (templateId === "template_EN")
+          EmailSendRequest(List(emailAddress), templateId, emailParameter)
+        else
+          EmailSendRequest(List(emailAddress), templateId, emailParametersCY)
 
         "request json can be parsed and email is send " in {
 
@@ -141,7 +151,11 @@ class SendEmailServiceImplSpec extends AnyWordSpec with Matchers with MockFactor
                 RequestWithSessionData(request, session)
               mockSendEmail(emailSendRequest)(Right(HttpResponse(ACCEPTED, "")))
 
-              val result = sendEmailService.sendEmail(emailAddress, emailParameter)
+              val result =
+                if (templateId === "template_EN")
+                  sendEmailService.sendEmail(emailAddress, emailParameter)
+                else
+                  sendEmailService.sendEmail(emailAddress, emailParametersCY)
               await(result.value) shouldBe Right(EmailSendResult.EmailSent)
 
             }

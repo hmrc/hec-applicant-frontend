@@ -19,7 +19,7 @@ package uk.gov.hmrc.hecapplicantfrontend.controllers
 import cats.data.EitherT
 import cats.implicits.catsSyntaxOptionId
 import play.api.inject.bind
-import play.api.mvc.Result
+import play.api.mvc.{Cookie, Result}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
@@ -29,7 +29,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.emailSend.{EmailParameters, Email
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{Passcode, PasscodeRequestResult, PasscodeVerificationResult}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.{JourneyService, SendEmailService}
-import uk.gov.hmrc.hecapplicantfrontend.util.{TimeProvider, TimeUtils}
+import uk.gov.hmrc.hecapplicantfrontend.util.{TimeUtils}
 import uk.gov.hmrc.hecapplicantfrontend.utils.Fixtures
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -53,7 +53,7 @@ class EmailAddressConfirmedControllerSpec
     bind[SendEmailService].toInstance(mockSendEmailService)
   )
 
-  val controller                          = instanceOf[EmailAddressConfirmedController]
+  val controller = instanceOf[EmailAddressConfirmedController]
 
   val ggEmailId = EmailAddress("user@test.com")
 
@@ -73,16 +73,22 @@ class EmailAddressConfirmedControllerSpec
 
   val hecTaxCheckCode = HECTaxCheckCode("ABC 123 DER")
 
-  val expiryDate  = LocalDate.of(2021, 10, 9)
-  val createDate = ZonedDateTime.of(2021, 7,9,0,0,0,0, ZoneId.of("Europe/London"))
+  val expiryDate = LocalDate.of(2021, 10, 9)
+  val createDate = ZonedDateTime.of(2021, 7, 9, 0, 0, 0, 0, ZoneId.of("Europe/London"))
 
   val createDateString = TimeUtils.govDisplayFormat(createDate.toLocalDate)
-  val expiryDateString  = TimeUtils.govDisplayFormat(expiryDate)
+  val expiryDateString = TimeUtils.govDisplayFormat(expiryDate)
 
   val hecTaxCheck = HECTaxCheck(hecTaxCheckCode, expiryDate, createDate)
 
-  val emailParametersEN = EmailParameters("9 July 2021", "ABC 123 DER","Driver of taxis and private hires", "9 October 2021")
-  val emailParametersCY = EmailParameters("9 Gorffennaf 2021", "ABC 123 DER","Yn cynnwys trwyddedau cerbydau hacni a deuol.", "9 Hydref 2021")
+  val emailParametersEN =
+    EmailParameters("9 July 2021", "Driver of taxis and private hires", "ABC 123 DER", "9 October 2021")
+  val emailParametersCY = EmailParameters(
+    "9 Gorffennaf 2021",
+    "Gyrrwr tacsis a hurio preifat",
+    "ABC 123 DER",
+    "9 Hydref 2021"
+  )
 
   def mockSendEmail(emailAddress: EmailAddress, emailParameters: EmailParameters)(
     result: Either[Error, EmailSendResult]
@@ -100,7 +106,7 @@ class EmailAddressConfirmedControllerSpec
 
       "return a technical error" when {
 
-        def isError(session:HECSession) = {
+        def isError(session: HECSession) = {
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
@@ -382,7 +388,7 @@ class EmailAddressConfirmedControllerSpec
 
       }
 
-      "redirect to the next page" in {
+      "redirect to the next page" when {
 
         "when the user has selected  English language" in {
           val session = Fixtures.companyHECSession(
@@ -411,7 +417,10 @@ class EmailAddressConfirmedControllerSpec
         }
 
         "when the user has selected  welsh language" in {
-          val session = Fixtures.companyHECSession(
+
+          def performAction(): Future[Result] =
+            controller.emailAddressConfirmedSubmit(FakeRequest().withCookies(Cookie("PLAY_LANG", "cy")))
+          val session                         = Fixtures.companyHECSession(
             loginData = Fixtures.companyLoginData(emailAddress = ggEmailId.some),
             userAnswers = Fixtures.completeCompanyUserAnswers(),
             isEmailRequested = true,
@@ -426,7 +435,7 @@ class EmailAddressConfirmedControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockSendEmail(ggEmailId, emailParameters = emailParametersEN)(Right(EmailSendResult.EmailSent))
+            mockSendEmail(ggEmailId, emailParameters = emailParametersCY)(Right(EmailSendResult.EmailSent))
             mockJourneyServiceUpdateAndNext(
               routes.EmailAddressConfirmedController.emailAddressConfirmed(),
               session,
