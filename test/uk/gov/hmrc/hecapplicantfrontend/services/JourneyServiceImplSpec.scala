@@ -1780,7 +1780,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
           }
 
           "the email is not send due to any failures" in {
-            test(None, routes.ProblemSendingEmailController.problemSendingEmail)
+            test(EmailSendResult.EmailSentFailure.some, routes.ProblemSendingEmailController.problemSendingEmail)
           }
 
         }
@@ -3064,8 +3064,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
           }
         }
 
-        "the Email sent page" in {
-
+        def previousIsEmailAddressConfirmed(emailSendResult: EmailSendResult, presentRoute: Call) = {
           val hecTaxCheckCode                             = HECTaxCheckCode("ABC 123 DER")
           val expiryDate                                  = LocalDate.of(2021, 10, 9)
           val hecTaxCheck                                 = HECTaxCheck(hecTaxCheckCode, expiryDate)
@@ -3074,7 +3073,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               passcodeRequestResult = PasscodeRequestResult.PasscodeSent.some,
               passcode = Passcode("HHHHHH").some,
               passcodeVerificationResult = PasscodeVerificationResult.Match.some,
-              emailSendResult = EmailSendResult.EmailSent.some
+              emailSendResult = emailSendResult.some
             )
           val session                                     = Fixtures.companyHECSession(
             loginData = Fixtures.companyLoginData(emailAddress = ggEmailId.some),
@@ -3085,11 +3084,19 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
           )
           implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
 
-          val result = journeyService.previous(
-            routes.EmailSentController.emailSent()
-          )
+          val result = journeyService.previous(presentRoute)
           result shouldBe routes.EmailAddressConfirmedController.emailAddressConfirmed()
+        }
 
+        "the Email sent page" in {
+          previousIsEmailAddressConfirmed(EmailSendResult.EmailSent, routes.EmailSentController.emailSent())
+        }
+
+        "the Email sent Failure page" in {
+          previousIsEmailAddressConfirmed(
+            EmailSendResult.EmailSentFailure,
+            routes.ProblemSendingEmailController.problemSendingEmail()
+          )
         }
 
         "the Enter Email Address page" when {

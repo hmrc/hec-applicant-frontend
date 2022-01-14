@@ -27,6 +27,7 @@ sealed trait EmailSendResult extends Product with Serializable
 object EmailSendResult {
 
   case object EmailSent extends EmailSendResult
+  case object EmailSentFailure extends EmailSendResult
 
   implicit val eq: Eq[EmailSendResult] = Eq.fromUniversalEquals
 

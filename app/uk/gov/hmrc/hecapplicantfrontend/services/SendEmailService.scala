@@ -21,11 +21,12 @@ import com.google.inject.{ImplementedBy, Inject, Singleton}
 import play.api.Configuration
 import play.api.http.Status.ACCEPTED
 import uk.gov.hmrc.hecapplicantfrontend.connectors.SendEmailConnector
-import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{RequestWithSessionData}
+import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.RequestWithSessionData
 import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, Error}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailSend.{EmailParameters, EmailSendRequest, EmailSendResult}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.Language
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.Language.{English, Welsh}
+import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -42,7 +43,8 @@ trait SendEmailService {
 @Singleton
 class SendEmailServiceImpl @Inject() (emailSendConnector: SendEmailConnector, configuration: Configuration)(implicit
   ec: ExecutionContext
-) extends SendEmailService {
+) extends SendEmailService
+    with Logging {
 
   val templateIdEN: String = configuration.get[String]("email-send.template-id-en")
   val templateIdCY: String = configuration.get[String]("email-send.template-id-cy")
@@ -61,9 +63,8 @@ class SendEmailServiceImpl @Inject() (emailSendConnector: SendEmailConnector, co
       response.status match {
         case ACCEPTED => Right(EmailSendResult.EmailSent)
         case other    =>
-          Left(
-            Error(s"Call to sendEmail came back with status $other")
-          )
+          logger.warn(s"Response for send email call came back with status : $other")
+          Right(EmailSendResult.EmailSentFailure)
       }
 
     }
