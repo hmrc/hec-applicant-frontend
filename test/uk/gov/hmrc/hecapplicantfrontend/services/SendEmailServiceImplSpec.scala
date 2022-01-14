@@ -149,7 +149,11 @@ class SendEmailServiceImplSpec extends AnyWordSpec with Matchers with MockFactor
 
         }
 
-        "request json is not parsed and email is not send" when {
+      }
+
+      "return an EmailSentFailure" when {
+
+        "Email Service fails to send email " when {
 
           val emailSendRequest                                                                = EmailSendRequest(List(emailAddress), "template_EN", emailParameter)
           val authenticatedRequest                                                            = AuthenticatedRequest(
@@ -158,29 +162,29 @@ class SendEmailServiceImplSpec extends AnyWordSpec with Matchers with MockFactor
           implicit val requestWithSessionData: RequestWithSessionData[AnyContentAsEmpty.type] =
             RequestWithSessionData(authenticatedRequest, session)
 
-          def emailSendFailure() = {
+          def testIsEmailSendFailure() = {
             val result = sendEmailService.sendEmail(emailAddress, emailParameter)
             await(result.value) shouldBe Right(EmailSendResult.EmailSentFailure)
           }
 
           val emailSendRequestJson = Json.toJson(emailSendRequest)
+
           "the http response does not come back with status 202 (Accepted)" in {
             mockSendEmail(emailSendRequest)(Right(HttpResponse(OK, emailSendRequestJson, emptyHeaders)))
-            emailSendFailure()
+            testIsEmailSendFailure()
           }
 
           "there is no json in the response" in {
             mockSendEmail(emailSendRequest)(Right(HttpResponse(CREATED, "hi")))
-            emailSendFailure()
+            testIsEmailSendFailure()
           }
 
           "the json in the response cannot be parsed" in {
             val json = Json.parse("""{ "a" : 1 }""")
             mockSendEmail(emailSendRequest)(Right(HttpResponse(BAD_REQUEST, json, emptyHeaders)))
-            emailSendFailure()
+            testIsEmailSendFailure()
           }
         }
-
       }
 
     }
