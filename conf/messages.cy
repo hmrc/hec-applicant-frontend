@@ -12,6 +12,7 @@ button.confirm=Cadarnhau
 button.continue=Yn eich blaen
 button.copy=Copi
 button.copied=Wedi’i gopïo
+button.back=Yn ôl
 iv.failedIv.title=Nid oedd modd i ni gadarnhau pwy ydych
 iv.failedIv.p1=Ni atebwyd bob cwestiwn yn gywir gennych.
 iv.failedIv.p2=Mae’n rhaid i’ch atebion gyd-fynd â’r manylion sydd gennym ar eich cyfer eisoes.

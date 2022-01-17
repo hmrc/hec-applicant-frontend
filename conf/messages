@@ -17,6 +17,7 @@ button.copy=Copy
 button.copied=Copied
 button.sendEmail =Send email
 button.resend =Resend
+button.back=Back
 
 # Failed IV
 iv.failedIv.title=We could not confirm your identity
