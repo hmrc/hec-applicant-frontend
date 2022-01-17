@@ -26,7 +26,7 @@ import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeRequestResult.PasscodeSent
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeVerificationResult.Match
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{Passcode, PasscodeRequestResult, PasscodeVerificationResult}
-import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, Error, UserEmailAnswers}
+import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, Error, HECSession, UserEmailAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.{EmailVerificationService, JourneyService}
 import uk.gov.hmrc.hecapplicantfrontend.utils.Fixtures
@@ -70,6 +70,14 @@ class VerifyEmailPasscodeControllerSpec
 
       "return a technical error" when {
 
+        def testTechnicalError(session: HECSession) = {
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+          }
+          assertThrows[RuntimeException](await(performAction()))
+        }
+
         "there is no user selected email in session " in {
           val session = Fixtures.individualHECSession(
             loginData = Fixtures.individualLoginData(emailAddress = ggEmailId.some),
@@ -77,12 +85,7 @@ class VerifyEmailPasscodeControllerSpec
             isEmailRequested = true,
             userEmailAnswers = None
           )
-
-          inSequence {
-            mockAuthWithNoRetrievals()
-            mockGetSession(session)
-          }
-          assertThrows[RuntimeException](await(performAction()))
+          testTechnicalError(session)
         }
 
         "session failed to get updated" in {
@@ -94,14 +97,7 @@ class VerifyEmailPasscodeControllerSpec
             userEmailAnswers =
               Fixtures.userEmailAnswers(passcodeRequestResult = PasscodeRequestResult.PasscodeSent.some).some
           )
-
-          inSequence {
-            mockAuthWithNoRetrievals()
-            mockGetSession(session)
-            mockStoreSession(session.copy(hasResentEmailConfirmation = false))(Left(Error("")))
-          }
-          assertThrows[RuntimeException](await(performAction()))
-
+          testTechnicalError(session)
         }
       }
 
