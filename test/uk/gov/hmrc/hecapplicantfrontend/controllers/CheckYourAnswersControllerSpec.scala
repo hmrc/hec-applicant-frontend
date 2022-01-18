@@ -81,7 +81,7 @@ class CheckYourAnswersControllerSpec
 
     "handling requests to display the check your answers page" must {
 
-      def checkYourAnswersRow(startDate: String, endDate: String) = List(
+      def checkYourAnswersRows(startDate: String, endDate: String) = List(
         CheckYourAnswersRow(
           messageFromMessageKey("licenceType.title"),
           messageFromMessageKey("licenceType.scrapMetalCollector"),
@@ -194,14 +194,28 @@ class CheckYourAnswersControllerSpec
           isCTUTRPresent: Boolean
         ) = {
 
+          val excludedList1 = List(
+            routes.CompanyDetailsController.enterCtutr().url,
+            routes.CompanyDetailsController.recentlyStartedTrading().url
+          )
+
+          val excludedList2 = List(
+            routes.CompanyDetailsController.enterCtutr().url,
+            routes.CompanyDetailsController.chargeableForCorporationTax().url,
+            routes.CompanyDetailsController.ctIncomeStatement().url
+          )
+
           val expectedRows = if (isIndividual) {
             val (startDate, endDate) = getTaxPeriodStrings(TaxYear(2020))
-            checkYourAnswersRow(startDate, endDate)
+            checkYourAnswersRows(startDate, endDate)
           } else {
             (isRecentlyStartedTrading, isCTUTRPresent) match {
-              case (_, true)  => companyExpectedRows.take(8)
-              case (true, _)  => (companyExpectedRows.take(5) ::: companyExpectedRows.takeRight(1))
-              case (false, _) => (companyExpectedRows.take(5) ::: companyExpectedRows.slice(6, 8))
+              case (_, true)  =>
+                companyExpectedRows.filterNot(
+                  _.changeUrl === routes.CompanyDetailsController.recentlyStartedTrading().url
+                )
+              case (true, _)  => companyExpectedRows.filterNot(cyar => excludedList2.contains(cyar.changeUrl))
+              case (false, _) => companyExpectedRows.filterNot(cyar => excludedList1.contains(cyar.changeUrl))
               case _          => companyExpectedRows
             }
 
