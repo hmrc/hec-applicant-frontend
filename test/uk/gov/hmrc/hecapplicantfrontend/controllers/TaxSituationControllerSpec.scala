@@ -129,69 +129,8 @@ class TaxSituationControllerSpec
 
       "display the page" when {
 
-        "the user has not previously answered the question " when {
-
-          "licence Type is Driver of taxis and private hire vehicles" in {
-            val session = Fixtures.individualHECSession(
-              individualLoginData,
-              IndividualRetrievedJourneyData.empty,
-              IndividualUserAnswers.empty.copy(
-                licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)
-              )
-            )
-
-            val updatedSession       = session.copy(relevantIncomeTaxYear = TaxYear(2020).some)
-            val (startDate, endDate) = getTaxPeriodStrings(TaxYear(2020))
-            inSequence {
-              mockAuthWithNoRetrievals()
-              mockGetSession(session)
-              mockJourneyServiceGetPrevious(routes.TaxSituationController.taxSituation(), session)(
-                mockPreviousCall
-              )
-              mockTimeProviderToday(TimeUtils.today())
-              mockStoreSession(updatedSession)(Right(()))
-            }
-
-            checkPageIsDisplayed(
-              performAction(),
-              messageFromMessageKey("taxSituation.title", startDate, endDate),
-              { doc =>
-                doc.select("#back").attr("href") shouldBe mockPreviousCall.url
-
-                val options = doc.select(".govuk-radios__item")
-                options.size() shouldBe 4
-
-                val selectedOptions = doc.select(".govuk-radios__input[checked]")
-                selectedOptions.isEmpty shouldBe true
-
-                val form = doc.select("form")
-                form
-                  .attr("action")            shouldBe routes.TaxSituationController.taxSituationSubmit().url
-                form.select("legend").text() shouldBe messageFromMessageKey(
-                  s"taxSituation.label.${LicenceTypeOption.licenceTypeOption(LicenceType.DriverOfTaxisAndPrivateHires).messageKey}"
-                )
-              }
-            )
-          }
-
-        }
-
-        "the user has previously answered the question" in {
-          val session              =
-            Fixtures.individualHECSession(
-              individualLoginData,
-              IndividualRetrievedJourneyData.empty,
-              Fixtures.completeIndividualUserAnswers(
-                LicenceType.DriverOfTaxisAndPrivateHires,
-                LicenceTimeTrading.TwoToFourYears,
-                LicenceValidityPeriod.UpToThreeYears,
-                TaxSituation.PAYE,
-                Some(YesNoAnswer.Yes)
-              )
-            )
-          val updatedSession       = session.copy(relevantIncomeTaxYear = TaxYear(2020).some)
+        def displayPageTest(session: HECSession, updatedSession: HECSession, value: Option[String]) = {
           val (startDate, endDate) = getTaxPeriodStrings(TaxYear(2020))
-
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
@@ -208,8 +147,15 @@ class TaxSituationControllerSpec
             { doc =>
               doc.select("#back").attr("href") shouldBe mockPreviousCall.url
 
+              val options = doc.select(".govuk-radios__item")
+              options.size() shouldBe 4
+
               val selectedOptions = doc.select(".govuk-radios__input[checked]")
-              selectedOptions.attr("value") shouldBe "0"
+
+              value match {
+                case Some(index) => selectedOptions.attr("value") shouldBe index
+                case None        => selectedOptions.isEmpty       shouldBe true
+              }
 
               val form = doc.select("form")
               form
@@ -219,6 +165,40 @@ class TaxSituationControllerSpec
               )
             }
           )
+        }
+
+        "the user has not previously answered the question " when {
+
+          "licence Type is Driver of taxis and private hire vehicles" in {
+            val session = Fixtures.individualHECSession(
+              individualLoginData,
+              IndividualRetrievedJourneyData.empty,
+              IndividualUserAnswers.empty.copy(
+                licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)
+              )
+            )
+
+            val updatedSession = session.copy(relevantIncomeTaxYear = TaxYear(2020).some)
+            displayPageTest(session, updatedSession, None)
+          }
+
+        }
+
+        "the user has previously answered the question" in {
+          val session        =
+            Fixtures.individualHECSession(
+              individualLoginData,
+              IndividualRetrievedJourneyData.empty,
+              Fixtures.completeIndividualUserAnswers(
+                LicenceType.DriverOfTaxisAndPrivateHires,
+                LicenceTimeTrading.TwoToFourYears,
+                LicenceValidityPeriod.UpToThreeYears,
+                TaxSituation.PAYE,
+                Some(YesNoAnswer.Yes)
+              )
+            )
+          val updatedSession = session.copy(relevantIncomeTaxYear = TaxYear(2020).some)
+          displayPageTest(session, updatedSession, Some("0"))
         }
 
         def testPage(currentDate: LocalDate, taxYear: Int) = {

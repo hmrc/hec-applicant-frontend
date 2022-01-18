@@ -34,7 +34,7 @@ import uk.gov.hmrc.hecapplicantfrontend.config.EnrolmentConfig
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, IndividualHECSession}
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CTUTR, GGCredId, NINO, SAUTR}
-import uk.gov.hmrc.hecapplicantfrontend.models.{CitizenDetails, DateOfBirth, EmailAddress, Error, Name, TaxCheckListItem}
+import uk.gov.hmrc.hecapplicantfrontend.models.{CitizenDetails, DateOfBirth, EmailAddress, Error, HECSession, Name, TaxCheckListItem}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.{CitizenDetailsService, JourneyService, TaxCheckService}
 import uk.gov.hmrc.hecapplicantfrontend.util.StringUtils.StringOps
@@ -172,42 +172,22 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
 
         "existing session data is found" when {
 
-          "it's individual session and hasConfirmedDetails = false, new session should have it as false" in {
-            val session = IndividualHECSession.newSession(completeIndividualLoginData)
-            inSequence {
-              mockAuthWithRetrievals(ConfidenceLevel.L50, None, None, None, None, Enrolments(Set.empty), None)
-              mockGetSession(session)
-              mockGetUnexpiredTaxCheckCodes(Right(List.empty))
-              mockStoreSession(session)(Right(()))
-              mockFirstPge(session)(mockNextCall)
-            }
-            checkIsRedirect(performAction(), mockNextCall)
-          }
-
-          "it's individual session and hasConfirmedDetails = true, new session should have it as true" in {
-            val tempSession = IndividualHECSession.newSession(completeIndividualLoginData)
-            val session     = tempSession.copy(hasConfirmedDetails = true)
-            inSequence {
-              mockAuthWithRetrievals(ConfidenceLevel.L50, None, None, None, None, Enrolments(Set.empty), None)
-              mockGetSession(session)
-              mockGetUnexpiredTaxCheckCodes(Right(List.empty))
-              mockStoreSession(session)(Right(()))
-              mockFirstPge(session)(mockNextCall)
-            }
-            checkIsRedirect(performAction(), mockNextCall)
-          }
-
-          "it's company session" in {
-            val session = CompanyHECSession.newSession(completeCompanyLoginData)
+          def testIsRedirect(
+            session: HECSession,
+            affinityGroup: Option[AffinityGroup],
+            retrievedEmailAddress: Option[EmailAddress],
+            retrievedEnrolments: Enrolments,
+            retrievedCredentials: Option[Credentials]
+          ) = {
             inSequence {
               mockAuthWithRetrievals(
                 ConfidenceLevel.L50,
-                Some(AffinityGroup.Organisation),
+                affinityGroup,
                 None,
                 None,
-                emailAddress.some,
-                Enrolments(Set(retrievedCtEnrolment(ctutr))),
-                Some(retrievedGGCredential(ggCredId))
+                retrievedEmailAddress,
+                retrievedEnrolments,
+                retrievedCredentials
               )
               mockGetSession(session)
               mockGetUnexpiredTaxCheckCodes(Right(List.empty))
@@ -215,12 +195,61 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
               mockFirstPge(session)(mockNextCall)
             }
             checkIsRedirect(performAction(), mockNextCall)
+          }
 
+          "it's individual session and hasConfirmedDetails = false, new session should have it as false" in {
+            val session = IndividualHECSession.newSession(completeIndividualLoginData)
+            testIsRedirect(session, None, None, Enrolments(Set.empty), None)
+          }
+
+          "it's individual session and hasConfirmedDetails = true, new session should have it as true" in {
+            val tempSession = IndividualHECSession.newSession(completeIndividualLoginData)
+            val session     = tempSession.copy(hasConfirmedDetails = true)
+            testIsRedirect(session, None, None, Enrolments(Set.empty), None)
+          }
+
+          "it's company session" in {
+            val session = CompanyHECSession.newSession(completeCompanyLoginData)
+            testIsRedirect(
+              session,
+              Some(AffinityGroup.Organisation),
+              emailAddress.some,
+              Enrolments(Set(retrievedCtEnrolment(ctutr))),
+              Some(retrievedGGCredential(ggCredId))
+            )
           }
 
         }
 
         "no session data is found and" when {
+
+          def isRedirectTest(
+            session: HECSession,
+            individualRetrievedData: IndividualLoginData,
+            citizenDetails: CitizenDetails,
+            sautr: Option[SAUTR],
+            affinityGroup: Option[AffinityGroup],
+            enrolments: Enrolments
+          ) = {
+            inSequence {
+              mockAuthWithRetrievals(
+                ConfidenceLevel.L250,
+                affinityGroup,
+                Some(individualRetrievedData.nino),
+                sautr,
+                individualRetrievedData.emailAddress,
+                enrolments,
+                Some(retrievedGGCredential(individualRetrievedData.ggCredId))
+              )
+              mockGetSession(Right(None))
+              mockGetCitizenDetails(individualRetrievedData.nino)(Right(citizenDetails))
+              mockGetUnexpiredTaxCheckCodes(Right(List.empty))
+              mockStoreSession(session)(Right(()))
+              mockFirstPge(session)(mockNextCall)
+            }
+
+            checkIsRedirect(performAction(), mockNextCall)
+          }
 
           "all the necessary data is retrieved for an individual with affinity group " +
             "'Individaul' and CL250 and email address is valid" in {
@@ -236,24 +265,14 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
                 )
 
                 val session = IndividualHECSession.newSession(individualRetrievedData)
-                inSequence {
-                  mockAuthWithRetrievals(
-                    ConfidenceLevel.L250,
-                    Some(AffinityGroup.Individual),
-                    Some(individualRetrievedData.nino),
-                    None,
-                    individualRetrievedData.emailAddress,
-                    Enrolments(Set.empty),
-                    Some(retrievedGGCredential(individualRetrievedData.ggCredId))
-                  )
-                  mockGetSession(Right(None))
-                  mockGetCitizenDetails(individualRetrievedData.nino)(Right(citizenDetails))
-                  mockGetUnexpiredTaxCheckCodes(Right(List.empty))
-                  mockStoreSession(session)(Right(()))
-                  mockFirstPge(session)(mockNextCall)
-                }
-
-                checkIsRedirect(performAction(), mockNextCall)
+                isRedirectTest(
+                  session,
+                  individualRetrievedData,
+                  citizenDetails,
+                  None,
+                  AffinityGroup.Individual.some,
+                  Enrolments(Set.empty)
+                )
               }
             }
 
@@ -270,24 +289,14 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
               val session   = IndividualHECSession
                 .newSession(individualRetrievedData)
                 .copy(loginData = loginData.copy(emailAddress = None))
-              inSequence {
-                mockAuthWithRetrievals(
-                  ConfidenceLevel.L250,
-                  Some(AffinityGroup.Individual),
-                  Some(individualRetrievedData.nino),
-                  None,
-                  individualRetrievedData.emailAddress,
-                  Enrolments(Set.empty),
-                  Some(retrievedGGCredential(individualRetrievedData.ggCredId))
-                )
-                mockGetSession(Right(None))
-                mockGetCitizenDetails(individualRetrievedData.nino)(Right(citizenDetails))
-                mockGetUnexpiredTaxCheckCodes(Right(List.empty))
-                mockStoreSession(session)(Right(()))
-                mockFirstPge(session)(mockNextCall)
-              }
-
-              checkIsRedirect(performAction(), mockNextCall)
+              isRedirectTest(
+                session,
+                individualRetrievedData,
+                citizenDetails,
+                None,
+                AffinityGroup.Individual.some,
+                Enrolments(Set.empty)
+              )
 
             }
 
@@ -299,25 +308,14 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
             )
 
             val session = IndividualHECSession.newSession(completeIndividualLoginData)
-
-            inSequence {
-              mockAuthWithRetrievals(
-                ConfidenceLevel.L250,
-                Some(AffinityGroup.Individual),
-                Some(completeIndividualLoginData.nino),
-                Some(sautr),
-                completeIndividualLoginData.emailAddress,
-                Enrolments(Set.empty),
-                Some(retrievedGGCredential(completeIndividualLoginData.ggCredId))
-              )
-              mockGetSession(Right(None))
-              mockGetCitizenDetails(completeIndividualLoginData.nino)(Right(citizenDetails))
-              mockGetUnexpiredTaxCheckCodes(Right(List.empty))
-              mockStoreSession(session)(Right(()))
-              mockFirstPge(session)(mockNextCall)
-            }
-
-            checkIsRedirect(performAction(), mockNextCall)
+            isRedirectTest(
+              session,
+              completeIndividualLoginData,
+              citizenDetails,
+              sautr.some,
+              AffinityGroup.Individual.some,
+              Enrolments(Set.empty)
+            )
           }
 
           "an SAUTR is retrieved in the GG cred and in citizen details" in {
@@ -333,24 +331,15 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
             val session =
               IndividualHECSession.newSession(completeIndividualLoginData.copy(sautr = Some(citizenDetailsSautr)))
 
-            inSequence {
-              mockAuthWithRetrievals(
-                ConfidenceLevel.L250,
-                Some(AffinityGroup.Individual),
-                Some(completeIndividualLoginData.nino),
-                Some(ggSautr),
-                completeIndividualLoginData.emailAddress,
-                Enrolments(Set.empty),
-                Some(retrievedGGCredential(completeIndividualLoginData.ggCredId))
-              )
-              mockGetSession(Right(None))
-              mockGetCitizenDetails(completeIndividualLoginData.nino)(Right(citizenDetails))
-              mockGetUnexpiredTaxCheckCodes(Right(List.empty))
-              mockStoreSession(session)(Right(()))
-              mockFirstPge(session)(mockNextCall)
-            }
+            isRedirectTest(
+              session,
+              completeIndividualLoginData,
+              citizenDetails,
+              ggSautr.some,
+              AffinityGroup.Individual.some,
+              Enrolments(Set.empty)
+            )
 
-            checkIsRedirect(performAction(), mockNextCall)
           }
 
           "all the necessary data is retrieved for an individual with affinity group " +
@@ -364,29 +353,20 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
 
               val session = IndividualHECSession.newSession(completeIndividualLoginData)
 
-              inSequence {
-                mockAuthWithRetrievals(
-                  ConfidenceLevel.L250,
-                  Some(AffinityGroup.Organisation),
-                  Some(completeIndividualLoginData.nino),
-                  None,
-                  completeIndividualLoginData.emailAddress,
-                  Enrolments(
-                    Set(
-                      Enrolment(EnrolmentConfig.SAEnrolment.key),
-                      Enrolment(EnrolmentConfig.NINOEnrolment.key)
-                    )
-                  ),
-                  Some(retrievedGGCredential(completeIndividualLoginData.ggCredId))
+              isRedirectTest(
+                session,
+                completeIndividualLoginData,
+                citizenDetails,
+                None,
+                AffinityGroup.Organisation.some,
+                Enrolments(
+                  Set(
+                    Enrolment(EnrolmentConfig.SAEnrolment.key),
+                    Enrolment(EnrolmentConfig.NINOEnrolment.key)
+                  )
                 )
-                mockGetSession(Right(None))
-                mockGetCitizenDetails(completeIndividualLoginData.nino)(Right(citizenDetails))
-                mockGetUnexpiredTaxCheckCodes(Right(List.empty))
-                mockStoreSession(session)(Right(()))
-                mockFirstPge(session)(mockNextCall)
-              }
+              )
 
-              checkIsRedirect(performAction(), mockNextCall)
             }
 
           "all the necessary data is retrieved for a company" in {

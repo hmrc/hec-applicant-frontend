@@ -68,9 +68,7 @@ class EntityTypeControllerSpec
 
       "display the page" when {
 
-        "the user has not previously answered the question" in {
-          val session = IndividualHECSession.newSession(individualLoginData)
-
+        def test(session: HECSession, value: Option[String]) = {
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
@@ -84,13 +82,20 @@ class EntityTypeControllerSpec
               doc.select("#back").attr("href") shouldBe mockPreviousCall.url
 
               val selectedOptions = doc.select(".govuk-radios__input[checked]")
-              selectedOptions.isEmpty shouldBe true
-
-              val form = doc.select("form")
+              value match {
+                case Some(index) => selectedOptions.attr("value") shouldBe index
+                case None        => selectedOptions.isEmpty       shouldBe true
+              }
+              val form            = doc.select("form")
               form
                 .attr("action") shouldBe routes.EntityTypeController.entityTypeSubmit().url
             }
           )
+        }
+
+        "the user has not previously answered the question" in {
+          val session = IndividualHECSession.newSession(individualLoginData)
+          test(session, None)
 
         }
 
@@ -108,27 +113,7 @@ class EntityTypeControllerSpec
                 Some(EntityType.Individual)
               )
             )
-
-          inSequence {
-            mockAuthWithNoRetrievals()
-            mockGetSession(session)
-            mockJourneyServiceGetPrevious(routes.EntityTypeController.entityType(), session)(mockPreviousCall)
-          }
-
-          checkPageIsDisplayed(
-            performAction(),
-            messageFromMessageKey("entityType.title"),
-            { doc =>
-              doc.select("#back").attr("href") shouldBe mockPreviousCall.url
-
-              val selectedOptions = doc.select(".govuk-radios__input[checked]")
-              selectedOptions.attr("value") shouldBe "0"
-
-              val form = doc.select("form")
-              form
-                .attr("action") shouldBe routes.EntityTypeController.entityTypeSubmit().url
-            }
-          )
+          test(session, Some("0"))
         }
 
       }
@@ -146,7 +131,7 @@ class EntityTypeControllerSpec
 
         val session = CompanyHECSession.newSession(companyLoginData)
 
-        "nothing is submitted" in {
+        def testFormError(data: (String, String)*)(errorMessageKey: String) = {
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
@@ -154,38 +139,22 @@ class EntityTypeControllerSpec
           }
 
           checkFormErrorIsDisplayed(
-            performAction(),
+            performAction(data: _*),
             messageFromMessageKey("entityType.title"),
-            messageFromMessageKey("entityType.error.required")
+            messageFromMessageKey(errorMessageKey)
           )
+        }
+
+        "nothing is submitted" in {
+          testFormError()("entityType.error.required")
         }
 
         "an index is submitted which is too large" in {
-          inSequence {
-            mockAuthWithNoRetrievals()
-            mockGetSession(session)
-            mockJourneyServiceGetPrevious(routes.EntityTypeController.entityType(), session)(mockPreviousCall)
-          }
-
-          checkFormErrorIsDisplayed(
-            performAction("entityType" -> Int.MaxValue.toString),
-            messageFromMessageKey("entityType.title"),
-            messageFromMessageKey("entityType.error.invalid")
-          )
+          testFormError("entityType" -> Int.MaxValue.toString)("entityType.error.invalid")
         }
 
         "a value is submitted which is not a number" in {
-          inSequence {
-            mockAuthWithNoRetrievals()
-            mockGetSession(session)
-            mockJourneyServiceGetPrevious(routes.EntityTypeController.entityType(), session)(mockPreviousCall)
-          }
-
-          checkFormErrorIsDisplayed(
-            performAction("entityType" -> "xyz"),
-            messageFromMessageKey("entityType.title"),
-            messageFromMessageKey("entityType.error.invalid")
-          )
+          testFormError("entityType" -> "xyz")("entityType.error.invalid")
         }
 
       }
@@ -220,11 +189,23 @@ class EntityTypeControllerSpec
 
       "redirect to the next page" when {
 
-        "valid data is submitted and" when {
+        def testRedirect(session: HECSession, updatedSession: HECSession, value: String) = {
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockJourneyServiceUpdateAndNext(routes.EntityTypeController.entityType(), session, updatedSession)(
+              Right(mockNextCall)
+            )
+          }
 
-          "the user is Individual has not previously completed answering questions" in {
+          checkIsRedirect(performAction("entityType" -> value), mockNextCall)
+        }
+
+        "valid data is submitted and user is an Individual" when {
+
+          "user has not previously completed answering questions" in {
             val answers        = IndividualUserAnswers.empty
-            val updatedAnswers = IndividualUserAnswers.empty.copy(entityType = Some(EntityType.Company))
+            val updatedAnswers = IndividualUserAnswers.empty.copy(entityType = Some(EntityType.Individual))
             val session        =
               Fixtures.individualHECSession(
                 individualLoginData,
@@ -233,40 +214,10 @@ class EntityTypeControllerSpec
               )
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 
-            inSequence {
-              mockAuthWithNoRetrievals()
-              mockGetSession(session)
-              mockJourneyServiceUpdateAndNext(routes.EntityTypeController.entityType(), session, updatedSession)(
-                Right(mockNextCall)
-              )
-            }
-
-            checkIsRedirect(performAction("entityType" -> "1"), mockNextCall)
+            testRedirect(session, updatedSession, "0")
           }
 
-          "the user is Company has not previously completed answering questions" in {
-            val answers        = CompanyUserAnswers.empty
-            val updatedAnswers = CompanyUserAnswers.empty.copy(entityType = Some(EntityType.Company))
-            val session        =
-              Fixtures.companyHECSession(companyLoginData, CompanyRetrievedJourneyData.empty, answers)
-            val updatedSession = session.copy(userAnswers = updatedAnswers)
-
-            inSequence {
-              mockAuthWithNoRetrievals()
-              mockGetSession(session)
-              mockJourneyServiceUpdateAndNext(
-                routes.EntityTypeController.entityType(),
-                session,
-                updatedSession
-              )(
-                Right(mockNextCall)
-              )
-            }
-
-            checkIsRedirect(performAction("entityType" -> "1"), mockNextCall)
-          }
-
-          "the user has previously completed answering questions" in {
+          "user has previously completed answering questions" in {
             val answers        = Fixtures.completeIndividualUserAnswers(
               LicenceType.DriverOfTaxisAndPrivateHires,
               LicenceTimeTrading.ZeroToTwoYears,
@@ -276,7 +227,7 @@ class EntityTypeControllerSpec
             )
             val updatedAnswers = IncompleteIndividualUserAnswers
               .fromCompleteAnswers(answers)
-              .copy(entityType = Some(EntityType.Company))
+              .copy(entityType = Some(EntityType.Individual))
             val session        =
               Fixtures.individualHECSession(
                 individualLoginData,
@@ -285,18 +236,23 @@ class EntityTypeControllerSpec
               )
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 
-            inSequence {
-              mockAuthWithNoRetrievals()
-              mockGetSession(session)
-              mockJourneyServiceUpdateAndNext(routes.EntityTypeController.entityType(), session, updatedSession)(
-                Right(mockNextCall)
-              )
-            }
+            testRedirect(session, updatedSession, "0")
+          }
+        }
 
-            checkIsRedirect(performAction("entityType" -> "1"), mockNextCall)
+        "valid data is submitted and user is a Company" when {
+
+          "user has not previously completed answering questions" in {
+            val answers        = CompanyUserAnswers.empty
+            val updatedAnswers = CompanyUserAnswers.empty.copy(entityType = Some(EntityType.Company))
+            val session        =
+              Fixtures.companyHECSession(companyLoginData, CompanyRetrievedJourneyData.empty, answers)
+            val updatedSession = session.copy(userAnswers = updatedAnswers)
+
+            testRedirect(session, updatedSession, "1")
           }
 
-          "the user is a company and  has previously completed answering questions" in {
+          "user has previously completed answering questions" in {
             val answers        = Fixtures.completeCompanyUserAnswers(
               licenceType = LicenceType.OperatorOfPrivateHireVehicles,
               licenceTimeTrading = LicenceTimeTrading.ZeroToTwoYears,
@@ -309,19 +265,7 @@ class EntityTypeControllerSpec
               Fixtures.companyHECSession(companyLoginData, CompanyRetrievedJourneyData.empty, answers)
             val updatedSession = session.copy(userAnswers = updatedAnswers)
 
-            inSequence {
-              mockAuthWithNoRetrievals()
-              mockGetSession(session)
-              mockJourneyServiceUpdateAndNext(
-                routes.EntityTypeController.entityType(),
-                session,
-                updatedSession
-              )(
-                Right(mockNextCall)
-              )
-            }
-
-            checkIsRedirect(performAction("entityType" -> "1"), mockNextCall)
+            testRedirect(session, updatedSession, "1")
           }
         }
 

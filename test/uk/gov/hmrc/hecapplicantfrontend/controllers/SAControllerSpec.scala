@@ -138,9 +138,7 @@ class SAControllerSpec
 
       "display the page" when {
 
-        "the user has not previously answered the question" in {
-          val session = IndividualHECSession.newSession(individualLoginData)
-
+        def displayPageTest(session: HECSession, value: Option[String]) = {
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
@@ -154,13 +152,23 @@ class SAControllerSpec
               doc.select("#back").attr("href") shouldBe mockPreviousCall.url
 
               val selectedOptions = doc.select(".govuk-radios__input[checked]")
-              selectedOptions.isEmpty shouldBe true
+
+              value match {
+                case Some(index) => selectedOptions.attr("value") shouldBe index
+                case None        => selectedOptions.isEmpty       shouldBe true
+              }
 
               val form = doc.select("form")
               form
                 .attr("action") shouldBe routes.SAController.saIncomeStatementSubmit().url
             }
           )
+        }
+
+        "the user has not previously answered the question" in {
+          val session = IndividualHECSession.newSession(individualLoginData)
+
+          displayPageTest(session, None)
 
         }
 
@@ -178,27 +186,7 @@ class SAControllerSpec
                 Some(EntityType.Individual)
               )
             )
-
-          inSequence {
-            mockAuthWithNoRetrievals()
-            mockGetSession(session)
-            mockJourneyServiceGetPrevious(routes.SAController.saIncomeStatement(), session)(mockPreviousCall)
-          }
-
-          checkPageIsDisplayed(
-            performAction(),
-            messageFromMessageKey("saIncomeDeclared.title"),
-            { doc =>
-              doc.select("#back").attr("href") shouldBe mockPreviousCall.url
-
-              val selectedOptions = doc.select(".govuk-radios__input[checked]")
-              selectedOptions.attr("value") shouldBe "0"
-
-              val form = doc.select("form")
-              form
-                .attr("action") shouldBe routes.SAController.saIncomeStatementSubmit().url
-            }
-          )
+          displayPageTest(session, Some("0"))
         }
 
       }
@@ -216,7 +204,7 @@ class SAControllerSpec
 
         val session = IndividualHECSession.newSession(individualLoginData)
 
-        "nothing is submitted" in {
+        def formErrorTest(data: (String, String)*)(errorMessageKey: String) = {
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
@@ -224,38 +212,22 @@ class SAControllerSpec
           }
 
           checkFormErrorIsDisplayed(
-            performAction(),
+            performAction(data: _*),
             messageFromMessageKey("saIncomeDeclared.title"),
-            messageFromMessageKey("saIncomeDeclared.error.required")
+            messageFromMessageKey(errorMessageKey)
           )
+        }
+
+        "nothing is submitted" in {
+          formErrorTest()("saIncomeDeclared.error.required")
         }
 
         "an index is submitted which is too large" in {
-          inSequence {
-            mockAuthWithNoRetrievals()
-            mockGetSession(session)
-            mockJourneyServiceGetPrevious(routes.SAController.saIncomeStatement(), session)(mockPreviousCall)
-          }
-
-          checkFormErrorIsDisplayed(
-            performAction("entityType" -> Int.MaxValue.toString),
-            messageFromMessageKey("saIncomeDeclared.title"),
-            messageFromMessageKey("saIncomeDeclared.error.invalid")
-          )
+          formErrorTest("entityType" -> Int.MaxValue.toString)("saIncomeDeclared.error.invalid")
         }
 
         "a value is submitted which is not a number" in {
-          inSequence {
-            mockAuthWithNoRetrievals()
-            mockGetSession(session)
-            mockJourneyServiceGetPrevious(routes.SAController.saIncomeStatement(), session)(mockPreviousCall)
-          }
-
-          checkFormErrorIsDisplayed(
-            performAction("entityType" -> "xyz"),
-            messageFromMessageKey("saIncomeDeclared.title"),
-            messageFromMessageKey("saIncomeDeclared.error.invalid")
-          )
+          formErrorTest("entityType" -> "xyz")("saIncomeDeclared.error.invalid")
         }
 
       }
@@ -290,6 +262,17 @@ class SAControllerSpec
 
         "valid data is submitted and" when {
 
+          def redirectTest(session: HECSession, updatedSession: HECSession, value: String) = {
+            inSequence {
+              mockAuthWithNoRetrievals()
+              mockGetSession(session)
+              mockJourneyServiceUpdateAndNext(routes.SAController.saIncomeStatement(), session, updatedSession)(
+                Right(mockNextCall)
+              )
+            }
+
+            checkIsRedirect(performAction("saIncomeDeclared" -> value), mockNextCall)
+          }
           "the user has not previously completed answering questions" in {
             val answers        = IndividualUserAnswers.empty
             val updatedAnswers = IndividualUserAnswers.empty.copy(saIncomeDeclared = Some(YesNoAnswer.No))
@@ -300,16 +283,7 @@ class SAControllerSpec
                 answers
               )
             val updatedSession = session.copy(userAnswers = updatedAnswers)
-
-            inSequence {
-              mockAuthWithNoRetrievals()
-              mockGetSession(session)
-              mockJourneyServiceUpdateAndNext(routes.SAController.saIncomeStatement(), session, updatedSession)(
-                Right(mockNextCall)
-              )
-            }
-
-            checkIsRedirect(performAction("saIncomeDeclared" -> "1"), mockNextCall)
+            redirectTest(session, updatedSession, "1")
           }
 
           "the user has previously completed answering questions" in {
@@ -330,16 +304,8 @@ class SAControllerSpec
                 answers
               )
             val updatedSession = session.copy(userAnswers = updatedAnswers)
+            redirectTest(session, updatedSession, "1")
 
-            inSequence {
-              mockAuthWithNoRetrievals()
-              mockGetSession(session)
-              mockJourneyServiceUpdateAndNext(routes.SAController.saIncomeStatement(), session, updatedSession)(
-                Right(mockNextCall)
-              )
-            }
-
-            checkIsRedirect(performAction("saIncomeDeclared" -> "1"), mockNextCall)
           }
         }
 

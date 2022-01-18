@@ -237,7 +237,7 @@ class CompanyDetailsControllerSpec
           Fixtures.incompleteCompanyUserAnswers(crn = Some(CRN("crn")))
         )
 
-        "nothing has been submitted" in {
+        def test(data: (String, String)*)(errorMessage: String) = {
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
@@ -247,42 +247,22 @@ class CompanyDetailsControllerSpec
           }
 
           checkFormErrorIsDisplayed(
-            performAction(),
+            performAction(data: _*),
             messageFromMessageKey("confirmCompanyName.title"),
-            messageFromMessageKey("confirmCompanyName.error.required")
+            messageFromMessageKey(errorMessage)
           )
+        }
+
+        "nothing has been submitted" in {
+          test()("confirmCompanyName.error.required")
         }
 
         "an invalid index value is submitted" in {
-          inSequence {
-            mockAuthWithNoRetrievals()
-            mockGetSession(session)
-            mockJourneyServiceGetPrevious(routes.CompanyDetailsController.confirmCompanyDetails(), session)(
-              mockPreviousCall
-            )
-          }
-
-          checkFormErrorIsDisplayed(
-            performAction("confirmCompanyName" -> Int.MaxValue.toString),
-            messageFromMessageKey("confirmCompanyName.title"),
-            messageFromMessageKey("confirmCompanyName.error.invalid")
-          )
+          test("confirmCompanyName" -> Int.MaxValue.toString)("confirmCompanyName.error.invalid")
         }
 
         "a non-numeric value is submitted" in {
-          inSequence {
-            mockAuthWithNoRetrievals()
-            mockGetSession(session)
-            mockJourneyServiceGetPrevious(routes.CompanyDetailsController.confirmCompanyDetails(), session)(
-              mockPreviousCall
-            )
-          }
-
-          checkFormErrorIsDisplayed(
-            performAction("confirmCompanyName" -> "xyz"),
-            messageFromMessageKey("confirmCompanyName.title"),
-            messageFromMessageKey("confirmCompanyName.error.invalid")
-          )
+          test("confirmCompanyName" -> "xyz")("confirmCompanyName.error.invalid")
         }
       }
 
@@ -479,6 +459,7 @@ class CompanyDetailsControllerSpec
               val currentDate       = LocalDate.of(2024, 2, 29)
               val lookBackStartDate = LocalDate.of(2022, 3, 1)
               val lookBackEndDate   = LocalDate.of(2023, 2, 28)
+
               test(currentDate, lookBackStartDate, lookBackEndDate)
             }
 
@@ -890,13 +871,17 @@ class CompanyDetailsControllerSpec
 
       "return a technical error" when {
 
-        "applicant is individual" in {
+        def test(session: HECSession) = {
           inSequence {
             mockAuthWithNoRetrievals()
-            mockGetSession(Fixtures.individualHECSession())
+            mockGetSession(session)
           }
 
           assertThrows[RuntimeException](await(performAction()))
+        }
+
+        "applicant is individual" in {
+          test(Fixtures.individualHECSession())
         }
 
         "CT status accounting period is not populated" in {
@@ -906,13 +891,7 @@ class CompanyDetailsControllerSpec
               ctStatus = Some(Fixtures.ctStatusResponse(latestAccountingPeriod = None))
             )
           )
-
-          inSequence {
-            mockAuthWithNoRetrievals()
-            mockGetSession(session)
-          }
-          assertThrows[RuntimeException](await(performAction()))
-
+          test(session)
         }
       }
     }
@@ -966,13 +945,17 @@ class CompanyDetailsControllerSpec
 
       "return a technical error" when {
 
-        "the applicant type is individual" in {
+        def test(session: HECSession) = {
           inSequence {
             mockAuthWithNoRetrievals()
-            mockGetSession(Fixtures.individualHECSession())
+            mockGetSession(session)
           }
 
           assertThrows[RuntimeException](await(performAction()))
+        }
+
+        "the applicant type is individual" in {
+          test(Fixtures.individualHECSession())
         }
 
         "CT status accounting period is not populated" in {
@@ -980,12 +963,7 @@ class CompanyDetailsControllerSpec
             companyLoginData,
             retrievedJourneyDataWithCompanyName.copy(ctStatus = Some(CTStatusResponse(CTUTR("utr"), date, date, None)))
           )
-
-          inSequence {
-            mockAuthWithNoRetrievals()
-            mockGetSession(session)
-          }
-          assertThrows[RuntimeException](await(performAction()))
+          test(session)
 
         }
 
@@ -1071,11 +1049,7 @@ class CompanyDetailsControllerSpec
           )
         )
 
-        "the user has not previously answered the question " in {
-
-          val session =
-            Fixtures.companyHECSession(companyLoginData, companyData, CompanyUserAnswers.empty)
-
+        def test(session: HECSession, value: Option[String]) = {
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
@@ -1089,12 +1063,22 @@ class CompanyDetailsControllerSpec
               doc.select("#back").attr("href") shouldBe mockPreviousCall.url
 
               val selectedOptions = doc.select(".govuk-radios__input[checked]")
-              selectedOptions.isEmpty shouldBe true
+              value match {
+                case Some(index) => selectedOptions.attr("value") shouldBe index
+                case None        => selectedOptions.isEmpty       shouldBe true
+              }
 
               val button = doc.select("form")
               button.attr("action") shouldBe recentlyStartedTradingSubmitRoute.url
             }
           )
+        }
+
+        "the user has not previously answered the question " in {
+
+          val session =
+            Fixtures.companyHECSession(companyLoginData, companyData, CompanyUserAnswers.empty)
+          test(session, None)
 
         }
 
@@ -1114,23 +1098,7 @@ class CompanyDetailsControllerSpec
             .copy(recentlyStartedTrading = Some(YesNoAnswer.No))
           val updatedSession = session.copy(userAnswers = updatedAnswers)
 
-          inSequence {
-            mockAuthWithNoRetrievals()
-            mockGetSession(updatedSession)
-            mockJourneyServiceGetPrevious(recentlyStartedTradingRoute, updatedSession)(mockPreviousCall)
-          }
-          checkPageIsDisplayed(
-            performAction(),
-            messageFromMessageKey("recentlyStartedTrading.title"),
-            { doc =>
-              doc.select("#back").attr("href") shouldBe mockPreviousCall.url
-              val selectedOptions = doc.select(".govuk-radios__input[checked]")
-              selectedOptions.attr("value") shouldBe "1"
-
-              val button = doc.select("form")
-              button.attr("action") shouldBe recentlyStartedTradingRoute.url
-            }
-          )
+          test(updatedSession, Some("1"))
 
         }
 
@@ -1960,21 +1928,33 @@ class CompanyDetailsControllerSpec
       }
 
       "throw exception" when {
-        "session is for individual" in {
+        def test(session: HECSession) = {
           inSequence {
             mockAuthWithNoRetrievals()
-            mockGetSession(Fixtures.individualHECSession())
+            mockGetSession(session)
           }
 
           assertThrows[RuntimeException](await(performAction()))
         }
 
+        "session is for individual" in {
+          test(Fixtures.individualHECSession())
+        }
+
         "CRN is missing in session answers" in {
           val answers = Fixtures.incompleteCompanyUserAnswers(crn = None)
           val session = Fixtures.companyHECSession(userAnswers = answers)
+          test(session)
+        }
+
+        def test1(session: HECSession, result: Either[Error, Option[CtutrAttempts]]) = {
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
+            mockJourneyServiceGetPrevious(routes.CompanyDetailsController.tooManyCtutrAttempts(), session)(
+              mockPreviousCall
+            )
+            mockCtutrAttemptsServiceGet(crn, companyLoginData.ggCredId)(result)
           }
 
           assertThrows[RuntimeException](await(performAction()))
@@ -1983,31 +1963,15 @@ class CompanyDetailsControllerSpec
         "fetching ctutr attempts fails" in {
           val answers = Fixtures.incompleteCompanyUserAnswers(crn = Some(crn))
           val session = Fixtures.companyHECSession(userAnswers = answers)
-          inSequence {
-            mockAuthWithNoRetrievals()
-            mockGetSession(session)
-            mockJourneyServiceGetPrevious(routes.CompanyDetailsController.tooManyCtutrAttempts(), session)(
-              mockPreviousCall
-            )
-            mockCtutrAttemptsServiceGet(crn, companyLoginData.ggCredId)(Left(Error("some error")))
-          }
+          test1(session, Left(Error("some error")))
 
-          assertThrows[RuntimeException](await(performAction()))
         }
 
         "fetched ctutr attempts is not blocked" in {
           val answers = Fixtures.incompleteCompanyUserAnswers(crn = Some(crn))
           val session = Fixtures.companyHECSession(userAnswers = answers)
-          inSequence {
-            mockAuthWithNoRetrievals()
-            mockGetSession(session)
-            mockJourneyServiceGetPrevious(routes.CompanyDetailsController.tooManyCtutrAttempts(), session)(
-              mockPreviousCall
-            )
-            mockCtutrAttemptsServiceGet(crn, companyLoginData.ggCredId)(Right(Some(ctutrAttempts)))
-          }
+          test1(session, Right(Some(ctutrAttempts)))
 
-          assertThrows[RuntimeException](await(performAction()))
         }
       }
 
