@@ -25,6 +25,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.HECSession
 import uk.gov.hmrc.hecapplicantfrontend.models.emailSend.EmailParameters
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
 import uk.gov.hmrc.hecapplicantfrontend.services.{JourneyService, SendEmailService}
+import uk.gov.hmrc.hecapplicantfrontend.util.StringUtils.StringOps
 import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging, TimeUtils}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.hecapplicantfrontend.views.html
@@ -100,7 +101,7 @@ class EmailAddressConfirmedController @Inject() (
     EmailParameters(
       currentDate = s"${TimeUtils.govDisplayFormat(taxCheckCodeCreatedDate.toLocalDate)}",
       licenceType = s"${FormUtils.licenceTypeFormat(licenceType)}",
-      hecTaxCheckCode = s"${hecTaxCheckCode.value}",
+      hecTaxCheckCode = s"${hecTaxCheckCode.value.removeWhitespace.grouped(3).mkString(" ")}",
       expiresAfter = s"${TimeUtils.govDisplayFormat(taxCheckCodeExpiryDate)}"
     )
 

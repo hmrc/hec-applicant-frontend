@@ -395,7 +395,7 @@ class EmailAddressConfirmedControllerSpec
             loginData = Fixtures.companyLoginData(emailAddress = ggEmailId.some),
             userAnswers = Fixtures.completeCompanyUserAnswers(),
             isEmailRequested = true,
-            completedTaxCheck = hecTaxCheck.some,
+            completedTaxCheck = hecTaxCheck.copy(taxCheckCode = HECTaxCheckCode("ABC123DER")).some,
             userEmailAnswers = passcodeSentAndMatchedUserEmailAnswer.some
           )
 
