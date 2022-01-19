@@ -184,6 +184,9 @@ object HECSession {
       }
     }
 
+    def ensureEmailHasBeenRequested[A](f: => A): A =
+      if (s.fold(_.isEmailRequested, _.isEmailRequested)) f else sys.error("Email has not been requested")
+
     def ensureGGEmailIdPresent[A](f: EmailAddress => A): A =
       s.fold(_.loginData.emailAddress, _.loginData.emailAddress) match {
         case Some(email) => f(email)

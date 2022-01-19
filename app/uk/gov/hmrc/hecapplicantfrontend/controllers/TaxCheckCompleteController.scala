@@ -20,6 +20,7 @@ import com.google.inject.{Inject, Singleton}
 import cats.instances.future._
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
@@ -35,7 +36,7 @@ class TaxCheckCompleteController @Inject() (
   journeyService: JourneyService,
   mcc: MessagesControllerComponents,
   taxCheckCompletePage: html.TaxCheckComplete
-)(implicit ec: ExecutionContext)
+)(implicit ec: ExecutionContext, appConfig: AppConfig)
     extends FrontendController(mcc)
     with I18nSupport
     with Logging {
@@ -52,16 +53,20 @@ class TaxCheckCompleteController @Inject() (
   }
 
   val emailTaxCheckCode: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
-    val session        = request.sessionData
-    val updatedSession = session.fold(_.copy(isEmailRequested = true), _.copy(isEmailRequested = true))
-    journeyService
-      .updateAndNext(
-        routes.TaxCheckCompleteController.taxCheckComplete(),
-        updatedSession
-      )
-      .fold(
-        _.doThrow("Could not update session and proceed"),
-        Redirect
-      )
+    if (!appConfig.sendEmailEnabled)
+      sys.error("Email journey is not enabled")
+    else {
+      val session        = request.sessionData
+      val updatedSession = session.fold(_.copy(isEmailRequested = true), _.copy(isEmailRequested = true))
+      journeyService
+        .updateAndNext(
+          routes.TaxCheckCompleteController.taxCheckComplete(),
+          updatedSession
+        )
+        .fold(
+          _.doThrow("Could not update session and proceed"),
+          Redirect
+        )
+    }
   }
 }

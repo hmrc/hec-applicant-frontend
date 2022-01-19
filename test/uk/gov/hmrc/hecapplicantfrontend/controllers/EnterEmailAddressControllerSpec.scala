@@ -79,6 +79,20 @@ class EnterEmailAddressControllerSpec
           assertThrows[RuntimeException](await(performAction()))
         }
 
+        "an email has not been requested" in {
+          val session = Fixtures.individualHECSession(
+            loginData = Fixtures.individualLoginData(),
+            userAnswers = Fixtures.completeIndividualUserAnswers(),
+            isEmailRequested = false
+          )
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+          }
+          assertThrows[RuntimeException](await(performAction()))
+        }
+
       }
 
       "display the page" when {
@@ -179,6 +193,20 @@ class EnterEmailAddressControllerSpec
       }
 
       "return a technical error" when {
+
+        "an email has not been requested" in {
+          val session = Fixtures.individualHECSession(
+            loginData = Fixtures.individualLoginData(),
+            userAnswers = Fixtures.completeIndividualUserAnswers(),
+            isEmailRequested = false
+          )
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+          }
+          assertThrows[RuntimeException](await(performAction()))
+        }
 
         "Call to request passcode fails" in {
           val session = Fixtures.companyHECSession(
