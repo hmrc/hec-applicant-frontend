@@ -248,6 +248,9 @@ class EmailAddressConfirmedControllerSpec
       def performAction(): Future[Result] =
         controller.emailAddressConfirmedSubmit(FakeRequest().withFormUrlEncodedBody())
 
+      def performActionCY(): Future[Result] =
+        controller.emailAddressConfirmedSubmit(FakeRequest().withCookies(Cookie("PLAY_LANG", "cy")))
+
       "return a technical error" when {
 
         def testTechnicalError(session: HECSession) = {
@@ -390,7 +393,10 @@ class EmailAddressConfirmedControllerSpec
 
       "redirect to the next page" when {
 
-        "when the user has selected  English language" in {
+        def testRedirect(
+          emailParameters: EmailParameters,
+          isEnglish: Boolean
+        ) = {
           val session = Fixtures.companyHECSession(
             loginData = Fixtures.companyLoginData(emailAddress = ggEmailId.some),
             userAnswers = Fixtures.completeCompanyUserAnswers(),
@@ -406,43 +412,24 @@ class EmailAddressConfirmedControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockSendEmail(ggEmailId, emailParameters = emailParametersEN)(Right(EmailSendResult.EmailSent))
+            mockSendEmail(ggEmailId, emailParameters = emailParameters)(Right(EmailSendResult.EmailSent))
             mockJourneyServiceUpdateAndNext(
               routes.EmailAddressConfirmedController.emailAddressConfirmed(),
               session,
               updatedSession
             )(Right(mockNextCall))
           }
-          checkIsRedirect(performAction(), mockNextCall)
+
+          if (isEnglish) checkIsRedirect(performAction(), mockNextCall)
+          else checkIsRedirect(performActionCY(), mockNextCall)
+        }
+
+        "when the user has selected  English language" in {
+          testRedirect(emailParametersEN, true)
         }
 
         "when the user has selected  welsh language" in {
-
-          def performAction(): Future[Result] =
-            controller.emailAddressConfirmedSubmit(FakeRequest().withCookies(Cookie("PLAY_LANG", "cy")))
-          val session                         = Fixtures.companyHECSession(
-            loginData = Fixtures.companyLoginData(emailAddress = ggEmailId.some),
-            userAnswers = Fixtures.completeCompanyUserAnswers(),
-            isEmailRequested = true,
-            completedTaxCheck = hecTaxCheck.some,
-            userEmailAnswers = passcodeSentAndMatchedUserEmailAnswer.some
-          )
-
-          val updatedSession =
-            session.copy(userEmailAnswers =
-              passcodeSentAndMatchedUserEmailAnswer.copy(emailSendResult = EmailSendResult.EmailSent.some).some
-            )
-          inSequence {
-            mockAuthWithNoRetrievals()
-            mockGetSession(session)
-            mockSendEmail(ggEmailId, emailParameters = emailParametersCY)(Right(EmailSendResult.EmailSent))
-            mockJourneyServiceUpdateAndNext(
-              routes.EmailAddressConfirmedController.emailAddressConfirmed(),
-              session,
-              updatedSession
-            )(Right(mockNextCall))
-          }
-          checkIsRedirect(performAction(), mockNextCall)
+          testRedirect(emailParametersCY, false)
         }
 
       }
