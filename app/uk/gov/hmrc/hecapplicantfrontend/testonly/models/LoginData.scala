@@ -25,7 +25,7 @@ final case class LoginData(
   redirectUrl: String,
   confidenceLevel: ConfidenceLevel,
   affinityGroup: AffinityGroup,
-  email: EmailAddress,
+  email: Option[EmailAddress],
   nino: Option[NINO],
   enrolment: Option[Enrolment],
   existingTaxChecks: List[SaveTaxCheckRequest]

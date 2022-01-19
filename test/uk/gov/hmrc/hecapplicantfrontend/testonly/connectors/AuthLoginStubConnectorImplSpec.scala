@@ -102,7 +102,7 @@ class AuthLoginStubConnectorImplSpec extends ConnectorSpec with Matchers with An
             "redirect/url",
             ConfidenceLevel.L250,
             AffinityGroup.Individual,
-            EmailAddress("email@test.com"),
+            Some(EmailAddress("email@test.com")),
             Some(NINO("nino")),
             Some(Enrolment("enrolmentKey", List(EnrolmentIdentifier("idKey", "idValue")), "state")),
             List.empty
@@ -139,7 +139,7 @@ class AuthLoginStubConnectorImplSpec extends ConnectorSpec with Matchers with An
             "redirect/url",
             ConfidenceLevel.L50,
             AffinityGroup.Organisation,
-            EmailAddress("email@test.com"),
+            None,
             None,
             None,
             List.empty
@@ -147,8 +147,7 @@ class AuthLoginStubConnectorImplSpec extends ConnectorSpec with Matchers with An
 
           val expectedBody =
             "authorityId=credId&redirectionUrl=redirect%2Furl&credentialStrength=strong&" +
-              "confidenceLevel=50&affinityGroup=Organisation&credentialRole=User&" +
-              "email=email%40test.com"
+              "confidenceLevel=50&affinityGroup=Organisation&credentialRole=User"
 
           val response = mock[WSResponse]
 

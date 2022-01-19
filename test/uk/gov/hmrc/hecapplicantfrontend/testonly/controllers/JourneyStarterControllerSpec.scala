@@ -29,7 +29,7 @@ import uk.gov.hmrc.auth.core.ConfidenceLevel.L250
 import uk.gov.hmrc.hecapplicantfrontend.controllers.{routes => nonTestOnlyRoutes}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.ControllerSpec
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.HECTaxCheckSource.Digital
-import uk.gov.hmrc.hecapplicantfrontend.models.{DateOfBirth, EmailAddress, Error, HECTaxCheckCode}
+import uk.gov.hmrc.hecapplicantfrontend.models.{DateOfBirth, Error, HECTaxCheckCode}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.GGCredId
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
 import uk.gov.hmrc.hecapplicantfrontend.testonly.models.Journey._
@@ -99,6 +99,7 @@ class JourneyStarterControllerSpec extends ControllerSpec {
               doc,
               List(
                 "Individual, no SA UTR",
+                "Individual, no SA UTR, no GG email address",
                 "Individual, SA return found",
                 "Individual, SA notice to file issued (but return not found)",
                 "Individual, SA no return found (and no notice to file issued)",
@@ -132,7 +133,7 @@ class JourneyStarterControllerSpec extends ControllerSpec {
           "redirect",
           L250,
           Individual,
-          EmailAddress(""),
+          None,
           None,
           None,
           List.empty

@@ -68,7 +68,7 @@ class JourneyToLoginDataTransformerImpl @Inject() (uuidGenerator: UUIDGenerator,
       redirectUrl,
       ConfidenceLevel.L250,
       AffinityGroup.Individual,
-      EmailAddress("user@test.com"),
+      Some(EmailAddress("user@test.com")),
       Some(NINO("NS123456C")),
       None,
       List.empty
@@ -80,7 +80,7 @@ class JourneyToLoginDataTransformerImpl @Inject() (uuidGenerator: UUIDGenerator,
       redirectUrl,
       ConfidenceLevel.L50,
       AffinityGroup.Organisation,
-      EmailAddress("user@test.com"),
+      Some(EmailAddress("user@test.com")),
       None,
       None,
       List.empty
@@ -89,6 +89,9 @@ class JourneyToLoginDataTransformerImpl @Inject() (uuidGenerator: UUIDGenerator,
   def toLoginData(journey: Journey, redirectUrl: String): LoginData = journey match {
     case IndividualNoSA =>
       individualNoSA(randomGGCredId(), redirectUrl)
+
+    case IndividualNoSANoGGEmail =>
+      individualNoSA(randomGGCredId(), redirectUrl).copy(email = None)
 
     case IndividualSAReturnFound =>
       individualNoSA(randomGGCredId(), redirectUrl).copy(enrolment = Some(saEnrolment(SAUTR("1234567895"))))

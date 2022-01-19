@@ -95,6 +95,7 @@ object JourneyStarterController {
 
   val journeyOptions: List[Journey] = List(
     IndividualNoSA,
+    IndividualNoSANoGGEmail,
     IndividualSAReturnFound,
     IndividualSANoticeToFileIssued,
     IndividualSANoReturnFound,
