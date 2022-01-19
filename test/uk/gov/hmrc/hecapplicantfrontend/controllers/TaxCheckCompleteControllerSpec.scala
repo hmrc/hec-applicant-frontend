@@ -92,7 +92,7 @@ class TaxCheckCompleteControllerSpec
             individualLoginData,
             IndividualRetrievedJourneyData.empty,
             IndividualUserAnswers.empty.copy(licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)),
-            Some(HECTaxCheck(HECTaxCheckCode(taxCheckCode), expiryDate))
+            Some(HECTaxCheck(HECTaxCheckCode(taxCheckCode), expiryDate, ZonedDateTime.now()))
           )
 
           inSequence {
@@ -281,7 +281,7 @@ class TaxCheckCompleteEmailDisabledControllerSpec
             individualLoginData,
             IndividualRetrievedJourneyData.empty,
             IndividualUserAnswers.empty.copy(licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)),
-            Some(HECTaxCheck(HECTaxCheckCode(taxCheckCode), expiryDate))
+            Some(HECTaxCheck(HECTaxCheckCode(taxCheckCode), expiryDate, ZonedDateTime.now()))
           )
 
           inSequence {

@@ -399,7 +399,7 @@ class CheckYourAnswersControllerSpec
         taxCheckStartDateTime = Some(zonedDateTimeNow)
       )
 
-      val hecTaxCheck = HECTaxCheck(HECTaxCheckCode(""), LocalDate.now())
+      val hecTaxCheck = HECTaxCheck(HECTaxCheckCode(""), LocalDate.now(), ZonedDateTime.now())
 
       "return a technical error" when {
 

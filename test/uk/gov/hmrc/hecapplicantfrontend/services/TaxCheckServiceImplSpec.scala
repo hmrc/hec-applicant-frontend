@@ -135,7 +135,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
       )
 
       val taxCheckCode = HECTaxCheckCode("code")
-      val taxCheck     = HECTaxCheck(taxCheckCode, LocalDate.now().plusDays(2L))
+      val taxCheck     = HECTaxCheck(taxCheckCode, LocalDate.now().plusDays(2L), ZonedDateTime.now())
       val taxCheckJson = Json.toJson(taxCheck)
 
       val individualSession  = Fixtures.individualHECSession(

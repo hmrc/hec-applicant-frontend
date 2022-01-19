@@ -1537,7 +1537,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                 saIncomeDeclared = Some(YesNoAnswer.Yes),
                 entityType = Some(Individual)
               ),
-              Some(HECTaxCheck(HECTaxCheckCode("code"), LocalDate.now.plusDays(1))),
+              Some(HECTaxCheck(HECTaxCheckCode("code"), LocalDate.now.plusDays(1), ZonedDateTime.now())),
               Some(taxCheckStartDateTime),
               isEmailRequested = true
             )
@@ -1624,7 +1624,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                 saIncomeDeclared = Some(YesNoAnswer.Yes),
                 entityType = Some(Individual)
               ),
-              Some(HECTaxCheck(HECTaxCheckCode("code"), LocalDate.now.plusDays(1))),
+              Some(HECTaxCheck(HECTaxCheckCode("code"), LocalDate.now.plusDays(1), ZonedDateTime.now)),
               Some(taxCheckStartDateTime),
               isEmailRequested = true,
               userEmailAnswers = userEmailAnswers.some
@@ -1709,7 +1709,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                 saIncomeDeclared = Some(YesNoAnswer.Yes),
                 entityType = Some(Individual)
               ),
-              Some(HECTaxCheck(HECTaxCheckCode("code"), LocalDate.now.plusDays(1))),
+              Some(HECTaxCheck(HECTaxCheckCode("code"), LocalDate.now.plusDays(1), ZonedDateTime.now)),
               Some(taxCheckStartDateTime),
               isEmailRequested = true,
               userEmailAnswers = Fixtures
@@ -1798,7 +1798,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                 saIncomeDeclared = Some(YesNoAnswer.Yes),
                 entityType = Some(Individual)
               ),
-              Some(HECTaxCheck(HECTaxCheckCode("code"), LocalDate.now.plusDays(1))),
+              Some(HECTaxCheck(HECTaxCheckCode("code"), LocalDate.now.plusDays(1), ZonedDateTime.now)),
               Some(taxCheckStartDateTime),
               isEmailRequested = true,
               userEmailAnswers = userEmailAnswers.some
@@ -1848,7 +1848,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                 saIncomeDeclared = Some(YesNoAnswer.Yes),
                 entityType = Some(Individual)
               ),
-              Some(HECTaxCheck(HECTaxCheckCode("code"), LocalDate.now.plusDays(1))),
+              Some(HECTaxCheck(HECTaxCheckCode("code"), LocalDate.now.plusDays(1), ZonedDateTime.now)),
               Some(taxCheckStartDateTime),
               isEmailRequested = true,
               hasResentEmailConfirmation = true,
@@ -1931,7 +1931,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                 saIncomeDeclared = Some(YesNoAnswer.Yes),
                 entityType = Some(Individual)
               ),
-              Some(HECTaxCheck(HECTaxCheckCode("code"), LocalDate.now.plusDays(1))),
+              Some(HECTaxCheck(HECTaxCheckCode("code"), LocalDate.now.plusDays(1), ZonedDateTime.now)),
               Some(taxCheckStartDateTime),
               isEmailRequested = true,
               hasResentEmailConfirmation = true,
@@ -3033,7 +3033,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               individualLoginData.copy(emailAddress = EmailAddress("user@test.com").some),
               retrievedJourneyData = journeyDataWithSaStatus,
               Fixtures.completeIndividualUserAnswers(),
-              Some(HECTaxCheck(HECTaxCheckCode("code1"), LocalDate.now.plusDays(1))),
+              Some(HECTaxCheck(HECTaxCheckCode("code1"), LocalDate.now.plusDays(1), ZonedDateTime.now)),
               taxCheckStartDateTime = taxCheckStartDateTime.some,
               isEmailRequested = true,
               userEmailAnswers = userEmailAnswers
@@ -3067,7 +3067,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
         def previousIsEmailAddressConfirmed(emailSendResult: EmailSendResult, presentRoute: Call) = {
           val hecTaxCheckCode                             = HECTaxCheckCode("ABC 123 DER")
           val expiryDate                                  = LocalDate.of(2021, 10, 9)
-          val hecTaxCheck                                 = HECTaxCheck(hecTaxCheckCode, expiryDate)
+          val hecTaxCheck                                 = HECTaxCheck(hecTaxCheckCode, expiryDate, ZonedDateTime.now)
           val userEmailAnswer                             = Fixtures
             .userEmailAnswers(
               passcodeRequestResult = PasscodeRequestResult.PasscodeSent.some,
@@ -3114,7 +3114,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               individualLoginData.copy(emailAddress = emailAddress),
               retrievedJourneyData = journeyDataWithSaStatus,
               Fixtures.completeIndividualUserAnswers(),
-              Some(HECTaxCheck(HECTaxCheckCode("code1"), LocalDate.now.plusDays(1))),
+              Some(HECTaxCheck(HECTaxCheckCode("code1"), LocalDate.now.plusDays(1), ZonedDateTime.now)),
               taxCheckStartDateTime = taxCheckStartDateTime.some,
               isEmailRequested = true,
               userEmailAnswers = userEmailAnswers,
@@ -3180,7 +3180,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                 saIncomeDeclared = Some(YesNoAnswer.Yes),
                 entityType = Some(Individual)
               ),
-              Some(HECTaxCheck(HECTaxCheckCode("code"), LocalDate.now.plusDays(1))),
+              Some(HECTaxCheck(HECTaxCheckCode("code"), LocalDate.now.plusDays(1), ZonedDateTime.now)),
               Some(taxCheckStartDateTime),
               isEmailRequested = true,
               userEmailAnswers = Fixtures
@@ -3239,7 +3239,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               saIncomeDeclared = Some(YesNoAnswer.Yes),
               entityType = Some(Individual)
             ),
-            Some(HECTaxCheck(HECTaxCheckCode("code"), LocalDate.now.plusDays(1))),
+            Some(HECTaxCheck(HECTaxCheckCode("code"), LocalDate.now.plusDays(1), ZonedDateTime.now)),
             Some(taxCheckStartDateTime),
             isEmailRequested = true,
             hasResentEmailConfirmation = true,
@@ -3266,7 +3266,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               saIncomeDeclared = Some(YesNoAnswer.Yes),
               entityType = Some(Individual)
             ),
-            Some(HECTaxCheck(HECTaxCheckCode("code"), LocalDate.now.plusDays(1))),
+            Some(HECTaxCheck(HECTaxCheckCode("code"), LocalDate.now.plusDays(1), ZonedDateTime.now())),
             Some(taxCheckStartDateTime),
             isEmailRequested = true,
             userEmailAnswers = Fixtures.userEmailAnswers(EmailType.GGEmail, ggEmailId, passcodeRequestResult.some).some
@@ -3294,7 +3294,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               saIncomeDeclared = Some(YesNoAnswer.Yes),
               entityType = Some(Individual)
             ),
-            Some(HECTaxCheck(HECTaxCheckCode("code"), LocalDate.now.plusDays(1))),
+            Some(HECTaxCheck(HECTaxCheckCode("code"), LocalDate.now.plusDays(1), ZonedDateTime.now)),
             Some(taxCheckStartDateTime),
             isEmailRequested = true,
             hasResentEmailConfirmation = resendFlag,
@@ -3405,7 +3405,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                 saIncomeDeclared = Some(YesNoAnswer.Yes),
                 entityType = Some(Individual)
               ),
-              Some(HECTaxCheck(HECTaxCheckCode("code"), LocalDate.now.plusDays(1))),
+              Some(HECTaxCheck(HECTaxCheckCode("code"), LocalDate.now.plusDays(1), ZonedDateTime.now)),
               Some(taxCheckStartDateTime),
               isEmailRequested = true,
               hasResentEmailConfirmation = hasResentEmailConfirmation,

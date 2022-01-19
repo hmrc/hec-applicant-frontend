@@ -18,14 +18,11 @@ package uk.gov.hmrc.hecapplicantfrontend.models.emailSend
 
 import play.api.libs.json.{Json, OWrites}
 
-//TODO discussion on data model for email parameters
 final case class EmailParameters(
-  name: String = "Dummy name",
-  verificationLink: String //added to call dummy  template
-  //currentDate: String, TODO uncomment for the real template
-  //licenceTYpe: LicenceType, TODO uncomment for the real template
-  //hecTaxCheckCode: String, TODO uncomment for the real template
-  //expiresAfter: String TODO uncomment for the real template
+  currentDate: String,
+  licenceType: String,
+  hecTaxCheckCode: String,
+  expiresAfter: String
 )
 
 object EmailParameters {

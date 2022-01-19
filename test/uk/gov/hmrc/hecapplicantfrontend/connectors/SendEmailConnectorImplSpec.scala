@@ -48,7 +48,7 @@ class SendEmailConnectorImplSpec
 
   val connector        = new SendEmailConnectorImpl(mockHttp, new ServicesConfig(config))
   val emailParameter   =
-    EmailParameters("Dummy name", "ABC 123 GRD")
+    EmailParameters("9 July 2021", "ABC 123 GRD", "Driver of taxis and private hires", "9 October 2021")
   val emailSendRequest = EmailSendRequest(List(EmailAddress("user@test.com")), "templateId1", emailParameter)
 
   "SendEmailConnectorImplSpec" when {
