@@ -24,6 +24,8 @@ object Journey {
 
   case object IndividualNoSA extends Journey
 
+  case object IndividualNoSANoGGEmail extends Journey
+
   case object IndividualSAReturnFound extends Journey
 
   case object IndividualSANoticeToFileIssued extends Journey

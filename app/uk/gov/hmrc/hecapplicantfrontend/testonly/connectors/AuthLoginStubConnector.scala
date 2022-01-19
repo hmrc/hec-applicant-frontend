@@ -56,7 +56,7 @@ class AuthLoginStubConnectorImpl @Inject() (config: Configuration, ws: WSClient)
       "confidenceLevel"                     -> Some(loginData.confidenceLevel.level.toString),
       "affinityGroup"                       -> Some(loginData.affinityGroup.toString),
       "credentialRole"                      -> Some("User"),
-      "email"                               -> Some(loginData.email.value),
+      "email"                               -> loginData.email.map(_.value),
       "nino"                                -> loginData.nino.map(_.value),
       "enrolment[0].name"                   -> loginData.enrolment.map(_.key),
       "enrolment[0].taxIdentifier[0].name"  -> enrolmentIdentifier.map(_.key),

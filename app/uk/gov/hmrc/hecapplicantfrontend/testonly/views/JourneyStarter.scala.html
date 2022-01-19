@@ -41,6 +41,7 @@
 @toRadioItem(journey: Journey, index: Int) = @{
     val content = journey match {
         case IndividualNoSA                          => "Individual, no SA UTR"
+        case IndividualNoSANoGGEmail                 => "Individual, no SA UTR, no GG email address"
         case IndividualSAReturnFound                 => "Individual, SA return found"
         case IndividualSANoticeToFileIssued          => "Individual, SA notice to file issued (but return not found)"
         case IndividualSANoReturnFound               => "Individual, SA no return found (and no notice to file issued)"

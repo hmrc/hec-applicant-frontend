@@ -77,7 +77,22 @@ class JourneyToLoginDataTransformerImplSpec extends Matchers with AnyWordSpecLik
             redirectUrl,
             L250,
             Individual,
-            EmailAddress("user@test.com"),
+            Some(EmailAddress("user@test.com")),
+            Some(NINO("NS123456C")),
+            None,
+            List.empty
+          )
+        }
+
+        "IndividualNoSANoGGEmail" in {
+          mockGenerateUUID(uuid)
+
+          transformer.toLoginData(IndividualNoSANoGGEmail, redirectUrl) shouldBe LoginData(
+            ggCredId,
+            redirectUrl,
+            L250,
+            Individual,
+            None,
             Some(NINO("NS123456C")),
             None,
             List.empty
@@ -92,7 +107,7 @@ class JourneyToLoginDataTransformerImplSpec extends Matchers with AnyWordSpecLik
             redirectUrl,
             L250,
             Individual,
-            EmailAddress("user@test.com"),
+            Some(EmailAddress("user@test.com")),
             Some(NINO("NS123456C")),
             Some(Enrolment("IR-SA", Seq(EnrolmentIdentifier("UTR", "1234567895")), "Activated")),
             List.empty
@@ -107,7 +122,7 @@ class JourneyToLoginDataTransformerImplSpec extends Matchers with AnyWordSpecLik
             redirectUrl,
             L250,
             Individual,
-            EmailAddress("user@test.com"),
+            Some(EmailAddress("user@test.com")),
             Some(NINO("NS123456C")),
             Some(Enrolment("IR-SA", Seq(EnrolmentIdentifier("UTR", "2222222222")), "Activated")),
             List.empty
@@ -122,7 +137,7 @@ class JourneyToLoginDataTransformerImplSpec extends Matchers with AnyWordSpecLik
             redirectUrl,
             L250,
             Individual,
-            EmailAddress("user@test.com"),
+            Some(EmailAddress("user@test.com")),
             Some(NINO("NS123456C")),
             Some(Enrolment("IR-SA", Seq(EnrolmentIdentifier("UTR", "1111111111")), "Activated")),
             List.empty
@@ -146,7 +161,7 @@ class JourneyToLoginDataTransformerImplSpec extends Matchers with AnyWordSpecLik
             redirectUrl,
             L250,
             Individual,
-            EmailAddress("user@test.com"),
+            Some(EmailAddress("user@test.com")),
             Some(NINO("NS123456C")),
             Some(Enrolment("IR-SA", Seq(EnrolmentIdentifier("UTR", "1234567895")), "Activated")),
             List(
@@ -173,7 +188,7 @@ class JourneyToLoginDataTransformerImplSpec extends Matchers with AnyWordSpecLik
             redirectUrl,
             L50,
             Organisation,
-            EmailAddress("user@test.com"),
+            Some(EmailAddress("user@test.com")),
             None,
             None,
             List.empty
@@ -188,7 +203,7 @@ class JourneyToLoginDataTransformerImplSpec extends Matchers with AnyWordSpecLik
             redirectUrl,
             L50,
             Organisation,
-            EmailAddress("user@test.com"),
+            Some(EmailAddress("user@test.com")),
             None,
             Some(Enrolment("IR-CT", Seq(EnrolmentIdentifier("UTR", "1111111111")), "Activated")),
             List.empty
@@ -203,7 +218,7 @@ class JourneyToLoginDataTransformerImplSpec extends Matchers with AnyWordSpecLik
             redirectUrl,
             L50,
             Organisation,
-            EmailAddress("user@test.com"),
+            Some(EmailAddress("user@test.com")),
             None,
             Some(Enrolment("IR-CT", Seq(EnrolmentIdentifier("UTR", "2222222222")), "Activated")),
             List.empty
@@ -218,7 +233,7 @@ class JourneyToLoginDataTransformerImplSpec extends Matchers with AnyWordSpecLik
             redirectUrl,
             L50,
             Organisation,
-            EmailAddress("user@test.com"),
+            Some(EmailAddress("user@test.com")),
             None,
             Some(Enrolment("IR-CT", Seq(EnrolmentIdentifier("UTR", "3333333333")), "Activated")),
             List.empty
@@ -233,7 +248,7 @@ class JourneyToLoginDataTransformerImplSpec extends Matchers with AnyWordSpecLik
             redirectUrl,
             L50,
             Organisation,
-            EmailAddress("user@test.com"),
+            Some(EmailAddress("user@test.com")),
             None,
             Some(Enrolment("IR-CT", Seq(EnrolmentIdentifier("UTR", "4444444444")), "Activated")),
             List.empty

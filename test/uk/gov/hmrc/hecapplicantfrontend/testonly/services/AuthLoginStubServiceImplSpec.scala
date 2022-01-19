@@ -28,7 +28,7 @@ import uk.gov.hmrc.auth.core.AffinityGroup.Individual
 import uk.gov.hmrc.auth.core.ConfidenceLevel.L250
 import uk.gov.hmrc.crypto.{Crypted, Decrypter, Encrypter, PlainBytes, PlainContent, PlainText}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.GGCredId
-import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, Error}
+import uk.gov.hmrc.hecapplicantfrontend.models.Error
 import uk.gov.hmrc.hecapplicantfrontend.testonly.connectors.AuthLoginStubConnector
 import uk.gov.hmrc.hecapplicantfrontend.testonly.models.LoginData
 import uk.gov.hmrc.http.HeaderCarrier
@@ -105,7 +105,7 @@ class AuthLoginStubServiceImplSpec extends Matchers with AnyWordSpecLike with Mo
           "redirect",
           L250,
           Individual,
-          EmailAddress(""),
+          None,
           None,
           None,
           List.empty
