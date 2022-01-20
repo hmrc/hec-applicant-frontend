@@ -153,6 +153,7 @@ taxCheckComplete.whatNext=Yr hyn y mae angen i chi ei wneud nesaf
 taxCheckComplete.list1=Gwneud nodyn o’ch cod gwirio treth. Gallwch <span class="js-visible"><a class="govuk-link" href="#print-dialogue">argraffu neu gadw’r dudalen hon fel PDF</a>, neu </span><a class="govuk-link" href="{0}">weld eich holl godau gwirio treth</a>.
 taxCheckComplete.list2=Nodwch eich cod gwirio treth yn eich cais am drwydded. Gwnewch yn siŵr eich bod yn gadael digon o amser i’ch cais gael ei brosesu cyn i’ch cod gwirio treth ddod i ben.
 taxCheckComplete.copyText=eich cod gwirio treth:
+exitSurvey.linkText=Rhowch wybod sut y gallwn wella’r gwasanaeth (mae’n cymryd 1 munud)
 sautrNotFound.title=Ni allwch ddefnyddio’r gwasanaeth hwn
 sautrNotFound.intro=Y rheswm am hyn yw na allem ddod o hyd i Gyfeirnod Unigryw y Trethdalwr (UTR) ar gyfer Hunanasesiad i chi.
 sautrNotFound.changeAnswer.heading=Os gwnaethoch roi gwybod i ni eich bod wedi cofrestru ar gyfer Hunanasesiad ond nad oeddech wedi gwneud hynny

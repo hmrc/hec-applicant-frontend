@@ -22,6 +22,7 @@
 @import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 @import uk.gov.hmrc.hecapplicantfrontend.util.TimeUtils
 @import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
+@import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 
 @this(layout: Layout, govukPanel : GovukPanel, copyButton: components.CopyButton)
 
@@ -53,6 +54,8 @@
         <li>@Html(messages(s"$key.list3", routes.StartController.start().url))</li>
     </ul>
 
-
+    <p class="govuk-body">
+      <a class="govuk-link" href="@{appConfig.signOutUrl(Some(appConfig.exitSurveyUrl))}">@messages("exitSurvey.linkText")</a>
+    </p>
 
 }
