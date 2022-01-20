@@ -27,8 +27,9 @@ import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
-
 import configs.syntax._
+
+import java.util.Locale
 import scala.concurrent.{ExecutionContext, Future}
 
 class EmailAllowedListFilter @Inject() (
@@ -40,8 +41,9 @@ class EmailAllowedListFilter @Inject() (
     with AuthorisedFunctions
     with Logging {
 
-  val userEmailListEnabled: Boolean      = config.underlying.getBoolean("email-allow-list.enabled")
-  val userEmailAllowedList: List[String] = config.underlying.get[List[String]]("email-allow-list.list").value
+  val userEmailListEnabled: Boolean               = config.underlying.getBoolean("email-allow-list.enabled")
+  val userEmailAllowedListLowerCase: List[String] =
+    config.underlying.get[List[String]]("email-allow-list.list").value.map(_.toLowerCase(Locale.UK))
 
   private def isExcludedEndpoint(rh: RequestHeader): Boolean =
     rh.path.contains(routes.AccessDeniedController.accessDenied().url) ||
@@ -56,11 +58,11 @@ class EmailAllowedListFilter @Inject() (
         .retrieve(Retrievals.email) { emailOpt =>
           //if access denied point is in session uri or email list contains the email from the enrollment, call the function f
           //access denied uri is checked to avoid it to go to else part where it wil stuck in a loop
-          if (isExcludedEndpoint(rh) || emailOpt.exists(email => userEmailAllowedList.contains(email))) {
-            f(rh)
-          } else {
-            Future.successful(Redirect(routes.AccessDeniedController.accessDenied))
-          }
+          val isAllowed = isExcludedEndpoint(rh) || emailOpt.exists(email =>
+            userEmailAllowedListLowerCase.contains(email.toLowerCase(Locale.UK))
+          )
+
+          if (isAllowed) f(rh) else Future.successful(Redirect(routes.AccessDeniedController.accessDenied))
         }
         .recoverWith { case _: NoActiveSession => f(rh) }
     } else {
