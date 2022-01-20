@@ -19,6 +19,7 @@ package uk.gov.hmrc.hecapplicantfrontend.controllers
 import com.google.inject.{Inject, Singleton}
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.hecapplicantfrontend.views.html.TimedOut
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -26,12 +27,17 @@ import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 @Singleton
 class SignOutController @Inject() (
   mcc: MessagesControllerComponents,
-  timedOutPage: TimedOut
+  timedOutPage: TimedOut,
+  appConfig: AppConfig
 ) extends FrontendController(mcc)
     with I18nSupport
     with Logging {
 
-  def signOutFromTimeout: Action[AnyContent] = Action { implicit request =>
+  val signOutFromTimeout: Action[AnyContent] = Action { implicit request =>
     Ok(timedOutPage()).withNewSession
+  }
+
+  val exitSurvey: Action[AnyContent] = Action { _ =>
+    Redirect(appConfig.exitSurveyUrl).withNewSession
   }
 }
