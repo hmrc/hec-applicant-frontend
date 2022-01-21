@@ -206,8 +206,7 @@ taxCheckComplete.list1 = <a class="govuk-link" href="#print-dialogue">print or s
 taxCheckComplete.list2 = <a class="govuk-link" href="{0}">get your tax check code sent to an email address</a>
 taxCheckComplete.list3 = <a class="govuk-link" href="{0}">see all your tax check codes</a>
 taxCheckComplete.copyText = your tax check code:
-exitSurvey.linkText=What did you think of this service?
-exitSurvey.duration = (takes 30 seconds)
+exitSurvey.linkText=<a class="govuk-link" href="{0}">What did you think of this service?</a> (takes 30 seconds)
 
 # SAUTR Not Found
 sautrNotFound.title = You cannot use this service

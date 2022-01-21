@@ -33,6 +33,6 @@ Request[_], messages: Messages)
     <p class="govuk-body">@messages(s"$key.p2")</p>
     <p class="govuk-body">@Html(messages(s"$key.p3", routes.StartController.start().url))</p>
     <p class="govuk-body">
-      <a class="govuk-link" href="@{routes.SignOutController.exitSurvey().url}">@messages("exitSurvey.linkText")</a> @messages("exitSurvey.duration")
+      @Html(messages("exitSurvey.linkText", routes.SignOutController.exitSurvey().url))
     </p>
 }
