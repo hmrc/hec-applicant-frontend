@@ -103,6 +103,16 @@ class EmailAllowedListFilterSpec
         status(result) shouldBe 200
       }
 
+      "user allowed email list contains the email with different case in enrollment, move to next page" in {
+
+        val request = FakeRequest()
+        mockAuthWithRetrievals(
+          Some(EmailAddress("UsEr@teSt.cOm"))
+        )
+        val result  = emailAllowedListFilter(true)(requestHandler)(request)
+        status(result) shouldBe 200
+      }
+
       "user allowed email list doesn't contain the email in enrollment, move to access denied" in {
 
         val request = FakeRequest()
