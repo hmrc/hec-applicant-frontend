@@ -53,6 +53,8 @@
         <li>@Html(messages(s"$key.list3", routes.StartController.start().url))</li>
     </ul>
 
-
+    <p class="govuk-body">
+      @Html(messages("exitSurvey.linkText", routes.SignOutController.exitSurvey().url))
+    </p>
 
 }

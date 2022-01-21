@@ -35,7 +35,8 @@ import scala.concurrent.duration.FiniteDuration
 class AppConfig @Inject() (config: Configuration, contactFrontendConfig: ContactFrontendConfig) {
 
   val platformHost: Option[String] = config.getOptional[String]("platform.frontend.host")
-  val contactFrontendUrl: String   =
+
+  val contactFrontendUrl: String =
     contactFrontendConfig.baseUrl.getOrElse(sys.error("Could not find config for contact frontend url"))
 
   val contactFormServiceIdentifier: String =
@@ -124,5 +125,10 @@ class AppConfig @Inject() (config: Configuration, contactFrontendConfig: Contact
   val maxTaxChecksPerLicenceType: Int = config.get[Int]("max-tax-checks-per-licence-type")
 
   val sendEmailEnabled: Boolean = config.get[Boolean]("email-send.enabled")
+
+  val exitSurveyUrl: String = {
+    val baseUrl = platformHost.getOrElse(config.get[String]("feedback-frontend.base-url"))
+    s"$baseUrl/feedback/$contactFormServiceIdentifier"
+  }
 
 }

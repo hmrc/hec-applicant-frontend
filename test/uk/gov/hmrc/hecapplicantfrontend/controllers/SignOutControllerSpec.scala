@@ -45,6 +45,17 @@ class SignOutControllerSpec extends ControllerSpec {
 
     }
 
+    "handling requests to the 'exit survey' endpoint" must {
+
+      "clear the http session and redirect to the exit survey" in {
+        val result = controller.exitSurvey(FakeRequest().withSession("key" -> "value"))
+
+        checkIsRedirect(result, appConfig.exitSurveyUrl)
+        session(result) shouldBe Session()
+      }
+
+    }
+
   }
 
 }

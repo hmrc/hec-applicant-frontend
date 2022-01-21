@@ -119,6 +119,10 @@ class TaxCheckCompleteControllerSpec
                 "8 January 2020"
               )
 
+              doc.select(".govuk-body > .govuk-link").parents().first().html shouldBe messageFromMessageKey(
+                "exitSurvey.linkText",
+                routes.SignOutController.exitSurvey().url
+              )
             }
           )
         }
