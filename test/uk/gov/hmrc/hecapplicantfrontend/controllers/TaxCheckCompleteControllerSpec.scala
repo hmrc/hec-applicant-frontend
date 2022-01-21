@@ -119,10 +119,10 @@ class TaxCheckCompleteControllerSpec
                 "8 January 2020"
               )
 
-              val exitSurveyLink = doc.select(".govuk-body > .govuk-link")
-              exitSurveyLink.text()       shouldBe messageFromMessageKey("exitSurvey.linkText")
-              exitSurveyLink.attr("href") shouldBe routes.SignOutController.exitSurvey().url
-
+              doc.select(".govuk-body > .govuk-link").parents().first().html shouldBe messageFromMessageKey(
+                "exitSurvey.linkText",
+                routes.SignOutController.exitSurvey().url
+              )
             }
           )
         }
