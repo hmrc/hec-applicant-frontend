@@ -50,7 +50,7 @@ lazy val microservice = Project(appName, file("."))
   .settings(addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.10.3"))
   .settings(addCompilerPlugin("org.scalamacros" %% "paradise" % "2.1.1" cross CrossVersion.full))
   .settings(
-    majorVersion := 0,
+    majorVersion := 1,
     scalaVersion := "2.12.13",
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
     pipelineStages in Assets := Seq(gzip),
