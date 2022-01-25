@@ -153,6 +153,8 @@ object AuditEvent {
 
     val transactionName: String = "tax-check-exit"
 
+    val source: String = "Digital"
+
     val serviceExitReason: String
 
     val serviceExitDescription: String
@@ -166,6 +168,7 @@ object AuditEvent {
       Json.obj(
         "serviceExitReason"      -> JsString(t.serviceExitReason),
         "serviceExitDescription" -> JsString(t.serviceExitDescription),
+        "source"                 -> JsString(t.source),
         "taxCheckSessionData"    -> Json.toJson(t.taxCheckSessionData)
       )
     }

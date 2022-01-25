@@ -229,6 +229,7 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
             |{
             |  "serviceExitReason": "SAUTRNotFound",
             |  "serviceExitDescription": "SA UTR not found for the Applicant's NINO.",
+            |  "source": "Digital",
             |  "taxCheckSessionData": $sessionJson
             |}
             |""".stripMargin
@@ -244,6 +245,7 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
              |{
              |  "serviceExitReason": "SANoNoticeToFileOrTaxReturn",
              |  "serviceExitDescription": "For relevant income tax year, Self Assessment Notice to File not found, Self Assessment Tax Return not found.",
+             |  "source": "Digital",
              |  "taxCheckSessionData": $sessionJson
              |}
              |""".stripMargin
@@ -259,6 +261,7 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
              |{
              |  "serviceExitReason": "CTEnteredCTUTRNotMatchingBlocked",
              |  "serviceExitDescription": "Applicant has made repeated attempts to provide a matching CT UTR. Attempts limit reached, so Applicant temporarily blocked from making an Application for that CRN.",
+             |  "source": "Digital",
              |  "taxCheckSessionData": $sessionJson
              |}
              |""".stripMargin
@@ -274,6 +277,7 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
              |{
              |  "serviceExitReason": "CTNoNoticeToFileOrTaxReturn",
              |  "serviceExitDescription": "For relevant accounting period, Corporation Tax Notice to File not found, Corporation Tax Return not found.",
+             |  "source": "Digital",
              |  "taxCheckSessionData": $sessionJson
              |}
              |""".stripMargin
@@ -289,6 +293,7 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
              |{
              |  "serviceExitReason": "CTNoAccountingPeriodNotRecentlyStartedTrading",
              |  "serviceExitDescription": "No relevant accounting period was found on tax summary record for the lookback period, and the Applicant's Company has not recently started trading.",
+             |  "source": "Digital",
              |  "taxCheckSessionData": $sessionJson
              |}
              |""".stripMargin
@@ -304,6 +309,7 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
              |{
              |  "serviceExitReason": "AllowedTaxChecksExceeded",
              |  "serviceExitDescription": "Attempted tax check for Licence Type exceeded number of permitted existing tax check codes, for a particular Applicant.",
+             |  "source": "Digital",
              |  "taxCheckSessionData": $sessionJson
              |}
              |""".stripMargin
