@@ -53,19 +53,20 @@ class EmailAllowedListFilter @Inject() (
 
   override def apply(f: RequestHeader => Future[Result])(rh: RequestHeader): Future[Result] =
     if (userEmailListEnabled) {
-      implicit val hc: HeaderCarrier =
-        HeaderCarrierConverter.fromRequestAndSession(rh, rh.session)
-      authorised()
-        .retrieve(Retrievals.email) { emailOpt =>
-          //if access denied point is in session uri or email list contains the email from the enrollment, call the function f
-          //access denied uri is checked to avoid it to go to else part where it wil stuck in a loop
-          val isAllowed = isExcludedEndpoint(rh) || emailOpt.exists(email =>
-            userEmailAllowedListLowerCase.contains(email.toLowerCase(Locale.UK))
-          )
+      if (isExcludedEndpoint(rh)) {
+        f(rh)
+      } else {
+        implicit val hc: HeaderCarrier =
+          HeaderCarrierConverter.fromRequestAndSession(rh, rh.session)
+        authorised()
+          .retrieve(Retrievals.email) { emailOpt =>
+            val isAllowed =
+              emailOpt.exists(email => userEmailAllowedListLowerCase.contains(email.toLowerCase(Locale.UK)))
 
-          if (isAllowed) f(rh) else Future.successful(Redirect(routes.AccessDeniedController.accessDenied))
-        }
-        .recoverWith { case _: NoActiveSession => f(rh) }
+            if (isAllowed) f(rh) else Future.successful(Redirect(routes.AccessDeniedController.accessDenied))
+          }
+          .recoverWith { case _: NoActiveSession => f(rh) }
+      }
     } else {
       f(rh)
     }
