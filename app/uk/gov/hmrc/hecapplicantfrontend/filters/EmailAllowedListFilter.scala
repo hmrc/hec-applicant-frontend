@@ -48,7 +48,8 @@ class EmailAllowedListFilter @Inject() (
   private def isExcludedEndpoint(rh: RequestHeader): Boolean =
     rh.path.contains(routes.AccessDeniedController.accessDenied().url) ||
       rh.path.contains("hmrc-frontend") ||
-      rh.path.contains("assets")
+      rh.path.contains("assets") ||
+      rh.path.contains("ping/ping")
 
   override def apply(f: RequestHeader => Future[Result])(rh: RequestHeader): Future[Result] =
     if (userEmailListEnabled) {
