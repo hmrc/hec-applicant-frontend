@@ -23,7 +23,7 @@ import org.scalatest.BeforeAndAfterAll
 import play.api.Configuration
 import play.api.inject.bind
 import play.api.inject.guice.GuiceableModule
-import play.api.mvc.{RequestHeader, Result, Results}
+import play.api.mvc.{Request, RequestHeader, Result, Results}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
@@ -33,6 +33,7 @@ import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 import uk.gov.hmrc.hecapplicantfrontend.controllers.{AuthSupport, ControllerSpec, JourneyServiceSupport, routes}
 import uk.gov.hmrc.hecapplicantfrontend.models.EmailAddress
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.GGCredId
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -91,46 +92,59 @@ class EmailAllowedListFilterSpec
       status(result) shouldBe 200
     }
 
-    "email allowed config is true" when {
+    "email allowed config is true" must {
 
-      "user allowed email list contains the email in enrollment, move to next page" in {
+      "move to the next page" when {
 
-        val request = FakeRequest()
-        mockAuthWithRetrievals(
-          Some(EmailAddress("user@test.com"))
-        )
-        val result  = emailAllowedListFilter(true)(requestHandler)(request)
-        status(result) shouldBe 200
+        def test(request: Request[_], emailAddress: EmailAddress) = {
+          mockAuthWithRetrievals(Some(emailAddress))
+
+          val result = emailAllowedListFilter(true)(requestHandler)(request)
+          status(result) shouldBe 200
+        }
+
+        "user allowed email list contains the email in enrollment" in {
+          test(FakeRequest(), EmailAddress("user@test.com"))
+        }
+
+        "user allowed email list contains the email with different case in enrollment" in {
+          test(FakeRequest(), EmailAddress("UsEr@teSt.cOm"))
+        }
+
+        "the user is not on the allowed email list and" when afterWord("the request") {
+
+          "is for the access denied page" in {
+            test(FakeRequest(routes.AccessDeniedController.accessDenied), EmailAddress("user1@test.com"))
+          }
+
+          "uri contains 'hmrc-frontend'" in {
+            test(FakeRequest("GET", "http://host/hmrc-frontend/x"), EmailAddress("user1@test.com"))
+          }
+
+          "uri contains 'assets'" in {
+            test(FakeRequest("GET", "http://host/assets/x"), EmailAddress("user1@test.com"))
+          }
+
+          "uri contains 'ping/ping'" in {
+            test(FakeRequest("GET", "http://host/ping/ping"), EmailAddress("user1@test.com"))
+          }
+
+        }
+
       }
 
-      "user allowed email list contains the email with different case in enrollment, move to next page" in {
+      "move to access denied" when {
 
-        val request = FakeRequest()
-        mockAuthWithRetrievals(
-          Some(EmailAddress("UsEr@teSt.cOm"))
-        )
-        val result  = emailAllowedListFilter(true)(requestHandler)(request)
-        status(result) shouldBe 200
-      }
+        "user allowed email list doesn't contain the email in enrollment" in {
 
-      "user allowed email list doesn't contain the email in enrollment, move to access denied" in {
+          val request = FakeRequest()
+          mockAuthWithRetrievals(
+            Some(EmailAddress("user1@test.com"))
+          )
+          val result  = emailAllowedListFilter(true)(requestHandler)(request)
+          checkIsRedirect(result, routes.AccessDeniedController.accessDenied)
+        }
 
-        val request = FakeRequest()
-        mockAuthWithRetrievals(
-          Some(EmailAddress("user1@test.com"))
-        )
-        val result  = emailAllowedListFilter(true)(requestHandler)(request)
-        checkIsRedirect(result, routes.AccessDeniedController.accessDenied)
-      }
-
-      "the uri in current session is access denied, move to next page" in {
-
-        val request = FakeRequest(routes.AccessDeniedController.accessDenied)
-        mockAuthWithRetrievals(
-          Some(EmailAddress("user1@test.com"))
-        )
-        val result  = emailAllowedListFilter(true)(requestHandler)(request)
-        status(result) shouldBe 200
       }
 
     }
