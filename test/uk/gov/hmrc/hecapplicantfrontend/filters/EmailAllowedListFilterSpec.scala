@@ -96,37 +96,45 @@ class EmailAllowedListFilterSpec
 
       "move to the next page" when {
 
-        def test(request: Request[_], emailAddress: EmailAddress) = {
-          mockAuthWithRetrievals(Some(emailAddress))
+        def test(request: Request[_], emailAddress: EmailAddress, authExpected: Boolean) = {
+          if (authExpected) mockAuthWithRetrievals(Some(emailAddress))
 
           val result = emailAllowedListFilter(true)(requestHandler)(request)
           status(result) shouldBe 200
         }
 
         "user allowed email list contains the email in enrollment" in {
-          test(FakeRequest(), EmailAddress("user@test.com"))
+          test(FakeRequest(), EmailAddress("user@test.com"), authExpected = true)
         }
 
         "user allowed email list contains the email with different case in enrollment" in {
-          test(FakeRequest(), EmailAddress("UsEr@teSt.cOm"))
+          test(FakeRequest(), EmailAddress("UsEr@teSt.cOm"), authExpected = true)
         }
 
         "the user is not on the allowed email list and" when afterWord("the request") {
 
           "is for the access denied page" in {
-            test(FakeRequest(routes.AccessDeniedController.accessDenied), EmailAddress("user1@test.com"))
+            test(
+              FakeRequest(routes.AccessDeniedController.accessDenied),
+              EmailAddress("user1@test.com"),
+              authExpected = false
+            )
           }
 
           "uri contains 'hmrc-frontend'" in {
-            test(FakeRequest("GET", "http://host/hmrc-frontend/x"), EmailAddress("user1@test.com"))
+            test(
+              FakeRequest("GET", "http://host/hmrc-frontend/x"),
+              EmailAddress("user1@test.com"),
+              authExpected = false
+            )
           }
 
           "uri contains 'assets'" in {
-            test(FakeRequest("GET", "http://host/assets/x"), EmailAddress("user1@test.com"))
+            test(FakeRequest("GET", "http://host/assets/x"), EmailAddress("user1@test.com"), authExpected = false)
           }
 
           "uri contains 'ping/ping'" in {
-            test(FakeRequest("GET", "http://host/ping/ping"), EmailAddress("user1@test.com"))
+            test(FakeRequest("GET", "http://host/ping/ping"), EmailAddress("user1@test.com"), authExpected = false)
           }
 
         }
