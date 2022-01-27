@@ -64,10 +64,11 @@ class VerifyResentEmailPasscodeControllerSpec
 
   "VerifyResentEmailPasscodeControllerSpec" when {
 
-    val ggEmailId        = EmailAddress("user@test.com")
-    val userEmailAnswers = Fixtures.userEmailAnswers()
-    val validPasscode    = Passcode("HHHHHH")
-    val noMatchPasscode  = Passcode("FFFFFF")
+    val ggEmailId           = EmailAddress("user@test.com")
+    val userSelectedGGEmail = UserSelectedEmail(EmailType.GGEmail, ggEmailId)
+    val userEmailAnswers    = Fixtures.userEmailAnswers()
+    val validPasscode       = Passcode("HHHHHH")
+    val noMatchPasscode     = Passcode("FFFFFF")
 
     "handling request to verify resent email confirmation code" must {
       def performAction(): Future[Result] = controller.verifyResentEmailPasscode(FakeRequest())
@@ -261,7 +262,7 @@ class VerifyResentEmailPasscodeControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockVerifyPasscode(noMatchPasscode, UserSelectedEmail(EmailType.GGEmail, ggEmailId))(
+            mockVerifyPasscode(noMatchPasscode, userSelectedGGEmail)(
               Right(PasscodeVerificationResult.NoMatch)
             )
             mockJourneyServiceGetPrevious(
@@ -310,7 +311,7 @@ class VerifyResentEmailPasscodeControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockVerifyPasscode(validPasscode, UserSelectedEmail(EmailType.GGEmail, ggEmailId))(Left(Error("")))
+            mockVerifyPasscode(validPasscode, userSelectedGGEmail)(Left(Error("")))
           }
           assertThrows[RuntimeException](await(performAction("passcode" -> validPasscode.value)))
 
@@ -335,7 +336,7 @@ class VerifyResentEmailPasscodeControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockVerifyPasscode(validPasscode, UserSelectedEmail(EmailType.GGEmail, ggEmailId))(
+            mockVerifyPasscode(validPasscode, userSelectedGGEmail)(
               Right(PasscodeVerificationResult.Match)
             )
             mockJourneyServiceUpdateAndNext(
@@ -376,7 +377,7 @@ class VerifyResentEmailPasscodeControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockVerifyPasscode(validPasscode, UserSelectedEmail(EmailType.GGEmail, ggEmailId))(
+            mockVerifyPasscode(validPasscode, userSelectedGGEmail)(
               Right(passcodeVerificationResult)
             )
             mockJourneyServiceUpdateAndNext(

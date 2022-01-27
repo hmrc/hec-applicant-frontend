@@ -50,6 +50,7 @@ class ResendEmailConfirmationControllerSpec
     bind[EmailVerificationService].toInstance(mockEmailVerificationService)
   )
   val ggEmailId                 = EmailAddress("user@test.com")
+  val userSelectedGGEmail       = UserSelectedEmail(EmailType.GGEmail, ggEmailId)
   val controller                = instanceOf[ResendEmailConfirmationController]
 
   def mockRequestPasscode(userSelectedEmail: UserSelectedEmail)(result: Either[Error, PasscodeRequestResult]) =
@@ -151,7 +152,7 @@ class ResendEmailConfirmationControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockRequestPasscode(UserSelectedEmail(EmailType.GGEmail, ggEmailId))(Left(Error("")))
+            mockRequestPasscode(userSelectedGGEmail)(Left(Error("")))
           }
           assertThrows[RuntimeException](await(performAction()))
         }
@@ -173,7 +174,7 @@ class ResendEmailConfirmationControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockRequestPasscode(UserSelectedEmail(EmailType.GGEmail, ggEmailId))(Right(PasscodeSent))
+            mockRequestPasscode(userSelectedGGEmail)(Right(PasscodeSent))
             mockJourneyServiceUpdateAndNext(
               routes.ResendEmailConfirmationController.resendEmail(),
               session,
@@ -204,7 +205,7 @@ class ResendEmailConfirmationControllerSpec
         inSequence {
           mockAuthWithNoRetrievals()
           mockGetSession(session)
-          mockRequestPasscode(UserSelectedEmail(EmailType.GGEmail, ggEmailId))(Right(PasscodeSent))
+          mockRequestPasscode(userSelectedGGEmail)(Right(PasscodeSent))
           mockJourneyServiceUpdateAndNext(
             routes.ResendEmailConfirmationController.resendEmail(),
             session,
