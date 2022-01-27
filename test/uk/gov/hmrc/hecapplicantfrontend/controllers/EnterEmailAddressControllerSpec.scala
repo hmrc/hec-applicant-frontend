@@ -23,10 +23,10 @@ import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{RequestWithSessionData}
+import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.RequestWithSessionData
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeRequestResult
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeRequestResult.{EmailAddressAlreadyVerified, PasscodeSent}
-import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, EmailType, Error, UserEmailAnswers}
+import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, EmailType, Error, UserEmailAnswers, UserSelectedEmail}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.{EmailVerificationService, JourneyService}
 import uk.gov.hmrc.hecapplicantfrontend.utils.Fixtures
@@ -52,10 +52,10 @@ class EnterEmailAddressControllerSpec
 
   val controller = instanceOf[EnterEmailAddressController]
 
-  def mockRequestPasscode(email: EmailAddress)(result: Either[Error, PasscodeRequestResult]) =
+  def mockRequestPasscode(userSelectedEmail: UserSelectedEmail)(result: Either[Error, PasscodeRequestResult]) =
     (mockEmailVerificationService
-      .requestPasscode(_: EmailAddress)(_: HeaderCarrier, _: RequestWithSessionData[_]))
-      .expects(email, *, *)
+      .requestPasscode(_: UserSelectedEmail)(_: HeaderCarrier, _: RequestWithSessionData[_]))
+      .expects(userSelectedEmail, *, *)
       .returning(EitherT.fromEither[Future](result))
 
   "EnterEmailAddressControllerSpec" when {
@@ -218,7 +218,7 @@ class EnterEmailAddressControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockRequestPasscode(otherEmailId)(Left(Error("")))
+            mockRequestPasscode(UserSelectedEmail(EmailType.DifferentEmail, otherEmailId))(Left(Error("")))
           }
           assertThrows[RuntimeException](await(performAction("enterEmailAddress" -> otherEmailId.value)))
         }
@@ -238,7 +238,7 @@ class EnterEmailAddressControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockRequestPasscode(otherEmailId)(Right(PasscodeSent))
+            mockRequestPasscode(UserSelectedEmail(EmailType.DifferentEmail, otherEmailId))(Right(PasscodeSent))
             mockJourneyServiceUpdateAndNext(
               routes.EnterEmailAddressController.enterEmailAddress(),
               session,
@@ -272,7 +272,7 @@ class EnterEmailAddressControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockRequestPasscode(updatedUserEmailAnswers.userSelectedEmail.emailAddress)(
+            mockRequestPasscode(updatedUserEmailAnswers.userSelectedEmail)(
               Right(updatedUserEmailAnswers.passcodeRequestResult.getOrElse(PasscodeSent))
             )
             mockJourneyServiceUpdateAndNext(

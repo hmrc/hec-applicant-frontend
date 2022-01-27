@@ -24,7 +24,7 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.RequestWithSessionData
-import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, Error}
+import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, EmailType, Error, UserSelectedEmail}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeRequestResult
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeRequestResult.PasscodeSent
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
@@ -52,10 +52,10 @@ class ResendEmailConfirmationControllerSpec
   val ggEmailId                 = EmailAddress("user@test.com")
   val controller                = instanceOf[ResendEmailConfirmationController]
 
-  def mockRequestPasscode(email: EmailAddress)(result: Either[Error, PasscodeRequestResult]) =
+  def mockRequestPasscode(userSelectedEmail: UserSelectedEmail)(result: Either[Error, PasscodeRequestResult]) =
     (mockEmailVerificationService
-      .requestPasscode(_: EmailAddress)(_: HeaderCarrier, _: RequestWithSessionData[_]))
-      .expects(email, *, *)
+      .requestPasscode(_: UserSelectedEmail)(_: HeaderCarrier, _: RequestWithSessionData[_]))
+      .expects(userSelectedEmail, *, *)
       .returning(EitherT.fromEither[Future](result))
 
   "ResendEmailConfirmationControllerSpec" when {
@@ -151,7 +151,7 @@ class ResendEmailConfirmationControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockRequestPasscode(ggEmailId)(Left(Error("")))
+            mockRequestPasscode(UserSelectedEmail(EmailType.GGEmail, ggEmailId))(Left(Error("")))
           }
           assertThrows[RuntimeException](await(performAction()))
         }
@@ -173,7 +173,7 @@ class ResendEmailConfirmationControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockRequestPasscode(ggEmailId)(Right(PasscodeSent))
+            mockRequestPasscode(UserSelectedEmail(EmailType.GGEmail, ggEmailId))(Right(PasscodeSent))
             mockJourneyServiceUpdateAndNext(
               routes.ResendEmailConfirmationController.resendEmail(),
               session,
@@ -204,7 +204,7 @@ class ResendEmailConfirmationControllerSpec
         inSequence {
           mockAuthWithNoRetrievals()
           mockGetSession(session)
-          mockRequestPasscode(ggEmailId)(Right(PasscodeSent))
+          mockRequestPasscode(UserSelectedEmail(EmailType.GGEmail, ggEmailId))(Right(PasscodeSent))
           mockJourneyServiceUpdateAndNext(
             routes.ResendEmailConfirmationController.resendEmail(),
             session,

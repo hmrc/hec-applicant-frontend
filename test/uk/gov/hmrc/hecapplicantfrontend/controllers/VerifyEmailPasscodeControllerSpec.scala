@@ -23,10 +23,11 @@ import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
+import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.RequestWithSessionData
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeRequestResult.PasscodeSent
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeVerificationResult.Match
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{Passcode, PasscodeRequestResult, PasscodeVerificationResult}
-import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, Error, HECSession, UserEmailAnswers}
+import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, EmailType, Error, HECSession, UserEmailAnswers, UserSelectedEmail}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.{EmailVerificationService, JourneyService}
 import uk.gov.hmrc.hecapplicantfrontend.utils.Fixtures
@@ -52,12 +53,12 @@ class VerifyEmailPasscodeControllerSpec
 
   val controller = instanceOf[VerifyEmailPasscodeController]
 
-  def mockVerifyPasscode(passcode: Passcode, emailAddress: EmailAddress)(
+  def mockVerifyPasscode(passcode: Passcode, userSelectedEmail: UserSelectedEmail)(
     result: Either[Error, PasscodeVerificationResult]
   ) =
     (mockEmailVerificationService
-      .verifyPasscode(_: Passcode, _: EmailAddress)(_: HeaderCarrier))
-      .expects(passcode, emailAddress, *)
+      .verifyPasscode(_: Passcode, _: UserSelectedEmail)(_: HeaderCarrier, _: RequestWithSessionData[_]))
+      .expects(passcode, userSelectedEmail, *, *)
       .returning(EitherT.fromEither[Future](result))
 
   "VerifyEmailPasscodeControllerSpec" when {
@@ -254,7 +255,9 @@ class VerifyEmailPasscodeControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockVerifyPasscode(passcode, emailAddress)(Right(PasscodeVerificationResult.NoMatch))
+            mockVerifyPasscode(passcode, UserSelectedEmail(EmailType.GGEmail, emailAddress))(
+              Right(PasscodeVerificationResult.NoMatch)
+            )
             mockJourneyServiceGetPrevious(routes.VerifyEmailPasscodeController.verifyEmailPasscode(), session)(
               mockPreviousCall
             )
@@ -303,7 +306,7 @@ class VerifyEmailPasscodeControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockVerifyPasscode(validPasscode, ggEmailId)(Left(Error("")))
+            mockVerifyPasscode(validPasscode, UserSelectedEmail(EmailType.GGEmail, ggEmailId))(Left(Error("")))
           }
           assertThrows[RuntimeException](await(performAction("passcode" -> validPasscode.value)))
 
@@ -330,7 +333,7 @@ class VerifyEmailPasscodeControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockVerifyPasscode(validPasscode, ggEmailId)(Right(Match))
+            mockVerifyPasscode(validPasscode, UserSelectedEmail(EmailType.GGEmail, ggEmailId))(Right(Match))
             mockJourneyServiceUpdateAndNext(
               routes.VerifyEmailPasscodeController.verifyEmailPasscode(),
               session,
@@ -370,7 +373,9 @@ class VerifyEmailPasscodeControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockVerifyPasscode(validPasscode, ggEmailId)(Right(passcodeVerificationResult))
+            mockVerifyPasscode(validPasscode, UserSelectedEmail(EmailType.GGEmail, ggEmailId))(
+              Right(passcodeVerificationResult)
+            )
             mockJourneyServiceUpdateAndNext(
               routes.VerifyEmailPasscodeController.verifyEmailPasscode(),
               session,

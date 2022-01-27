@@ -52,7 +52,7 @@ class ResendEmailConfirmationController @Inject() (
     authAction.andThen(sessionDataAction).async { implicit request =>
       request.sessionData.ensureUserSelectedEmailPresent { userSelectedEmail =>
         val result = for {
-          passcodeResult      <- emailVerificationService.requestPasscode(userSelectedEmail.emailAddress)
+          passcodeResult      <- emailVerificationService.requestPasscode(userSelectedEmail)
           existingEmailAnswers = request.sessionData.userEmailAnswers
           updatedEmailAnswers  = existingEmailAnswers.map(_.copy(passcodeRequestResult = passcodeResult.some))
           updatedSession       =

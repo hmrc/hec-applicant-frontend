@@ -53,10 +53,10 @@ class ConfirmEmailAddressControllerSpec
 
   val controller = instanceOf[ConfirmEmailAddressController]
 
-  def mockRequestPasscode(email: EmailAddress)(result: Either[Error, PasscodeRequestResult]) =
+  def mockRequestPasscode(userSelectedEmail: UserSelectedEmail)(result: Either[Error, PasscodeRequestResult]) =
     (mockEmailVerificationService
-      .requestPasscode(_: EmailAddress)(_: HeaderCarrier, _: RequestWithSessionData[_]))
-      .expects(email, *, *)
+      .requestPasscode(_: UserSelectedEmail)(_: HeaderCarrier, _: RequestWithSessionData[_]))
+      .expects(userSelectedEmail, *, *)
       .returning(EitherT.fromEither[Future](result))
 
   "ConfirmEmailAddressControllerSpec" when {
@@ -290,7 +290,7 @@ class ConfirmEmailAddressControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockRequestPasscode(ggEmailId)(Left(Error("")))
+            mockRequestPasscode(UserSelectedEmail(EmailType.GGEmail, ggEmailId))(Left(Error("")))
           }
           assertThrows[RuntimeException](await(performAction("confirmEmailAddress" -> "0")))
         }
@@ -310,7 +310,7 @@ class ConfirmEmailAddressControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockRequestPasscode(ggEmailId)(Right(PasscodeSent))
+            mockRequestPasscode(UserSelectedEmail(EmailType.GGEmail, ggEmailId))(Right(PasscodeSent))
             mockJourneyServiceUpdateAndNext(
               routes.ConfirmEmailAddressController.confirmEmailAddress(),
               session,
@@ -344,7 +344,7 @@ class ConfirmEmailAddressControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockRequestPasscode(updatedUserEmailAnswers.userSelectedEmail.emailAddress)(
+            mockRequestPasscode(updatedUserEmailAnswers.userSelectedEmail)(
               Right(updatedUserEmailAnswers.passcodeRequestResult.getOrElse(PasscodeSent))
             )
             mockJourneyServiceUpdateAndNext(

@@ -92,7 +92,7 @@ class VerifyEmailPasscodeController @Inject() (
       def handleValidPasscode(passcode: Passcode): Future[Result] =
         getNextOrNoMatchResult(
           passcode,
-          userSelectedEmail.emailAddress,
+          userSelectedEmail,
           currentCall,
           emailVerificationService,
           journeyService
@@ -170,7 +170,7 @@ object VerifyEmailPasscodeController {
 
   def getNextOrNoMatchResult(
     passcode: Passcode,
-    emailAddress: EmailAddress,
+    userSelectedEmail: UserSelectedEmail,
     currentCall: Call,
     emailVerificationService: EmailVerificationService,
     journeyService: JourneyService
@@ -180,7 +180,7 @@ object VerifyEmailPasscodeController {
     request: RequestWithSessionData[_]
   ): EitherT[Future, Error, Either[PasscodeVerificationResult, Call]] = for {
     passcodeVerificationResult <-
-      emailVerificationService.verifyPasscode(passcode, emailAddress)
+      emailVerificationService.verifyPasscode(passcode, userSelectedEmail)
     currentEmailAnswers         = request.sessionData.userEmailAnswers
     updatedEmailAnswers         =
       currentEmailAnswers
