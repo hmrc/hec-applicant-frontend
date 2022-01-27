@@ -18,6 +18,8 @@ package uk.gov.hmrc.hecapplicantfrontend.models
 
 import play.api.libs.json.{JsObject, JsString, Json, OWrites, Writes}
 import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.CompanyMatch.{CTUTRType, MatchResult}
+import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{Passcode, PasscodeRequestResult, PasscodeVerificationResult}
+import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeRequestResult._
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR, GGCredId}
 
 sealed trait AuditEvent {
@@ -217,6 +219,110 @@ object AuditEvent {
         "Attempted tax check for Licence Type exceeded number of permitted existing tax check codes, " +
           "for a particular Applicant."
     }
+
+  }
+
+  sealed trait EmailAuditEvent extends AuditEvent {
+    val ggCredId: GGCredId
+    val taxCheckCode: HECTaxCheckCode
+    val emailAddress: EmailAddress
+    val emailSource: EmailType
+  }
+
+  object EmailAuditEvent {
+
+    private val emailTypeWrites: Writes[EmailType] = Writes {
+      case EmailType.GGEmail        => JsString("GovernmentGateway")
+      case EmailType.DifferentEmail => JsString("Submitted")
+    }
+
+    def emailAuditEventJson(e: EmailAuditEvent): JsObject =
+      JsObject(
+        Map(
+          "ggCredId"     -> Json.toJson(e.ggCredId),
+          "taxCheckCode" -> Json.toJson(e.taxCheckCode),
+          "emailAddress" -> Json.toJson(e.emailAddress),
+          "emailSource"  -> emailTypeWrites.writes(e.emailSource)
+        )
+      )
+  }
+
+  final case class SubmitEmailAddressVerificationRequest(
+    ggCredId: GGCredId,
+    taxCheckCode: HECTaxCheckCode,
+    emailAddress: EmailAddress,
+    emailSource: EmailType,
+    result: Option[PasscodeRequestResult]
+  ) extends EmailAuditEvent {
+
+    override val auditType: String = "SubmitEmailAddressVerificationRequest"
+
+    override val transactionName: String = "submit-email-address-verification-request"
+  }
+
+  object SubmitEmailAddressVerificationRequest {
+
+    private def resultJson(result: Option[PasscodeRequestResult]): JsString = result match {
+      case Some(PasscodeSent)                                                 => JsString("Success")
+      case Some(EmailAddressAlreadyVerified)                                  => JsString("AlreadyVerified")
+      case Some(MaximumNumberOfEmailsExceeded) | Some(BadEmailAddress) | None => JsString("Failure")
+    }
+
+    private def failureReason(result: Option[PasscodeRequestResult]): Option[String] = result match {
+      case Some(PasscodeSent) | Some(EmailAddressAlreadyVerified) => None
+      case Some(BadEmailAddress)                                  => Some("VerificationPasscodeEmailFailed")
+      case Some(MaximumNumberOfEmailsExceeded)                    => Some("AttemptsToVerifyEmailAddressExceeded")
+      case _                                                      => Some("TechnicalError")
+    }
+
+    implicit val writes: OWrites[SubmitEmailAddressVerificationRequest] =
+      OWrites { s =>
+        val resultKeyValue = "result" -> resultJson(s.result)
+        val json           = EmailAuditEvent.emailAuditEventJson(s) + resultKeyValue
+        failureReason(s.result).fold(json)(f => json + ("failureReason" -> JsString(f)))
+      }
+
+  }
+
+  final case class SubmitEmailAddressVerificationPasscode(
+    ggCredId: GGCredId,
+    taxCheckCode: HECTaxCheckCode,
+    emailAddress: EmailAddress,
+    emailSource: EmailType,
+    verificationPasscode: Passcode,
+    result: Option[PasscodeVerificationResult]
+  ) extends EmailAuditEvent {
+
+    override val auditType: String = "SubmitEmailAddressVerificationPasscode"
+
+    override val transactionName: String = "submit-email-address-verification-passcode"
+  }
+
+  object SubmitEmailAddressVerificationPasscode {
+
+    private def resultJson(result: Option[PasscodeVerificationResult]): JsString = result match {
+      case Some(PasscodeVerificationResult.Match) => JsString("Success")
+      case _                                      => JsString("Failure")
+    }
+
+    private def failureReason(result: Option[PasscodeVerificationResult]): Option[String] = result match {
+      case Some(PasscodeVerificationResult.Match)           => None
+      case Some(PasscodeVerificationResult.TooManyAttempts) => Some("MaximumPasscodeVerificationAttemptsExceeded")
+      case Some(PasscodeVerificationResult.Expired)         => Some("PasscodeNotFoundExpired")
+      case Some(PasscodeVerificationResult.NoMatch)         => Some("PasscodeMismatch")
+      case None                                             => Some("TechnicalError")
+    }
+
+    implicit val writes: OWrites[SubmitEmailAddressVerificationPasscode] =
+      OWrites { s =>
+        val json = EmailAuditEvent.emailAuditEventJson(s) ++ JsObject(
+          Map(
+            "verificationPasscode" -> JsString(s.verificationPasscode.value),
+            "result"               -> resultJson(s.result)
+          )
+        )
+        failureReason(s.result).fold(json)(f => json + ("failureReason" -> JsString(f)))
+      }
 
   }
 

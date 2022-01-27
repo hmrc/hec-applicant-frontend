@@ -22,10 +22,11 @@ import com.google.inject.{ImplementedBy, Inject}
 import play.api.http.Status._
 import play.api.libs.json.{JsValue, Json, OFormat}
 import uk.gov.hmrc.hecapplicantfrontend.connectors.EmailVerificationConnector
-import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{RequestWithSessionData}
+import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.RequestWithSessionData
+import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.{SubmitEmailAddressVerificationPasscode, SubmitEmailAddressVerificationRequest}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeRequestResult._
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeVerificationResult._
-import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, Error}
+import uk.gov.hmrc.hecapplicantfrontend.models.{Error, UserSelectedEmail}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{Language, Passcode, PasscodeRequest, PasscodeRequestResult, PasscodeVerificationRequest, PasscodeVerificationResult}
 import uk.gov.hmrc.hecapplicantfrontend.services.EmailVerificationService.ErrorResponse
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
@@ -38,17 +39,21 @@ import scala.concurrent.{ExecutionContext, Future}
 trait EmailVerificationService {
 
   def requestPasscode(
-    emailAddress: EmailAddress
+    userSelectedEmail: UserSelectedEmail
   )(implicit hc: HeaderCarrier, r: RequestWithSessionData[_]): EitherT[Future, Error, PasscodeRequestResult]
 
-  def verifyPasscode(passcode: Passcode, emailAddress: EmailAddress)(implicit
-    hc: HeaderCarrier
+  def verifyPasscode(passcode: Passcode, userSelectedEmail: UserSelectedEmail)(implicit
+    hc: HeaderCarrier,
+    r: RequestWithSessionData[_]
   ): EitherT[Future, Error, PasscodeVerificationResult]
 
 }
 
 @Singleton
-class EmailVerificationServiceImpl @Inject() (emailVerificationConnector: EmailVerificationConnector)(implicit
+class EmailVerificationServiceImpl @Inject() (
+  emailVerificationConnector: EmailVerificationConnector,
+  auditService: AuditService
+)(implicit
   ec: ExecutionContext
 ) extends EmailVerificationService {
 
@@ -58,40 +63,76 @@ class EmailVerificationServiceImpl @Inject() (emailVerificationConnector: EmailV
   val PASSCODE_MISMATCH  = "PASSCODE_MISMATCH"
 
   override def requestPasscode(
-    emailAddress: EmailAddress
+    userSelectedEmail: UserSelectedEmail
   )(implicit hc: HeaderCarrier, r: RequestWithSessionData[_]): EitherT[Future, Error, PasscodeRequestResult] = {
+    def auditEvent(result: Option[PasscodeRequestResult]): SubmitEmailAddressVerificationRequest =
+      SubmitEmailAddressVerificationRequest(
+        r.sessionData.loginData.ggCredId,
+        r.sessionData.completedTaxCheck.map(_.taxCheckCode).getOrElse(sys.error("Could not find tax check code")),
+        userSelectedEmail.emailAddress,
+        userSelectedEmail.emailType,
+        result
+      )
 
     val result: EitherT[Future, Error, HttpResponse] = for {
       lang   <- EitherT.fromEither[Future](Language.fromRequest(r.request)).leftMap(Error(_))
-      result <- emailVerificationConnector.requestPasscode(PasscodeRequest(emailAddress, serviceName, lang))
+      result <-
+        emailVerificationConnector.requestPasscode(PasscodeRequest(userSelectedEmail.emailAddress, serviceName, lang))
     } yield result
 
-    result.subflatMap { response =>
-      response.status match {
-        case CONFLICT    => Right(EmailAddressAlreadyVerified)
-        case FORBIDDEN   => Right(MaximumNumberOfEmailsExceeded)
-        case CREATED     => Right(PasscodeSent)
-        case BAD_REQUEST => evalRequestPasscodeBadRequest(response)
-        case _           =>
-          errorMessage(response.status)
+    result
+      .leftMap { e =>
+        auditService.sendEvent(auditEvent(None))
+        e
       }
-    }
+      .subflatMap { response =>
+        val result = response.status match {
+          case CONFLICT    => Right(EmailAddressAlreadyVerified)
+          case FORBIDDEN   => Right(MaximumNumberOfEmailsExceeded)
+          case CREATED     => Right(PasscodeSent)
+          case BAD_REQUEST => evalRequestPasscodeBadRequest(response)
+          case _           =>
+            errorMessage(response.status)
+        }
+        auditService.sendEvent(auditEvent(result.toOption))
+        result
+      }
+
   }
 
-  override def verifyPasscode(passcode: Passcode, emailAddress: EmailAddress)(implicit
-    hc: HeaderCarrier
-  ): EitherT[Future, Error, PasscodeVerificationResult] =
+  override def verifyPasscode(passcode: Passcode, userSelectedEmail: UserSelectedEmail)(implicit
+    hc: HeaderCarrier,
+    r: RequestWithSessionData[_]
+  ): EitherT[Future, Error, PasscodeVerificationResult] = {
+    def auditEvent(result: Option[PasscodeVerificationResult]): SubmitEmailAddressVerificationPasscode =
+      SubmitEmailAddressVerificationPasscode(
+        r.sessionData.loginData.ggCredId,
+        r.sessionData.completedTaxCheck.map(_.taxCheckCode).getOrElse(sys.error("Could not find tax check code")),
+        userSelectedEmail.emailAddress,
+        userSelectedEmail.emailType,
+        passcode,
+        result
+      )
+
     emailVerificationConnector
-      .verifyPasscode(PasscodeVerificationRequest(passcode, emailAddress))
+      .verifyPasscode(PasscodeVerificationRequest(passcode, userSelectedEmail.emailAddress))
+      .leftMap { e =>
+        auditService.sendEvent(auditEvent(None))
+        e
+      }
       .subflatMap { response =>
-        response.status match {
+        val result = response.status match {
           case FORBIDDEN            => Right(TooManyAttempts)
           case NOT_FOUND            => evalVerifyPasscodeNotFound(response)
           case CREATED | NO_CONTENT => Right(Match)
           case _                    =>
             errorMessage(response.status)
         }
+        auditService.sendEvent(auditEvent(result.toOption))
+        result
       }
+
+  }
 
   private def evalRequestPasscodeBadRequest(response: HttpResponse) = response.parseJSON[ErrorResponse] match {
     case Right(ErrorResponse(BAD_EMAIL_REQUEST, _)) => Right(BadEmailAddress)

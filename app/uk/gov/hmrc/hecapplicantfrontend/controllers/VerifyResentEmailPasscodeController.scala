@@ -81,7 +81,7 @@ class VerifyResentEmailPasscodeController @Inject() (
         def handleValidPasscode(passcode: Passcode): Future[Result] =
           getNextOrNoMatchResult(
             passcode,
-            userSelectedEmail.emailAddress,
+            userSelectedEmail,
             currentCall,
             emailVerificationService,
             journeyService

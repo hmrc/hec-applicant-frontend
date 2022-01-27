@@ -21,10 +21,11 @@ import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.CompanyMatchFailure.{EnrolmentCTUTRCompanyMatchFailure, EnterCTUTRCompanyMatchFailure}
 import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.CompanyMatchSuccess.{EnrolmentCTUTRCompanyMatchSuccess, EnterCTUTRCompanyMatchSuccess}
-import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.{TaxCheckCodesDisplayed, TaxCheckExit}
+import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.{SubmitEmailAddressVerificationPasscode, SubmitEmailAddressVerificationRequest, TaxCheckCodesDisplayed, TaxCheckExit}
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.IndividualHECSession
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.IndividualLoginData
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.IndividualRetrievedJourneyData
+import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{Passcode, PasscodeRequestResult, PasscodeVerificationResult}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR, GGCredId, NINO}
 
 import java.time.{LocalDate, ZoneId, ZonedDateTime}
@@ -315,6 +316,249 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
              |""".stripMargin
         )
       )
+    }
+
+  }
+
+  "SubmitEmailAddressVerificationRequest" must {
+
+    "have the correct JSON" when afterWord("the passcode request result is") {
+
+      "PasscodeSent" in {
+        Json.toJson(
+          SubmitEmailAddressVerificationRequest(
+            GGCredId("credId"),
+            HECTaxCheckCode("code"),
+            EmailAddress("email"),
+            EmailType.GGEmail,
+            Some(PasscodeRequestResult.PasscodeSent)
+          )
+        ) shouldBe Json.parse(
+          """{
+            |  "ggCredId": "credId",
+            |  "taxCheckCode": "code",
+            |  "emailAddress": "email",
+            |  "emailSource": "GovernmentGateway",
+            |  "result": "Success"
+            |}
+            |""".stripMargin
+        )
+      }
+
+      "EmailAddressAlreadyVerified" in {
+        Json.toJson(
+          SubmitEmailAddressVerificationRequest(
+            GGCredId("credId"),
+            HECTaxCheckCode("code"),
+            EmailAddress("email"),
+            EmailType.DifferentEmail,
+            Some(PasscodeRequestResult.EmailAddressAlreadyVerified)
+          )
+        ) shouldBe Json.parse(
+          """{
+            |  "ggCredId": "credId",
+            |  "taxCheckCode": "code",
+            |  "emailAddress": "email",
+            |  "emailSource": "Submitted",
+            |  "result": "AlreadyVerified"
+            |}
+            |""".stripMargin
+        )
+      }
+
+      "BadEmailAddress" in {
+        Json.toJson(
+          SubmitEmailAddressVerificationRequest(
+            GGCredId("credId"),
+            HECTaxCheckCode("code"),
+            EmailAddress("email"),
+            EmailType.DifferentEmail,
+            Some(PasscodeRequestResult.BadEmailAddress)
+          )
+        ) shouldBe Json.parse(
+          """{
+            |  "ggCredId": "credId",
+            |  "taxCheckCode": "code",
+            |  "emailAddress": "email",
+            |  "emailSource": "Submitted",
+            |  "result": "Failure",
+            |  "failureReason": "VerificationPasscodeEmailFailed"
+            |}
+            |""".stripMargin
+        )
+      }
+
+      "MaximumNumberOfEmailsExceeded" in {
+        Json.toJson(
+          SubmitEmailAddressVerificationRequest(
+            GGCredId("credId"),
+            HECTaxCheckCode("code"),
+            EmailAddress("email"),
+            EmailType.DifferentEmail,
+            Some(PasscodeRequestResult.MaximumNumberOfEmailsExceeded)
+          )
+        ) shouldBe Json.parse(
+          """{
+            |  "ggCredId": "credId",
+            |  "taxCheckCode": "code",
+            |  "emailAddress": "email",
+            |  "emailSource": "Submitted",
+            |  "result": "Failure",
+            |  "failureReason": "AttemptsToVerifyEmailAddressExceeded"
+            |}
+            |""".stripMargin
+        )
+      }
+
+      "empty" in {
+        Json.toJson(
+          SubmitEmailAddressVerificationRequest(
+            GGCredId("credId"),
+            HECTaxCheckCode("code"),
+            EmailAddress("email"),
+            EmailType.DifferentEmail,
+            None
+          )
+        ) shouldBe Json.parse(
+          """{
+            |  "ggCredId": "credId",
+            |  "taxCheckCode": "code",
+            |  "emailAddress": "email",
+            |  "emailSource": "Submitted",
+            |  "result": "Failure",
+            |  "failureReason": "TechnicalError"
+            |}
+            |""".stripMargin
+        )
+      }
+
+    }
+
+  }
+
+  "SubmitEmailAddressVerificationPasscode" must {
+
+    "have the correct JSON" when afterWord("the passcode verification result is") {
+
+      "Match" in {
+        Json.toJson(
+          SubmitEmailAddressVerificationPasscode(
+            GGCredId("credId"),
+            HECTaxCheckCode("code"),
+            EmailAddress("email"),
+            EmailType.GGEmail,
+            Passcode("pass"),
+            Some(PasscodeVerificationResult.Match)
+          )
+        ) shouldBe Json.parse(
+          """{
+            |  "ggCredId": "credId",
+            |  "taxCheckCode": "code",
+            |  "emailAddress": "email",
+            |  "emailSource": "GovernmentGateway",
+            |  "verificationPasscode": "pass",
+            |  "result": "Success"
+            |}
+            |""".stripMargin
+        )
+      }
+
+      "TooManyAttempts" in {
+        Json.toJson(
+          SubmitEmailAddressVerificationPasscode(
+            GGCredId("credId"),
+            HECTaxCheckCode("code"),
+            EmailAddress("email"),
+            EmailType.DifferentEmail,
+            Passcode("pass"),
+            Some(PasscodeVerificationResult.TooManyAttempts)
+          )
+        ) shouldBe Json.parse(
+          """{
+            |  "ggCredId": "credId",
+            |  "taxCheckCode": "code",
+            |  "emailAddress": "email",
+            |  "emailSource": "Submitted",
+            |  "verificationPasscode": "pass",
+            |  "result": "Failure",
+            |  "failureReason": "MaximumPasscodeVerificationAttemptsExceeded"
+            |}
+            |""".stripMargin
+        )
+      }
+
+      "Expired" in {
+        Json.toJson(
+          SubmitEmailAddressVerificationPasscode(
+            GGCredId("credId"),
+            HECTaxCheckCode("code"),
+            EmailAddress("email"),
+            EmailType.DifferentEmail,
+            Passcode("pass"),
+            Some(PasscodeVerificationResult.Expired)
+          )
+        ) shouldBe Json.parse(
+          """{
+            |  "ggCredId": "credId",
+            |  "taxCheckCode": "code",
+            |  "emailAddress": "email",
+            |  "emailSource": "Submitted",
+            |  "verificationPasscode": "pass",
+            |  "result": "Failure",
+            |  "failureReason": "PasscodeNotFoundExpired"
+            |}
+            |""".stripMargin
+        )
+      }
+
+      "NoMatch" in {
+        Json.toJson(
+          SubmitEmailAddressVerificationPasscode(
+            GGCredId("credId"),
+            HECTaxCheckCode("code"),
+            EmailAddress("email"),
+            EmailType.DifferentEmail,
+            Passcode("pass"),
+            Some(PasscodeVerificationResult.NoMatch)
+          )
+        ) shouldBe Json.parse(
+          """{
+            |  "ggCredId": "credId",
+            |  "taxCheckCode": "code",
+            |  "emailAddress": "email",
+            |  "emailSource": "Submitted",
+            |  "verificationPasscode": "pass",
+            |  "result": "Failure",
+            |  "failureReason": "PasscodeMismatch"
+            |}
+            |""".stripMargin
+        )
+      }
+
+      "empty" in {
+        Json.toJson(
+          SubmitEmailAddressVerificationPasscode(
+            GGCredId("credId"),
+            HECTaxCheckCode("code"),
+            EmailAddress("email"),
+            EmailType.DifferentEmail,
+            Passcode("pass"),
+            None
+          )
+        ) shouldBe Json.parse(
+          """{
+            |  "ggCredId": "credId",
+            |  "taxCheckCode": "code",
+            |  "emailAddress": "email",
+            |  "emailSource": "Submitted",
+            |  "verificationPasscode": "pass",
+            |  "result": "Failure",
+            |  "failureReason": "TechnicalError"
+            |}
+            |""".stripMargin
+        )
+      }
+
     }
 
   }

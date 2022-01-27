@@ -93,7 +93,7 @@ class ConfirmEmailAddressController @Inject() (
         def handleValidEmail(userSelectedEmail: UserSelectedEmail): Future[Result] = {
           val result = for {
             passcodeResult     <-
-              emailVerificationService.requestPasscode(userSelectedEmail.emailAddress)
+              emailVerificationService.requestPasscode(userSelectedEmail)
             updatedEmailAnswers =
               Some(UserEmailAnswers(userSelectedEmail, passcodeResult.some, None, None, None))
             updatedSession      =
