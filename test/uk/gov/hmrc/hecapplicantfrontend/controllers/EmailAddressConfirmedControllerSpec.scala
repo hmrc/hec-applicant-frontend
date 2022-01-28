@@ -24,12 +24,12 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.RequestWithSessionData
-import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, Error, HECSession, HECTaxCheck, HECTaxCheckCode, UserEmailAnswers}
+import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, EmailType, Error, HECSession, HECTaxCheck, HECTaxCheckCode, UserEmailAnswers, UserSelectedEmail}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailSend.{EmailParameters, EmailSendResult}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{Passcode, PasscodeRequestResult, PasscodeVerificationResult}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.{JourneyService, SendEmailService}
-import uk.gov.hmrc.hecapplicantfrontend.util.{TimeUtils}
+import uk.gov.hmrc.hecapplicantfrontend.util.TimeUtils
 import uk.gov.hmrc.hecapplicantfrontend.utils.Fixtures
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -55,7 +55,7 @@ class EmailAddressConfirmedControllerSpec
 
   val controller = instanceOf[EmailAddressConfirmedController]
 
-  val ggEmailId = EmailAddress("user@test.com")
+  val ggUserSelectedEmail = UserSelectedEmail(EmailType.GGEmail, EmailAddress("user@test.com"))
 
   val passcodeSentAndMatchedUserEmailAnswer = Fixtures
     .userEmailAnswers(
@@ -90,12 +90,12 @@ class EmailAddressConfirmedControllerSpec
     "9 Hydref 2021"
   )
 
-  def mockSendEmail(emailAddress: EmailAddress, emailParameters: EmailParameters)(
+  def mockSendEmail(userSelectedEmail: UserSelectedEmail, emailParameters: EmailParameters)(
     result: Either[Error, EmailSendResult]
   ) =
     (mockSendEmailService
-      .sendEmail(_: EmailAddress, _: EmailParameters)(_: HeaderCarrier, _: RequestWithSessionData[_]))
-      .expects(emailAddress, emailParameters, *, *)
+      .sendEmail(_: UserSelectedEmail, _: EmailParameters)(_: HeaderCarrier, _: RequestWithSessionData[_]))
+      .expects(userSelectedEmail, emailParameters, *, *)
       .returning(EitherT.fromEither[Future](result))
 
   "EmailAddressConfirmedControllerSpec" when {
@@ -203,7 +203,7 @@ class EmailAddressConfirmedControllerSpec
 
         def test(userEmailAnswers: UserEmailAnswers) = {
           val session: HECSession = Fixtures.companyHECSession(
-            loginData = Fixtures.companyLoginData(emailAddress = ggEmailId.some),
+            loginData = Fixtures.companyLoginData(emailAddress = ggUserSelectedEmail.emailAddress.some),
             userAnswers = Fixtures.completeCompanyUserAnswers(),
             isEmailRequested = true,
             userEmailAnswers = userEmailAnswers.some
@@ -345,7 +345,7 @@ class EmailAddressConfirmedControllerSpec
 
         "Call to send email fails" in {
           val session = Fixtures.companyHECSession(
-            loginData = Fixtures.companyLoginData(emailAddress = ggEmailId.some),
+            loginData = Fixtures.companyLoginData(emailAddress = ggUserSelectedEmail.emailAddress.some),
             userAnswers = Fixtures.completeCompanyUserAnswers(),
             isEmailRequested = true,
             completedTaxCheck = hecTaxCheck.some,
@@ -355,7 +355,7 @@ class EmailAddressConfirmedControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockSendEmail(ggEmailId, emailParameters = emailParametersEN)(Left(Error("")))
+            mockSendEmail(ggUserSelectedEmail, emailParameters = emailParametersEN)(Left(Error("")))
           }
 
           assertThrows[RuntimeException](await(performAction()))
@@ -363,7 +363,7 @@ class EmailAddressConfirmedControllerSpec
 
         "Call to update and Next fails" in {
           val session = Fixtures.companyHECSession(
-            loginData = Fixtures.companyLoginData(emailAddress = ggEmailId.some),
+            loginData = Fixtures.companyLoginData(emailAddress = ggUserSelectedEmail.emailAddress.some),
             userAnswers = Fixtures.completeCompanyUserAnswers(),
             isEmailRequested = true,
             completedTaxCheck = hecTaxCheck.some,
@@ -377,7 +377,7 @@ class EmailAddressConfirmedControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockSendEmail(ggEmailId, emailParameters = emailParametersEN)(Right(EmailSendResult.EmailSent))
+            mockSendEmail(ggUserSelectedEmail, emailParameters = emailParametersEN)(Right(EmailSendResult.EmailSent))
             mockJourneyServiceUpdateAndNext(
               routes.EmailAddressConfirmedController.emailAddressConfirmed(),
               session,
@@ -398,7 +398,7 @@ class EmailAddressConfirmedControllerSpec
           isEnglish: Boolean
         ) = {
           val session = Fixtures.companyHECSession(
-            loginData = Fixtures.companyLoginData(emailAddress = ggEmailId.some),
+            loginData = Fixtures.companyLoginData(emailAddress = ggUserSelectedEmail.emailAddress.some),
             userAnswers = Fixtures.completeCompanyUserAnswers(),
             isEmailRequested = true,
             completedTaxCheck = hecTaxCheck.copy(taxCheckCode = HECTaxCheckCode("ABC123DER")).some,
@@ -412,7 +412,7 @@ class EmailAddressConfirmedControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockSendEmail(ggEmailId, emailParameters = emailParameters)(Right(EmailSendResult.EmailSent))
+            mockSendEmail(ggUserSelectedEmail, emailParameters = emailParameters)(Right(EmailSendResult.EmailSent))
             mockJourneyServiceUpdateAndNext(
               routes.EmailAddressConfirmedController.emailAddressConfirmed(),
               session,

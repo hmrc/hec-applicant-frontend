@@ -18,6 +18,7 @@ package uk.gov.hmrc.hecapplicantfrontend.models
 
 import play.api.libs.json.{JsObject, JsString, Json, OWrites, Writes}
 import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.CompanyMatch.{CTUTRType, MatchResult}
+import uk.gov.hmrc.hecapplicantfrontend.models.emailSend.EmailSendResult
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{Passcode, PasscodeRequestResult, PasscodeVerificationResult}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeRequestResult._
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR, GGCredId}
@@ -322,6 +323,39 @@ object AuditEvent {
           )
         )
         failureReason(s.result).fold(json)(f => json + ("failureReason" -> JsString(f)))
+      }
+
+  }
+
+  final case class SendTaxCheckCodeNotificationEmail(
+    ggCredId: GGCredId,
+    taxCheckCode: HECTaxCheckCode,
+    emailAddress: EmailAddress,
+    emailSource: EmailType,
+    templateId: String,
+    result: Option[EmailSendResult]
+  ) extends EmailAuditEvent {
+
+    override val auditType: String = "SendTaxCheckCodeNotificationEmail"
+
+    override val transactionName: String = "send-tax-check-code-notification-email"
+  }
+
+  object SendTaxCheckCodeNotificationEmail {
+
+    private def resultJson(result: Option[EmailSendResult]): JsString = result match {
+      case Some(EmailSendResult.EmailSent)               => JsString("Success")
+      case Some(EmailSendResult.EmailSentFailure) | None => JsString("Failure")
+    }
+
+    implicit val writes: OWrites[SendTaxCheckCodeNotificationEmail] =
+      OWrites { s =>
+        EmailAuditEvent.emailAuditEventJson(s) ++ JsObject(
+          Map(
+            "emailTemplateIdentifier" -> JsString(s.templateId),
+            "result"                  -> resultJson(s.result)
+          )
+        )
       }
 
   }

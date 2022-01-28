@@ -24,22 +24,29 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
 import play.api.libs.json.Json
-import play.api.mvc.{AnyContentAsEmpty, Cookie, MessagesRequest}
+import play.api.mvc.{Cookie, MessagesRequest}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.hecapplicantfrontend.connectors.SendEmailConnector
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthenticatedRequest, RequestWithSessionData}
-import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, Error, HECSession}
+import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.SendTaxCheckCodeNotificationEmail
+import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, EmailType, Error, HECSession, HECTaxCheck, HECTaxCheckCode, UserSelectedEmail}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailSend.{EmailParameters, EmailSendRequest, EmailSendResult}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.Language.{English, Welsh}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{Passcode, PasscodeRequestResult, PasscodeVerificationResult}
 import uk.gov.hmrc.hecapplicantfrontend.utils.{Fixtures, PlaySupport}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 
+import java.time.{LocalDate, ZonedDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class SendEmailServiceImplSpec extends AnyWordSpec with Matchers with MockFactory with PlaySupport {
+class SendEmailServiceImplSpec
+    extends AnyWordSpec
+    with Matchers
+    with MockFactory
+    with PlaySupport
+    with AuditServiceSupport {
 
   val mockSendEmailConnector: SendEmailConnector = mock[SendEmailConnector]
   val config                                     = Configuration(
@@ -67,9 +74,9 @@ class SendEmailServiceImplSpec extends AnyWordSpec with Matchers with MockFactor
       .expects(emailSendRequest, *)
       .returning(EitherT.fromEither[Future](result))
 
-  val sendEmailService           = new SendEmailServiceImpl(mockSendEmailConnector, config)
+  val sendEmailService           = new SendEmailServiceImpl(mockSendEmailConnector, mockAuditService, config)
   implicit val hc: HeaderCarrier = HeaderCarrier()
-  val emailAddress               = EmailAddress("user@test.com")
+  val userSelectedEmail          = UserSelectedEmail(EmailType.GGEmail, EmailAddress("user@test.com"))
   val emailParameter             =
     EmailParameters("9 July 2021", "ABC 123 GRD", "Driver of taxis and private hires", "9 October 2021")
 
@@ -88,11 +95,23 @@ class SendEmailServiceImplSpec extends AnyWordSpec with Matchers with MockFactor
       passcodeVerificationResult = PasscodeVerificationResult.Match.some
     )
 
+  val taxCheckCode = HECTaxCheckCode("code")
+
   val session: HECSession = Fixtures.companyHECSession(
-    loginData = Fixtures.companyLoginData(emailAddress = emailAddress.some),
+    loginData = Fixtures.companyLoginData(emailAddress = userSelectedEmail.emailAddress.some),
     userAnswers = Fixtures.completeCompanyUserAnswers(),
     isEmailRequested = true,
-    userEmailAnswers = userEmailAnswer.some
+    userEmailAnswers = userEmailAnswer.some,
+    completedTaxCheck = Some(HECTaxCheck(taxCheckCode, LocalDate.now(), ZonedDateTime.now()))
+  )
+
+  def auditEvent(templateId: String, result: Option[EmailSendResult]) = SendTaxCheckCodeNotificationEmail(
+    session.loginData.ggCredId,
+    taxCheckCode,
+    userSelectedEmail.emailAddress,
+    userSelectedEmail.emailType,
+    templateId,
+    result
   )
 
   "SendEmailServiceImplSpec" when {
@@ -101,30 +120,36 @@ class SendEmailServiceImplSpec extends AnyWordSpec with Matchers with MockFactor
 
       "return an error" when {
 
-        val emailSendRequest                                                                = EmailSendRequest(List(emailAddress), "template_EN", emailParameter)
-        val authenticatedRequest                                                            = AuthenticatedRequest(
-          new MessagesRequest(FakeRequest().withCookies(Cookie("PLAY_LANG", "en")), messagesApi)
-        )
-        implicit val requestWithSessionData: RequestWithSessionData[AnyContentAsEmpty.type] =
+        val emailSendRequest                                           =
+          EmailSendRequest(List(userSelectedEmail.emailAddress), "template_EN", emailParameter)
+        val authenticatedRequest                                       =
+          AuthenticatedRequest(
+            new MessagesRequest(FakeRequest().withCookies(Cookie("PLAY_LANG", "en")), messagesApi)
+          )
+        implicit val requestWithSessionData: RequestWithSessionData[_] =
           RequestWithSessionData(authenticatedRequest, session)
 
         def testError() = {
-          val result = sendEmailService.sendEmail(emailAddress, emailParameter)
+          val result = sendEmailService.sendEmail(userSelectedEmail, emailParameter)
           await(result.value) shouldBe a[Left[_, _]]
         }
 
         "the http call fails" in {
-          mockSendEmail(emailSendRequest)(Left(Error("")))
+          inSequence {
+            mockSendEmail(emailSendRequest)(Left(Error("")))
+            mockSendAuditEvent(auditEvent("template_EN", None))
+          }
+
           testError()
         }
 
         "Language in the session is not either en or cy" in {
-          val authenticatedRequest: AuthenticatedRequest[AnyContentAsEmpty.type]    = AuthenticatedRequest(
+          val authenticatedRequest: AuthenticatedRequest[_]    = AuthenticatedRequest(
             new MessagesRequest(FakeRequest().withCookies(Cookie("PLAY_LANG", "fr")), messagesApi)
           )
-          implicit val requestWiths: RequestWithSessionData[AnyContentAsEmpty.type] =
+          implicit val requestWiths: RequestWithSessionData[_] =
             RequestWithSessionData(authenticatedRequest, session)
-          val result                                                                = sendEmailService.sendEmail(emailAddress, emailParameter)(hc, requestWiths)
+          val result                                           = sendEmailService.sendEmail(userSelectedEmail, emailParameter)(hc, requestWiths)
           await(result.value) shouldBe a[Left[_, _]]
         }
       }
@@ -135,27 +160,29 @@ class SendEmailServiceImplSpec extends AnyWordSpec with Matchers with MockFactor
         )
 
         def getEmailSendRequest(templateId: String) = if (templateId === "template_EN")
-          EmailSendRequest(List(emailAddress), templateId, emailParameter)
+          EmailSendRequest(List(userSelectedEmail.emailAddress), templateId, emailParameter)
         else
-          EmailSendRequest(List(emailAddress), templateId, emailParametersCY)
+          EmailSendRequest(List(userSelectedEmail.emailAddress), templateId, emailParametersCY)
 
         "request json can be parsed and email is send " in {
 
-          Map(English.code -> "template_EN", Welsh.code -> "template_CY").foreach { keyValue =>
-            withClue(s"For lang: ${keyValue._1} and templateId: ${keyValue._2}") {
-              val lang                                                                            = keyValue._1
-              val templateId                                                                      = keyValue._2
-              val emailSendRequest                                                                = getEmailSendRequest(templateId)
-              val request                                                                         = authenticatedRequest(lang)
-              implicit val requestWithSessionData: RequestWithSessionData[AnyContentAsEmpty.type] =
+          Map(English.code -> "template_EN", Welsh.code -> "template_CY").foreach { case (lang, templateId) =>
+            withClue(s"For lang: $lang and templateId: $templateId") {
+              val emailSendRequest                                           = getEmailSendRequest(templateId)
+              val request                                                    = authenticatedRequest(lang)
+              implicit val requestWithSessionData: RequestWithSessionData[_] =
                 RequestWithSessionData(request, session)
-              mockSendEmail(emailSendRequest)(Right(HttpResponse(ACCEPTED, "")))
+
+              inSequence {
+                mockSendEmail(emailSendRequest)(Right(HttpResponse(ACCEPTED, "")))
+                mockSendAuditEvent(auditEvent(templateId, Some(EmailSendResult.EmailSent)))
+              }
 
               val result =
                 if (templateId === "template_EN")
-                  sendEmailService.sendEmail(emailAddress, emailParameter)
+                  sendEmailService.sendEmail(userSelectedEmail, emailParameter)
                 else
-                  sendEmailService.sendEmail(emailAddress, emailParametersCY)
+                  sendEmailService.sendEmail(userSelectedEmail, emailParametersCY)
               await(result.value) shouldBe Right(EmailSendResult.EmailSent)
 
             }
@@ -169,34 +196,37 @@ class SendEmailServiceImplSpec extends AnyWordSpec with Matchers with MockFactor
 
         "Email Service fails to send email " when {
 
-          val emailSendRequest                                                                = EmailSendRequest(List(emailAddress), "template_EN", emailParameter)
-          val authenticatedRequest                                                            = AuthenticatedRequest(
-            new MessagesRequest(FakeRequest().withCookies(Cookie("PLAY_LANG", "en")), messagesApi)
-          )
-          implicit val requestWithSessionData: RequestWithSessionData[AnyContentAsEmpty.type] =
-            RequestWithSessionData(authenticatedRequest, session)
+          def testIsEmailSendFailure(httpResponse: HttpResponse) = {
+            val emailSendRequest                                           =
+              EmailSendRequest(List(userSelectedEmail.emailAddress), "template_EN", emailParameter)
+            val authenticatedRequest                                       =
+              AuthenticatedRequest(
+                new MessagesRequest(FakeRequest().withCookies(Cookie("PLAY_LANG", "en")), messagesApi)
+              )
+            implicit val requestWithSessionData: RequestWithSessionData[_] =
+              RequestWithSessionData(authenticatedRequest, session)
+            val expectedAuditEvent                                         = auditEvent("template_EN", Some(EmailSendResult.EmailSentFailure))
 
-          def testIsEmailSendFailure() = {
-            val result = sendEmailService.sendEmail(emailAddress, emailParameter)
+            inSequence {
+              mockSendEmail(emailSendRequest)(Right(httpResponse))
+              mockSendAuditEvent(expectedAuditEvent)
+            }
+
+            val result = sendEmailService.sendEmail(userSelectedEmail, emailParameter)
             await(result.value) shouldBe Right(EmailSendResult.EmailSentFailure)
           }
 
-          val emailSendRequestJson = Json.toJson(emailSendRequest)
-
           "the http response does not come back with status 202 (Accepted)" in {
-            mockSendEmail(emailSendRequest)(Right(HttpResponse(OK, emailSendRequestJson, emptyHeaders)))
-            testIsEmailSendFailure()
+            testIsEmailSendFailure(HttpResponse(OK, "", emptyHeaders))
           }
 
           "there is no json in the response" in {
-            mockSendEmail(emailSendRequest)(Right(HttpResponse(CREATED, "hi")))
-            testIsEmailSendFailure()
+            testIsEmailSendFailure(HttpResponse(CREATED, "hi"))
           }
 
           "the json in the response cannot be parsed" in {
             val json = Json.parse("""{ "a" : 1 }""")
-            mockSendEmail(emailSendRequest)(Right(HttpResponse(BAD_REQUEST, json, emptyHeaders)))
-            testIsEmailSendFailure()
+            testIsEmailSendFailure(HttpResponse(BAD_REQUEST, json, emptyHeaders))
           }
         }
       }

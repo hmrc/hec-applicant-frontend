@@ -62,7 +62,7 @@ class EmailAddressConfirmedController @Inject() (
 
           val result = for {
             result             <-
-              sendEmailService.sendEmail(userSelectedEmail.emailAddress, emailParameters)
+              sendEmailService.sendEmail(userSelectedEmail, emailParameters)
             updatedEmailAnswers = existingUserEmailAnswers.map(_.copy(emailSendResult = result.some))
             updatedSession      =
               request.sessionData
