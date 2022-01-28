@@ -43,17 +43,17 @@
 
     <p class="govuk-body">@messages(s"$key.p3")</p>
 
-    <div class="govuk-!-margin-top-2">
+    <div class="govuk-!-margin-top-2 govuk-!-display-none-print">
     @copyButton(hecTaxCheck.taxCheckCode.value, None, Some(messages(s"$key.copyText")))
     </div>
 
-    <ul class="govuk-list govuk-list--bullet govuk-!-margin-bottom-7">
+    <ul class="govuk-list govuk-list--bullet govuk-!-margin-bottom-7 govuk-!-display-none-print">
         <li class="js-visible">@Html(messages(s"$key.list1"))</li>
         @if(appConfig.sendEmailEnabled){ <li>@Html(messages(s"$key.list2", routes.TaxCheckCompleteController.emailTaxCheckCode().url))</li> }
         <li>@Html(messages(s"$key.list3", routes.StartController.start().url))</li>
     </ul>
 
-    <p class="govuk-body">
+    <p class="govuk-body govuk-!-display-none-print">
       @Html(messages("exitSurvey.linkText", routes.SignOutController.exitSurvey().url))
     </p>
 
