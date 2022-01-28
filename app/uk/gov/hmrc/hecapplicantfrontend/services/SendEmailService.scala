@@ -22,7 +22,8 @@ import play.api.Configuration
 import play.api.http.Status.ACCEPTED
 import uk.gov.hmrc.hecapplicantfrontend.connectors.SendEmailConnector
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.RequestWithSessionData
-import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, Error}
+import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.SendTaxCheckCodeNotificationEmail
+import uk.gov.hmrc.hecapplicantfrontend.models.{Error, UserSelectedEmail}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailSend.{EmailParameters, EmailSendRequest, EmailSendResult}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.Language
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.Language.{English, Welsh}
@@ -33,7 +34,8 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @ImplementedBy(classOf[SendEmailServiceImpl])
 trait SendEmailService {
-  def sendEmail(emailAddress: EmailAddress, emailParameters: EmailParameters)(implicit
+
+  def sendEmail(userSelectedEmail: UserSelectedEmail, emailParameters: EmailParameters)(implicit
     hc: HeaderCarrier,
     r: RequestWithSessionData[_]
   ): EitherT[Future, Error, EmailSendResult]
@@ -41,7 +43,11 @@ trait SendEmailService {
 }
 
 @Singleton
-class SendEmailServiceImpl @Inject() (emailSendConnector: SendEmailConnector, configuration: Configuration)(implicit
+class SendEmailServiceImpl @Inject() (
+  emailSendConnector: SendEmailConnector,
+  auditService: AuditService,
+  configuration: Configuration
+)(implicit
   ec: ExecutionContext
 ) extends SendEmailService
     with Logging {
@@ -49,26 +55,46 @@ class SendEmailServiceImpl @Inject() (emailSendConnector: SendEmailConnector, co
   val templateIdEN: String = configuration.get[String]("email-send.template-id-en")
   val templateIdCY: String = configuration.get[String]("email-send.template-id-cy")
 
-  override def sendEmail(emailAddress: EmailAddress, emailParameters: EmailParameters)(implicit
+  override def sendEmail(userSelectedEmail: UserSelectedEmail, emailParameters: EmailParameters)(implicit
     hc: HeaderCarrier,
     r: RequestWithSessionData[_]
   ): EitherT[Future, Error, EmailSendResult] = {
-    val result: EitherT[Future, Error, HttpResponse] = for {
-      lang      <- EitherT.fromEither[Future](Language.fromRequest(r.request)).leftMap(Error(_))
-      templateId = getTemplateId(lang)
-      result    <- emailSendConnector.sendEmail(EmailSendRequest(List(emailAddress), templateId, emailParameters))
-    } yield result
+    def auditEvent(templateId: String, result: Option[EmailSendResult]): SendTaxCheckCodeNotificationEmail =
+      SendTaxCheckCodeNotificationEmail(
+        r.sessionData.loginData.ggCredId,
+        r.sessionData.completedTaxCheck.map(_.taxCheckCode).getOrElse(sys.error("Could not find tax check code")),
+        userSelectedEmail.emailAddress,
+        userSelectedEmail.emailType,
+        templateId,
+        result
+      )
 
-    result.subflatMap { response =>
-      response.status match {
-        case ACCEPTED => Right(EmailSendResult.EmailSent)
-        case other    =>
-          logger.warn(s"Response for send email call came back with status : $other")
-          Right(EmailSendResult.EmailSentFailure)
+    EitherT
+      .fromEither[Future](Language.fromRequest(r.request))
+      .leftMap((Error(_)))
+      .flatMap { lang =>
+        val templateId                                   = getTemplateId(lang)
+        val result: EitherT[Future, Error, HttpResponse] = emailSendConnector.sendEmail(
+          EmailSendRequest(List(userSelectedEmail.emailAddress), templateId, emailParameters)
+        )
+
+        result
+          .leftMap { e =>
+            auditService.sendEvent(auditEvent(templateId, None))
+            e
+          }
+          .subflatMap { response =>
+            val result = response.status match {
+              case ACCEPTED => Right(EmailSendResult.EmailSent)
+              case other    =>
+                logger.warn(s"Response for send email call came back with status : $other")
+                Right(EmailSendResult.EmailSentFailure)
+            }
+
+            auditService.sendEvent(auditEvent(templateId, result.toOption))
+            result
+          }
       }
-
-    }
-
   }
 
   private def getTemplateId(lang: Language) = lang match {

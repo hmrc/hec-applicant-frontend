@@ -21,10 +21,11 @@ import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.CompanyMatchFailure.{EnrolmentCTUTRCompanyMatchFailure, EnterCTUTRCompanyMatchFailure}
 import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.CompanyMatchSuccess.{EnrolmentCTUTRCompanyMatchSuccess, EnterCTUTRCompanyMatchSuccess}
-import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.{SubmitEmailAddressVerificationPasscode, SubmitEmailAddressVerificationRequest, TaxCheckCodesDisplayed, TaxCheckExit}
+import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.{SendTaxCheckCodeNotificationEmail, SubmitEmailAddressVerificationPasscode, SubmitEmailAddressVerificationRequest, TaxCheckCodesDisplayed, TaxCheckExit}
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.IndividualHECSession
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.IndividualLoginData
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.IndividualRetrievedJourneyData
+import uk.gov.hmrc.hecapplicantfrontend.models.emailSend.EmailSendResult
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{Passcode, PasscodeRequestResult, PasscodeVerificationResult}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR, GGCredId, NINO}
 
@@ -324,17 +325,23 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
 
     "have the correct JSON" when afterWord("the passcode request result is") {
 
+      def test(auditEvent: SubmitEmailAddressVerificationRequest, expectedJson: JsValue) = {
+        auditEvent.auditType       shouldBe "SubmitEmailAddressVerificationRequest"
+        auditEvent.transactionName shouldBe "submit-email-address-verification-request"
+        Json.toJson(auditEvent)    shouldBe expectedJson
+      }
+
       "PasscodeSent" in {
-        Json.toJson(
+        test(
           SubmitEmailAddressVerificationRequest(
             GGCredId("credId"),
             HECTaxCheckCode("code"),
             EmailAddress("email"),
             EmailType.GGEmail,
             Some(PasscodeRequestResult.PasscodeSent)
-          )
-        ) shouldBe Json.parse(
-          """{
+          ),
+          Json.parse(
+            """{
             |  "ggCredId": "credId",
             |  "taxCheckCode": "code",
             |  "emailAddress": "email",
@@ -342,20 +349,21 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
             |  "result": "Success"
             |}
             |""".stripMargin
+          )
         )
       }
 
       "EmailAddressAlreadyVerified" in {
-        Json.toJson(
+        test(
           SubmitEmailAddressVerificationRequest(
             GGCredId("credId"),
             HECTaxCheckCode("code"),
             EmailAddress("email"),
             EmailType.DifferentEmail,
             Some(PasscodeRequestResult.EmailAddressAlreadyVerified)
-          )
-        ) shouldBe Json.parse(
-          """{
+          ),
+          Json.parse(
+            """{
             |  "ggCredId": "credId",
             |  "taxCheckCode": "code",
             |  "emailAddress": "email",
@@ -363,20 +371,21 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
             |  "result": "AlreadyVerified"
             |}
             |""".stripMargin
+          )
         )
       }
 
       "BadEmailAddress" in {
-        Json.toJson(
+        test(
           SubmitEmailAddressVerificationRequest(
             GGCredId("credId"),
             HECTaxCheckCode("code"),
             EmailAddress("email"),
             EmailType.DifferentEmail,
             Some(PasscodeRequestResult.BadEmailAddress)
-          )
-        ) shouldBe Json.parse(
-          """{
+          ),
+          Json.parse(
+            """{
             |  "ggCredId": "credId",
             |  "taxCheckCode": "code",
             |  "emailAddress": "email",
@@ -385,20 +394,21 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
             |  "failureReason": "VerificationPasscodeEmailFailed"
             |}
             |""".stripMargin
+          )
         )
       }
 
       "MaximumNumberOfEmailsExceeded" in {
-        Json.toJson(
+        test(
           SubmitEmailAddressVerificationRequest(
             GGCredId("credId"),
             HECTaxCheckCode("code"),
             EmailAddress("email"),
             EmailType.DifferentEmail,
             Some(PasscodeRequestResult.MaximumNumberOfEmailsExceeded)
-          )
-        ) shouldBe Json.parse(
-          """{
+          ),
+          Json.parse(
+            """{
             |  "ggCredId": "credId",
             |  "taxCheckCode": "code",
             |  "emailAddress": "email",
@@ -407,20 +417,21 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
             |  "failureReason": "AttemptsToVerifyEmailAddressExceeded"
             |}
             |""".stripMargin
+          )
         )
       }
 
       "empty" in {
-        Json.toJson(
+        test(
           SubmitEmailAddressVerificationRequest(
             GGCredId("credId"),
             HECTaxCheckCode("code"),
             EmailAddress("email"),
             EmailType.DifferentEmail,
             None
-          )
-        ) shouldBe Json.parse(
-          """{
+          ),
+          Json.parse(
+            """{
             |  "ggCredId": "credId",
             |  "taxCheckCode": "code",
             |  "emailAddress": "email",
@@ -429,6 +440,7 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
             |  "failureReason": "TechnicalError"
             |}
             |""".stripMargin
+          )
         )
       }
 
@@ -440,8 +452,14 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
 
     "have the correct JSON" when afterWord("the passcode verification result is") {
 
+      def test(auditEvent: SubmitEmailAddressVerificationPasscode, expectedJson: JsValue) = {
+        auditEvent.auditType       shouldBe "SubmitEmailAddressVerificationPasscode"
+        auditEvent.transactionName shouldBe "submit-email-address-verification-passcode"
+        Json.toJson(auditEvent)    shouldBe expectedJson
+      }
+
       "Match" in {
-        Json.toJson(
+        test(
           SubmitEmailAddressVerificationPasscode(
             GGCredId("credId"),
             HECTaxCheckCode("code"),
@@ -449,9 +467,9 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
             EmailType.GGEmail,
             Passcode("pass"),
             Some(PasscodeVerificationResult.Match)
-          )
-        ) shouldBe Json.parse(
-          """{
+          ),
+          Json.parse(
+            """{
             |  "ggCredId": "credId",
             |  "taxCheckCode": "code",
             |  "emailAddress": "email",
@@ -460,11 +478,12 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
             |  "result": "Success"
             |}
             |""".stripMargin
+          )
         )
       }
 
       "TooManyAttempts" in {
-        Json.toJson(
+        test(
           SubmitEmailAddressVerificationPasscode(
             GGCredId("credId"),
             HECTaxCheckCode("code"),
@@ -472,9 +491,9 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
             EmailType.DifferentEmail,
             Passcode("pass"),
             Some(PasscodeVerificationResult.TooManyAttempts)
-          )
-        ) shouldBe Json.parse(
-          """{
+          ),
+          Json.parse(
+            """{
             |  "ggCredId": "credId",
             |  "taxCheckCode": "code",
             |  "emailAddress": "email",
@@ -484,11 +503,12 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
             |  "failureReason": "MaximumPasscodeVerificationAttemptsExceeded"
             |}
             |""".stripMargin
+          )
         )
       }
 
       "Expired" in {
-        Json.toJson(
+        test(
           SubmitEmailAddressVerificationPasscode(
             GGCredId("credId"),
             HECTaxCheckCode("code"),
@@ -496,9 +516,9 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
             EmailType.DifferentEmail,
             Passcode("pass"),
             Some(PasscodeVerificationResult.Expired)
-          )
-        ) shouldBe Json.parse(
-          """{
+          ),
+          Json.parse(
+            """{
             |  "ggCredId": "credId",
             |  "taxCheckCode": "code",
             |  "emailAddress": "email",
@@ -508,11 +528,12 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
             |  "failureReason": "PasscodeNotFoundExpired"
             |}
             |""".stripMargin
+          )
         )
       }
 
       "NoMatch" in {
-        Json.toJson(
+        test(
           SubmitEmailAddressVerificationPasscode(
             GGCredId("credId"),
             HECTaxCheckCode("code"),
@@ -520,9 +541,9 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
             EmailType.DifferentEmail,
             Passcode("pass"),
             Some(PasscodeVerificationResult.NoMatch)
-          )
-        ) shouldBe Json.parse(
-          """{
+          ),
+          Json.parse(
+            """{
             |  "ggCredId": "credId",
             |  "taxCheckCode": "code",
             |  "emailAddress": "email",
@@ -532,11 +553,12 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
             |  "failureReason": "PasscodeMismatch"
             |}
             |""".stripMargin
+          )
         )
       }
 
       "empty" in {
-        Json.toJson(
+        test(
           SubmitEmailAddressVerificationPasscode(
             GGCredId("credId"),
             HECTaxCheckCode("code"),
@@ -544,9 +566,9 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
             EmailType.DifferentEmail,
             Passcode("pass"),
             None
-          )
-        ) shouldBe Json.parse(
-          """{
+          ),
+          Json.parse(
+            """{
             |  "ggCredId": "credId",
             |  "taxCheckCode": "code",
             |  "emailAddress": "email",
@@ -556,6 +578,93 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
             |  "failureReason": "TechnicalError"
             |}
             |""".stripMargin
+          )
+        )
+      }
+
+    }
+
+  }
+
+  "SendTaxCheckCodeNotificationEmail" must {
+
+    "have the correct JSON" when afterWord("the passcode verification result is") {
+
+      def test(auditEvent: SendTaxCheckCodeNotificationEmail, expectedJson: JsValue) = {
+        auditEvent.auditType       shouldBe "SendTaxCheckCodeNotificationEmail"
+        auditEvent.transactionName shouldBe "send-tax-check-code-notification-email"
+        Json.toJson(auditEvent)    shouldBe expectedJson
+      }
+
+      "Sent" in {
+        test(
+          SendTaxCheckCodeNotificationEmail(
+            GGCredId("credId"),
+            HECTaxCheckCode("code"),
+            EmailAddress("email"),
+            EmailType.GGEmail,
+            "template",
+            Some(EmailSendResult.EmailSent)
+          ),
+          Json.parse(
+            """{
+              |  "ggCredId": "credId",
+              |  "taxCheckCode": "code",
+              |  "emailAddress": "email",
+              |  "emailSource": "GovernmentGateway",
+              |  "emailTemplateIdentifier": "template",
+              |  "result": "Success"
+              |}
+              |""".stripMargin
+          )
+        )
+      }
+
+      "NotSent" in {
+        test(
+          SendTaxCheckCodeNotificationEmail(
+            GGCredId("credId"),
+            HECTaxCheckCode("code"),
+            EmailAddress("email"),
+            EmailType.DifferentEmail,
+            "template",
+            Some(EmailSendResult.EmailSentFailure)
+          ),
+          Json.parse(
+            """{
+              |  "ggCredId": "credId",
+              |  "taxCheckCode": "code",
+              |  "emailAddress": "email",
+              |  "emailSource": "Submitted",
+              |  "emailTemplateIdentifier": "template",
+              |  "result": "Failure"
+              |}
+              |""".stripMargin
+          )
+        )
+      }
+
+      "empty" in {
+        test(
+          SendTaxCheckCodeNotificationEmail(
+            GGCredId("credId"),
+            HECTaxCheckCode("code"),
+            EmailAddress("email"),
+            EmailType.GGEmail,
+            "template",
+            None
+          ),
+          Json.parse(
+            """{
+              |  "ggCredId": "credId",
+              |  "taxCheckCode": "code",
+              |  "emailAddress": "email",
+              |  "emailSource": "GovernmentGateway",
+              |  "emailTemplateIdentifier": "template",
+              |  "result": "Failure"
+              |}
+              |""".stripMargin
+          )
         )
       }
 
