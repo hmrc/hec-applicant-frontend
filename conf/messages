@@ -205,7 +205,8 @@ taxCheckComplete.p4 = You can also:
 taxCheckComplete.list1 = <a class="govuk-link" href="#print-dialogue">print or save this page as a PDF</a>
 taxCheckComplete.list2 = <a class="govuk-link" href="{0}">get your tax check code sent to an email address</a>
 taxCheckComplete.list3 = <a class="govuk-link" href="{0}">see all your tax check codes</a>
-taxCheckComplete.copyText = your tax check code:
+taxCheckComplete.copyText = Copy your tax check code
+taxCheckComplete.copiedText = Tax check code copied
 exitSurvey.linkText=<a class="govuk-link" href="{0}">What did you think of this service?</a> (takes 30 seconds)
 
 # SAUTR Not Found
@@ -255,10 +256,11 @@ crn.error.notFoundInCompaniesHouse = Your company registration number does not m
 
 # Tax Check Codes
 taxCheck.expiryKey = Last day this code can be used is:
-taxCheck.codeKey = Tax check code:
+taxCheck.codeKey = Tax check code
 
 # Tax Checks List
 taxChecksList.title = Your tax check codes
+taxChecksList.copyButtonScreenReaderText = your {0} tax check code {1}
 taxChecksList.button = Do a new tax check
 taxChecksList.p1 = If your tax check code expires before your application is processed, you will need to do another tax check.
 taxChecksList.link = Print or save this page as a PDF
