@@ -78,6 +78,7 @@ body footer,
 .hmrc-sign-out-nav,
 button,
 input[type="button"],
-input[type="submit"] {
+input[type="submit"],
+a[href^="#print-dialogue"] {
   display: none !important;
 }
