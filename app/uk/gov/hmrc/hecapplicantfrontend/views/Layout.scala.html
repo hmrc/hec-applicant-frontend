@@ -60,7 +60,9 @@
         )
     }
 
-    @Html(s"""<link rel="stylesheet" media="all" href="${controllers.routes.Assets.versioned("stylesheets/application.css")}" ${CSPNonce.attr}>""")
+    @Html(s"""<link rel="stylesheet" media="screen" href="${controllers.routes.Assets.versioned("stylesheets/application.css")}" ${CSPNonce.attr}>""")
+    @Html(s"""<link rel="stylesheet" media="print" href="${controllers.routes.Assets.versioned("stylesheets/print.css")}" ${CSPNonce.attr}>""")
+
 }
 
 @scripts = {
@@ -69,6 +71,7 @@
 }
 
 @beforeContentBlock = {
+  <div class="govuk-!-display-none-print">
     @govukPhaseBanner(PhaseBanner(
         tag = Some(Tag(
             content = Text(messages("service.phase"))
@@ -82,14 +85,16 @@
         }
     }
     @{if(appConfig.welshLanguageSupportEnabled) Some(hmrcLanguageSelectHelper()) else None}
+  </div>
 }
 
 @content = {
     <div class="govuk-!-margin-bottom-6">
         @contentBlock
     </div>
-
-    @hmrcReportTechnicalIssueHelper()
+    <div class="govuk-!-display-none-print">
+      @hmrcReportTechnicalIssueHelper()
+    </div>
 }
 
 @serviceNameAndHeading = @{pageTitle.fold(messages("service.name"))(t => s"""$t - ${messages("service.name")}""")}
