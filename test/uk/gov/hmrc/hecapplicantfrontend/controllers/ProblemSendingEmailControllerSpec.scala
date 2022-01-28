@@ -23,6 +23,7 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.hecapplicantfrontend.models.EmailAddress
+import uk.gov.hmrc.hecapplicantfrontend.models.emailSend.EmailSendResult
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{Passcode, PasscodeRequestResult, PasscodeVerificationResult}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
@@ -31,7 +32,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 import scala.concurrent.Future
 
-class VerificationPasscodeExpiredControllerSpec
+class ProblemSendingEmailControllerSpec
     extends ControllerSpec
     with AuthSupport
     with SessionSupport
@@ -44,17 +45,17 @@ class VerificationPasscodeExpiredControllerSpec
     bind[JourneyService].toInstance(mockJourneyService)
   )
 
-  val controller = instanceOf[VerificationPasscodeExpiredController]
+  val controller = instanceOf[ProblemSendingEmailController]
 
-  "VerificationPasscodeExpiredControllerSec" when {
+  "ProblemSendingEmailControllerSpec" when {
 
-    "handling request to verification passcode expired page" must {
-      val ggEmailId       = EmailAddress("user@test.com")
-      val expiredPasscode = Passcode("FFFFFF")
+    "handling request to problem sending email page" must {
 
-      def performAction(): Future[Result] = controller.verificationPasscodeExpired(FakeRequest())
+      val ggEmailId                       = EmailAddress("user@test.com")
+      val expiredPasscode                 = Passcode("FFFFFF")
+      def performAction(): Future[Result] = controller.problemSendingEmail(FakeRequest())
 
-      def getSession(passcodeVerificationResult: Option[PasscodeVerificationResult]) = Fixtures.individualHECSession(
+      def getSession(emailSendResult: Option[EmailSendResult]) = Fixtures.individualHECSession(
         loginData = Fixtures.individualLoginData(emailAddress = ggEmailId.some),
         userAnswers = Fixtures.completeIndividualUserAnswers(),
         isEmailRequested = true,
@@ -62,42 +63,33 @@ class VerificationPasscodeExpiredControllerSpec
           .userEmailAnswers(
             passcodeRequestResult = PasscodeRequestResult.PasscodeSent.some,
             passcode = expiredPasscode.some,
-            passcodeVerificationResult = passcodeVerificationResult
+            passcodeVerificationResult = PasscodeVerificationResult.Match.some,
+            emailSendResult = emailSendResult
           )
           .some
       )
 
       "return a technical error" when {
 
-        "passcode verification result is other than Expired" in {
-
-          List(
-            PasscodeVerificationResult.Match.some,
-            PasscodeVerificationResult.NoMatch.some,
-            PasscodeVerificationResult.TooManyAttempts.some
-          ).foreach { passcodeVerificationResult =>
-            withClue(s" For passcode  verification result :: $passcodeVerificationResult") {
-              val session = getSession(passcodeVerificationResult)
-              inSequence {
-                mockAuthWithNoRetrievals()
-                mockGetSession(session)
-              }
-              assertThrows[RuntimeException](await(performAction()))
-            }
+        "Email send result result is other than Failure" in {
+          val session = getSession(EmailSendResult.EmailSent.some)
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
           }
+          assertThrows[RuntimeException](await(performAction()))
 
         }
 
       }
 
       "display the page" in {
-
-        val session = getSession(PasscodeVerificationResult.Expired.some)
+        val session = getSession(EmailSendResult.EmailSentFailure.some)
         inSequence {
           mockAuthWithNoRetrievals()
           mockGetSession(session)
           mockJourneyServiceGetPrevious(
-            routes.VerificationPasscodeExpiredController.verificationPasscodeExpired(),
+            routes.ProblemSendingEmailController.problemSendingEmail(),
             session
           )(
             mockPreviousCall
@@ -105,15 +97,14 @@ class VerificationPasscodeExpiredControllerSpec
         }
         checkPageIsDisplayed(
           performAction(),
-          messageFromMessageKey("verifyPasscodeExpired.title"),
+          messageFromMessageKey("problemSendingEmail.title"),
           { doc =>
             doc.select("#back").attr("href") shouldBe mockPreviousCall.url
 
             val htmlBody = doc.select(".govuk-body").html()
 
             htmlBody should include regex messageFromMessageKey(
-              "verifyPasscodeExpired.p2",
-              routes.ResendEmailConfirmationController.resendEmail().url,
+              "problemSendingEmail.p2",
               routes.StartController.start().url
             )
 
@@ -121,6 +112,9 @@ class VerificationPasscodeExpiredControllerSpec
         )
 
       }
+
     }
+
   }
+
 }
