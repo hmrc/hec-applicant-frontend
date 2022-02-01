@@ -52,14 +52,14 @@ class TooManyPasscodeVerificationControllerSpec
 
       "return a technical error" when {
 
-        "passcode verificatiomn result is other than too many attempts" in {
+        "passcode request result is other than too many attempts" in {
 
           List(
             PasscodeVerificationResult.Match.some,
             PasscodeVerificationResult.NoMatch.some,
             PasscodeVerificationResult.Expired.some
           ).foreach { passcodeVerificationResult =>
-            withClue(s" For passcode  verification result :: $passcodeVerificationResult") {
+            withClue(s" For passcode  request result :: $passcodeVerificationResult") {
 
               val session = Fixtures.individualHECSession(
                 loginData = Fixtures.individualLoginData(emailAddress = ggEmailId.some),
