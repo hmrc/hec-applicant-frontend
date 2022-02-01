@@ -54,11 +54,10 @@ class TaxChecksListController @Inject() (
         sys.error("No tax check codes found")
       case taxChecks =>
         val sorted = taxChecks.sortBy(_.createDate)
-        val back   = journeyService.previous(routes.TaxChecksListController.unexpiredTaxChecks())
         auditService.sendEvent(
           TaxCheckCodesDisplayed(request.sessionData.loginData.ggCredId, taxChecks.map(_.taxCheckCode))
         )
-        Ok(taxChecksListPage(back, sorted))
+        Ok(taxChecksListPage(sorted))
     }
   }
 

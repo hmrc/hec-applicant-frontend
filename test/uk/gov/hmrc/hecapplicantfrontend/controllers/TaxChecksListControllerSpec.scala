@@ -122,7 +122,6 @@ class TaxChecksListControllerSpec
         inSequence {
           mockAuthWithNoRetrievals()
           mockGetSession(session)
-          mockJourneyServiceGetPrevious(routes.TaxChecksListController.unexpiredTaxChecks(), session)(mockPreviousCall)
           mockSendAuditEvent(
             TaxCheckCodesDisplayed(individualLoginData.ggCredId, unsortedTaxChecks.map(_.taxCheckCode))
           )
@@ -149,8 +148,6 @@ class TaxChecksListControllerSpec
           performAction(),
           messageFromMessageKey("taxChecksList.title"),
           doc => {
-            doc.select("#back").attr("href") shouldBe mockPreviousCall.url
-
             val taxChecks = doc.select(".existing-code")
             taxChecks.size() shouldBe 3
             verifyTaxCheckListItem(taxChecks.get(0), todayTaxCheck)
