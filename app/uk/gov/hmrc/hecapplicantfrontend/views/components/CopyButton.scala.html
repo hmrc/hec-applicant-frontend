@@ -20,12 +20,12 @@
 
 @(clip: String, screenReaderText: Option[String] = None, copyContent: Option[String] = None, copiedContent: Option[String] = None)(implicit messages: Messages)
 
-<span class="js-visible" aria-live="polite">
+
   <button
     type="button"
     data-clip="@clip"
     data-module="govuk-button"
-    class="govuk-button govuk-button--secondary copy-to-clipboard not-supported"
+    class="js-visible govuk-button govuk-button--secondary copy-to-clipboard not-supported"
   >
     <span class="copy-content">
       @copyContent.getOrElse(messages("button.copy"))
@@ -35,4 +35,3 @@
     </span>
     @screenReaderText.map(s => Html(s"""<span class="govuk-visually-hidden">${s} </span>"""))
   </button>
-</span>
