@@ -96,19 +96,11 @@ class VerificationPasscodeExpiredControllerSpec
         inSequence {
           mockAuthWithNoRetrievals()
           mockGetSession(session)
-          mockJourneyServiceGetPrevious(
-            routes.VerificationPasscodeExpiredController.verificationPasscodeExpired(),
-            session
-          )(
-            mockPreviousCall
-          )
         }
         checkPageIsDisplayed(
           performAction(),
           messageFromMessageKey("verifyPasscodeExpired.title"),
           { doc =>
-            doc.select("#back").attr("href") shouldBe mockPreviousCall.url
-
             val htmlBody = doc.select(".govuk-body").html()
 
             htmlBody should include regex messageFromMessageKey(

@@ -21,7 +21,6 @@ import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeVerificationResult
-import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.hecapplicantfrontend.views.html
@@ -29,7 +28,6 @@ import uk.gov.hmrc.hecapplicantfrontend.views.html
 class VerificationPasscodeExpiredController @Inject() (
   authAction: AuthAction,
   sessionDataAction: SessionDataAction,
-  journeyService: JourneyService,
   verificationPasscodeExpiredPage: html.VerificationPasscodeExpired,
   mcc: MessagesControllerComponents
 ) extends FrontendController(mcc)
@@ -38,9 +36,8 @@ class VerificationPasscodeExpiredController @Inject() (
 
   val verificationPasscodeExpired: Action[AnyContent] =
     authAction.andThen(sessionDataAction).async { implicit request =>
-      val previous = journeyService.previous(routes.VerificationPasscodeExpiredController.verificationPasscodeExpired())
       request.sessionData.userEmailAnswers.flatMap(_.passcodeVerificationResult) match {
-        case Some(PasscodeVerificationResult.Expired) => Ok(verificationPasscodeExpiredPage(previous))
+        case Some(PasscodeVerificationResult.Expired) => Ok(verificationPasscodeExpiredPage())
         case other                                    => sys.error(s" Passcode Verification result found $other but the expected is  Expired")
       }
     }
