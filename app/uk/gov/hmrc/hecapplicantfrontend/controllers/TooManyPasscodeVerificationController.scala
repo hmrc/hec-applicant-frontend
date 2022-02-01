@@ -22,7 +22,6 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.VerifyEmailPasscodeController.verifyGGEmailInSession
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeVerificationResult
-import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.hecapplicantfrontend.views.html
@@ -30,7 +29,6 @@ import uk.gov.hmrc.hecapplicantfrontend.views.html
 class TooManyPasscodeVerificationController @Inject() (
   authAction: AuthAction,
   sessionDataAction: SessionDataAction,
-  journeyService: JourneyService,
   passcodeEnteredTooManyTimesPage: html.PasscodeEnteredTooManyTimes,
   mcc: MessagesControllerComponents
 ) extends FrontendController(mcc)
@@ -42,9 +40,7 @@ class TooManyPasscodeVerificationController @Inject() (
       request.sessionData.userEmailAnswers.flatMap(_.passcodeVerificationResult) match {
         case Some(PasscodeVerificationResult.TooManyAttempts) =>
           val isGGEmailInSession = verifyGGEmailInSession(request.sessionData)
-          val previous           =
-            journeyService.previous(routes.TooManyPasscodeVerificationController.tooManyPasscodeVerification())
-          Ok(passcodeEnteredTooManyTimesPage(previous, isGGEmailInSession))
+          Ok(passcodeEnteredTooManyTimesPage(isGGEmailInSession))
         case other                                            => sys.error(s" Passcode Verification result found $other but the expected is Too many Attempts")
       }
     }
