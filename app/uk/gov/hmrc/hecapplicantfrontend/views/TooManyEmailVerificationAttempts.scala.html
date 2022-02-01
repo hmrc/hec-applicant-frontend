@@ -16,20 +16,19 @@
 
 @import play.api.i18n.Messages
 @import play.api.mvc.Request
+@import play.twirl.api.Html
+@import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 
 @this(layout: Layout)
 
 @()(implicit request: Request[_], messages: Messages)
-@title = @{"Too many email verification attempts"}
+@key = @{"emailRequestExceeded"}
+@title =  @{messages(s"$key.title")}
+
 
 @layout(pageTitle = Some(title)) {
-
-    <h1 class="govuk-heading-xl">
-    @title
-    </h1>
-
-    <p class="govuk-body">
-    Too many email verification attempts
-    </p>
+    <h1 class ="govuk-heading-xl">@title</h1>
+    <p class="govuk-body">@messages(s"$key.p1")</p>
+    <p class="govuk-body">@Html(messages(s"$key.p2", routes.StartController.start()))</p>
 
 }
