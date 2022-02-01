@@ -21,13 +21,13 @@
 
 @this(layout: Layout)
 
-@(back: Call)(implicit request:
+@()(implicit request:
 Request[_], messages: Messages)
 @key = @{"verifyPasscodeExpired"}
 @title = @{messages(s"$key.title")}
 
 
-@layout(pageTitle = Some(title), backLocation = Some(back)) {
+@layout(pageTitle = Some(title)) {
     <h1 class ="govuk-heading-xl">@title</h1>
     <p class="govuk-body">@messages(s"$key.p1")</p>
     <p class="govuk-body">@Html(messages(s"$key.p2", routes.ResendEmailConfirmationController.resendEmail().url, routes.StartController.start()))</p>

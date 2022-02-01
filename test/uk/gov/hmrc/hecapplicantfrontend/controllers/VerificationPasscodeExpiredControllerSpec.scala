@@ -107,7 +107,6 @@ class VerificationPasscodeExpiredControllerSpec
           performAction(),
           messageFromMessageKey("verifyPasscodeExpired.title"),
           { doc =>
-            doc.select("#back").attr("href") shouldBe mockPreviousCall.url
 
             val htmlBody = doc.select(".govuk-body").html()
 

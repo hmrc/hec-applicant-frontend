@@ -38,9 +38,8 @@ class VerificationPasscodeExpiredController @Inject() (
 
   val verificationPasscodeExpired: Action[AnyContent] =
     authAction.andThen(sessionDataAction).async { implicit request =>
-      val previous = journeyService.previous(routes.VerificationPasscodeExpiredController.verificationPasscodeExpired())
       request.sessionData.userEmailAnswers.flatMap(_.passcodeVerificationResult) match {
-        case Some(PasscodeVerificationResult.Expired) => Ok(verificationPasscodeExpiredPage(previous))
+        case Some(PasscodeVerificationResult.Expired) => Ok(verificationPasscodeExpiredPage())
         case other                                    => sys.error(s" Passcode Verification result found $other but the expected is  Expired")
       }
     }
