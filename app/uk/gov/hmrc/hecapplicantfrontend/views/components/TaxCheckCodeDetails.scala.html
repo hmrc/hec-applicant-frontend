@@ -19,28 +19,44 @@
 @import uk.gov.hmrc.hecapplicantfrontend.models.TaxCheckListItem
 @import uk.gov.hmrc.hecapplicantfrontend.models.views.LicenceTypeOption
 @import uk.gov.hmrc.hecapplicantfrontend.util.TimeUtils
+@import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
 
 @this(copyButton: CopyButton)
 
-@(taxCheckDetails: TaxCheckListItem)(implicit messages: Messages)
-
-@licenceType = @{messages(s"licenceType.${LicenceTypeOption.licenceTypeOption(taxCheckDetails.licenceType).messageKey}")}
+@(taxCheckDetails: (LicenceType, List[TaxCheckListItem]))(implicit messages: Messages)
+@licenceType = @{messages(s"licenceType.${LicenceTypeOption.licenceTypeOption(taxCheckDetails._1).messageKey}")}
 
 <div class="existing-code">
-  <h2 class="govuk-heading-m">
+  <h2 class="govuk-heading-l">
     @licenceType
   </h2>
-  <span class="govuk-caption-m">
-     @messages("taxCheck.expiryKey") @TimeUtils.govDisplayFormat(taxCheckDetails.expiresAfter)
-  </span>
-  <span class="govuk-caption-m">
-    @messages("taxCheck.codeKey") <strong>@taxCheckDetails.taxCheckCode.value.grouped(3).mkString(" ")</strong>
-  </span>
-  <div class="govuk-!-margin-top-2">
-    @copyButton(
-      taxCheckDetails.taxCheckCode.value,
-      Some(messages("taxChecksList.copyButtonScreenReaderText", licenceType,  taxCheckDetails.taxCheckCode.value))
-    )
-  </div>
-  <hr>
+  @taxCheckDetails._2.map { code =>
+    <dl class="govuk-summary-list">
+      <div class="govuk-summary-list__row">
+        <dt class="govuk-summary-list__key ">
+          @{messages("taxCheck.expiryKey")}
+        </dt>
+        <dd class="govuk-summary-list__value align-middle">
+          @{TimeUtils.govDisplayFormat(code.expiresAfter)}
+        </dd>
+        <dd class="govuk-summary-list__actions">
+        </dd>
+      </div>
+      <div class="govuk-summary-list__row">
+        <dt class="govuk-summary-list__key  align-middle">
+          @{messages("taxCheck.codeKey")}
+        </dt>
+        <dd class="govuk-summary-list__value align-middle">
+          @{code.taxCheckCode.value.grouped(3).mkString(" ")}
+        </dd>
+        <dd class="govuk-summary-list__actions align-middle">
+          @{copyButton(
+            code.taxCheckCode.value,
+            Some(messages("taxChecksList.copyButtonScreenReaderText", licenceType, code.taxCheckCode.value))
+          )}
+        </dd>
+      </div>
+    </dl>
+  }
+
 </div>
