@@ -103,19 +103,11 @@ class TooManyPasscodeVerificationControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockJourneyServiceGetPrevious(
-              routes.TooManyPasscodeVerificationController.tooManyPasscodeVerification(),
-              session
-            )(
-              mockPreviousCall
-            )
           }
           checkPageIsDisplayed(
             performAction(),
             messageFromMessageKey("verifyPasscodeTooManyAttempts.title"),
             { doc =>
-              doc.select("#back").attr("href") shouldBe mockPreviousCall.url
-
               val htmlBody = doc.select(".govuk-body").html()
 
               val firstUrl =
