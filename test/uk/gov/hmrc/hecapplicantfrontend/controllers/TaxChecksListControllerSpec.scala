@@ -30,6 +30,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
 import uk.gov.hmrc.hecapplicantfrontend.models.views.LicenceTypeOption
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.{AuditService, AuditServiceSupport, JourneyService}
+import uk.gov.hmrc.hecapplicantfrontend.util.TimeUtils
 import uk.gov.hmrc.hecapplicantfrontend.utils.Fixtures
 
 import java.time.{LocalDate, ZonedDateTime}
@@ -86,31 +87,51 @@ class TaxChecksListControllerSpec
 
       }
 
-      "display the page with tax checks sorted by create date" in {
-        val expiryDate        = LocalDate.of(2020, 1, 10)
-        val today             = ZonedDateTime.now()
-        val yesterday         = today.minusDays(1)
-        val dayBefore         = today.minusDays(2)
-        val todayTaxCheck     = TaxCheckListItem(
+      "display the page with tax checks grouped by licence type" in {
+        val expiryDate                           = LocalDate.of(2020, 1, 10)
+        val today                                = ZonedDateTime.now()
+        val yesterday                            = today.minusDays(1)
+        val dayBefore                            = today.minusDays(2)
+        val scrapMetalCollectorTodayTaxCheck     = TaxCheckListItem(
           LicenceType.ScrapMetalMobileCollector,
           HECTaxCheckCode("2DYFK48KL"),
           expiryDate,
           today
         )
-        val dayBeforeTaxCheck = TaxCheckListItem(
+        val driverDayBeforeTaxCheck              = TaxCheckListItem(
           LicenceType.DriverOfTaxisAndPrivateHires,
           HECTaxCheckCode("XRCYRKA74"),
           expiryDate,
           dayBefore
         )
-        val yesterdayTaxCheck = TaxCheckListItem(
+        val scrapMetalCollectorYesterdayTaxCheck = TaxCheckListItem(
           LicenceType.ScrapMetalMobileCollector,
           HECTaxCheckCode("THP3T2TXL"),
           expiryDate,
           yesterday
         )
-        val unsortedTaxChecks = List(dayBeforeTaxCheck, todayTaxCheck, yesterdayTaxCheck)
-        val session           = Fixtures.individualHECSession(
+        val scrapMetalDealerTodayTaxCheck        = TaxCheckListItem(
+          LicenceType.ScrapMetalDealerSite,
+          HECTaxCheckCode("GGP3T2TXL"),
+          expiryDate,
+          today
+        )
+        val operatorTodayTaxCheck                = TaxCheckListItem(
+          LicenceType.OperatorOfPrivateHireVehicles,
+          HECTaxCheckCode("FF3T2TXL"),
+          expiryDate,
+          today
+        )
+
+        val unsortedTaxChecks = List(
+          driverDayBeforeTaxCheck,
+          scrapMetalCollectorTodayTaxCheck,
+          scrapMetalCollectorYesterdayTaxCheck,
+          scrapMetalDealerTodayTaxCheck,
+          operatorTodayTaxCheck
+        )
+
+        val session = Fixtures.individualHECSession(
           individualLoginData,
           IndividualRetrievedJourneyData.empty,
           answers,
@@ -127,34 +148,80 @@ class TaxChecksListControllerSpec
           )
         }
 
+        def verifyLicenceGroup(
+          element: Element,
+          licenceType: LicenceType,
+          expectedTaxChecks: List[TaxCheckListItem]
+        ) = {
+          val heading = element.select("h2")
+          heading
+            .text() shouldBe s"${messageFromMessageKey(s"licenceType.${LicenceTypeOption.licenceTypeOption(licenceType).messageKey}")}"
+          val taxCheckItems = element.select(".existing-code")
+          taxCheckItems.size() shouldBe expectedTaxChecks.size
+          expectedTaxChecks.zipWithIndex.map { case (t, index) =>
+            verifyTaxCheckListItem(taxCheckItems.get(index), t)
+          }
+        }
+
         def verifyTaxCheckListItem(element: Element, item: TaxCheckListItem) = {
-          val licenceTypeMessageKey = s"licenceType.${LicenceTypeOption.licenceTypeOption(item.licenceType).messageKey}"
-          element.select(".govuk-heading-m").text() shouldBe messageFromMessageKey(licenceTypeMessageKey)
+          val keys = element.select(".govuk-summary-list__key")
+          keys.size() shouldBe 2
 
-          val captions = element.select(".govuk-caption-m")
-          captions.size() shouldBe 2
+          val expiryKey = keys.get(0)
+          expiryKey.text() shouldBe s"${messageFromMessageKey("taxCheck.expiryKey")}"
 
-          val expiryCaption = captions.get(0)
-          expiryCaption.text() shouldBe s"${messageFromMessageKey("taxCheck.expiryKey")} 10 January 2020"
+          val taxCheckCodeKey = keys.get(1)
+          taxCheckCodeKey
+            .text() shouldBe s"${messageFromMessageKey("taxCheck.codeKey")}"
 
-          val taxCheckCodeCaption = captions.get(1)
-          taxCheckCodeCaption
-            .text() shouldBe s"${messageFromMessageKey("taxCheck.codeKey")} ${item.taxCheckCode.value.grouped(3).mkString(" ")}"
+          val values = element.select(".govuk-summary-list__value")
+          values.size() shouldBe 2
 
-          element.select("button").text() should include regex item.taxCheckCode.value
+          val expiryValue = values.get(0)
+          expiryValue.text() shouldBe TimeUtils.govDisplayFormat(item.expiresAfter)
+
+          val taxCheckCodeValue = values.get(1)
+          taxCheckCodeValue.text() shouldBe item.taxCheckCode.value.grouped(3).mkString(" ")
+
+          val copyButton = element.select("button")
+          copyButton.select(".copy-content").text()          shouldBe s"${messageFromMessageKey("button.copy")}"
+          copyButton.select(".copied-content").text()        shouldBe s"${messageFromMessageKey("button.copied")}"
+          copyButton.select(".govuk-visually-hidden").text() shouldBe s"${messageFromMessageKey(
+            "taxChecksList.copyButtonScreenReaderText",
+            messageFromMessageKey(s"licenceType.${LicenceTypeOption.licenceTypeOption(item.licenceType).messageKey}"),
+            item.taxCheckCode.value
+          )}"
         }
 
         checkPageIsDisplayed(
           performAction(),
           messageFromMessageKey("taxChecksList.title"),
           doc => {
-            val taxChecks = doc.select(".existing-code")
-            taxChecks.size() shouldBe 3
-            verifyTaxCheckListItem(taxChecks.get(0), todayTaxCheck)
-            verifyTaxCheckListItem(taxChecks.get(1), yesterdayTaxCheck)
-            verifyTaxCheckListItem(taxChecks.get(2), dayBeforeTaxCheck)
-
-            doc.select("form").select("button").text() shouldBe messageFromMessageKey("taxChecksList.button")
+            val licenceGroups = doc.select(".licence-type-group")
+            licenceGroups.size()                       shouldBe 4
+            verifyLicenceGroup(
+              licenceGroups.get(0),
+              LicenceType.DriverOfTaxisAndPrivateHires,
+              List(driverDayBeforeTaxCheck)
+            )
+            verifyLicenceGroup(
+              licenceGroups.get(1),
+              LicenceType.OperatorOfPrivateHireVehicles,
+              List(operatorTodayTaxCheck)
+            )
+            verifyLicenceGroup(
+              licenceGroups.get(2),
+              LicenceType.ScrapMetalMobileCollector,
+              List(scrapMetalCollectorTodayTaxCheck, scrapMetalCollectorYesterdayTaxCheck)
+            )
+            verifyLicenceGroup(
+              licenceGroups.get(3),
+              LicenceType.ScrapMetalDealerSite,
+              List(scrapMetalDealerTodayTaxCheck)
+            )
+            doc.select("form").select("button").text() shouldBe messageFromMessageKey(
+              "taxChecksList.button"
+            )
           }
         )
 

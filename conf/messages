@@ -253,7 +253,7 @@ crn.error.crnInvalid = Enter a valid company registration number
 crn.error.notFoundInCompaniesHouse = Your company registration number does not match Companies House records
 
 # Tax Check Codes
-taxCheck.expiryKey = Last day this code can be used is:
+taxCheck.expiryKey = Last day this code can be used
 taxCheck.codeKey = Tax check code
 
 # Tax Checks List
