@@ -3446,6 +3446,47 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
 
         }
 
+        "the cannot send verification passcode email page" when {
+
+          def test(emailAddress: Option[EmailAddress], previousRoute: Call) = {
+            val session = Fixtures.individualHECSession(
+              individualLoginData.copy(emailAddress = emailAddress),
+              IndividualRetrievedJourneyData.empty,
+              Fixtures.completeIndividualUserAnswers(
+                licenceType = DriverOfTaxisAndPrivateHires,
+                licenceTimeTrading = LicenceTimeTrading.TwoToFourYears,
+                licenceValidityPeriod = UpToOneYear,
+                taxSituation = PAYE,
+                saIncomeDeclared = Some(YesNoAnswer.Yes),
+                entityType = Some(Individual)
+              ),
+              Some(HECTaxCheck(HECTaxCheckCode("code"), LocalDate.now.plusDays(1), ZonedDateTime.now)),
+              Some(taxCheckStartDateTime),
+              isEmailRequested = true,
+              userEmailAnswers = Fixtures
+                .userEmailAnswers(passcodeRequestResult = PasscodeRequestResult.BadEmailAddress.some)
+                .some
+            )
+
+            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+
+            val result = journeyService.previous(
+              routes.CannotSendVerificationPasscodeController.cannotSendVerificationPasscode()
+            )
+            result shouldBe previousRoute
+          }
+
+          "there is email Id in ggAccount" in {
+            test(ggEmailId.some, routes.ConfirmEmailAddressController.confirmEmailAddress())
+          }
+
+          "there is no email Id in ggAccount" in {
+            test(None, routes.EnterEmailAddressController.enterEmailAddress())
+
+          }
+
+        }
+
         def buildIndividualSession(taxSituation: TaxSituation, saStatus: SAStatus): HECSession = {
           val individualLoginData =
             IndividualLoginData(

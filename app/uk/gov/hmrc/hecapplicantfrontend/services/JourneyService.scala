@@ -532,6 +532,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
         routes.EmailAddressConfirmedController.emailAddressConfirmed
       case Some(MaximumNumberOfEmailsExceeded) =>
         routes.TooManyEmailVerificationAttemptController.tooManyEmailVerificationAttempts
+      case Some(BadEmailAddress)               => routes.CannotSendVerificationPasscodeController.cannotSendVerificationPasscode
       case _                                   => sys.error("Passcode Result is  invalid/missing from the response")
     }
   }
@@ -548,6 +549,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
         routes.EmailAddressConfirmedController.emailAddressConfirmed
       case Some(MaximumNumberOfEmailsExceeded) =>
         routes.TooManyEmailVerificationAttemptController.tooManyEmailVerificationAttempts
+      case Some(BadEmailAddress)               => routes.CannotSendVerificationPasscodeController.cannotSendVerificationPasscode
       case _                                   => sys.error("Passcode Result is  invalid/missing from the response")
     }
   }
