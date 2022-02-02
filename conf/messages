@@ -405,5 +405,9 @@ emailRequestExceeded.title = You have tried to confirm an email address too many
 emailRequestExceeded.p1 = You have made too many attempts to confirm an email address.
 emailRequestExceeded.p2 = <a href="{0}" class="govuk-link">See all your tax check codes</a>.
 
+#Cannot Send Verification passcode
+cannotSendVerificationPasscode.title = Email cannot be sent
+cannotSendVerificationPasscode.p1 = We cannot send an email to the address you provided.
+cannotSendVerificationPasscode.p2 = You can <a href="{0}" class="govuk-link">go back and enter a new email address</a>, or you can <a href="{1}" class="govuk-link">see all your tax check codes</a>.
 
 

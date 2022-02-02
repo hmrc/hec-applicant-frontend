@@ -23,15 +23,15 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.hecapplicantfrontend.models.EmailAddress
-import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{Passcode, PasscodeRequestResult, PasscodeVerificationResult}
+import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeRequestResult
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
 import uk.gov.hmrc.hecapplicantfrontend.utils.Fixtures
-import scala.concurrent.ExecutionContext.Implicits.global
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class TooManyPasscodeVerificationControllerSpec
+class CannotSendVerificationPasscodeControllerSpec
     extends ControllerSpec
     with AuthSupport
     with SessionSupport
@@ -42,24 +42,26 @@ class TooManyPasscodeVerificationControllerSpec
     bind[SessionStore].toInstance(mockSessionStore),
     bind[JourneyService].toInstance(mockJourneyService)
   )
-  val controller                = instanceOf[TooManyPasscodeVerificationController]
-  "PasscodeAttemptedTooManyTimesControllerSpec" when {
 
-    val ggEmailId       = EmailAddress("user@test.com")
-    val expiredPasscode = Passcode("FFFFFF")
-    "handling request to passcode attempted too many times page" must {
-      def performAction(): Future[Result] = controller.tooManyPasscodeVerification(FakeRequest())
+  val controller = instanceOf[CannotSendVerificationPasscodeController]
+
+  "CannotSendVerificationPasscodeControllerSpec" when {
+
+    "handling request too cannot send verification passcode email " must {
+      val ggEmailId = EmailAddress("user@test.com")
+
+      def performAction(): Future[Result] = controller.cannotSendVerificationPasscode(FakeRequest())
 
       "return a technical error" when {
 
-        "passcode request result is other than too many attempts" in {
+        "passcode request result is other than bad email request" in {
 
           List(
-            PasscodeVerificationResult.Match.some,
-            PasscodeVerificationResult.NoMatch.some,
-            PasscodeVerificationResult.Expired.some
-          ).foreach { passcodeVerificationResult =>
-            withClue(s" For passcode  request result :: $passcodeVerificationResult") {
+            PasscodeRequestResult.PasscodeSent.some,
+            PasscodeRequestResult.EmailAddressAlreadyVerified.some,
+            PasscodeRequestResult.MaximumNumberOfEmailsExceeded.some
+          ).foreach { passcodeRequestResult =>
+            withClue(s" For passcode  request result :: $passcodeRequestResult") {
 
               val session = Fixtures.individualHECSession(
                 loginData = Fixtures.individualLoginData(emailAddress = ggEmailId.some),
@@ -67,9 +69,7 @@ class TooManyPasscodeVerificationControllerSpec
                 isEmailRequested = true,
                 userEmailAnswers = Fixtures
                   .userEmailAnswers(
-                    passcodeRequestResult = PasscodeRequestResult.PasscodeSent.some,
-                    passcode = expiredPasscode.some,
-                    passcodeVerificationResult = passcodeVerificationResult
+                    passcodeRequestResult = passcodeRequestResult
                   )
                   .some
               )
@@ -93,9 +93,7 @@ class TooManyPasscodeVerificationControllerSpec
             isEmailRequested = true,
             userEmailAnswers = Fixtures
               .userEmailAnswers(
-                passcodeRequestResult = PasscodeRequestResult.PasscodeSent.some,
-                passcode = expiredPasscode.some,
-                passcodeVerificationResult = PasscodeVerificationResult.TooManyAttempts.some
+                passcodeRequestResult = PasscodeRequestResult.BadEmailAddress.some
               )
               .some
           )
@@ -103,11 +101,18 @@ class TooManyPasscodeVerificationControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
+            mockJourneyServiceGetPrevious(
+              routes.CannotSendVerificationPasscodeController.cannotSendVerificationPasscode(),
+              session
+            )(
+              mockPreviousCall
+            )
           }
           checkPageIsDisplayed(
             performAction(),
-            messageFromMessageKey("verifyPasscodeTooManyAttempts.title"),
+            messageFromMessageKey("cannotSendVerificationPasscode.title"),
             { doc =>
+              doc.select("#back").attr("href") shouldBe mockPreviousCall.url
               val htmlBody = doc.select(".govuk-body").html()
 
               val firstUrl =
@@ -115,13 +120,8 @@ class TooManyPasscodeVerificationControllerSpec
                 else routes.EnterEmailAddressController.enterEmailAddress().url
 
               htmlBody should include regex messageFromMessageKey(
-                "verifyPasscodeTooManyAttempts.p2",
+                "cannotSendVerificationPasscode.p2",
                 firstUrl,
-                routes.ResendEmailConfirmationController.resendEmail().url
-              )
-
-              htmlBody should include regex messageFromMessageKey(
-                "verifyPasscodeTooManyAttempts.p3",
                 routes.StartController.start().url
               )
 
@@ -133,12 +133,12 @@ class TooManyPasscodeVerificationControllerSpec
           test(ggEmailId.some)
         }
 
-        "there is no email in GGAccount" in { test(None) }
+        "there is no email in GGAccount" in {
+          test(None)
+        }
 
       }
 
     }
-
   }
-
 }

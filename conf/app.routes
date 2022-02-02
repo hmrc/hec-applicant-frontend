@@ -96,6 +96,8 @@ GET       /email-sent                      uk.gov.hmrc.hecapplicantfrontend.cont
 
 GET       /problem-email-send              uk.gov.hmrc.hecapplicantfrontend.controllers.ProblemSendingEmailController.problemSendingEmail
 
+GET      /cannot-send-email                uk.gov.hmrc.hecapplicantfrontend.controllers.CannotSendVerificationPasscodeController.cannotSendVerificationPasscode
+
 # IV
 GET  /failed-iv/callback                         uk.gov.hmrc.hecapplicantfrontend.controllers.IvFailureController.ivFailure(journeyId: java.util.UUID)
 GET  /failed-iv/retry                            uk.gov.hmrc.hecapplicantfrontend.controllers.IvFailureController.retry
