@@ -88,30 +88,50 @@ class TaxChecksListControllerSpec
       }
 
       "display the page with tax checks grouped by licence type" in {
-        val expiryDate        = LocalDate.of(2020, 1, 10)
-        val today             = ZonedDateTime.now()
-        val yesterday         = today.minusDays(1)
-        val dayBefore         = today.minusDays(2)
-        val todayTaxCheck     = TaxCheckListItem(
+        val expiryDate                           = LocalDate.of(2020, 1, 10)
+        val today                                = ZonedDateTime.now()
+        val yesterday                            = today.minusDays(1)
+        val dayBefore                            = today.minusDays(2)
+        val scrapMetalCollectorTodayTaxCheck     = TaxCheckListItem(
           LicenceType.ScrapMetalMobileCollector,
           HECTaxCheckCode("2DYFK48KL"),
           expiryDate,
           today
         )
-        val dayBeforeTaxCheck = TaxCheckListItem(
+        val driverDayBeforeTaxCheck              = TaxCheckListItem(
           LicenceType.DriverOfTaxisAndPrivateHires,
           HECTaxCheckCode("XRCYRKA74"),
           expiryDate,
           dayBefore
         )
-        val yesterdayTaxCheck = TaxCheckListItem(
+        val scrapMetalCollectorYesterdayTaxCheck = TaxCheckListItem(
           LicenceType.ScrapMetalMobileCollector,
           HECTaxCheckCode("THP3T2TXL"),
           expiryDate,
           yesterday
         )
-        val unsortedTaxChecks = List(dayBeforeTaxCheck, todayTaxCheck, yesterdayTaxCheck)
-        val session           = Fixtures.individualHECSession(
+        val scrapMetalDealerTodayTaxCheck        = TaxCheckListItem(
+          LicenceType.ScrapMetalDealerSite,
+          HECTaxCheckCode("GGP3T2TXL"),
+          expiryDate,
+          today
+        )
+        val operatorTodayTaxCheck                = TaxCheckListItem(
+          LicenceType.OperatorOfPrivateHireVehicles,
+          HECTaxCheckCode("FF3T2TXL"),
+          expiryDate,
+          today
+        )
+
+        val unsortedTaxChecks = List(
+          driverDayBeforeTaxCheck,
+          scrapMetalCollectorTodayTaxCheck,
+          scrapMetalCollectorYesterdayTaxCheck,
+          scrapMetalDealerTodayTaxCheck,
+          operatorTodayTaxCheck
+        )
+
+        val session = Fixtures.individualHECSession(
           individualLoginData,
           IndividualRetrievedJourneyData.empty,
           answers,
@@ -178,13 +198,27 @@ class TaxChecksListControllerSpec
           messageFromMessageKey("taxChecksList.title"),
           doc => {
             val licenceGroups = doc.select(".licence-type-group")
-            licenceGroups.size()                       shouldBe 2
+            licenceGroups.size()                       shouldBe 4
             verifyLicenceGroup(
               licenceGroups.get(0),
-              LicenceType.ScrapMetalMobileCollector,
-              List(todayTaxCheck, yesterdayTaxCheck)
+              LicenceType.DriverOfTaxisAndPrivateHires,
+              List(driverDayBeforeTaxCheck)
             )
-            verifyLicenceGroup(licenceGroups.get(1), LicenceType.DriverOfTaxisAndPrivateHires, List(dayBeforeTaxCheck))
+            verifyLicenceGroup(
+              licenceGroups.get(1),
+              LicenceType.OperatorOfPrivateHireVehicles,
+              List(operatorTodayTaxCheck)
+            )
+            verifyLicenceGroup(
+              licenceGroups.get(2),
+              LicenceType.ScrapMetalMobileCollector,
+              List(scrapMetalCollectorTodayTaxCheck, scrapMetalCollectorYesterdayTaxCheck)
+            )
+            verifyLicenceGroup(
+              licenceGroups.get(3),
+              LicenceType.ScrapMetalDealerSite,
+              List(scrapMetalDealerTodayTaxCheck)
+            )
             doc.select("form").select("button").text() shouldBe messageFromMessageKey(
               "taxChecksList.button"
             )

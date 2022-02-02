@@ -19,19 +19,27 @@
 @import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 @import uk.gov.hmrc.govukfrontend.views.html.components._
 @import uk.gov.hmrc.hecapplicantfrontend.views.html.components.TaxCheckCodeDetails
+@import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceType => LicenceTypeModel }
 @import uk.gov.hmrc.hecapplicantfrontend.models.TaxCheckListItem
 
+@import java.time.ZonedDateTime
 
 @this(layout: Layout, govukButton: GovukButton, formWithCSRF: FormWithCSRF, taxCheckDetails: TaxCheckCodeDetails)
 
-
-@(taxChecks: List[TaxCheckListItem])(implicit request: Request[_], messages: Messages)
+@(taxChecks: List[TaxCheckListItem])(implicit request: Request[_], messages: Messages, dateOrdering: Ordering[ZonedDateTime], licenceTypeOrdering: Ordering[LicenceTypeModel])
 @key = @{"taxChecksList"}
 @title = @{messages(s"$key.title")}
-@taxChecksGrouped = @{taxChecks.groupBy(_.licenceType)}
+@taxChecksGrouped = @{
+    taxChecks
+            .groupBy(_.licenceType)
+            .toList
+            .map{case (l,t) => l -> t.sortBy(_.createDate) }
+            .sortBy(_._1)
+}
+
 @layout(pageTitle = Some(title)) {
     <h1 class="govuk-heading-xl">@title</h1>
-    @taxChecksGrouped.map(taxCheck => taxCheckDetails(taxCheck))
+    @taxChecksGrouped.map(taxCheckDetails(_))
     <p class="govuk-body">@messages(s"$key.p1")</p>
     <p class="govuk-body js-visible">
         <a href="#print-dialogue" class="govuk-link">@messages(s"$key.link")</a>
