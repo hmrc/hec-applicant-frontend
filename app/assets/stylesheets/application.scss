@@ -12,7 +12,6 @@ body:not(.js-enabled) .js-visible {
 
 .copy-to-clipboard {
   padding: 7px 30px;
-  margin-bottom: 0;
   &.not-supported {
     display: none;
   }
@@ -30,6 +29,7 @@ body:not(.js-enabled) .js-visible {
 }
 
 .govuk-summary-list__actions > .copy-to-clipboard {
+  margin-bottom: 0;
   @include govuk-media-query($from: tablet) {
     margin-left:-58%;
   }

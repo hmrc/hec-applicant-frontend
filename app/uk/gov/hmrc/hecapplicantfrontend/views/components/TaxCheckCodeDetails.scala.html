@@ -26,12 +26,12 @@
 @(taxCheckDetails: (LicenceType, List[TaxCheckListItem]))(implicit messages: Messages)
 @licenceType = @{messages(s"licenceType.${LicenceTypeOption.licenceTypeOption(taxCheckDetails._1).messageKey}")}
 
-<div class="existing-code">
+<div class="licence-type-group">
   <h2 class="govuk-heading-l">
     @licenceType
   </h2>
   @taxCheckDetails._2.map { code =>
-    <dl class="govuk-summary-list">
+    <dl class="govuk-summary-list existing-code">
       <div class="govuk-summary-list__row">
         <dt class="govuk-summary-list__key ">
           @{messages("taxCheck.expiryKey")}
@@ -58,5 +58,4 @@
       </div>
     </dl>
   }
-
 </div>
