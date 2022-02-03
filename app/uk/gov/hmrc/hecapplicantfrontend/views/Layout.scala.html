@@ -78,7 +78,7 @@
         )),
         content = HtmlContent(messages("phaseBanner.text", appConfig.betaFeedbackUrl))
     ))
-    @{if(appConfig.welshLanguageSupportEnabled) Some(hmrcLanguageSelectHelper()) else None}
+    @{ if(appConfig.welshLanguageSupportEnabled) hmrcLanguageSelectHelper() }
     @{
         backLocation map { back =>
             val url = if (back.url === routes.StartController.start().url) appConfig.taxCheckGuidanceUrl else back.url
