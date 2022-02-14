@@ -95,13 +95,13 @@ class TaxSituationControllerSpec
       def performAction(): Future[Result] = controller.taxSituation(FakeRequest())
 
       val allRadioTexts     = List(
-        messageFromMessageKey("taxSituation.PA"),
-        messageFromMessageKey("taxSituation.SA"),
-        messageFromMessageKey("taxSituation.SAPAYE"),
+        s"${messageFromMessageKey("taxSituation.PA")} ${messageFromMessageKey("taxSituation.PA.hint")}",
+        s"${messageFromMessageKey("taxSituation.SA")} ${messageFromMessageKey("taxSituation.SA.hint")}",
+        s"${messageFromMessageKey("taxSituation.SAPAYE")} ${messageFromMessageKey("taxSituation.SAPAYE.hint")}",
         s"${messageFromMessageKey("taxSituation.NotChargeable")} ${messageFromMessageKey("taxSituation.NotChargeable.hint")}"
       )
       val nonPAYERadioTexts = List(
-        messageFromMessageKey("taxSituation.SA"),
+        s"${messageFromMessageKey("taxSituation.SA")} ${messageFromMessageKey("taxSituation.SA.hint")}",
         s"${messageFromMessageKey("taxSituation.NotChargeable")} ${messageFromMessageKey("taxSituation.NotChargeable.hint")}"
       )
 
