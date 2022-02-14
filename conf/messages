@@ -398,7 +398,7 @@ verifyPasscodeTooManyAttempts.p3 = <a href="{0}" class="govuk-link">See all your
 #Problem sending email
 problemSendingEmail.title = Email cannot be sent
 problemSendingEmail.p1 = We cannot send an email to the address you provided.
-problemSendingEmail.p2 =You can <a href="{0}" class="govuk-link">see all your tax check codes.</a>
+problemSendingEmail.p2 =You can <a href="{0}" class="govuk-link">see all your tax check codes</a>.
 
 #Email Request Exceeded
 emailRequestExceeded.title = You have tried to confirm an email address too many times

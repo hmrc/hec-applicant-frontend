@@ -288,7 +288,7 @@ verifyPasscodeTooManyAttempts.p2=Gallwch <a href="{0}" class="govuk-link">fynd y
 verifyPasscodeTooManyAttempts.p3=<a href="{0}" class="govuk-link">Gweld pob un o’ch codau gwirio treth</a>.
 problemSendingEmail.title=Methu anfon e-bost
 problemSendingEmail.p1=Ni allwn anfon e-bost i’r cyfeiriad a roesoch.
-problemSendingEmail.p2=Gallwch <a href="{0}" class="govuk-link">weld pob un o’ch codau gwirio treth.</a>
+problemSendingEmail.p2=Gallwch <a href="{0}" class="govuk-link">weld pob un o’ch codau gwirio treth</a>.
 emailRequestExceeded.title=Rydych wedi ceisio cadarnhau cyfeiriad e-bost gormod o weithiau
 emailRequestExceeded.p1=Rydych wedi gwneud gormod o gynigion i gadarnhau cyfeiriad e-bost.
 emailRequestExceeded.p2=<a href="{0}" class="govuk-link">Gweld pob un o’ch codau gwirio treth</a>.
