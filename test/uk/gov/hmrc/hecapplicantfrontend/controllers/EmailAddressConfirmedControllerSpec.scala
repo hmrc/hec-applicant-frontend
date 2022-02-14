@@ -18,6 +18,7 @@ package uk.gov.hmrc.hecapplicantfrontend.controllers
 
 import cats.data.EitherT
 import cats.implicits.catsSyntaxOptionId
+import play.api.i18n.Lang
 import play.api.inject.bind
 import play.api.mvc.{Cookie, Result}
 import play.api.test.FakeRequest
@@ -82,10 +83,15 @@ class EmailAddressConfirmedControllerSpec
   val hecTaxCheck = HECTaxCheck(hecTaxCheckCode, expiryDate, createDate)
 
   val emailParametersEN =
-    EmailParameters("9 July 2021", "Driver of taxis and private hires", "ABC 123 DER", "9 October 2021")
+    EmailParameters(
+      "9 July 2021",
+      messagesApi("licenceType.driverOfTaxis")(Lang("en")),
+      "ABC 123 DER",
+      "9 October 2021"
+    )
   val emailParametersCY = EmailParameters(
     "9 Gorffennaf 2021",
-    "Gyrrwr tacsis a hurio preifat",
+    messagesApi("licenceType.driverOfTaxis")(Lang("cy")),
     "ABC 123 DER",
     "9 Hydref 2021"
   )
