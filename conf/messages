@@ -145,8 +145,11 @@ taxSituation.label.scrapMetalCollector = For your scrap metal mobile collector l
 taxSituation.label.scrapMetalDealer = For your scrap metal dealer site licence(s), which of the following apply?
 
 taxSituation.PA = I was an employee only
+taxSituation.PA.hint = For work using this licence you paid tax through PAYE.
 taxSituation.SA = I was registered for Self Assessment only
+taxSituation.SA.hint = For work using this licence you paid tax through Self Assessment.
 taxSituation.SAPAYE = I was both an employee and registered for Self Assessment
+taxSituation.SAPAYE.hint = For work using this licence you paid tax through a combination of PAYE and Self Assessment.
 taxSituation.NotChargeable = I had no tax to pay from using this licence during this tax year
 taxSituation.NotChargeable.hint = For example, you may have had a licence but not used it to generate income.
 taxSituation.link = Find out who needs to register for Self Assessment
