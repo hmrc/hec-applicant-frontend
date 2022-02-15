@@ -18,15 +18,13 @@
 @import play.api.mvc.Request
 @import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 @import uk.gov.hmrc.govukfrontend.views.html.components._
-@import uk.gov.hmrc.hecapplicantfrontend.views.html.components.TaxCheckCodeDetails
+@import uk.gov.hmrc.hecapplicantfrontend.views.html.components.{ TaxCheckCodeDetails, ExitSurveyLink }
 @import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceType => LicenceTypeModel }
 @import uk.gov.hmrc.hecapplicantfrontend.models.TaxCheckListItem
-@import play.twirl.api.Html
 
 @import java.time.ZonedDateTime
 
-@this(layout: Layout, govukButton: GovukButton, formWithCSRF: FormWithCSRF, taxCheckDetails: TaxCheckCodeDetails)
-
+@this(layout: Layout, govukButton: GovukButton, formWithCSRF: FormWithCSRF, taxCheckDetails: TaxCheckCodeDetails, exitSurveyLink: ExitSurveyLink)
 @(taxChecks: List[TaxCheckListItem])(implicit request: Request[_], messages: Messages, dateOrdering: Ordering[ZonedDateTime], licenceTypeOrdering: Ordering[LicenceTypeModel])
 @key = @{"taxChecksList"}
 @title = @{messages(s"$key.title")}
@@ -45,10 +43,10 @@
     <p class="govuk-body js-visible">
         <a href="#print-dialogue" class="govuk-link">@messages(s"$key.link")</a>
     </p>
+
     @formWithCSRF(action = routes.TaxChecksListController.unexpiredTaxChecksSubmit()) {
         @govukButton(Button(content = Text(messages(s"$key.button"))))
     }
-    <p class="govuk-body">
-      @Html(messages("exitSurvey.linkText", routes.SignOutController.exitSurvey().url))
-    </p>
+
+    @exitSurveyLink()
 }
