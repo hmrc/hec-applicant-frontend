@@ -1840,7 +1840,8 @@ class CompanyDetailsControllerSpec
             links.iterator().asScala.toList.map(_.attr("href")) shouldBe List(
               appConfig.registerForCtUrl,
               appConfig.findLostUtrUrl,
-              mockPreviousCall.url
+              mockPreviousCall.url,
+              routes.SignOutController.exitSurvey().url
             )
           }
         )
