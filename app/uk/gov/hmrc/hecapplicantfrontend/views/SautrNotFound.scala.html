@@ -37,5 +37,8 @@
     <p class="govuk-body">@messages(s"$key.newRegistration.p1")</p>
     <h2 class="govuk-heading-m">@messages(s"$key.problem.heading")</h2>
     <p class="govuk-body">@Html(messages(s"$key.problem.p1", appConfig.contactHmrcSa))</p>
+    <p class="govuk-body">
+    @Html(messages("exitSurvey.linkText", routes.SignOutController.exitSurvey().url))
+    </p>
 
 }

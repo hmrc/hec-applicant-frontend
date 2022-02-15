@@ -18,6 +18,7 @@
 @import play.api.mvc.{Call, Request}
 @import play.twirl.api.Html
 @import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
+@import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 
 @this(layout: Layout)
 
@@ -28,4 +29,7 @@
 @layout(pageTitle = Some(title), backLocation = Some(back)) {
     <h1 class="govuk-heading-xl">@title</h1>
     <p class="govuk-body govuk-!-margin-bottom-9">@Html(messages(s"$key.p1", appConfig.contactHmrcSa))</p>
+    <p class="govuk-body">
+     @Html(messages("exitSurvey.linkText", routes.SignOutController.exitSurvey().url))
+    </p>
 }

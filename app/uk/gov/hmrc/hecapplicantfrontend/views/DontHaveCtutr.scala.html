@@ -18,6 +18,7 @@
 @import play.api.mvc.{Call, Request}
 @import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 @import play.twirl.api.Html
+@import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 
 @this(layout: Layout)
 
@@ -30,4 +31,7 @@
     <p class="govuk-body">@Html(messages(s"$key.p1", appConfig.registerForCtUrl))</p>
     <p class="govuk-body">@Html(messages(s"$key.p2", appConfig.findLostUtrUrl))</p>
     <p class="govuk-body">@Html(messages(s"$key.p3", back.url))</p>
-}
+    <p class="govuk-body">
+      @Html(messages("exitSurvey.linkText", routes.SignOutController.exitSurvey().url))
+    </p>
+  }
