@@ -23,8 +23,7 @@
 @import uk.gov.hmrc.hecapplicantfrontend.util.TimeUtils
 @import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 
-@this(layout: Layout, govukPanel : GovukPanel, copyButton: components.CopyButton)
-
+@this(layout: Layout, govukPanel : GovukPanel, copyButton: components.CopyButton, exitSurveyLink: components.ExitSurveyLink)
 @(hecTaxCheck: HECTaxCheck)(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
 @key = @{"taxCheckComplete"}
 @title = @{messages(s"$key.title")}
@@ -57,9 +56,7 @@
         <li>@Html(messages(s"$key.list3", routes.StartController.start().url))</li>
       </ul>
 
-      <p class="govuk-body">
-      @Html(messages("exitSurvey.linkText", routes.SignOutController.exitSurvey().url))
-      </p>
+      @exitSurveyLink()
     </div>
 
 

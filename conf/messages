@@ -145,8 +145,11 @@ taxSituation.label.scrapMetalCollector = For your scrap metal mobile collector l
 taxSituation.label.scrapMetalDealer = For your scrap metal dealer site licence(s), which of the following apply?
 
 taxSituation.PA = I was an employee only
+taxSituation.PA.hint = For work using this licence you paid tax through PAYE.
 taxSituation.SA = I was registered for Self Assessment only
+taxSituation.SA.hint = For work using this licence you paid tax through Self Assessment.
 taxSituation.SAPAYE = I was both an employee and registered for Self Assessment
+taxSituation.SAPAYE.hint = For work using this licence you paid tax through a combination of PAYE and Self Assessment.
 taxSituation.NotChargeable = I had no tax to pay from using this licence during this tax year
 taxSituation.NotChargeable.hint = For example, you may have had a licence but not used it to generate income.
 taxSituation.link = Find out who needs to register for Self Assessment
@@ -213,11 +216,9 @@ sautrNotFound.intro = This is because we could not find a Self Assessment Unique
 sautrNotFound.changeAnswer.heading = If you told us you were registered for Self Assessment but were not
 sautrNotFound.changeAnswer.p1 = You’ll need to <a href="{0}" class="govuk-link">go back and change your answer</a>.
 sautrNotFound.register.heading = If you have not registered for Self Assessment
-sautrNotFound.register.p1 = You’ll need to <a href="{0}" class="govuk-link">register for Self Assessment</a>. When you have received your UTR, you can then come back and do a tax check. It typically takes 2 to 3 weeks to register.
-sautrNotFound.newRegistration.heading = If you have registered for Self Assessment in the last 3 weeks
-sautrNotFound.newRegistration.p1 = Our systems will not have been updated yet. You’ll need to wait until you have received your UTR. You can then do a tax check.
-sautrNotFound.problem.heading = If you registered for Self Assessment more than 3 weeks ago
-sautrNotFound.problem.p1 = You’ll need to <a href="{0}" class="govuk-link">contact HMRC</a>.
+sautrNotFound.register.p1 = You’ll need to <a href="{0}" class="govuk-link">register for Self Assessment</a>. Once you have done this you should receive your UTR within 10 days.
+sautrNotFound.newRegistration.heading = If you have registered for Self Assessment but do not have your UTR
+sautrNotFound.newRegistration.p1 = You should receive your UTR within 10 days. If you have not received it within 3 weeks, <a href="{0}" class="govuk-link">contact HMRC</a>.
 
 # No Return Found
 noReturnFound.title = You cannot do a tax check at the moment

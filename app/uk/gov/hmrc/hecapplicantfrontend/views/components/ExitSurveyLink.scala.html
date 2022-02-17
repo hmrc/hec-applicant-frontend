@@ -15,18 +15,13 @@
  *@
 
 @import play.api.i18n.Messages
-@import play.api.mvc.{Call, Request}
 @import play.twirl.api.Html
-@import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
-@import uk.gov.hmrc.hecapplicantfrontend.views.html.components.ExitSurveyLink
+@import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 
-@this(layout: Layout, exitSurveyLink: ExitSurveyLink)
-@(back: Call)(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
-@key = @{"noReturnFound"}
-@title = @{messages(s"$key.title")}
+@this()
 
-@layout(pageTitle = Some(title), backLocation = Some(back)) {
-    <h1 class="govuk-heading-xl">@title</h1>
-    <p class="govuk-body govuk-!-margin-bottom-9">@Html(messages(s"$key.p1", appConfig.contactHmrcSa))</p>
-    @exitSurveyLink()
-}
+@()(implicit messages: Messages)
+
+<p class="govuk-body">
+  @Html(messages("exitSurvey.linkText", routes.SignOutController.exitSurvey().url))
+</p>

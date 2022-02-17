@@ -24,9 +24,9 @@ object TaxSituationOption {
 
   def taxSituationOption(taxSituation: TaxSituation): TaxSituationOption =
     taxSituation match {
-      case PAYE          => TaxSituationOption("PA", None)
-      case SA            => TaxSituationOption("SA", None)
-      case SAPAYE        => TaxSituationOption("SAPAYE", None)
+      case PAYE          => TaxSituationOption("PA", Some("PA.hint"))
+      case SA            => TaxSituationOption("SA", Some("SA.hint"))
+      case SAPAYE        => TaxSituationOption("SAPAYE", Some("SAPAYE.hint"))
       case NotChargeable => TaxSituationOption("NotChargeable", Some("NotChargeable.hint"))
     }
 

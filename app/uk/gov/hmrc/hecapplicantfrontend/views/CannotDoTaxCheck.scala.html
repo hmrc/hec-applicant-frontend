@@ -18,14 +18,17 @@
 @import play.api.mvc.{Call, Request}
 @import play.twirl.api.Html
 @import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
+@import uk.gov.hmrc.hecapplicantfrontend.views.html.components.ExitSurveyLink
 
-@this(layout: Layout)
+@this(layout: Layout, exitSurveyLink: ExitSurveyLink)
 
 @(back: Call)(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
+
 @key = @{"cannotDoTaxCheck"}
 @title = @{messages(s"$key.title")}
 
 @layout(pageTitle = Some(title), backLocation = Some(back)) {
     <h1 class="govuk-heading-xl">@title</h1>
     <p class="govuk-body govuk-!-margin-bottom-9">@Html(messages(s"$key.p1", appConfig.contactHmrcSa))</p>
+    @exitSurveyLink()
 }
