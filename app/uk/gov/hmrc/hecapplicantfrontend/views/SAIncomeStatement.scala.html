@@ -22,6 +22,7 @@
 @import uk.gov.hmrc.hecapplicantfrontend.models.YesNoAnswer
 @import uk.gov.hmrc.hecapplicantfrontend.models.views.YesNoOption
 @import uk.gov.hmrc.hecapplicantfrontend.models.TaxYear
+@import uk.gov.hmrc.hecapplicantfrontend.views.helpers.FormErrorMessage.formErrorMessage
 
 @this(layout: Layout, govukErrorSummary: GovukErrorSummary, govukRadios: GovukRadios, govukButton: GovukButton, formWithCSRF: FormWithCSRF)
 
@@ -57,10 +58,7 @@
       idPrefix = Some(key),
       name = key,
       items = radioOptions,
-      errorMessage = form.error(key).map(e => ErrorMessage(
-        content = Text(messages(s"$key.${e.message}")),
-        visuallyHiddenText = Some(messages("generic.errorPrefix"))
-      ))
+      errorMessage = formErrorMessage(form, key)
     ))
     @govukButton(Button(content = Text(messages("button.continue"))))
   }

@@ -23,6 +23,7 @@
 @import uk.gov.hmrc.hecapplicantfrontend.models.EmailType
 @import cats.implicits.catsSyntaxEq
 @import uk.gov.hmrc.hecapplicantfrontend.models.UserSelectedEmail
+@import uk.gov.hmrc.hecapplicantfrontend.views.helpers.FormErrorMessage.formErrorMessage
 
 @this(layout: Layout, govukErrorSummary: GovukErrorSummary, govukRadios: GovukRadios, govukButton: GovukButton, formWithCSRF: FormWithCSRF, govukInput: GovukInput)
 
@@ -91,10 +92,7 @@
                 idPrefix = Some(key),
                 name = key,
                 items = radioOptions,
-                errorMessage = form.error(key).map(e => ErrorMessage(
-                  content = Text(messages(s"$key.${e.message}")),
-                  visuallyHiddenText = Some(messages("generic.errorPrefix"))
-                ))
+                errorMessage = formErrorMessage(form, key)
             )
         )
 

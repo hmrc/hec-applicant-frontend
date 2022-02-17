@@ -20,8 +20,7 @@
 @import uk.gov.hmrc.govukfrontend.views.html.components._
 @import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 @import uk.gov.hmrc.hecapplicantfrontend.models.UserSelectedEmail
-
-
+@import uk.gov.hmrc.hecapplicantfrontend.views.helpers.FormErrorMessage.formErrorMessage
 
 @this(layout: Layout, govukInput: GovukInput, govukButton: GovukButton, formWithCSRF: FormWithCSRF, govukErrorSummary : GovukErrorSummary)
 
@@ -49,10 +48,7 @@
                 content = Text(title)
             ),
             classes = "govuk-!-width-full",
-            errorMessage = form.error(key).map(e => ErrorMessage(
-              content = Text(messages(s"$key.${e.message}")),
-              visuallyHiddenText = Some(messages("generic.errorPrefix"))
-            ))
+            errorMessage = formErrorMessage(form, key)
         ))
 
         @govukButton(Button(
