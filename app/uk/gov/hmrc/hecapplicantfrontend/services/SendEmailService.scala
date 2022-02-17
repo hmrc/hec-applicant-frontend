@@ -20,13 +20,14 @@ import cats.data.EitherT
 import com.google.inject.{ImplementedBy, Inject, Singleton}
 import play.api.Configuration
 import play.api.http.Status.ACCEPTED
-import uk.gov.hmrc.hecapplicantfrontend.connectors.SendEmailConnector
+import uk.gov.hmrc.hecapplicantfrontend.connectors.{HECConnector, SendEmailConnector}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.RequestWithSessionData
 import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.SendTaxCheckCodeNotificationEmail
 import uk.gov.hmrc.hecapplicantfrontend.models.{Error, UserSelectedEmail}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailSend.{EmailParameters, EmailSendRequest, EmailSendResult}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.Language
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.Language.{English, Welsh}
+import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.SaveEmailAddressRequest
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 
@@ -45,6 +46,7 @@ trait SendEmailService {
 @Singleton
 class SendEmailServiceImpl @Inject() (
   emailSendConnector: SendEmailConnector,
+  hecConnector: HECConnector,
   auditService: AuditService,
   configuration: Configuration
 )(implicit
@@ -59,10 +61,13 @@ class SendEmailServiceImpl @Inject() (
     hc: HeaderCarrier,
     r: RequestWithSessionData[_]
   ): EitherT[Future, Error, EmailSendResult] = {
+    val taxCheckCode =
+      r.sessionData.completedTaxCheck.map(_.taxCheckCode).getOrElse(sys.error("Could not find tax check code"))
+
     def auditEvent(templateId: String, result: Option[EmailSendResult]): SendTaxCheckCodeNotificationEmail =
       SendTaxCheckCodeNotificationEmail(
         r.sessionData.loginData.ggCredId,
-        r.sessionData.completedTaxCheck.map(_.taxCheckCode).getOrElse(sys.error("Could not find tax check code")),
+        taxCheckCode,
         userSelectedEmail.emailAddress,
         userSelectedEmail.emailType,
         templateId,
@@ -85,7 +90,10 @@ class SendEmailServiceImpl @Inject() (
           }
           .subflatMap { response =>
             val result = response.status match {
-              case ACCEPTED => Right(EmailSendResult.EmailSent)
+              case ACCEPTED =>
+                val _ =
+                  hecConnector.saveEmailAddress(SaveEmailAddressRequest(userSelectedEmail.emailAddress, taxCheckCode))
+                Right(EmailSendResult.EmailSent)
               case other    =>
                 logger.warn(s"Response for send email call came back with status : $other")
                 Right(EmailSendResult.EmailSentFailure)

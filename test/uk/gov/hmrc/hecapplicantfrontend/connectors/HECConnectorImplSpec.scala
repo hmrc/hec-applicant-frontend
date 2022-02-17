@@ -25,7 +25,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models._
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.ApplicantDetails.IndividualApplicantDetails
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.HECTaxCheckData.IndividualHECTaxCheckData
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.TaxDetails.IndividualTaxDetails
-import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.{HECTaxCheckData, HECTaxCheckSource}
+import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.{HECTaxCheckData, HECTaxCheckSource, SaveEmailAddressRequest}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids._
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -151,6 +151,21 @@ class HECConnectorImplSpec extends AnyWordSpec with Matchers with MockFactory wi
       behave like connectorBehaviour(
         mockGet(expectedUrl)(_),
         () => connector.getUnexpiredTaxCheckCodes()
+      )
+
+    }
+
+    "handling requests to save email addresses" must {
+
+      implicit val hc: HeaderCarrier = HeaderCarrier()
+
+      val saveEmailAddressRequest = SaveEmailAddressRequest(EmailAddress("email"), HECTaxCheckCode("code"))
+
+      val expectedUrl = s"$protocol://$host:$port/hec/email-address"
+
+      behave like connectorBehaviour(
+        mockPost(expectedUrl, Seq.empty, saveEmailAddressRequest)(_),
+        () => connector.saveEmailAddress(saveEmailAddressRequest)
       )
 
     }

@@ -18,7 +18,7 @@ package uk.gov.hmrc.hecapplicantfrontend.connectors
 
 import cats.data.EitherT
 import com.google.inject.{ImplementedBy, Inject, Singleton}
-import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.HECTaxCheckData
+import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.{HECTaxCheckData, SaveEmailAddressRequest}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR, SAUTR}
 import uk.gov.hmrc.hecapplicantfrontend.models.{Error, TaxYear}
 import uk.gov.hmrc.http.HttpReads.Implicits._
@@ -44,6 +44,10 @@ trait HECConnector {
 
   def getUnexpiredTaxCheckCodes()(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse]
 
+  def saveEmailAddress(saveEmailAddressRequest: SaveEmailAddressRequest)(implicit
+    hc: HeaderCarrier
+  ): EitherT[Future, Error, HttpResponse]
+
 }
 
 @Singleton
@@ -67,6 +71,8 @@ class HECConnectorImpl @Inject() (http: HttpClient, servicesConfig: ServicesConf
   private def getCtutrUrl(crn: CRN): String = s"$baseUrl/hec/ctutr/${crn.value}"
 
   private val getTaxCheckCodesUrl: String = s"$baseUrl/hec/unexpired-tax-checks"
+
+  private val saveEmailAddressUrl: String = s"$baseUrl/hec/email-address"
 
   override def saveTaxCheck(
     taxCheckData: HECTaxCheckData
@@ -108,6 +114,16 @@ class HECConnectorImpl @Inject() (http: HttpClient, servicesConfig: ServicesConf
     EitherT[Future, Error, HttpResponse](
       http
         .GET[HttpResponse](getTaxCheckCodesUrl)
+        .map(Right(_))
+        .recover { case e => Left(Error(e)) }
+    )
+
+  def saveEmailAddress(
+    saveEmailAddressRequest: SaveEmailAddressRequest
+  )(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse] =
+    EitherT[Future, Error, HttpResponse](
+      http
+        .POST[SaveEmailAddressRequest, HttpResponse](saveEmailAddressUrl, saveEmailAddressRequest)
         .map(Right(_))
         .recover { case e => Left(Error(e)) }
     )
