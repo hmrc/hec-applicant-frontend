@@ -5,7 +5,7 @@ service.text = This is your new service
 service.phase = beta
 phaseBanner.text = This is a new service – your <a class="govuk-link" href="{0}">feedback</a> will help us to improve it.
 
-generic.errorPrefix = Error:
+generic.errorPrefix = Error
 generic.errorSummary = There is a problem
 
 # Buttons

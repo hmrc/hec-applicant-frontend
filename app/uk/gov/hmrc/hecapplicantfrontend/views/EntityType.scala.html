@@ -56,7 +56,8 @@
             name = key,
             items = radioOptions,
             errorMessage = form.error(key).map(e => ErrorMessage(
-                content = Text(messages(s"$key.${e.message}"))
+                content = Text(messages(s"$key.${e.message}")),
+                visuallyHiddenText = Some(messages("generic.errorPrefix"))
             ))
         ))
         <p class="govuk-body">

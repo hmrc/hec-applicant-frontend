@@ -4,7 +4,7 @@ service.name=Gwneud gwiriad treth wrth wneud cais am drwydded
 service.text=Dyma’ch gwasanaeth newydd
 service.phase=beta
 phaseBanner.text=Mae hwn yn wasanaeth newydd – bydd eich <a class="govuk-link" href="{0}">adborth</a> yn ein helpu i’w wella.
-generic.errorPrefix=Gwall:
+generic.errorPrefix=Gwall
 generic.errorSummary=Mae problem wedi codi
 button.sign-in=Mewngofnodi
 button.try-again=Rhowch gynnig arall arni

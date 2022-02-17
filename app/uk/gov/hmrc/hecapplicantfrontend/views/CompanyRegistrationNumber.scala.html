@@ -53,7 +53,8 @@
         content = Text(messages(s"$key.hint"))
       )),
       errorMessage = form.error(key).map(e => ErrorMessage(
-        content = Text(messages(s"$key.${e.message}"))
+        content = Text(messages(s"$key.${e.message}")),
+        visuallyHiddenText = Some(messages("generic.errorPrefix"))
       ))
     ))
 

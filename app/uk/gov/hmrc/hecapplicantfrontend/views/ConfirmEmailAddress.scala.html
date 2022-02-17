@@ -44,7 +44,8 @@
     autocomplete = Some("email"),
     spellcheck = Some(false),
     errorMessage = form.error(differentEmailKey).map(e => ErrorMessage(
-      content = Text(messages(s"$differentEmailKey.${e.message}"))
+      content = Text(messages(s"$differentEmailKey.${e.message}")),
+      visuallyHiddenText = Some(messages("generic.errorPrefix"))
     )),
     value = form(differentEmailKey).value
   ))
@@ -90,7 +91,10 @@
                 idPrefix = Some(key),
                 name = key,
                 items = radioOptions,
-                errorMessage = form.error(key).map(e => ErrorMessage(content = Text(messages(s"$key.${e.message}"))))
+                errorMessage = form.error(key).map(e => ErrorMessage(
+                  content = Text(messages(s"$key.${e.message}")),
+                  visuallyHiddenText = Some(messages("generic.errorPrefix"))
+                ))
             )
         )
 

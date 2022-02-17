@@ -77,7 +77,10 @@ Request[_], messages: Messages, appConfig: AppConfig)
                 idPrefix = Some(key),
                 name = key,
                 items = radioOptions,
-                errorMessage = form.error(key).map(e => ErrorMessage(content = Text(messages(s"$key.${e.message}"))))
+                errorMessage = form.error(key).map(e => ErrorMessage(
+                  content = Text(messages(s"$key.${e.message}")),
+                  visuallyHiddenText = Some(messages("generic.errorPrefix"))
+                ))
             )
         )
 
