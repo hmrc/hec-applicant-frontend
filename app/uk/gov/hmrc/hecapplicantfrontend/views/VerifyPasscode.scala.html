@@ -78,7 +78,7 @@ Request[_], messages: Messages)
         hint = Some(Hint(
           content = Text(messages(s"$key.hint"))
         )),
-        errorMessage = formErrorMessage(form, key)
+        errorMessage = formErrorMessage(form, fieldKey)
       ))
 
       @govukDetails(Details(
