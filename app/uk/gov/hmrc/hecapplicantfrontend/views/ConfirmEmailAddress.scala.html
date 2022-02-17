@@ -44,10 +44,7 @@
     ),
     autocomplete = Some("email"),
     spellcheck = Some(false),
-    errorMessage = form.error(differentEmailKey).map(e => ErrorMessage(
-      content = Text(messages(s"$differentEmailKey.${e.message}")),
-      visuallyHiddenText = Some(messages("generic.errorPrefix"))
-    )),
+    errorMessage = formErrorMessage(form, differentEmailKey),
     value = form(differentEmailKey).value
   ))
 }
