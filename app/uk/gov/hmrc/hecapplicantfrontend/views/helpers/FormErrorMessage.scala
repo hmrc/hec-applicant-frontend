@@ -26,7 +26,7 @@ object FormErrorMessage {
     .error(key)
     .map(e =>
       ErrorMessage(
-        content = Text(messages(s"${e.key}.${e.message}")),
+        content = Text(messages(s"${e.key}.${e.message}", e.args: _*)),
         visuallyHiddenText = Some(messages("generic.errorPrefix"))
       )
     )
