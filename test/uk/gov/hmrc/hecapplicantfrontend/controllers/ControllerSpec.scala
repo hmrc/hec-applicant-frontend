@@ -79,7 +79,7 @@ trait ControllerSpec extends PlaySupport {
         errorSummary.select("a").text() shouldBe formError
 
         val inputErrorMessage = doc.select(".govuk-error-message")
-        inputErrorMessage.text() shouldBe s"Error: $formError"
+        inputErrorMessage.text() shouldBe s"${messageFromMessageKey("generic.errorPrefix")}: $formError"
       },
       expectedStatus
     )

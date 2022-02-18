@@ -22,9 +22,9 @@
 @import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 @import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.Passcode
 @import uk.gov.hmrc.hecapplicantfrontend.models.EmailAddress
+@import uk.gov.hmrc.hecapplicantfrontend.views.helpers.FormErrorMessage.formErrorMessage
 
 @this(layout: Layout, govukErrorSummary: GovukErrorSummary, govukInput: GovukInput, govukButton: GovukButton, formWithCSRF: FormWithCSRF, govukDetails : GovukDetails)
-
 
 @(form: Form[Passcode], back: Call, email: EmailAddress, isGGEmailInSession: Boolean)(implicit request:
 Request[_], messages: Messages)
@@ -81,9 +81,7 @@ Request[_], messages: Messages)
             hint = Some(Hint(
                 content = Text(messages(s"$key.hint"))
             )),
-            errorMessage = form.error(fieldKey).map(e => ErrorMessage(
-                content = Text(messages(s"$fieldKey.${e.message}"))
-            ))
+            errorMessage = formErrorMessage(form, fieldKey)
         ))
 
         @govukDetails(Details(

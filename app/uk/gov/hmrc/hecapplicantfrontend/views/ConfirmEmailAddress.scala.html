@@ -23,6 +23,7 @@
 @import uk.gov.hmrc.hecapplicantfrontend.models.EmailType
 @import cats.implicits.catsSyntaxEq
 @import uk.gov.hmrc.hecapplicantfrontend.models.UserSelectedEmail
+@import uk.gov.hmrc.hecapplicantfrontend.views.helpers.FormErrorMessage.formErrorMessage
 
 @this(layout: Layout, govukErrorSummary: GovukErrorSummary, govukRadios: GovukRadios, govukButton: GovukButton, formWithCSRF: FormWithCSRF, govukInput: GovukInput)
 
@@ -43,9 +44,7 @@
     ),
     autocomplete = Some("email"),
     spellcheck = Some(false),
-    errorMessage = form.error(differentEmailKey).map(e => ErrorMessage(
-      content = Text(messages(s"$differentEmailKey.${e.message}"))
-    )),
+    errorMessage = formErrorMessage(form, differentEmailKey),
     value = form(differentEmailKey).value
   ))
 }
@@ -90,7 +89,7 @@
                 idPrefix = Some(key),
                 name = key,
                 items = radioOptions,
-                errorMessage = form.error(key).map(e => ErrorMessage(content = Text(messages(s"$key.${e.message}"))))
+                errorMessage = formErrorMessage(form, key)
             )
         )
 

@@ -21,6 +21,7 @@
 @import uk.gov.hmrc.hecapplicantfrontend.models
 @import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 @import uk.gov.hmrc.hecapplicantfrontend.models.views.EntityTypeOption
+@import uk.gov.hmrc.hecapplicantfrontend.views.helpers.FormErrorMessage.formErrorMessage
 
 @this(layout: Layout, govukErrorSummary: GovukErrorSummary, govukRadios: GovukRadios, govukButton: GovukButton, formWithCSRF: FormWithCSRF)
 
@@ -55,9 +56,7 @@
             idPrefix = Some(key),
             name = key,
             items = radioOptions,
-            errorMessage = form.error(key).map(e => ErrorMessage(
-                content = Text(messages(s"$key.${e.message}"))
-            ))
+            errorMessage = formErrorMessage(form, key)
         ))
         <p class="govuk-body">
             <a class="govuk-link" href="@{routes.EntityTypeController.wrongEntityType()}">@messages(s"$key.link")</a>
