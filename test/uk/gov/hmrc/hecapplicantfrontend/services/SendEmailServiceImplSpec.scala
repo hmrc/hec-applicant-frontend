@@ -27,13 +27,14 @@ import play.api.libs.json.Json
 import play.api.mvc.{Cookie, MessagesRequest}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import uk.gov.hmrc.hecapplicantfrontend.connectors.SendEmailConnector
+import uk.gov.hmrc.hecapplicantfrontend.connectors.{HECConnector, SendEmailConnector}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthenticatedRequest, RequestWithSessionData}
 import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.SendTaxCheckCodeNotificationEmail
 import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, EmailType, Error, HECSession, HECTaxCheck, HECTaxCheckCode, UserSelectedEmail}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailSend.{EmailParameters, EmailSendRequest, EmailSendResult}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.Language.{English, Welsh}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{Passcode, PasscodeRequestResult, PasscodeVerificationResult}
+import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.SaveEmailAddressRequest
 import uk.gov.hmrc.hecapplicantfrontend.utils.{Fixtures, PlaySupport}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 
@@ -49,7 +50,9 @@ class SendEmailServiceImplSpec
     with AuditServiceSupport {
 
   val mockSendEmailConnector: SendEmailConnector = mock[SendEmailConnector]
-  val config                                     = Configuration(
+  val mockHecConnector: HECConnector             = mock[HECConnector]
+
+  val config = Configuration(
     ConfigFactory.parseString(s"""
                                  | email-send {
                                  |    template-id-en = "template_EN"
@@ -74,11 +77,17 @@ class SendEmailServiceImplSpec
       .expects(emailSendRequest, *)
       .returning(EitherT.fromEither[Future](result))
 
-  val sendEmailService           = new SendEmailServiceImpl(mockSendEmailConnector, mockAuditService, config)
+  def mockSaveEmailAddress(saveEmailAddressRequest: SaveEmailAddressRequest)(result: Either[Error, HttpResponse]) =
+    (mockHecConnector
+      .saveEmailAddress(_: SaveEmailAddressRequest)(_: HeaderCarrier))
+      .expects(saveEmailAddressRequest, *)
+      .returning(EitherT.fromEither[Future](result))
+
+  val sendEmailService           = new SendEmailServiceImpl(mockSendEmailConnector, mockHecConnector, mockAuditService, config)
   implicit val hc: HeaderCarrier = HeaderCarrier()
   val userSelectedEmail          = UserSelectedEmail(EmailType.GGEmail, EmailAddress("user@test.com"))
   val emailParameter             =
-    EmailParameters("9 July 2021", "ABC 123 GRD", "Driver of taxis and private hires", "9 October 2021")
+    EmailParameters("9 July 2021", "Driver of taxis and private hires", "ABC 123 GRD", "9 October 2021")
 
   val emailParametersCY = EmailParameters(
     "9 Gorffennaf 2021",
@@ -116,7 +125,7 @@ class SendEmailServiceImplSpec
 
   "SendEmailServiceImplSpec" when {
 
-    " handling request to send email" must {
+    "handling request to send email" must {
 
       "return an error" when {
 
@@ -159,13 +168,13 @@ class SendEmailServiceImplSpec
           new MessagesRequest(FakeRequest().withCookies(Cookie("PLAY_LANG", lang)), messagesApi)
         )
 
-        def getEmailSendRequest(templateId: String) = if (templateId === "template_EN")
-          EmailSendRequest(List(userSelectedEmail.emailAddress), templateId, emailParameter)
-        else
-          EmailSendRequest(List(userSelectedEmail.emailAddress), templateId, emailParametersCY)
+        def getEmailSendRequest(templateId: String) =
+          if (templateId === "template_EN")
+            EmailSendRequest(List(userSelectedEmail.emailAddress), templateId, emailParameter)
+          else
+            EmailSendRequest(List(userSelectedEmail.emailAddress), templateId, emailParametersCY)
 
-        "request json can be parsed and email is send " in {
-
+        def test(saveEmailAddressResponse: () => Either[Error, HttpResponse]) =
           Map(English.code -> "template_EN", Welsh.code -> "template_CY").foreach { case (lang, templateId) =>
             withClue(s"For lang: $lang and templateId: $templateId") {
               val emailSendRequest                                           = getEmailSendRequest(templateId)
@@ -175,6 +184,12 @@ class SendEmailServiceImplSpec
 
               inSequence {
                 mockSendEmail(emailSendRequest)(Right(HttpResponse(ACCEPTED, "")))
+                mockSaveEmailAddress(
+                  SaveEmailAddressRequest(
+                    userSelectedEmail.emailAddress,
+                    taxCheckCode
+                  )
+                )(saveEmailAddressResponse())
                 mockSendAuditEvent(auditEvent(templateId, Some(EmailSendResult.EmailSent)))
               }
 
@@ -188,6 +203,16 @@ class SendEmailServiceImplSpec
             }
           }
 
+        "request json can be parsed and email is sent" in {
+          test(() => Right(HttpResponse(200, "")))
+        }
+
+        "request json can be parsed and email is sent but the call to save an email address fails" in {
+          test(() => Left(Error("")))
+        }
+
+        "request json can be parsed and email is sent but the call to save an email address comes back with a non-200 response" in {
+          test(() => Right(HttpResponse(404, "")))
         }
 
       }
