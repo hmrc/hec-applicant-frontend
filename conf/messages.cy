@@ -295,4 +295,4 @@ emailRequestExceeded.p2=<a href="{0}" class="govuk-link">Gweld pob un o’ch cod
 cannotSendVerificationPasscode.title=Methu anfon e-bost
 cannotSendVerificationPasscode.p1=Ni allwn anfon e-bost i’r cyfeiriad a roesoch.
 cannotSendVerificationPasscode.p2=Gallwch <a href="{0}" class="govuk-link">fynd yn ôl a nodi cyfeiriad e-bost newydd</a>, neu gallwch <a href="{1}" class="govuk-link">weld pob un o’ch codau gwirio treth</a>.
-
+emailVerification.passcodeEmail.serviceName = wasanaeth gwirio treth CThEM

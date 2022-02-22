@@ -40,7 +40,10 @@ trait EmailVerificationService {
 
   def requestPasscode(
     userSelectedEmail: UserSelectedEmail
-  )(implicit hc: HeaderCarrier, r: RequestWithSessionData[_]): EitherT[Future, Error, PasscodeRequestResult]
+  )(implicit
+    hc: HeaderCarrier,
+    r: RequestWithSessionData[_]
+  ): EitherT[Future, Error, PasscodeRequestResult]
 
   def verifyPasscode(passcode: Passcode, userSelectedEmail: UserSelectedEmail)(implicit
     hc: HeaderCarrier,
@@ -57,14 +60,16 @@ class EmailVerificationServiceImpl @Inject() (
   ec: ExecutionContext
 ) extends EmailVerificationService {
 
-  val serviceName        = "hec"
   val BAD_EMAIL_REQUEST  = "BAD_EMAIL_REQUEST"
   val PASSCODE_NOT_FOUND = "PASSCODE_NOT_FOUND"
   val PASSCODE_MISMATCH  = "PASSCODE_MISMATCH"
 
   override def requestPasscode(
     userSelectedEmail: UserSelectedEmail
-  )(implicit hc: HeaderCarrier, r: RequestWithSessionData[_]): EitherT[Future, Error, PasscodeRequestResult] = {
+  )(implicit
+    hc: HeaderCarrier,
+    r: RequestWithSessionData[_]
+  ): EitherT[Future, Error, PasscodeRequestResult] = {
     def auditEvent(result: Option[PasscodeRequestResult]): SubmitEmailAddressVerificationRequest =
       SubmitEmailAddressVerificationRequest(
         r.sessionData.loginData.ggCredId,
@@ -73,6 +78,8 @@ class EmailVerificationServiceImpl @Inject() (
         userSelectedEmail.emailType,
         result
       )
+
+    val serviceName = r.request.request.messages("emailVerification.passcodeEmail.serviceName")
 
     val result: EitherT[Future, Error, HttpResponse] = for {
       lang   <- EitherT.fromEither[Future](Language.fromRequest(r.request)).leftMap(Error(_))
