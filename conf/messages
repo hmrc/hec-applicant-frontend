@@ -201,7 +201,7 @@ checkYourAnswers.ctIncomeDeclared.screenReaderText = if you included all income 
 taxCheckComplete.title = Tax Check Complete
 taxCheckComplete.subtitle = Your tax check code
 taxCheckComplete.p1 = Your tax check code is valid for 120 days.
-taxCheckComplete.p2 = The last day it can be used in your licence application is <strong>{0}</strong>.
+taxCheckComplete.p2 = The last day it can be used in your <strong>{0}</strong> licence application is <strong>{1}</strong>.
 taxCheckComplete.p3 = You can also:
 taxCheckComplete.list1 = <a class="govuk-link" href="#print-dialogue">print or save this page as a PDF</a>
 taxCheckComplete.list2 = <a class="govuk-link" href="{0}">get your tax check code sent to an email address</a>

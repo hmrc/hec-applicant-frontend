@@ -22,6 +22,8 @@ import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
+import uk.gov.hmrc.hecapplicantfrontend.models.CompanyUserAnswers.CompleteCompanyUserAnswers
+import uk.gov.hmrc.hecapplicantfrontend.models.IndividualUserAnswers.CompleteIndividualUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -45,8 +47,16 @@ class TaxCheckCompleteController @Inject() (
     * Fetches tax check data (code & expiry date) for authenticated user
     */
   val taxCheckComplete: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
+    val licenceType = request.sessionData.userAnswers.foldByCompleteness(
+      _ => sys.error("Could not find complete answers"),
+      {
+        case ci: CompleteIndividualUserAnswers => ci.licenceType
+        case cc: CompleteCompanyUserAnswers    => cc.licenceType
+      }
+    )
+
     request.sessionData.completedTaxCheck match {
-      case Some(taxCheck) => Ok(taxCheckCompletePage(taxCheck))
+      case Some(taxCheck) => Ok(taxCheckCompletePage(taxCheck, licenceType))
       case None           =>
         sys.error("Tax check code not found")
     }
