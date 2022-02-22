@@ -411,4 +411,5 @@ cannotSendVerificationPasscode.title = Email cannot be sent
 cannotSendVerificationPasscode.p1 = We cannot send an email to the address you provided.
 cannotSendVerificationPasscode.p2 = You can <a href="{0}" class="govuk-link">go back and enter a new email address</a>, or you can <a href="{1}" class="govuk-link">see all your tax check codes</a>.
 
-
+#Email verification passcode email
+emailVerification.passcodeEmail.serviceName = HMRC tax check service

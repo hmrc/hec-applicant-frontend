@@ -24,6 +24,7 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
 import play.api.http.Status.{BAD_GATEWAY, FORBIDDEN}
+import play.api.i18n.Lang
 import play.api.libs.json.Json
 import play.api.mvc.{AnyContentAsEmpty, Cookie, MessagesRequest}
 import play.api.test.FakeRequest
@@ -101,12 +102,16 @@ class EmailVerificationServiceSpec
   implicit val authenticatedRequest = AuthenticatedRequest(new MessagesRequest(FakeRequest(), messagesApi))
   implicit val requestWithSession   = RequestWithSessionData(authenticatedRequest, session)
 
+  val serviceNameMessageKey = "emailVerification.passcodeEmail.serviceName"
+  val serviceNameEnglish    = messages.messagesApi(serviceNameMessageKey)(Lang("en"))
+  val serviceNameWelsh      = messages.messagesApi(serviceNameMessageKey)(Lang("cy"))
+
   "EmailVerificationServiceSpec" when {
     val userSelectedEmail = UserSelectedEmail(EmailType.GGEmail, EmailAddress("user@test.com"))
 
     "handling request to requestPasscode" must {
 
-      val passcodeRequest    = PasscodeRequest(userSelectedEmail.emailAddress, "hec", Language.English)
+      val passcodeRequest    = PasscodeRequest(userSelectedEmail.emailAddress, serviceNameEnglish, Language.English)
       val expectedAuditEvent = SubmitEmailAddressVerificationRequest(
         requestWithSession.sessionData.loginData.ggCredId,
         taxCheckCode,
@@ -159,7 +164,8 @@ class EmailVerificationServiceSpec
           )
           implicit val requestWithSession: RequestWithSessionData[AnyContentAsEmpty.type] =
             RequestWithSessionData(authenticatedRequest, session)
-          val passcodeRequest                                                             = PasscodeRequest(userSelectedEmail.emailAddress, "hec", Language.Welsh)
+          val passcodeRequest                                                             =
+            PasscodeRequest(userSelectedEmail.emailAddress, serviceNameWelsh, Language.Welsh)
 
           inSequence {
             mockRequestPasscode(passcodeRequest)(Right(HttpResponse(OK, "", emptyHeaders)))
@@ -186,7 +192,8 @@ class EmailVerificationServiceSpec
           )
           implicit val requestWithSession: RequestWithSessionData[AnyContentAsEmpty.type] =
             RequestWithSessionData(authenticatedRequest, session)
-          val passcodeRequest                                                             = PasscodeRequest(userSelectedEmail.emailAddress, "hec", Language.Welsh)
+          val passcodeRequest                                                             =
+            PasscodeRequest(userSelectedEmail.emailAddress, serviceNameWelsh, Language.Welsh)
 
           inSequence {
             mockRequestPasscode(passcodeRequest)(Right(HttpResponse(BAD_GATEWAY, "", emptyHeaders)))
@@ -202,7 +209,7 @@ class EmailVerificationServiceSpec
 
         "http response came back with status 403 (Forbidden)" in {
           val userSelectedEmail  = UserSelectedEmail(EmailType.GGEmail, EmailAddress("max_emails_exceeded@email.com"))
-          val passcodeRequest    = PasscodeRequest(userSelectedEmail.emailAddress, "hec", Language.English)
+          val passcodeRequest    = PasscodeRequest(userSelectedEmail.emailAddress, serviceNameEnglish, Language.English)
           val errorResponse      = ErrorResponse("MAX_EMAILS_EXCEEDED", "Too many emails or email addresses")
           val expectedAuditEvent = SubmitEmailAddressVerificationRequest(
             requestWithSession.sessionData.loginData.ggCredId,
@@ -230,7 +237,7 @@ class EmailVerificationServiceSpec
           implicit val requestWithSession: RequestWithSessionData[AnyContentAsEmpty.type] =
             RequestWithSessionData(authenticatedRequest, session)
           val userSelectedEmail                                                           = UserSelectedEmail(EmailType.GGEmail, EmailAddress("email_verified_already@email.com"))
-          val passcodeRequest                                                             = PasscodeRequest(userSelectedEmail.emailAddress, "hec", Language.Welsh)
+          val passcodeRequest                                                             = PasscodeRequest(userSelectedEmail.emailAddress, serviceNameWelsh, Language.Welsh)
           val errorResponse                                                               = ErrorResponse("EMAIL_VERIFIED_ALREADY", "Email has already been verified")
           val expectedAuditEvent                                                          = SubmitEmailAddressVerificationRequest(
             requestWithSession.sessionData.loginData.ggCredId,
@@ -253,7 +260,7 @@ class EmailVerificationServiceSpec
 
         "http response came back with status Bad request (400) and error response code is BAD_EMAIL_REQUEST" in {
           val userSelectedEmail  = UserSelectedEmail(EmailType.GGEmail, EmailAddress("bad_email_request@email.com"))
-          val passcodeRequest    = PasscodeRequest(userSelectedEmail.emailAddress, "hec", Language.English)
+          val passcodeRequest    = PasscodeRequest(userSelectedEmail.emailAddress, serviceNameEnglish, Language.English)
           val errorResponse      =
             ErrorResponse("BAD_EMAIL_REQUEST", "email-verification had a problem, sendEmail returned bad request")
           val expectedAuditEvent = SubmitEmailAddressVerificationRequest(
@@ -302,7 +309,8 @@ class EmailVerificationServiceSpec
           )
           implicit val requestWithSession: RequestWithSessionData[AnyContentAsEmpty.type] =
             RequestWithSessionData(authenticatedRequest, session)
-          val passcodeRequest                                                             = PasscodeRequest(userSelectedEmail.emailAddress, "hec", Language.Welsh)
+          val passcodeRequest                                                             =
+            PasscodeRequest(userSelectedEmail.emailAddress, serviceNameWelsh, Language.Welsh)
 
           inSequence {
             mockRequestPasscode(passcodeRequest)(Right(HttpResponse(CREATED, "")))
