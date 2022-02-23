@@ -32,6 +32,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.{CompanyRetr
 import uk.gov.hmrc.hecapplicantfrontend.models._
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
+import uk.gov.hmrc.hecapplicantfrontend.models.views.LicenceTypeOption
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
 import uk.gov.hmrc.hecapplicantfrontend.utils.Fixtures
@@ -86,12 +87,20 @@ class TaxCheckCompleteControllerSpec
       "display the page" when {
 
         "tax check code has been generated for the user " in {
+          val answers      = Fixtures.completeIndividualUserAnswers(
+            LicenceType.DriverOfTaxisAndPrivateHires,
+            LicenceTimeTrading.ZeroToTwoYears,
+            LicenceValidityPeriod.UpToOneYear,
+            TaxSituation.SA,
+            Some(YesNoAnswer.Yes),
+            Some(EntityType.Individual)
+          )
           val taxCheckCode = "LXB7G6DX7"
           val expiryDate   = LocalDate.of(2020, 1, 8)
           val session      = Fixtures.individualHECSession(
             individualLoginData,
             IndividualRetrievedJourneyData.empty,
-            IndividualUserAnswers.empty.copy(licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)),
+            answers,
             Some(HECTaxCheck(HECTaxCheckCode(taxCheckCode), expiryDate, ZonedDateTime.now()))
           )
 
@@ -116,6 +125,9 @@ class TaxCheckCompleteControllerSpec
               )
               doc.select(".govuk-body").html should include regex messageFromMessageKey(
                 "taxCheckComplete.p2",
+                messageFromMessageKey(
+                  s"licenceType.${LicenceTypeOption.licenceTypeOption(answers.licenceType).messageKey}"
+                ),
                 "8 January 2020"
               )
 
@@ -279,12 +291,20 @@ class TaxCheckCompleteEmailDisabledControllerSpec
       "display the page" when {
 
         "tax check code has been generated for the user " in {
+          val answers      = Fixtures.completeIndividualUserAnswers(
+            LicenceType.DriverOfTaxisAndPrivateHires,
+            LicenceTimeTrading.ZeroToTwoYears,
+            LicenceValidityPeriod.UpToOneYear,
+            TaxSituation.SA,
+            Some(YesNoAnswer.Yes),
+            Some(EntityType.Individual)
+          )
           val taxCheckCode = "LXB7G6DX7"
           val expiryDate   = LocalDate.of(2020, 1, 8)
           val session      = Fixtures.individualHECSession(
             individualLoginData,
             IndividualRetrievedJourneyData.empty,
-            IndividualUserAnswers.empty.copy(licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)),
+            answers,
             Some(HECTaxCheck(HECTaxCheckCode(taxCheckCode), expiryDate, ZonedDateTime.now()))
           )
 
@@ -309,6 +329,9 @@ class TaxCheckCompleteEmailDisabledControllerSpec
               )
               doc.select(".govuk-body").html should include regex messageFromMessageKey(
                 "taxCheckComplete.p2",
+                messageFromMessageKey(
+                  s"licenceType.${LicenceTypeOption.licenceTypeOption(answers.licenceType).messageKey}"
+                ),
                 "8 January 2020"
               )
 

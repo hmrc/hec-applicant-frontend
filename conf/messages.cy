@@ -150,7 +150,7 @@ checkYourAnswers.ctIncomeDeclared.screenReaderText=os gwnaethoch gynnwys yr holl
 taxCheckComplete.title=Gwiriad Treth wedi’i gwblhau
 taxCheckComplete.subtitle=Eich cod gwirio treth
 taxCheckComplete.p1=Mae eich cod gwirio treth yn ddilys am 120 diwrnod.
-taxCheckComplete.p2=Y diwrnod olaf y gellir ei ddefnyddio yn eich cais am drwydded yw <strong>{0}</strong>.
+taxCheckComplete.p2=Y diwrnod olaf y gellir ei ddefnyddio yn eich cais am drwydded yw <strong>{1}</strong>.
 taxCheckComplete.p3=Gallwch hefyd wneud y canlynol:
 taxCheckComplete.list1=<a class="govuk-link" href="#print-dialogue">argraffu neu gadw’r dudalen hon fel PDF</a>
 taxCheckComplete.list2=<a class="govuk-link" href="{0}">trefnu bod eich cod gwirio treth yn cael ei anfon i gyfeiriad e-bost</a>
