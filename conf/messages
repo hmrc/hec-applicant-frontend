@@ -356,6 +356,7 @@ verifyPasscode.label = Email confirmation code:
 verifyPasscode.hint = For example, DNCLRK
 passcode.error.required = Enter your email confirmation code
 passcode.error.noMatch = This confirmation code does not match the one emailed to you
+passcode.error.format = Enter the email confirmation code you have been sent
 verifyPasscode.summaryLink = I have not received the email
 verifyPasscode.h2 = New confirmation code sent
 verifyPasscode.label2 = Email confirmation code:
