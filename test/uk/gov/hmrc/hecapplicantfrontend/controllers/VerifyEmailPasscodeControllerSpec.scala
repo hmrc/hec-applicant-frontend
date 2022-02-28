@@ -214,8 +214,7 @@ class VerifyEmailPasscodeControllerSpec
 
       "show a form error" when {
 
-        "nothing is entered" in {
-
+        def testFormError(formData: (String, String)*)(expectedErrorMessageKey: String) = {
           val session = Fixtures.individualHECSession(
             loginData = Fixtures.individualLoginData(emailAddress = ggEmailId.some),
             userAnswers = Fixtures.completeIndividualUserAnswers(),
@@ -232,11 +231,26 @@ class VerifyEmailPasscodeControllerSpec
             )
           }
           checkFormErrorIsDisplayed(
-            performAction(),
+            performAction(formData: _*),
             messageFromMessageKey("verifyPasscode.title"),
-            messageFromMessageKey("passcode.error.required")
+            messageFromMessageKey(expectedErrorMessageKey)
           )
+        }
 
+        "nothing is entered" in {
+          testFormError()("passcode.error.required")
+        }
+
+        "the submitted code is not exactly 6 characters in length" in {
+          testFormError("passcode" -> "HHHHH")("passcode.error.format")
+        }
+
+        "the submitted code is 6 characters long but contains vowels" in {
+          List("A", "e", "i", "O", "u").foreach { vowel =>
+            withClue(s"For vowel '$vowel': ") {
+              testFormError("passcode" -> s"HHHHH$vowel")("passcode.error.format")
+            }
+          }
         }
 
         "No match passcode is entered" in {
@@ -402,7 +416,7 @@ class VerifyEmailPasscodeControllerSpec
                 existingUserEmailAnswers,
                 updatedUserEmailAnswers,
                 passcodeVerificationResult,
-                List("passcode" -> validPasscode.value)
+                List("passcode" -> " hh h H  h h ")
               )
             }
 

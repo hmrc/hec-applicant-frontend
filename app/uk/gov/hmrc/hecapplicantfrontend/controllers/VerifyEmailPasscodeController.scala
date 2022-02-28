@@ -33,6 +33,7 @@ import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.{EmailVerificationService, JourneyService}
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
+import uk.gov.hmrc.hecapplicantfrontend.util.StringUtils._
 import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -133,10 +134,13 @@ class VerifyEmailPasscodeController @Inject() (
 
 object VerifyEmailPasscodeController {
 
+  private val upperCaseVowels: List[Char] = List('A', 'E', 'I', 'O', 'U')
+
   def verifyPasscodeForm(): Form[Passcode] = Form(
     mapping(
       "passcode" -> nonEmptyText
-        .transform[Passcode](p => Passcode(p.toUpperCase(Locale.UK)), _.value)
+        .transform[Passcode](p => Passcode(p.removeWhitespace.toUpperCase(Locale.UK)), _.value)
+        .verifying("error.format", p => p.value.length === 6 && !p.value.exists(upperCaseVowels.contains(_)))
     )(identity)(Some(_))
   )
 
