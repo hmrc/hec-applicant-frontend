@@ -92,6 +92,7 @@ class VerifyResentEmailPasscodeController @Inject() (
                 Ok(
                   verifyResentPasscodePage(
                     verifyPasscodeForm()
+                      .bindFromRequest()
                       .withError("passcode", "error.noMatch"),
                     journeyService.previous(currentCall),
                     userSelectedEmail.emailAddress,

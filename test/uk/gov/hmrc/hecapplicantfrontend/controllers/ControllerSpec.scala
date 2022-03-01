@@ -69,7 +69,8 @@ trait ControllerSpec extends PlaySupport {
     result: Future[Result],
     expectedTitle: String,
     formError: String,
-    expectedStatus: Int = OK
+    expectedStatus: Int = OK,
+    additionalChecks: Document => Unit = _ => ()
   ): Unit =
     checkPageIsDisplayed(
       result,
@@ -80,6 +81,7 @@ trait ControllerSpec extends PlaySupport {
 
         val inputErrorMessage = doc.select(".govuk-error-message")
         inputErrorMessage.text() shouldBe s"${messageFromMessageKey("generic.errorPrefix")}: $formError"
+        additionalChecks(doc)
       },
       expectedStatus
     )
