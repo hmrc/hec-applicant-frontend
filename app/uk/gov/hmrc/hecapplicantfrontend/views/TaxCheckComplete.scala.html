@@ -38,7 +38,7 @@
     ))
 
     <p class="govuk-body">@messages(s"$key.p1")</p>
-    <p class="govuk-body">@Html(messages(s"$key.p2", messages(s"licenceType.${LicenceTypeOption.licenceTypeOption(licenceType).messageKey}"), TimeUtils.govDisplayFormat(hecTaxCheck.expiresAfter)))</p>
+    <p class="govuk-body">@Html(messages(s"$key.p2", messages(s"licenceType.midSentence.${LicenceTypeOption.licenceTypeOption(licenceType).messageKey}"), TimeUtils.govDisplayFormat(hecTaxCheck.expiresAfter)))</p>
 
     <div class="govuk-!-display-none-print">
       <div class="govuk-!-margin-top-2">

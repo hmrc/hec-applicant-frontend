@@ -102,6 +102,10 @@ licenceType.scrapMetalDealer = Scrap metal dealer site
 licenceType.link = Find out what to do if you cannot see your licence type
 licenceType.error.required = Select the type of licence you are applying for
 licenceType.error.invalid = Select the type of licence you are applying for
+licenceType.midSentence.driverOfTaxis = driver of taxis and private hires
+licenceType.midSentence.operatorOfPrivateHireVehicles = operator of private hire vehicles
+licenceType.midSentence.scrapMetalCollector = scrap metal mobile collector
+licenceType.midSentence.scrapMetalDealer = scrap metal dealer site
 
 # Licence type exit
 licenceTypeExit.title = You may not need to do a tax check

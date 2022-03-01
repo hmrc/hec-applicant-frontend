@@ -126,7 +126,7 @@ class TaxCheckCompleteControllerSpec
               doc.select(".govuk-body").html should include regex messageFromMessageKey(
                 "taxCheckComplete.p2",
                 messageFromMessageKey(
-                  s"licenceType.${LicenceTypeOption.licenceTypeOption(answers.licenceType).messageKey}"
+                  s"licenceType.midSentence.${LicenceTypeOption.licenceTypeOption(answers.licenceType).messageKey}"
                 ),
                 "8 January 2020"
               )
@@ -330,7 +330,7 @@ class TaxCheckCompleteEmailDisabledControllerSpec
               doc.select(".govuk-body").html should include regex messageFromMessageKey(
                 "taxCheckComplete.p2",
                 messageFromMessageKey(
-                  s"licenceType.${LicenceTypeOption.licenceTypeOption(answers.licenceType).messageKey}"
+                  s"licenceType.midSentence.${LicenceTypeOption.licenceTypeOption(answers.licenceType).messageKey}"
                 ),
                 "8 January 2020"
               )
