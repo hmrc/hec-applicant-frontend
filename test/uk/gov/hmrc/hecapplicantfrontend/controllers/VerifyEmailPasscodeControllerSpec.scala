@@ -214,7 +214,7 @@ class VerifyEmailPasscodeControllerSpec
 
       "show a form error" when {
 
-        def testFormError(formData: (String, String)*)(expectedErrorMessageKey: String) = {
+        def testFormError(formData: Option[(String, String)])(expectedErrorMessageKey: String) = {
           val session = Fixtures.individualHECSession(
             loginData = Fixtures.individualLoginData(emailAddress = ggEmailId.some),
             userAnswers = Fixtures.completeIndividualUserAnswers(),
@@ -231,24 +231,27 @@ class VerifyEmailPasscodeControllerSpec
             )
           }
           checkFormErrorIsDisplayed(
-            performAction(formData: _*),
+            performAction(formData.toList: _*),
             messageFromMessageKey("verifyPasscode.title"),
-            messageFromMessageKey(expectedErrorMessageKey)
+            messageFromMessageKey(expectedErrorMessageKey),
+            additionalChecks = { doc =>
+              doc.select("#passcode").attr("value") shouldBe formData.map(_._2).getOrElse("")
+            }
           )
         }
 
         "nothing is entered" in {
-          testFormError()("passcode.error.required")
+          testFormError(None)("passcode.error.required")
         }
 
         "the submitted code is not exactly 6 characters in length" in {
-          testFormError("passcode" -> "HHHHH")("passcode.error.format")
+          testFormError(Some("passcode" -> "HHHHH"))("passcode.error.format")
         }
 
         "the submitted code is 6 characters long but contains vowels" in {
           List("A", "e", "i", "O", "u").foreach { vowel =>
             withClue(s"For vowel '$vowel': ") {
-              testFormError("passcode" -> s"HHHHH$vowel")("passcode.error.format")
+              testFormError(Some("passcode" -> s"HHHHH$vowel"))("passcode.error.format")
             }
           }
         }
@@ -279,9 +282,12 @@ class VerifyEmailPasscodeControllerSpec
           }
 
           checkFormErrorIsDisplayed(
-            performAction("passcode" -> "FFFFFF"),
+            performAction("passcode" -> "FF FFF F"),
             messageFromMessageKey("verifyPasscode.title"),
-            messageFromMessageKey("passcode.error.noMatch")
+            messageFromMessageKey("passcode.error.noMatch"),
+            additionalChecks = { doc =>
+              doc.select("#passcode").attr("value") shouldBe "FF FFF F"
+            }
           )
         }
 
