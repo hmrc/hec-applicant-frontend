@@ -275,7 +275,7 @@ emailAddressConfirmed.title=Cyfeiriad e-bost wedi’i gadarnhau
 emailAddressConfirmed.p1=Mae’ch cyfeiriad e-bost wedi’i gadarnhau. Caiff eich cod gwirio treth ei anfon i {0}
 emailSent.title=Mae’ch cod gwirio treth wedi’i e-bostio atoch
 emailSent.p1=Rydym wedi anfon eich cod gwirio treth i <b>{0}</b>
-emailSent.p2=Nodwch eich cod gwirio treth yn eich cais am drwydded. Gwnewch yn siŵr eich bod yn gadael digon o amser i’ch cais gael ei brosesu cyn i’ch cod gwirio treth ddod i ben.
+emailSent.p2=Y diwrnod olaf y gellir ei ddefnyddio yn eich cais am drwydded yw <strong>{1}</strong>.
 emailSent.p3=<a href="{0}" class="govuk-link">Gweld fy nghodau gwirio treth</a>
 enterEmailAddress.title=Pa gyfeiriad e-bost yr hoffech ei ddefnyddio?
 enterEmailAddress.error.required=Nodwch gyfeiriad e-bost

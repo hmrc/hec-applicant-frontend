@@ -22,11 +22,14 @@ import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, HECSession}
+import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, EntityType, HECSession, HECTaxCheck, HECTaxCheckCode, TaxSituation, YesNoAnswer}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{Passcode, PasscodeRequestResult, PasscodeVerificationResult}
+import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
+import uk.gov.hmrc.hecapplicantfrontend.models.views.LicenceTypeOption
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.utils.Fixtures
 
+import java.time.{LocalDate, ZonedDateTime}
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -74,11 +77,22 @@ class EmailSentControllerSpec
       }
 
       "display the page" in {
-        val session: HECSession = Fixtures.companyHECSession(
-          loginData = Fixtures.companyLoginData(emailAddress = ggEmailId.some),
-          userAnswers = Fixtures.completeCompanyUserAnswers(),
+        val answers             = Fixtures.completeIndividualUserAnswers(
+          LicenceType.DriverOfTaxisAndPrivateHires,
+          LicenceTimeTrading.ZeroToTwoYears,
+          LicenceValidityPeriod.UpToOneYear,
+          TaxSituation.SA,
+          Some(YesNoAnswer.Yes),
+          Some(EntityType.Individual)
+        )
+        val taxCheckCode        = "LXB7G6DX7"
+        val expiryDate          = LocalDate.of(2020, 1, 8)
+        val session: HECSession = Fixtures.individualHECSession(
+          loginData = Fixtures.individualLoginData(emailAddress = ggEmailId.some),
+          userAnswers = answers,
           isEmailRequested = true,
-          userEmailAnswers = userEmailAnswer.some
+          userEmailAnswers = userEmailAnswer.some,
+          completedTaxCheck = Some(HECTaxCheck(HECTaxCheckCode(taxCheckCode), expiryDate, ZonedDateTime.now()))
         )
 
         inSequence {
@@ -91,6 +105,13 @@ class EmailSentControllerSpec
           messageFromMessageKey("emailSent.title"),
           { doc =>
             doc.select(".govuk-inset-text").text() should include regex "user@test.com"
+            doc.select(".govuk-body").html         should include regex messageFromMessageKey(
+              "emailSent.p2",
+              messageFromMessageKey(
+                s"licenceType.midSentence.${LicenceTypeOption.licenceTypeOption(answers.licenceType).messageKey}"
+              ),
+              "8 January 2020"
+            )
             doc.select(".govuk-body").html()       should include regex messageFromMessageKey(
               "emailSent.p3",
               routes.StartController.start().url
