@@ -15,6 +15,7 @@
  *@
 
 @import play.api.i18n.Messages
+@import play.twirl.api.Html
 @import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 @import uk.gov.hmrc.hecapplicantfrontend.models.TaxCheckListItem
 @import uk.gov.hmrc.hecapplicantfrontend.models.views.LicenceTypeOption
@@ -58,10 +59,10 @@
         </dd>
         <dd class="govuk-summary-list__actions align-middle email-column mob-pb-15 ">
           <a class="govuk-link desktop-email-link" href="@{routes.TaxChecksListController.sendEmail(code.taxCheckCode).url}">
-            Send <span class="govuk-visually-hidden">@{messages("taxChecksList.copyButtonScreenReaderText", licenceType, code.taxCheckCode.value)}</span> by email
+            @Html(messages("taxCheck.emailLink", messages("taxChecksList.copyButtonScreenReaderText", licenceType, code.taxCheckCode.value)))
           </a>
           <a class="mobile-email-link govuk-button govuk-button--secondary" role="button" data-module="govuk-button" href="@{routes.TaxChecksListController.sendEmail(code.taxCheckCode).url}">
-            Send by email
+            @Html(messages("taxCheck.emailLink", messages("taxChecksList.copyButtonScreenReaderText", licenceType, code.taxCheckCode.value)))
           </a>
         </dd>
       </div>
