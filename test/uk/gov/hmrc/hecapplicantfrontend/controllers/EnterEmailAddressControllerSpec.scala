@@ -69,7 +69,10 @@ class EnterEmailAddressControllerSpec
       "throw technical error " when {
 
         "call to update session fails" in {
-          val session = Fixtures.individualHECSession(isEmailRequested = true, hasResentEmailConfirmation = true)
+          val session = Fixtures.individualHECSession(
+            emailRequestedForTaxCheck = Fixtures.emailRequestedForTaxCheck().some,
+            hasResentEmailConfirmation = true
+          )
 
           inSequence {
             mockAuthWithNoRetrievals()
@@ -82,8 +85,7 @@ class EnterEmailAddressControllerSpec
         "an email has not been requested" in {
           val session = Fixtures.individualHECSession(
             loginData = Fixtures.individualLoginData(),
-            userAnswers = Fixtures.completeIndividualUserAnswers(),
-            isEmailRequested = false
+            emailRequestedForTaxCheck = Fixtures.emailRequestedForTaxCheck().some
           )
 
           inSequence {
@@ -100,8 +102,7 @@ class EnterEmailAddressControllerSpec
         def test(userEmailAnswers: Option[UserEmailAnswers]) = {
           val session = Fixtures.companyHECSession(
             loginData = Fixtures.companyLoginData(),
-            userAnswers = Fixtures.completeCompanyUserAnswers(),
-            isEmailRequested = true,
+            emailRequestedForTaxCheck = Fixtures.emailRequestedForTaxCheck().some,
             userEmailAnswers = userEmailAnswers
           )
 
@@ -151,8 +152,7 @@ class EnterEmailAddressControllerSpec
 
       val session = Fixtures.companyHECSession(
         loginData = Fixtures.companyLoginData(),
-        userAnswers = Fixtures.completeCompanyUserAnswers(),
-        isEmailRequested = true
+        emailRequestedForTaxCheck = Fixtures.emailRequestedForTaxCheck().some
       )
 
       behave like authAndSessionDataBehaviour(() => performAction())
@@ -197,8 +197,7 @@ class EnterEmailAddressControllerSpec
         "an email has not been requested" in {
           val session = Fixtures.individualHECSession(
             loginData = Fixtures.individualLoginData(),
-            userAnswers = Fixtures.completeIndividualUserAnswers(),
-            isEmailRequested = false
+            emailRequestedForTaxCheck = None
           )
 
           inSequence {
@@ -211,8 +210,7 @@ class EnterEmailAddressControllerSpec
         "Call to request passcode fails" in {
           val session = Fixtures.companyHECSession(
             loginData = Fixtures.companyLoginData(),
-            userAnswers = Fixtures.completeCompanyUserAnswers(),
-            isEmailRequested = true
+            emailRequestedForTaxCheck = Fixtures.emailRequestedForTaxCheck().some
           )
 
           inSequence {
@@ -226,8 +224,7 @@ class EnterEmailAddressControllerSpec
         "Call to update and Next fails" in {
           val session = Fixtures.companyHECSession(
             loginData = Fixtures.companyLoginData(),
-            userAnswers = Fixtures.completeCompanyUserAnswers(),
-            isEmailRequested = true
+            emailRequestedForTaxCheck = Fixtures.emailRequestedForTaxCheck().some
           )
 
           val updatedSession =
@@ -261,8 +258,7 @@ class EnterEmailAddressControllerSpec
         ) = {
           val session = Fixtures.companyHECSession(
             loginData = Fixtures.companyLoginData(),
-            userAnswers = Fixtures.completeCompanyUserAnswers(),
-            isEmailRequested = true,
+            emailRequestedForTaxCheck = Fixtures.emailRequestedForTaxCheck().some,
             userEmailAnswers = existingUserEmailAnswers
           )
 

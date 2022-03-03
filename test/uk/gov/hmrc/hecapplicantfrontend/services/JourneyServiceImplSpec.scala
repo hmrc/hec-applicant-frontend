@@ -1539,7 +1539,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               ),
               Some(HECTaxCheck(HECTaxCheckCode("code"), LocalDate.now.plusDays(1), ZonedDateTime.now())),
               Some(taxCheckStartDateTime),
-              isEmailRequested = true
+              emailRequestedForTaxCheck = Some(Fixtures.emailRequestedForTaxCheck())
             )
             implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
 
@@ -1557,7 +1557,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               CompanyRetrievedJourneyData.empty,
               Fixtures.completeCompanyUserAnswers(recentlyStartedTrading = YesNoAnswer.Yes.some),
               taxCheckStartDateTime = Some(taxCheckStartDateTime),
-              isEmailRequested = true
+              emailRequestedForTaxCheck = Some(Fixtures.emailRequestedForTaxCheck())
             )
             implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
 
@@ -1626,7 +1626,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               ),
               Some(HECTaxCheck(HECTaxCheckCode("code"), LocalDate.now.plusDays(1), ZonedDateTime.now)),
               Some(taxCheckStartDateTime),
-              isEmailRequested = true,
+              emailRequestedForTaxCheck = Some(Fixtures.emailRequestedForTaxCheck()),
               userEmailAnswers = userEmailAnswers.some
             )
             implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
@@ -1711,7 +1711,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               ),
               Some(HECTaxCheck(HECTaxCheckCode("code"), LocalDate.now.plusDays(1), ZonedDateTime.now)),
               Some(taxCheckStartDateTime),
-              isEmailRequested = true,
+              emailRequestedForTaxCheck = Some(Fixtures.emailRequestedForTaxCheck()),
               userEmailAnswers = Fixtures
                 .userEmailAnswers(
                   passcodeRequestResult = PasscodeSent.some,
@@ -1755,7 +1755,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             val session                                     = Fixtures.companyHECSession(
               loginData = Fixtures.companyLoginData(emailAddress = ggEmailId.some),
               userAnswers = Fixtures.completeCompanyUserAnswers(),
-              isEmailRequested = true,
+              emailRequestedForTaxCheck = Some(Fixtures.emailRequestedForTaxCheck()),
               userEmailAnswers = Fixtures
                 .userEmailAnswers(
                   passcodeRequestResult = PasscodeRequestResult.PasscodeSent.some,
@@ -1800,7 +1800,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               ),
               Some(HECTaxCheck(HECTaxCheckCode("code"), LocalDate.now.plusDays(1), ZonedDateTime.now)),
               Some(taxCheckStartDateTime),
-              isEmailRequested = true,
+              emailRequestedForTaxCheck = Some(Fixtures.emailRequestedForTaxCheck()),
               userEmailAnswers = userEmailAnswers.some
             )
             implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
@@ -1850,7 +1850,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               ),
               Some(HECTaxCheck(HECTaxCheckCode("code"), LocalDate.now.plusDays(1), ZonedDateTime.now)),
               Some(taxCheckStartDateTime),
-              isEmailRequested = true,
+              emailRequestedForTaxCheck = Some(Fixtures.emailRequestedForTaxCheck()),
               hasResentEmailConfirmation = true,
               userEmailAnswers = userEmailAnswers.some
             )
@@ -1933,7 +1933,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               ),
               Some(HECTaxCheck(HECTaxCheckCode("code"), LocalDate.now.plusDays(1), ZonedDateTime.now)),
               Some(taxCheckStartDateTime),
-              isEmailRequested = true,
+              emailRequestedForTaxCheck = Some(Fixtures.emailRequestedForTaxCheck()),
               hasResentEmailConfirmation = true,
               userEmailAnswers = Fixtures
                 .userEmailAnswers(
@@ -3035,7 +3035,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               Fixtures.completeIndividualUserAnswers(),
               Some(HECTaxCheck(HECTaxCheckCode("code1"), LocalDate.now.plusDays(1), ZonedDateTime.now)),
               taxCheckStartDateTime = taxCheckStartDateTime.some,
-              isEmailRequested = true,
+              emailRequestedForTaxCheck = Fixtures.emailRequestedForTaxCheck().some,
               userEmailAnswers = userEmailAnswers
             )
             implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
@@ -3078,7 +3078,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
           val session                                     = Fixtures.companyHECSession(
             loginData = Fixtures.companyLoginData(emailAddress = ggEmailId.some),
             userAnswers = Fixtures.completeCompanyUserAnswers(),
-            isEmailRequested = true,
+            emailRequestedForTaxCheck = Fixtures.emailRequestedForTaxCheck().some,
             completedTaxCheck = hecTaxCheck.some,
             userEmailAnswers = userEmailAnswer.some
           )
@@ -3116,7 +3116,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               Fixtures.completeIndividualUserAnswers(),
               Some(HECTaxCheck(HECTaxCheckCode("code1"), LocalDate.now.plusDays(1), ZonedDateTime.now)),
               taxCheckStartDateTime = taxCheckStartDateTime.some,
-              isEmailRequested = true,
+              emailRequestedForTaxCheck = Fixtures.emailRequestedForTaxCheck().some,
               userEmailAnswers = userEmailAnswers,
               hasResentEmailConfirmation = isResendFlag
             )
@@ -3182,7 +3182,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               ),
               Some(HECTaxCheck(HECTaxCheckCode("code"), LocalDate.now.plusDays(1), ZonedDateTime.now)),
               Some(taxCheckStartDateTime),
-              isEmailRequested = true,
+              emailRequestedForTaxCheck = Fixtures.emailRequestedForTaxCheck().some,
               userEmailAnswers = Fixtures
                 .userEmailAnswers(
                   passcodeRequestResult = PasscodeRequestResult.PasscodeSent.some,
@@ -3241,7 +3241,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             ),
             Some(HECTaxCheck(HECTaxCheckCode("code"), LocalDate.now.plusDays(1), ZonedDateTime.now)),
             Some(taxCheckStartDateTime),
-            isEmailRequested = true,
+            emailRequestedForTaxCheck = Fixtures.emailRequestedForTaxCheck().some,
             hasResentEmailConfirmation = true,
             userEmailAnswers = Fixtures.userEmailAnswers(passcodeRequestResult = PasscodeSent.some).some
           )
@@ -3268,7 +3268,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             ),
             Some(HECTaxCheck(HECTaxCheckCode("code"), LocalDate.now.plusDays(1), ZonedDateTime.now())),
             Some(taxCheckStartDateTime),
-            isEmailRequested = true,
+            emailRequestedForTaxCheck = Fixtures.emailRequestedForTaxCheck().some,
             userEmailAnswers = Fixtures.userEmailAnswers(EmailType.GGEmail, ggEmailId, passcodeRequestResult.some).some
           )
 
@@ -3296,7 +3296,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             ),
             Some(HECTaxCheck(HECTaxCheckCode("code"), LocalDate.now.plusDays(1), ZonedDateTime.now)),
             Some(taxCheckStartDateTime),
-            isEmailRequested = true,
+            emailRequestedForTaxCheck = Fixtures.emailRequestedForTaxCheck().some,
             hasResentEmailConfirmation = resendFlag,
             userEmailAnswers = Fixtures
               .userEmailAnswers(
@@ -3407,7 +3407,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               ),
               Some(HECTaxCheck(HECTaxCheckCode("code"), LocalDate.now.plusDays(1), ZonedDateTime.now)),
               Some(taxCheckStartDateTime),
-              isEmailRequested = true,
+              emailRequestedForTaxCheck = Fixtures.emailRequestedForTaxCheck().some,
               hasResentEmailConfirmation = hasResentEmailConfirmation,
               userEmailAnswers = Fixtures
                 .userEmailAnswers(passcodeRequestResult = PasscodeRequestResult.MaximumNumberOfEmailsExceeded.some)
@@ -3462,7 +3462,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               ),
               Some(HECTaxCheck(HECTaxCheckCode("code"), LocalDate.now.plusDays(1), ZonedDateTime.now)),
               Some(taxCheckStartDateTime),
-              isEmailRequested = true,
+              emailRequestedForTaxCheck = Fixtures.emailRequestedForTaxCheck().some,
               userEmailAnswers = Fixtures
                 .userEmailAnswers(passcodeRequestResult = PasscodeRequestResult.BadEmailAddress.some)
                 .some

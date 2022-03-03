@@ -52,7 +52,7 @@ class ConfirmEmailAddressController @Inject() (
     with Logging {
 
   val confirmEmailAddress: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
-    request.sessionData.ensureEmailHasBeenRequested {
+    request.sessionData.ensureEmailHasBeenRequested { _ =>
       request.sessionData.ensureGGEmailIdPresent { ggEmail =>
         //updating the session to false here and enter email address page, cause this is the main email journey but sometime this page has to reach via the resend journey
         //This hasResentEmailConfirmation flag can't be set to false in previous page because it's verify resend confirmation email
@@ -88,7 +88,7 @@ class ConfirmEmailAddressController @Inject() (
   }
 
   val confirmEmailAddressSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
-    request.sessionData.ensureEmailHasBeenRequested {
+    request.sessionData.ensureEmailHasBeenRequested { _ =>
       request.sessionData.ensureGGEmailIdPresent { ggEmail =>
         def handleValidEmail(userSelectedEmail: UserSelectedEmail): Future[Result] = {
           val result = for {

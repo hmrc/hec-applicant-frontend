@@ -72,8 +72,7 @@ class ConfirmEmailAddressControllerSpec
         "an email has not been requested" in {
           val session = Fixtures.individualHECSession(
             loginData = Fixtures.individualLoginData(emailAddress = EmailAddress("user@test.com").some),
-            userAnswers = Fixtures.completeIndividualUserAnswers(),
-            isEmailRequested = false
+            emailRequestedForTaxCheck = None
           )
 
           inSequence {
@@ -85,8 +84,7 @@ class ConfirmEmailAddressControllerSpec
 
         "GG account email id is not in session" in {
           val session = Fixtures.individualHECSession(
-            userAnswers = Fixtures.completeIndividualUserAnswers(),
-            isEmailRequested = true
+            emailRequestedForTaxCheck = Fixtures.emailRequestedForTaxCheck().some
           )
 
           inSequence {
@@ -99,8 +97,7 @@ class ConfirmEmailAddressControllerSpec
         "session failed tp get updated" in {
           val session = Fixtures.individualHECSession(
             loginData = Fixtures.individualLoginData(emailAddress = EmailAddress("user@test.com").some),
-            userAnswers = Fixtures.completeIndividualUserAnswers(),
-            isEmailRequested = true,
+            emailRequestedForTaxCheck = Fixtures.emailRequestedForTaxCheck().some,
             hasResentEmailConfirmation = true
           )
 
@@ -118,8 +115,7 @@ class ConfirmEmailAddressControllerSpec
         def test(userEmailAnswers: Option[UserEmailAnswers], selected: Option[String]) = {
           val session = Fixtures.companyHECSession(
             loginData = Fixtures.companyLoginData(emailAddress = EmailAddress("user@test.com").some),
-            userAnswers = Fixtures.completeCompanyUserAnswers(),
-            isEmailRequested = true,
+            emailRequestedForTaxCheck = Fixtures.emailRequestedForTaxCheck().some,
             userEmailAnswers = userEmailAnswers
           )
 
@@ -186,8 +182,7 @@ class ConfirmEmailAddressControllerSpec
 
       val session = Fixtures.companyHECSession(
         loginData = Fixtures.companyLoginData(emailAddress = EmailAddress("user@test.com").some),
-        userAnswers = Fixtures.completeCompanyUserAnswers(),
-        isEmailRequested = true
+        emailRequestedForTaxCheck = Fixtures.emailRequestedForTaxCheck().some
       )
 
       behave like authAndSessionDataBehaviour(() => performAction())
@@ -256,8 +251,7 @@ class ConfirmEmailAddressControllerSpec
         "an email has not been requested" in {
           val session = Fixtures.individualHECSession(
             loginData = Fixtures.individualLoginData(emailAddress = ggEmailId.some),
-            userAnswers = Fixtures.completeIndividualUserAnswers(),
-            isEmailRequested = false
+            emailRequestedForTaxCheck = Fixtures.emailRequestedForTaxCheck().some
           )
 
           inSequence {
@@ -269,8 +263,7 @@ class ConfirmEmailAddressControllerSpec
 
         "no ggEmail is found in the session" in {
           val session = Fixtures.individualHECSession(
-            userAnswers = Fixtures.completeIndividualUserAnswers(),
-            isEmailRequested = true
+            emailRequestedForTaxCheck = Fixtures.emailRequestedForTaxCheck().some
           )
 
           inSequence {
@@ -283,8 +276,7 @@ class ConfirmEmailAddressControllerSpec
         "Call to request passcode fails" in {
           val session = Fixtures.companyHECSession(
             loginData = Fixtures.companyLoginData(emailAddress = ggEmailId.some),
-            userAnswers = Fixtures.completeCompanyUserAnswers(),
-            isEmailRequested = true
+            emailRequestedForTaxCheck = Fixtures.emailRequestedForTaxCheck().some
           )
 
           inSequence {
@@ -298,8 +290,7 @@ class ConfirmEmailAddressControllerSpec
         "Call to update and Next fails" in {
           val session = Fixtures.companyHECSession(
             loginData = Fixtures.companyLoginData(emailAddress = ggEmailId.some),
-            userAnswers = Fixtures.completeCompanyUserAnswers(),
-            isEmailRequested = true
+            emailRequestedForTaxCheck = Fixtures.emailRequestedForTaxCheck().some
           )
 
           val updatedSession =
@@ -333,8 +324,7 @@ class ConfirmEmailAddressControllerSpec
         ) = {
           val session = Fixtures.companyHECSession(
             loginData = Fixtures.companyLoginData(emailAddress = ggEmailId.some),
-            userAnswers = Fixtures.completeCompanyUserAnswers(),
-            isEmailRequested = true,
+            emailRequestedForTaxCheck = Fixtures.emailRequestedForTaxCheck().some,
             userEmailAnswers = existingUserEmailAnswers
           )
 

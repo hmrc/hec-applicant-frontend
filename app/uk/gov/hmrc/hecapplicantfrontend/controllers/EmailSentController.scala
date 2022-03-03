@@ -20,8 +20,6 @@ import com.google.inject.Inject
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
-import uk.gov.hmrc.hecapplicantfrontend.models.CompanyUserAnswers.CompleteCompanyUserAnswers
-import uk.gov.hmrc.hecapplicantfrontend.models.IndividualUserAnswers.CompleteIndividualUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -36,19 +34,9 @@ class EmailSentController @Inject() (
     with Logging {
 
   val emailSent: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
-    request.sessionData.ensureUserSelectedEmailPresent { userSelectedEmail =>
-      val licenceType = request.sessionData.userAnswers.foldByCompleteness(
-        _ => sys.error("Could not find complete answers"),
-        {
-          case ci: CompleteIndividualUserAnswers => ci.licenceType
-          case cc: CompleteCompanyUserAnswers    => cc.licenceType
-        }
-      )
-
-      request.sessionData.completedTaxCheck match {
-        case Some(taxCheck) => Ok(emailSentPage(userSelectedEmail.emailAddress, taxCheck, licenceType))
-        case None           =>
-          sys.error("Tax check code not found")
+    request.sessionData.ensureEmailHasBeenRequested { taxCheck =>
+      request.sessionData.ensureUserSelectedEmailPresent { userSelectedEmail =>
+        Ok(emailSentPage(userSelectedEmail.emailAddress, taxCheck))
       }
     }
   }

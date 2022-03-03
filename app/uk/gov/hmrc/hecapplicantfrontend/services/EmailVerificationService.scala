@@ -73,7 +73,9 @@ class EmailVerificationServiceImpl @Inject() (
     def auditEvent(result: Option[PasscodeRequestResult]): SubmitEmailAddressVerificationRequest =
       SubmitEmailAddressVerificationRequest(
         r.sessionData.loginData.ggCredId,
-        r.sessionData.completedTaxCheck.map(_.taxCheckCode).getOrElse(sys.error("Could not find tax check code")),
+        r.sessionData.emailRequestedForTaxCheck
+          .map(_.taxCheckCode)
+          .getOrElse(sys.error("Could not find tax check code")),
         userSelectedEmail.emailAddress,
         userSelectedEmail.emailType,
         result
@@ -114,7 +116,9 @@ class EmailVerificationServiceImpl @Inject() (
     def auditEvent(result: Option[PasscodeVerificationResult]): SubmitEmailAddressVerificationPasscode =
       SubmitEmailAddressVerificationPasscode(
         r.sessionData.loginData.ggCredId,
-        r.sessionData.completedTaxCheck.map(_.taxCheckCode).getOrElse(sys.error("Could not find tax check code")),
+        r.sessionData.emailRequestedForTaxCheck
+          .map(_.taxCheckCode)
+          .getOrElse(sys.error("Could not find tax check code")),
         userSelectedEmail.emailAddress,
         userSelectedEmail.emailType,
         passcode,

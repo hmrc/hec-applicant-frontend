@@ -22,9 +22,9 @@ import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, EntityType, HECSession, HECTaxCheck, HECTaxCheckCode, TaxSituation, YesNoAnswer}
+import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, HECSession, HECTaxCheckCode, TaxCheckListItem}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{Passcode, PasscodeRequestResult, PasscodeVerificationResult}
-import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
+import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
 import uk.gov.hmrc.hecapplicantfrontend.models.views.LicenceTypeOption
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.utils.Fixtures
@@ -60,11 +60,22 @@ class EmailSentControllerSpec
 
       "return a technical error page" when {
 
-        "user selected email is not in session" in {
-
+        "an email has not been requested" in {
           val session = Fixtures.individualHECSession(
-            userAnswers = Fixtures.completeIndividualUserAnswers(),
-            isEmailRequested = true,
+            emailRequestedForTaxCheck = None,
+            userEmailAnswers = userEmailAnswer.some
+          )
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+          }
+          assertThrows[RuntimeException](await(performAction()))
+        }
+
+        "user selected email is not in session" in {
+          val session = Fixtures.individualHECSession(
+            emailRequestedForTaxCheck = Some(Fixtures.emailRequestedForTaxCheck()),
             userEmailAnswers = None
           )
 
@@ -77,22 +88,20 @@ class EmailSentControllerSpec
       }
 
       "display the page" in {
-        val answers             = Fixtures.completeIndividualUserAnswers(
-          LicenceType.DriverOfTaxisAndPrivateHires,
-          LicenceTimeTrading.ZeroToTwoYears,
-          LicenceValidityPeriod.UpToOneYear,
-          TaxSituation.SA,
-          Some(YesNoAnswer.Yes),
-          Some(EntityType.Individual)
-        )
-        val taxCheckCode        = "LXB7G6DX7"
-        val expiryDate          = LocalDate.of(2020, 1, 8)
-        val session: HECSession = Fixtures.individualHECSession(
+
+        val taxCheckCode              = "LXB7G6DX7"
+        val expiryDate                = LocalDate.of(2020, 1, 8)
+        val emailRequestedForTaxCheck =
+          TaxCheckListItem(
+            LicenceType.DriverOfTaxisAndPrivateHires,
+            HECTaxCheckCode(taxCheckCode),
+            expiryDate,
+            ZonedDateTime.now()
+          )
+        val session: HECSession       = Fixtures.individualHECSession(
           loginData = Fixtures.individualLoginData(emailAddress = ggEmailId.some),
-          userAnswers = answers,
-          isEmailRequested = true,
-          userEmailAnswers = userEmailAnswer.some,
-          completedTaxCheck = Some(HECTaxCheck(HECTaxCheckCode(taxCheckCode), expiryDate, ZonedDateTime.now()))
+          emailRequestedForTaxCheck = Some(emailRequestedForTaxCheck),
+          userEmailAnswers = userEmailAnswer.some
         )
 
         inSequence {
@@ -108,7 +117,7 @@ class EmailSentControllerSpec
             doc.select(".govuk-body").html         should include regex messageFromMessageKey(
               "emailSent.p2",
               messageFromMessageKey(
-                s"licenceType.midSentence.${LicenceTypeOption.licenceTypeOption(answers.licenceType).messageKey}"
+                s"licenceType.midSentence.${LicenceTypeOption.licenceTypeOption(emailRequestedForTaxCheck.licenceType).messageKey}"
               ),
               "8 January 2020"
             )

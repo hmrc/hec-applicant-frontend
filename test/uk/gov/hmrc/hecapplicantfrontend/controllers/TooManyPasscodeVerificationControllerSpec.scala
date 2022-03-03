@@ -63,8 +63,7 @@ class TooManyPasscodeVerificationControllerSpec
 
               val session = Fixtures.individualHECSession(
                 loginData = Fixtures.individualLoginData(emailAddress = ggEmailId.some),
-                userAnswers = Fixtures.completeIndividualUserAnswers(),
-                isEmailRequested = true,
+                emailRequestedForTaxCheck = Fixtures.emailRequestedForTaxCheck().some,
                 userEmailAnswers = Fixtures
                   .userEmailAnswers(
                     passcodeRequestResult = PasscodeRequestResult.PasscodeSent.some,
@@ -89,8 +88,7 @@ class TooManyPasscodeVerificationControllerSpec
         def test(emailAddress: Option[EmailAddress]) = {
           val session = Fixtures.individualHECSession(
             loginData = Fixtures.individualLoginData(emailAddress = emailAddress),
-            userAnswers = Fixtures.completeIndividualUserAnswers(),
-            isEmailRequested = true,
+            emailRequestedForTaxCheck = Fixtures.emailRequestedForTaxCheck().some,
             userEmailAnswers = Fixtures
               .userEmailAnswers(
                 passcodeRequestResult = PasscodeRequestResult.PasscodeSent.some,

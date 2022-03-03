@@ -62,7 +62,7 @@ class SendEmailServiceImpl @Inject() (
     r: RequestWithSessionData[_]
   ): EitherT[Future, Error, EmailSendResult] = {
     val taxCheckCode =
-      r.sessionData.completedTaxCheck.map(_.taxCheckCode).getOrElse(sys.error("Could not find tax check code"))
+      r.sessionData.emailRequestedForTaxCheck.map(_.taxCheckCode).getOrElse(sys.error("Could not find tax check code"))
 
     def auditEvent(templateId: String, result: Option[EmailSendResult]): SendTaxCheckCodeNotificationEmail =
       SendTaxCheckCodeNotificationEmail(

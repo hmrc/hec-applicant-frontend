@@ -61,7 +61,6 @@ class HECSessionDataSpec extends AnyWordSpec with Matchers {
           |  "unexpiredTaxChecks" : [],
           |  "hasConfirmedDetails" : false,
           |  "type":"Individual",
-          |  "isEmailRequested" : false,
           |  "hasResentEmailConfirmation" : false
           |}""".stripMargin)
 
@@ -85,7 +84,6 @@ class HECSessionDataSpec extends AnyWordSpec with Matchers {
           |  "unexpiredTaxChecks" : [],
           |  "crnBlocked" : false,
           |  "type":"Company",
-          |  "isEmailRequested" : false,
           |  "hasResentEmailConfirmation" : false
           |}""".stripMargin)
 

@@ -58,8 +58,18 @@ class TaxCheckCompleteControllerSpec
   val individualLoginData =
     IndividualLoginData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None)
 
-  val companyLoginData =
-    CompanyLoginData(GGCredId(""), None, None)
+  val completeIndividualAnswers = Fixtures.completeIndividualUserAnswers(
+    LicenceType.DriverOfTaxisAndPrivateHires,
+    LicenceTimeTrading.ZeroToTwoYears,
+    LicenceValidityPeriod.UpToOneYear,
+    TaxSituation.SA,
+    Some(YesNoAnswer.Yes),
+    Some(EntityType.Individual)
+  )
+
+  val taxCheckCode      = "LXB7G6DX7"
+  val expiryDate        = LocalDate.of(2020, 1, 8)
+  val completedTaxCheck = HECTaxCheck(HECTaxCheckCode(taxCheckCode), expiryDate, ZonedDateTime.now())
 
   "TaxCheckCompleteController" when {
 
@@ -71,8 +81,21 @@ class TaxCheckCompleteControllerSpec
 
       "return a technical error" when {
 
-        "a tax check code cannot be found in session" in {
-          val session = IndividualHECSession.newSession(individualLoginData)
+        "a completed tax check cannot be found in session" in {
+          val session =
+            IndividualHECSession.newSession(individualLoginData).copy(userAnswers = completeIndividualAnswers)
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+          }
+
+          assertThrows[RuntimeException](await(performAction()))
+        }
+
+        "no licence type can be found in session" in {
+          val session =
+            IndividualHECSession.newSession(individualLoginData).copy(completedTaxCheck = Some(completedTaxCheck))
 
           inSequence {
             mockAuthWithNoRetrievals()
@@ -87,21 +110,11 @@ class TaxCheckCompleteControllerSpec
       "display the page" when {
 
         "tax check code has been generated for the user " in {
-          val answers      = Fixtures.completeIndividualUserAnswers(
-            LicenceType.DriverOfTaxisAndPrivateHires,
-            LicenceTimeTrading.ZeroToTwoYears,
-            LicenceValidityPeriod.UpToOneYear,
-            TaxSituation.SA,
-            Some(YesNoAnswer.Yes),
-            Some(EntityType.Individual)
-          )
-          val taxCheckCode = "LXB7G6DX7"
-          val expiryDate   = LocalDate.of(2020, 1, 8)
-          val session      = Fixtures.individualHECSession(
+          val session = Fixtures.individualHECSession(
             individualLoginData,
             IndividualRetrievedJourneyData.empty,
-            answers,
-            Some(HECTaxCheck(HECTaxCheckCode(taxCheckCode), expiryDate, ZonedDateTime.now()))
+            completeIndividualAnswers,
+            Some(completedTaxCheck)
           )
 
           inSequence {
@@ -126,7 +139,7 @@ class TaxCheckCompleteControllerSpec
               doc.select(".govuk-body").html should include regex messageFromMessageKey(
                 "taxCheckComplete.p2",
                 messageFromMessageKey(
-                  s"licenceType.midSentence.${LicenceTypeOption.licenceTypeOption(answers.licenceType).messageKey}"
+                  s"licenceType.midSentence.${LicenceTypeOption.licenceTypeOption(completeIndividualAnswers.licenceType).messageKey}"
                 ),
                 "8 January 2020"
               )
@@ -152,9 +165,46 @@ class TaxCheckCompleteControllerSpec
 
       "return a technical error" when {
 
+        "a completed tax check cannot be found in session" in {
+          val session =
+            IndividualHECSession.newSession(individualLoginData).copy(userAnswers = completeIndividualAnswers)
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+          }
+
+          assertThrows[RuntimeException](await(performAction()))
+        }
+
+        "no licence type can be found in session" in {
+          val session =
+            IndividualHECSession.newSession(individualLoginData).copy(completedTaxCheck = Some(completedTaxCheck))
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+          }
+
+          assertThrows[RuntimeException](await(performAction()))
+        }
+
         "the call to update and next fails" in {
-          val session        = Fixtures.individualHECSession()
-          val updatedSession = session.copy(isEmailRequested = true)
+          val session                   = Fixtures.individualHECSession(
+            individualLoginData,
+            IndividualRetrievedJourneyData.empty,
+            completeIndividualAnswers,
+            Some(completedTaxCheck)
+          )
+          val emailRequestedForTaxCheck = TaxCheckListItem(
+            completeIndividualAnswers.licenceType,
+            completedTaxCheck.taxCheckCode,
+            completedTaxCheck.expiresAfter,
+            completedTaxCheck.createDate
+          )
+
+          val updatedSession = session.copy(emailRequestedForTaxCheck = Some(emailRequestedForTaxCheck))
+
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
@@ -193,7 +243,7 @@ class TaxCheckCompleteControllerSpec
         }
 
         "valid Individual tax check code has been generated" in {
-          val answers = Fixtures.completeIndividualUserAnswers(
+          val answers                   = Fixtures.completeIndividualUserAnswers(
             LicenceType.DriverOfTaxisAndPrivateHires,
             LicenceTimeTrading.ZeroToTwoYears,
             LicenceValidityPeriod.UpToOneYear,
@@ -201,30 +251,47 @@ class TaxCheckCompleteControllerSpec
             Some(YesNoAnswer.Yes),
             Some(EntityType.Individual)
           )
-          val session =
+          val session                   =
             Fixtures.individualHECSession(
               individualLoginData,
               IndividualRetrievedJourneyData.empty,
               answers,
+              Some(completedTaxCheck),
               taxCheckStartDateTime = Some(now)
             )
-          nextPageRedirectTest(session, session.copy(isEmailRequested = true))
+          val emailRequestedForTaxCheck = TaxCheckListItem(
+            answers.licenceType,
+            completedTaxCheck.taxCheckCode,
+            completedTaxCheck.expiresAfter,
+            completedTaxCheck.createDate
+          )
+          nextPageRedirectTest(session, session.copy(emailRequestedForTaxCheck = Some(emailRequestedForTaxCheck)))
         }
 
         "valid Company data is submitted and" in {
-          val answers = Fixtures.completeCompanyUserAnswers(
+          val companyLoginData =
+            CompanyLoginData(GGCredId(""), None, None)
+
+          val answers                   = Fixtures.completeCompanyUserAnswers(
             LicenceType.OperatorOfPrivateHireVehicles,
             LicenceTimeTrading.ZeroToTwoYears,
             LicenceValidityPeriod.UpToOneYear,
             recentlyStartedTrading = YesNoAnswer.Yes.some
           )
-          val session = Fixtures.companyHECSession(
+          val session                   = Fixtures.companyHECSession(
             companyLoginData,
             CompanyRetrievedJourneyData.empty,
             answers,
+            Some(completedTaxCheck),
             taxCheckStartDateTime = Some(now)
           )
-          nextPageRedirectTest(session, session.copy(isEmailRequested = true))
+          val emailRequestedForTaxCheck = TaxCheckListItem(
+            answers.licenceType,
+            completedTaxCheck.taxCheckCode,
+            completedTaxCheck.expiresAfter,
+            completedTaxCheck.createDate
+          )
+          nextPageRedirectTest(session, session.copy(emailRequestedForTaxCheck = Some(emailRequestedForTaxCheck)))
         }
 
       }

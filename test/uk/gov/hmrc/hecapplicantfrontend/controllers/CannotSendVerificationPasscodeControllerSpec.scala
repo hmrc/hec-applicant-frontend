@@ -65,8 +65,7 @@ class CannotSendVerificationPasscodeControllerSpec
 
               val session = Fixtures.individualHECSession(
                 loginData = Fixtures.individualLoginData(emailAddress = ggEmailId.some),
-                userAnswers = Fixtures.completeIndividualUserAnswers(),
-                isEmailRequested = true,
+                emailRequestedForTaxCheck = Some(Fixtures.emailRequestedForTaxCheck()),
                 userEmailAnswers = Fixtures
                   .userEmailAnswers(
                     passcodeRequestResult = passcodeRequestResult
@@ -89,8 +88,7 @@ class CannotSendVerificationPasscodeControllerSpec
         def test(emailAddress: Option[EmailAddress]) = {
           val session = Fixtures.individualHECSession(
             loginData = Fixtures.individualLoginData(emailAddress = emailAddress),
-            userAnswers = Fixtures.completeIndividualUserAnswers(),
-            isEmailRequested = true,
+            emailRequestedForTaxCheck = Some(Fixtures.emailRequestedForTaxCheck()),
             userEmailAnswers = Fixtures
               .userEmailAnswers(
                 passcodeRequestResult = PasscodeRequestResult.BadEmailAddress.some
