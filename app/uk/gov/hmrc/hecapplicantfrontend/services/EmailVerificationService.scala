@@ -74,7 +74,7 @@ class EmailVerificationServiceImpl @Inject() (
       SubmitEmailAddressVerificationRequest(
         r.sessionData.loginData.ggCredId,
         r.sessionData.emailRequestedForTaxCheck
-          .map(_.taxCheckCode)
+          .map(_.taxCheck.taxCheckCode)
           .getOrElse(sys.error("Could not find tax check code")),
         userSelectedEmail.emailAddress,
         userSelectedEmail.emailType,
@@ -117,7 +117,7 @@ class EmailVerificationServiceImpl @Inject() (
       SubmitEmailAddressVerificationPasscode(
         r.sessionData.loginData.ggCredId,
         r.sessionData.emailRequestedForTaxCheck
-          .map(_.taxCheckCode)
+          .map(_.taxCheck.taxCheckCode)
           .getOrElse(sys.error("Could not find tax check code")),
         userSelectedEmail.emailAddress,
         userSelectedEmail.emailType,

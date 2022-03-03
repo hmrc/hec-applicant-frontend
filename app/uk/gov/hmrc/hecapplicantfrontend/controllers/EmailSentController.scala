@@ -34,9 +34,9 @@ class EmailSentController @Inject() (
     with Logging {
 
   val emailSent: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
-    request.sessionData.ensureEmailHasBeenRequested { taxCheck =>
+    request.sessionData.ensureEmailHasBeenRequested { emailRequested =>
       request.sessionData.ensureUserSelectedEmailPresent { userSelectedEmail =>
-        Ok(emailSentPage(userSelectedEmail.emailAddress, taxCheck))
+        Ok(emailSentPage(userSelectedEmail.emailAddress, emailRequested.taxCheck))
       }
     }
   }

@@ -16,15 +16,15 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models
 
-import cats.Eq
-import play.api.libs.json.{Format, Json}
+import play.api.libs.json.{Json, OFormat}
 
-final case class HECTaxCheckCode(value: String) extends AnyVal
+final case class EmailRequestedForTaxCheck(
+  originUrl: String,
+  taxCheck: TaxCheckListItem
+)
 
-object HECTaxCheckCode {
+object EmailRequestedForTaxCheck {
 
-  implicit val eq: Eq[HECTaxCheckCode] = Eq.fromUniversalEquals
-
-  implicit val format: Format[HECTaxCheckCode] = Json.valueFormat[HECTaxCheckCode]
+  implicit val format: OFormat[EmailRequestedForTaxCheck] = Json.format
 
 }

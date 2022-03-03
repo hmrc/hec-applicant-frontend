@@ -30,7 +30,7 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.hecapplicantfrontend.connectors.{HECConnector, SendEmailConnector}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthenticatedRequest, RequestWithSessionData}
 import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.SendTaxCheckCodeNotificationEmail
-import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, EmailType, Error, HECSession, HECTaxCheckCode, TaxCheckListItem, UserSelectedEmail}
+import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, EmailRequestedForTaxCheck, EmailType, Error, HECSession, HECTaxCheckCode, TaxCheckListItem, UserSelectedEmail}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailSend.{EmailParameters, EmailSendRequest, EmailSendResult}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.Language.{English, Welsh}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{Passcode, PasscodeRequestResult, PasscodeVerificationResult}
@@ -110,8 +110,12 @@ class SendEmailServiceImplSpec
   val session: HECSession = Fixtures.companyHECSession(
     loginData = Fixtures.companyLoginData(emailAddress = userSelectedEmail.emailAddress.some),
     userAnswers = Fixtures.completeCompanyUserAnswers(),
-    emailRequestedForTaxCheck =
-      Some(TaxCheckListItem(LicenceType.ScrapMetalMobileCollector, taxCheckCode, LocalDate.now(), ZonedDateTime.now())),
+    emailRequestedForTaxCheck = Some(
+      EmailRequestedForTaxCheck(
+        "",
+        TaxCheckListItem(LicenceType.ScrapMetalMobileCollector, taxCheckCode, LocalDate.now(), ZonedDateTime.now())
+      )
+    ),
     userEmailAnswers = userEmailAnswer.some
   )
 

@@ -23,7 +23,7 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, RequestWithSessionData, SessionDataAction}
 import uk.gov.hmrc.hecapplicantfrontend.models.CompanyUserAnswers.CompleteCompanyUserAnswers
-import uk.gov.hmrc.hecapplicantfrontend.models.{HECTaxCheck, TaxCheckListItem}
+import uk.gov.hmrc.hecapplicantfrontend.models.{EmailRequestedForTaxCheck, HECTaxCheck, TaxCheckListItem}
 import uk.gov.hmrc.hecapplicantfrontend.models.IndividualUserAnswers.CompleteIndividualUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
@@ -60,11 +60,14 @@ class TaxCheckCompleteController @Inject() (
     else {
       ensureCompletedTaxCheckAndLicenceType { case (completedTaxCheck, licenceType) =>
         val session                   = request.sessionData
-        val emailRequestedForTaxCheck = TaxCheckListItem(
-          licenceType,
-          completedTaxCheck.taxCheckCode,
-          completedTaxCheck.expiresAfter,
-          completedTaxCheck.createDate
+        val emailRequestedForTaxCheck = EmailRequestedForTaxCheck(
+          routes.TaxCheckCompleteController.taxCheckComplete().url,
+          TaxCheckListItem(
+            licenceType,
+            completedTaxCheck.taxCheckCode,
+            completedTaxCheck.expiresAfter,
+            completedTaxCheck.createDate
+          )
         )
         val updatedSession            = session.fold(
           _.copy(emailRequestedForTaxCheck = Some(emailRequestedForTaxCheck)),

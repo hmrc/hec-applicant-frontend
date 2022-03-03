@@ -25,7 +25,7 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.RequestWithSessionData
-import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, EmailType, Error, HECSession, HECTaxCheckCode, TaxCheckListItem, UserEmailAnswers, UserSelectedEmail}
+import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, EmailRequestedForTaxCheck, EmailType, Error, HECSession, HECTaxCheckCode, TaxCheckListItem, UserEmailAnswers, UserSelectedEmail}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailSend.{EmailParameters, EmailSendResult}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{Passcode, PasscodeRequestResult, PasscodeVerificationResult}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
@@ -82,7 +82,10 @@ class EmailAddressConfirmedControllerSpec
   val expiryDateString = TimeUtils.govDisplayFormat(expiryDate)
 
   val emailRequestedForTaxCheck =
-    TaxCheckListItem(LicenceType.DriverOfTaxisAndPrivateHires, hecTaxCheckCode, expiryDate, createDate)
+    EmailRequestedForTaxCheck(
+      "",
+      TaxCheckListItem(LicenceType.DriverOfTaxisAndPrivateHires, hecTaxCheckCode, expiryDate, createDate)
+    )
 
   val emailParametersEN =
     EmailParameters(
@@ -402,8 +405,9 @@ class EmailAddressConfirmedControllerSpec
         ) = {
           val session = Fixtures.companyHECSession(
             loginData = Fixtures.companyLoginData(emailAddress = ggUserSelectedEmail.emailAddress.some),
-            emailRequestedForTaxCheck =
-              emailRequestedForTaxCheck.copy(taxCheckCode = HECTaxCheckCode("ABC123DER")).some,
+            emailRequestedForTaxCheck = emailRequestedForTaxCheck
+              .copy(taxCheck = emailRequestedForTaxCheck.taxCheck.copy(taxCheckCode = HECTaxCheckCode("ABC123DER")))
+              .some,
             userEmailAnswers = passcodeSentAndMatchedUserEmailAnswer.some
           )
 

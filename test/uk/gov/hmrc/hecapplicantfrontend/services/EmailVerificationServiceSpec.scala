@@ -36,7 +36,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.{SubmitEmailAddressVer
 import uk.gov.hmrc.hecapplicantfrontend.models.emailSend.EmailSendResult.EmailSent
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeRequestResult._
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeVerificationResult._
-import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, EmailType, Error, HECSession, HECTaxCheckCode, TaxCheckListItem, UserSelectedEmail}
+import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, EmailRequestedForTaxCheck, EmailType, Error, HECSession, HECTaxCheckCode, TaxCheckListItem, UserSelectedEmail}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{Language, Passcode, PasscodeRequest, PasscodeRequestResult, PasscodeVerificationRequest, PasscodeVerificationResult}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
 import uk.gov.hmrc.hecapplicantfrontend.services.EmailVerificationService.ErrorResponse
@@ -84,8 +84,12 @@ class EmailVerificationServiceSpec
 
   val session: HECSession        = Fixtures.companyHECSession(
     loginData = Fixtures.companyLoginData(emailAddress = ggEmailId.some),
-    emailRequestedForTaxCheck =
-      Some(TaxCheckListItem(LicenceType.ScrapMetalDealerSite, taxCheckCode, LocalDate.now, ZonedDateTime.now())),
+    emailRequestedForTaxCheck = Some(
+      EmailRequestedForTaxCheck(
+        "",
+        TaxCheckListItem(LicenceType.ScrapMetalDealerSite, taxCheckCode, LocalDate.now, ZonedDateTime.now())
+      )
+    ),
     userEmailAnswers = userEmailAnswer.some
   )
   implicit val hc: HeaderCarrier = HeaderCarrier()

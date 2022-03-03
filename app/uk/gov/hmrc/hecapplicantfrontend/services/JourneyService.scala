@@ -42,7 +42,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.company.CTStatus
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.individual.SAStatus.ReturnFound
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.individual.{SAStatus, SAStatusResponse}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
-import uk.gov.hmrc.hecapplicantfrontend.models.{EntityType, Error, HECSession, TaxSituation, YesNoAnswer}
+import uk.gov.hmrc.hecapplicantfrontend.models.{EmailRequestedForTaxCheck, EntityType, Error, HECSession, TaxSituation, YesNoAnswer}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyServiceImpl._
 import uk.gov.hmrc.http.HeaderCarrier
@@ -82,7 +82,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
   ): Map[Call, HECSession => Call] = Map(
     routes.StartController.start()                                         -> firstPage,
     routes.ConfirmIndividualDetailsController.confirmIndividualDetails()   -> confirmIndividualDetailsRoute,
-    routes.TaxChecksListController.unexpiredTaxChecks()                    -> (_ => routes.LicenceDetailsController.licenceType()),
+    routes.TaxChecksListController.unexpiredTaxChecks()                    -> unexpiredTaxChecksRoutes,
     routes.LicenceDetailsController.licenceType()                          -> licenceTypeRoute,
     routes.LicenceDetailsController.licenceTimeTrading                     -> (_ => routes.LicenceDetailsController.recentLicenceLength()),
     routes.LicenceDetailsController.recentLicenceLength()                  -> licenceValidityPeriodRoute,
@@ -198,7 +198,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
         exitPageToPreviousPage
           .get(current)
           .map(_(r.sessionData))
-          .orElse(loop(routes.TaxCheckCompleteController.taxCheckComplete()))
+          .orElse(loop(routes.StartController.start()))
           .getOrElse(sys.error(s"Could not find previous for $current"))
       }
     } else {
@@ -307,10 +307,18 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
     }
 
   private def confirmIndividualDetailsRoute(session: HECSession): Call =
-    if (session.unexpiredTaxChecks.nonEmpty) {
+    if (session.unexpiredTaxChecks.nonEmpty)
       routes.TaxChecksListController.unexpiredTaxChecks()
-    } else {
+    else
       routes.LicenceDetailsController.licenceType()
+
+  private def unexpiredTaxChecksRoutes(session: HECSession): Call =
+    session.emailRequestedForTaxCheck match {
+      case Some(e: EmailRequestedForTaxCheck)
+          if e.originUrl === routes.TaxChecksListController.unexpiredTaxChecks().url =>
+        emailVerificationRoute(session)
+
+      case _ => routes.LicenceDetailsController.licenceType()
     }
 
   private def licenceTypeRoute(
@@ -582,11 +590,15 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
     }
 
   def confirmEnterEmailAddressPreviousRoute(session: HECSession): Call =
-    session.userEmailAnswers.flatMap(_.passcodeVerificationResult) match {
-      case Some(PasscodeVerificationResult.TooManyAttempts) =>
-        routes.TooManyPasscodeVerificationController.tooManyPasscodeVerification()
-      case _                                                => routes.TaxCheckCompleteController.taxCheckComplete()
+    session.ensureEmailHasBeenRequested { emailRequested =>
+      session.userEmailAnswers.flatMap(_.passcodeVerificationResult) match {
+        case Some(PasscodeVerificationResult.TooManyAttempts) =>
+          routes.TooManyPasscodeVerificationController.tooManyPasscodeVerification()
+        case _                                                =>
+          Call("GET", emailRequested.originUrl)
+      }
     }
+
 }
 
 object JourneyServiceImpl {

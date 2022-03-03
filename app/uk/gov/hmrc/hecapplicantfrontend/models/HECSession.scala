@@ -38,8 +38,8 @@ trait HECSession extends Product with Serializable {
   val completedTaxCheck: Option[HECTaxCheck]
   val taxCheckStartDateTime: Option[ZonedDateTime]
   val unexpiredTaxChecks: List[TaxCheckListItem]
-  val emailRequestedForTaxCheck: Option[TaxCheckListItem]
-  val hasResentEmailConfirmation: Boolean //flag added to separate the resend email confirmaation journey
+  val emailRequestedForTaxCheck: Option[EmailRequestedForTaxCheck]
+  val hasResentEmailConfirmation: Boolean //flag added to separate the resend email confirmation journey
   val userEmailAnswers: Option[UserEmailAnswers]
 
 }
@@ -55,7 +55,7 @@ object HECSession {
     unexpiredTaxChecks: List[TaxCheckListItem],
     hasConfirmedDetails: Boolean,
     relevantIncomeTaxYear: Option[TaxYear],
-    emailRequestedForTaxCheck: Option[TaxCheckListItem],
+    emailRequestedForTaxCheck: Option[EmailRequestedForTaxCheck],
     hasResentEmailConfirmation: Boolean,
     userEmailAnswers: Option[UserEmailAnswers]
   ) extends HECSession {
@@ -89,7 +89,7 @@ object HECSession {
     taxCheckStartDateTime: Option[ZonedDateTime],
     unexpiredTaxChecks: List[TaxCheckListItem],
     crnBlocked: Boolean = false,
-    emailRequestedForTaxCheck: Option[TaxCheckListItem],
+    emailRequestedForTaxCheck: Option[EmailRequestedForTaxCheck],
     hasResentEmailConfirmation: Boolean,
     userEmailAnswers: Option[UserEmailAnswers]
   ) extends HECSession {
@@ -186,10 +186,10 @@ object HECSession {
 
     def isEmailRequested: Boolean = s.fold(_.emailRequestedForTaxCheck, _.emailRequestedForTaxCheck).isDefined
 
-    def ensureEmailHasBeenRequested[A](f: TaxCheckListItem => A): A =
+    def ensureEmailHasBeenRequested[A](f: EmailRequestedForTaxCheck => A): A =
       s.fold(_.emailRequestedForTaxCheck, _.emailRequestedForTaxCheck) match {
-        case Some(taxCheck) => f(taxCheck)
-        case None           => sys.error("Email has not been requested")
+        case Some(e) => f(e)
+        case None    => sys.error("Email has not been requested")
       }
 
     def ensureGGEmailIdPresent[A](f: EmailAddress => A): A =
