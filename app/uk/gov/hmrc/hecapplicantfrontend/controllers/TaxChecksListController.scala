@@ -72,7 +72,10 @@ class TaxChecksListController @Inject() (
 
   val unexpiredTaxChecksSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     journeyService
-      .updateAndNext(routes.TaxChecksListController.unexpiredTaxChecks(), request.sessionData)
+      .updateAndNext(
+        routes.TaxChecksListController.unexpiredTaxChecks(),
+        request.sessionData.fold(_.copy(emailRequestedForTaxCheck = None), _.copy(emailRequestedForTaxCheck = None))
+      )
       .fold(
         _.doThrow("Could not save tax check"),
         Redirect

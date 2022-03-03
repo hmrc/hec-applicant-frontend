@@ -228,6 +228,176 @@ class TaxChecksListControllerSpec
       }
 
     }
+
+    "handling requests to submits on the tax check codes page" must {
+
+      def performAction() = controller.unexpiredTaxChecksSubmit(FakeRequest())
+
+      behave like (authAndSessionDataBehaviour(performAction))
+
+      "return an error" when {
+
+        "there is an error updating the session" in {
+          inSequence {
+            val session =
+              Fixtures.individualHECSession(
+                individualLoginData,
+                emailRequestedForTaxCheck = Some(Fixtures.emailRequestedForTaxCheck())
+              )
+
+            inSequence {
+              mockAuthWithNoRetrievals()
+              mockGetSession(session)
+              mockJourneyServiceUpdateAndNext(
+                routes.TaxChecksListController.unexpiredTaxChecks(),
+                session,
+                session.copy(emailRequestedForTaxCheck = None)
+              )(Left(Error("")))
+            }
+
+            assertThrows[RuntimeException](await(performAction()))
+          }
+
+        }
+
+      }
+
+      "redirect to the next page" when {
+
+        "the session has been successfully updated" in {
+          inSequence {
+            val session =
+              Fixtures.companyHECSession(
+                Fixtures.companyLoginData(),
+                emailRequestedForTaxCheck = Some(Fixtures.emailRequestedForTaxCheck())
+              )
+
+            inSequence {
+              mockAuthWithNoRetrievals()
+              mockGetSession(session)
+              mockJourneyServiceUpdateAndNext(
+                routes.TaxChecksListController.unexpiredTaxChecks(),
+                session,
+                session.copy(emailRequestedForTaxCheck = None)
+              )(Right(mockNextCall))
+            }
+
+            checkIsRedirect(performAction(), mockNextCall)
+          }
+
+        }
+
+      }
+    }
+
+    "handling requests to send an email" must {
+
+      def performAction(taxCheckCode: HECTaxCheckCode) =
+        controller.sendEmail(taxCheckCode)(FakeRequest())
+
+      behave like (authAndSessionDataBehaviour(() => performAction(HECTaxCheckCode(""))))
+
+      "return an error" when {
+
+        val taxCheckCode = HECTaxCheckCode("AAA222AAA")
+
+        "the user has no unexpired tax checks in session" in {
+          val session = Fixtures.individualHECSession(
+            unexpiredTaxChecks = List.empty
+          )
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+          }
+
+          assertThrows[RuntimeException](await(performAction(taxCheckCode)))
+        }
+
+        "the user does not have a tax check in session with the " +
+          "tax check code given in the URL" in {
+            val session = Fixtures.individualHECSession(
+              unexpiredTaxChecks = List(
+                Fixtures.taxCheckListItem(
+                  taxCheckCode = HECTaxCheckCode("BBB333BBB")
+                )
+              )
+            )
+
+            inSequence {
+              mockAuthWithNoRetrievals()
+              mockGetSession(session)
+            }
+
+            assertThrows[RuntimeException](await(performAction(taxCheckCode)))
+          }
+
+        "there is an error updating the session" in {
+          val taxCheck = Fixtures.taxCheckListItem(taxCheckCode = taxCheckCode)
+          val session  = Fixtures.individualHECSession(unexpiredTaxChecks = List(taxCheck))
+
+          val updatedSession = session.copy(
+            emailRequestedForTaxCheck = Some(
+              EmailRequestedForTaxCheck(
+                routes.TaxChecksListController.unexpiredTaxChecks().url,
+                taxCheck
+              )
+            )
+          )
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockJourneyServiceUpdateAndNext(
+              routes.TaxChecksListController.unexpiredTaxChecks(),
+              session,
+              updatedSession
+            )(Left(Error("")))
+          }
+
+          assertThrows[RuntimeException](await(performAction(taxCheckCode)))
+        }
+
+      }
+
+      "redirect to the next page" when {
+
+        "a tax check can be found with the given tax check code and the session is " +
+          "successfully updated" in {
+            val taxCheckCode = HECTaxCheckCode("AAA 2 22B BB ")
+            val taxCheck     = Fixtures.taxCheckListItem(taxCheckCode = taxCheckCode)
+            val session      = Fixtures.individualHECSession(unexpiredTaxChecks = List(taxCheck))
+
+            val updatedSession = session.copy(
+              emailRequestedForTaxCheck = Some(
+                EmailRequestedForTaxCheck(
+                  routes.TaxChecksListController.unexpiredTaxChecks().url,
+                  taxCheck
+                )
+              )
+            )
+
+            inSequence {
+              mockAuthWithNoRetrievals()
+              mockGetSession(session)
+              mockJourneyServiceUpdateAndNext(
+                routes.TaxChecksListController.unexpiredTaxChecks(),
+                session,
+                updatedSession
+              )(Right(mockNextCall))
+            }
+
+            checkIsRedirect(
+              performAction(HECTaxCheckCode("aaa222bbb")),
+              mockNextCall
+            )
+
+          }
+
+      }
+
+    }
+
   }
 
 }

@@ -215,15 +215,64 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
           }
         }
 
-        "the tax check codes page" in {
-          val session                                     = IndividualHECSession.newSession(individualLoginData)
-          implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+        "the tax check codes page" when {
 
-          val result = journeyService.updateAndNext(
-            routes.TaxChecksListController.unexpiredTaxChecks(),
-            session
-          )
-          await(result.value) shouldBe Right(routes.LicenceDetailsController.licenceType())
+          def test(session: HECSession, expectedNext: Call) = {
+            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+
+            val result = journeyService.updateAndNext(
+              routes.TaxChecksListController.unexpiredTaxChecks(),
+              session
+            )
+            await(result.value) shouldBe Right(expectedNext)
+          }
+
+          "no email has been requested" in {
+            test(
+              IndividualHECSession.newSession(individualLoginData),
+              routes.LicenceDetailsController.licenceType()
+            )
+          }
+
+          "an email has been requested but the origin url is no the tax check codes page" in {
+            test(
+              IndividualHECSession
+                .newSession(individualLoginData)
+                .copy(
+                  emailRequestedForTaxCheck = Fixtures.emailRequestedForTaxCheck(originUrl = "/url").some
+                ),
+              routes.LicenceDetailsController.licenceType()
+            )
+          }
+
+          "an email has been requested and the origin url is the tax check codes page and" when {
+
+            "there is a gg email in session" in {
+              test(
+                IndividualHECSession
+                  .newSession(individualLoginData.copy(emailAddress = Some(EmailAddress("user@test.com"))))
+                  .copy(
+                    emailRequestedForTaxCheck = Fixtures.emailRequestedForTaxCheck(originUrl = "/url").some
+                  ),
+                routes.LicenceDetailsController.licenceType()
+              )
+            }
+
+            "there is no gg email in session" in {
+              test(
+                IndividualHECSession
+                  .newSession(individualLoginData.copy(emailAddress = None))
+                  .copy(
+                    emailRequestedForTaxCheck = Fixtures
+                      .emailRequestedForTaxCheck(originUrl = routes.TaxChecksListController.unexpiredTaxChecks().url)
+                      .some
+                  ),
+                routes.EnterEmailAddressController.enterEmailAddress()
+              )
+            }
+
+          }
+
         }
 
         "the licence type page" when {
@@ -3025,6 +3074,8 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
 
         "the Confirm Email Address page" when {
 
+          val emailJourneyOriginUrl = "/url"
+
           def test(userEmailAnswers: Option[UserEmailAnswers], previousRoute: Call) = {
             val journeyDataWithSaStatus                     = IndividualRetrievedJourneyData(saStatus =
               Some(individual.SAStatusResponse(SAUTR(""), TaxYear(2020), SAStatus.NoticeToFileIssued))
@@ -3035,7 +3086,8 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               Fixtures.completeIndividualUserAnswers(),
               Some(HECTaxCheck(HECTaxCheckCode("code1"), LocalDate.now.plusDays(1), ZonedDateTime.now)),
               taxCheckStartDateTime = taxCheckStartDateTime.some,
-              emailRequestedForTaxCheck = Fixtures.emailRequestedForTaxCheck().some,
+              emailRequestedForTaxCheck =
+                Fixtures.emailRequestedForTaxCheck().copy(originUrl = emailJourneyOriginUrl).some,
               userEmailAnswers = userEmailAnswers
             )
             implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
@@ -3057,9 +3109,8 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
 
           }
 
-          "the page is reached via tax check complete page" in {
-
-            test(userEmailAnswers = None, routes.TaxCheckCompleteController.taxCheckComplete())
+          "the page is not reached via too many passcode attempts page" in {
+            test(userEmailAnswers = None, Call("GET", emailJourneyOriginUrl))
 
           }
         }
@@ -3101,6 +3152,8 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
 
         "the Enter Email Address page" when {
 
+          val emailJourneyOriginUrl = "/url"
+
           def test(
             emailAddress: Option[EmailAddress],
             userEmailAnswers: Option[UserEmailAnswers],
@@ -3116,7 +3169,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               Fixtures.completeIndividualUserAnswers(),
               Some(HECTaxCheck(HECTaxCheckCode("code1"), LocalDate.now.plusDays(1), ZonedDateTime.now)),
               taxCheckStartDateTime = taxCheckStartDateTime.some,
-              emailRequestedForTaxCheck = Fixtures.emailRequestedForTaxCheck().some,
+              emailRequestedForTaxCheck = Fixtures.emailRequestedForTaxCheck(originUrl = emailJourneyOriginUrl).some,
               userEmailAnswers = userEmailAnswers,
               hasResentEmailConfirmation = isResendFlag
             )
@@ -3129,19 +3182,19 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
 
           }
 
-          "the page is reached via tax check complete page" when {
+          "the page is not reached via too many passcode attempts page" when {
 
             "the email id is invalid " in {
               test(
                 Some(EmailAddress("user@test@test.com")),
                 None,
-                routes.TaxCheckCompleteController.taxCheckComplete(),
+                Call("GET", emailJourneyOriginUrl),
                 false
               )
             }
 
             "the email id is not in GG login data" in {
-              test(None, None, routes.TaxCheckCompleteController.taxCheckComplete(), false)
+              test(None, None, Call("GET", emailJourneyOriginUrl), false)
             }
           }
 

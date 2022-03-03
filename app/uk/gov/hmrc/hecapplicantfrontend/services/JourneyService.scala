@@ -198,7 +198,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
         exitPageToPreviousPage
           .get(current)
           .map(_(r.sessionData))
-          .orElse(loop(routes.StartController.start()))
+          .orElse(loop(routes.TaxCheckCompleteController.taxCheckComplete()))
           .getOrElse(sys.error(s"Could not find previous for $current"))
       }
     } else {
