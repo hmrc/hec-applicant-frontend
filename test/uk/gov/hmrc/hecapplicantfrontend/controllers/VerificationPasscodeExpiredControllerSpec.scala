@@ -56,8 +56,7 @@ class VerificationPasscodeExpiredControllerSpec
 
       def getSession(passcodeVerificationResult: Option[PasscodeVerificationResult]) = Fixtures.individualHECSession(
         loginData = Fixtures.individualLoginData(emailAddress = ggEmailId.some),
-        userAnswers = Fixtures.completeIndividualUserAnswers(),
-        isEmailRequested = true,
+        emailRequestedForTaxCheck = Fixtures.emailRequestedForTaxCheck().some,
         userEmailAnswers = Fixtures
           .userEmailAnswers(
             passcodeRequestResult = PasscodeRequestResult.PasscodeSent.some,

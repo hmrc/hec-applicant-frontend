@@ -141,7 +141,7 @@ object Fixtures {
     taxCheckStartDateTime: Option[ZonedDateTime] = None,
     unexpiredTaxChecks: List[TaxCheckListItem] = List.empty,
     relevantIncomeTaxYear: Option[TaxYear] = None,
-    isEmailRequested: Boolean = false,
+    emailRequestedForTaxCheck: Option[TaxCheckListItem] = None,
     hasResentEmailConfirmation: Boolean = false,
     userEmailAnswers: Option[UserEmailAnswers] = None
   ): IndividualHECSession =
@@ -154,7 +154,7 @@ object Fixtures {
       unexpiredTaxChecks = unexpiredTaxChecks,
       hasConfirmedDetails = false,
       relevantIncomeTaxYear = relevantIncomeTaxYear,
-      isEmailRequested = isEmailRequested,
+      emailRequestedForTaxCheck = emailRequestedForTaxCheck,
       hasResentEmailConfirmation = hasResentEmailConfirmation,
       userEmailAnswers = userEmailAnswers
     )
@@ -187,7 +187,7 @@ object Fixtures {
     taxCheckStartDateTime: Option[ZonedDateTime] = None,
     unexpiredTaxChecks: List[TaxCheckListItem] = List.empty,
     crnBlocked: Boolean = false,
-    isEmailRequested: Boolean = false,
+    emailRequestedForTaxCheck: Option[TaxCheckListItem] = None,
     hasResentEmailConfirmation: Boolean = false,
     userEmailAnswers: Option[UserEmailAnswers] = None
   ): CompanyHECSession = CompanyHECSession(
@@ -198,7 +198,7 @@ object Fixtures {
     taxCheckStartDateTime = taxCheckStartDateTime,
     unexpiredTaxChecks = unexpiredTaxChecks,
     crnBlocked = crnBlocked,
-    isEmailRequested = isEmailRequested,
+    emailRequestedForTaxCheck = emailRequestedForTaxCheck,
     hasResentEmailConfirmation = hasResentEmailConfirmation,
     userEmailAnswers = userEmailAnswers
   )
@@ -252,4 +252,16 @@ object Fixtures {
       passcodeVerificationResult,
       emailSendResult
     )
+
+  def emailRequestedForTaxCheck(
+    licenceType: LicenceType = LicenceType.DriverOfTaxisAndPrivateHires,
+    taxCheckCode: HECTaxCheckCode = HECTaxCheckCode("TTT222TTT"),
+    expiresAfter: LocalDate = LocalDate.now(),
+    createDate: ZonedDateTime = ZonedDateTime.now()
+  ) = TaxCheckListItem(
+    licenceType,
+    taxCheckCode,
+    expiresAfter,
+    createDate
+  )
 }

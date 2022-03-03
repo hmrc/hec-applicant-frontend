@@ -84,8 +84,7 @@ class VerifyEmailPasscodeControllerSpec
         "there is no user selected email in session " in {
           val session = Fixtures.individualHECSession(
             loginData = Fixtures.individualLoginData(emailAddress = ggEmailId.some),
-            userAnswers = Fixtures.completeIndividualUserAnswers(),
-            isEmailRequested = true,
+            emailRequestedForTaxCheck = Fixtures.emailRequestedForTaxCheck().some,
             userEmailAnswers = None
           )
           testTechnicalError(session)
@@ -95,8 +94,7 @@ class VerifyEmailPasscodeControllerSpec
 
           val session = Fixtures.individualHECSession(
             loginData = Fixtures.individualLoginData(emailAddress = ggEmailId.some),
-            userAnswers = Fixtures.completeIndividualUserAnswers(),
-            isEmailRequested = true,
+            emailRequestedForTaxCheck = Fixtures.emailRequestedForTaxCheck().some,
             userEmailAnswers =
               Fixtures.userEmailAnswers(passcodeRequestResult = PasscodeRequestResult.PasscodeSent.some).some
           )
@@ -113,8 +111,7 @@ class VerifyEmailPasscodeControllerSpec
         ) = {
           val session                 = Fixtures.companyHECSession(
             loginData = Fixtures.companyLoginData(emailAddress = emailAddress),
-            userAnswers = Fixtures.completeCompanyUserAnswers(),
-            isEmailRequested = true,
+            emailRequestedForTaxCheck = Fixtures.emailRequestedForTaxCheck().some,
             userEmailAnswers = userEmailAnswers,
             hasResentEmailConfirmation = hasResentEmailConfirmation
           )
@@ -217,8 +214,7 @@ class VerifyEmailPasscodeControllerSpec
         def testFormError(formData: Option[(String, String)])(expectedErrorMessageKey: String) = {
           val session = Fixtures.individualHECSession(
             loginData = Fixtures.individualLoginData(emailAddress = ggEmailId.some),
-            userAnswers = Fixtures.completeIndividualUserAnswers(),
-            isEmailRequested = true,
+            emailRequestedForTaxCheck = Fixtures.emailRequestedForTaxCheck().some,
             userEmailAnswers =
               Fixtures.userEmailAnswers(passcodeRequestResult = PasscodeRequestResult.PasscodeSent.some).some
           )
@@ -265,8 +261,7 @@ class VerifyEmailPasscodeControllerSpec
 
           val session = Fixtures.individualHECSession(
             loginData = Fixtures.individualLoginData(emailAddress = ggEmailId.some),
-            userAnswers = Fixtures.completeIndividualUserAnswers(),
-            isEmailRequested = true,
+            emailRequestedForTaxCheck = Fixtures.emailRequestedForTaxCheck().some,
             userEmailAnswers = userEmailAnswers.some
           )
 
@@ -298,8 +293,7 @@ class VerifyEmailPasscodeControllerSpec
         "there is no user selected email in session " in {
           val session = Fixtures.individualHECSession(
             loginData = Fixtures.individualLoginData(emailAddress = ggEmailId.some),
-            userAnswers = Fixtures.completeIndividualUserAnswers(),
-            isEmailRequested = true,
+            emailRequestedForTaxCheck = Fixtures.emailRequestedForTaxCheck().some,
             userEmailAnswers = None
           )
 
@@ -314,8 +308,7 @@ class VerifyEmailPasscodeControllerSpec
 
           val session = Fixtures.individualHECSession(
             loginData = Fixtures.individualLoginData(emailAddress = ggEmailId.some),
-            userAnswers = Fixtures.completeIndividualUserAnswers(),
-            isEmailRequested = true,
+            emailRequestedForTaxCheck = Fixtures.emailRequestedForTaxCheck().some,
             userEmailAnswers = Fixtures
               .userEmailAnswers(
                 passcodeRequestResult = PasscodeRequestResult.PasscodeSent.some,
@@ -343,8 +336,7 @@ class VerifyEmailPasscodeControllerSpec
 
           val session = Fixtures.individualHECSession(
             loginData = Fixtures.individualLoginData(emailAddress = ggEmailId.some),
-            userAnswers = Fixtures.completeIndividualUserAnswers(),
-            isEmailRequested = true,
+            emailRequestedForTaxCheck = Fixtures.emailRequestedForTaxCheck().some,
             userEmailAnswers = userEmailAnswers.some
           )
 
@@ -383,8 +375,7 @@ class VerifyEmailPasscodeControllerSpec
         ) = {
           val session = Fixtures.companyHECSession(
             loginData = Fixtures.companyLoginData(emailAddress = ggEmailId.some),
-            userAnswers = Fixtures.completeCompanyUserAnswers(),
-            isEmailRequested = true,
+            emailRequestedForTaxCheck = Fixtures.emailRequestedForTaxCheck().some,
             userEmailAnswers = existingUserEmailAnswers.some
           )
 

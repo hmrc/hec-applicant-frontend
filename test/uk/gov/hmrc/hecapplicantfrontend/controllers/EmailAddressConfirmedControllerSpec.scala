@@ -25,9 +25,10 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.RequestWithSessionData
-import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, EmailType, Error, HECSession, HECTaxCheck, HECTaxCheckCode, UserEmailAnswers, UserSelectedEmail}
+import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, EmailType, Error, HECSession, HECTaxCheckCode, TaxCheckListItem, UserEmailAnswers, UserSelectedEmail}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailSend.{EmailParameters, EmailSendResult}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{Passcode, PasscodeRequestResult, PasscodeVerificationResult}
+import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.{JourneyService, SendEmailService}
 import uk.gov.hmrc.hecapplicantfrontend.util.TimeUtils
@@ -80,7 +81,8 @@ class EmailAddressConfirmedControllerSpec
   val createDateString = TimeUtils.govDisplayFormat(createDate.toLocalDate)
   val expiryDateString = TimeUtils.govDisplayFormat(expiryDate)
 
-  val hecTaxCheck = HECTaxCheck(hecTaxCheckCode, expiryDate, createDate)
+  val emailRequestedForTaxCheck =
+    TaxCheckListItem(LicenceType.DriverOfTaxisAndPrivateHires, hecTaxCheckCode, expiryDate, createDate)
 
   val emailParametersEN =
     EmailParameters(
@@ -122,8 +124,7 @@ class EmailAddressConfirmedControllerSpec
 
         "user selected email is not in session" in {
           val session = Fixtures.individualHECSession(
-            userAnswers = Fixtures.completeIndividualUserAnswers(),
-            isEmailRequested = true,
+            emailRequestedForTaxCheck = emailRequestedForTaxCheck.some,
             userEmailAnswers = None
           )
           isError(session)
@@ -138,8 +139,7 @@ class EmailAddressConfirmedControllerSpec
           ).foreach { passcodeVerificationResult =>
             withClue(s" For passcode verification result $passcodeVerificationResult") {
               val session = Fixtures.individualHECSession(
-                userAnswers = Fixtures.completeIndividualUserAnswers(),
-                isEmailRequested = true,
+                emailRequestedForTaxCheck = emailRequestedForTaxCheck.some,
                 userEmailAnswers = Fixtures
                   .userEmailAnswers(
                     passcodeRequestResult = PasscodeRequestResult.PasscodeSent.some,
@@ -162,8 +162,7 @@ class EmailAddressConfirmedControllerSpec
           ).foreach { passcodeRequestResult =>
             withClue(s" For passcode verification result $passcodeRequestResult") {
               val session = Fixtures.individualHECSession(
-                userAnswers = Fixtures.completeIndividualUserAnswers(),
-                isEmailRequested = true,
+                emailRequestedForTaxCheck = emailRequestedForTaxCheck.some,
                 userEmailAnswers = Fixtures
                   .userEmailAnswers(
                     passcodeRequestResult = passcodeRequestResult,
@@ -187,8 +186,7 @@ class EmailAddressConfirmedControllerSpec
           ).foreach { passcodeRequestResult =>
             withClue(s" For passcode verification result $passcodeRequestResult") {
               val session = Fixtures.individualHECSession(
-                userAnswers = Fixtures.completeIndividualUserAnswers(),
-                isEmailRequested = true,
+                emailRequestedForTaxCheck = emailRequestedForTaxCheck.some,
                 userEmailAnswers = Fixtures
                   .userEmailAnswers(
                     passcodeRequestResult = passcodeRequestResult,
@@ -210,8 +208,7 @@ class EmailAddressConfirmedControllerSpec
         def test(userEmailAnswers: UserEmailAnswers) = {
           val session: HECSession = Fixtures.companyHECSession(
             loginData = Fixtures.companyLoginData(emailAddress = ggUserSelectedEmail.emailAddress.some),
-            userAnswers = Fixtures.completeCompanyUserAnswers(),
-            isEmailRequested = true,
+            emailRequestedForTaxCheck = emailRequestedForTaxCheck.some,
             userEmailAnswers = userEmailAnswers.some
           )
 
@@ -269,9 +266,16 @@ class EmailAddressConfirmedControllerSpec
 
         "user selected email is not in session" in {
           val session = Fixtures.individualHECSession(
-            userAnswers = Fixtures.completeIndividualUserAnswers(),
-            isEmailRequested = true,
+            emailRequestedForTaxCheck = emailRequestedForTaxCheck.some,
             userEmailAnswers = None
+          )
+          testTechnicalError(session)
+        }
+
+        "user has not chosen to get an email sent to them" in {
+          val session = Fixtures.individualHECSession(
+            emailRequestedForTaxCheck = None,
+            userEmailAnswers = Some(Fixtures.userEmailAnswers())
           )
           testTechnicalError(session)
         }
@@ -284,8 +288,7 @@ class EmailAddressConfirmedControllerSpec
           ).foreach { passcodeVerificationResult =>
             withClue(s" For passcode verification result $passcodeVerificationResult") {
               val session = Fixtures.individualHECSession(
-                userAnswers = Fixtures.completeIndividualUserAnswers(),
-                isEmailRequested = true,
+                emailRequestedForTaxCheck = emailRequestedForTaxCheck.some,
                 userEmailAnswers = Fixtures
                   .userEmailAnswers(
                     passcodeRequestResult = PasscodeRequestResult.PasscodeSent.some,
@@ -308,8 +311,7 @@ class EmailAddressConfirmedControllerSpec
           ).foreach { passcodeRequestResult =>
             withClue(s" For passcode verification result $passcodeRequestResult") {
               val session = Fixtures.individualHECSession(
-                userAnswers = Fixtures.completeIndividualUserAnswers(),
-                isEmailRequested = true,
+                emailRequestedForTaxCheck = emailRequestedForTaxCheck.some,
                 userEmailAnswers = Fixtures
                   .userEmailAnswers(
                     passcodeRequestResult = passcodeRequestResult,
@@ -333,8 +335,7 @@ class EmailAddressConfirmedControllerSpec
           ).foreach { passcodeRequestResult =>
             withClue(s" For passcode verification result $passcodeRequestResult") {
               val session = Fixtures.individualHECSession(
-                userAnswers = Fixtures.completeIndividualUserAnswers(),
-                isEmailRequested = true,
+                emailRequestedForTaxCheck = emailRequestedForTaxCheck.some,
                 userEmailAnswers = Fixtures
                   .userEmailAnswers(
                     passcodeRequestResult = passcodeRequestResult,
@@ -352,9 +353,7 @@ class EmailAddressConfirmedControllerSpec
         "Call to send email fails" in {
           val session = Fixtures.companyHECSession(
             loginData = Fixtures.companyLoginData(emailAddress = ggUserSelectedEmail.emailAddress.some),
-            userAnswers = Fixtures.completeCompanyUserAnswers(),
-            isEmailRequested = true,
-            completedTaxCheck = hecTaxCheck.some,
+            emailRequestedForTaxCheck = emailRequestedForTaxCheck.some,
             userEmailAnswers = passcodeSentAndMatchedUserEmailAnswer.some
           )
 
@@ -370,9 +369,7 @@ class EmailAddressConfirmedControllerSpec
         "Call to update and Next fails" in {
           val session = Fixtures.companyHECSession(
             loginData = Fixtures.companyLoginData(emailAddress = ggUserSelectedEmail.emailAddress.some),
-            userAnswers = Fixtures.completeCompanyUserAnswers(),
-            isEmailRequested = true,
-            completedTaxCheck = hecTaxCheck.some,
+            emailRequestedForTaxCheck = emailRequestedForTaxCheck.some,
             userEmailAnswers = passcodeSentAndMatchedUserEmailAnswer.some
           )
 
@@ -405,9 +402,8 @@ class EmailAddressConfirmedControllerSpec
         ) = {
           val session = Fixtures.companyHECSession(
             loginData = Fixtures.companyLoginData(emailAddress = ggUserSelectedEmail.emailAddress.some),
-            userAnswers = Fixtures.completeCompanyUserAnswers(),
-            isEmailRequested = true,
-            completedTaxCheck = hecTaxCheck.copy(taxCheckCode = HECTaxCheckCode("ABC123DER")).some,
+            emailRequestedForTaxCheck =
+              emailRequestedForTaxCheck.copy(taxCheckCode = HECTaxCheckCode("ABC123DER")).some,
             userEmailAnswers = passcodeSentAndMatchedUserEmailAnswer.some
           )
 

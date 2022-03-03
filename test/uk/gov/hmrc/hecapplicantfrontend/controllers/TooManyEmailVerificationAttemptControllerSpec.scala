@@ -67,8 +67,7 @@ class TooManyEmailVerificationAttemptControllerSpec
 
               val session = Fixtures.individualHECSession(
                 loginData = Fixtures.individualLoginData(emailAddress = ggEmailId.some),
-                userAnswers = Fixtures.completeIndividualUserAnswers(),
-                isEmailRequested = true,
+                emailRequestedForTaxCheck = Fixtures.emailRequestedForTaxCheck().some,
                 userEmailAnswers = Fixtures
                   .userEmailAnswers(
                     passcodeRequestResult = passcodeRequestResult,
@@ -92,8 +91,7 @@ class TooManyEmailVerificationAttemptControllerSpec
       "display the page" when {
         val session = Fixtures.individualHECSession(
           loginData = Fixtures.individualLoginData(emailAddress = None),
-          userAnswers = Fixtures.completeIndividualUserAnswers(),
-          isEmailRequested = true,
+          emailRequestedForTaxCheck = Fixtures.emailRequestedForTaxCheck().some,
           userEmailAnswers = Fixtures
             .userEmailAnswers(
               passcodeRequestResult = PasscodeRequestResult.MaximumNumberOfEmailsExceeded.some

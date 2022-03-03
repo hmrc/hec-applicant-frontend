@@ -18,11 +18,14 @@
 @import play.api.mvc.Request
 @import play.twirl.api.Html
 @import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
-@import uk.gov.hmrc.hecapplicantfrontend.models.EmailAddress
+@import uk.gov.hmrc.hecapplicantfrontend.models.{ EmailAddress, TaxCheckListItem }
 @import uk.gov.hmrc.hecapplicantfrontend.views.html.components.ExitSurveyLink
+@import uk.gov.hmrc.hecapplicantfrontend.models.views.LicenceTypeOption
+@import uk.gov.hmrc.hecapplicantfrontend.util.TimeUtils
 
 @this(layout: Layout, exitSurveyLink: ExitSurveyLink)
-@(email: EmailAddress)(implicit request:
+
+@(email: EmailAddress, taxCheck: TaxCheckListItem)(implicit request:
 Request[_], messages: Messages)
 @key = @{"emailSent"}
 @title = @{messages(s"$key.title")}
@@ -30,7 +33,7 @@ Request[_], messages: Messages)
 @layout(pageTitle = Some(title)) {
     <h1 class ="govuk-heading-xl">@title</h1>
     <p class="govuk-inset-text">@Html(messages(s"$key.p1",email.value ))</p>
-    <p class="govuk-body">@messages(s"$key.p2")</p>
+    <p class="govuk-body">@Html(messages(s"$key.p2", messages(s"licenceType.midSentence.${LicenceTypeOption.licenceTypeOption(taxCheck.licenceType).messageKey}"), TimeUtils.govDisplayFormat(taxCheck.expiresAfter)))</p>
     <p class="govuk-body">@Html(messages(s"$key.p3", routes.StartController.start().url))</p>
     @exitSurveyLink()
 }

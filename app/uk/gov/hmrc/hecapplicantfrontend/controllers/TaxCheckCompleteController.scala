@@ -19,17 +19,19 @@ package uk.gov.hmrc.hecapplicantfrontend.controllers
 import com.google.inject.{Inject, Singleton}
 import cats.instances.future._
 import play.api.i18n.I18nSupport
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
-import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
+import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, RequestWithSessionData, SessionDataAction}
 import uk.gov.hmrc.hecapplicantfrontend.models.CompanyUserAnswers.CompleteCompanyUserAnswers
+import uk.gov.hmrc.hecapplicantfrontend.models.{HECTaxCheck, TaxCheckListItem}
 import uk.gov.hmrc.hecapplicantfrontend.models.IndividualUserAnswers.CompleteIndividualUserAnswers
+import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.hecapplicantfrontend.views.html
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class TaxCheckCompleteController @Inject() (
@@ -46,19 +48,9 @@ class TaxCheckCompleteController @Inject() (
   /**
     * Fetches tax check data (code & expiry date) for authenticated user
     */
-  val taxCheckComplete: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
-    val licenceType = request.sessionData.userAnswers.foldByCompleteness(
-      _ => sys.error("Could not find complete answers"),
-      {
-        case ci: CompleteIndividualUserAnswers => ci.licenceType
-        case cc: CompleteCompanyUserAnswers    => cc.licenceType
-      }
-    )
-
-    request.sessionData.completedTaxCheck match {
-      case Some(taxCheck) => Ok(taxCheckCompletePage(taxCheck, licenceType))
-      case None           =>
-        sys.error("Tax check code not found")
+  val taxCheckComplete: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
+    ensureCompletedTaxCheckAndLicenceType { case (completedTaxCheck, licenceType) =>
+      Ok(taxCheckCompletePage(completedTaxCheck, licenceType))
     }
   }
 
@@ -66,17 +58,47 @@ class TaxCheckCompleteController @Inject() (
     if (!appConfig.sendEmailEnabled)
       sys.error("Email journey is not enabled")
     else {
-      val session        = request.sessionData
-      val updatedSession = session.fold(_.copy(isEmailRequested = true), _.copy(isEmailRequested = true))
-      journeyService
-        .updateAndNext(
-          routes.TaxCheckCompleteController.taxCheckComplete(),
-          updatedSession
+      ensureCompletedTaxCheckAndLicenceType { case (completedTaxCheck, licenceType) =>
+        val session                   = request.sessionData
+        val emailRequestedForTaxCheck = TaxCheckListItem(
+          licenceType,
+          completedTaxCheck.taxCheckCode,
+          completedTaxCheck.expiresAfter,
+          completedTaxCheck.createDate
         )
-        .fold(
-          _.doThrow("Could not update session and proceed"),
-          Redirect
+        val updatedSession            = session.fold(
+          _.copy(emailRequestedForTaxCheck = Some(emailRequestedForTaxCheck)),
+          _.copy(emailRequestedForTaxCheck = Some(emailRequestedForTaxCheck))
         )
+        journeyService
+          .updateAndNext(
+            routes.TaxCheckCompleteController.taxCheckComplete(),
+            updatedSession
+          )
+          .fold(
+            _.doThrow("Could not update session and proceed"),
+            Redirect
+          )
+      }
+
     }
   }
+
+  private def ensureCompletedTaxCheckAndLicenceType(
+    f: (HECTaxCheck, LicenceType) => Future[Result]
+  )(implicit r: RequestWithSessionData[_]): Future[Result] = {
+    val licenceType = r.sessionData.userAnswers.foldByCompleteness(
+      _ => sys.error("Could not find complete answers"),
+      {
+        case ci: CompleteIndividualUserAnswers => ci.licenceType
+        case cc: CompleteCompanyUserAnswers    => cc.licenceType
+      }
+    )
+
+    r.sessionData.completedTaxCheck match {
+      case Some(taxCheck) => f(taxCheck, licenceType)
+      case None           => sys.error("Completed tax check not found")
+    }
+  }
+
 }

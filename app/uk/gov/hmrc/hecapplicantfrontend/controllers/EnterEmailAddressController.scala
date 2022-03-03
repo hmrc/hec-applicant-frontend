@@ -48,7 +48,7 @@ class EnterEmailAddressController @Inject() (
     with Logging {
 
   val enterEmailAddress: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
-    request.sessionData.ensureEmailHasBeenRequested {
+    request.sessionData.ensureEmailHasBeenRequested { _ =>
       val userEmailAnswerOpt: Option[UserEmailAnswers] = request.sessionData.userEmailAnswers
 
       val updatedSession =
@@ -71,7 +71,7 @@ class EnterEmailAddressController @Inject() (
   }
 
   val enterEmailAddressSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
-    request.sessionData.ensureEmailHasBeenRequested {
+    request.sessionData.ensureEmailHasBeenRequested { _ =>
       def handleValidEmail(userSelectedEmail: UserSelectedEmail) = {
         val result = for {
           passcodeResult     <-

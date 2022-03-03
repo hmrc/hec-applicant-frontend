@@ -193,7 +193,7 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
       List.empty,
       hasConfirmedDetails = true,
       None,
-      isEmailRequested = false,
+      emailRequestedForTaxCheck = None,
       false,
       None
     )
@@ -217,7 +217,6 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
         |    "taxCheckStartDateTime" : "2021-12-17T16:32:33.368Z[Europe/London]",
         |    "unexpiredTaxChecks" : [],
         |    "hasConfirmedDetails" : true,
-        |    "isEmailRequested": false,
         |    "hasResentEmailConfirmation" : false,
         |    "type" : "Individual"
         |}

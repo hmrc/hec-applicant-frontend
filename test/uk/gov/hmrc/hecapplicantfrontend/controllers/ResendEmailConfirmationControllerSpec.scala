@@ -68,8 +68,7 @@ class ResendEmailConfirmationControllerSpec
 
         "user selected email is not in session" in {
           val session = Fixtures.individualHECSession(
-            userAnswers = Fixtures.completeIndividualUserAnswers(),
-            isEmailRequested = true
+            emailRequestedForTaxCheck = Fixtures.emailRequestedForTaxCheck().some
           )
 
           inSequence {
@@ -84,8 +83,7 @@ class ResendEmailConfirmationControllerSpec
       "display the page" in {
 
         val session = Fixtures.individualHECSession(
-          userAnswers = Fixtures.completeIndividualUserAnswers(),
-          isEmailRequested = true,
+          emailRequestedForTaxCheck = Fixtures.emailRequestedForTaxCheck().some,
           userEmailAnswers = Fixtures
             .userEmailAnswers(
               passcodeRequestResult = PasscodeRequestResult.PasscodeSent.some
@@ -126,8 +124,7 @@ class ResendEmailConfirmationControllerSpec
 
         "user selected email is not in session" in {
           val session = Fixtures.individualHECSession(
-            userAnswers = Fixtures.completeIndividualUserAnswers(),
-            isEmailRequested = true
+            emailRequestedForTaxCheck = Fixtures.emailRequestedForTaxCheck().some
           )
 
           inSequence {
@@ -140,8 +137,7 @@ class ResendEmailConfirmationControllerSpec
         "Call to request passcode fails" in {
           val session = Fixtures.companyHECSession(
             loginData = Fixtures.companyLoginData(emailAddress = ggEmailId.some),
-            userAnswers = Fixtures.completeCompanyUserAnswers(),
-            isEmailRequested = true,
+            emailRequestedForTaxCheck = Fixtures.emailRequestedForTaxCheck().some,
             userEmailAnswers = Fixtures
               .userEmailAnswers(
                 passcodeRequestResult = PasscodeRequestResult.PasscodeSent.some
@@ -160,8 +156,7 @@ class ResendEmailConfirmationControllerSpec
         "Call to update and Next fails" in {
           val session = Fixtures.companyHECSession(
             loginData = Fixtures.companyLoginData(emailAddress = ggEmailId.some),
-            userAnswers = Fixtures.completeCompanyUserAnswers(),
-            isEmailRequested = true,
+            emailRequestedForTaxCheck = Fixtures.emailRequestedForTaxCheck().some,
             userEmailAnswers = Fixtures.userEmailAnswers().some
           )
 
@@ -191,8 +186,7 @@ class ResendEmailConfirmationControllerSpec
       "redirect to next page" in {
         val session = Fixtures.companyHECSession(
           loginData = Fixtures.companyLoginData(emailAddress = ggEmailId.some),
-          userAnswers = Fixtures.completeCompanyUserAnswers(),
-          isEmailRequested = true,
+          emailRequestedForTaxCheck = Fixtures.emailRequestedForTaxCheck().some,
           userEmailAnswers = Fixtures.userEmailAnswers().some
         )
 

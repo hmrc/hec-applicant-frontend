@@ -38,7 +38,7 @@ trait HECSession extends Product with Serializable {
   val completedTaxCheck: Option[HECTaxCheck]
   val taxCheckStartDateTime: Option[ZonedDateTime]
   val unexpiredTaxChecks: List[TaxCheckListItem]
-  val isEmailRequested: Boolean
+  val emailRequestedForTaxCheck: Option[TaxCheckListItem]
   val hasResentEmailConfirmation: Boolean //flag added to separate the resend email confirmaation journey
   val userEmailAnswers: Option[UserEmailAnswers]
 
@@ -55,7 +55,7 @@ object HECSession {
     unexpiredTaxChecks: List[TaxCheckListItem],
     hasConfirmedDetails: Boolean,
     relevantIncomeTaxYear: Option[TaxYear],
-    isEmailRequested: Boolean,
+    emailRequestedForTaxCheck: Option[TaxCheckListItem],
     hasResentEmailConfirmation: Boolean,
     userEmailAnswers: Option[UserEmailAnswers]
   ) extends HECSession {
@@ -74,7 +74,7 @@ object HECSession {
         List.empty,
         false,
         None,
-        false,
+        None,
         false,
         None
       )
@@ -89,7 +89,7 @@ object HECSession {
     taxCheckStartDateTime: Option[ZonedDateTime],
     unexpiredTaxChecks: List[TaxCheckListItem],
     crnBlocked: Boolean = false,
-    isEmailRequested: Boolean,
+    emailRequestedForTaxCheck: Option[TaxCheckListItem],
     hasResentEmailConfirmation: Boolean,
     userEmailAnswers: Option[UserEmailAnswers]
   ) extends HECSession {
@@ -106,7 +106,7 @@ object HECSession {
         None,
         None,
         List.empty,
-        isEmailRequested = false,
+        emailRequestedForTaxCheck = None,
         hasResentEmailConfirmation = false,
         userEmailAnswers = None
       )
@@ -184,8 +184,13 @@ object HECSession {
       }
     }
 
-    def ensureEmailHasBeenRequested[A](f: => A): A =
-      if (s.fold(_.isEmailRequested, _.isEmailRequested)) f else sys.error("Email has not been requested")
+    def isEmailRequested: Boolean = s.fold(_.emailRequestedForTaxCheck, _.emailRequestedForTaxCheck).isDefined
+
+    def ensureEmailHasBeenRequested[A](f: TaxCheckListItem => A): A =
+      s.fold(_.emailRequestedForTaxCheck, _.emailRequestedForTaxCheck) match {
+        case Some(taxCheck) => f(taxCheck)
+        case None           => sys.error("Email has not been requested")
+      }
 
     def ensureGGEmailIdPresent[A](f: EmailAddress => A): A =
       s.fold(_.loginData.emailAddress, _.loginData.emailAddress) match {
