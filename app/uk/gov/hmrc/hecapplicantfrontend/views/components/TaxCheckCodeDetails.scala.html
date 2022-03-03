@@ -32,10 +32,10 @@
   @taxCheckDetails._2.map { code =>
     <dl class="govuk-summary-list existing-code">
       <div class="govuk-summary-list__row">
-        <dt class="govuk-summary-list__key ">
+        <dt class="govuk-summary-list__key">
           @{messages("taxCheck.expiryKey")}
         </dt>
-        <dd class="govuk-summary-list__value align-middle value-width">
+        <dd class="govuk-summary-list__value align-middle">
           @{TimeUtils.govDisplayFormat(code.expiresAfter)}
         </dd>
         <dd class="govuk-summary-list__actions">
