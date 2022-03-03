@@ -33,6 +33,9 @@ body:not(.js-enabled) .js-visible {
   @include govuk-media-query($until: desktop) {
     .copy-to-clipboard {
       padding: 7px 20px;
+      &.copied-to-clipboard {
+        padding: 7px 15px;
+      }
     }
   }
   @include govuk-media-query($until: tablet) {
