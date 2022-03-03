@@ -28,10 +28,10 @@
     class="js-visible govuk-button govuk-button--secondary copy-to-clipboard not-supported"
     aria-live="assertive"
   >
-    <span class="copy-content govuk-!-font-size-16">
+    <span class="copy-content">
       @copyContent.getOrElse(messages("button.copy"))
     </span>
-    <span class="copied-content govuk-!-font-size-16">
+    <span class="copied-content">
       @copiedContent.getOrElse(messages("button.copied"))
     </span>
     @screenReaderText.map(s => Html(s"""<span class="govuk-visually-hidden">${s} </span>"""))

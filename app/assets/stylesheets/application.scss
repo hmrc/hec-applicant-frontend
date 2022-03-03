@@ -25,6 +25,9 @@ body:not(.js-enabled) .js-visible {
 .existing-code {
   .govuk-button {
     margin-bottom: 0;
+    > span {
+      font-size: 16px;
+    }
   }
 }
 
