@@ -56,6 +56,10 @@ body:not(.js-enabled) .js-visible {
   }
   @include govuk-media-query($from: tablet) {
 
+    .govuk-summary-list__key {
+      width: 24%;
+    }
+
     .padding-l {
       padding-left: 0!important;;
     }
