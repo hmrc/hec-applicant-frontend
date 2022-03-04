@@ -141,7 +141,7 @@ object Fixtures {
     taxCheckStartDateTime: Option[ZonedDateTime] = None,
     unexpiredTaxChecks: List[TaxCheckListItem] = List.empty,
     relevantIncomeTaxYear: Option[TaxYear] = None,
-    emailRequestedForTaxCheck: Option[TaxCheckListItem] = None,
+    emailRequestedForTaxCheck: Option[EmailRequestedForTaxCheck] = None,
     hasResentEmailConfirmation: Boolean = false,
     userEmailAnswers: Option[UserEmailAnswers] = None
   ): IndividualHECSession =
@@ -187,7 +187,7 @@ object Fixtures {
     taxCheckStartDateTime: Option[ZonedDateTime] = None,
     unexpiredTaxChecks: List[TaxCheckListItem] = List.empty,
     crnBlocked: Boolean = false,
-    emailRequestedForTaxCheck: Option[TaxCheckListItem] = None,
+    emailRequestedForTaxCheck: Option[EmailRequestedForTaxCheck] = None,
     hasResentEmailConfirmation: Boolean = false,
     userEmailAnswers: Option[UserEmailAnswers] = None
   ): CompanyHECSession = CompanyHECSession(
@@ -254,14 +254,20 @@ object Fixtures {
     )
 
   def emailRequestedForTaxCheck(
+    originUrl: String = "",
     licenceType: LicenceType = LicenceType.DriverOfTaxisAndPrivateHires,
     taxCheckCode: HECTaxCheckCode = HECTaxCheckCode("TTT222TTT"),
     expiresAfter: LocalDate = LocalDate.now(),
     createDate: ZonedDateTime = ZonedDateTime.now()
-  ) = TaxCheckListItem(
-    licenceType,
-    taxCheckCode,
-    expiresAfter,
-    createDate
-  )
+  ): EmailRequestedForTaxCheck =
+    EmailRequestedForTaxCheck(
+      originUrl,
+      TaxCheckListItem(
+        licenceType,
+        taxCheckCode,
+        expiresAfter,
+        createDate
+      )
+    )
+
 }

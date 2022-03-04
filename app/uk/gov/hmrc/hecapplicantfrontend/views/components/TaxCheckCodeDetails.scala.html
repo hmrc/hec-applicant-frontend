@@ -15,7 +15,8 @@
  *@
 
 @import play.api.i18n.Messages
-
+@import play.twirl.api.Html
+@import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 @import uk.gov.hmrc.hecapplicantfrontend.models.TaxCheckListItem
 @import uk.gov.hmrc.hecapplicantfrontend.models.views.LicenceTypeOption
 @import uk.gov.hmrc.hecapplicantfrontend.util.TimeUtils
@@ -25,7 +26,6 @@
 
 @(taxCheckDetails: (LicenceType, List[TaxCheckListItem]))(implicit messages: Messages)
 @licenceType = @{messages(s"licenceType.${LicenceTypeOption.licenceTypeOption(taxCheckDetails._1).messageKey}")}
-
 <div class="licence-type-group">
   <h2 class="govuk-heading-l">
     @licenceType
@@ -33,7 +33,7 @@
   @taxCheckDetails._2.map { code =>
     <dl class="govuk-summary-list existing-code">
       <div class="govuk-summary-list__row">
-        <dt class="govuk-summary-list__key ">
+        <dt class="govuk-summary-list__key">
           @{messages("taxCheck.expiryKey")}
         </dt>
         <dd class="govuk-summary-list__value align-middle">
@@ -41,19 +41,29 @@
         </dd>
         <dd class="govuk-summary-list__actions">
         </dd>
+        <dd class="govuk-summary-list__actions">
+        </dd>
       </div>
-      <div class="govuk-summary-list__row">
-        <dt class="govuk-summary-list__key  align-middle">
+      <div class="govuk-summary-list__row line-thick">
+        <dt class="govuk-summary-list__key align-middle">
           @{messages("taxCheck.codeKey")}
         </dt>
         <dd class="govuk-summary-list__value align-middle">
           @{code.taxCheckCode.value.grouped(3).mkString(" ")}
         </dd>
-        <dd class="govuk-summary-list__actions align-middle">
+        <dd class="govuk-summary-list__actions align-middle align-left padding-l">
           @{copyButton(
             code.taxCheckCode.value,
             Some(messages("taxChecksList.copyButtonScreenReaderText", licenceType, code.taxCheckCode.value))
           )}
+        </dd>
+        <dd class="govuk-summary-list__actions align-middle email-column mob-pb-15 ">
+          <a class="govuk-link desktop-email-link" href="@{routes.TaxChecksListController.sendEmail(code.taxCheckCode).url}">
+            @Html(messages("taxCheck.emailLink", messages("taxChecksList.copyButtonScreenReaderText", licenceType, code.taxCheckCode.value)))
+          </a>
+          <a class="mobile-email-link govuk-button govuk-button--secondary" role="button" data-module="govuk-button" href="@{routes.TaxChecksListController.sendEmail(code.taxCheckCode).url}">
+            @Html(messages("taxCheck.emailLink", messages("taxChecksList.copyButtonScreenReaderText", licenceType, code.taxCheckCode.value)))
+          </a>
         </dd>
       </div>
     </dl>

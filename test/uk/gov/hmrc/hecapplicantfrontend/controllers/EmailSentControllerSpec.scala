@@ -22,7 +22,7 @@ import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, HECSession, HECTaxCheckCode, TaxCheckListItem}
+import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, EmailRequestedForTaxCheck, HECSession, HECTaxCheckCode, TaxCheckListItem}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{Passcode, PasscodeRequestResult, PasscodeVerificationResult}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
 import uk.gov.hmrc.hecapplicantfrontend.models.views.LicenceTypeOption
@@ -92,13 +92,17 @@ class EmailSentControllerSpec
         val taxCheckCode              = "LXB7G6DX7"
         val expiryDate                = LocalDate.of(2020, 1, 8)
         val emailRequestedForTaxCheck =
-          TaxCheckListItem(
-            LicenceType.DriverOfTaxisAndPrivateHires,
-            HECTaxCheckCode(taxCheckCode),
-            expiryDate,
-            ZonedDateTime.now()
+          EmailRequestedForTaxCheck(
+            "",
+            TaxCheckListItem(
+              LicenceType.DriverOfTaxisAndPrivateHires,
+              HECTaxCheckCode(taxCheckCode),
+              expiryDate,
+              ZonedDateTime.now()
+            )
           )
-        val session: HECSession       = Fixtures.individualHECSession(
+
+        val session: HECSession = Fixtures.individualHECSession(
           loginData = Fixtures.individualLoginData(emailAddress = ggEmailId.some),
           emailRequestedForTaxCheck = Some(emailRequestedForTaxCheck),
           userEmailAnswers = userEmailAnswer.some
@@ -117,7 +121,7 @@ class EmailSentControllerSpec
             doc.select(".govuk-body").html         should include regex messageFromMessageKey(
               "emailSent.p2",
               messageFromMessageKey(
-                s"licenceType.midSentence.${LicenceTypeOption.licenceTypeOption(emailRequestedForTaxCheck.licenceType).messageKey}"
+                s"licenceType.midSentence.${LicenceTypeOption.licenceTypeOption(emailRequestedForTaxCheck.taxCheck.licenceType).messageKey}"
               ),
               "8 January 2020"
             )

@@ -196,12 +196,16 @@ class TaxCheckCompleteControllerSpec
             completeIndividualAnswers,
             Some(completedTaxCheck)
           )
-          val emailRequestedForTaxCheck = TaxCheckListItem(
-            completeIndividualAnswers.licenceType,
-            completedTaxCheck.taxCheckCode,
-            completedTaxCheck.expiresAfter,
-            completedTaxCheck.createDate
-          )
+          val emailRequestedForTaxCheck =
+            EmailRequestedForTaxCheck(
+              routes.TaxCheckCompleteController.taxCheckComplete().url,
+              TaxCheckListItem(
+                completeIndividualAnswers.licenceType,
+                completedTaxCheck.taxCheckCode,
+                completedTaxCheck.expiresAfter,
+                completedTaxCheck.createDate
+              )
+            )
 
           val updatedSession = session.copy(emailRequestedForTaxCheck = Some(emailRequestedForTaxCheck))
 
@@ -259,12 +263,16 @@ class TaxCheckCompleteControllerSpec
               Some(completedTaxCheck),
               taxCheckStartDateTime = Some(now)
             )
-          val emailRequestedForTaxCheck = TaxCheckListItem(
-            answers.licenceType,
-            completedTaxCheck.taxCheckCode,
-            completedTaxCheck.expiresAfter,
-            completedTaxCheck.createDate
-          )
+          val emailRequestedForTaxCheck =
+            EmailRequestedForTaxCheck(
+              routes.TaxCheckCompleteController.taxCheckComplete().url,
+              TaxCheckListItem(
+                answers.licenceType,
+                completedTaxCheck.taxCheckCode,
+                completedTaxCheck.expiresAfter,
+                completedTaxCheck.createDate
+              )
+            )
           nextPageRedirectTest(session, session.copy(emailRequestedForTaxCheck = Some(emailRequestedForTaxCheck)))
         }
 
@@ -285,12 +293,16 @@ class TaxCheckCompleteControllerSpec
             Some(completedTaxCheck),
             taxCheckStartDateTime = Some(now)
           )
-          val emailRequestedForTaxCheck = TaxCheckListItem(
-            answers.licenceType,
-            completedTaxCheck.taxCheckCode,
-            completedTaxCheck.expiresAfter,
-            completedTaxCheck.createDate
-          )
+          val emailRequestedForTaxCheck =
+            EmailRequestedForTaxCheck(
+              routes.TaxCheckCompleteController.taxCheckComplete().url,
+              TaxCheckListItem(
+                answers.licenceType,
+                completedTaxCheck.taxCheckCode,
+                completedTaxCheck.expiresAfter,
+                completedTaxCheck.createDate
+              )
+            )
           nextPageRedirectTest(session, session.copy(emailRequestedForTaxCheck = Some(emailRequestedForTaxCheck)))
         }
 

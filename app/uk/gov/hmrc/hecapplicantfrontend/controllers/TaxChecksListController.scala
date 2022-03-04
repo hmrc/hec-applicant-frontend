@@ -17,18 +17,22 @@
 package uk.gov.hmrc.hecapplicantfrontend.controllers
 
 import cats.instances.future._
+import cats.syntax.eq._
 import com.google.inject.{Inject, Singleton}
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
 import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.TaxCheckCodesDisplayed
+import uk.gov.hmrc.hecapplicantfrontend.models.{EmailRequestedForTaxCheck, HECTaxCheckCode}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
 import uk.gov.hmrc.hecapplicantfrontend.services.{AuditService, JourneyService}
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
+import uk.gov.hmrc.hecapplicantfrontend.util.StringUtils._
 import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
 import java.time.ZonedDateTime
+import java.util.Locale
 import scala.concurrent.ExecutionContext
 
 @Singleton
@@ -68,10 +72,49 @@ class TaxChecksListController @Inject() (
 
   val unexpiredTaxChecksSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     journeyService
-      .updateAndNext(routes.TaxChecksListController.unexpiredTaxChecks(), request.sessionData)
+      .updateAndNext(
+        routes.TaxChecksListController.unexpiredTaxChecks(),
+        request.sessionData.fold(_.copy(emailRequestedForTaxCheck = None), _.copy(emailRequestedForTaxCheck = None))
+      )
       .fold(
         _.doThrow("Could not save tax check"),
         Redirect
       )
   }
+
+  def sendEmail(taxCheckCode: HECTaxCheckCode): Action[AnyContent] =
+    authAction.andThen(sessionDataAction).async { implicit request =>
+      request.sessionData.unexpiredTaxChecks match {
+        case Nil       =>
+          sys.error("No tax check codes found")
+        case taxChecks =>
+          taxChecks.find(t => normalise(t.taxCheckCode) === normalise(taxCheckCode)) match {
+            case None           =>
+              sys.error(s"Received request to send tax check email for non-existent tax check code ${taxCheckCode.value}")
+            case Some(taxCheck) =>
+              val emailRequestedForTaxCheck = EmailRequestedForTaxCheck(
+                routes.TaxChecksListController.unexpiredTaxChecks().url,
+                taxCheck
+              )
+              val updatedSession            = request.sessionData.fold(
+                _.copy(emailRequestedForTaxCheck = Some(emailRequestedForTaxCheck)),
+                _.copy(emailRequestedForTaxCheck = Some(emailRequestedForTaxCheck))
+              )
+
+              journeyService
+                .updateAndNext(
+                  routes.TaxChecksListController.unexpiredTaxChecks(),
+                  updatedSession
+                )
+                .fold(
+                  _.doThrow("Could not update session and calculate next page"),
+                  Redirect
+                )
+          }
+      }
+    }
+
+  private def normalise(taxCheckCode: HECTaxCheckCode): HECTaxCheckCode =
+    HECTaxCheckCode(taxCheckCode.value.toUpperCase(Locale.UK).removeWhitespace)
+
 }
