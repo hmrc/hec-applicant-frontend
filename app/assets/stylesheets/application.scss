@@ -60,6 +60,10 @@ body:not(.js-enabled) .js-visible {
       width: 24%;
     }
 
+    .govuk-summary-list__value {
+      width: 19%;
+    }
+
     .padding-l {
       padding-left: 0!important;;
     }
@@ -83,10 +87,6 @@ body:not(.js-enabled) .js-visible {
 
   .align-middle {
     vertical-align: middle;
-  }
-
-  .govuk-summary-list__value {
-    width: 19%;
   }
 
   .align-left {
