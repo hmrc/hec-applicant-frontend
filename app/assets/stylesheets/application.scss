@@ -39,6 +39,9 @@ body:not(.js-enabled) .js-visible {
     }
   }
   @include govuk-media-query($until: tablet) {
+    .govuk-summary-list__row {
+      border-bottom: none;
+    }
     .email-column {
       padding-left: 0!important;
     }
