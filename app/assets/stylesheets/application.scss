@@ -29,7 +29,6 @@ body:not(.js-enabled) .js-visible {
 }
 
 .existing-code {
-
   @include govuk-media-query($until: desktop) {
     .copy-to-clipboard {
       padding: 7px 20px;
@@ -57,28 +56,23 @@ body:not(.js-enabled) .js-visible {
       }
     }
   }
-  @include govuk-media-query($from: tablet) {
 
+  @include govuk-media-query($from: tablet) {
     .govuk-summary-list__key {
       width: 24%;
     }
-
     .govuk-summary-list__value {
       width: 19%;
     }
-
     .padding-l {
       padding-left: 0!important;;
     }
-
     .govuk-summary-list__actions {
       text-align: left;
-
       .mobile-email-link {
         display: none;
       }
     }
-
   }
 
   .govuk-button {
@@ -94,10 +88,6 @@ body:not(.js-enabled) .js-visible {
 
   .align-left {
     text-align: left;
-  }
-
-  .smaller-rem {
-    font-size: 1.1rem;
   }
 
   .email-column {
