@@ -260,7 +260,7 @@ crn.error.notFoundInCompaniesHouse = Your company registration number does not m
 # Tax Check Codes
 taxCheck.expiryKey = Last day your code can be used
 taxCheck.codeKey = Tax check code
-taxCheck.emailLink = Send by email <span class="govuk-visually-hidden">{0}</span>
+taxCheck.emailLink = Send by email<span class="govuk-visually-hidden"> your tax check code {0}</span>
 
 # Tax Checks List
 taxChecksList.title = Your tax check codes

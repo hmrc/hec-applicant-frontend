@@ -90,7 +90,9 @@ class TaxChecksListController @Inject() (
         case taxChecks =>
           taxChecks.find(t => normalise(t.taxCheckCode) === normalise(taxCheckCode)) match {
             case None           =>
-              sys.error(s"Received request to send tax check email for non-existent tax check code ${taxCheckCode.value}")
+              sys.error(
+                s"Received request to send tax check email for non-existent tax check code ${taxCheckCode.value}"
+              )
             case Some(taxCheck) =>
               val emailRequestedForTaxCheck = EmailRequestedForTaxCheck(
                 routes.TaxChecksListController.unexpiredTaxChecks().url,

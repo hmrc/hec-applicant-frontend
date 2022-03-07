@@ -191,6 +191,17 @@ class TaxChecksListControllerSpec
             messageFromMessageKey(s"licenceType.${LicenceTypeOption.licenceTypeOption(item.licenceType).messageKey}"),
             item.taxCheckCode.value
           )}"
+          element.select("a.desktop-email-link").html()      shouldBe
+            messageFromMessageKey(
+              "taxCheck.emailLink",
+              item.taxCheckCode.value
+            )
+
+          element.select("a.mobile-email-link").html() shouldBe
+            messageFromMessageKey(
+              "taxCheck.emailLink",
+              item.taxCheckCode.value
+            )
         }
 
         checkPageIsDisplayed(

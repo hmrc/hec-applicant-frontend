@@ -59,10 +59,10 @@
         </dd>
         <dd class="govuk-summary-list__actions align-middle email-column mob-pb-15 ">
           <a class="govuk-link desktop-email-link" href="@{routes.TaxChecksListController.sendEmail(code.taxCheckCode).url}">
-            @Html(messages("taxCheck.emailLink", messages("taxChecksList.copyButtonScreenReaderText", "", code.taxCheckCode.value)))
+            @Html(messages("taxCheck.emailLink", code.taxCheckCode.value))
           </a>
           <a class="mobile-email-link govuk-button govuk-button--secondary" role="button" data-module="govuk-button" href="@{routes.TaxChecksListController.sendEmail(code.taxCheckCode).url}">
-            @Html(messages("taxCheck.emailLink", messages("taxChecksList.copyButtonScreenReaderText", "", code.taxCheckCode.value)))
+            @Html(messages("taxCheck.emailLink", code.taxCheckCode.value))
           </a>
         </dd>
       </div>
