@@ -342,7 +342,7 @@ accessDenied.p2 = If you need any assistance accessing this link, please get in 
 
 # Confirm email address
 confirmEmailAddress.title = Which email address would you like to use?
-confirmEmailAddress.hint = Your tax check code will be sent to this email, any other email addresses you have saved with us will not be changed
+confirmEmailAddress.hint = You must have access to this email address. Any other email addresses you have saved with us will not be changed.
 confirmEmailAddress.differentEmail = A different email address
 confirmEmailAddress.error.required = Select which email address you would like to use
 confirmEmailAddress.error.invalid = Select which email address you would like to use
