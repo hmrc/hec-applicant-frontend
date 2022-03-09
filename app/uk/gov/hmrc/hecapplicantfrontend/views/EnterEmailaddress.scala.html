@@ -48,7 +48,8 @@
                 content = Text(title)
             ),
             classes = "govuk-!-width-full",
-            errorMessage = formErrorMessage(form, key)
+            errorMessage = formErrorMessage(form, key),
+            hint = Some(Hint(content = Text(messages(s"$key.hint"))))
         ))
 
         @govukButton(Button(

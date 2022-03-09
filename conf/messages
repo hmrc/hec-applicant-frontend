@@ -383,6 +383,7 @@ emailSent.p3 = <a href="{0}" class="govuk-link">See my tax check codes</a>
 
 #Enter Email Address
 enterEmailAddress.title = What email address do you want to use?
+enterEmailAddress.hint = You must have access to this email address.
 enterEmailAddress.error.required = Enter email address
 enterEmailAddress.error.invalidFormat = Enter an email address in the correct format, like name@example.com
 enterEmailAddress.error.tooManyChar = Email address has too many characters, it should be less or equal to 256

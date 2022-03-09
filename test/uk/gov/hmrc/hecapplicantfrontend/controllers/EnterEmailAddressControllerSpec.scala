@@ -121,6 +121,8 @@ class EnterEmailAddressControllerSpec
             { doc =>
               doc.select("#back").attr("href") shouldBe mockPreviousCall.url
 
+              doc.select(".govuk-hint").text() shouldBe messageFromMessageKey("enterEmailAddress.hint")
+
               doc.select(".govuk-input").attr("value") shouldBe userEmailAnswers
                 .map(_.userSelectedEmail.emailAddress.value)
                 .getOrElse("")
