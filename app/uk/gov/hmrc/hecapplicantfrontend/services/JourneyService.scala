@@ -656,6 +656,18 @@ object JourneyServiceImpl {
     }
 
   /**
+    * Is the tax situation one that would allow the user to progress to get a tax check?
+    */
+  private def checkTaxSituation(taxSituation: TaxSituation, session: IndividualHECSession): Boolean =
+    taxSituation match {
+      case TaxSituation.SA | TaxSituation.SAPAYE =>
+        session.loginData.sautr.isDefined && session.retrievedJourneyData.saStatus.exists(
+          _.status =!= SAStatus.NoReturnFound
+        )
+      case _                                     => true
+    }
+
+  /**
     * Process the incomplete individual answers and retrieved user data to determine if all answers have
     * been given by the user
     *
@@ -677,9 +689,10 @@ object JourneyServiceImpl {
             entityType
           ) =>
         val licenceTypeCheck      = checkEntityTypePresentIfRequired(licenceType, entityType)
+        val taxSituationCheck     = checkTaxSituation(taxSituation, session)
         val saIncomeDeclaredCheck =
           checkSAIncomeDeclared(taxSituation, saIncomeDeclared, session.retrievedJourneyData)
-        licenceTypeCheck && saIncomeDeclaredCheck
+        licenceTypeCheck && taxSituationCheck && saIncomeDeclaredCheck
 
       case _ => false
     }

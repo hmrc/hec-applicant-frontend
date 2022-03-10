@@ -2177,7 +2177,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                 )
                 val session     =
                   Fixtures.individualHECSession(
-                    loginData = individualLoginData,
+                    loginData = individualLoginData.copy(sautr = Some(SAUTR("utr"))),
                     retrievedJourneyData = journeyData,
                     userAnswers = incompleteAnswers
                   )
@@ -2194,7 +2194,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             }
           }
 
-          "the user has selected an SA tax situation, SA status != ReturnFound" in {
+          "the user has selected an SA tax situation, SA status = NoticeToFileIssued" in {
             List(
               TaxSituation.SA,
               TaxSituation.SAPAYE
@@ -2217,11 +2217,11 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                 )
 
                 val journeyData = IndividualRetrievedJourneyData(
-                  saStatus = Some(individual.SAStatusResponse(SAUTR("utr"), TaxYear(2020), SAStatus.NoReturnFound))
+                  saStatus = Some(individual.SAStatusResponse(SAUTR("utr"), TaxYear(2020), SAStatus.NoticeToFileIssued))
                 )
                 val session     =
                   Fixtures.individualHECSession(
-                    individualLoginData,
+                    individualLoginData.copy(sautr = Some(SAUTR("utr"))),
                     journeyData,
                     incompleteAnswers
                   )
@@ -3640,18 +3640,30 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
           ) shouldBe false
         }
 
-        "tax situation = SA & status = ReturnFound & income declared is missing)" in {
-          List(
-            TaxSituation.SA,
-            TaxSituation.SAPAYE
-          ) foreach { taxSituation =>
-            withClue(s"for $taxSituation") {
+        "tax situation contains SA and" when {
+
+          def test(f: TaxSituation => Unit) =
+            List(
+              TaxSituation.SA,
+              TaxSituation.SAPAYE
+            ).foreach { taxSituation =>
+              withClue(s"for $taxSituation") {
+                f(taxSituation)
+              }
+            }
+
+          "status = ReturnFound & income declared is missing)" in {
+            test { taxSituation =>
               val journeyData = IndividualRetrievedJourneyData(
                 saStatus = Some(individual.SAStatusResponse(SAUTR("utr"), TaxYear(2020), SAStatus.ReturnFound))
               )
 
               val session =
-                IndividualHECSession.newSession(individualLoginData).copy(retrievedJourneyData = journeyData)
+                IndividualHECSession
+                  .newSession(
+                    individualLoginData.copy(sautr = Some(SAUTR("utr")))
+                  )
+                  .copy(retrievedJourneyData = journeyData)
 
               JourneyServiceImpl.allIndividualAnswersComplete(
                 incompleteUserAnswers = incompleteAnswersBase.copy(
@@ -3662,7 +3674,48 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               ) shouldBe false
             }
           }
+
+          "there is no SA UTR for the user in session" in {
+            test { taxSituation =>
+              val session =
+                IndividualHECSession.newSession(individualLoginData.copy(sautr = None))
+
+              JourneyServiceImpl.allIndividualAnswersComplete(
+                incompleteUserAnswers = incompleteAnswersBase.copy(
+                  taxSituation = Some(taxSituation),
+                  saIncomeDeclared = None
+                ),
+                session
+              ) shouldBe false
+            }
+
+          }
+
+          "the SA status response in session says no return was found" in {
+            test { taxSituation =>
+              val journeyData = IndividualRetrievedJourneyData(
+                saStatus = Some(individual.SAStatusResponse(SAUTR("utr"), TaxYear(2020), SAStatus.NoReturnFound))
+              )
+
+              val session =
+                IndividualHECSession
+                  .newSession(
+                    individualLoginData.copy(sautr = Some(SAUTR("utr")))
+                  )
+                  .copy(retrievedJourneyData = journeyData)
+
+              JourneyServiceImpl.allIndividualAnswersComplete(
+                incompleteUserAnswers = incompleteAnswersBase.copy(
+                  taxSituation = Some(taxSituation),
+                  saIncomeDeclared = None
+                ),
+                session
+              ) shouldBe false
+            }
+          }
+
         }
+
       }
 
       "return true" when {
@@ -3701,30 +3754,23 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
           }
         }
 
-        "tax situation = SA & status != ReturnFound (irrespective of whether income declared is missing or present)" in {
+        "tax situation = SA & status = NoticeToFileIssued (irrespective of whether income declared is missing or present)" in {
           val saTaxSituations = List(
             TaxSituation.SA,
             TaxSituation.SAPAYE
           )
-          val saStatuses      = List[SAStatus](
-            SAStatus.NoticeToFileIssued,
-            SAStatus.NoReturnFound
-          )
 
-          val permutations = for {
-            ts     <- saTaxSituations
-            status <- saStatuses
-          } yield ts -> status
-
-          permutations foreach { case (taxSituation, saStatus) =>
-            withClue(s"for $taxSituation & $saStatus") {
+          saTaxSituations foreach { taxSituation =>
+            withClue(s"for $taxSituation ") {
               val journeyData =
                 IndividualRetrievedJourneyData(
-                  saStatus = Some(individual.SAStatusResponse(SAUTR("utr"), TaxYear(2020), saStatus))
+                  saStatus = Some(individual.SAStatusResponse(SAUTR("utr"), TaxYear(2020), SAStatus.NoticeToFileIssued))
                 )
 
               val session =
-                IndividualHECSession.newSession(individualLoginData).copy(retrievedJourneyData = journeyData)
+                IndividualHECSession
+                  .newSession(individualLoginData.copy(sautr = Some(SAUTR("utr"))))
+                  .copy(retrievedJourneyData = journeyData)
 
               // income declared is missing
               JourneyServiceImpl.allIndividualAnswersComplete(
@@ -3758,7 +3804,9 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               )
 
               val session =
-                IndividualHECSession.newSession(individualLoginData).copy(retrievedJourneyData = journeyData)
+                IndividualHECSession
+                  .newSession(individualLoginData.copy(sautr = Some(SAUTR("utr"))))
+                  .copy(retrievedJourneyData = journeyData)
 
               JourneyServiceImpl.allIndividualAnswersComplete(
                 incompleteUserAnswers = incompleteAnswersBase.copy(
