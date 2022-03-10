@@ -117,7 +117,11 @@ class EmailSentControllerSpec
           performAction(),
           messageFromMessageKey("emailSent.title"),
           { doc =>
-            doc.select(".govuk-inset-text").text() should include regex "user@test.com"
+            doc.select(".govuk-inset-text").html shouldBe messageFromMessageKey(
+              "emailSent.p1",
+              emailRequestedForTaxCheck.taxCheck.taxCheckCode.value.grouped(3).mkString(" "),
+              userEmailAnswer.userSelectedEmail.emailAddress.value
+            )
             doc.select(".govuk-body").html         should include regex messageFromMessageKey(
               "emailSent.p2",
               messageFromMessageKey(
