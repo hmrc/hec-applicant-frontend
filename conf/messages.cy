@@ -274,7 +274,7 @@ verifyPasscode.p5=Gwiriwch eich ffolder sbam neu sothach – os nad yw wedi cyrr
 emailAddressConfirmed.title=Cyfeiriad e-bost wedi’i gadarnhau
 emailAddressConfirmed.p1=Mae’ch cyfeiriad e-bost wedi’i gadarnhau. Caiff eich cod gwirio treth ei anfon i {0}
 emailSent.title=Mae’ch cod gwirio treth wedi’i e-bostio atoch
-emailSent.p1=Rydym wedi anfon eich cod gwirio treth i <b>{0}</b>
+emailSent.p1=Rydym wedi anfon eich cod gwirio treth i <b>{1}</b>
 emailSent.p2=Y diwrnod olaf y gellir ei ddefnyddio yn eich cais am drwydded yw <strong>{1}</strong>.
 emailSent.p3=<a href="{0}" class="govuk-link">Gweld fy nghodau gwirio treth</a>
 enterEmailAddress.title=Pa gyfeiriad e-bost yr hoffech ei ddefnyddio?
