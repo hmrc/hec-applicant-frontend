@@ -19,6 +19,7 @@ package uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.individual
 import ai.x.play.json.Jsonx
 import ai.x.play.json.SingletonEncoder.simpleName
 import ai.x.play.json.implicits.formatSingleton
+import cats.Eq
 import play.api.libs.json.Format
 
 sealed trait SAStatus
@@ -30,6 +31,8 @@ object SAStatus {
   case object NoticeToFileIssued extends SAStatus
 
   case object NoReturnFound extends SAStatus
+
+  implicit val eq: Eq[SAStatus] = Eq.fromUniversalEquals
 
   @SuppressWarnings(Array("org.wartremover.warts.All"))
   implicit val format: Format[SAStatus] = Jsonx.formatSealed[SAStatus]
