@@ -185,7 +185,7 @@ wrongEntityType.link=Find out who needs to do a tax check
 
 # Check Your Answers
 checkYourAnswers.title = Check your answers
-checkYourAnswers.p1 = Make sure your answers are correct. We will use these details to do a tax check.
+checkYourAnswers.p1 = Make sure your answers are correct. We’ll use these details to do a tax check.
 checkYourAnswers.change = Change
 checkYourAnswers.declaration.heading = Declaration
 checkYourAnswers.declaration.p1 = The information I have given to do this tax check is correct and complete to the best of my knowledge and belief.
