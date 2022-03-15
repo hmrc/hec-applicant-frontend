@@ -23,10 +23,9 @@ import play.api.http.Status.ACCEPTED
 import uk.gov.hmrc.hecapplicantfrontend.connectors.{HECConnector, SendEmailConnector}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.RequestWithSessionData
 import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.SendTaxCheckCodeNotificationEmail
-import uk.gov.hmrc.hecapplicantfrontend.models.{Error, UserSelectedEmail}
+import uk.gov.hmrc.hecapplicantfrontend.models.{Error, Language, UserSelectedEmail}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailSend.{EmailParameters, EmailSendRequest, EmailSendResult}
-import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.Language
-import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.Language.{English, Welsh}
+import uk.gov.hmrc.hecapplicantfrontend.models.Language.{English, Welsh}
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.SaveEmailAddressRequest
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}

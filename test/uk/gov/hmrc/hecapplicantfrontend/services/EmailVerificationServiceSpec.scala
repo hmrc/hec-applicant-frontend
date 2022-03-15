@@ -36,8 +36,8 @@ import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.{SubmitEmailAddressVer
 import uk.gov.hmrc.hecapplicantfrontend.models.emailSend.EmailSendResult.EmailSent
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeRequestResult._
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeVerificationResult._
-import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, EmailRequestedForTaxCheck, EmailType, Error, HECSession, HECTaxCheckCode, TaxCheckListItem, UserSelectedEmail}
-import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{Language, Passcode, PasscodeRequest, PasscodeRequestResult, PasscodeVerificationRequest, PasscodeVerificationResult}
+import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, EmailRequestedForTaxCheck, EmailType, Error, HECSession, HECTaxCheckCode, Language, TaxCheckListItem, UserSelectedEmail}
+import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{Passcode, PasscodeRequest, PasscodeRequestResult, PasscodeVerificationRequest, PasscodeVerificationResult}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
 import uk.gov.hmrc.hecapplicantfrontend.services.EmailVerificationService.ErrorResponse
 import uk.gov.hmrc.hecapplicantfrontend.utils.Fixtures

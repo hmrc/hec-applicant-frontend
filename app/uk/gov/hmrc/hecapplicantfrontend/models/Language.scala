@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hecapplicantfrontend.models.emailVerification
+package uk.gov.hmrc.hecapplicantfrontend.models
 
 import play.api.libs.json.{JsString, Writes}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.AuthenticatedRequest

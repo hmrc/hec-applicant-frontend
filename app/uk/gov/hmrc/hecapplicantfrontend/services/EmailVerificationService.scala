@@ -26,8 +26,8 @@ import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.RequestWithSessionDa
 import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.{SubmitEmailAddressVerificationPasscode, SubmitEmailAddressVerificationRequest}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeRequestResult._
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeVerificationResult._
-import uk.gov.hmrc.hecapplicantfrontend.models.{Error, UserSelectedEmail}
-import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{Language, Passcode, PasscodeRequest, PasscodeRequestResult, PasscodeVerificationRequest, PasscodeVerificationResult}
+import uk.gov.hmrc.hecapplicantfrontend.models.{Error, Language, UserSelectedEmail}
+import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{Passcode, PasscodeRequest, PasscodeRequestResult, PasscodeVerificationRequest, PasscodeVerificationResult}
 import uk.gov.hmrc.hecapplicantfrontend.services.EmailVerificationService.ErrorResponse
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.hecapplicantfrontend.util.HttpResponseOps._
