@@ -62,7 +62,7 @@ class HECTaxCheckDataSpec extends AnyWordSpec with Matchers {
           ),
           taxCheckStartDateTime,
           HECTaxCheckSource.Digital,
-          Language.English
+          Language.Welsh
         )
 
       val individualJson = Json.parse(s"""{
@@ -93,7 +93,8 @@ class HECTaxCheckDataSpec extends AnyWordSpec with Matchers {
           | },
           | "taxCheckStartDateTime" : "2021-10-09T09:12:34+01:00[Europe/London]",
           | "type":"Individual",
-          | "source": "Digital"
+          | "source": "Digital",
+          | "languagePreference": "cy"
           |}""".stripMargin)
 
       val companyTaxCheckData: HECTaxCheckData =
@@ -154,7 +155,8 @@ class HECTaxCheckDataSpec extends AnyWordSpec with Matchers {
                                      | },
                                      | "taxCheckStartDateTime" : "2021-10-09T09:12:34+01:00[Europe/London]",
                                      | "source": "Digital",
-                                     |  "type":"Company"
+                                     | "languagePreference": "en",
+                                     | "type":"Company"
                                      |}""".stripMargin)
 
       "serialize Individual data" in {
