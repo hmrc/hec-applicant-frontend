@@ -84,7 +84,7 @@ class EmailVerificationServiceImpl @Inject() (
     val serviceName = r.request.request.messages("emailVerification.passcodeEmail.serviceName")
 
     val result: EitherT[Future, Error, HttpResponse] = for {
-      lang   <- EitherT.fromEither[Future](Language.fromRequest(r.request)).leftMap(Error(_))
+      lang   <- EitherT.fromEither[Future](Language.fromRequest(r.messagesRequest)).leftMap(Error(_))
       result <-
         emailVerificationConnector.requestPasscode(PasscodeRequest(userSelectedEmail.emailAddress, serviceName, lang))
     } yield result

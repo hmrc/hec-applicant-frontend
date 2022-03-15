@@ -19,7 +19,7 @@ package uk.gov.hmrc.hecapplicantfrontend.controllers.actions
 import cats.instances.future._
 import com.google.inject.{Inject, Singleton}
 import play.api.mvc.Results.Redirect
-import play.api.mvc.{ActionRefiner, Result, WrappedRequest}
+import play.api.mvc.{ActionRefiner, MessagesRequest, Result, WrappedRequest}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
@@ -31,6 +31,14 @@ final case class RequestWithSessionData[A](
   request: AuthenticatedRequest[A],
   sessionData: HECSession
 ) extends WrappedRequest[A](request)
+
+object RequestWithSessionData {
+
+  implicit class RequestWithSessionDataOps[A](private val r: RequestWithSessionData[A]) extends AnyVal {
+    def messagesRequest: MessagesRequest[A] = r.request.request
+  }
+
+}
 
 @Singleton
 class SessionDataAction @Inject() (

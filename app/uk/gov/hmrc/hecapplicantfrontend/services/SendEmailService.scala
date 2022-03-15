@@ -76,7 +76,7 @@ class SendEmailServiceImpl @Inject() (
       )
 
     EitherT
-      .fromEither[Future](Language.fromRequest(r.request))
+      .fromEither[Future](Language.fromRequest(r.messagesRequest))
       .leftMap((Error(_)))
       .flatMap { lang =>
         val templateId                                   = getTemplateId(lang)

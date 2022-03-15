@@ -61,7 +61,8 @@ class HECTaxCheckDataSpec extends AnyWordSpec with Matchers {
             TaxYear(2021)
           ),
           taxCheckStartDateTime,
-          HECTaxCheckSource.Digital
+          HECTaxCheckSource.Digital,
+          Language.English
         )
 
       val individualJson = Json.parse(s"""{
@@ -119,7 +120,8 @@ class HECTaxCheckDataSpec extends AnyWordSpec with Matchers {
             Some(YesNoAnswer.Yes)
           ),
           taxCheckStartDateTime,
-          HECTaxCheckSource.Digital
+          HECTaxCheckSource.Digital,
+          Language.English
         )
 
       val companyJson = Json.parse("""{

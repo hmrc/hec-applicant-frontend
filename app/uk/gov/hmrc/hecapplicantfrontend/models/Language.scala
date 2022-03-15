@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models
 
-import play.api.libs.json.{JsString, Writes}
-import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.AuthenticatedRequest
+import play.api.libs.json.{Format, JsError, JsResult, JsString, JsSuccess, Reads, Writes}
+import play.api.mvc.MessagesRequest
 
 import java.util.Locale
 
@@ -35,13 +35,21 @@ object Language {
     val code = "cy"
   }
 
-  def fromRequest(request: AuthenticatedRequest[_]): Either[String, Language] =
-    request.request.messages.lang.code.toLowerCase(Locale.UK) match {
-      case English.code => Right(English)
-      case Welsh.code   => Right(Welsh)
-      case other        => Left(s"Found unsupported language code $other")
-    }
+  def fromRequest(request: MessagesRequest[_]): Either[String, Language] =
+    fromString(request.messages.lang.code.toLowerCase(Locale.UK))
 
-  implicit val writes: Writes[Language] = Writes(l => JsString(l.code))
+  private def fromString(s: String): Either[String, Language] = s match {
+    case English.code => Right(English)
+    case Welsh.code   => Right(Welsh)
+    case other        => Left(s"Found unsupported language code $other")
+  }
+
+  implicit val format: Format[Language] = Format(
+    Reads({
+      case JsString(s) => fromString(s).fold[JsResult[Language]](JsError(_), JsSuccess(_))
+      case other       => JsError(s"Expected string but got ${other.getClass.getSimpleName}")
+    }),
+    Writes(l => JsString(l.code))
+  )
 
 }

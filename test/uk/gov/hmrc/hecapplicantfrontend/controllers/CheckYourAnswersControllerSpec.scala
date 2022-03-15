@@ -19,6 +19,7 @@ package uk.gov.hmrc.hecapplicantfrontend.controllers
 import cats.data.EitherT
 import cats.instances.future._
 import play.api.inject.bind
+import play.api.mvc.MessagesRequest
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
@@ -73,8 +74,8 @@ class CheckYourAnswersControllerSpec
     result: Either[Error, HECTaxCheck]
   ) =
     (mockTaxCheckService
-      .saveTaxCheck(_: HECSession, _: CompleteUserAnswers)(_: HeaderCarrier))
-      .expects(HECSession, completeAnswers, *)
+      .saveTaxCheck(_: HECSession, _: CompleteUserAnswers)(_: MessagesRequest[_], _: HeaderCarrier))
+      .expects(HECSession, completeAnswers, *, *)
       .returning(EitherT.fromEither(result))
 
   "CheckYourAnswersController" when {
