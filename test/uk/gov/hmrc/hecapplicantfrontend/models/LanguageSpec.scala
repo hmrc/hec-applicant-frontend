@@ -86,7 +86,7 @@ class LanguageSpec extends AnyWordSpec with Matchers {
           JsNumber(1).validate[Language] shouldBe a[JsError]
         }
 
-        "the string value is not a recoginised language code" in {
+        "the string value is not a recognised language code" in {
           JsString("XX").validate[Language] shouldBe a[JsError]
         }
 
