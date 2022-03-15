@@ -124,8 +124,6 @@ class AppConfig @Inject() (config: Configuration, contactFrontendConfig: Contact
 
   val maxTaxChecksPerLicenceType: Int = config.get[Int]("max-tax-checks-per-licence-type")
 
-  val sendEmailEnabled: Boolean = config.get[Boolean]("email-send.enabled")
-
   val exitSurveyUrl: String = {
     val baseUrl = platformHost.getOrElse(config.get[String]("feedback-frontend.base-url"))
     s"$baseUrl/feedback/$contactFormServiceIdentifier"
