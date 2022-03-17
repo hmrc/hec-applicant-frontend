@@ -98,7 +98,7 @@ GET        /confirmation-email-cannot-be-sent    uk.gov.hmrc.hecapplicantfronten
 
 GET        /send-email/:taxCheckCode             uk.gov.hmrc.hecapplicantfrontend.controllers.TaxChecksListController.sendEmail(taxCheckCode: uk.gov.hmrc.hecapplicantfrontend.models.HECTaxCheckCode)
 
-GET        /agents                               uk.gov.hmrc.hecapplicantfrontend.controllers.AgentsController.agentsNotSupported
+GET        /agent-cannot-access                  uk.gov.hmrc.hecapplicantfrontend.controllers.AgentsController.agentsNotSupported
 
 # IV
 GET  /failed-iv/callback                         uk.gov.hmrc.hecapplicantfrontend.controllers.IvFailureController.ivFailure(journeyId: java.util.UUID)
