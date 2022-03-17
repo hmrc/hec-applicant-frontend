@@ -71,7 +71,7 @@ class VerifyEmailPasscodeController @Inject() (
         .fold(
           _.doThrow("Could not update session and proceed"),
           _ => {
-            val req                           = RequestWithSessionData(request.request, updatedSession)
+            val req                           = request.copy(sessionData = updatedSession)
             val passcodeOpt: Option[Passcode] =
               session.fold(_.userEmailAnswers.flatMap(_.passcode), _.userEmailAnswers.flatMap(_.passcode))
             val form                          = passcodeOpt.fold(verifyPasscodeForm)(verifyPasscodeForm.fill)

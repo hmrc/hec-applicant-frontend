@@ -24,7 +24,6 @@ import cats.syntax.eq._
 import com.google.inject.{ImplementedBy, Inject, Singleton}
 import play.api.http.Status.OK
 import play.api.libs.json.{Json, OFormat}
-import play.api.mvc.MessagesRequest
 import play.mvc.Http.Status.{CREATED, NOT_FOUND}
 import uk.gov.hmrc.hecapplicantfrontend.connectors.HECConnector
 import uk.gov.hmrc.hecapplicantfrontend.models.CompanyUserAnswers.CompleteCompanyUserAnswers
@@ -51,8 +50,9 @@ trait TaxCheckService {
 
   def saveTaxCheck(
     session: HECSession,
-    answers: CompleteUserAnswers
-  )(implicit r: MessagesRequest[_], hc: HeaderCarrier): EitherT[Future, Error, HECTaxCheck]
+    answers: CompleteUserAnswers,
+    languagePreference: Language
+  )(implicit hc: HeaderCarrier): EitherT[Future, Error, HECTaxCheck]
 
   def getSAStatus(sautr: SAUTR, taxYear: TaxYear)(implicit hc: HeaderCarrier): EitherT[Future, Error, SAStatusResponse]
 
@@ -72,9 +72,10 @@ class TaxCheckServiceImpl @Inject() (hecConnector: HECConnector)(implicit ec: Ex
 
   def saveTaxCheck(
     session: HECSession,
-    answers: CompleteUserAnswers
-  )(implicit r: MessagesRequest[_], hc: HeaderCarrier): EitherT[Future, Error, HECTaxCheck] = {
-    val taxCheckData = toHECTaxCheckData(session, answers)
+    answers: CompleteUserAnswers,
+    languagePreference: Language
+  )(implicit hc: HeaderCarrier): EitherT[Future, Error, HECTaxCheck] = {
+    val taxCheckData = toHECTaxCheckData(session, answers, languagePreference)
     hecConnector
       .saveTaxCheck(taxCheckData)
       .subflatMap { response =>
@@ -129,10 +130,9 @@ class TaxCheckServiceImpl @Inject() (hecConnector: HECConnector)(implicit ec: Ex
 
   private def toHECTaxCheckData(
     session: HECSession,
-    completeUserAnswers: CompleteUserAnswers
-  )(implicit r: MessagesRequest[_]): HECTaxCheckData = {
-    val preferrenLanguage = Language.fromRequest(r).valueOr(sys.error)
-
+    completeUserAnswers: CompleteUserAnswers,
+    languagePreference: Language
+  ): HECTaxCheckData =
     (session, completeUserAnswers) match {
       case (
             IndividualHECSession(
@@ -179,7 +179,7 @@ class TaxCheckServiceImpl @Inject() (hecConnector: HECConnector)(implicit ec: Ex
             sys.error("taxCheckStartDateTime is not present")
           ),
           HECTaxCheckSource.Digital,
-          preferrenLanguage
+          languagePreference
         )
 
       case (
@@ -226,12 +226,11 @@ class TaxCheckServiceImpl @Inject() (hecConnector: HECConnector)(implicit ec: Ex
             sys.error("taxCheckStartDateTime is not present")
           ),
           HECTaxCheckSource.Digital,
-          preferrenLanguage
+          languagePreference
         )
 
       case _ => sys.error("Invalid session & complete answers combination")
     }
-  }
 
   def getUnexpiredTaxCheckCodes()(implicit hc: HeaderCarrier): EitherT[Future, Error, List[TaxCheckListItem]] =
     hecConnector

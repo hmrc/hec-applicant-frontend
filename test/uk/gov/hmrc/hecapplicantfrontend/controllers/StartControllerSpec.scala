@@ -23,7 +23,7 @@ import com.typesafe.config.ConfigFactory
 import play.api.Configuration
 import play.api.inject.bind
 import play.api.inject.guice.GuiceableModule
-import play.api.mvc.Result
+import play.api.mvc.{Cookie, Result}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.authorise.EmptyPredicate
@@ -34,7 +34,7 @@ import uk.gov.hmrc.hecapplicantfrontend.config.EnrolmentConfig
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, IndividualHECSession}
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CTUTR, GGCredId, NINO, SAUTR}
-import uk.gov.hmrc.hecapplicantfrontend.models.{CitizenDetails, DateOfBirth, EmailAddress, Error, HECSession, Name, TaxCheckListItem}
+import uk.gov.hmrc.hecapplicantfrontend.models.{CitizenDetails, DateOfBirth, EmailAddress, Error, HECSession, Language, Name, TaxCheckListItem}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.{CitizenDetailsService, JourneyService, TaxCheckService}
 import uk.gov.hmrc.hecapplicantfrontend.util.StringUtils.StringOps
@@ -72,6 +72,7 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
          |   sign-in.url = "$signInUrl"
          |   gg.origin = "$ggOrigin"
          |}
+         |play.i18n.langs = ["en", "cy", "fr"]
          |""".stripMargin
     )
   )
@@ -166,7 +167,8 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
         Some(emailAddress)
       )
 
-      def performAction(): Future[Result] = controller.start(FakeRequest())
+      def performAction(languageCode: String = Language.English.code): Future[Result] =
+        controller.start(FakeRequest().withCookies(Cookie("PLAY_LANG", languageCode)))
 
       "proceed" when {
 
@@ -426,6 +428,23 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
         def testIsError(mockActions: () => Unit) = {
           mockActions()
           assertThrows[RuntimeException](await(performAction()))
+        }
+
+        "the language is not recognised" in {
+          inSequence {
+            mockAuthWithRetrievals(
+              ConfidenceLevel.L50,
+              Some(AffinityGroup.Agent),
+              Some(completeIndividualLoginData.nino),
+              Some(sautr),
+              completeIndividualLoginData.emailAddress,
+              Enrolments(Set.empty),
+              Some(retrievedGGCredential(completeIndividualLoginData.ggCredId))
+            )
+            mockGetSession(Right(None))
+          }
+
+          assertThrows[RuntimeException](await(performAction("fr")))
         }
 
         "an AuthorisationException is thrown" in {

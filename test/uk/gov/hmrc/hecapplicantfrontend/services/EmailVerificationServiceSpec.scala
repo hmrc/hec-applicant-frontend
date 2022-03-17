@@ -18,15 +18,13 @@ package uk.gov.hmrc.hecapplicantfrontend.services
 
 import cats.data.EitherT
 import cats.implicits.catsSyntaxOptionId
-import com.typesafe.config.ConfigFactory
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import play.api.Configuration
 import play.api.http.Status.{BAD_GATEWAY, FORBIDDEN}
 import play.api.i18n.Lang
 import play.api.libs.json.Json
-import play.api.mvc.{AnyContentAsEmpty, Cookie, MessagesRequest}
+import play.api.mvc.{AnyContentAsEmpty, MessagesRequest}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.hecapplicantfrontend.connectors.EmailVerificationConnector
@@ -94,17 +92,8 @@ class EmailVerificationServiceSpec
   )
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  override def additionalConfig     = super.additionalConfig.withFallback(
-    Configuration(
-      ConfigFactory.parseString(
-        s"""
-           | play.i18n.langs = ["en", "cy", "fr"]
-           |""".stripMargin
-      )
-    )
-  )
-  implicit val authenticatedRequest = AuthenticatedRequest(new MessagesRequest(FakeRequest(), messagesApi))
-  implicit val requestWithSession   = RequestWithSessionData(authenticatedRequest, session)
+  val authenticatedRequest        = AuthenticatedRequest(new MessagesRequest(FakeRequest(), messagesApi))
+  implicit val requestWithSession = RequestWithSessionData(authenticatedRequest, session, Language.English)
 
   val serviceNameMessageKey = "emailVerification.passcodeEmail.serviceName"
   val serviceNameEnglish    = messages.messagesApi(serviceNameMessageKey)(Lang("en"))
@@ -125,20 +114,6 @@ class EmailVerificationServiceSpec
       )
 
       "return a technical  error " when {
-
-        "Language in the session is not either en or cy" in {
-          val authenticatedRequest: AuthenticatedRequest[AnyContentAsEmpty.type] = AuthenticatedRequest(
-            new MessagesRequest(FakeRequest().withCookies(Cookie("PLAY_LANG", "fr")), messagesApi)
-          )
-
-          implicit val requestWithSession: RequestWithSessionData[AnyContentAsEmpty.type] =
-            RequestWithSessionData(authenticatedRequest, session)
-
-          mockSendAuditEvent(expectedAuditEvent)
-
-          val result = service.requestPasscode(userSelectedEmail)
-          await(result.value) shouldBe a[Left[_, _]]
-        }
 
         "the http call fails" in {
           inSequence {
@@ -163,11 +138,8 @@ class EmailVerificationServiceSpec
         }
 
         "the http response comes back with a non-201 " in {
-          val authenticatedRequest: AuthenticatedRequest[AnyContentAsEmpty.type]          = AuthenticatedRequest(
-            new MessagesRequest(FakeRequest().withCookies(Cookie("PLAY_LANG", "cy")), messagesApi)
-          )
           implicit val requestWithSession: RequestWithSessionData[AnyContentAsEmpty.type] =
-            RequestWithSessionData(authenticatedRequest, session)
+            RequestWithSessionData(authenticatedRequest, session, Language.Welsh)
           val passcodeRequest                                                             =
             PasscodeRequest(userSelectedEmail.emailAddress, serviceNameWelsh, Language.Welsh)
 
@@ -191,11 +163,8 @@ class EmailVerificationServiceSpec
         }
 
         "the http response came back with  502 (Bad Gateway)" in {
-          val authenticatedRequest: AuthenticatedRequest[AnyContentAsEmpty.type]          = AuthenticatedRequest(
-            new MessagesRequest(FakeRequest().withCookies(Cookie("PLAY_LANG", "cy")), messagesApi)
-          )
           implicit val requestWithSession: RequestWithSessionData[AnyContentAsEmpty.type] =
-            RequestWithSessionData(authenticatedRequest, session)
+            RequestWithSessionData(authenticatedRequest, session, Language.Welsh)
           val passcodeRequest                                                             =
             PasscodeRequest(userSelectedEmail.emailAddress, serviceNameWelsh, Language.Welsh)
 
@@ -235,11 +204,8 @@ class EmailVerificationServiceSpec
         }
 
         "http response came back with status 409 (Conflict)" in {
-          val authenticatedRequest: AuthenticatedRequest[AnyContentAsEmpty.type]          = AuthenticatedRequest(
-            new MessagesRequest(FakeRequest().withCookies(Cookie("PLAY_LANG", "cy")), messagesApi)
-          )
           implicit val requestWithSession: RequestWithSessionData[AnyContentAsEmpty.type] =
-            RequestWithSessionData(authenticatedRequest, session)
+            RequestWithSessionData(authenticatedRequest, session, Language.Welsh)
           val userSelectedEmail                                                           = UserSelectedEmail(EmailType.GGEmail, EmailAddress("email_verified_already@email.com"))
           val passcodeRequest                                                             = PasscodeRequest(userSelectedEmail.emailAddress, serviceNameWelsh, Language.Welsh)
           val errorResponse                                                               = ErrorResponse("EMAIL_VERIFIED_ALREADY", "Email has already been verified")
@@ -308,11 +274,8 @@ class EmailVerificationServiceSpec
         }
 
         "the passcode has been successfully requested, Authenticated request has Welsh language" in {
-          val authenticatedRequest: AuthenticatedRequest[AnyContentAsEmpty.type]          = AuthenticatedRequest(
-            new MessagesRequest(FakeRequest().withCookies(Cookie("PLAY_LANG", "cy")), messagesApi)
-          )
           implicit val requestWithSession: RequestWithSessionData[AnyContentAsEmpty.type] =
-            RequestWithSessionData(authenticatedRequest, session)
+            RequestWithSessionData(authenticatedRequest, session, Language.Welsh)
           val passcodeRequest                                                             =
             PasscodeRequest(userSelectedEmail.emailAddress, serviceNameWelsh, Language.Welsh)
 

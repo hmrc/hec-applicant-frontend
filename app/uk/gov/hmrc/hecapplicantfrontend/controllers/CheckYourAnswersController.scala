@@ -27,7 +27,6 @@ import uk.gov.hmrc.hecapplicantfrontend.models.IndividualUserAnswers.CompleteInd
 import uk.gov.hmrc.hecapplicantfrontend.services.{JourneyService, TaxCheckService}
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.hecapplicantfrontend.views.html
-import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
 import scala.concurrent.ExecutionContext
@@ -74,7 +73,7 @@ class CheckYourAnswersController @Inject() (
       case c: CompleteUserAnswers =>
         val result = for {
           taxCheck      <-
-            taxCheckService.saveTaxCheck(request.sessionData, c)(request.messagesRequest, implicitly[HeaderCarrier])
+            taxCheckService.saveTaxCheck(request.sessionData, c, request.language)
           updatedSession = request.sessionData.fold(
                              _.copy(completedTaxCheck = Some(taxCheck)),
                              _.copy(completedTaxCheck = Some(taxCheck))

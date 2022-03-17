@@ -25,7 +25,7 @@ import uk.gov.hmrc.emailaddress.{EmailAddress => EmailAddressValidation}
 import play.api.i18n.I18nSupport
 import play.api.mvc._
 import uk.gov.hmrc.hecapplicantfrontend.controllers.ConfirmEmailAddressController.{emailAddressForm, emailTypeOptions}
-import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, RequestWithSessionData, SessionDataAction}
+import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
 import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, EmailType, UserEmailAnswers, UserSelectedEmail}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
@@ -66,7 +66,7 @@ class ConfirmEmailAddressController @Inject() (
             _.doThrow("Could not update session and proceed"),
             _ => {
 
-              val req                                          = RequestWithSessionData(request.request, updatedSession)
+              val req                                          = request.copy(sessionData = updatedSession)
               val userEmailAnswerOpt: Option[UserEmailAnswers] = request.sessionData.userEmailAnswers
               val back                                         = journeyService.previous(routes.ConfirmEmailAddressController.confirmEmailAddress)(req, hc)
 

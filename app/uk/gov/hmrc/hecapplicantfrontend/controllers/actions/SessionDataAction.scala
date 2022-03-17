@@ -17,11 +17,12 @@
 package uk.gov.hmrc.hecapplicantfrontend.controllers.actions
 
 import cats.instances.future._
+import cats.syntax.either._
 import com.google.inject.{Inject, Singleton}
 import play.api.mvc.Results.Redirect
-import play.api.mvc.{ActionRefiner, MessagesRequest, Result, WrappedRequest}
+import play.api.mvc.{ActionRefiner, Result, WrappedRequest}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
-import uk.gov.hmrc.hecapplicantfrontend.models.HECSession
+import uk.gov.hmrc.hecapplicantfrontend.models.{HECSession, Language}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 
@@ -29,16 +30,9 @@ import scala.concurrent.{ExecutionContext, Future}
 
 final case class RequestWithSessionData[A](
   request: AuthenticatedRequest[A],
-  sessionData: HECSession
+  sessionData: HECSession,
+  language: Language
 ) extends WrappedRequest[A](request)
-
-object RequestWithSessionData {
-
-  implicit class RequestWithSessionDataOps[A](private val r: RequestWithSessionData[A]) extends AnyVal {
-    def messagesRequest: MessagesRequest[A] = r.request.request
-  }
-
-}
 
 @Singleton
 class SessionDataAction @Inject() (
@@ -49,14 +43,16 @@ class SessionDataAction @Inject() (
 
   override def refine[A](
     request: AuthenticatedRequest[A]
-  ): Future[Either[Result, RequestWithSessionData[A]]] =
+  ): Future[Either[Result, RequestWithSessionData[A]]] = {
+    lazy val language = Language.fromRequest(request.request).valueOr(sys.error)
     sessionStore
       .get()(request)
       .leftMap(_.doThrow("Could not get session data"))
       .subflatMap(
-        _.map(RequestWithSessionData(request, _))
+        _.map(RequestWithSessionData(request, _, language))
           .toRight(Redirect(routes.StartController.start()))
       )
       .value
+  }
 
 }

@@ -22,10 +22,7 @@ import cats.instances.future._
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import play.api.i18n.{DefaultLangs, DefaultMessagesApi, Lang}
 import play.api.libs.json.Json
-import play.api.mvc.{Cookie, MessagesRequest}
-import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.hecapplicantfrontend.connectors.HECConnector
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.ApplicantDetails.IndividualApplicantDetails
@@ -158,64 +155,53 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         relevantIncomeTaxYear = incomeTaxYear.some
       )
 
-      class Context(lang: Language) {
-        val messagesApi =
-          new DefaultMessagesApi(
-            langs = new DefaultLangs(Seq(Lang(Language.English.code), Lang(Language.Welsh.code)))
-          )
-
-        implicit val request: MessagesRequest[_] =
-          new MessagesRequest(
-            FakeRequest().withCookies(Cookie("PLAY_LANG", lang.code)),
-            messagesApi
-          )
-      }
-
       "return an error" when {
 
-        "the http call fails" in new Context(Language.English) {
+        "the http call fails" in {
           mockSaveTaxCheck(individualTaxCheckData(Language.English))(Left(Error("")))
 
-          val result = service.saveTaxCheck(individualSession, completeAnswers)
+          val result = service.saveTaxCheck(individualSession, completeAnswers, Language.English)
           await(result.value) shouldBe a[Left[_, _]]
         }
 
-        "the http response does not come back with status 201 (created)" in new Context(Language.Welsh) {
+        "the http response does not come back with status 201 (created)" in {
           mockSaveTaxCheck(individualTaxCheckData(Language.Welsh))(Right(HttpResponse(OK, taxCheckJson, emptyHeaders)))
 
-          val result = service.saveTaxCheck(individualSession, completeAnswers)
+          val result = service.saveTaxCheck(individualSession, completeAnswers, Language.Welsh)
           await(result.value) shouldBe a[Left[_, _]]
         }
 
-        "there is no json in the response" in new Context(Language.English) {
+        "there is no json in the response" in {
           mockSaveTaxCheck(individualTaxCheckData(Language.English))(Right(HttpResponse(CREATED, "hi")))
 
-          val result = service.saveTaxCheck(individualSession, completeAnswers)
+          val result = service.saveTaxCheck(individualSession, completeAnswers, Language.English)
           await(result.value) shouldBe a[Left[_, _]]
         }
 
-        "the json in the response cannot be parsed" in new Context(Language.English) {
+        "the json in the response cannot be parsed" in {
           val json = Json.parse("""{ "a" : 1 }""")
-          mockSaveTaxCheck(individualTaxCheckData(Language.English))(Right(HttpResponse(CREATED, json, emptyHeaders)))
+          mockSaveTaxCheck(individualTaxCheckData(Language.Welsh))(Right(HttpResponse(CREATED, json, emptyHeaders)))
 
-          val result = service.saveTaxCheck(individualSession, completeAnswers)
+          val result = service.saveTaxCheck(individualSession, completeAnswers, Language.Welsh)
           await(result.value) shouldBe a[Left[_, _]]
         }
 
-        "there is no taxCheckStartDateTime in the session" in new Context(Language.English) {
-          assertThrows[RuntimeException](await(service.saveTaxCheck(individualSession2, completeAnswers).value))
+        "there is no taxCheckStartDateTime in the session" in {
+          assertThrows[RuntimeException](
+            await(service.saveTaxCheck(individualSession2, completeAnswers, Language.English).value)
+          )
         }
 
       }
 
       "return successfully" when {
 
-        "the tax check has been saved and the json response can be parsed" in new Context(Language.English) {
+        "the tax check has been saved and the json response can be parsed" in {
           mockSaveTaxCheck(individualTaxCheckData(Language.English))(
             Right(HttpResponse(CREATED, taxCheckJson, emptyHeaders))
           )
 
-          val result = service.saveTaxCheck(individualSession, completeAnswers)
+          val result = service.saveTaxCheck(individualSession, completeAnswers, Language.English)
           await(result.value) shouldBe Right(taxCheck)
         }
 

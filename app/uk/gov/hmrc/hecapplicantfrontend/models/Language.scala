@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models
 
+import play.api.i18n.Lang
 import play.api.libs.json.{Format, JsError, JsResult, JsString, JsSuccess, Reads, Writes}
 import play.api.mvc.MessagesRequest
 
@@ -34,6 +35,8 @@ object Language {
   case object Welsh extends Language {
     val code = "cy"
   }
+
+  implicit def toPlayLang(l: Language): Lang = Lang(l.code)
 
   def fromRequest(request: MessagesRequest[_]): Either[String, Language] =
     fromString(request.messages.lang.code.toLowerCase(Locale.UK))

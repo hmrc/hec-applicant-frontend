@@ -75,35 +75,31 @@ class SendEmailServiceImpl @Inject() (
         result
       )
 
-    EitherT
-      .fromEither[Future](Language.fromRequest(r.messagesRequest))
-      .leftMap((Error(_)))
-      .flatMap { lang =>
-        val templateId                                   = getTemplateId(lang)
-        val result: EitherT[Future, Error, HttpResponse] = emailSendConnector.sendEmail(
-          EmailSendRequest(List(userSelectedEmail.emailAddress), templateId, emailParameters)
-        )
+    val templateId                                   = getTemplateId(r.language)
+    val result: EitherT[Future, Error, HttpResponse] = emailSendConnector.sendEmail(
+      EmailSendRequest(List(userSelectedEmail.emailAddress), templateId, emailParameters)
+    )
 
-        result
-          .leftMap { e =>
-            auditService.sendEvent(auditEvent(templateId, None))
-            e
-          }
-          .subflatMap { response =>
-            val result = response.status match {
-              case ACCEPTED =>
-                val _ =
-                  hecConnector.saveEmailAddress(SaveEmailAddressRequest(userSelectedEmail.emailAddress, taxCheckCode))
-                Right(EmailSendResult.EmailSent)
-              case other    =>
-                logger.warn(s"Response for send email call came back with status : $other")
-                Right(EmailSendResult.EmailSentFailure)
-            }
-
-            auditService.sendEvent(auditEvent(templateId, result.toOption))
-            result
-          }
+    result
+      .leftMap { e =>
+        auditService.sendEvent(auditEvent(templateId, None))
+        e
       }
+      .subflatMap { response =>
+        val result = response.status match {
+          case ACCEPTED =>
+            val _ =
+              hecConnector.saveEmailAddress(SaveEmailAddressRequest(userSelectedEmail.emailAddress, taxCheckCode))
+            Right(EmailSendResult.EmailSent)
+          case other    =>
+            logger.warn(s"Response for send email call came back with status : $other")
+            Right(EmailSendResult.EmailSentFailure)
+        }
+
+        auditService.sendEvent(auditEvent(templateId, result.toOption))
+        result
+      }
+
   }
 
   private def getTemplateId(lang: Language) = lang match {
