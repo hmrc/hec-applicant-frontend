@@ -413,7 +413,7 @@ cannotSendVerificationPasscode.p2 = You can <a href="{0}" class="govuk-link">go 
 #Email verification passcode email
 emailVerification.passcodeEmail.serviceName = HMRC tax check service
 
-#Agents not supposed
+#Agents not supported
 agentsNotSupported.title = You cannot access this service
 agentsNotSupported.p1 = You will not be able to do a tax check because you are logged in with an agent services account Government Gateway user ID.
 agentsNotSupported.p2 = If your client needs to do a tax check, they must do it themselves using their own Government Gateway account. If they do not have a Government Gateway user ID, they can create one when they start the check.

@@ -744,7 +744,7 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
         }
       }
 
-      "redirect to the 'Agents not supposed' page" when {
+      "redirect to the 'Agents not supported' page" when {
 
         "the retrieved affinity group is Agent" in {
           inSequence {
