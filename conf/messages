@@ -63,7 +63,7 @@ iv.preconditionFailed.link=Find out who needs to do a tax check
 
 # Check Personal Details
 confirmIndividualDetails.title=Check your personal details
-confirmIndividualDetails.intro=We will use these details to do a tax check, confirm they are correct before continuing.
+confirmIndividualDetails.intro=We’ll use these details to do a tax check, confirm they are correct before continuing.
 confirmIndividualDetails.firstName=First name
 confirmIndividualDetails.lastName=Last name
 confirmIndividualDetails.dob=Date of birth
@@ -121,7 +121,7 @@ licenceTypeExit.signBackInLink = Sign in with the correct Government Gateway acc
 
 # Licence time trading
 licenceTimeTrading.title = How many years ago did you first get a licence for this activity?
-licenceTimeTrading.hint = This is the licence type you are doing a tax check for. You may need to give an estimate for this question.
+licenceTimeTrading.hint = This is the licence type you’re doing a tax check for. You may need to give an estimate for this question.
 licenceTimeTrading.zeroToTwoYears = 0 to 2 years
 licenceTimeTrading.twoToFourYears = Between 2 and 4 years
 licenceTimeTrading.fourToEightYears = Between 4 and 8 years
@@ -164,9 +164,9 @@ taxSituation.error.invalid = Select your tax status
 entityType.title=Who are you doing a tax check for?
 entityType.individual=Yourself
 entityType.company=A company
-entityType.individual.hint=Includes if you are self-employed or a partner in a partnership.
+entityType.individual.hint=Includes if you’re self-employed or a partner in a partnership.
 entityType.company.hint=Includes if the company is a partner in a partnership.
-entityType.link=If you are not doing a tax check for yourself or a company
+entityType.link=If you’re not doing a tax check for yourself or a company
 entityType.error.required=Select who you are doing a tax check for
 entityType.error.invalid=Select who you are doing a tax check for
 
@@ -226,11 +226,11 @@ sautrNotFound.newRegistration.p1 = You should receive your UTR within 10 days. I
 
 # No Return Found
 noReturnFound.title = You cannot do a tax check at the moment
-noReturnFound.p1 = You will need to <a href="{0}" class="govuk-link">contact HMRC</a> before doing your tax check.
+noReturnFound.p1 = You’ll need to <a href="{0}" class="govuk-link">contact HMRC</a> before doing your tax check.
 
 # Cannot do tax check
 cannotDoTaxCheck.title = You cannot do a tax check at the moment
-cannotDoTaxCheck.p1 = You will need to <a href="{0}" class="govuk-link">contact HMRC</a> before doing your tax check.
+cannotDoTaxCheck.p1 = You’ll need to <a href="{0}" class="govuk-link">contact HMRC</a> before doing your tax check.
 
 # SA Income Declared
 saIncomeDeclared.title = Did you include income you earned using this type of licence in your tax return?
@@ -266,7 +266,7 @@ taxCheck.emailLink = Send by email<span class="govuk-visually-hidden"> your tax 
 taxChecksList.title = Your tax check codes
 taxChecksList.copyButtonScreenReaderText = your {0} tax check code {1}
 taxChecksList.button = Do a new tax check
-taxChecksList.p1 = If your tax check code expires before your application is processed, you will need to do another tax check.
+taxChecksList.p1 = If your tax check code expires before your application is processed, you’ll need to do another tax check.
 taxChecksList.link = Print or save this page as a PDF
 
 # Confirm company name
