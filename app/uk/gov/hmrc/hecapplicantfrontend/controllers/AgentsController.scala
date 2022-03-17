@@ -16,23 +16,27 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.controllers
 
-import com.google.inject.{Inject, Singleton}
+import com.google.inject.Inject
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.AuthAction
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
-import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.hecapplicantfrontend.views.html
+import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
-@Singleton
-class AccessDeniedController @Inject() (
+class AgentsController @Inject() (
   authAction: AuthAction,
   mcc: MessagesControllerComponents,
-  accessDeniedPage: html.AccessDenied
-) extends FrontendController(mcc)
+  agentsNotSupportedPage: html.AgentsNotSupported
+)(implicit appConfig: AppConfig)
+    extends FrontendController(mcc)
     with I18nSupport
     with Logging {
-  val accessDenied: Action[AnyContent] = authAction { implicit request =>
-    Ok(accessDeniedPage())
-  }
+
+  val agentsNotSupported: Action[AnyContent] =
+    authAction { implicit request =>
+      Ok(agentsNotSupportedPage())
+    }
+
 }

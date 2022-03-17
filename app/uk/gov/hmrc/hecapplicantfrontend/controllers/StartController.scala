@@ -96,7 +96,7 @@ class StartController @Inject() (
           sys.error(s"Unsupported auth provider: $provider")
 
         case AgentLogin =>
-          sys.error("Agent login")
+          Redirect(routes.AgentsController.agentsNotSupported())
 
       },
       session => Redirect(journeyService.firstPage(session))

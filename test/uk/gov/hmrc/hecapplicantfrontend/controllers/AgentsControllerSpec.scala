@@ -17,32 +17,47 @@
 package uk.gov.hmrc.hecapplicantfrontend.controllers
 
 import play.api.inject.bind
+import play.api.mvc.Result
 import play.api.test.FakeRequest
 import uk.gov.hmrc.auth.core.AuthConnector
+import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 
-class AccessDeniedControllerSpec
+import scala.concurrent.Future
+
+class AgentsControllerSpec
     extends ControllerSpec
     with AuthSupport
     with SessionSupport
     with AuthAndSessionDataBehaviour {
 
   override def overrideBindings = List(
-    bind[AuthConnector].toInstance(mockAuthConnector)
+    bind[AuthConnector].toInstance(mockAuthConnector),
+    bind[SessionStore].toInstance(mockSessionStore)
   )
 
-  private val controller = instanceOf[AccessDeniedController]
+  val controller = instanceOf[AgentsController]
 
-  "AccessDeniedController" when {
+  "AgentsController" when {
 
-    "handling requests to the 'denied access' page" must {
+    "handling requests to the 'Agents not supported' page" must {
+
+      def performAction(): Future[Result] = controller.agentsNotSupported(FakeRequest())
+
+      behave like authBehaviour(performAction)
 
       "display the page" in {
         mockAuthWithNoRetrievals()
 
         checkPageIsDisplayed(
-          controller.accessDenied(FakeRequest()),
-          messageFromMessageKey("accessDenied.title")
+          performAction(),
+          messageFromMessageKey("agentsNotSupported.title"),
+          { doc =>
+            val link = doc.select(".govuk-body > .govuk-link")
+            link.attr("href") shouldBe appConfig.taxCheckGuidanceUrl
+            link.text()       shouldBe messageFromMessageKey("agentsNotSupported.link")
+          }
         )
+
       }
 
     }

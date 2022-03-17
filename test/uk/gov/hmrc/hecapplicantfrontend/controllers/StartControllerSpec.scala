@@ -461,23 +461,6 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
           )
         }
 
-        "the retrieved affinity group is Agent" in {
-          testIsError(() =>
-            inSequence {
-              mockAuthWithRetrievals(
-                ConfidenceLevel.L50,
-                Some(AffinityGroup.Agent),
-                Some(completeIndividualLoginData.nino),
-                Some(sautr),
-                completeIndividualLoginData.emailAddress,
-                Enrolments(Set.empty),
-                Some(retrievedGGCredential(completeIndividualLoginData.ggCredId))
-              )
-              mockGetSession(Right(None))
-            }
-          )
-        }
-
         "the retrieved affinity group is empty" in {
           testIsError(() =>
             inSequence {
@@ -759,6 +742,27 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
             )
           }
         }
+      }
+
+      "redirect to the 'Agents not supported' page" when {
+
+        "the retrieved affinity group is Agent" in {
+          inSequence {
+            mockAuthWithRetrievals(
+              ConfidenceLevel.L50,
+              Some(AffinityGroup.Agent),
+              Some(completeIndividualLoginData.nino),
+              Some(sautr),
+              completeIndividualLoginData.emailAddress,
+              Enrolments(Set.empty),
+              Some(retrievedGGCredential(completeIndividualLoginData.ggCredId))
+            )
+            mockGetSession(Right(None))
+          }
+
+          checkIsRedirect(performAction, routes.AgentsController.agentsNotSupported())
+        }
+
       }
 
     }

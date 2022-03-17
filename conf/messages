@@ -332,14 +332,6 @@ maxTaxChecksLimitExceeded.title = You cannot do another tax check for this licen
 maxTaxChecksLimitExceeded.p1 = You have tried to do a tax check too many times for this licence type.
 maxTaxChecksLimitExceeded.link = <a href="{0}" class="govuk-link">View your existing tax check codes</a> or <a href="{1}" class="govuk-link">go back and select a different licence type</a>
 
-
-
-# Access Denied
-accessDenied.title = You cannot access this page
-accessDenied.p1 = If you have been sent this link and cannot access it, you may be logged in with the wrong Government Gateway account.
-accessDenied.p2 = If you need any assistance accessing this link, please get in touch with your HMRC contact.
-
-
 # Confirm email address
 confirmEmailAddress.title = Which email address would you like to use?
 confirmEmailAddress.hint = You must have access to this email address. Any other email addresses you have saved with us will not be changed.
@@ -420,3 +412,9 @@ cannotSendVerificationPasscode.p2 = You can <a href="{0}" class="govuk-link">go 
 
 #Email verification passcode email
 emailVerification.passcodeEmail.serviceName = HMRC tax check service
+
+#Agents not supported
+agentsNotSupported.title = You cannot access this service
+agentsNotSupported.p1 = You will not be able to do a tax check because you are logged in with an agent services account Government Gateway user ID.
+agentsNotSupported.p2 = If your client needs to do a tax check, they must do it themselves using their own Government Gateway account. If they do not have a Government Gateway user ID, they can create one when they start the check.
+agentsNotSupported.link = Find out more about tax checks
