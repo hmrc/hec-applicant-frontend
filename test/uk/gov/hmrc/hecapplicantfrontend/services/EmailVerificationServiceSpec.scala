@@ -104,13 +104,14 @@ class EmailVerificationServiceSpec
 
     "handling request to requestPasscode" must {
 
-      val passcodeRequest    = PasscodeRequest(userSelectedEmail.emailAddress, serviceNameEnglish, Language.English)
-      val expectedAuditEvent = SubmitEmailAddressVerificationRequest(
+      val passcodeRequest                        = PasscodeRequest(userSelectedEmail.emailAddress, serviceNameEnglish, Language.English)
+      def expectedAuditEvent(language: Language) = SubmitEmailAddressVerificationRequest(
         requestWithSession.sessionData.loginData.ggCredId,
         taxCheckCode,
         userSelectedEmail.emailAddress,
         userSelectedEmail.emailType,
-        None
+        None,
+        language
       )
 
       "return a technical  error " when {
@@ -118,7 +119,7 @@ class EmailVerificationServiceSpec
         "the http call fails" in {
           inSequence {
             mockRequestPasscode(passcodeRequest)(Left(Error("")))
-            mockSendAuditEvent(expectedAuditEvent)
+            mockSendAuditEvent(expectedAuditEvent(Language.English))
           }
 
           val result = service.requestPasscode(userSelectedEmail)
@@ -130,7 +131,7 @@ class EmailVerificationServiceSpec
 
           inSequence {
             mockRequestPasscode(passcodeRequest)(Right(HttpResponse(BAD_REQUEST, json, emptyHeaders)))
-            mockSendAuditEvent(expectedAuditEvent)
+            mockSendAuditEvent(expectedAuditEvent(Language.English))
           }
 
           val result = service.requestPasscode(userSelectedEmail)
@@ -145,7 +146,7 @@ class EmailVerificationServiceSpec
 
           inSequence {
             mockRequestPasscode(passcodeRequest)(Right(HttpResponse(OK, "", emptyHeaders)))
-            mockSendAuditEvent(expectedAuditEvent)
+            mockSendAuditEvent(expectedAuditEvent(Language.Welsh))
           }
 
           val result = service.requestPasscode(userSelectedEmail)
@@ -155,7 +156,7 @@ class EmailVerificationServiceSpec
         "the http response came back with  401 (unauthorized)" in {
           inSequence {
             mockRequestPasscode(passcodeRequest)(Right(HttpResponse(UNAUTHORIZED, "", emptyHeaders)))
-            mockSendAuditEvent(expectedAuditEvent)
+            mockSendAuditEvent(expectedAuditEvent(Language.English))
           }
 
           val result = service.requestPasscode(userSelectedEmail)
@@ -170,7 +171,7 @@ class EmailVerificationServiceSpec
 
           inSequence {
             mockRequestPasscode(passcodeRequest)(Right(HttpResponse(BAD_GATEWAY, "", emptyHeaders)))
-            mockSendAuditEvent(expectedAuditEvent)
+            mockSendAuditEvent(expectedAuditEvent(Language.Welsh))
           }
           val result = service.requestPasscode(userSelectedEmail)
           await(result.value) shouldBe a[Left[_, _]]
@@ -189,7 +190,8 @@ class EmailVerificationServiceSpec
             taxCheckCode,
             userSelectedEmail.emailAddress,
             userSelectedEmail.emailType,
-            Some(MaximumNumberOfEmailsExceeded)
+            Some(MaximumNumberOfEmailsExceeded),
+            Language.English
           )
 
           inSequence {
@@ -214,7 +216,8 @@ class EmailVerificationServiceSpec
             taxCheckCode,
             userSelectedEmail.emailAddress,
             userSelectedEmail.emailType,
-            Some(EmailAddressAlreadyVerified)
+            Some(EmailAddressAlreadyVerified),
+            Language.Welsh
           )
 
           inSequence {
@@ -238,7 +241,8 @@ class EmailVerificationServiceSpec
             taxCheckCode,
             userSelectedEmail.emailAddress,
             userSelectedEmail.emailType,
-            Some(BadEmailAddress)
+            Some(BadEmailAddress),
+            Language.English
           )
 
           inSequence {
@@ -255,18 +259,19 @@ class EmailVerificationServiceSpec
 
       "return successfully" when {
 
-        val expectedAuditEvent = SubmitEmailAddressVerificationRequest(
+        def expectedAuditEvent(language: Language) = SubmitEmailAddressVerificationRequest(
           requestWithSession.sessionData.loginData.ggCredId,
           taxCheckCode,
           userSelectedEmail.emailAddress,
           userSelectedEmail.emailType,
-          Some(PasscodeSent)
+          Some(PasscodeSent),
+          language
         )
 
         "the passcode has been successfully requested , Authenticated request has English language" in {
           inSequence {
             mockRequestPasscode(passcodeRequest)(Right(HttpResponse(CREATED, "")))
-            mockSendAuditEvent(expectedAuditEvent)
+            mockSendAuditEvent(expectedAuditEvent(Language.English))
           }
 
           val result = service.requestPasscode(userSelectedEmail)
@@ -281,7 +286,7 @@ class EmailVerificationServiceSpec
 
           inSequence {
             mockRequestPasscode(passcodeRequest)(Right(HttpResponse(CREATED, "")))
-            mockSendAuditEvent(expectedAuditEvent)
+            mockSendAuditEvent(expectedAuditEvent(Language.Welsh))
           }
 
           val result = service.requestPasscode(userSelectedEmail)
@@ -303,7 +308,8 @@ class EmailVerificationServiceSpec
           userSelectedEmail.emailAddress,
           userSelectedEmail.emailType,
           passcode,
-          None
+          None,
+          Language.English
         )
 
         "the http call fails" in {
@@ -351,7 +357,8 @@ class EmailVerificationServiceSpec
             userSelectedEmail.emailAddress,
             userSelectedEmail.emailType,
             passcode,
-            Some(TooManyAttempts)
+            Some(TooManyAttempts),
+            Language.English
           )
 
           inSequence {
@@ -375,7 +382,8 @@ class EmailVerificationServiceSpec
             userSelectedEmail.emailAddress,
             userSelectedEmail.emailType,
             passcode,
-            Some(Expired)
+            Some(Expired),
+            Language.English
           )
 
           inSequence {
@@ -399,7 +407,8 @@ class EmailVerificationServiceSpec
             userSelectedEmail.emailAddress,
             userSelectedEmail.emailType,
             passcode,
-            Some(NoMatch)
+            Some(NoMatch),
+            Language.English
           )
 
           inSequence {
@@ -418,19 +427,23 @@ class EmailVerificationServiceSpec
 
       "return success" when {
 
-        val expectedAuditEvent = SubmitEmailAddressVerificationPasscode(
+        def expectedAuditEvent(language: Language) = SubmitEmailAddressVerificationPasscode(
           requestWithSession.sessionData.loginData.ggCredId,
           taxCheckCode,
           userSelectedEmail.emailAddress,
           userSelectedEmail.emailType,
           passcode,
-          Some(Match)
+          Some(Match),
+          language
         )
 
         "http response came back with status 201" in {
+          implicit val requestWithSession: RequestWithSessionData[AnyContentAsEmpty.type] =
+            RequestWithSessionData(authenticatedRequest, session, Language.Welsh)
+
           inSequence {
             mockVerifyPasscode(passcode, userSelectedEmail.emailAddress)(Right(HttpResponse(CREATED, "", emptyHeaders)))
-            mockSendAuditEvent(expectedAuditEvent)
+            mockSendAuditEvent(expectedAuditEvent(Language.Welsh))
           }
 
           val result = service.verifyPasscode(passcode, userSelectedEmail)
@@ -443,7 +456,7 @@ class EmailVerificationServiceSpec
             mockVerifyPasscode(passcode, userSelectedEmail.emailAddress)(
               Right(HttpResponse(NO_CONTENT, "", emptyHeaders))
             )
-            mockSendAuditEvent(expectedAuditEvent)
+            mockSendAuditEvent(expectedAuditEvent(Language.English))
           }
 
           val result = service.verifyPasscode(passcode, userSelectedEmail)

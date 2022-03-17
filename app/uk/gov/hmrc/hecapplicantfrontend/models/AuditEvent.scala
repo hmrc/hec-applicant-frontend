@@ -35,7 +35,8 @@ object AuditEvent {
 
   final case class TaxCheckCodesDisplayed(
     ggCredId: GGCredId,
-    taxCheckCodes: List[HECTaxCheckCode]
+    taxCheckCodes: List[HECTaxCheckCode],
+    languagePreference: Language
   ) extends AuditEvent {
     val auditType: String = "TaxCheckCodesDisplayed"
 
@@ -56,6 +57,11 @@ object AuditEvent {
     val ctutrType: CTUTRType
 
     val matchResult: MatchResult
+
+    val languagePreference: Language
+
+    val ggCredId: GGCredId
+
   }
 
   object CompanyMatch {
@@ -82,7 +88,12 @@ object AuditEvent {
 
     def companyMatchWrites[A <: CompanyMatch](writes: OWrites[A]): OWrites[A] = OWrites { c =>
       writes.writes(c) ++ JsObject(
-        Map("ctutrType" -> JsString(c.ctutrType.toString), "matchResult" -> JsString(c.matchResult.toString))
+        Map(
+          "ctutrType"          -> JsString(c.ctutrType.toString),
+          "matchResult"        -> JsString(c.matchResult.toString),
+          "languagePreference" -> Json.toJson(c.languagePreference),
+          "ggCredId"           -> Json.toJson(c.ggCredId)
+        )
       )
     }
 
@@ -99,7 +110,9 @@ object AuditEvent {
       submittedCTUTR: CTUTR,
       submittedCTUTRStandardised: CTUTR,
       hmrcCTUTR: CTUTR,
-      tooManyAttempts: Boolean
+      tooManyAttempts: Boolean,
+      languagePreference: Language,
+      ggCredId: GGCredId
     ) extends CompanyMatchFailure {
       override val ctutrType: CTUTRType = CTUTRType.Submitted
     }
@@ -107,7 +120,9 @@ object AuditEvent {
     final case class EnrolmentCTUTRCompanyMatchFailure(
       companyRegistrationNumber: CRN,
       hmrcCTUTR: CTUTR,
-      enrolmentCTUTR: CTUTR
+      enrolmentCTUTR: CTUTR,
+      languagePreference: Language,
+      ggCredId: GGCredId
     ) extends CompanyMatchFailure {
       override val ctutrType: CTUTRType = CTUTRType.Enrolment
     }
@@ -130,7 +145,9 @@ object AuditEvent {
       companyRegistrationNumber: CRN,
       submittedCTUTR: CTUTR,
       submittedCTUTRStandardised: CTUTR,
-      hmrcCTUTR: CTUTR
+      hmrcCTUTR: CTUTR,
+      languagePreference: Language,
+      ggCredId: GGCredId
     ) extends CompanyMatchSuccess {
       override val ctutrType: CTUTRType = CTUTRType.Submitted
     }
@@ -138,7 +155,9 @@ object AuditEvent {
     final case class EnrolmentCTUTRCompanyMatchSuccess(
       companyRegistrationNumber: CRN,
       hmrcCTUTR: CTUTR,
-      enrolmentCTUTR: CTUTR
+      enrolmentCTUTR: CTUTR,
+      languagePreference: Language,
+      ggCredId: GGCredId
     ) extends CompanyMatchSuccess {
       override val ctutrType: CTUTRType = CTUTRType.Enrolment
     }
@@ -163,6 +182,8 @@ object AuditEvent {
     val serviceExitDescription: String
 
     val taxCheckSessionData: HECSession
+
+    val languagePreference: Language
   }
 
   object TaxCheckExit {
@@ -172,24 +193,27 @@ object AuditEvent {
         "serviceExitReason"      -> JsString(t.serviceExitReason),
         "serviceExitDescription" -> JsString(t.serviceExitDescription),
         "source"                 -> JsString(t.source),
-        "taxCheckSessionData"    -> Json.toJson(t.taxCheckSessionData)
+        "taxCheckSessionData"    -> Json.toJson(t.taxCheckSessionData),
+        "languagePreference"     -> Json.toJson(t.languagePreference)
       )
     }
 
-    final case class SAUTRNotFound(taxCheckSessionData: HECSession) extends TaxCheckExit {
+    final case class SAUTRNotFound(taxCheckSessionData: HECSession, languagePreference: Language) extends TaxCheckExit {
       val serviceExitReason: String = "SAUTRNotFound"
 
       val serviceExitDescription: String = "SA UTR not found for the Applicant's NINO."
     }
 
-    final case class SANoNoticeToFileOrTaxReturn(taxCheckSessionData: HECSession) extends TaxCheckExit {
+    final case class SANoNoticeToFileOrTaxReturn(taxCheckSessionData: HECSession, languagePreference: Language)
+        extends TaxCheckExit {
       val serviceExitReason: String = "SANoNoticeToFileOrTaxReturn"
 
       val serviceExitDescription: String =
         "For relevant income tax year, Self Assessment Notice to File not found, Self Assessment Tax Return not found."
     }
 
-    final case class CTEnteredCTUTRNotMatchingBlocked(taxCheckSessionData: HECSession) extends TaxCheckExit {
+    final case class CTEnteredCTUTRNotMatchingBlocked(taxCheckSessionData: HECSession, languagePreference: Language)
+        extends TaxCheckExit {
       val serviceExitReason: String = "CTEnteredCTUTRNotMatchingBlocked"
 
       val serviceExitDescription: String =
@@ -197,15 +221,18 @@ object AuditEvent {
           "so Applicant temporarily blocked from making an Application for that CRN."
     }
 
-    final case class CTNoNoticeToFileOrTaxReturn(taxCheckSessionData: HECSession) extends TaxCheckExit {
+    final case class CTNoNoticeToFileOrTaxReturn(taxCheckSessionData: HECSession, languagePreference: Language)
+        extends TaxCheckExit {
       val serviceExitReason: String = "CTNoNoticeToFileOrTaxReturn"
 
       val serviceExitDescription: String =
         "For relevant accounting period, Corporation Tax Notice to File not found, Corporation Tax Return not found."
     }
 
-    final case class CTNoAccountingPeriodNotRecentlyStartedTrading(taxCheckSessionData: HECSession)
-        extends TaxCheckExit {
+    final case class CTNoAccountingPeriodNotRecentlyStartedTrading(
+      taxCheckSessionData: HECSession,
+      languagePreference: Language
+    ) extends TaxCheckExit {
       val serviceExitReason: String = "CTNoAccountingPeriodNotRecentlyStartedTrading"
 
       val serviceExitDescription: String =
@@ -213,7 +240,8 @@ object AuditEvent {
           "Applicant's Company has not recently started trading."
     }
 
-    final case class AllowedTaxChecksExceeded(taxCheckSessionData: HECSession) extends TaxCheckExit {
+    final case class AllowedTaxChecksExceeded(taxCheckSessionData: HECSession, languagePreference: Language)
+        extends TaxCheckExit {
       val serviceExitReason: String = "AllowedTaxChecksExceeded"
 
       val serviceExitDescription: String =
@@ -228,6 +256,7 @@ object AuditEvent {
     val taxCheckCode: HECTaxCheckCode
     val emailAddress: EmailAddress
     val emailSource: EmailType
+    val languagePreference: Language
   }
 
   object EmailAuditEvent {
@@ -240,10 +269,11 @@ object AuditEvent {
     def emailAuditEventJson(e: EmailAuditEvent): JsObject =
       JsObject(
         Map(
-          "ggCredId"     -> Json.toJson(e.ggCredId),
-          "taxCheckCode" -> Json.toJson(e.taxCheckCode),
-          "emailAddress" -> Json.toJson(e.emailAddress),
-          "emailSource"  -> emailTypeWrites.writes(e.emailSource)
+          "ggCredId"           -> Json.toJson(e.ggCredId),
+          "taxCheckCode"       -> Json.toJson(e.taxCheckCode),
+          "emailAddress"       -> Json.toJson(e.emailAddress),
+          "emailSource"        -> emailTypeWrites.writes(e.emailSource),
+          "languagePreference" -> Json.toJson(e.languagePreference)
         )
       )
   }
@@ -253,7 +283,8 @@ object AuditEvent {
     taxCheckCode: HECTaxCheckCode,
     emailAddress: EmailAddress,
     emailSource: EmailType,
-    result: Option[PasscodeRequestResult]
+    result: Option[PasscodeRequestResult],
+    languagePreference: Language
   ) extends EmailAuditEvent {
 
     override val auditType: String = "SubmitEmailAddressVerificationRequest"
@@ -291,7 +322,8 @@ object AuditEvent {
     emailAddress: EmailAddress,
     emailSource: EmailType,
     verificationPasscode: Passcode,
-    result: Option[PasscodeVerificationResult]
+    result: Option[PasscodeVerificationResult],
+    languagePreference: Language
   ) extends EmailAuditEvent {
 
     override val auditType: String = "SubmitEmailAddressVerificationPasscode"
@@ -333,7 +365,8 @@ object AuditEvent {
     emailAddress: EmailAddress,
     emailSource: EmailType,
     templateId: String,
-    result: Option[EmailSendResult]
+    result: Option[EmailSendResult],
+    languagePreference: Language
   ) extends EmailAuditEvent {
 
     override val auditType: String = "SendTaxCheckCodeNotificationEmail"

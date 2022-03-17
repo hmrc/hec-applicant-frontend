@@ -23,7 +23,7 @@ import play.api.libs.json.Json
 import play.api.mvc.{Headers, Request}
 import play.api.test.FakeRequest
 import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.TaxCheckCodesDisplayed
-import uk.gov.hmrc.hecapplicantfrontend.models.HECTaxCheckCode
+import uk.gov.hmrc.hecapplicantfrontend.models.{HECTaxCheckCode, Language}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.GGCredId
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.AuditExtensions._
@@ -63,7 +63,7 @@ class AuditServiceImplSpec extends Matchers with AnyWordSpecLike with MockFactor
 
         implicit val hc: HeaderCarrier = HeaderCarrier()
 
-        val auditEvent = TaxCheckCodesDisplayed(GGCredId(""), List(HECTaxCheckCode("")))
+        val auditEvent = TaxCheckCodesDisplayed(GGCredId(""), List(HECTaxCheckCode("")), Language.English)
 
         val extendedDataEvent = ExtendedDataEvent(
           auditSource = "hidden-economy-conditionality",

@@ -105,14 +105,16 @@ class SendEmailServiceImplSpec extends AnyWordSpec with Matchers with MockFactor
     userEmailAnswers = userEmailAnswer.some
   )
 
-  def auditEvent(templateId: String, result: Option[EmailSendResult]) = SendTaxCheckCodeNotificationEmail(
-    session.loginData.ggCredId,
-    taxCheckCode,
-    userSelectedEmail.emailAddress,
-    userSelectedEmail.emailType,
-    templateId,
-    result
-  )
+  def auditEvent(templateId: String, result: Option[EmailSendResult], language: Language) =
+    SendTaxCheckCodeNotificationEmail(
+      session.loginData.ggCredId,
+      taxCheckCode,
+      userSelectedEmail.emailAddress,
+      userSelectedEmail.emailType,
+      templateId,
+      result,
+      language
+    )
 
   val authenticatedRequest =
     AuthenticatedRequest(
@@ -139,7 +141,7 @@ class SendEmailServiceImplSpec extends AnyWordSpec with Matchers with MockFactor
         "the http call fails" in {
           inSequence {
             mockSendEmail(emailSendRequest)(Left(Error("")))
-            mockSendAuditEvent(auditEvent("template_EN", None))
+            mockSendAuditEvent(auditEvent("template_EN", None, Language.English))
           }
 
           testError()
@@ -172,7 +174,7 @@ class SendEmailServiceImplSpec extends AnyWordSpec with Matchers with MockFactor
                     taxCheckCode
                   )
                 )(saveEmailAddressResponse())
-                mockSendAuditEvent(auditEvent(templateId, Some(EmailSendResult.EmailSent)))
+                mockSendAuditEvent(auditEvent(templateId, Some(EmailSendResult.EmailSent), lang))
               }
 
               val result =
@@ -208,7 +210,7 @@ class SendEmailServiceImplSpec extends AnyWordSpec with Matchers with MockFactor
               EmailSendRequest(List(userSelectedEmail.emailAddress), "template_EN", emailParameter)
             implicit val requestWithSessionData: RequestWithSessionData[_] =
               RequestWithSessionData(authenticatedRequest, session, Language.English)
-            val expectedAuditEvent                                         = auditEvent("template_EN", Some(EmailSendResult.EmailSentFailure))
+            val expectedAuditEvent                                         = auditEvent("template_EN", Some(EmailSendResult.EmailSentFailure), Language.English)
 
             inSequence {
               mockSendEmail(emailSendRequest)(Right(httpResponse))

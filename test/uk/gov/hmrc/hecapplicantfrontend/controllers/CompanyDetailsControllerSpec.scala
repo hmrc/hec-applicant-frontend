@@ -21,7 +21,7 @@ import cats.instances.future._
 import com.typesafe.config.ConfigFactory
 import play.api.Configuration
 import play.api.inject.bind
-import play.api.mvc.Result
+import play.api.mvc.{Cookie, Result}
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.auth.core.AuthConnector
@@ -126,6 +126,7 @@ class CompanyDetailsControllerSpec
       ConfigFactory.parseString(
         s"""
            | ctutr-attempts { maximum-attempts = $maxCtutrAttempts }
+           | play.i18n.langs = ["en", "cy", "fr"]
            |""".stripMargin
       )
     )
@@ -224,10 +225,32 @@ class CompanyDetailsControllerSpec
 
     "handling submit on the confirm company name page" must {
 
-      def performAction(data: (String, String)*): Future[Result] =
-        controller.confirmCompanyDetailsSubmit(FakeRequest().withFormUrlEncodedBody(data: _*))
+      def performAction(data: (String, String)*)(language: Language): Future[Result] =
+        controller.confirmCompanyDetailsSubmit(
+          FakeRequest().withCookies(Cookie("PLAY_LANG", language.code)).withFormUrlEncodedBody(data: _*)
+        )
 
-      behave like authAndSessionDataBehaviour(() => performAction())
+      behave like authAndSessionDataBehaviour(() => performAction()(Language.English))
+
+      "return a technical error" when {
+
+        "the language is not recognised" in {
+          val session = Fixtures.companyHECSession(
+            companyLoginData,
+            retrievedJourneyDataWithCompanyName,
+            Fixtures.incompleteCompanyUserAnswers(crn = Some(CRN("crn")))
+          )
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+          }
+
+          val result = controller.confirmCompanyDetailsSubmit(FakeRequest().withCookies(Cookie("PLAY_LANG", "fr")))
+          a[RuntimeException] shouldBe thrownBy(await(result))
+        }
+
+      }
 
       "show a form error" when {
 
@@ -247,7 +270,7 @@ class CompanyDetailsControllerSpec
           }
 
           checkFormErrorIsDisplayed(
-            performAction(data: _*),
+            performAction(data: _*)(Language.English),
             messageFromMessageKey("confirmCompanyName.title"),
             messageFromMessageKey(errorMessage)
           )
@@ -276,7 +299,7 @@ class CompanyDetailsControllerSpec
             mockAuthWithNoRetrievals()
             mockGetSession(session)
           }
-          assertThrows[RuntimeException](await(performAction("confirmCompanyName" -> value)))
+          assertThrows[RuntimeException](await(performAction("confirmCompanyName" -> value)(Language.English)))
         }
 
         "user answers with a Yes" when {
@@ -311,13 +334,21 @@ class CompanyDetailsControllerSpec
               mockAuthWithNoRetrievals()
               mockGetSession(session)
               mockTaxCheckServiceGetCtutr(CRN("crn"))(Right(Some(CTUTR("ctutr"))))
-              mockSendAuditEvent(EnrolmentCTUTRCompanyMatchSuccess(CRN("crn"), CTUTR("ctutr"), CTUTR("ctutr")))
+              mockSendAuditEvent(
+                EnrolmentCTUTRCompanyMatchSuccess(
+                  CRN("crn"),
+                  CTUTR("ctutr"),
+                  CTUTR("ctutr"),
+                  Language.Welsh,
+                  session.loginData.ggCredId
+                )
+              )
               mockTimeProviderToday(date)
               mockTaxCheckServiceGetCtStatus(CTUTR("ctutr"), startDate, endDate)(
                 Left(Error("fetch ct status failed"))
               )
             }
-            assertThrows[RuntimeException](await(performAction("confirmCompanyName" -> "0")))
+            assertThrows[RuntimeException](await(performAction("confirmCompanyName" -> "0")(Language.Welsh)))
 
           }
 
@@ -345,7 +376,15 @@ class CompanyDetailsControllerSpec
               mockAuthWithNoRetrievals()
               mockGetSession(session)
               mockTaxCheckServiceGetCtutr(CRN("crn"))(Right(Some(ctutr)))
-              mockSendAuditEvent(EnrolmentCTUTRCompanyMatchSuccess(CRN("crn"), ctutr, ctutr))
+              mockSendAuditEvent(
+                EnrolmentCTUTRCompanyMatchSuccess(
+                  CRN("crn"),
+                  ctutr,
+                  ctutr,
+                  Language.English,
+                  session.loginData.ggCredId
+                )
+              )
               mockTimeProviderToday(date)
               mockTaxCheckServiceGetCtStatus(ctutr, startDate, endDate)(
                 Right(Some(ctStatusResponse))
@@ -358,7 +397,7 @@ class CompanyDetailsControllerSpec
                 Left(Error("update and next failed"))
               )
             }
-            assertThrows[RuntimeException](await(performAction("confirmCompanyName" -> "0")))
+            assertThrows[RuntimeException](await(performAction("confirmCompanyName" -> "0")(Language.English)))
 
           }
         }
@@ -382,7 +421,7 @@ class CompanyDetailsControllerSpec
                 updatedSession
               )(Left(Error("some error")))
             }
-            assertThrows[RuntimeException](await(performAction("confirmCompanyName" -> "1")))
+            assertThrows[RuntimeException](await(performAction("confirmCompanyName" -> "1")(Language.English)))
 
           }
         }
@@ -419,7 +458,15 @@ class CompanyDetailsControllerSpec
                 mockAuthWithNoRetrievals()
                 mockGetSession(session)
                 mockTaxCheckServiceGetCtutr(CRN("crn"))(Right(Some(ctutr)))
-                mockSendAuditEvent(EnrolmentCTUTRCompanyMatchSuccess(CRN("crn"), ctutr, ctutr))
+                mockSendAuditEvent(
+                  EnrolmentCTUTRCompanyMatchSuccess(
+                    CRN("crn"),
+                    ctutr,
+                    ctutr,
+                    Language.English,
+                    session.loginData.ggCredId
+                  )
+                )
                 mockTimeProviderToday(currentDate)
                 mockTaxCheckServiceGetCtStatus(ctutr, lookBackStartDate, lookBackEndDate)(
                   Right(Some(ctStatusResponse))
@@ -431,7 +478,7 @@ class CompanyDetailsControllerSpec
                 )(Right(mockNextCall))
               }
 
-              checkIsRedirect(performAction("confirmCompanyName" -> "0"), mockNextCall)
+              checkIsRedirect(performAction("confirmCompanyName" -> "0")(Language.English), mockNextCall)
             }
 
             "today is 7 april 2021 " in {
@@ -490,7 +537,15 @@ class CompanyDetailsControllerSpec
               mockAuthWithNoRetrievals()
               mockGetSession(session)
               mockTaxCheckServiceGetCtutr(CRN("crn"))(Right(Some(desCtutr)))
-              mockSendAuditEvent(EnrolmentCTUTRCompanyMatchFailure(CRN("crn"), desCtutr, CTUTR("ctutr")))
+              mockSendAuditEvent(
+                EnrolmentCTUTRCompanyMatchFailure(
+                  CRN("crn"),
+                  desCtutr,
+                  CTUTR("ctutr"),
+                  Language.Welsh,
+                  session.loginData.ggCredId
+                )
+              )
               mockJourneyServiceUpdateAndNext(
                 routes.CompanyDetailsController.confirmCompanyDetails(),
                 session,
@@ -498,7 +553,7 @@ class CompanyDetailsControllerSpec
               )(Right(mockNextCall))
             }
 
-            checkIsRedirect(performAction("confirmCompanyName" -> "0"), mockNextCall)
+            checkIsRedirect(performAction("confirmCompanyName" -> "0")(Language.Welsh), mockNextCall)
           }
         }
 
@@ -520,7 +575,7 @@ class CompanyDetailsControllerSpec
             )(Right(mockNextCall))
           }
 
-          checkIsRedirect(performAction("confirmCompanyName" -> "1"), mockNextCall)
+          checkIsRedirect(performAction("confirmCompanyName" -> "1")(Language.English), mockNextCall)
         }
 
       }
@@ -1349,10 +1404,12 @@ class CompanyDetailsControllerSpec
       val crn             = CRN("crn")
       val companyName     = CompanyHouseName("test company")
 
-      def performAction(data: (String, String)*): Future[Result] =
-        controller.enterCtutrSubmit(FakeRequest().withFormUrlEncodedBody(data: _*))
+      def performAction(data: (String, String)*)(language: Language): Future[Result] =
+        controller.enterCtutrSubmit(
+          FakeRequest().withCookies(Cookie("PLAY_LANG", language.code)).withFormUrlEncodedBody(data: _*)
+        )
 
-      behave like authAndSessionDataBehaviour(() => performAction())
+      behave like authAndSessionDataBehaviour(() => performAction()(Language.English))
 
       "show a form error" when {
         val userAnswers   = Fixtures.incompleteCompanyUserAnswers(crn = Some(crn))
@@ -1373,7 +1430,7 @@ class CompanyDetailsControllerSpec
           }
 
           checkFormErrorIsDisplayed(
-            performAction(formAnswer: _*),
+            performAction(formAnswer: _*)(Language.English),
             messageFromMessageKey("enterCtutr.title"),
             messageFromMessageKey(errorMessageKey)
           )
@@ -1430,7 +1487,9 @@ class CompanyDetailsControllerSpec
             submittedCTUTR,
             submittedCTUTR.strippedCtutr,
             CTUTR(ctutr1),
-            false
+            false,
+            Language.English,
+            session.loginData.ggCredId
           )
 
           inSequence {
@@ -1446,7 +1505,7 @@ class CompanyDetailsControllerSpec
           }
 
           checkFormErrorIsDisplayed(
-            performAction("enterCtutr" -> submittedCTUTR.value),
+            performAction("enterCtutr" -> submittedCTUTR.value)(Language.English),
             messageFromMessageKey("enterCtutr.title"),
             messageFromMessageKey("enterCtutr.error.ctutrsDoNotMatch")
           )
@@ -1463,7 +1522,7 @@ class CompanyDetailsControllerSpec
             mockGetSession(Fixtures.individualHECSession())
           }
 
-          assertThrows[RuntimeException](await(performAction()))
+          assertThrows[RuntimeException](await(performAction()(Language.English)))
         }
 
         "CRN answer is missing" in {
@@ -1477,7 +1536,7 @@ class CompanyDetailsControllerSpec
             mockAuthWithNoRetrievals()
             mockGetSession(session)
           }
-          assertThrows[RuntimeException](await(performAction("enterCtutr" -> "some-utr")))
+          assertThrows[RuntimeException](await(performAction("enterCtutr" -> "some-utr")(Language.English)))
         }
 
         "DES CTUTR is not in the session" in {
@@ -1491,7 +1550,7 @@ class CompanyDetailsControllerSpec
             mockAuthWithNoRetrievals()
             mockGetSession(session)
           }
-          assertThrows[RuntimeException](await(performAction("enterCtutr" -> "some-utr")))
+          assertThrows[RuntimeException](await(performAction("enterCtutr" -> "some-utr")(Language.English)))
         }
 
         val companySessionWithCrn = Fixtures.companyHECSession(
@@ -1508,7 +1567,7 @@ class CompanyDetailsControllerSpec
               Left(Error("some error"))
             )
           }
-          assertThrows[RuntimeException](await(performAction("enterCtutr" -> ctutr1)))
+          assertThrows[RuntimeException](await(performAction("enterCtutr" -> ctutr1)(Language.English)))
         }
 
         "the call to delete ctutr attempts fails" in {
@@ -1521,7 +1580,7 @@ class CompanyDetailsControllerSpec
             mockTimeProviderToday(LocalDate.now)
             mockCtutrAttemptsServiceDelete(crn, companySessionWithCrn.loginData.ggCredId)(Left(Error("some error")))
           }
-          assertThrows[RuntimeException](await(performAction("enterCtutr" -> ctutr1)))
+          assertThrows[RuntimeException](await(performAction("enterCtutr" -> ctutr1)(Language.English)))
         }
 
         "the call to fetch CT status fails" in {
@@ -1541,10 +1600,11 @@ class CompanyDetailsControllerSpec
               Left(Error("fetch CT status failed"))
             )
           }
-          assertThrows[RuntimeException](await(performAction("enterCtutr" -> ctutr1)))
+          assertThrows[RuntimeException](await(performAction("enterCtutr" -> ctutr1)(Language.English)))
         }
 
         "the call to update and next fails" when {
+
           "user answer is valid" in {
             val answers = Fixtures.incompleteCompanyUserAnswers(crn = Some(CRN("crn")))
             val session = Fixtures.companyHECSession(
@@ -1562,7 +1622,14 @@ class CompanyDetailsControllerSpec
             val updatedRetrievedData = session.retrievedJourneyData.copy(ctStatus = Some(ctStatusResponse))
             val updatedSession       = session.copy(userAnswers = updatedAnswers, retrievedJourneyData = updatedRetrievedData)
             val expectedAuditEvent   =
-              EnterCTUTRCompanyMatchSuccess(crn, CTUTR(ctutr1), CTUTR(ctutr1).strippedCtutr, CTUTR(ctutr1))
+              EnterCTUTRCompanyMatchSuccess(
+                crn,
+                CTUTR(ctutr1),
+                CTUTR(ctutr1).strippedCtutr,
+                CTUTR(ctutr1),
+                Language.Welsh,
+                session.loginData.ggCredId
+              )
 
             inSequence {
               mockAuthWithNoRetrievals()
@@ -1584,49 +1651,60 @@ class CompanyDetailsControllerSpec
                 Left(Error("update and next failed"))
               )
             }
-            assertThrows[RuntimeException](await(performAction("enterCtutr" -> ctutr1)))
+            assertThrows[RuntimeException](await(performAction("enterCtutr" -> ctutr1)(Language.Welsh)))
           }
 
           "user answer does not match DES CTUTR & CRN has not been blocked yet but gets blocked on this attempt" in {
-            val session = Fixtures.companyHECSession(
-              companyLoginData,
-              Fixtures.companyRetrievedJourneyData(desCtutr = Some(CTUTR(ctutr1)), companyName = Some(companyName)),
-              crnBlocked = true,
-              userAnswers = Fixtures.incompleteCompanyUserAnswers(crn = Some(CRN("crn")))
-            )
+            List(
+              Language.English,
+              Language.Welsh
+            ).foreach { lang =>
+              withClue(s"For lang $lang: ") {
 
-            val attempts = CtutrAttempts(crn, companyLoginData.ggCredId, companyName, 1, None)
+                val session = Fixtures.companyHECSession(
+                  companyLoginData,
+                  Fixtures.companyRetrievedJourneyData(desCtutr = Some(CTUTR(ctutr1)), companyName = Some(companyName)),
+                  crnBlocked = true,
+                  userAnswers = Fixtures.incompleteCompanyUserAnswers(crn = Some(CRN("crn")))
+                )
 
-            val expectedMatchFailureAuditEvent =
-              EnterCTUTRCompanyMatchFailure(
-                crn,
-                CTUTR(ctutr2),
-                CTUTR(ctutr2).strippedCtutr,
-                CTUTR(ctutr1),
-                true
-              )
+                val attempts = CtutrAttempts(crn, companyLoginData.ggCredId, companyName, 1, None)
 
-            val expectedTaxCheckExitAuditEvent =
-              TaxCheckExit.CTEnteredCTUTRNotMatchingBlocked(session)
+                val expectedMatchFailureAuditEvent =
+                  EnterCTUTRCompanyMatchFailure(
+                    crn,
+                    CTUTR(ctutr2),
+                    CTUTR(ctutr2).strippedCtutr,
+                    CTUTR(ctutr1),
+                    true,
+                    lang,
+                    session.loginData.ggCredId
+                  )
 
-            inSequence {
-              mockAuthWithNoRetrievals()
-              mockGetSession(session)
-              mockCtutrAttemptsServiceGetWithDefault(crn, companyLoginData.ggCredId, companyName)(Right(attempts))
-              mockCtutrAttemptsServiceUpdateAttempts(attempts)(
-                Right(attempts.copy(blockedUntil = Some(ZonedDateTime.now)))
-              )
-              mockSendAuditEvent(expectedMatchFailureAuditEvent)
-              mockSendAuditEvent(expectedTaxCheckExitAuditEvent)
-              mockJourneyServiceUpdateAndNext(
-                enterCtutrRoute,
-                session,
-                session
-              )(
-                Left(Error("update and next failed"))
-              )
+                val expectedTaxCheckExitAuditEvent =
+                  TaxCheckExit.CTEnteredCTUTRNotMatchingBlocked(session, lang)
+
+                inSequence {
+                  mockAuthWithNoRetrievals()
+                  mockGetSession(session)
+                  mockCtutrAttemptsServiceGetWithDefault(crn, companyLoginData.ggCredId, companyName)(Right(attempts))
+                  mockCtutrAttemptsServiceUpdateAttempts(attempts)(
+                    Right(attempts.copy(blockedUntil = Some(ZonedDateTime.now)))
+                  )
+                  mockSendAuditEvent(expectedMatchFailureAuditEvent)
+                  mockSendAuditEvent(expectedTaxCheckExitAuditEvent)
+                  mockJourneyServiceUpdateAndNext(
+                    enterCtutrRoute,
+                    session,
+                    session
+                  )(
+                    Left(Error("update and next failed"))
+                  )
+                }
+                assertThrows[RuntimeException](await(performAction("enterCtutr" -> ctutr2)(lang)))
+              }
+
             }
-            assertThrows[RuntimeException](await(performAction("enterCtutr" -> ctutr2)))
           }
         }
 
@@ -1662,7 +1740,9 @@ class CompanyDetailsControllerSpec
               CTUTR(ctutr1),
               CTUTR(ctutr1).strippedCtutr,
               CTUTR("des"),
-              false
+              false,
+              Language.English,
+              session.loginData.ggCredId
             )
 
           inSequence {
@@ -1674,7 +1754,7 @@ class CompanyDetailsControllerSpec
             mockStoreSession(updatedSession)(Left(Error("some error")))
           }
 
-          assertThrows[RuntimeException](await(performAction("enterCtutr" -> ctutr1)))
+          assertThrows[RuntimeException](await(performAction("enterCtutr" -> ctutr1)(Language.English)))
         }
       }
 
@@ -1717,7 +1797,9 @@ class CompanyDetailsControllerSpec
                     crn,
                     CTUTR(ctutrAnswer),
                     CTUTR(strippedCtutrAnswer),
-                    CTUTR(strippedCtutrAnswer)
+                    CTUTR(strippedCtutrAnswer),
+                    Language.English,
+                    session.loginData.ggCredId
                   )
 
                 inSequence {
@@ -1743,7 +1825,7 @@ class CompanyDetailsControllerSpec
                   )(Right(mockNextCall))
                 }
 
-                checkIsRedirect(performAction("enterCtutr" -> ctutrAnswer), mockNextCall)
+                checkIsRedirect(performAction("enterCtutr" -> ctutrAnswer)(Language.English), mockNextCall)
               }
             }
           }
@@ -1771,7 +1853,7 @@ class CompanyDetailsControllerSpec
             )(Right(mockNextCall))
           }
 
-          checkIsRedirect(performAction("enterCtutr" -> ctutr1), mockNextCall)
+          checkIsRedirect(performAction("enterCtutr" -> ctutr1)(Language.English), mockNextCall)
         }
 
         "user's answer and DES CTUTR do not match & CRN gets blocked on this attempt" in {
@@ -1791,10 +1873,12 @@ class CompanyDetailsControllerSpec
               CTUTR(ctutr2),
               CTUTR(ctutr2).strippedCtutr,
               CTUTR(ctutr1),
-              true
+              true,
+              Language.Welsh,
+              session.loginData.ggCredId
             )
           val expectedTaxCheckExitAuditEvent =
-            TaxCheckExit.CTEnteredCTUTRNotMatchingBlocked(session)
+            TaxCheckExit.CTEnteredCTUTRNotMatchingBlocked(session, Language.Welsh)
 
           inSequence {
             mockAuthWithNoRetrievals()
@@ -1810,7 +1894,7 @@ class CompanyDetailsControllerSpec
             )(Right(mockNextCall))
           }
 
-          checkIsRedirect(performAction("enterCtutr" -> ctutr2), mockNextCall)
+          checkIsRedirect(performAction("enterCtutr" -> ctutr2)(Language.Welsh), mockNextCall)
         }
 
       }

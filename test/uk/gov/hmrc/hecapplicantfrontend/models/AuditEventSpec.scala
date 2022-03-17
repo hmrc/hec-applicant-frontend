@@ -41,7 +41,8 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
         List(
           HECTaxCheckCode("ABC"),
           HECTaxCheckCode("DEF")
-        )
+        ),
+        Language.Welsh
       )
 
       auditEvent.auditType       shouldBe "TaxCheckCodesDisplayed"
@@ -50,7 +51,8 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
         """
           |{
           |  "ggCredId": "ggCred",
-          |  "taxCheckCodes": [ "ABC", "DEF" ]
+          |  "taxCheckCodes": [ "ABC", "DEF" ],
+          |  "languagePreference": "Welsh"
           |}
           |""".stripMargin
       )
@@ -67,7 +69,9 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
         CTUTR("1111111111"),
         CTUTR("2222222222"),
         CTUTR("3333333333"),
-        true
+        true,
+        Language.English,
+        GGCredId("gg")
       )
 
       auditEvent.auditType       shouldBe "CompanyMatch"
@@ -81,7 +85,9 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
           |  "submittedCTUTR": "1111111111",
           |  "submittedCTUTRStandardised": "2222222222",
           |  "hmrcCTUTR": "3333333333",
-          |  "tooManyAttempts": true
+          |  "tooManyAttempts": true,
+          |  "languagePreference": "English",
+          |  "ggCredId": "gg"
           |}
           |""".stripMargin
       )
@@ -95,7 +101,9 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
       val auditEvent = EnrolmentCTUTRCompanyMatchFailure(
         CRN("12345678"),
         CTUTR("3333333333"),
-        CTUTR("4444444444")
+        CTUTR("4444444444"),
+        Language.Welsh,
+        GGCredId("gg")
       )
 
       auditEvent.auditType       shouldBe "CompanyMatch"
@@ -107,7 +115,9 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
           |  "matchResult": "NoMatch",
           |  "companyRegistrationNumber": "12345678",
           |  "hmrcCTUTR": "3333333333",
-          |  "enrolmentCTUTR": "4444444444"
+          |  "enrolmentCTUTR": "4444444444",
+          |  "languagePreference": "Welsh",
+          |  "ggCredId": "gg"
           |}
           |""".stripMargin
       )
@@ -122,7 +132,9 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
         CRN("12345678"),
         CTUTR("1111111111"),
         CTUTR("2222222222"),
-        CTUTR("3333333333")
+        CTUTR("3333333333"),
+        Language.English,
+        GGCredId("gg")
       )
 
       auditEvent.auditType       shouldBe "CompanyMatch"
@@ -135,7 +147,9 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
           |  "companyRegistrationNumber": "12345678",
           |  "submittedCTUTR": "1111111111",
           |  "submittedCTUTRStandardised": "2222222222",
-          |  "hmrcCTUTR": "3333333333"
+          |  "hmrcCTUTR": "3333333333",
+          |  "languagePreference": "English",
+          |  "ggCredId": "gg"
           |}
           |""".stripMargin
       )
@@ -149,7 +163,9 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
       val auditEvent = EnrolmentCTUTRCompanyMatchSuccess(
         CRN("12345678"),
         CTUTR("3333333333"),
-        CTUTR("4444444444")
+        CTUTR("4444444444"),
+        Language.Welsh,
+        GGCredId("gg")
       )
 
       auditEvent.auditType       shouldBe "CompanyMatch"
@@ -161,7 +177,9 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
           |  "matchResult": "Match",
           |  "companyRegistrationNumber": "12345678",
           |  "hmrcCTUTR": "3333333333",
-          |  "enrolmentCTUTR": "4444444444"
+          |  "enrolmentCTUTR": "4444444444",
+          |  "languagePreference": "Welsh",
+          |  "ggCredId": "gg"
           |}
           |""".stripMargin
       )
@@ -224,14 +242,15 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
 
     "SAUTRNotFound" in {
       test(
-        TaxCheckExit.SAUTRNotFound(session),
+        TaxCheckExit.SAUTRNotFound(session, Language.English),
         Json.parse(
           s"""
             |{
             |  "serviceExitReason": "SAUTRNotFound",
             |  "serviceExitDescription": "SA UTR not found for the Applicant's NINO.",
             |  "source": "Digital",
-            |  "taxCheckSessionData": $sessionJson
+            |  "taxCheckSessionData": $sessionJson,
+            |  "languagePreference": "English"
             |}
             |""".stripMargin
         )
@@ -240,14 +259,15 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
 
     "SANoNoticeToFileOrTaxReturn" in {
       test(
-        TaxCheckExit.SANoNoticeToFileOrTaxReturn(session),
+        TaxCheckExit.SANoNoticeToFileOrTaxReturn(session, Language.Welsh),
         Json.parse(
           s"""
              |{
              |  "serviceExitReason": "SANoNoticeToFileOrTaxReturn",
              |  "serviceExitDescription": "For relevant income tax year, Self Assessment Notice to File not found, Self Assessment Tax Return not found.",
              |  "source": "Digital",
-             |  "taxCheckSessionData": $sessionJson
+             |  "taxCheckSessionData": $sessionJson,
+             |  "languagePreference": "Welsh"
              |}
              |""".stripMargin
         )
@@ -256,14 +276,15 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
 
     "CTEnteredCTUTRNotMatchingBlocked" in {
       test(
-        TaxCheckExit.CTEnteredCTUTRNotMatchingBlocked(session),
+        TaxCheckExit.CTEnteredCTUTRNotMatchingBlocked(session, Language.Welsh),
         Json.parse(
           s"""
              |{
              |  "serviceExitReason": "CTEnteredCTUTRNotMatchingBlocked",
              |  "serviceExitDescription": "Applicant has made repeated attempts to provide a matching CT UTR. Attempts limit reached, so Applicant temporarily blocked from making an Application for that CRN.",
              |  "source": "Digital",
-             |  "taxCheckSessionData": $sessionJson
+             |  "taxCheckSessionData": $sessionJson,
+             |  "languagePreference": "Welsh"
              |}
              |""".stripMargin
         )
@@ -272,14 +293,15 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
 
     "CTNoNoticeToFileOrTaxReturn" in {
       test(
-        TaxCheckExit.CTNoNoticeToFileOrTaxReturn(session),
+        TaxCheckExit.CTNoNoticeToFileOrTaxReturn(session, Language.English),
         Json.parse(
           s"""
              |{
              |  "serviceExitReason": "CTNoNoticeToFileOrTaxReturn",
              |  "serviceExitDescription": "For relevant accounting period, Corporation Tax Notice to File not found, Corporation Tax Return not found.",
              |  "source": "Digital",
-             |  "taxCheckSessionData": $sessionJson
+             |  "taxCheckSessionData": $sessionJson,
+             |  "languagePreference": "English"
              |}
              |""".stripMargin
         )
@@ -288,14 +310,15 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
 
     "CTNoAccountingPeriodNotRecentlyStartedTrading" in {
       test(
-        TaxCheckExit.CTNoAccountingPeriodNotRecentlyStartedTrading(session),
+        TaxCheckExit.CTNoAccountingPeriodNotRecentlyStartedTrading(session, Language.English),
         Json.parse(
           s"""
              |{
              |  "serviceExitReason": "CTNoAccountingPeriodNotRecentlyStartedTrading",
              |  "serviceExitDescription": "No relevant accounting period was found on tax summary record for the lookback period, and the Applicant's Company has not recently started trading.",
              |  "source": "Digital",
-             |  "taxCheckSessionData": $sessionJson
+             |  "taxCheckSessionData": $sessionJson,
+             |  "languagePreference": "English"
              |}
              |""".stripMargin
         )
@@ -304,14 +327,15 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
 
     "AllowedTaxChecksExceeded" in {
       test(
-        TaxCheckExit.AllowedTaxChecksExceeded(session),
+        TaxCheckExit.AllowedTaxChecksExceeded(session, Language.Welsh),
         Json.parse(
           s"""
              |{
              |  "serviceExitReason": "AllowedTaxChecksExceeded",
              |  "serviceExitDescription": "Attempted tax check for Licence Type exceeded number of permitted existing tax check codes, for a particular Applicant.",
              |  "source": "Digital",
-             |  "taxCheckSessionData": $sessionJson
+             |  "taxCheckSessionData": $sessionJson,
+             |  "languagePreference": "Welsh"
              |}
              |""".stripMargin
         )
@@ -337,7 +361,8 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
             HECTaxCheckCode("code"),
             EmailAddress("email"),
             EmailType.GGEmail,
-            Some(PasscodeRequestResult.PasscodeSent)
+            Some(PasscodeRequestResult.PasscodeSent),
+            Language.Welsh
           ),
           Json.parse(
             """{
@@ -345,7 +370,8 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
             |  "taxCheckCode": "code",
             |  "emailAddress": "email",
             |  "emailSource": "GovernmentGateway",
-            |  "result": "Success"
+            |  "result": "Success",
+            |  "languagePreference": "Welsh"
             |}
             |""".stripMargin
           )
@@ -359,7 +385,8 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
             HECTaxCheckCode("code"),
             EmailAddress("email"),
             EmailType.DifferentEmail,
-            Some(PasscodeRequestResult.EmailAddressAlreadyVerified)
+            Some(PasscodeRequestResult.EmailAddressAlreadyVerified),
+            Language.English
           ),
           Json.parse(
             """{
@@ -367,7 +394,8 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
             |  "taxCheckCode": "code",
             |  "emailAddress": "email",
             |  "emailSource": "Submitted",
-            |  "result": "AlreadyVerified"
+            |  "result": "AlreadyVerified",
+            |  "languagePreference": "English"
             |}
             |""".stripMargin
           )
@@ -381,7 +409,8 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
             HECTaxCheckCode("code"),
             EmailAddress("email"),
             EmailType.DifferentEmail,
-            Some(PasscodeRequestResult.BadEmailAddress)
+            Some(PasscodeRequestResult.BadEmailAddress),
+            Language.Welsh
           ),
           Json.parse(
             """{
@@ -390,7 +419,8 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
             |  "emailAddress": "email",
             |  "emailSource": "Submitted",
             |  "result": "Failure",
-            |  "failureReason": "VerificationPasscodeEmailFailed"
+            |  "failureReason": "VerificationPasscodeEmailFailed",
+            |  "languagePreference": "Welsh"
             |}
             |""".stripMargin
           )
@@ -404,7 +434,8 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
             HECTaxCheckCode("code"),
             EmailAddress("email"),
             EmailType.DifferentEmail,
-            Some(PasscodeRequestResult.MaximumNumberOfEmailsExceeded)
+            Some(PasscodeRequestResult.MaximumNumberOfEmailsExceeded),
+            Language.English
           ),
           Json.parse(
             """{
@@ -413,7 +444,8 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
             |  "emailAddress": "email",
             |  "emailSource": "Submitted",
             |  "result": "Failure",
-            |  "failureReason": "AttemptsToVerifyEmailAddressExceeded"
+            |  "failureReason": "AttemptsToVerifyEmailAddressExceeded",
+            |  "languagePreference": "English"
             |}
             |""".stripMargin
           )
@@ -427,7 +459,8 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
             HECTaxCheckCode("code"),
             EmailAddress("email"),
             EmailType.DifferentEmail,
-            None
+            None,
+            Language.Welsh
           ),
           Json.parse(
             """{
@@ -436,7 +469,8 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
             |  "emailAddress": "email",
             |  "emailSource": "Submitted",
             |  "result": "Failure",
-            |  "failureReason": "TechnicalError"
+            |  "failureReason": "TechnicalError",
+            |  "languagePreference": "Welsh"
             |}
             |""".stripMargin
           )
@@ -465,7 +499,8 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
             EmailAddress("email"),
             EmailType.GGEmail,
             Passcode("pass"),
-            Some(PasscodeVerificationResult.Match)
+            Some(PasscodeVerificationResult.Match),
+            Language.English
           ),
           Json.parse(
             """{
@@ -474,7 +509,8 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
             |  "emailAddress": "email",
             |  "emailSource": "GovernmentGateway",
             |  "verificationPasscode": "pass",
-            |  "result": "Success"
+            |  "result": "Success",
+            |  "languagePreference": "English"
             |}
             |""".stripMargin
           )
@@ -489,7 +525,8 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
             EmailAddress("email"),
             EmailType.DifferentEmail,
             Passcode("pass"),
-            Some(PasscodeVerificationResult.TooManyAttempts)
+            Some(PasscodeVerificationResult.TooManyAttempts),
+            Language.English
           ),
           Json.parse(
             """{
@@ -499,7 +536,8 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
             |  "emailSource": "Submitted",
             |  "verificationPasscode": "pass",
             |  "result": "Failure",
-            |  "failureReason": "MaximumPasscodeVerificationAttemptsExceeded"
+            |  "failureReason": "MaximumPasscodeVerificationAttemptsExceeded",
+            |  "languagePreference": "English"
             |}
             |""".stripMargin
           )
@@ -514,7 +552,8 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
             EmailAddress("email"),
             EmailType.DifferentEmail,
             Passcode("pass"),
-            Some(PasscodeVerificationResult.Expired)
+            Some(PasscodeVerificationResult.Expired),
+            Language.Welsh
           ),
           Json.parse(
             """{
@@ -524,7 +563,8 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
             |  "emailSource": "Submitted",
             |  "verificationPasscode": "pass",
             |  "result": "Failure",
-            |  "failureReason": "PasscodeNotFoundExpired"
+            |  "failureReason": "PasscodeNotFoundExpired",
+            |  "languagePreference": "Welsh"
             |}
             |""".stripMargin
           )
@@ -539,7 +579,8 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
             EmailAddress("email"),
             EmailType.DifferentEmail,
             Passcode("pass"),
-            Some(PasscodeVerificationResult.NoMatch)
+            Some(PasscodeVerificationResult.NoMatch),
+            Language.English
           ),
           Json.parse(
             """{
@@ -549,7 +590,8 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
             |  "emailSource": "Submitted",
             |  "verificationPasscode": "pass",
             |  "result": "Failure",
-            |  "failureReason": "PasscodeMismatch"
+            |  "failureReason": "PasscodeMismatch",
+            |  "languagePreference": "English"
             |}
             |""".stripMargin
           )
@@ -564,7 +606,8 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
             EmailAddress("email"),
             EmailType.DifferentEmail,
             Passcode("pass"),
-            None
+            None,
+            Language.Welsh
           ),
           Json.parse(
             """{
@@ -574,7 +617,8 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
             |  "emailSource": "Submitted",
             |  "verificationPasscode": "pass",
             |  "result": "Failure",
-            |  "failureReason": "TechnicalError"
+            |  "failureReason": "TechnicalError",
+            |  "languagePreference": "Welsh"
             |}
             |""".stripMargin
           )
@@ -603,7 +647,8 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
             EmailAddress("email"),
             EmailType.GGEmail,
             "template",
-            Some(EmailSendResult.EmailSent)
+            Some(EmailSendResult.EmailSent),
+            Language.English
           ),
           Json.parse(
             """{
@@ -612,7 +657,8 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
               |  "emailAddress": "email",
               |  "emailSource": "GovernmentGateway",
               |  "emailTemplateIdentifier": "template",
-              |  "result": "Success"
+              |  "result": "Success",
+              |  "languagePreference": "English"
               |}
               |""".stripMargin
           )
@@ -627,7 +673,8 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
             EmailAddress("email"),
             EmailType.DifferentEmail,
             "template",
-            Some(EmailSendResult.EmailSentFailure)
+            Some(EmailSendResult.EmailSentFailure),
+            Language.Welsh
           ),
           Json.parse(
             """{
@@ -636,7 +683,8 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
               |  "emailAddress": "email",
               |  "emailSource": "Submitted",
               |  "emailTemplateIdentifier": "template",
-              |  "result": "Failure"
+              |  "result": "Failure",
+              |  "languagePreference": "Welsh"
               |}
               |""".stripMargin
           )
@@ -651,7 +699,8 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
             EmailAddress("email"),
             EmailType.GGEmail,
             "template",
-            None
+            None,
+            Language.English
           ),
           Json.parse(
             """{
@@ -660,7 +709,8 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
               |  "emailAddress": "email",
               |  "emailSource": "GovernmentGateway",
               |  "emailTemplateIdentifier": "template",
-              |  "result": "Failure"
+              |  "result": "Failure",
+              |  "languagePreference": "English"
               |}
               |""".stripMargin
           )

@@ -64,7 +64,11 @@ class TaxChecksListController @Inject() (
         sys.error("No tax check codes found")
       case taxChecks =>
         auditService.sendEvent(
-          TaxCheckCodesDisplayed(request.sessionData.loginData.ggCredId, taxChecks.map(_.taxCheckCode))
+          TaxCheckCodesDisplayed(
+            request.sessionData.loginData.ggCredId,
+            taxChecks.map(_.taxCheckCode),
+            request.language
+          )
         )
         Ok(taxChecksListPage(taxChecks))
     }

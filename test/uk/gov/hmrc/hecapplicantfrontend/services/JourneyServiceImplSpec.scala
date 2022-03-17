@@ -343,10 +343,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               )
 
             implicit val request: RequestWithSessionData[_] =
-              requestWithSessionData(session)
+              requestWithSessionData(session, Language.Welsh)
 
             inSequence {
-              mockSendAuditEvent(TaxCheckExit.AllowedTaxChecksExceeded(updatedSession))
+              mockSendAuditEvent(TaxCheckExit.AllowedTaxChecksExceeded(updatedSession, Language.Welsh))
               mockStoreSession(updatedSession)(Right(()))
             }
 
@@ -696,10 +696,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                 )
 
               implicit val request: RequestWithSessionData[_] =
-                requestWithSessionData(session)
+                requestWithSessionData(session, Language.English)
 
               inSequence {
-                mockSendAuditEvent(TaxCheckExit.SAUTRNotFound(updatedSession))
+                mockSendAuditEvent(TaxCheckExit.SAUTRNotFound(updatedSession, Language.English))
                 mockStoreSession(updatedSession)(Right(()))
               }
 
@@ -765,10 +765,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                 )
 
               implicit val request: RequestWithSessionData[_] =
-                requestWithSessionData(session)
+                requestWithSessionData(session, Language.Welsh)
 
               inSequence {
-                mockSendAuditEvent(TaxCheckExit.SANoNoticeToFileOrTaxReturn(updatedSession))
+                mockSendAuditEvent(TaxCheckExit.SANoNoticeToFileOrTaxReturn(updatedSession, Language.Welsh))
                 mockStoreSession(updatedSession)(Right(()))
               }
               val result = journeyService.updateAndNext(
@@ -1364,7 +1364,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               test(
                 status = CTStatus.NoReturnFound,
                 destination = routes.CompanyDetailsController.cannotDoTaxCheck(),
-                Some(TaxCheckExit.CTNoNoticeToFileOrTaxReturn(_))
+                Some(TaxCheckExit.CTNoNoticeToFileOrTaxReturn(_, Language.English))
               )
             }
           }
@@ -1443,7 +1443,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             testStartTrading(
               YesNoAnswer.No,
               routes.CompanyDetailsController.cannotDoTaxCheck(),
-              Some(TaxCheckExit.CTNoAccountingPeriodNotRecentlyStartedTrading(_))
+              Some(TaxCheckExit.CTNoAccountingPeriodNotRecentlyStartedTrading(_, Language.English))
             )
           }
 
