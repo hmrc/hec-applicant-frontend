@@ -104,7 +104,7 @@ class ConfirmIndividualDetailsControllerSpec
               form
                 .attr("action") shouldBe routes.ConfirmIndividualDetailsController.confirmIndividualDetailsSubmit().url
 
-              doc.select("#back").attr("href") shouldBe appConfig.taxCheckGuidanceUrl
+              doc.select("#back").attr("href") shouldBe appConfig.applicantServiceGuidanceUrl
             }
           )
 
