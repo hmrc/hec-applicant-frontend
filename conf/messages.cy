@@ -245,9 +245,6 @@ tooManyCtutrAttempts.crn=Rhif Cofrestru’r Cwmni
 maxTaxChecksLimitExceeded.title=Ni allwch wneud gwiriad treth arall ar gyfer y math hwn o drwydded
 maxTaxChecksLimitExceeded.p1=Rydych wedi ceisio gwneud gwiriad treth gormod o weithiau ar gyfer y math hwn o drwydded.
 maxTaxChecksLimitExceeded.link=<a href="{0}" class="govuk-link">Bwriwch olwg dros eich codau gwirio treth presennol</a> neu <a href="{1}" class="govuk-link">ewch yn ôl a dewis math gwahanol o drwydded</a>
-accessDenied.title=Ni allwch gael at y dudalen hon
-accessDenied.p1=Os yw’r ddolen hon wedi’i hanfon atoch ac na allwch gael ati, mae’n bosibl eich bod wedi mewngofnodi i’r cyfrif Porth y Llywodraeth anghywir.
-accessDenied.p2=Os oes angen unrhyw help arnoch i gael at y ddolen hon, cysylltwch â’ch cyswllt yn CThEM.
 confirmEmailAddress.title=Pa gyfeiriad e-bost yr hoffech ei ddefnyddio?
 confirmEmailAddress.hint=Caiff eich cod gwirio treth ei anfon i’r e-bost hwn, ac ni fydd unrhyw gyfeiriadau e-bost eraill rydych wedi’u cadw gyda ni’n cael eu newid
 confirmEmailAddress.differentEmail=Cyfeiriad e-bost gwahanol
