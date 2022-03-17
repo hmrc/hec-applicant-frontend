@@ -17,7 +17,7 @@
 package uk.gov.hmrc.hecapplicantfrontend.models
 
 import play.api.i18n.Lang
-import play.api.libs.json.{Format, JsError, JsResult, JsString, JsSuccess, Reads, Writes}
+import play.api.libs.json.{Format, JsError, JsString, JsSuccess, Reads, Writes}
 import play.api.mvc.MessagesRequest
 
 import java.util.Locale
@@ -39,20 +39,24 @@ object Language {
   implicit def toPlayLang(l: Language): Lang = Lang(l.code)
 
   def fromRequest(request: MessagesRequest[_]): Either[String, Language] =
-    fromString(request.messages.lang.code.toLowerCase(Locale.UK))
-
-  private def fromString(s: String): Either[String, Language] = s match {
-    case English.code => Right(English)
-    case Welsh.code   => Right(Welsh)
-    case other        => Left(s"Found unsupported language code $other")
-  }
+    request.messages.lang.code.toLowerCase(Locale.UK) match {
+      case English.code => Right(English)
+      case Welsh.code   => Right(Welsh)
+      case other        => Left(s"Found unsupported language code $other")
+    }
 
   implicit val format: Format[Language] = Format(
     Reads({
-      case JsString(s) => fromString(s).fold[JsResult[Language]](JsError(_), JsSuccess(_))
-      case other       => JsError(s"Expected string but got ${other.getClass.getSimpleName}")
+      case JsString(s) =>
+        s match {
+          case "English" => JsSuccess(English)
+          case "Welsh"   => JsSuccess(Welsh)
+          case other     => JsError(s"Found unsupported language $other")
+        }
+
+      case other => JsError(s"Expected string but got ${other.getClass.getSimpleName}")
     }),
-    Writes(l => JsString(l.code))
+    Writes(l => JsString(l.toString))
   )
 
 }
