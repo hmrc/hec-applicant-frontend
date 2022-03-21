@@ -20,7 +20,7 @@ import com.google.inject.Inject
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.VerifyEmailPasscodeController.{getNextOrNoMatchResult, verifyGGEmailInSession, verifyPasscodeForm}
-import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, RequestWithSessionData, SessionDataAction}
+import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.Passcode
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.{EmailVerificationService, JourneyService}
@@ -59,7 +59,7 @@ class VerifyResentEmailPasscodeController @Inject() (
           .fold(
             _.doThrow("Could not update session and proceed"),
             _ => {
-              val req                           = RequestWithSessionData(request.request, updatedSession)
+              val req                           = request.copy(sessionData = updatedSession)
               val passcodeOpt: Option[Passcode] =
                 session.fold(_.userEmailAnswers.flatMap(_.passcode), _.userEmailAnswers.flatMap(_.passcode))
               val form                          = passcodeOpt.fold(verifyPasscodeForm)(verifyPasscodeForm.fill)

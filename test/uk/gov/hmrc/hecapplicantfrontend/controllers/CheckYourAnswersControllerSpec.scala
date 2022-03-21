@@ -19,6 +19,7 @@ package uk.gov.hmrc.hecapplicantfrontend.controllers
 import cats.data.EitherT
 import cats.instances.future._
 import play.api.inject.bind
+import play.api.mvc.Cookie
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
@@ -68,13 +69,14 @@ class CheckYourAnswersControllerSpec
 
   def mockSaveTaxCheck(
     HECSession: HECSession,
-    completeAnswers: CompleteUserAnswers
+    completeAnswers: CompleteUserAnswers,
+    language: Language
   )(
     result: Either[Error, HECTaxCheck]
   ) =
     (mockTaxCheckService
-      .saveTaxCheck(_: HECSession, _: CompleteUserAnswers)(_: HeaderCarrier))
-      .expects(HECSession, completeAnswers, *)
+      .saveTaxCheck(_: HECSession, _: CompleteUserAnswers, _: Language)(_: HeaderCarrier))
+      .expects(HECSession, completeAnswers, language, *)
       .returning(EitherT.fromEither(result))
 
   "CheckYourAnswersController" when {
@@ -379,9 +381,10 @@ class CheckYourAnswersControllerSpec
 
     "handling submits on the check your answers page" must {
 
-      def performAction() = controller.checkYourAnswersSubmit(FakeRequest())
+      def performAction(language: Language) =
+        controller.checkYourAnswersSubmit(FakeRequest().withCookies(Cookie("PLAY_LANG", language.code)))
 
-      behave like authAndSessionDataBehaviour(performAction)
+      behave like authAndSessionDataBehaviour(() => performAction(Language.English))
 
       val completeAnswers = Fixtures.completeIndividualUserAnswers(
         LicenceType.OperatorOfPrivateHireVehicles,
@@ -414,7 +417,7 @@ class CheckYourAnswersControllerSpec
             mockAuthWithNoRetrievals()
             mockGetSession(session)
           }
-          assertThrows[RuntimeException](await(performAction()))
+          assertThrows[RuntimeException](await(performAction(Language.English)))
 
         }
 
@@ -422,11 +425,11 @@ class CheckYourAnswersControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockSaveTaxCheck(session, completeAnswers)(
+            mockSaveTaxCheck(session, completeAnswers, Language.English)(
               Left(Error(new Exception("Oh no!")))
             )
           }
-          assertThrows[RuntimeException](await(performAction()))
+          assertThrows[RuntimeException](await(performAction(Language.English)))
 
         }
 
@@ -436,14 +439,14 @@ class CheckYourAnswersControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockSaveTaxCheck(session, completeAnswers)(Right(hecTaxCheck))
+            mockSaveTaxCheck(session, completeAnswers, Language.English)(Right(hecTaxCheck))
             mockJourneyServiceUpdateAndNext(
               routes.CheckYourAnswersController.checkYourAnswers(),
               session,
               updatedSession
             )(Left(Error("")))
           }
-          assertThrows[RuntimeException](await(performAction()))
+          assertThrows[RuntimeException](await(performAction(Language.English)))
 
         }
 
@@ -457,7 +460,7 @@ class CheckYourAnswersControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockSaveTaxCheck(session, completeAnswers)(Right(hecTaxCheck))
+            mockSaveTaxCheck(session, completeAnswers, Language.Welsh)(Right(hecTaxCheck))
             mockJourneyServiceUpdateAndNext(
               routes.CheckYourAnswersController.checkYourAnswers(),
               session,
@@ -465,7 +468,7 @@ class CheckYourAnswersControllerSpec
             )(Right(mockNextCall))
           }
 
-          checkIsRedirect(performAction(), mockNextCall)
+          checkIsRedirect(performAction(Language.Welsh), mockNextCall)
         }
 
       }

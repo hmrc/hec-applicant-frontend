@@ -72,7 +72,8 @@ class CheckYourAnswersController @Inject() (
     request.sessionData.userAnswers match {
       case c: CompleteUserAnswers =>
         val result = for {
-          taxCheck      <- taxCheckService.saveTaxCheck(request.sessionData, c)
+          taxCheck      <-
+            taxCheckService.saveTaxCheck(request.sessionData, c, request.language)
           updatedSession = request.sessionData.fold(
                              _.copy(completedTaxCheck = Some(taxCheck)),
                              _.copy(completedTaxCheck = Some(taxCheck))

@@ -23,10 +23,9 @@ import play.api.http.Status.ACCEPTED
 import uk.gov.hmrc.hecapplicantfrontend.connectors.{HECConnector, SendEmailConnector}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.RequestWithSessionData
 import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.SendTaxCheckCodeNotificationEmail
-import uk.gov.hmrc.hecapplicantfrontend.models.{Error, UserSelectedEmail}
+import uk.gov.hmrc.hecapplicantfrontend.models.{Error, Language, UserSelectedEmail}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailSend.{EmailParameters, EmailSendRequest, EmailSendResult}
-import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.Language
-import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.Language.{English, Welsh}
+import uk.gov.hmrc.hecapplicantfrontend.models.Language.{English, Welsh}
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.SaveEmailAddressRequest
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
@@ -76,35 +75,31 @@ class SendEmailServiceImpl @Inject() (
         result
       )
 
-    EitherT
-      .fromEither[Future](Language.fromRequest(r.request))
-      .leftMap((Error(_)))
-      .flatMap { lang =>
-        val templateId                                   = getTemplateId(lang)
-        val result: EitherT[Future, Error, HttpResponse] = emailSendConnector.sendEmail(
-          EmailSendRequest(List(userSelectedEmail.emailAddress), templateId, emailParameters)
-        )
+    val templateId                                   = getTemplateId(r.language)
+    val result: EitherT[Future, Error, HttpResponse] = emailSendConnector.sendEmail(
+      EmailSendRequest(List(userSelectedEmail.emailAddress), templateId, emailParameters)
+    )
 
-        result
-          .leftMap { e =>
-            auditService.sendEvent(auditEvent(templateId, None))
-            e
-          }
-          .subflatMap { response =>
-            val result = response.status match {
-              case ACCEPTED =>
-                val _ =
-                  hecConnector.saveEmailAddress(SaveEmailAddressRequest(userSelectedEmail.emailAddress, taxCheckCode))
-                Right(EmailSendResult.EmailSent)
-              case other    =>
-                logger.warn(s"Response for send email call came back with status : $other")
-                Right(EmailSendResult.EmailSentFailure)
-            }
-
-            auditService.sendEvent(auditEvent(templateId, result.toOption))
-            result
-          }
+    result
+      .leftMap { e =>
+        auditService.sendEvent(auditEvent(templateId, None))
+        e
       }
+      .subflatMap { response =>
+        val result = response.status match {
+          case ACCEPTED =>
+            val _ =
+              hecConnector.saveEmailAddress(SaveEmailAddressRequest(userSelectedEmail.emailAddress, taxCheckCode))
+            Right(EmailSendResult.EmailSent)
+          case other    =>
+            logger.warn(s"Response for send email call came back with status : $other")
+            Right(EmailSendResult.EmailSentFailure)
+        }
+
+        auditService.sendEvent(auditEvent(templateId, result.toOption))
+        result
+      }
+
   }
 
   private def getTemplateId(lang: Language) = lang match {

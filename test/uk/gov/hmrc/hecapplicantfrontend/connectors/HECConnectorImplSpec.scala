@@ -79,7 +79,8 @@ class HECConnectorImplSpec extends AnyWordSpec with Matchers with MockFactory wi
             TaxYear(2021)
           ),
           taxCheckStartDateTime,
-          HECTaxCheckSource.Digital
+          HECTaxCheckSource.Digital,
+          Language.English
         )
 
       val expectedUrl = s"$protocol://$host:$port/hec/tax-check"

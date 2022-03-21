@@ -63,8 +63,8 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
   val taxCheckStartDateTime = ZonedDateTime.of(2021, 10, 9, 9, 12, 34, 0, ZoneId.of("Europe/London"))
   val fakeRequest           = new MessagesRequest(FakeRequest(), messagesApi)
 
-  def requestWithSessionData(s: HECSession): RequestWithSessionData[_] =
-    RequestWithSessionData(AuthenticatedRequest(fakeRequest), s)
+  def requestWithSessionData(s: HECSession, language: Language = Language.English): RequestWithSessionData[_] =
+    RequestWithSessionData(AuthenticatedRequest(fakeRequest), s, language)
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 

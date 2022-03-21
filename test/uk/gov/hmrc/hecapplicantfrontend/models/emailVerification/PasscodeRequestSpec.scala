@@ -16,15 +16,29 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models.emailVerification
 
-import play.api.libs.json.{JsString, Json, OWrites, Writes}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
+import play.api.libs.json.Json
 import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, Language}
 
-final case class PasscodeRequest(email: EmailAddress, serviceName: String, lang: Language)
+class PasscodeRequestSpec extends AnyWordSpec with Matchers {
 
-object PasscodeRequest {
+  "PasscodeRequest" must {
 
-  implicit val langWrites: Writes[Language] = Writes(l => JsString(l.code))
+    "have a write instance" in {
+      val passcodeRequest = PasscodeRequest(EmailAddress("email@test.com"), "service", Language.English)
+      Json.toJson(passcodeRequest) shouldBe Json.parse(
+        """
+          |{
+          |  "email": "email@test.com",
+          |  "serviceName": "service",
+          |  "lang": "en"
+          |}
+          |""".stripMargin
+      )
 
-  implicit val writes: OWrites[PasscodeRequest] = Json.writes
+    }
+
+  }
 
 }

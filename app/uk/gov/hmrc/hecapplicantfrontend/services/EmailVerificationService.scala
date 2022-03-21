@@ -27,7 +27,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.{SubmitEmailAddressVer
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeRequestResult._
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeVerificationResult._
 import uk.gov.hmrc.hecapplicantfrontend.models.{Error, UserSelectedEmail}
-import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{Language, Passcode, PasscodeRequest, PasscodeRequestResult, PasscodeVerificationRequest, PasscodeVerificationResult}
+import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{Passcode, PasscodeRequest, PasscodeRequestResult, PasscodeVerificationRequest, PasscodeVerificationResult}
 import uk.gov.hmrc.hecapplicantfrontend.services.EmailVerificationService.ErrorResponse
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.hecapplicantfrontend.util.HttpResponseOps._
@@ -81,15 +81,10 @@ class EmailVerificationServiceImpl @Inject() (
         result
       )
 
-    val serviceName = r.request.request.messages("emailVerification.passcodeEmail.serviceName")
+    val serviceName = r.request.request.messagesApi("emailVerification.passcodeEmail.serviceName")(r.language)
 
-    val result: EitherT[Future, Error, HttpResponse] = for {
-      lang   <- EitherT.fromEither[Future](Language.fromRequest(r.request)).leftMap(Error(_))
-      result <-
-        emailVerificationConnector.requestPasscode(PasscodeRequest(userSelectedEmail.emailAddress, serviceName, lang))
-    } yield result
-
-    result
+    emailVerificationConnector
+      .requestPasscode(PasscodeRequest(userSelectedEmail.emailAddress, serviceName, r.language))
       .leftMap { e =>
         auditService.sendEvent(auditEvent(None))
         e

@@ -27,7 +27,7 @@ import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthenticatedReques
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.CompanyHECSession
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.CompanyLoginData
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CTUTR, GGCredId}
-import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, HECSession}
+import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, HECSession, Language}
 import uk.gov.hmrc.hecapplicantfrontend.utils.PlaySupport
 import uk.gov.hmrc.http.SessionId
 
@@ -53,7 +53,7 @@ class SessionStoreImplSpec extends PlaySupport with MongoSupportSpec with Eventu
       new MessagesRequest(FakeRequest().withSession(("sessionId", sessionId.toString)), messagesApi)
     )
     implicit val request: Request[_]                              =
-      RequestWithSessionData(fakeRequest, sessionData)
+      RequestWithSessionData(fakeRequest, sessionData, Language.English)
   }
 
   "SessionStoreImpl" must {

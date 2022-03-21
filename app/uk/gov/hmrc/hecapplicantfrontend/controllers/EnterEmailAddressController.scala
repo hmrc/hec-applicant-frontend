@@ -24,7 +24,7 @@ import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.ConfirmEmailAddressController.differentEmailAddressMapping
 import uk.gov.hmrc.hecapplicantfrontend.controllers.EnterEmailAddressController.enterEmailAddressForm
-import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, RequestWithSessionData, SessionDataAction}
+import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
 import uk.gov.hmrc.hecapplicantfrontend.models.{EmailType, UserEmailAnswers, UserSelectedEmail}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.{EmailVerificationService, JourneyService}
@@ -59,7 +59,7 @@ class EnterEmailAddressController @Inject() (
         .fold(
           _.doThrow("Could not update session and proceed"),
           _ => {
-            val req  = RequestWithSessionData(request.request, updatedSession)
+            val req  = request.copy(sessionData = updatedSession)
             //reason for explicitly passing req and hc is same as mentioned in ConfirmEmailAddressController
             val back = journeyService.previous(routes.EnterEmailAddressController.enterEmailAddress())(req, hc)
             val form =
