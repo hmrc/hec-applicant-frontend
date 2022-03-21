@@ -72,7 +72,6 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
          |   sign-in.url = "$signInUrl"
          |   gg.origin = "$ggOrigin"
          |}
-         |play.i18n.langs = ["en", "cy", "fr"]
          |""".stripMargin
     )
   )
@@ -430,23 +429,6 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
           assertThrows[RuntimeException](await(performAction()))
         }
 
-        "the language is not recognised" in {
-          inSequence {
-            mockAuthWithRetrievals(
-              ConfidenceLevel.L50,
-              Some(AffinityGroup.Agent),
-              Some(completeIndividualLoginData.nino),
-              Some(sautr),
-              completeIndividualLoginData.emailAddress,
-              Enrolments(Set.empty),
-              Some(retrievedGGCredential(completeIndividualLoginData.ggCredId))
-            )
-            mockGetSession(Right(None))
-          }
-
-          assertThrows[RuntimeException](await(performAction("fr")))
-        }
-
         "an AuthorisationException is thrown" in {
           List[AuthorisationException](
             InsufficientEnrolments(),
@@ -779,7 +761,7 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
             mockGetSession(Right(None))
           }
 
-          checkIsRedirect(performAction, routes.AgentsController.agentsNotSupported())
+          checkIsRedirect(performAction(), routes.AgentsController.agentsNotSupported())
         }
 
       }
