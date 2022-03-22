@@ -36,14 +36,7 @@ trait PlaySupport extends AnyWordSpec with Matchers with BeforeAndAfterAll with 
 
   def overrideBindings: List[GuiceableModule] = List.empty[GuiceableModule]
 
-  def additionalConfig = Configuration(
-    ConfigFactory.parseString(
-      """
-        | userAllowedList.enabled = false
-        | 
-        | """.stripMargin
-    )
-  )
+  def additionalConfig = Configuration()
 
   def buildFakeApplication(): Application =
     new GuiceApplicationBuilder()
@@ -52,6 +45,8 @@ trait PlaySupport extends AnyWordSpec with Matchers with BeforeAndAfterAll with 
           ConfigFactory.parseString(
             """
               | microservice.metrics.graphite.enabled = false 
+              | metrics.enabled = false
+              | metrics.jvm = false
               | 
               | """.stripMargin
           )
