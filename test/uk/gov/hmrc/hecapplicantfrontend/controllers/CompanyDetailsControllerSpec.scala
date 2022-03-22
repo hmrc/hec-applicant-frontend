@@ -252,26 +252,6 @@ class CompanyDetailsControllerSpec
 
       }
 
-      "return a technical error" when {
-
-        "the language is not recognised" in {
-          val session = Fixtures.companyHECSession(
-            companyLoginData,
-            retrievedJourneyDataWithCompanyName,
-            Fixtures.incompleteCompanyUserAnswers(crn = Some(CRN("crn")))
-          )
-
-          inSequence {
-            mockAuthWithNoRetrievals()
-            mockGetSession(session)
-          }
-
-          val result = controller.confirmCompanyDetailsSubmit(FakeRequest().withCookies(Cookie("PLAY_LANG", "fr")))
-          a[RuntimeException] shouldBe thrownBy(await(result))
-        }
-
-      }
-
       "show a form error" when {
 
         val session = Fixtures.companyHECSession(
