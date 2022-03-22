@@ -21,7 +21,7 @@ import cats.instances.future._
 import com.typesafe.config.ConfigFactory
 import play.api.Configuration
 import play.api.inject.bind
-import play.api.mvc.Result
+import play.api.mvc.{Cookie, Result}
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.auth.core.AuthConnector
@@ -126,6 +126,7 @@ class CompanyDetailsControllerSpec
       ConfigFactory.parseString(
         s"""
            | ctutr-attempts { maximum-attempts = $maxCtutrAttempts }
+           | play.i18n.langs = ["en", "cy", "fr"]
            |""".stripMargin
       )
     )
@@ -228,6 +229,26 @@ class CompanyDetailsControllerSpec
         controller.confirmCompanyDetailsSubmit(FakeRequest().withFormUrlEncodedBody(data: _*))
 
       behave like authAndSessionDataBehaviour(() => performAction())
+
+      "return a technical error" when {
+
+        "the language is not recognised" in {
+          val session = Fixtures.companyHECSession(
+            companyLoginData,
+            retrievedJourneyDataWithCompanyName,
+            Fixtures.incompleteCompanyUserAnswers(crn = Some(CRN("crn")))
+          )
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+          }
+
+          val result = controller.confirmCompanyDetailsSubmit(FakeRequest().withCookies(Cookie("PLAY_LANG", "fr")))
+          a[RuntimeException] shouldBe thrownBy(await(result))
+        }
+
+      }
 
       "show a form error" when {
 
