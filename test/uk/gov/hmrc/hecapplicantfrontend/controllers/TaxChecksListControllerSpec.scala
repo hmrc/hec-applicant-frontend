@@ -18,6 +18,7 @@ package uk.gov.hmrc.hecapplicantfrontend.controllers
 
 import org.jsoup.nodes.Element
 import play.api.inject.bind
+import play.api.mvc.Cookie
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
@@ -60,9 +61,10 @@ class TaxChecksListControllerSpec
 
     "handling requests to display the tax check codes page" must {
 
-      def performAction() = controller.unexpiredTaxChecks(FakeRequest())
+      def performAction(language: Language) =
+        controller.unexpiredTaxChecks(FakeRequest().withCookies(Cookie("PLAY_LANG", language.code)))
 
-      behave like (authAndSessionDataBehaviour(performAction))
+      behave like (authAndSessionDataBehaviour(() => performAction(Language.English)))
 
       val answers = Fixtures.incompleteIndividualUserAnswers(
         Some(LicenceType.ScrapMetalMobileCollector)
@@ -83,7 +85,7 @@ class TaxChecksListControllerSpec
           mockGetSession(session)
         }
 
-        assertThrows[RuntimeException](await(performAction()))
+        assertThrows[RuntimeException](await(performAction(Language.English)))
 
       }
 
@@ -144,7 +146,11 @@ class TaxChecksListControllerSpec
           mockAuthWithNoRetrievals()
           mockGetSession(session)
           mockSendAuditEvent(
-            TaxCheckCodesDisplayed(individualLoginData.ggCredId, unsortedTaxChecks.map(_.taxCheckCode))
+            TaxCheckCodesDisplayed(
+              individualLoginData.ggCredId,
+              unsortedTaxChecks.map(_.taxCheckCode),
+              Language.English
+            )
           )
         }
 
@@ -205,7 +211,7 @@ class TaxChecksListControllerSpec
         }
 
         checkPageIsDisplayed(
-          performAction(),
+          performAction(Language.English),
           messageFromMessageKey("taxChecksList.title"),
           doc => {
             val licenceGroups = doc.select(".licence-type-group")
@@ -235,6 +241,34 @@ class TaxChecksListControllerSpec
             )
           }
         )
+
+      }
+
+      "audit the correct language" in {
+        List(
+          Language.English,
+          Language.Welsh
+        ).foreach { lang =>
+          val taxCheck = Fixtures.taxCheckListItem()
+          val session  = Fixtures.individualHECSession(
+            individualLoginData,
+            IndividualRetrievedJourneyData.empty,
+            answers,
+            None,
+            None,
+            List(taxCheck)
+          )
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockSendAuditEvent(
+              TaxCheckCodesDisplayed(individualLoginData.ggCredId, List(taxCheck.taxCheckCode), lang)
+            )
+          }
+
+          status(performAction(lang)) shouldBe OK
+        }
 
       }
 

@@ -78,7 +78,8 @@ class EmailVerificationServiceImpl @Inject() (
           .getOrElse(sys.error("Could not find tax check code")),
         userSelectedEmail.emailAddress,
         userSelectedEmail.emailType,
-        result
+        result,
+        r.language
       )
 
     val serviceName = r.request.request.messagesApi("emailVerification.passcodeEmail.serviceName")(r.language)
@@ -117,7 +118,8 @@ class EmailVerificationServiceImpl @Inject() (
         userSelectedEmail.emailAddress,
         userSelectedEmail.emailType,
         passcode,
-        result
+        result,
+        r.language
       )
 
     emailVerificationConnector

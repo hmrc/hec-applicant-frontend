@@ -116,13 +116,25 @@ class CompanyDetailsController @Inject() (
         companyLoginData.ctutr flatTraverse [EitherT[Future, Error, *], CTStatusResponse] { ctutr =>
           desCtutrOpt match {
             case Some(desCtutr) if desCtutr.value === ctutr.value =>
-              auditService.sendEvent(EnrolmentCTUTRCompanyMatchSuccess(crn, desCtutr, ctutr))
+              auditService.sendEvent(
+                EnrolmentCTUTRCompanyMatchSuccess(
+                  crn,
+                  desCtutr,
+                  ctutr,
+                  request.language,
+                  companyLoginData.ggCredId
+                )
+              )
               val (start, end) = CompanyDetailsController.calculateLookBackPeriod(timeProvider.currentDate)
               taxCheckService.getCTStatus(desCtutr, start, end)
 
             case _ =>
               desCtutrOpt
-                .foreach(desCtutr => auditService.sendEvent(EnrolmentCTUTRCompanyMatchFailure(crn, desCtutr, ctutr)))
+                .foreach(desCtutr =>
+                  auditService.sendEvent(
+                    EnrolmentCTUTRCompanyMatchFailure(crn, desCtutr, ctutr, request.language, companyLoginData.ggCredId)
+                  )
+                )
               EitherT.fromEither[Future](Right[Error, Option[CTStatusResponse]](None))
           }
         }
@@ -337,7 +349,16 @@ class CompanyDetailsController @Inject() (
                 ctStatus            <- ctStatusFut
                 updatedRetrievedData = companySession.retrievedJourneyData.copy(ctStatus = ctStatus)
                 _                    = auditService
-                                         .sendEvent(EnterCTUTRCompanyMatchSuccess(crn, ctutr, ctutr.strippedCtutr, desCtutr))
+                                         .sendEvent(
+                                           EnterCTUTRCompanyMatchSuccess(
+                                             crn,
+                                             ctutr,
+                                             ctutr.strippedCtutr,
+                                             desCtutr,
+                                             request.language,
+                                             companySession.loginData.ggCredId
+                                           )
+                                         )
                 next                <-
                   journeyService.updateAndNext(
                     routes.CompanyDetailsController.enterCtutr(),
@@ -380,12 +401,15 @@ class CompanyDetailsController @Inject() (
                           CTUTR(submittedCTUTR),
                           CTUTR(submittedCTUTR).strippedCtutr,
                           desCtutr,
-                          ctutrAttempts.isBlocked
+                          ctutrAttempts.isBlocked,
+                          request.language,
+                          companySession.loginData.ggCredId
                         )
                       )
 
                       if (ctutrAttempts.isBlocked) {
-                        auditService.sendEvent(TaxCheckExit.CTEnteredCTUTRNotMatchingBlocked(companySession))
+                        auditService
+                          .sendEvent(TaxCheckExit.CTEnteredCTUTRNotMatchingBlocked(companySession, request.language))
                         updateAndNextJourneyData(
                           routes.CompanyDetailsController.enterCtutr(),
                           companySession.copy(crnBlocked = ctutrAttempts.isBlocked)

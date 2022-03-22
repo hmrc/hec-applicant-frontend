@@ -72,7 +72,8 @@ class SendEmailServiceImpl @Inject() (
         userSelectedEmail.emailAddress,
         userSelectedEmail.emailType,
         templateId,
-        result
+        result,
+        r.language
       )
 
     val templateId                                   = getTemplateId(r.language)

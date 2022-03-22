@@ -23,7 +23,7 @@ import cats.instances.string._
 import cats.syntax.eq._
 import cats.syntax.option._
 import com.google.inject.{ImplementedBy, Inject, Singleton}
-import play.api.mvc.{Call, Request}
+import play.api.mvc.Call
 import uk.gov.hmrc.emailaddress.EmailAddress
 import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 import uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.saTaxSituations
@@ -76,7 +76,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
   // values are the destination pages which come after the current page. The destination can sometimes depend
   // on state (e.g. the type of user or the answers users have submitted), hence the value type `HECSession => Call`
   private def paths(implicit
-    r: Request[_],
+    r: RequestWithSessionData[_],
     hc: HeaderCarrier,
     enableAuditing: EnableAuditing = EnableAuditing(false)
   ): Map[Call, HECSession => Call] = Map(
@@ -216,7 +216,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
   }
 
   private def upliftToCompleteAnswersIfComplete(session: HECSession, current: Call)(implicit
-    r: Request[_],
+    r: RequestWithSessionData[_],
     hc: HeaderCarrier
   ): Either[Error, HECSession] =
     paths.get(current).map(_(session)) match {
@@ -323,7 +323,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
 
   private def licenceTypeRoute(
     session: HECSession
-  )(implicit r: Request[_], hc: HeaderCarrier, enableAuditing: EnableAuditing): Call = {
+  )(implicit r: RequestWithSessionData[_], hc: HeaderCarrier, enableAuditing: EnableAuditing): Call = {
     val licenceTypeOpt = session.userAnswers.fold(
       _.fold(_.licenceType, _.licenceType.some),
       _.fold(_.licenceType, _.licenceType.some)
@@ -337,7 +337,9 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
           .getOrElse(licenceType, 0)
 
         if (taxCheckCountForLicenceType >= appConfig.maxTaxChecksPerLicenceType) {
-          if (enableAuditing.enabled) auditService.sendEvent(TaxCheckExit.AllowedTaxChecksExceeded(session))
+          if (enableAuditing.enabled)
+            auditService.sendEvent(TaxCheckExit.AllowedTaxChecksExceeded(session, r.language))
+
           routes.LicenceDetailsController.maxTaxChecksExceeded()
         } else {
           routes.LicenceDetailsController.licenceTimeTrading()
@@ -381,7 +383,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
 
   private def taxSituationRoute(
     session: HECSession
-  )(implicit r: Request[_], hc: HeaderCarrier, enableAuditing: EnableAuditing): Call =
+  )(implicit r: RequestWithSessionData[_], hc: HeaderCarrier, enableAuditing: EnableAuditing): Call =
     session.mapAsIndividual { individualSession: IndividualHECSession =>
       individualSession.userAnswers.fold(_.taxSituation, _.taxSituation.some) match {
         case None =>
@@ -396,7 +398,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
                   case SAStatus.NoticeToFileIssued => routes.CheckYourAnswersController.checkYourAnswers()
                   case SAStatus.NoReturnFound      =>
                     if (enableAuditing.enabled)
-                      auditService.sendEvent(TaxCheckExit.SANoNoticeToFileOrTaxReturn(session))
+                      auditService.sendEvent(TaxCheckExit.SANoNoticeToFileOrTaxReturn(session, r.language))
                     routes.SAController.noReturnFound()
                 }
 
@@ -404,7 +406,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
                 sys.error("Found SA UTR for tax situation route but no SA status response")
 
               case (None, _) =>
-                if (enableAuditing.enabled) auditService.sendEvent(TaxCheckExit.SAUTRNotFound(session))
+                if (enableAuditing.enabled) auditService.sendEvent(TaxCheckExit.SAUTRNotFound(session, r.language))
                 routes.SAController.sautrNotFound()
             }
           } else {
@@ -460,7 +462,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
 
   private def chargeableForCTRoute(
     session: HECSession
-  )(implicit enableAuditing: EnableAuditing, r: Request[_], hc: HeaderCarrier) =
+  )(implicit enableAuditing: EnableAuditing, r: RequestWithSessionData[_], hc: HeaderCarrier) =
     session.mapAsCompany { companySession =>
       companySession.userAnswers.fold(_.chargeableForCT, _.chargeableForCT) map {
         case YesNoAnswer.No  => routes.CheckYourAnswersController.checkYourAnswers()
@@ -471,7 +473,8 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
                 case CTStatus.ReturnFound        => routes.CompanyDetailsController.ctIncomeStatement()
                 case CTStatus.NoticeToFileIssued => routes.CheckYourAnswersController.checkYourAnswers()
                 case CTStatus.NoReturnFound      =>
-                  if (enableAuditing.enabled) auditService.sendEvent(TaxCheckExit.CTNoNoticeToFileOrTaxReturn(session))
+                  if (enableAuditing.enabled)
+                    auditService.sendEvent(TaxCheckExit.CTNoNoticeToFileOrTaxReturn(session, r.language))
                   routes.CompanyDetailsController.cannotDoTaxCheck()
               }
             case None                   => sys.error("CT status info missing")
@@ -483,13 +486,13 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
 
   private def recentlyStartedTradingRoute(
     session: HECSession
-  )(implicit enableAuditing: EnableAuditing, r: Request[_], hc: HeaderCarrier) =
+  )(implicit enableAuditing: EnableAuditing, r: RequestWithSessionData[_], hc: HeaderCarrier) =
     session.mapAsCompany { companySession =>
       companySession.userAnswers.fold(_.recentlyStartedTrading, _.recentlyStartedTrading) map {
         case YesNoAnswer.Yes => routes.CheckYourAnswersController.checkYourAnswers()
         case YesNoAnswer.No  =>
           if (enableAuditing.enabled)
-            auditService.sendEvent(TaxCheckExit.CTNoAccountingPeriodNotRecentlyStartedTrading(session))
+            auditService.sendEvent(TaxCheckExit.CTNoAccountingPeriodNotRecentlyStartedTrading(session, r.language))
           routes.CompanyDetailsController.cannotDoTaxCheck()
       } getOrElse {
         sys.error("Answer missing for if company has recently started trading")
