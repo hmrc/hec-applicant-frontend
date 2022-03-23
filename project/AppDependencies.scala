@@ -29,6 +29,6 @@ object AppDependencies {
     "com.typesafe.play"      %% "play-test"               % PlayVersion.current % Test,
     "org.scalamock"          %% "scalamock"               % "5.2.0"             % Test,
     "org.scalatestplus.play" %% "scalatestplus-play"      % "5.1.0"             % "test, it",
-    "com.vladsch.flexmark"    % "flexmark-all"            % "0.64.0"            % "test, it"
+    "com.vladsch.flexmark"    % "flexmark-all"            % "0.62.2"            % "test, it"
   )
 }
