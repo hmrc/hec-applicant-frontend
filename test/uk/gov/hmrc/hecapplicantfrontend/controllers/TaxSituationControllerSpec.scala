@@ -134,7 +134,7 @@ class TaxSituationControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockJourneyServiceGetPrevious(routes.TaxSituationController.taxSituation(), session)(
+            mockJourneyServiceGetPrevious(routes.TaxSituationController.taxSituation, session)(
               mockPreviousCall
             )
             mockTimeProviderToday(TimeUtils.today())
@@ -159,7 +159,7 @@ class TaxSituationControllerSpec
 
               val form = doc.select("form")
               form
-                .attr("action")            shouldBe routes.TaxSituationController.taxSituationSubmit().url
+                .attr("action")            shouldBe routes.TaxSituationController.taxSituationSubmit.url
               form.select("legend").text() shouldBe messageFromMessageKey(
                 s"taxSituation.label.${LicenceTypeOption.licenceTypeOption(LicenceType.DriverOfTaxisAndPrivateHires).messageKey}"
               )
@@ -214,7 +214,7 @@ class TaxSituationControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockJourneyServiceGetPrevious(routes.TaxSituationController.taxSituation(), session)(
+            mockJourneyServiceGetPrevious(routes.TaxSituationController.taxSituation, session)(
               mockPreviousCall
             )
             mockTimeProviderToday(currentDate)
@@ -234,7 +234,7 @@ class TaxSituationControllerSpec
 
               val form = doc.select("form")
               form
-                .attr("action")            shouldBe routes.TaxSituationController.taxSituationSubmit().url
+                .attr("action")            shouldBe routes.TaxSituationController.taxSituationSubmit.url
               form.select("legend").text() shouldBe messageFromMessageKey(
                 s"taxSituation.label.${LicenceTypeOption.licenceTypeOption(LicenceType.DriverOfTaxisAndPrivateHires).messageKey}"
               )
@@ -286,7 +286,7 @@ class TaxSituationControllerSpec
               inSequence {
                 mockAuthWithNoRetrievals()
                 mockGetSession(session)
-                mockJourneyServiceGetPrevious(routes.TaxSituationController.taxSituation(), session)(
+                mockJourneyServiceGetPrevious(routes.TaxSituationController.taxSituation, session)(
                   mockPreviousCall
                 )
                 mockTimeProviderToday(TimeUtils.today())
@@ -306,7 +306,7 @@ class TaxSituationControllerSpec
 
                   val form = doc.select("form")
                   form
-                    .attr("action")            shouldBe routes.TaxSituationController.taxSituationSubmit().url
+                    .attr("action")            shouldBe routes.TaxSituationController.taxSituationSubmit.url
                   form.select("legend").text() shouldBe messageFromMessageKey(
                     s"taxSituation.label.${LicenceTypeOption.licenceTypeOption(LicenceType.DriverOfTaxisAndPrivateHires).messageKey}"
                   )
@@ -333,7 +333,7 @@ class TaxSituationControllerSpec
                   inSequence {
                     mockAuthWithNoRetrievals()
                     mockGetSession(session)
-                    mockJourneyServiceGetPrevious(routes.TaxSituationController.taxSituation(), session)(
+                    mockJourneyServiceGetPrevious(routes.TaxSituationController.taxSituation, session)(
                       mockPreviousCall
                     )
                     mockTimeProviderToday(TimeUtils.today())
@@ -353,7 +353,7 @@ class TaxSituationControllerSpec
 
                       val form = doc.select("form")
                       form
-                        .attr("action")            shouldBe routes.TaxSituationController.taxSituationSubmit().url
+                        .attr("action")            shouldBe routes.TaxSituationController.taxSituationSubmit.url
                       form.select("legend").text() shouldBe messageFromMessageKey(
                         s"taxSituation.label.${LicenceTypeOption.licenceTypeOption(licenceType).messageKey}"
                       )
@@ -394,7 +394,7 @@ class TaxSituationControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(updatedSession)
-            mockJourneyServiceGetPrevious(routes.TaxSituationController.taxSituation(), updatedSession)(
+            mockJourneyServiceGetPrevious(routes.TaxSituationController.taxSituation, updatedSession)(
               mockPreviousCall
             )
           }
@@ -410,7 +410,7 @@ class TaxSituationControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(updatedSession)
-            mockJourneyServiceGetPrevious(routes.TaxSituationController.taxSituation(), updatedSession)(
+            mockJourneyServiceGetPrevious(routes.TaxSituationController.taxSituation, updatedSession)(
               mockPreviousCall
             )
           }
@@ -426,7 +426,7 @@ class TaxSituationControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(updatedSession)
-            mockJourneyServiceGetPrevious(routes.TaxSituationController.taxSituation(), updatedSession)(
+            mockJourneyServiceGetPrevious(routes.TaxSituationController.taxSituation, updatedSession)(
               mockPreviousCall
             )
           }
@@ -488,7 +488,7 @@ class TaxSituationControllerSpec
             mockAuthWithNoRetrievals()
             mockGetSession(session)
             mockJourneyServiceUpdateAndNext(
-              routes.TaxSituationController.taxSituation(),
+              routes.TaxSituationController.taxSituation,
               session,
               updatedSession
             )(
@@ -540,7 +540,7 @@ class TaxSituationControllerSpec
           mockAuthWithNoRetrievals()
           mockGetSession(session)
           mockJourneyServiceUpdateAndNext(
-            routes.TaxSituationController.taxSituation(),
+            routes.TaxSituationController.taxSituation,
             session,
             updatedSession
           )(
@@ -581,7 +581,7 @@ class TaxSituationControllerSpec
           mockGetSession(session)
           mockGetSAStatus(statusResponse.sautr, TaxYear(2020))(Right(statusResponse))
           mockJourneyServiceUpdateAndNext(
-            routes.TaxSituationController.taxSituation(),
+            routes.TaxSituationController.taxSituation,
             session,
             updatedSession
           )(
@@ -642,7 +642,7 @@ class TaxSituationControllerSpec
               mockAuthWithNoRetrievals()
               mockGetSession(session)
               mockJourneyServiceUpdateAndNext(
-                routes.TaxSituationController.taxSituation(),
+                routes.TaxSituationController.taxSituation,
                 session,
                 updatedSession
               )(
@@ -684,7 +684,7 @@ class TaxSituationControllerSpec
               mockAuthWithNoRetrievals()
               mockGetSession(session)
               mockJourneyServiceUpdateAndNext(
-                routes.TaxSituationController.taxSituation(),
+                routes.TaxSituationController.taxSituation,
                 session,
                 updatedSession
               )(

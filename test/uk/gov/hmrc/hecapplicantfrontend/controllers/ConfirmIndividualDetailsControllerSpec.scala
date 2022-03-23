@@ -83,9 +83,9 @@ class ConfirmIndividualDetailsControllerSpec
             mockAuthWithNoRetrievals()
             mockGetSession(session)
             mockJourneyServiceGetPrevious(
-              routes.ConfirmIndividualDetailsController.confirmIndividualDetails(),
+              routes.ConfirmIndividualDetailsController.confirmIndividualDetails,
               session
-            )(routes.StartController.start())
+            )(routes.StartController.start)
           }
 
           checkPageIsDisplayed(
@@ -98,11 +98,11 @@ class ConfirmIndividualDetailsControllerSpec
               rowValues.get(2).text shouldBe "3 December 2000"
 
               val link = doc.select(".govuk-body > .govuk-link")
-              link.attr("href") shouldBe routes.ConfirmIndividualDetailsController.confirmIndividualDetailsExit().url
+              link.attr("href") shouldBe routes.ConfirmIndividualDetailsController.confirmIndividualDetailsExit.url
 
               val form = doc.select("form")
               form
-                .attr("action") shouldBe routes.ConfirmIndividualDetailsController.confirmIndividualDetailsSubmit().url
+                .attr("action") shouldBe routes.ConfirmIndividualDetailsController.confirmIndividualDetailsSubmit.url
 
               doc.select("#back").attr("href") shouldBe appConfig.applicantServiceGuidanceUrl
             }
@@ -150,7 +150,7 @@ class ConfirmIndividualDetailsControllerSpec
             mockAuthWithNoRetrievals()
             mockGetSession(session)
             mockJourneyServiceUpdateAndNext(
-              routes.ConfirmIndividualDetailsController.confirmIndividualDetails(),
+              routes.ConfirmIndividualDetailsController.confirmIndividualDetails,
               session,
               session.copy(hasConfirmedDetails = true)
             )(Left(Error("")))
@@ -179,7 +179,7 @@ class ConfirmIndividualDetailsControllerSpec
             mockAuthWithNoRetrievals()
             mockGetSession(session)
             mockJourneyServiceUpdateAndNext(
-              routes.ConfirmIndividualDetailsController.confirmIndividualDetails(),
+              routes.ConfirmIndividualDetailsController.confirmIndividualDetails,
               session,
               session.copy(hasConfirmedDetails = true)
             )(Right(mockNextCall))
@@ -231,7 +231,7 @@ class ConfirmIndividualDetailsControllerSpec
             mockAuthWithNoRetrievals()
             mockGetSession(session)
             mockJourneyServiceGetPrevious(
-              routes.ConfirmIndividualDetailsController.confirmIndividualDetailsExit(),
+              routes.ConfirmIndividualDetailsController.confirmIndividualDetailsExit,
               session
             )(mockPreviousCall)
           }

@@ -49,7 +49,7 @@ class CheckYourAnswersController @Inject() (
     request.sessionData.userAnswers.foldByCompleteness(
       _ => sys.error("Could not find complete answers"),
       { complete =>
-        val back = journeyService.previous(routes.CheckYourAnswersController.checkYourAnswers())
+        val back = journeyService.previous(routes.CheckYourAnswersController.checkYourAnswers)
         complete match {
           case ci: CompleteIndividualUserAnswers =>
             Ok(
@@ -78,7 +78,7 @@ class CheckYourAnswersController @Inject() (
                              _.copy(completedTaxCheck = Some(taxCheck)),
                              _.copy(completedTaxCheck = Some(taxCheck))
                            )
-          next          <- journeyService.updateAndNext(routes.CheckYourAnswersController.checkYourAnswers(), updatedSession)
+          next          <- journeyService.updateAndNext(routes.CheckYourAnswersController.checkYourAnswers, updatedSession)
         } yield next
 
         result.fold(

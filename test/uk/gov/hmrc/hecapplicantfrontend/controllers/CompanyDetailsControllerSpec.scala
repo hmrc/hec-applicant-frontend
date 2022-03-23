@@ -147,7 +147,7 @@ class CompanyDetailsControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockJourneyServiceGetPrevious(routes.CompanyDetailsController.confirmCompanyDetails(), session)(
+            mockJourneyServiceGetPrevious(routes.CompanyDetailsController.confirmCompanyDetails, session)(
               mockPreviousCall
             )
           }
@@ -165,7 +165,7 @@ class CompanyDetailsControllerSpec
               }
 
               val button = doc.select("form")
-              button.attr("action") shouldBe routes.CompanyDetailsController.confirmCompanyDetailsSubmit().url
+              button.attr("action") shouldBe routes.CompanyDetailsController.confirmCompanyDetailsSubmit.url
             }
           )
 
@@ -264,7 +264,7 @@ class CompanyDetailsControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockJourneyServiceGetPrevious(routes.CompanyDetailsController.confirmCompanyDetails(), session)(
+            mockJourneyServiceGetPrevious(routes.CompanyDetailsController.confirmCompanyDetails, session)(
               mockPreviousCall
             )
           }
@@ -390,7 +390,7 @@ class CompanyDetailsControllerSpec
                 Right(Some(ctStatusResponse))
               )
               mockJourneyServiceUpdateAndNext(
-                routes.CompanyDetailsController.confirmCompanyDetails(),
+                routes.CompanyDetailsController.confirmCompanyDetails,
                 session,
                 updatedSession
               )(
@@ -416,7 +416,7 @@ class CompanyDetailsControllerSpec
               mockAuthWithNoRetrievals()
               mockGetSession(session)
               mockJourneyServiceUpdateAndNext(
-                routes.CompanyDetailsController.confirmCompanyDetails(),
+                routes.CompanyDetailsController.confirmCompanyDetails,
                 session,
                 updatedSession
               )(Left(Error("some error")))
@@ -472,7 +472,7 @@ class CompanyDetailsControllerSpec
                   Right(Some(ctStatusResponse))
                 )
                 mockJourneyServiceUpdateAndNext(
-                  routes.CompanyDetailsController.confirmCompanyDetails(),
+                  routes.CompanyDetailsController.confirmCompanyDetails,
                   session,
                   updatedSession
                 )(Right(mockNextCall))
@@ -547,7 +547,7 @@ class CompanyDetailsControllerSpec
                 )
               )
               mockJourneyServiceUpdateAndNext(
-                routes.CompanyDetailsController.confirmCompanyDetails(),
+                routes.CompanyDetailsController.confirmCompanyDetails,
                 session,
                 updatedSession
               )(Right(mockNextCall))
@@ -569,7 +569,7 @@ class CompanyDetailsControllerSpec
             mockAuthWithNoRetrievals()
             mockGetSession(session)
             mockJourneyServiceUpdateAndNext(
-              routes.CompanyDetailsController.confirmCompanyDetails(),
+              routes.CompanyDetailsController.confirmCompanyDetails,
               session,
               updatedSession
             )(Right(mockNextCall))
@@ -606,7 +606,7 @@ class CompanyDetailsControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockJourneyServiceGetPrevious(routes.CompanyDetailsController.chargeableForCorporationTax(), session)(
+            mockJourneyServiceGetPrevious(routes.CompanyDetailsController.chargeableForCorporationTax, session)(
               mockPreviousCall
             )
           }
@@ -625,7 +625,7 @@ class CompanyDetailsControllerSpec
               }
 
               val button = doc.select("form")
-              button.attr("action") shouldBe routes.CompanyDetailsController.chargeableForCorporationTaxSubmit().url
+              button.attr("action") shouldBe routes.CompanyDetailsController.chargeableForCorporationTaxSubmit.url
             }
           )
         }
@@ -693,7 +693,7 @@ class CompanyDetailsControllerSpec
 
     "handling submit on the chargeable for CT page" must {
 
-      val chargeableForCTRoute = routes.CompanyDetailsController.chargeableForCorporationTax()
+      val chargeableForCTRoute = routes.CompanyDetailsController.chargeableForCorporationTax
       val date                 = LocalDate.of(2020, 10, 5)
       val validJourneyData     = retrievedJourneyDataWithCompanyName.copy(
         ctStatus = Some(
@@ -782,7 +782,7 @@ class CompanyDetailsControllerSpec
             mockAuthWithNoRetrievals()
             mockGetSession(session)
             mockJourneyServiceUpdateAndNext(
-              routes.CompanyDetailsController.chargeableForCorporationTax(),
+              routes.CompanyDetailsController.chargeableForCorporationTax,
               session,
               updatedSession
             )(
@@ -803,7 +803,7 @@ class CompanyDetailsControllerSpec
               mockAuthWithNoRetrievals()
               mockGetSession(currentSession)
               mockJourneyServiceUpdateAndNext(
-                routes.CompanyDetailsController.chargeableForCorporationTax(),
+                routes.CompanyDetailsController.chargeableForCorporationTax,
                 currentSession,
                 updatedSession
               )(Right(mockNextCall))
@@ -847,8 +847,8 @@ class CompanyDetailsControllerSpec
     "handling requests to the CT income statement page " must {
 
       val date                         = LocalDate.of(2020, 10, 5)
-      val ctIncomeStatementRoute       = routes.CompanyDetailsController.ctIncomeStatement()
-      val ctIncomeStatementSubmitRoute = routes.CompanyDetailsController.ctIncomeStatementSubmit()
+      val ctIncomeStatementRoute       = routes.CompanyDetailsController.ctIncomeStatement
+      val ctIncomeStatementSubmitRoute = routes.CompanyDetailsController.ctIncomeStatementSubmit
 
       def performAction(): Future[Result] = controller.ctIncomeStatement(FakeRequest())
 
@@ -954,7 +954,7 @@ class CompanyDetailsControllerSpec
     "handling submit on the CT income statement page" must {
 
       val date                   = LocalDate.of(2020, 10, 5)
-      val ctIncomeStatementRoute = routes.CompanyDetailsController.ctIncomeStatement()
+      val ctIncomeStatementRoute = routes.CompanyDetailsController.ctIncomeStatement
       val validJourneyData       = retrievedJourneyDataWithCompanyName.copy(
         ctStatus = Some(Fixtures.ctStatusResponse(latestAccountingPeriod = Some(Fixtures.ctAccountingPeriod())))
       )
@@ -1085,8 +1085,8 @@ class CompanyDetailsControllerSpec
     "handling requests to recently started trading page " must {
 
       val date                              = LocalDate.of(2020, 10, 5)
-      val recentlyStartedTradingRoute       = routes.CompanyDetailsController.recentlyStartedTrading()
-      val recentlyStartedTradingSubmitRoute = routes.CompanyDetailsController.recentlyStartedTradingSubmit()
+      val recentlyStartedTradingRoute       = routes.CompanyDetailsController.recentlyStartedTrading
+      val recentlyStartedTradingSubmitRoute = routes.CompanyDetailsController.recentlyStartedTradingSubmit
 
       def performAction(): Future[Result] = controller.recentlyStartedTrading(FakeRequest())
 
@@ -1176,7 +1176,7 @@ class CompanyDetailsControllerSpec
     "handling submit on the recently started trading page" must {
 
       val date                        = LocalDate.of(2020, 10, 5)
-      val recentlyStartedTradingRoute = routes.CompanyDetailsController.recentlyStartedTrading()
+      val recentlyStartedTradingRoute = routes.CompanyDetailsController.recentlyStartedTrading
       val validJourneyData            = retrievedJourneyDataWithCompanyName.copy(
         ctStatus = Some(
           CTStatusResponse(CTUTR("utr"), date, date, None)
@@ -1298,8 +1298,8 @@ class CompanyDetailsControllerSpec
 
     "handling requests to the enter CTUTR page " must {
 
-      val enterCtutrRoute       = routes.CompanyDetailsController.enterCtutr()
-      val enterCtutrSubmitRoute = routes.CompanyDetailsController.enterCtutrSubmit()
+      val enterCtutrRoute       = routes.CompanyDetailsController.enterCtutr
+      val enterCtutrSubmitRoute = routes.CompanyDetailsController.enterCtutrSubmit
 
       def performAction(): Future[Result] = controller.enterCtutr(FakeRequest())
 
@@ -1400,7 +1400,7 @@ class CompanyDetailsControllerSpec
 
       val ctutr1          = "1111111111"
       val ctutr2          = "2222222222"
-      val enterCtutrRoute = routes.CompanyDetailsController.enterCtutr()
+      val enterCtutrRoute = routes.CompanyDetailsController.enterCtutr
       val crn             = CRN("crn")
       val companyName     = CompanyHouseName("test company")
 
@@ -1912,7 +1912,7 @@ class CompanyDetailsControllerSpec
         inSequence {
           mockAuthWithNoRetrievals()
           mockGetSession(session)
-          mockJourneyServiceGetPrevious(routes.CompanyDetailsController.dontHaveUtr(), session)(mockPreviousCall)
+          mockJourneyServiceGetPrevious(routes.CompanyDetailsController.dontHaveUtr, session)(mockPreviousCall)
         }
 
         checkPageIsDisplayed(
@@ -1925,7 +1925,7 @@ class CompanyDetailsControllerSpec
               appConfig.registerForCtUrl,
               appConfig.findLostUtrUrl,
               mockPreviousCall.url,
-              routes.SignOutController.exitSurvey().url
+              routes.SignOutController.exitSurvey.url
             )
           }
         )
@@ -1945,7 +1945,7 @@ class CompanyDetailsControllerSpec
         inSequence {
           mockAuthWithNoRetrievals()
           mockGetSession(session)
-          mockJourneyServiceGetPrevious(routes.CompanyDetailsController.ctutrNotMatched(), session)(mockPreviousCall)
+          mockJourneyServiceGetPrevious(routes.CompanyDetailsController.ctutrNotMatched, session)(mockPreviousCall)
         }
 
         checkPageIsDisplayed(
@@ -1983,7 +1983,7 @@ class CompanyDetailsControllerSpec
         inSequence {
           mockAuthWithNoRetrievals()
           mockGetSession(session)
-          mockJourneyServiceGetPrevious(routes.CompanyDetailsController.tooManyCtutrAttempts(), session)(
+          mockJourneyServiceGetPrevious(routes.CompanyDetailsController.tooManyCtutrAttempts, session)(
             mockPreviousCall
           )
           mockCtutrAttemptsServiceGet(crn, companyLoginData.ggCredId)(Right(Some(blockedCtutrAttempts)))
@@ -2005,7 +2005,7 @@ class CompanyDetailsControllerSpec
             )
 
             val links = doc.select(".govuk-body > .govuk-link")
-            links.get(0).attr("href") shouldBe routes.CRNController.companyRegistrationNumber().url
+            links.get(0).attr("href") shouldBe routes.CRNController.companyRegistrationNumber.url
             links.get(1).attr("href") shouldBe appConfig.applicantServiceGuidanceUrl
           }
         )
@@ -2036,7 +2036,7 @@ class CompanyDetailsControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockJourneyServiceGetPrevious(routes.CompanyDetailsController.tooManyCtutrAttempts(), session)(
+            mockJourneyServiceGetPrevious(routes.CompanyDetailsController.tooManyCtutrAttempts, session)(
               mockPreviousCall
             )
             mockCtutrAttemptsServiceGet(crn, companyLoginData.ggCredId)(result)

@@ -28,5 +28,5 @@
 @layout(pageTitle = Some(title)) {
     <h1 class="govuk-heading-xl">@title</h1>
     <p class="govuk-body">@messages(s"$key.p1")</p>
-    <p class="govuk-body">@Html(messages(s"$key.link", routes.StartController.start().url, routes.LicenceDetailsController.licenceType().url))</p>
+    <p class="govuk-body">@Html(messages(s"$key.link", routes.StartController.start.url, routes.LicenceDetailsController.licenceType.url))</p>
 }

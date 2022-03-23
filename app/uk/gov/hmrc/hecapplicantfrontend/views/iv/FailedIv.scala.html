@@ -30,6 +30,6 @@
   <p class="govuk-body">@{messages("iv.failedIv.p2")}</p>
   @govukButton(Button(
     content = Text(messages("button.try-again")),
-    href = Some(routes.IvFailureController.retry().url)
+    href = Some(routes.IvFailureController.retry.url)
   ))
 }

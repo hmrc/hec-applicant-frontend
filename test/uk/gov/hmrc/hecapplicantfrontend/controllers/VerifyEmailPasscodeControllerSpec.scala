@@ -123,7 +123,7 @@ class VerifyEmailPasscodeControllerSpec
             mockAuthWithNoRetrievals()
             mockGetSession(session)
             mockStoreSession(updatedSession)(Right(()))
-            mockJourneyServiceGetPrevious(routes.VerifyEmailPasscodeController.verifyEmailPasscode(), updatedSession)(
+            mockJourneyServiceGetPrevious(routes.VerifyEmailPasscodeController.verifyEmailPasscode, updatedSession)(
               mockPreviousCall
             )
           }
@@ -143,14 +143,14 @@ class VerifyEmailPasscodeControllerSpec
               if (emailAddress.isDefined) {
                 htmlBody should include regex messageFromMessageKey(
                   "verifyPasscode.p5",
-                  routes.ResendEmailConfirmationController.resendEmail().url,
-                  routes.ConfirmEmailAddressController.confirmEmailAddress().url
+                  routes.ResendEmailConfirmationController.resendEmail.url,
+                  routes.ConfirmEmailAddressController.confirmEmailAddress.url
                 )
               } else {
                 htmlBody should include regex messageFromMessageKey(
                   "verifyPasscode.p5",
-                  routes.ResendEmailConfirmationController.resendEmail().url,
-                  routes.EnterEmailAddressController.enterEmailAddress().url
+                  routes.ResendEmailConfirmationController.resendEmail.url,
+                  routes.EnterEmailAddressController.enterEmailAddress.url
                 )
               }
 
@@ -160,7 +160,7 @@ class VerifyEmailPasscodeControllerSpec
 
               val form = doc.select("form")
               form
-                .attr("action") shouldBe routes.VerifyEmailPasscodeController.verifyEmailPasscodeSubmit().url
+                .attr("action") shouldBe routes.VerifyEmailPasscodeController.verifyEmailPasscodeSubmit.url
             }
           )
 
@@ -222,7 +222,7 @@ class VerifyEmailPasscodeControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockJourneyServiceGetPrevious(routes.VerifyEmailPasscodeController.verifyEmailPasscode(), session)(
+            mockJourneyServiceGetPrevious(routes.VerifyEmailPasscodeController.verifyEmailPasscode, session)(
               mockPreviousCall
             )
           }
@@ -271,7 +271,7 @@ class VerifyEmailPasscodeControllerSpec
             mockVerifyPasscode(passcode, userSelectedGGEmail)(
               Right(PasscodeVerificationResult.NoMatch)
             )
-            mockJourneyServiceGetPrevious(routes.VerifyEmailPasscodeController.verifyEmailPasscode(), session)(
+            mockJourneyServiceGetPrevious(routes.VerifyEmailPasscodeController.verifyEmailPasscode, session)(
               mockPreviousCall
             )
           }
@@ -348,7 +348,7 @@ class VerifyEmailPasscodeControllerSpec
             mockGetSession(session)
             mockVerifyPasscode(validPasscode, userSelectedGGEmail)(Right(Match))
             mockJourneyServiceUpdateAndNext(
-              routes.VerifyEmailPasscodeController.verifyEmailPasscode(),
+              routes.VerifyEmailPasscodeController.verifyEmailPasscode,
               session,
               updatedSession
             )(
@@ -389,7 +389,7 @@ class VerifyEmailPasscodeControllerSpec
               Right(passcodeVerificationResult)
             )
             mockJourneyServiceUpdateAndNext(
-              routes.VerifyEmailPasscodeController.verifyEmailPasscode(),
+              routes.VerifyEmailPasscodeController.verifyEmailPasscode,
               session,
               updatedSession
             )(Right(mockNextCall))

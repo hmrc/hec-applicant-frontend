@@ -43,7 +43,7 @@ class CannotSendVerificationPasscodeController @Inject() (
         case Some(PasscodeRequestResult.BadEmailAddress) =>
           val isGGEmailInSession = verifyGGEmailInSession(request.sessionData)
           val previous           =
-            journeyService.previous(routes.CannotSendVerificationPasscodeController.cannotSendVerificationPasscode())
+            journeyService.previous(routes.CannotSendVerificationPasscodeController.cannotSendVerificationPasscode)
           Ok(cannotSendVerificationPasscodePage(isGGEmailInSession, previous))
         case other                                       => sys.error(s" Passcode request result found $other but the expected is Bad Email Request")
 

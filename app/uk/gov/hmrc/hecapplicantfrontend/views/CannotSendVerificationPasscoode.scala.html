@@ -25,10 +25,10 @@
 Request[_], messages: Messages)
 @key = @{"cannotSendVerificationPasscode"}
 @title = @{messages(s"$key.title")}
-@linkURL = @{if(isGGEmailInSession) routes.ConfirmEmailAddressController.confirmEmailAddress().url else routes.EnterEmailAddressController.enterEmailAddress().url }
+@linkURL = @{if(isGGEmailInSession) routes.ConfirmEmailAddressController.confirmEmailAddress.url else routes.EnterEmailAddressController.enterEmailAddress.url }
 
 @layout(pageTitle = Some(title), backLocation = Some(back)) {
     <h1 class ="govuk-heading-xl">@title</h1>
     <p class="govuk-body">@messages(s"$key.p1")</p>
-    <p class="govuk-body">@Html(messages(s"$key.p2", linkURL, routes.StartController.start().url))</p>
+    <p class="govuk-body">@Html(messages(s"$key.p2", linkURL, routes.StartController.start.url))</p>
 }

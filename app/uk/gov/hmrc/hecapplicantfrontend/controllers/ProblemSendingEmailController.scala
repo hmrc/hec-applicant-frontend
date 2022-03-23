@@ -37,7 +37,7 @@ class ProblemSendingEmailController @Inject() (
     with Logging {
 
   val problemSendingEmail: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
-    val previous = journeyService.previous(routes.ProblemSendingEmailController.problemSendingEmail())
+    val previous = journeyService.previous(routes.ProblemSendingEmailController.problemSendingEmail)
     request.sessionData.userEmailAnswers.flatMap(_.emailSendResult) match {
       case Some(EmailSendResult.EmailSentFailure) => Ok(problemSendingEmailPage(previous))
       case other                                  => sys.error(s" Email send result found $other but the expected is EmailSentFailure")

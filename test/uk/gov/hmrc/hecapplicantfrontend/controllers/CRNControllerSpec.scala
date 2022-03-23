@@ -97,7 +97,7 @@ class CRNControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockJourneyServiceGetPrevious(routes.CRNController.companyRegistrationNumber(), session)(mockPreviousCall)
+            mockJourneyServiceGetPrevious(routes.CRNController.companyRegistrationNumber, session)(mockPreviousCall)
           }
 
           checkPageIsDisplayed(
@@ -107,7 +107,7 @@ class CRNControllerSpec
               doc.select("#back").attr("href") shouldBe mockPreviousCall.url
 
               val button = doc.select("form")
-              button.attr("action") shouldBe routes.CRNController.companyRegistrationNumberSubmit().url
+              button.attr("action") shouldBe routes.CRNController.companyRegistrationNumberSubmit.url
 
               val link = doc.select("p > .govuk-link")
               link.text should startWith(messageFromMessageKey("crn.link"))
@@ -165,7 +165,7 @@ class CRNControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockJourneyServiceGetPrevious(routes.CRNController.companyRegistrationNumber(), session)(
+            mockJourneyServiceGetPrevious(routes.CRNController.companyRegistrationNumber, session)(
               mockPreviousCall
             )
           }
@@ -217,7 +217,7 @@ class CRNControllerSpec
             mockGetSession(session)
             mockCtutrAttemptsServiceGet(crn, session.loginData.ggCredId)(Right(Some(ctutrAttempts)))
             mockFindCompany(validCRN)(Right(None))
-            mockJourneyServiceGetPrevious(routes.CRNController.companyRegistrationNumber(), session)(
+            mockJourneyServiceGetPrevious(routes.CRNController.companyRegistrationNumber, session)(
               mockPreviousCall
             )
           }
@@ -266,7 +266,7 @@ class CRNControllerSpec
               Right(Some(CompanyHouseDetails(companyName)))
             )
             mockJourneyServiceUpdateAndNext(
-              routes.CRNController.companyRegistrationNumber(),
+              routes.CRNController.companyRegistrationNumber,
               session,
               updatedSession
             )(
@@ -304,7 +304,7 @@ class CRNControllerSpec
             mockGetSession(session)
             mockCtutrAttemptsServiceGet(crn, session.loginData.ggCredId)(Right(Some(blockedCtutrAttempts)))
             mockJourneyServiceUpdateAndNext(
-              routes.CRNController.companyRegistrationNumber(),
+              routes.CRNController.companyRegistrationNumber,
               session,
               updatedSession
             )(Left(Error("some error")))
@@ -343,7 +343,7 @@ class CRNControllerSpec
             mockGetSession(session)
             mockCtutrAttemptsServiceGet(crn, session.loginData.ggCredId)(Right(Some(blockedCtutrAttempts)))
             mockJourneyServiceUpdateAndNext(
-              routes.CRNController.companyRegistrationNumber(),
+              routes.CRNController.companyRegistrationNumber,
               session,
               updatedSession
             )(
@@ -380,7 +380,7 @@ class CRNControllerSpec
                   Right(companyDetails)
                 )
                 mockJourneyServiceUpdateAndNext(
-                  routes.CRNController.companyRegistrationNumber(),
+                  routes.CRNController.companyRegistrationNumber,
                   session,
                   updatedSession
                 )(
@@ -434,7 +434,7 @@ class CRNControllerSpec
               Right(companyDetails)
             )
             mockJourneyServiceUpdateAndNext(
-              routes.CRNController.companyRegistrationNumber(),
+              routes.CRNController.companyRegistrationNumber,
               session,
               updatedSession
             )(
@@ -465,7 +465,7 @@ class CRNControllerSpec
             mockGetSession(session)
             mockCtutrAttemptsServiceGet(validCRN, session.loginData.ggCredId)(Right(Some(ctutrAttempts)))
             mockJourneyServiceUpdateAndNext(
-              routes.CRNController.companyRegistrationNumber(),
+              routes.CRNController.companyRegistrationNumber,
               session,
               session.copy(crnBlocked = false)
             )(

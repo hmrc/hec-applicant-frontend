@@ -110,7 +110,7 @@ class EnterEmailAddressControllerSpec
             mockAuthWithNoRetrievals()
             mockGetSession(session)
             mockStoreSession(session.copy(hasResentEmailConfirmation = false))(Right(()))
-            mockJourneyServiceGetPrevious(routes.EnterEmailAddressController.enterEmailAddress(), session)(
+            mockJourneyServiceGetPrevious(routes.EnterEmailAddressController.enterEmailAddress, session)(
               mockPreviousCall
             )
           }
@@ -129,7 +129,7 @@ class EnterEmailAddressControllerSpec
 
               val form = doc.select("form")
               form
-                .attr("action") shouldBe routes.EnterEmailAddressController.enterEmailAddressSubmit().url
+                .attr("action") shouldBe routes.EnterEmailAddressController.enterEmailAddressSubmit.url
             }
           )
         }
@@ -166,7 +166,7 @@ class EnterEmailAddressControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockJourneyServiceGetPrevious(routes.EnterEmailAddressController.enterEmailAddress(), session)(
+            mockJourneyServiceGetPrevious(routes.EnterEmailAddressController.enterEmailAddress, session)(
               mockPreviousCall
             )
           }
@@ -239,7 +239,7 @@ class EnterEmailAddressControllerSpec
             mockGetSession(session)
             mockRequestPasscode(UserSelectedEmail(EmailType.DifferentEmail, otherEmailId))(Right(PasscodeSent))
             mockJourneyServiceUpdateAndNext(
-              routes.EnterEmailAddressController.enterEmailAddress(),
+              routes.EnterEmailAddressController.enterEmailAddress,
               session,
               updatedSession
             )(
@@ -274,7 +274,7 @@ class EnterEmailAddressControllerSpec
               Right(updatedUserEmailAnswers.passcodeRequestResult.getOrElse(PasscodeSent))
             )
             mockJourneyServiceUpdateAndNext(
-              routes.EnterEmailAddressController.enterEmailAddress(),
+              routes.EnterEmailAddressController.enterEmailAddress,
               session,
               updatedSession
             )(Right(mockNextCall))

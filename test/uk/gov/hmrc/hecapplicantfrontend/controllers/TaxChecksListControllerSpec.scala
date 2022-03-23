@@ -294,7 +294,7 @@ class TaxChecksListControllerSpec
               mockAuthWithNoRetrievals()
               mockGetSession(session)
               mockJourneyServiceUpdateAndNext(
-                routes.TaxChecksListController.unexpiredTaxChecks(),
+                routes.TaxChecksListController.unexpiredTaxChecks,
                 session,
                 session.copy(emailRequestedForTaxCheck = None)
               )(Left(Error("")))
@@ -321,7 +321,7 @@ class TaxChecksListControllerSpec
               mockAuthWithNoRetrievals()
               mockGetSession(session)
               mockJourneyServiceUpdateAndNext(
-                routes.TaxChecksListController.unexpiredTaxChecks(),
+                routes.TaxChecksListController.unexpiredTaxChecks,
                 session,
                 session.copy(emailRequestedForTaxCheck = None)
               )(Right(mockNextCall))
@@ -384,7 +384,7 @@ class TaxChecksListControllerSpec
           val updatedSession = session.copy(
             emailRequestedForTaxCheck = Some(
               EmailRequestedForTaxCheck(
-                routes.TaxChecksListController.unexpiredTaxChecks().url,
+                routes.TaxChecksListController.unexpiredTaxChecks.url,
                 taxCheck
               )
             )
@@ -394,7 +394,7 @@ class TaxChecksListControllerSpec
             mockAuthWithNoRetrievals()
             mockGetSession(session)
             mockJourneyServiceUpdateAndNext(
-              routes.TaxChecksListController.unexpiredTaxChecks(),
+              routes.TaxChecksListController.unexpiredTaxChecks,
               session,
               updatedSession
             )(Left(Error("")))
@@ -416,7 +416,7 @@ class TaxChecksListControllerSpec
             val updatedSession = session.copy(
               emailRequestedForTaxCheck = Some(
                 EmailRequestedForTaxCheck(
-                  routes.TaxChecksListController.unexpiredTaxChecks().url,
+                  routes.TaxChecksListController.unexpiredTaxChecks.url,
                   taxCheck
                 )
               )
@@ -426,7 +426,7 @@ class TaxChecksListControllerSpec
               mockAuthWithNoRetrievals()
               mockGetSession(session)
               mockJourneyServiceUpdateAndNext(
-                routes.TaxChecksListController.unexpiredTaxChecks(),
+                routes.TaxChecksListController.unexpiredTaxChecks,
                 session,
                 updatedSession
               )(Right(mockNextCall))

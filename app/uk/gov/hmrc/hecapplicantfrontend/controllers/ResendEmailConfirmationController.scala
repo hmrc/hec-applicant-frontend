@@ -43,7 +43,7 @@ class ResendEmailConfirmationController @Inject() (
   val resendEmail: Action[AnyContent] =
     authAction.andThen(sessionDataAction).async { implicit request =>
       request.sessionData.ensureUserSelectedEmailPresent { userSelectedEmail =>
-        val back = journeyService.previous(routes.ResendEmailConfirmationController.resendEmail())
+        val back = journeyService.previous(routes.ResendEmailConfirmationController.resendEmail)
         Ok(resendEmailConfirmationPage(userSelectedEmail.emailAddress, back))
       }
     }
@@ -62,7 +62,7 @@ class ResendEmailConfirmationController @Inject() (
                 _.copy(userEmailAnswers = updatedEmailAnswers, hasResentEmailConfirmation = true),
                 _.copy(userEmailAnswers = updatedEmailAnswers, hasResentEmailConfirmation = true)
               )
-          next                <- journeyService.updateAndNext(routes.ResendEmailConfirmationController.resendEmail(), updatedSession)
+          next                <- journeyService.updateAndNext(routes.ResendEmailConfirmationController.resendEmail, updatedSession)
         } yield next
         result.fold(
           _.doThrow("Could not update session and proceed"),

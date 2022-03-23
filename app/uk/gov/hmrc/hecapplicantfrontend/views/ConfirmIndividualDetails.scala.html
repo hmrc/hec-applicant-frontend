@@ -60,10 +60,10 @@
     ))
 
     <p class="govuk-body">
-        <a class="govuk-link" href="@{routes.ConfirmIndividualDetailsController.confirmIndividualDetailsExit().url}">@messages("confirmIndividualDetails.link")</a>
+        <a class="govuk-link" href="@{routes.ConfirmIndividualDetailsController.confirmIndividualDetailsExit.url}">@messages("confirmIndividualDetails.link")</a>
     </p>
 
-    @formWithCSRF(action = routes.ConfirmIndividualDetailsController.confirmIndividualDetailsSubmit()) {
+    @formWithCSRF(action = routes.ConfirmIndividualDetailsController.confirmIndividualDetailsSubmit) {
         @govukButton(Button(content = Text(messages("button.confirm"))))
     }
 }

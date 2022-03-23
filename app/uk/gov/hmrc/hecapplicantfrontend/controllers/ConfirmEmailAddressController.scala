@@ -100,7 +100,7 @@ class ConfirmEmailAddressController @Inject() (
               request.sessionData
                 .fold(_.copy(userEmailAnswers = updatedEmailAnswers), _.copy(userEmailAnswers = updatedEmailAnswers))
             next               <-
-              journeyService.updateAndNext(routes.ConfirmEmailAddressController.confirmEmailAddress(), updatedSession)
+              journeyService.updateAndNext(routes.ConfirmEmailAddressController.confirmEmailAddress, updatedSession)
           } yield next
 
           result.fold(
@@ -116,7 +116,7 @@ class ConfirmEmailAddressController @Inject() (
               Ok(
                 confirmEmailAddressPage(
                   formWithErrors,
-                  journeyService.previous(routes.ConfirmEmailAddressController.confirmEmailAddress()),
+                  journeyService.previous(routes.ConfirmEmailAddressController.confirmEmailAddress),
                   emailTypeOptions,
                   ggEmail.value
                 )

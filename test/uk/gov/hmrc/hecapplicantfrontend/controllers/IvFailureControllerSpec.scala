@@ -91,16 +91,16 @@ class IvFailureControllerSpec
       "redirect to the correct place when the failed journey status is retrieved" in {
         val testCases =
           List(
-            Incomplete           -> routes.IvFailureController.technicalIssue(),
-            FailedMatching       -> routes.IvFailureController.failedMatching(),
-            FailedIV             -> routes.IvFailureController.failedIV(),
-            InsufficientEvidence -> routes.IvFailureController.insufficientEvidence(),
-            LockedOut            -> routes.IvFailureController.lockedOut(),
-            UserAborted          -> routes.IvFailureController.userAborted(),
-            Timeout              -> routes.IvFailureController.timedOut(),
-            TechnicalIssue       -> routes.IvFailureController.technicalIssue(),
-            PreconditionFailed   -> routes.IvFailureController.preconditionFailed(),
-            Unknown("")          -> routes.IvFailureController.technicalIssue()
+            Incomplete           -> routes.IvFailureController.technicalIssue,
+            FailedMatching       -> routes.IvFailureController.failedMatching,
+            FailedIV             -> routes.IvFailureController.failedIV,
+            InsufficientEvidence -> routes.IvFailureController.insufficientEvidence,
+            LockedOut            -> routes.IvFailureController.lockedOut,
+            UserAborted          -> routes.IvFailureController.userAborted,
+            Timeout              -> routes.IvFailureController.timedOut,
+            TechnicalIssue       -> routes.IvFailureController.technicalIssue,
+            PreconditionFailed   -> routes.IvFailureController.preconditionFailed,
+            Unknown("")          -> routes.IvFailureController.technicalIssue
           )
 
         val results = testCases.map { case (ivErrorStatus, expectedRedirectTo) =>
@@ -143,7 +143,7 @@ class IvFailureControllerSpec
           messageFromMessageKey("iv.failedMatching.title"),
           { doc =>
             val button = doc.select(".govuk-button")
-            button.attr("href") shouldBe routes.IvFailureController.retry().url
+            button.attr("href") shouldBe routes.IvFailureController.retry.url
           }
         )
 
@@ -165,7 +165,7 @@ class IvFailureControllerSpec
           messageFromMessageKey("iv.failedIv.title"),
           { doc =>
             val button = doc.select(".govuk-button")
-            button.attr("href") shouldBe routes.IvFailureController.retry().url
+            button.attr("href") shouldBe routes.IvFailureController.retry.url
           }
         )
 
@@ -220,7 +220,7 @@ class IvFailureControllerSpec
           messageFromMessageKey("iv.userAborted.title"),
           { doc =>
             val button = doc.select(".govuk-button")
-            button.attr("href") shouldBe routes.IvFailureController.retry().url
+            button.attr("href") shouldBe routes.IvFailureController.retry.url
           }
         )
       }
@@ -241,7 +241,7 @@ class IvFailureControllerSpec
           messageFromMessageKey("iv.timeout.title"),
           { doc =>
             val button = doc.select(".govuk-button")
-            button.attr("href") shouldBe routes.IvFailureController.retry().url
+            button.attr("href") shouldBe routes.IvFailureController.retry.url
           }
         )
       }
@@ -262,7 +262,7 @@ class IvFailureControllerSpec
           messageFromMessageKey("iv.technicalIssue.title"),
           { doc =>
             val button = doc.select(".govuk-button")
-            button.attr("href") shouldBe routes.IvFailureController.retry().url
+            button.attr("href") shouldBe routes.IvFailureController.retry.url
           }
         )
       }
@@ -295,7 +295,7 @@ class IvFailureControllerSpec
       "redirect to the start endpoint" in {
         mockAuthWithNoRetrievals()
 
-        checkIsRedirect(performAction(), routes.StartController.start())
+        checkIsRedirect(performAction(), routes.StartController.start)
       }
 
     }

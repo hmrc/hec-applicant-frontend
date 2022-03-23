@@ -111,7 +111,7 @@ class TooManyEmailVerificationAttemptControllerSpec
 
             htmlBody should include regex messageFromMessageKey(
               "emailRequestExceeded.p2",
-              routes.StartController.start().url
+              routes.StartController.start.url
             )
 
           }

@@ -131,7 +131,7 @@ class EmailSentControllerSpec
             )
             doc.select(".govuk-body").html()       should include regex messageFromMessageKey(
               "emailSent.p3",
-              routes.StartController.start().url
+              routes.StartController.start.url
             )
 
           }

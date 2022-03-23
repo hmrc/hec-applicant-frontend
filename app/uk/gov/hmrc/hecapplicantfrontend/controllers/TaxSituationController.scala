@@ -59,7 +59,7 @@ class TaxSituationController @Inject() (
   val taxSituation: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     request.sessionData.mapAsIndividual { implicit individualSession =>
       request.sessionData.ensureLicenceTypePresent { licenceType =>
-        val back            = journeyService.previous(routes.TaxSituationController.taxSituation())
+        val back            = journeyService.previous(routes.TaxSituationController.taxSituation)
         val taxSituationOpt = individualSession.userAnswers.fold(_.taxSituation, _.taxSituation.some)
         val options         = taxSituationOptions(licenceType)
         val form = {
@@ -118,7 +118,7 @@ class TaxSituationController @Inject() (
                                      retrievedJourneyData = updatedRetrievedData
                                    )
 
-            next <- journeyService.updateAndNext(routes.TaxSituationController.taxSituation(), updatedRequest)
+            next <- journeyService.updateAndNext(routes.TaxSituationController.taxSituation, updatedRequest)
           } yield next
 
           result.fold(
@@ -136,7 +136,7 @@ class TaxSituationController @Inject() (
               Ok(
                 taxSituationPage(
                   formWithErrors,
-                  journeyService.previous(routes.TaxSituationController.taxSituation()),
+                  journeyService.previous(routes.TaxSituationController.taxSituation),
                   options,
                   startDate,
                   endDate,

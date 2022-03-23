@@ -74,7 +74,7 @@ class CompanyDetailsController @Inject() (
   private def getConfirmCompanyDetailsPage(form: Form[YesNoAnswer], companyName: CompanyHouseName)(implicit
     request: RequestWithSessionData[_]
   ): Result = {
-    val back = journeyService.previous(routes.CompanyDetailsController.confirmCompanyDetails())
+    val back = journeyService.previous(routes.CompanyDetailsController.confirmCompanyDetails)
     Ok(
       confirmCompanyNamePage(
         form,
@@ -104,7 +104,7 @@ class CompanyDetailsController @Inject() (
       def callUpdateAndNext(updatedSession: HECSession) =
         journeyService
           .updateAndNext(
-            routes.CompanyDetailsController.confirmCompanyDetails(),
+            routes.CompanyDetailsController.confirmCompanyDetails,
             updatedSession
           )
 
@@ -209,7 +209,7 @@ class CompanyDetailsController @Inject() (
         Ok(
           recentlyStartedTradingPage(
             form = form,
-            back = journeyService.previous(routes.CompanyDetailsController.recentlyStartedTrading()),
+            back = journeyService.previous(routes.CompanyDetailsController.recentlyStartedTrading),
             options = YesNoOption.yesNoOptions
           )
         )
@@ -225,7 +225,7 @@ class CompanyDetailsController @Inject() (
             .copy(recentlyStartedTrading = Some(recentlyStartedTrading))
 
           updateAndNextJourneyData(
-            routes.CompanyDetailsController.recentlyStartedTrading(),
+            routes.CompanyDetailsController.recentlyStartedTrading,
             request.sessionData.mapAsCompany(_.copy(userAnswers = updatedAnswers))
           )
         }
@@ -238,7 +238,7 @@ class CompanyDetailsController @Inject() (
               Ok(
                 recentlyStartedTradingPage(
                   form = formWithErrors,
-                  back = journeyService.previous(routes.CompanyDetailsController.recentlyStartedTrading()),
+                  back = journeyService.previous(routes.CompanyDetailsController.recentlyStartedTrading),
                   options = YesNoOption.yesNoOptions
                 )
               ),
@@ -260,7 +260,7 @@ class CompanyDetailsController @Inject() (
           Ok(
             chargeableForCTPage(
               form = form,
-              back = journeyService.previous(routes.CompanyDetailsController.chargeableForCorporationTax()),
+              back = journeyService.previous(routes.CompanyDetailsController.chargeableForCorporationTax),
               date = endDateStr,
               options = YesNoOption.yesNoOptions
             )
@@ -284,7 +284,7 @@ class CompanyDetailsController @Inject() (
           }
 
           updateAndNextJourneyData(
-            routes.CompanyDetailsController.chargeableForCorporationTax(),
+            routes.CompanyDetailsController.chargeableForCorporationTax,
             companySession.copy(userAnswers = updatedAnswers)
           )
         }
@@ -299,7 +299,7 @@ class CompanyDetailsController @Inject() (
                 Ok(
                   chargeableForCTPage(
                     form = formWithErrors,
-                    back = journeyService.previous(routes.CompanyDetailsController.chargeableForCorporationTax()),
+                    back = journeyService.previous(routes.CompanyDetailsController.chargeableForCorporationTax),
                     date = endDateStr,
                     options = YesNoOption.yesNoOptions
                   )
@@ -311,7 +311,7 @@ class CompanyDetailsController @Inject() (
     }
 
   val ctutrNotMatched: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
-    val back = journeyService.previous(routes.CompanyDetailsController.ctutrNotMatched())
+    val back = journeyService.previous(routes.CompanyDetailsController.ctutrNotMatched)
     Ok(ctutrNotMatchedPage(back))
   }
 
@@ -319,7 +319,7 @@ class CompanyDetailsController @Inject() (
     request.sessionData mapAsCompany { companySession =>
       ensureCompanyDataHasDesCtutr(companySession) { desCtutr =>
         val ctutr     = companySession.userAnswers.fold(_.ctutr, _.ctutr)
-        val back      = journeyService.previous(routes.CompanyDetailsController.enterCtutr())
+        val back      = journeyService.previous(routes.CompanyDetailsController.enterCtutr)
         val ctutrForm = enterCtutrForm(desCtutr)
         val form      = ctutr.fold(ctutrForm)(ctutrForm.fill)
         Ok(enterCtutrPage(form, back))
@@ -361,7 +361,7 @@ class CompanyDetailsController @Inject() (
                                          )
                 next                <-
                   journeyService.updateAndNext(
-                    routes.CompanyDetailsController.enterCtutr(),
+                    routes.CompanyDetailsController.enterCtutr,
                     companySession.copy(
                       userAnswers = updatedAnswers,
                       retrievedJourneyData = updatedRetrievedData,
@@ -379,7 +379,7 @@ class CompanyDetailsController @Inject() (
             def ok(formWithErrors: Form[CTUTR]) = Ok(
               enterCtutrPage(
                 formWithErrors,
-                journeyService.previous(routes.CompanyDetailsController.enterCtutr())
+                journeyService.previous(routes.CompanyDetailsController.enterCtutr)
               )
             )
 
@@ -411,7 +411,7 @@ class CompanyDetailsController @Inject() (
                         auditService
                           .sendEvent(TaxCheckExit.CTEnteredCTUTRNotMatchingBlocked(companySession, request.language))
                         updateAndNextJourneyData(
-                          routes.CompanyDetailsController.enterCtutr(),
+                          routes.CompanyDetailsController.enterCtutr,
                           companySession.copy(crnBlocked = ctutrAttempts.isBlocked)
                         )
                       } else {
@@ -444,7 +444,7 @@ class CompanyDetailsController @Inject() (
                 ctutrAttempts =>
                   if (ctutrAttempts.isBlocked) {
                     updateAndNextJourneyData(
-                      routes.CompanyDetailsController.enterCtutr(),
+                      routes.CompanyDetailsController.enterCtutr,
                       companySession.copy(crnBlocked = true)
                     )
                   } else {
@@ -460,14 +460,14 @@ class CompanyDetailsController @Inject() (
   }
 
   val dontHaveUtr: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
-    val back = journeyService.previous(routes.CompanyDetailsController.dontHaveUtr())
+    val back = journeyService.previous(routes.CompanyDetailsController.dontHaveUtr)
     Ok(dontHaveCtutrPage(back))
   }
 
   val tooManyCtutrAttempts: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     request.sessionData mapAsCompany { companySession =>
       ensureUserAnswersHasCRN(companySession) { crn =>
-        val back = journeyService.previous(routes.CompanyDetailsController.tooManyCtutrAttempts())
+        val back = journeyService.previous(routes.CompanyDetailsController.tooManyCtutrAttempts)
 
         ctutrAttemptsService
           .get(crn, companySession.loginData.ggCredId)
@@ -489,7 +489,7 @@ class CompanyDetailsController @Inject() (
   val ctIncomeStatement: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     request.sessionData mapAsCompany { companySession =>
       ensureCompanyDataHasCTStatusAccountingPeriod(companySession) { latestAccountingPeriod =>
-        val back             = journeyService.previous(routes.CompanyDetailsController.ctIncomeStatement())
+        val back             = journeyService.previous(routes.CompanyDetailsController.ctIncomeStatement)
         val ctIncomeDeclared = companySession.userAnswers.fold(_.ctIncomeDeclared, _.ctIncomeDeclared)
         val form = {
           val emptyForm = CompanyDetailsController.yesNoForm("ctIncomeDeclared", YesNoAnswer.values)
@@ -515,7 +515,7 @@ class CompanyDetailsController @Inject() (
             companySession.userAnswers.unset(_.ctIncomeDeclared).copy(ctIncomeDeclared = Some(incomeDeclared))
 
           updateAndNextJourneyData(
-            routes.CompanyDetailsController.ctIncomeStatement(),
+            routes.CompanyDetailsController.ctIncomeStatement,
             companySession.copy(userAnswers = updatedAnswers)
           )
         }
@@ -528,7 +528,7 @@ class CompanyDetailsController @Inject() (
               Ok(
                 ctIncomeStatementPage(
                   formWithErrors,
-                  journeyService.previous(routes.CompanyDetailsController.ctIncomeStatement()),
+                  journeyService.previous(routes.CompanyDetailsController.ctIncomeStatement),
                   YesNoOption.yesNoOptions,
                   TimeUtils.govDisplayFormat(latestAccountingPeriod.endDate)
                 )
@@ -540,7 +540,7 @@ class CompanyDetailsController @Inject() (
   }
 
   val cannotDoTaxCheck: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
-    val back = journeyService.previous(routes.CompanyDetailsController.cannotDoTaxCheck())
+    val back = journeyService.previous(routes.CompanyDetailsController.cannotDoTaxCheck)
     Ok(cannotDoTaxCheckPage(back))
   }
 

@@ -75,7 +75,7 @@ class VerifyEmailPasscodeController @Inject() (
             val passcodeOpt: Option[Passcode] =
               session.fold(_.userEmailAnswers.flatMap(_.passcode), _.userEmailAnswers.flatMap(_.passcode))
             val form                          = passcodeOpt.fold(verifyPasscodeForm)(verifyPasscodeForm.fill)
-            val back                          = journeyService.previous(routes.VerifyEmailPasscodeController.verifyEmailPasscode())(req, hc)
+            val back                          = journeyService.previous(routes.VerifyEmailPasscodeController.verifyEmailPasscode)(req, hc)
             Ok(verifyPasscodePage(form, back, userSelectedEmail.emailAddress, isGGEmailInSession))
           }
         )
@@ -88,7 +88,7 @@ class VerifyEmailPasscodeController @Inject() (
     val session = request.sessionData
     session.ensureUserSelectedEmailPresent { userSelectedEmail =>
       val isGGEmailInSession = verifyGGEmailInSession(session)
-      val currentCall        = routes.VerifyEmailPasscodeController.verifyEmailPasscode()
+      val currentCall        = routes.VerifyEmailPasscodeController.verifyEmailPasscode
 
       def handleValidPasscode(passcode: Passcode): Future[Result] =
         getNextOrNoMatchResult(

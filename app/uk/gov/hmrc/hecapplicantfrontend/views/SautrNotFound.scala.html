@@ -31,7 +31,7 @@
     <h1 class="govuk-heading-xl">@title</h1>
     <p class="govuk-body">@messages(s"$key.intro")</p>
     <h2 class="govuk-heading-m">@messages(s"$key.changeAnswer.heading")</h2>
-    <p class="govuk-body">@Html(messages(s"$key.changeAnswer.p1", routes.TaxSituationController.taxSituation()))</p>
+    <p class="govuk-body">@Html(messages(s"$key.changeAnswer.p1", routes.TaxSituationController.taxSituation))</p>
     <h2 class="govuk-heading-m">@messages(s"$key.register.heading")</h2>
     <p class="govuk-body">@Html(messages(s"$key.register.p1", appConfig.registerForSaUrl))</p>
     <h2 class="govuk-heading-m">@messages(s"$key.newRegistration.heading")</h2>

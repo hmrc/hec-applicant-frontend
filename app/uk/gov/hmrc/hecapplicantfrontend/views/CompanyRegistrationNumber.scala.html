@@ -39,7 +39,7 @@
     )), title = Text(messages("generic.errorSummary"))))
   }
 
-  @formWithCSRF(action = routes.CRNController.companyRegistrationNumberSubmit()) {
+  @formWithCSRF(action = routes.CRNController.companyRegistrationNumberSubmit) {
     @govukInput(Input(
       id = key,
       name = key,

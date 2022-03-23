@@ -104,8 +104,8 @@ class VerificationPasscodeExpiredControllerSpec
 
             htmlBody should include regex messageFromMessageKey(
               "verifyPasscodeExpired.p2",
-              routes.ResendEmailConfirmationController.resendEmail().url,
-              routes.StartController.start().url
+              routes.ResendEmailConfirmationController.resendEmail.url,
+              routes.StartController.start.url
             )
 
           }

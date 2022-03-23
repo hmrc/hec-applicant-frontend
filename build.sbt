@@ -6,7 +6,7 @@ import wartremover.WartRemover.autoImport.wartremoverErrors
 
 val appName = "hec-applicant-frontend"
 
-val silencerVersion = "1.7.3"
+val silencerVersion = "1.7.8"
 
 lazy val wartremoverSettings =
   Seq(
@@ -47,23 +47,23 @@ lazy val microservice = Project(appName, file("."))
     SbtDistributablesPlugin
   )
   .disablePlugins(JUnitXmlReportPlugin)
-  .settings(addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.10.3"))
+  .settings(addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.13.2" cross CrossVersion.full))
   .settings(addCompilerPlugin("org.scalamacros" %% "paradise" % "2.1.1" cross CrossVersion.full))
   .settings(
     majorVersion := 1,
-    scalaVersion := "2.12.13",
+    scalaVersion := "2.12.15",
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
-    pipelineStages in Assets := Seq(gzip),
+    Assets / pipelineStages := Seq(gzip),
     // ***************
     // Use the silencer plugin to suppress warnings
     scalacOptions += "-P:silencer:pathFilters=routes",
-    scalacOptions in Test --= Seq("-Ywarn-value-discard"),
+    Test / scalacOptions --= Seq("-Ywarn-value-discard"),
     libraryDependencies ++= Seq(
       compilerPlugin("com.github.ghik" % "silencer-plugin" % silencerVersion cross CrossVersion.full),
       "com.github.ghik" % "silencer-lib" % silencerVersion % Provided cross CrossVersion.full
     ),
     // ***************
-    sources in (Compile, doc) := Seq.empty
+    Compile / doc / sources := Seq.empty
   )
   .settings(publishingSettings: _*)
   .configs(IntegrationTest)

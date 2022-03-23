@@ -88,7 +88,7 @@ class ProblemSendingEmailControllerSpec
           mockAuthWithNoRetrievals()
           mockGetSession(session)
           mockJourneyServiceGetPrevious(
-            routes.ProblemSendingEmailController.problemSendingEmail(),
+            routes.ProblemSendingEmailController.problemSendingEmail,
             session
           )(
             mockPreviousCall
@@ -104,7 +104,7 @@ class ProblemSendingEmailControllerSpec
 
             htmlBody should include regex messageFromMessageKey(
               "problemSendingEmail.p2",
-              routes.StartController.start().url
+              routes.StartController.start.url
             )
 
           }

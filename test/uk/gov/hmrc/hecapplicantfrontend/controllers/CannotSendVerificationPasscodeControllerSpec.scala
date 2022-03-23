@@ -100,7 +100,7 @@ class CannotSendVerificationPasscodeControllerSpec
             mockAuthWithNoRetrievals()
             mockGetSession(session)
             mockJourneyServiceGetPrevious(
-              routes.CannotSendVerificationPasscodeController.cannotSendVerificationPasscode(),
+              routes.CannotSendVerificationPasscodeController.cannotSendVerificationPasscode,
               session
             )(
               mockPreviousCall
@@ -114,13 +114,13 @@ class CannotSendVerificationPasscodeControllerSpec
               val htmlBody = doc.select(".govuk-body").html()
 
               val firstUrl =
-                if (emailAddress.isDefined) routes.ConfirmEmailAddressController.confirmEmailAddress().url
-                else routes.EnterEmailAddressController.enterEmailAddress().url
+                if (emailAddress.isDefined) routes.ConfirmEmailAddressController.confirmEmailAddress.url
+                else routes.EnterEmailAddressController.enterEmailAddress.url
 
               htmlBody should include regex messageFromMessageKey(
                 "cannotSendVerificationPasscode.p2",
                 firstUrl,
-                routes.StartController.start().url
+                routes.StartController.start.url
               )
 
             }

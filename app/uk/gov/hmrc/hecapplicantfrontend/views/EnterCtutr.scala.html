@@ -36,7 +36,7 @@
     )), title = Text(messages("generic.errorSummary"))))
   }
 
-  @formWithCSRF(action = routes.CompanyDetailsController.enterCtutrSubmit()) {
+  @formWithCSRF(action = routes.CompanyDetailsController.enterCtutrSubmit) {
     @govukInput(Input(
       id = key,
       name = key,
@@ -54,7 +54,7 @@
     ))
 
     <p class="govuk-body">
-        <a class="govuk-link" href="@{routes.CompanyDetailsController.dontHaveUtr().url}">@messages(s"$key.link2")</a>
+        <a class="govuk-link" href="@{routes.CompanyDetailsController.dontHaveUtr.url}">@messages(s"$key.link2")</a>
     </p>
 
     @govukButton(Button(

@@ -61,7 +61,7 @@ class EnterEmailAddressController @Inject() (
           _ => {
             val req  = request.copy(sessionData = updatedSession)
             //reason for explicitly passing req and hc is same as mentioned in ConfirmEmailAddressController
-            val back = journeyService.previous(routes.EnterEmailAddressController.enterEmailAddress())(req, hc)
+            val back = journeyService.previous(routes.EnterEmailAddressController.enterEmailAddress)(req, hc)
             val form =
               userEmailAnswerOpt.fold(enterEmailAddressForm)(uea => enterEmailAddressForm.fill(uea.userSelectedEmail))
             Ok(enterEmailAddressPage(form, back))
@@ -82,7 +82,7 @@ class EnterEmailAddressController @Inject() (
             request.sessionData
               .fold(_.copy(userEmailAnswers = updatedEmailAnswers), _.copy(userEmailAnswers = updatedEmailAnswers))
           next               <-
-            journeyService.updateAndNext(routes.EnterEmailAddressController.enterEmailAddress(), updatedSession)
+            journeyService.updateAndNext(routes.EnterEmailAddressController.enterEmailAddress, updatedSession)
         } yield next
 
         result.fold(
@@ -99,7 +99,7 @@ class EnterEmailAddressController @Inject() (
             Ok(
               enterEmailAddressPage(
                 formWithErrors,
-                journeyService.previous(routes.EnterEmailAddressController.enterEmailAddress())
+                journeyService.previous(routes.EnterEmailAddressController.enterEmailAddress)
               )
             ),
           handleValidEmail

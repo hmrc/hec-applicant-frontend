@@ -37,7 +37,7 @@
         )), title = Text(messages("generic.errorSummary"))))
     }
 
-    @formWithCSRF(action = routes.EnterEmailAddressController.enterEmailAddressSubmit()) {
+    @formWithCSRF(action = routes.EnterEmailAddressController.enterEmailAddressSubmit) {
         @govukInput(Input(
             id = key,
             name = key,

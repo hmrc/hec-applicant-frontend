@@ -233,7 +233,7 @@ class EmailAddressConfirmedControllerSpec
 
               val form = doc.select("form")
               form
-                .attr("action") shouldBe routes.EmailAddressConfirmedController.emailAddressConfirmedSubmit().url
+                .attr("action") shouldBe routes.EmailAddressConfirmedController.emailAddressConfirmedSubmit.url
             }
           )
         }
@@ -385,7 +385,7 @@ class EmailAddressConfirmedControllerSpec
             mockGetSession(session)
             mockSendEmail(ggUserSelectedEmail, emailParameters = emailParametersEN)(Right(EmailSendResult.EmailSent))
             mockJourneyServiceUpdateAndNext(
-              routes.EmailAddressConfirmedController.emailAddressConfirmed(),
+              routes.EmailAddressConfirmedController.emailAddressConfirmed,
               session,
               updatedSession
             )(
@@ -420,7 +420,7 @@ class EmailAddressConfirmedControllerSpec
             mockGetSession(session)
             mockSendEmail(ggUserSelectedEmail, emailParameters = emailParameters)(Right(EmailSendResult.EmailSent))
             mockJourneyServiceUpdateAndNext(
-              routes.EmailAddressConfirmedController.emailAddressConfirmed(),
+              routes.EmailAddressConfirmedController.emailAddressConfirmed,
               session,
               updatedSession
             )(Right(mockNextCall))

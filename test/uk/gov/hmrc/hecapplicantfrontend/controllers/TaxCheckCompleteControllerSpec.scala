@@ -128,11 +128,11 @@ class TaxCheckCompleteControllerSpec
               val list = doc.select(".govuk-list--bullet").html
               list                           should include regex messageFromMessageKey(
                 "taxCheckComplete.list2",
-                routes.TaxCheckCompleteController.emailTaxCheckCode().url
+                routes.TaxCheckCompleteController.emailTaxCheckCode.url
               )
               list                           should include regex messageFromMessageKey(
                 "taxCheckComplete.list3",
-                routes.StartController.start().url
+                routes.StartController.start.url
               )
               doc.select(".govuk-body").html should include regex messageFromMessageKey(
                 "taxCheckComplete.p2",
@@ -144,7 +144,7 @@ class TaxCheckCompleteControllerSpec
 
               doc.select(".govuk-body > .govuk-link").parents().first().html shouldBe messageFromMessageKey(
                 "exitSurvey.linkText",
-                routes.SignOutController.exitSurvey().url
+                routes.SignOutController.exitSurvey.url
               )
             }
           )
@@ -196,7 +196,7 @@ class TaxCheckCompleteControllerSpec
           )
           val emailRequestedForTaxCheck =
             EmailRequestedForTaxCheck(
-              routes.TaxCheckCompleteController.taxCheckComplete().url,
+              routes.TaxCheckCompleteController.taxCheckComplete.url,
               TaxCheckListItem(
                 completeIndividualAnswers.licenceType,
                 completedTaxCheck.taxCheckCode,
@@ -211,7 +211,7 @@ class TaxCheckCompleteControllerSpec
             mockAuthWithNoRetrievals()
             mockGetSession(session)
             mockJourneyServiceUpdateAndNext(
-              routes.TaxCheckCompleteController.taxCheckComplete(),
+              routes.TaxCheckCompleteController.taxCheckComplete,
               session,
               updatedSession
             )(
@@ -233,7 +233,7 @@ class TaxCheckCompleteControllerSpec
             mockAuthWithNoRetrievals()
             mockGetSession(session)
             mockJourneyServiceUpdateAndNext(
-              routes.TaxCheckCompleteController.taxCheckComplete(),
+              routes.TaxCheckCompleteController.taxCheckComplete,
               session,
               updatedSession
             )(
@@ -263,7 +263,7 @@ class TaxCheckCompleteControllerSpec
             )
           val emailRequestedForTaxCheck =
             EmailRequestedForTaxCheck(
-              routes.TaxCheckCompleteController.taxCheckComplete().url,
+              routes.TaxCheckCompleteController.taxCheckComplete.url,
               TaxCheckListItem(
                 answers.licenceType,
                 completedTaxCheck.taxCheckCode,
@@ -293,7 +293,7 @@ class TaxCheckCompleteControllerSpec
           )
           val emailRequestedForTaxCheck =
             EmailRequestedForTaxCheck(
-              routes.TaxCheckCompleteController.taxCheckComplete().url,
+              routes.TaxCheckCompleteController.taxCheckComplete.url,
               TaxCheckListItem(
                 answers.licenceType,
                 completedTaxCheck.taxCheckCode,

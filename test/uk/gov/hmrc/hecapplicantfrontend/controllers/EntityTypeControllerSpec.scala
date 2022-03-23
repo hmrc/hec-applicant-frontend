@@ -72,7 +72,7 @@ class EntityTypeControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockJourneyServiceGetPrevious(routes.EntityTypeController.entityType(), session)(mockPreviousCall)
+            mockJourneyServiceGetPrevious(routes.EntityTypeController.entityType, session)(mockPreviousCall)
           }
 
           checkPageIsDisplayed(
@@ -88,7 +88,7 @@ class EntityTypeControllerSpec
               }
               val form            = doc.select("form")
               form
-                .attr("action") shouldBe routes.EntityTypeController.entityTypeSubmit().url
+                .attr("action") shouldBe routes.EntityTypeController.entityTypeSubmit.url
             }
           )
         }
@@ -135,7 +135,7 @@ class EntityTypeControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockJourneyServiceGetPrevious(routes.EntityTypeController.entityType(), session)(mockPreviousCall)
+            mockJourneyServiceGetPrevious(routes.EntityTypeController.entityType, session)(mockPreviousCall)
           }
 
           checkFormErrorIsDisplayed(
@@ -175,7 +175,7 @@ class EntityTypeControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockJourneyServiceUpdateAndNext(routes.EntityTypeController.entityType(), session, updatedSession)(
+            mockJourneyServiceUpdateAndNext(routes.EntityTypeController.entityType, session, updatedSession)(
               Left(Error(new Exception))
             )
           }
@@ -193,7 +193,7 @@ class EntityTypeControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockJourneyServiceUpdateAndNext(routes.EntityTypeController.entityType(), session, updatedSession)(
+            mockJourneyServiceUpdateAndNext(routes.EntityTypeController.entityType, session, updatedSession)(
               Right(mockNextCall)
             )
           }
@@ -311,7 +311,7 @@ class EntityTypeControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockJourneyServiceGetPrevious(routes.EntityTypeController.wrongGGAccount(), session)(mockPreviousCall)
+            mockJourneyServiceGetPrevious(routes.EntityTypeController.wrongGGAccount, session)(mockPreviousCall)
           }
 
           checkPageIsDisplayed(
@@ -363,7 +363,7 @@ class EntityTypeControllerSpec
         inSequence {
           mockAuthWithNoRetrievals()
           mockGetSession(session)
-          mockJourneyServiceGetPrevious(routes.EntityTypeController.wrongEntityType(), session)(mockPreviousCall)
+          mockJourneyServiceGetPrevious(routes.EntityTypeController.wrongEntityType, session)(mockPreviousCall)
         }
 
         checkPageIsDisplayed(

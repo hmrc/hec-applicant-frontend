@@ -61,7 +61,7 @@ class SummaryRows {
         messages(
           s"licenceType.${LicenceTypeOption.licenceTypeOption(completeAnswers.foldOnEntityType(_.licenceType, _.licenceType)).messageKey}"
         ),
-        routes.LicenceDetailsController.licenceType(),
+        routes.LicenceDetailsController.licenceType,
         messages(s"$messageKey.licenceType.screenReaderText")
       )
 
@@ -71,7 +71,7 @@ class SummaryRows {
         messages(
           s"licenceTimeTrading.${LicenceTimeTradingOption.licenceTimeTradingOption(completeAnswers.foldOnEntityType(_.licenceTimeTrading, _.licenceTimeTrading)).messageKey}"
         ),
-        routes.LicenceDetailsController.licenceTimeTrading(),
+        routes.LicenceDetailsController.licenceTimeTrading,
         messages(s"$messageKey.licenceTimeTrading.screenReaderText")
       )
 
@@ -81,7 +81,7 @@ class SummaryRows {
         messages(
           s"licenceValidityPeriod.${LicenceValidityPeriodOption.licenceValidityPeriodOption(completeAnswers.foldOnEntityType(_.licenceValidityPeriod, _.licenceValidityPeriod)).messageKey}"
         ),
-        routes.LicenceDetailsController.recentLicenceLength(),
+        routes.LicenceDetailsController.recentLicenceLength,
         messages(s"$messageKey.licenceValidityPeriod.screenReaderText")
       )
 
@@ -100,14 +100,14 @@ class SummaryRows {
       summaryListRow(
         messages("entityType.title"),
         messages(s"entityType.${EntityTypeOption.entityTypeOption(completeAnswers.entityType).messageKey}"),
-        routes.EntityTypeController.entityType(),
+        routes.EntityTypeController.entityType,
         messages(s"$messageKey.entityType.screenReaderText")
       )
     val crnRow                    =
       summaryListRow(
         messages("crn.title"),
         completeAnswers.crn.value,
-        routes.CRNController.companyRegistrationNumber(),
+        routes.CRNController.companyRegistrationNumber,
         messages(s"$messageKey.crn.screenReaderText")
       )
     val ctutrRow                  =
@@ -115,7 +115,7 @@ class SummaryRows {
         summaryListRow(
           messages("enterCtutr.title"),
           ctutr.value,
-          routes.CompanyDetailsController.enterCtutr(),
+          routes.CompanyDetailsController.enterCtutr,
           messages(s"$messageKey.ctutr.screenReaderText")
         )
       }
@@ -124,7 +124,7 @@ class SummaryRows {
         summaryListRow(
           messages("recentlyStartedTrading.title"),
           messages(s"recentlyStartedTrading.${YesNoOption.yesNoOption(recentlyStartedTrading).messageKey}"),
-          routes.CompanyDetailsController.recentlyStartedTrading(),
+          routes.CompanyDetailsController.recentlyStartedTrading,
           messages(s"$messageKey.recentlyStartedTrading.screenReaderText")
         )
       }
@@ -142,7 +142,7 @@ class SummaryRows {
         summaryListRow(
           messages("chargeableForCT.title", TimeUtils.govDisplayFormat(latestAccountingPeriod.endDate)),
           messages(s"chargeableForCT.${YesNoOption.yesNoOption(chargeableForCT).messageKey}"),
-          routes.CompanyDetailsController.chargeableForCorporationTax(),
+          routes.CompanyDetailsController.chargeableForCorporationTax,
           messages(s"$messageKey.chargeableForCT.screenReaderText")
         )
 
@@ -152,7 +152,7 @@ class SummaryRows {
         summaryListRow(
           messages("ctIncomeDeclared.title"),
           messages(s"ctIncomeDeclared.${YesNoOption.yesNoOption(ctIncomeDeclared).messageKey}"),
-          routes.CompanyDetailsController.ctIncomeStatement(),
+          routes.CompanyDetailsController.ctIncomeStatement,
           messages(s"$messageKey.ctIncomeDeclared.screenReaderText")
         )
       }
@@ -176,7 +176,7 @@ class SummaryRows {
         summaryListRow(
           messages("entityType.title"),
           messages(s"entityType.${EntityTypeOption.entityTypeOption(entityType).messageKey}"),
-          routes.EntityTypeController.entityType(),
+          routes.EntityTypeController.entityType,
           messages(s"$messageKey.entityType.screenReaderText")
         )
       }
@@ -185,7 +185,7 @@ class SummaryRows {
       summaryListRow(
         messages("taxSituation.title", startDate, endDate),
         messages(s"taxSituation.${TaxSituationOption.taxSituationOption(completeAnswers.taxSituation).messageKey}"),
-        routes.TaxSituationController.taxSituation(),
+        routes.TaxSituationController.taxSituation,
         messages(s"$messageKey.taxSituation.screenReaderText")
       )
     }
@@ -195,7 +195,7 @@ class SummaryRows {
         summaryListRow(
           messages("saIncomeDeclared.title"),
           messages(s"saIncomeDeclared.${YesNoOption.yesNoOption(saIncomeDeclared).messageKey}"),
-          routes.SAController.saIncomeStatement(),
+          routes.SAController.saIncomeStatement,
           messages(s"$messageKey.saIncomeDeclared.screenReaderText")
         )
       }

@@ -75,7 +75,7 @@
             title = Text(messages("generic.errorSummary"))))
     }
 
-    @formWithCSRF(action = routes.ConfirmEmailAddressController.confirmEmailAddressSubmit()) {
+    @formWithCSRF(action = routes.ConfirmEmailAddressController.confirmEmailAddressSubmit) {
         @govukRadios(
             Radios(
                 fieldset = Some(Fieldset(
