@@ -766,6 +766,26 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
 
       }
 
+      "redirect to the 'Verify no supported' page" when {
+
+        "the user logs in with Verify" in {
+          inSequence {
+            mockAuthWithRetrievals(
+              ConfidenceLevel.L50,
+              Some(AffinityGroup.Individual),
+              Some(completeIndividualLoginData.nino),
+              Some(sautr),
+              completeIndividualLoginData.emailAddress,
+              Enrolments(Set.empty),
+              Some(Credentials("id", "Verify"))
+            )
+            mockGetSession(Right(None))
+          }
+
+          checkIsRedirect(performAction(), routes.VerifyController.verifyNotSupported)
+        }
+
+      }
     }
 
   }

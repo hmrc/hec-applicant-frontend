@@ -93,7 +93,10 @@ class StartController @Inject() (
           appConfig.redirectToIvUplift
 
         case UnsupportedAuthProvider(provider) =>
-          sys.error(s"Unsupported auth provider: $provider")
+          if (provider === "Verify")
+            Redirect(routes.VerifyController.verifyNotSupported)
+          else
+            sys.error(s"Unsupported auth provider: $provider")
 
         case AgentLogin =>
           Redirect(routes.AgentsController.agentsNotSupported)

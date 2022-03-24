@@ -100,6 +100,8 @@ GET        /send-email/:taxCheckCode             uk.gov.hmrc.hecapplicantfronten
 
 GET        /agent-cannot-access                  uk.gov.hmrc.hecapplicantfrontend.controllers.AgentsController.agentsNotSupported
 
+GET        /verify                               uk.gov.hmrc.hecapplicantfrontend.controllers.VerifyController.verifyNotSupported
+
 # IV
 GET  /failed-iv/callback                         uk.gov.hmrc.hecapplicantfrontend.controllers.IvFailureController.ivFailure(journeyId: java.util.UUID)
 GET  /failed-iv/retry                            uk.gov.hmrc.hecapplicantfrontend.controllers.IvFailureController.retry
