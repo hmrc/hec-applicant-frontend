@@ -95,7 +95,7 @@ class ResendEmailConfirmationControllerSpec
         inSequence {
           mockAuthWithNoRetrievals()
           mockGetSession(session)
-          mockJourneyServiceGetPrevious(routes.ResendEmailConfirmationController.resendEmail(), session)(
+          mockJourneyServiceGetPrevious(routes.ResendEmailConfirmationController.resendEmail, session)(
             mockPreviousCall
           )
         }
@@ -109,7 +109,7 @@ class ResendEmailConfirmationControllerSpec
 
             val form = doc.select("form")
             form
-              .attr("action") shouldBe routes.ResendEmailConfirmationController.resendEmailSubmit().url
+              .attr("action") shouldBe routes.ResendEmailConfirmationController.resendEmailSubmit.url
           }
         )
       }
@@ -171,7 +171,7 @@ class ResendEmailConfirmationControllerSpec
             mockGetSession(session)
             mockRequestPasscode(userSelectedGGEmail)(Right(PasscodeSent))
             mockJourneyServiceUpdateAndNext(
-              routes.ResendEmailConfirmationController.resendEmail(),
+              routes.ResendEmailConfirmationController.resendEmail,
               session,
               updatedSession
             )(
@@ -201,7 +201,7 @@ class ResendEmailConfirmationControllerSpec
           mockGetSession(session)
           mockRequestPasscode(userSelectedGGEmail)(Right(PasscodeSent))
           mockJourneyServiceUpdateAndNext(
-            routes.ResendEmailConfirmationController.resendEmail(),
+            routes.ResendEmailConfirmationController.resendEmail,
             session,
             updatedSession
           )(Right(mockNextCall))

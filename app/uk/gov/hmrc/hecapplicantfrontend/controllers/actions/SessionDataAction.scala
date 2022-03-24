@@ -50,7 +50,7 @@ class SessionDataAction @Inject() (
       .leftMap(_.doThrow("Could not get session data"))
       .subflatMap(
         _.map(RequestWithSessionData(request, _, language))
-          .toRight(Redirect(routes.StartController.start()))
+          .toRight(Redirect(routes.StartController.start))
       )
       .value
   }

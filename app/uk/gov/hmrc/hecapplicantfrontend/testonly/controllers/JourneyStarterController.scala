@@ -53,7 +53,7 @@ class JourneyStarterController @Inject() (
     with I18nSupport
     with Logging {
 
-  private val redirectUrl = s"${appConfig.selfBaseUrl}${nonTestOnlyRoutes.StartController.start().url}"
+  private val redirectUrl = s"${appConfig.selfBaseUrl}${nonTestOnlyRoutes.StartController.start.url}"
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 

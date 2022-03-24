@@ -80,29 +80,29 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
     hc: HeaderCarrier,
     enableAuditing: EnableAuditing = EnableAuditing(false)
   ): Map[Call, HECSession => Call] = Map(
-    routes.StartController.start()                                         -> firstPage,
-    routes.ConfirmIndividualDetailsController.confirmIndividualDetails()   -> confirmIndividualDetailsRoute,
-    routes.TaxChecksListController.unexpiredTaxChecks()                    -> unexpiredTaxChecksRoutes,
-    routes.LicenceDetailsController.licenceType()                          -> licenceTypeRoute,
-    routes.LicenceDetailsController.licenceTimeTrading                     -> (_ => routes.LicenceDetailsController.recentLicenceLength()),
-    routes.LicenceDetailsController.recentLicenceLength()                  -> licenceValidityPeriodRoute,
-    routes.EntityTypeController.entityType()                               -> entityTypeRoute,
-    routes.TaxSituationController.taxSituation()                           -> taxSituationRoute,
-    routes.SAController.saIncomeStatement()                                -> (_ => routes.CheckYourAnswersController.checkYourAnswers()),
-    routes.CheckYourAnswersController.checkYourAnswers()                   -> (_ => routes.TaxCheckCompleteController.taxCheckComplete()),
-    routes.CRNController.companyRegistrationNumber()                       -> companyRegistrationNumberRoute,
-    routes.CompanyDetailsController.confirmCompanyDetails()                -> confirmCompanyDetailsRoute,
-    routes.CompanyDetailsController.chargeableForCorporationTax()          -> chargeableForCTRoute,
-    routes.CompanyDetailsController.ctIncomeStatement()                    -> (_ => routes.CheckYourAnswersController.checkYourAnswers()),
-    routes.CompanyDetailsController.recentlyStartedTrading()               -> recentlyStartedTradingRoute,
-    routes.CompanyDetailsController.enterCtutr()                           -> enterCtutrRoute,
-    routes.TaxCheckCompleteController.taxCheckComplete()                   -> emailVerificationRoute,
-    routes.ConfirmEmailAddressController.confirmEmailAddress()             -> confirmEmailAddressRoute,
-    routes.VerifyEmailPasscodeController.verifyEmailPasscode               -> verifyEmailPasscodeRoute,
-    routes.EmailAddressConfirmedController.emailAddressConfirmed()         -> emailAddressConfirmedRoute,
-    routes.EnterEmailAddressController.enterEmailAddress()                 -> confirmEmailAddressRoute,
-    routes.ResendEmailConfirmationController.resendEmail()                 -> resendEmailConfirmationRoute,
-    routes.VerifyResentEmailPasscodeController.verifyResentEmailPasscode() -> verifyEmailPasscodeRoute
+    routes.StartController.start                                         -> firstPage,
+    routes.ConfirmIndividualDetailsController.confirmIndividualDetails   -> confirmIndividualDetailsRoute,
+    routes.TaxChecksListController.unexpiredTaxChecks                    -> unexpiredTaxChecksRoutes,
+    routes.LicenceDetailsController.licenceType                          -> licenceTypeRoute,
+    routes.LicenceDetailsController.licenceTimeTrading                   -> (_ => routes.LicenceDetailsController.recentLicenceLength),
+    routes.LicenceDetailsController.recentLicenceLength                  -> licenceValidityPeriodRoute,
+    routes.EntityTypeController.entityType                               -> entityTypeRoute,
+    routes.TaxSituationController.taxSituation                           -> taxSituationRoute,
+    routes.SAController.saIncomeStatement                                -> (_ => routes.CheckYourAnswersController.checkYourAnswers),
+    routes.CheckYourAnswersController.checkYourAnswers                   -> (_ => routes.TaxCheckCompleteController.taxCheckComplete),
+    routes.CRNController.companyRegistrationNumber                       -> companyRegistrationNumberRoute,
+    routes.CompanyDetailsController.confirmCompanyDetails                -> confirmCompanyDetailsRoute,
+    routes.CompanyDetailsController.chargeableForCorporationTax          -> chargeableForCTRoute,
+    routes.CompanyDetailsController.ctIncomeStatement                    -> (_ => routes.CheckYourAnswersController.checkYourAnswers),
+    routes.CompanyDetailsController.recentlyStartedTrading               -> recentlyStartedTradingRoute,
+    routes.CompanyDetailsController.enterCtutr                           -> enterCtutrRoute,
+    routes.TaxCheckCompleteController.taxCheckComplete                   -> emailVerificationRoute,
+    routes.ConfirmEmailAddressController.confirmEmailAddress             -> confirmEmailAddressRoute,
+    routes.VerifyEmailPasscodeController.verifyEmailPasscode             -> verifyEmailPasscodeRoute,
+    routes.EmailAddressConfirmedController.emailAddressConfirmed         -> emailAddressConfirmedRoute,
+    routes.EnterEmailAddressController.enterEmailAddress                 -> confirmEmailAddressRoute,
+    routes.ResendEmailConfirmationController.resendEmail                 -> resendEmailConfirmationRoute,
+    routes.VerifyResentEmailPasscodeController.verifyResentEmailPasscode -> verifyEmailPasscodeRoute
   )
 
   // map which describes routes from an exit page to their previous page. The keys are the exit page and the values are
@@ -111,29 +111,30 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
 
   lazy val exitPageToPreviousPage: Map[Call, HECSession => Call] =
     Map(
-      routes.ConfirmIndividualDetailsController
-        .confirmIndividualDetailsExit()                          -> (_ => routes.ConfirmIndividualDetailsController.confirmIndividualDetails()),
-      routes.LicenceDetailsController.licenceTypeExit()          ->
-        (_ => routes.LicenceDetailsController.licenceType()),
-      routes.EntityTypeController.wrongEntityType()              ->
-        (_ => routes.EntityTypeController.entityType()),
-      routes.CompanyDetailsController.dontHaveUtr()              ->
-        (_ => routes.CompanyDetailsController.enterCtutr()),
-      routes.ResendEmailConfirmationController.resendEmail()     -> resendEmailPreviousRoute,
-      routes.ConfirmEmailAddressController.confirmEmailAddress() -> confirmEnterEmailAddressPreviousRoute,
-      routes.EnterEmailAddressController.enterEmailAddress()     -> confirmEnterEmailAddressPreviousRoute
+      routes.ConfirmIndividualDetailsController.confirmIndividualDetailsExit -> (_ =>
+        routes.ConfirmIndividualDetailsController.confirmIndividualDetails
+      ),
+      routes.LicenceDetailsController.licenceTypeExit                        ->
+        (_ => routes.LicenceDetailsController.licenceType),
+      routes.EntityTypeController.wrongEntityType                            ->
+        (_ => routes.EntityTypeController.entityType),
+      routes.CompanyDetailsController.dontHaveUtr                            ->
+        (_ => routes.CompanyDetailsController.enterCtutr),
+      routes.ResendEmailConfirmationController.resendEmail                   -> resendEmailPreviousRoute,
+      routes.ConfirmEmailAddressController.confirmEmailAddress               -> confirmEnterEmailAddressPreviousRoute,
+      routes.EnterEmailAddressController.enterEmailAddress                   -> confirmEnterEmailAddressPreviousRoute
     )
 
   override def firstPage(session: HECSession): Call = {
     val hasTaxCheckCodes = session.unexpiredTaxChecks.nonEmpty
     session match {
       case i: IndividualHECSession if i.hasConfirmedDetails && !hasTaxCheckCodes =>
-        routes.LicenceDetailsController.licenceType()
+        routes.LicenceDetailsController.licenceType
       case i: IndividualHECSession if i.hasConfirmedDetails && hasTaxCheckCodes  =>
-        routes.TaxChecksListController.unexpiredTaxChecks()
-      case _: IndividualHECSession                                               => routes.ConfirmIndividualDetailsController.confirmIndividualDetails()
-      case _: CompanyHECSession if hasTaxCheckCodes                              => routes.TaxChecksListController.unexpiredTaxChecks()
-      case _: CompanyHECSession                                                  => routes.LicenceDetailsController.licenceType()
+        routes.TaxChecksListController.unexpiredTaxChecks
+      case _: IndividualHECSession                                               => routes.ConfirmIndividualDetailsController.confirmIndividualDetails
+      case _: CompanyHECSession if hasTaxCheckCodes                              => routes.TaxChecksListController.unexpiredTaxChecks
+      case _: CompanyHECSession                                                  => routes.LicenceDetailsController.licenceType
     }
   }
 
@@ -141,7 +142,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
     r: RequestWithSessionData[_],
     hc: HeaderCarrier
   ): EitherT[Future, Error, Call] = {
-    val currentPageIsCYA: Boolean = current === routes.CheckYourAnswersController.checkYourAnswers()
+    val currentPageIsCYA: Boolean = current === routes.CheckYourAnswersController.checkYourAnswers
     for {
       upliftedSession <- EitherT.fromEither[Future](upliftToCompleteAnswersIfComplete(updatedSession, current))
       next            <- EitherT.fromOption[Future](
@@ -154,7 +155,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
                                _ =>
                                  if (currentPageIsCYA || upliftedSession.isEmailRequested)
                                    paths.get(current).map(_(upliftedSession))
-                                 else Some(routes.CheckYourAnswersController.checkYourAnswers())
+                                 else Some(routes.CheckYourAnswersController.checkYourAnswers)
                              )
                            },
                            Error(s"Could not find next for $current")
@@ -192,25 +193,25 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
         exitPageToPreviousPage
           .get(current)
           .map(_(r.sessionData))
-          .orElse(loop(routes.ResendEmailConfirmationController.resendEmail()))
+          .orElse(loop(routes.ResendEmailConfirmationController.resendEmail))
           .getOrElse(sys.error(s"Could not find previous for $current"))
       } else {
         exitPageToPreviousPage
           .get(current)
           .map(_(r.sessionData))
-          .orElse(loop(routes.TaxCheckCompleteController.taxCheckComplete()))
+          .orElse(loop(routes.TaxCheckCompleteController.taxCheckComplete))
           .getOrElse(sys.error(s"Could not find previous for $current"))
       }
     } else {
-      if (current === routes.StartController.start())
+      if (current === routes.StartController.start)
         current
-      else if (current =!= routes.CheckYourAnswersController.checkYourAnswers() && hasCompletedAnswers)
-        routes.CheckYourAnswersController.checkYourAnswers()
+      else if (current =!= routes.CheckYourAnswersController.checkYourAnswers && hasCompletedAnswers)
+        routes.CheckYourAnswersController.checkYourAnswers
       else
         exitPageToPreviousPage
           .get(current)
           .map(_(r.sessionData))
-          .orElse(loop(routes.StartController.start()))
+          .orElse(loop(routes.StartController.start))
           .getOrElse(sys.error(s"Could not find previous for $current"))
     }
   }
@@ -226,7 +227,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
       case Some(next) =>
         // if we're not on the last page and there is no next page some exit page has been reached
         val isExitPageNext =
-          !paths.contains(next) && next =!= routes.TaxCheckCompleteController.taxCheckComplete()
+          !paths.contains(next) && next =!= routes.TaxCheckCompleteController.taxCheckComplete
 
         val updatedSession = session match {
           case _ if isExitPageNext || session.isEmailRequested => session
@@ -308,17 +309,17 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
 
   private def confirmIndividualDetailsRoute(session: HECSession): Call =
     if (session.unexpiredTaxChecks.nonEmpty)
-      routes.TaxChecksListController.unexpiredTaxChecks()
+      routes.TaxChecksListController.unexpiredTaxChecks
     else
-      routes.LicenceDetailsController.licenceType()
+      routes.LicenceDetailsController.licenceType
 
   private def unexpiredTaxChecksRoutes(session: HECSession): Call =
     session.emailRequestedForTaxCheck match {
       case Some(e: EmailRequestedForTaxCheck)
-          if e.originUrl === routes.TaxChecksListController.unexpiredTaxChecks().url =>
+          if e.originUrl === routes.TaxChecksListController.unexpiredTaxChecks.url =>
         emailVerificationRoute(session)
 
-      case _ => routes.LicenceDetailsController.licenceType()
+      case _ => routes.LicenceDetailsController.licenceType
     }
 
   private def licenceTypeRoute(
@@ -340,9 +341,9 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
           if (enableAuditing.enabled)
             auditService.sendEvent(TaxCheckExit.AllowedTaxChecksExceeded(session, r.language))
 
-          routes.LicenceDetailsController.maxTaxChecksExceeded()
+          routes.LicenceDetailsController.maxTaxChecksExceeded
         } else {
-          routes.LicenceDetailsController.licenceTimeTrading()
+          routes.LicenceDetailsController.licenceTimeTrading
         }
       case None              => sys.error("Could not find licence type")
     }
@@ -354,8 +355,8 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
       _.fold(_.licenceType, _.licenceType.some)
     ) match {
       case Some(licenceType) =>
-        if (licenceTypeForIndividualAndCompany(licenceType)) routes.EntityTypeController.entityType()
-        else routes.TaxSituationController.taxSituation()
+        if (licenceTypeForIndividualAndCompany(licenceType)) routes.EntityTypeController.entityType
+        else routes.TaxSituationController.taxSituation
       case None              =>
         sys.error("Could not find licence type to work out route after licence validity period")
     }
@@ -373,10 +374,10 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
         sys.error("Could not find selected entity type for entity type route")
       case Some(selectedEntityType) =>
         if (selectedEntityType === ggEntityType && selectedEntityType === Individual)
-          routes.TaxSituationController.taxSituation()
+          routes.TaxSituationController.taxSituation
         else if (selectedEntityType === ggEntityType && selectedEntityType === Company)
-          routes.CRNController.companyRegistrationNumber()
-        else routes.EntityTypeController.wrongGGAccount()
+          routes.CRNController.companyRegistrationNumber
+        else routes.EntityTypeController.wrongGGAccount
     }
 
   }
@@ -394,12 +395,12 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
             (individualSession.loginData.sautr, individualSession.retrievedJourneyData) match {
               case (Some(_), IndividualRetrievedJourneyData(Some(saStatus))) =>
                 saStatus.status match {
-                  case SAStatus.ReturnFound        => routes.SAController.saIncomeStatement()
-                  case SAStatus.NoticeToFileIssued => routes.CheckYourAnswersController.checkYourAnswers()
+                  case SAStatus.ReturnFound        => routes.SAController.saIncomeStatement
+                  case SAStatus.NoticeToFileIssued => routes.CheckYourAnswersController.checkYourAnswers
                   case SAStatus.NoReturnFound      =>
                     if (enableAuditing.enabled)
                       auditService.sendEvent(TaxCheckExit.SANoNoticeToFileOrTaxReturn(session, r.language))
-                    routes.SAController.noReturnFound()
+                    routes.SAController.noReturnFound
                 }
 
               case (Some(_), IndividualRetrievedJourneyData(None)) =>
@@ -407,10 +408,10 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
 
               case (None, _) =>
                 if (enableAuditing.enabled) auditService.sendEvent(TaxCheckExit.SAUTRNotFound(session, r.language))
-                routes.SAController.sautrNotFound()
+                routes.SAController.sautrNotFound
             }
           } else {
-            routes.CheckYourAnswersController.checkYourAnswers()
+            routes.CheckYourAnswersController.checkYourAnswers
           }
       }
     }
@@ -418,11 +419,11 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
   private def companyRegistrationNumberRoute(session: HECSession) =
     session.mapAsCompany { companySession =>
       if (companySession.crnBlocked) {
-        routes.CompanyDetailsController.tooManyCtutrAttempts()
+        routes.CompanyDetailsController.tooManyCtutrAttempts
       } else {
         companySession.retrievedJourneyData.companyName.fold(
           sys.error("company name not found")
-        )(_ => routes.CompanyDetailsController.confirmCompanyDetails())
+        )(_ => routes.CompanyDetailsController.confirmCompanyDetails)
       }
     }
 
@@ -433,28 +434,28 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
           (companySession.loginData.ctutr, companySession.retrievedJourneyData) match {
             // enrolment and DES CTUTR present but don't match
             case (Some(ctutr), CompanyRetrievedJourneyData(_, Some(desCtutr), _)) if ctutr =!= desCtutr =>
-              routes.CompanyDetailsController.ctutrNotMatched()
+              routes.CompanyDetailsController.ctutrNotMatched
 
             // enrolment and DES CTUTRs are present and match, CT status found
             case (Some(_), CompanyRetrievedJourneyData(_, Some(_), Some(ctStatus)))                     =>
               ctStatus.latestAccountingPeriod.map(_.ctStatus) match {
-                case Some(_) => routes.CompanyDetailsController.chargeableForCorporationTax()
-                case None    => routes.CompanyDetailsController.recentlyStartedTrading()
+                case Some(_) => routes.CompanyDetailsController.chargeableForCorporationTax
+                case None    => routes.CompanyDetailsController.recentlyStartedTrading
               }
 
             // enrolment and DES CTUTRs are present and match, but CT status couldn't be fetched
             case (Some(_), CompanyRetrievedJourneyData(_, Some(_), None))                               =>
-              routes.CompanyDetailsController.cannotDoTaxCheck()
+              routes.CompanyDetailsController.cannotDoTaxCheck
 
             // DES CTUTR not fetched
             case (_, CompanyRetrievedJourneyData(_, None, _))                                           =>
-              routes.CompanyDetailsController.cannotDoTaxCheck()
+              routes.CompanyDetailsController.cannotDoTaxCheck
 
             //enrollment CTUTR is not present
             case (None, _)                                                                              =>
-              routes.CompanyDetailsController.enterCtutr()
+              routes.CompanyDetailsController.enterCtutr
           }
-        case Some(YesNoAnswer.No)  => routes.CRNController.companyRegistrationNumber()
+        case Some(YesNoAnswer.No)  => routes.CRNController.companyRegistrationNumber
         case None                  => sys.error("Confirm company details answer was not found")
       }
 
@@ -465,17 +466,17 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
   )(implicit enableAuditing: EnableAuditing, r: RequestWithSessionData[_], hc: HeaderCarrier) =
     session.mapAsCompany { companySession =>
       companySession.userAnswers.fold(_.chargeableForCT, _.chargeableForCT) map {
-        case YesNoAnswer.No  => routes.CheckYourAnswersController.checkYourAnswers()
+        case YesNoAnswer.No  => routes.CheckYourAnswersController.checkYourAnswers
         case YesNoAnswer.Yes =>
           companySession.retrievedJourneyData.ctStatus.flatMap(_.latestAccountingPeriod) match {
             case Some(accountingPeriod) =>
               accountingPeriod.ctStatus match {
-                case CTStatus.ReturnFound        => routes.CompanyDetailsController.ctIncomeStatement()
-                case CTStatus.NoticeToFileIssued => routes.CheckYourAnswersController.checkYourAnswers()
+                case CTStatus.ReturnFound        => routes.CompanyDetailsController.ctIncomeStatement
+                case CTStatus.NoticeToFileIssued => routes.CheckYourAnswersController.checkYourAnswers
                 case CTStatus.NoReturnFound      =>
                   if (enableAuditing.enabled)
                     auditService.sendEvent(TaxCheckExit.CTNoNoticeToFileOrTaxReturn(session, r.language))
-                  routes.CompanyDetailsController.cannotDoTaxCheck()
+                  routes.CompanyDetailsController.cannotDoTaxCheck
               }
             case None                   => sys.error("CT status info missing")
           }
@@ -489,11 +490,11 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
   )(implicit enableAuditing: EnableAuditing, r: RequestWithSessionData[_], hc: HeaderCarrier) =
     session.mapAsCompany { companySession =>
       companySession.userAnswers.fold(_.recentlyStartedTrading, _.recentlyStartedTrading) map {
-        case YesNoAnswer.Yes => routes.CheckYourAnswersController.checkYourAnswers()
+        case YesNoAnswer.Yes => routes.CheckYourAnswersController.checkYourAnswers
         case YesNoAnswer.No  =>
           if (enableAuditing.enabled)
             auditService.sendEvent(TaxCheckExit.CTNoAccountingPeriodNotRecentlyStartedTrading(session, r.language))
-          routes.CompanyDetailsController.cannotDoTaxCheck()
+          routes.CompanyDetailsController.cannotDoTaxCheck
       } getOrElse {
         sys.error("Answer missing for if company has recently started trading")
       }
@@ -502,18 +503,18 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
   private def enterCtutrRoute(session: HECSession) =
     session.mapAsCompany { companySession =>
       if (companySession.crnBlocked) {
-        routes.CompanyDetailsController.tooManyCtutrAttempts()
+        routes.CompanyDetailsController.tooManyCtutrAttempts
       } else {
         val ctutrOpt = companySession.userAnswers.fold(_.ctutr, _.ctutr)
         ctutrOpt map { _ =>
           companySession.retrievedJourneyData match {
             case CompanyRetrievedJourneyData(_, Some(_), Some(ctStatus)) =>
               ctStatus.latestAccountingPeriod.map(_.ctStatus) match {
-                case Some(_) => routes.CompanyDetailsController.chargeableForCorporationTax()
-                case None    => routes.CompanyDetailsController.recentlyStartedTrading()
+                case Some(_) => routes.CompanyDetailsController.chargeableForCorporationTax
+                case None    => routes.CompanyDetailsController.recentlyStartedTrading
               }
             case CompanyRetrievedJourneyData(_, Some(_), None)           =>
-              routes.CompanyDetailsController.cannotDoTaxCheck()
+              routes.CompanyDetailsController.cannotDoTaxCheck
             case _                                                       => sys.error("DES CTUTR missing in journey data")
           }
         } getOrElse {
@@ -526,8 +527,8 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
     val emailOpt = session.fold(_.loginData.emailAddress, _.loginData.emailAddress)
     emailOpt match {
       case Some(email) if EmailAddress.isValid(email.value) =>
-        routes.ConfirmEmailAddressController.confirmEmailAddress()
-      case _                                                => routes.EnterEmailAddressController.enterEmailAddress()
+        routes.ConfirmEmailAddressController.confirmEmailAddress
+      case _                                                => routes.EnterEmailAddressController.enterEmailAddress
     }
   }
 
@@ -567,7 +568,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
 
   def verifyEmailPasscodeRoute(session: HECSession): Call =
     session.userEmailAnswers.flatMap(_.passcodeVerificationResult) match {
-      case Some(PasscodeVerificationResult.Match)           => routes.EmailAddressConfirmedController.emailAddressConfirmed()
+      case Some(PasscodeVerificationResult.Match)           => routes.EmailAddressConfirmedController.emailAddressConfirmed
       case Some(PasscodeVerificationResult.Expired)         =>
         routes.VerificationPasscodeExpiredController.verificationPasscodeExpired
       case Some(PasscodeVerificationResult.TooManyAttempts) =>
@@ -585,18 +586,18 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
   def resendEmailPreviousRoute(session: HECSession): Call =
     (session.userEmailAnswers.flatMap(_.passcodeVerificationResult), session.hasResentEmailConfirmation) match {
       case (Some(PasscodeVerificationResult.Expired), _)         =>
-        routes.VerificationPasscodeExpiredController.verificationPasscodeExpired()
+        routes.VerificationPasscodeExpiredController.verificationPasscodeExpired
       case (Some(PasscodeVerificationResult.TooManyAttempts), _) =>
-        routes.TooManyPasscodeVerificationController.tooManyPasscodeVerification()
-      case (_, true)                                             => routes.VerifyResentEmailPasscodeController.verifyResentEmailPasscode()
-      case (_, false)                                            => routes.VerifyEmailPasscodeController.verifyEmailPasscode()
+        routes.TooManyPasscodeVerificationController.tooManyPasscodeVerification
+      case (_, true)                                             => routes.VerifyResentEmailPasscodeController.verifyResentEmailPasscode
+      case (_, false)                                            => routes.VerifyEmailPasscodeController.verifyEmailPasscode
     }
 
   def confirmEnterEmailAddressPreviousRoute(session: HECSession): Call =
     session.ensureEmailHasBeenRequested { emailRequested =>
       session.userEmailAnswers.flatMap(_.passcodeVerificationResult) match {
         case Some(PasscodeVerificationResult.TooManyAttempts) =>
-          routes.TooManyPasscodeVerificationController.tooManyPasscodeVerification()
+          routes.TooManyPasscodeVerificationController.tooManyPasscodeVerification
         case _                                                =>
           Call("GET", emailRequested.originUrl)
       }

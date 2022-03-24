@@ -55,7 +55,7 @@ class CRNController @Inject() (
   val companyRegistrationNumber: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
     request.sessionData.mapAsCompany { implicit companySession =>
       val crn  = companySession.userAnswers.fold(_.crn, _.crn.some)
-      val back = journeyService.previous(routes.CRNController.companyRegistrationNumber())
+      val back = journeyService.previous(routes.CRNController.companyRegistrationNumber)
       val form = crn.fold(crnForm())(crnForm().fill)
       Ok(crnPage(form, back))
     }
@@ -68,13 +68,13 @@ class CRNController @Inject() (
           Ok(
             crnPage(
               form,
-              journeyService.previous(routes.CRNController.companyRegistrationNumber())
+              journeyService.previous(routes.CRNController.companyRegistrationNumber)
             )
           )
 
         def updateAndNext(updatedSession: HECSession): EitherT[Future, Error, Either[Form[CRN], Call]] =
           journeyService
-            .updateAndNext(routes.CRNController.companyRegistrationNumber(), updatedSession)
+            .updateAndNext(routes.CRNController.companyRegistrationNumber, updatedSession)
             .map(Right[Form[CRN], Call])
 
         def updateAnswers(crn: CRN) =

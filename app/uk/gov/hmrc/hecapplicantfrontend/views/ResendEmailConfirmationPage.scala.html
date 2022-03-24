@@ -30,7 +30,7 @@
 @layout(pageTitle = Some(title), backLocation = Some(back)) {
     <h1 class ="govuk-heading-xl">@title</h1>
     <p class="govuk-body">@Html(messages(s"$key.p1", userSelectedEmail.value))</p>
-    @formWithCSRF(action = routes.ResendEmailConfirmationController.resendEmailSubmit()) {
+    @formWithCSRF(action = routes.ResendEmailConfirmationController.resendEmailSubmit) {
         @govukButton(Button(content = Text(messages("button.resend"))))
     }
 }

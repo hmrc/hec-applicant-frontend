@@ -109,18 +109,18 @@ class TooManyPasscodeVerificationControllerSpec
               val htmlBody = doc.select(".govuk-body").html()
 
               val firstUrl =
-                if (emailAddress.isDefined) routes.ConfirmEmailAddressController.confirmEmailAddress().url
-                else routes.EnterEmailAddressController.enterEmailAddress().url
+                if (emailAddress.isDefined) routes.ConfirmEmailAddressController.confirmEmailAddress.url
+                else routes.EnterEmailAddressController.enterEmailAddress.url
 
               htmlBody should include regex messageFromMessageKey(
                 "verifyPasscodeTooManyAttempts.p2",
                 firstUrl,
-                routes.ResendEmailConfirmationController.resendEmail().url
+                routes.ResendEmailConfirmationController.resendEmail.url
               )
 
               htmlBody should include regex messageFromMessageKey(
                 "verifyPasscodeTooManyAttempts.p3",
-                routes.StartController.start().url
+                routes.StartController.start.url
               )
 
             }

@@ -82,7 +82,7 @@ class SAControllerSpec
         inSequence {
           mockAuthWithNoRetrievals()
           mockGetSession(session)
-          mockJourneyServiceGetPrevious(routes.SAController.sautrNotFound(), session)(mockPreviousCall)
+          mockJourneyServiceGetPrevious(routes.SAController.sautrNotFound, session)(mockPreviousCall)
         }
 
         checkPageIsDisplayed(
@@ -91,7 +91,7 @@ class SAControllerSpec
           doc => {
             doc.select("#back").attr("href") shouldBe mockPreviousCall.url
 
-            testLink(doc, routes.TaxSituationController.taxSituation().url)
+            testLink(doc, routes.TaxSituationController.taxSituation.url)
             testLink(doc, appConfig.registerForSaUrl)
             testLink(doc, appConfig.contactHmrcSa)
           }
@@ -114,7 +114,7 @@ class SAControllerSpec
         inSequence {
           mockAuthWithNoRetrievals()
           mockGetSession(session)
-          mockJourneyServiceGetPrevious(routes.SAController.noReturnFound(), session)(mockPreviousCall)
+          mockJourneyServiceGetPrevious(routes.SAController.noReturnFound, session)(mockPreviousCall)
         }
 
         checkPageIsDisplayed(
@@ -142,7 +142,7 @@ class SAControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockJourneyServiceGetPrevious(routes.SAController.saIncomeStatement(), session)(mockPreviousCall)
+            mockJourneyServiceGetPrevious(routes.SAController.saIncomeStatement, session)(mockPreviousCall)
           }
 
           checkPageIsDisplayed(
@@ -160,7 +160,7 @@ class SAControllerSpec
 
               val form = doc.select("form")
               form
-                .attr("action") shouldBe routes.SAController.saIncomeStatementSubmit().url
+                .attr("action") shouldBe routes.SAController.saIncomeStatementSubmit.url
             }
           )
         }
@@ -208,7 +208,7 @@ class SAControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockJourneyServiceGetPrevious(routes.SAController.saIncomeStatement(), session)(mockPreviousCall)
+            mockJourneyServiceGetPrevious(routes.SAController.saIncomeStatement, session)(mockPreviousCall)
           }
 
           checkFormErrorIsDisplayed(
@@ -248,7 +248,7 @@ class SAControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockJourneyServiceUpdateAndNext(routes.SAController.saIncomeStatement(), session, updatedSession)(
+            mockJourneyServiceUpdateAndNext(routes.SAController.saIncomeStatement, session, updatedSession)(
               Left(Error(new Exception))
             )
           }
@@ -266,7 +266,7 @@ class SAControllerSpec
             inSequence {
               mockAuthWithNoRetrievals()
               mockGetSession(session)
-              mockJourneyServiceUpdateAndNext(routes.SAController.saIncomeStatement(), session, updatedSession)(
+              mockJourneyServiceUpdateAndNext(routes.SAController.saIncomeStatement, session, updatedSession)(
                 Right(mockNextCall)
               )
             }

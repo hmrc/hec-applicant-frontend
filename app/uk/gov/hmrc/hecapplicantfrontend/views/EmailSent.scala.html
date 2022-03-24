@@ -34,6 +34,6 @@ Request[_], messages: Messages)
     <h1 class ="govuk-heading-xl">@title</h1>
     <p class="govuk-inset-text">@Html(messages(s"$key.p1", taxCheck.taxCheckCode.value.grouped(3).mkString(" "), email.value ))</p>
     <p class="govuk-body">@Html(messages(s"$key.p2", messages(s"licenceType.midSentence.${LicenceTypeOption.licenceTypeOption(taxCheck.licenceType).messageKey}"), TimeUtils.govDisplayFormat(taxCheck.expiresAfter)))</p>
-    <p class="govuk-body">@Html(messages(s"$key.p3", routes.StartController.start().url))</p>
+    <p class="govuk-body">@Html(messages(s"$key.p3", routes.StartController.start.url))</p>
     @exitSurveyLink()
 }

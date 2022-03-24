@@ -112,7 +112,7 @@ class JourneyStarterControllerSpec extends ControllerSpec {
               )
             )
 
-            doc.select("form").attr("action") shouldBe routes.JourneyStarterController.journeyStarterSubmit().url
+            doc.select("form").attr("action") shouldBe routes.JourneyStarterController.journeyStarterSubmit.url
           }
         )
 
@@ -125,7 +125,7 @@ class JourneyStarterControllerSpec extends ControllerSpec {
       def performAction(data: (String, String)*): Future[Result] =
         controller.journeyStarterSubmit(FakeRequest().withFormUrlEncodedBody(data: _*))
 
-      val expectedRedirectUrl = s"${appConfig.selfBaseUrl}${nonTestOnlyRoutes.StartController.start().url}"
+      val expectedRedirectUrl = s"${appConfig.selfBaseUrl}${nonTestOnlyRoutes.StartController.start.url}"
 
       val loginDataNoExistingTaxChecks =
         LoginData(

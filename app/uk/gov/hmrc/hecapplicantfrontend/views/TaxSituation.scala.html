@@ -64,7 +64,7 @@ Request[_], messages: Messages, appConfig: AppConfig)
       @messages(s"$key.p1", taxPeriodStartDate, taxPeriodEndDate)
     </p>
 
-    @formWithCSRF(action = routes.TaxSituationController.taxSituationSubmit()) {
+    @formWithCSRF(action = routes.TaxSituationController.taxSituationSubmit) {
         @govukRadios(
             Radios(
                 fieldset = Some(Fieldset(

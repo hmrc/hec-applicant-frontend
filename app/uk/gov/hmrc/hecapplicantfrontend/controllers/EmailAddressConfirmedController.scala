@@ -46,7 +46,7 @@ class EmailAddressConfirmedController @Inject() (
   val emailAddressConfirmed: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
     request.sessionData.ensureUserSelectedEmailPresent { userSelectedEmail =>
       request.sessionData.verifyPasscodeVerificationResultAndPasscodeRequestResult {
-        val previous = journeyService.previous(routes.EmailAddressConfirmedController.emailAddressConfirmed())
+        val previous = journeyService.previous(routes.EmailAddressConfirmedController.emailAddressConfirmed)
         Ok(emailAddressConfirmedPage(userSelectedEmail.emailAddress, previous))
       }
     }
@@ -68,7 +68,7 @@ class EmailAddressConfirmedController @Inject() (
                 .fold(_.copy(userEmailAnswers = updatedEmailAnswers), _.copy(userEmailAnswers = updatedEmailAnswers))
             next               <-
               journeyService
-                .updateAndNext(routes.EmailAddressConfirmedController.emailAddressConfirmed(), updatedSession)
+                .updateAndNext(routes.EmailAddressConfirmedController.emailAddressConfirmed, updatedSession)
           } yield next
 
           result.fold(

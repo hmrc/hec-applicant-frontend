@@ -81,7 +81,7 @@ class ConfirmIndividualDetailsControllerSpecCYSpec
             mockAuthWithNoRetrievals()
             mockGetSession(session)
             mockJourneyServiceGetPrevious(
-              routes.ConfirmIndividualDetailsController.confirmIndividualDetails(),
+              routes.ConfirmIndividualDetailsController.confirmIndividualDetails,
               session
             )(mockPreviousCall)
           }
@@ -96,11 +96,11 @@ class ConfirmIndividualDetailsControllerSpecCYSpec
               rowValues.get(2).text shouldBe "3 Rhagfyr 2000"
 
               val link = doc.select(".govuk-body > .govuk-link")
-              link.attr("href") shouldBe routes.ConfirmIndividualDetailsController.confirmIndividualDetailsExit().url
+              link.attr("href") shouldBe routes.ConfirmIndividualDetailsController.confirmIndividualDetailsExit.url
 
               val form = doc.select("form")
               form
-                .attr("action") shouldBe routes.ConfirmIndividualDetailsController.confirmIndividualDetailsSubmit().url
+                .attr("action") shouldBe routes.ConfirmIndividualDetailsController.confirmIndividualDetailsSubmit.url
 
               doc.select("#back").attr("href")             shouldBe mockPreviousCall.url
               doc.select(".hmrc-language-select__list").text should include regex "English"

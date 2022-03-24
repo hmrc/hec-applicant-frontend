@@ -44,7 +44,7 @@ class ConfirmIndividualDetailsController @Inject() (
 
   val confirmIndividualDetails: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     request.sessionData.mapAsIndividual { i =>
-      val back = journeyService.previous(routes.ConfirmIndividualDetailsController.confirmIndividualDetails())
+      val back = journeyService.previous(routes.ConfirmIndividualDetailsController.confirmIndividualDetails)
       Ok(confirmIndividualDetailsPage(back, i.loginData))
     }
   }
@@ -54,7 +54,7 @@ class ConfirmIndividualDetailsController @Inject() (
       request.sessionData.mapAsIndividual { individualSession =>
         journeyService
           .updateAndNext(
-            routes.ConfirmIndividualDetailsController.confirmIndividualDetails(),
+            routes.ConfirmIndividualDetailsController.confirmIndividualDetails,
             individualSession.copy(hasConfirmedDetails = true)
           )
           .fold(
@@ -67,7 +67,7 @@ class ConfirmIndividualDetailsController @Inject() (
   val confirmIndividualDetailsExit: Action[AnyContent] =
     authAction.andThen(sessionDataAction).async { implicit request =>
       request.sessionData.mapAsIndividual { _ =>
-        val back = journeyService.previous(routes.ConfirmIndividualDetailsController.confirmIndividualDetailsExit())
+        val back = journeyService.previous(routes.ConfirmIndividualDetailsController.confirmIndividualDetailsExit)
         Ok(confirmIndividualDetailsExitPage(back))
       }
     }

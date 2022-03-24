@@ -53,7 +53,7 @@ class AppConfig @Inject() (config: Configuration, contactFrontendConfig: Contact
 
   lazy val signInUrl: String = {
     val url: String = config.get[String]("auth.sign-in.url")
-    s"$url?continue=${(s"$selfBaseUrl${routes.StartController.start().url}").urlEncode}&origin=$ggOrigin"
+    s"$url?continue=${(s"$selfBaseUrl${routes.StartController.start.url}").urlEncode}&origin=$ggOrigin"
   }
 
   private val signOutUrlBase: String = config.get[String]("auth.sign-out.url")
@@ -62,7 +62,7 @@ class AppConfig @Inject() (config: Configuration, contactFrontendConfig: Contact
     continueUrl.fold(signOutUrlBase)(continue => s"$signOutUrlBase?continue=${continue.urlEncode}")
 
   lazy val signOutAndSignBackInUrl: String =
-    signOutUrl(continueUrl = Some(s"$selfBaseUrl${routes.StartController.start().url}"))
+    signOutUrl(continueUrl = Some(s"$selfBaseUrl${routes.StartController.start.url}"))
 
   private val registerForNewGGAccountUrl: String = config.get[String]("auth.register-new-account.url")
 
@@ -71,7 +71,7 @@ class AppConfig @Inject() (config: Configuration, contactFrontendConfig: Contact
       case EntityType.Individual => "Individual"
       case EntityType.Company    => "Organisation"
     }
-    s"$registerForNewGGAccountUrl?continueUrl=${routes.StartController.start().url.urlEncode}&accountType=$accountType&origin=$ggOrigin"
+    s"$registerForNewGGAccountUrl?continueUrl=${routes.StartController.start.url.urlEncode}&accountType=$accountType&origin=$ggOrigin"
   }
 
   val authTimeoutSeconds: Int = config.get[FiniteDuration]("auth.sign-out.inactivity-timeout").toSeconds.toInt
@@ -88,8 +88,8 @@ class AppConfig @Inject() (config: Configuration, contactFrontendConfig: Contact
     val (ivSuccessUrl: String, ivFailureUrl: String) = {
       val useRelativeUrls                          = platformHost.isDefined
       val (successRelativeUrl, failureRelativeUrl) =
-        routes.StartController.start().url ->
-          routes.IvFailureController.ivFailure(UUID.randomUUID()).url.takeWhile(_ =!= '?')
+        routes.StartController.start.url ->
+          routes.IvFailureController.ivFailure(UUID.randomUUID).url.takeWhile(_ =!= '?')
 
       if (useRelativeUrls)
         successRelativeUrl                 -> failureRelativeUrl

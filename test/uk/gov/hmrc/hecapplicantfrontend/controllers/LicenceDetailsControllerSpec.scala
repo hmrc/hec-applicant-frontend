@@ -76,7 +76,7 @@ class LicenceDetailsControllerSpec
         inSequence {
           mockAuthWithNoRetrievals()
           mockGetSession(session)
-          mockJourneyServiceGetPrevious(routes.LicenceDetailsController.licenceType(), session)(mockPreviousCall)
+          mockJourneyServiceGetPrevious(routes.LicenceDetailsController.licenceType, session)(mockPreviousCall)
         }
         checkPageIsDisplayed(
           performAction(),
@@ -89,13 +89,13 @@ class LicenceDetailsControllerSpec
 
             testRadioButtonOptions(doc, radioTextList)
 
-            doc.select(".govuk-body > .govuk-link").attr("href") shouldBe routes.LicenceDetailsController
-              .licenceTypeExit()
-              .url
+            doc
+              .select(".govuk-body > .govuk-link")
+              .attr("href") shouldBe routes.LicenceDetailsController.licenceTypeExit.url
 
             val form = doc.select("form")
             form
-              .attr("action") shouldBe routes.LicenceDetailsController.licenceTypeSubmit().url
+              .attr("action") shouldBe routes.LicenceDetailsController.licenceTypeSubmit.url
           }
         )
       }
@@ -105,7 +105,7 @@ class LicenceDetailsControllerSpec
         inSequence {
           mockAuthWithNoRetrievals()
           mockGetSession(session)
-          mockJourneyServiceGetPrevious(routes.LicenceDetailsController.licenceType(), session)(mockPreviousCall)
+          mockJourneyServiceGetPrevious(routes.LicenceDetailsController.licenceType, session)(mockPreviousCall)
         }
         checkPageIsDisplayed(
           performAction(),
@@ -118,7 +118,7 @@ class LicenceDetailsControllerSpec
 
             val form = doc.select("form")
             form
-              .attr("action") shouldBe routes.LicenceDetailsController.licenceTypeSubmit().url
+              .attr("action") shouldBe routes.LicenceDetailsController.licenceTypeSubmit.url
           }
         )
       }
@@ -127,7 +127,7 @@ class LicenceDetailsControllerSpec
         inSequence {
           mockAuthWithNoRetrievals()
           mockGetSession(session)
-          mockJourneyServiceGetPrevious(routes.LicenceDetailsController.licenceType(), session)(mockPreviousCall)
+          mockJourneyServiceGetPrevious(routes.LicenceDetailsController.licenceType, session)(mockPreviousCall)
         }
 
         checkPageIsDisplayed(
@@ -235,7 +235,7 @@ class LicenceDetailsControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockJourneyServiceGetPrevious(routes.LicenceDetailsController.licenceType(), session)(mockPreviousCall)
+            mockJourneyServiceGetPrevious(routes.LicenceDetailsController.licenceType, session)(mockPreviousCall)
           }
 
           checkFormErrorIsDisplayed(
@@ -277,7 +277,7 @@ class LicenceDetailsControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockJourneyServiceUpdateAndNext(routes.LicenceDetailsController.licenceType(), session, updatedSession)(
+            mockJourneyServiceUpdateAndNext(routes.LicenceDetailsController.licenceType, session, updatedSession)(
               Left(Error(new Exception))
             )
           }
@@ -299,7 +299,7 @@ class LicenceDetailsControllerSpec
             mockAuthWithNoRetrievals()
             mockGetSession(session)
             mockNow.foreach(_())
-            mockJourneyServiceUpdateAndNext(routes.LicenceDetailsController.licenceType(), session, updatedSession)(
+            mockJourneyServiceUpdateAndNext(routes.LicenceDetailsController.licenceType, session, updatedSession)(
               Right(mockNextCall)
             )
           }
@@ -479,7 +479,7 @@ class LicenceDetailsControllerSpec
         inSequence {
           mockAuthWithNoRetrievals()
           mockGetSession(session)
-          mockJourneyServiceGetPrevious(routes.LicenceDetailsController.licenceTypeExit(), session)(mockPreviousCall)
+          mockJourneyServiceGetPrevious(routes.LicenceDetailsController.licenceTypeExit, session)(mockPreviousCall)
         }
 
         checkPageIsDisplayed(
@@ -504,7 +504,7 @@ class LicenceDetailsControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockJourneyServiceGetPrevious(routes.LicenceDetailsController.licenceTimeTrading(), session)(
+            mockJourneyServiceGetPrevious(routes.LicenceDetailsController.licenceTimeTrading, session)(
               mockPreviousCall
             )
           }
@@ -523,7 +523,7 @@ class LicenceDetailsControllerSpec
 
               val form = doc.select("form")
               form
-                .attr("action") shouldBe routes.LicenceDetailsController.licenceTimeTradingSubmit().url
+                .attr("action") shouldBe routes.LicenceDetailsController.licenceTimeTradingSubmit.url
             }
           )
         }
@@ -570,7 +570,7 @@ class LicenceDetailsControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockJourneyServiceGetPrevious(routes.LicenceDetailsController.licenceTimeTrading(), session)(
+            mockJourneyServiceGetPrevious(routes.LicenceDetailsController.licenceTimeTrading, session)(
               mockPreviousCall
             )
           }
@@ -614,7 +614,7 @@ class LicenceDetailsControllerSpec
             mockAuthWithNoRetrievals()
             mockGetSession(session)
             mockJourneyServiceUpdateAndNext(
-              routes.LicenceDetailsController.licenceTimeTrading(),
+              routes.LicenceDetailsController.licenceTimeTrading,
               session,
               updatedSession
             )(
@@ -636,7 +636,7 @@ class LicenceDetailsControllerSpec
               mockAuthWithNoRetrievals()
               mockGetSession(session)
               mockJourneyServiceUpdateAndNext(
-                routes.LicenceDetailsController.licenceTimeTrading(),
+                routes.LicenceDetailsController.licenceTimeTrading,
                 session,
                 updatedSession
               )(
@@ -722,7 +722,7 @@ class LicenceDetailsControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockJourneyServiceGetPrevious(routes.LicenceDetailsController.recentLicenceLength(), session)(
+            mockJourneyServiceGetPrevious(routes.LicenceDetailsController.recentLicenceLength, session)(
               mockPreviousCall
             )
           }
@@ -747,7 +747,7 @@ class LicenceDetailsControllerSpec
 
               val form = doc.select("form")
               form
-                .attr("action") shouldBe routes.LicenceDetailsController.recentLicenceLengthSubmit().url
+                .attr("action") shouldBe routes.LicenceDetailsController.recentLicenceLengthSubmit.url
             }
           )
         }
@@ -832,7 +832,7 @@ class LicenceDetailsControllerSpec
             mockAuthWithNoRetrievals()
             mockGetSession(session)
             mockJourneyServiceUpdateAndNext(
-              routes.LicenceDetailsController.recentLicenceLength(),
+              routes.LicenceDetailsController.recentLicenceLength,
               session,
               updatedSession
             )(
@@ -861,7 +861,7 @@ class LicenceDetailsControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(updatedSession)
-            mockJourneyServiceGetPrevious(routes.LicenceDetailsController.recentLicenceLength(), updatedSession)(
+            mockJourneyServiceGetPrevious(routes.LicenceDetailsController.recentLicenceLength, updatedSession)(
               mockPreviousCall
             )
           }
@@ -896,7 +896,7 @@ class LicenceDetailsControllerSpec
               mockAuthWithNoRetrievals()
               mockGetSession(session)
               mockJourneyServiceUpdateAndNext(
-                routes.LicenceDetailsController.recentLicenceLength(),
+                routes.LicenceDetailsController.recentLicenceLength,
                 session,
                 updatedSession
               )(
@@ -987,8 +987,8 @@ class LicenceDetailsControllerSpec
             doc.select(".govuk-body").get(0).text shouldBe messageFromMessageKey("maxTaxChecksLimitExceeded.p1")
 
             val links = doc.select(".govuk-body > .govuk-link")
-            links.get(0).attr("href") shouldBe routes.StartController.start().url
-            links.get(1).attr("href") shouldBe routes.LicenceDetailsController.licenceType().url
+            links.get(0).attr("href") shouldBe routes.StartController.start.url
+            links.get(1).attr("href") shouldBe routes.LicenceDetailsController.licenceType.url
           }
         )
       }

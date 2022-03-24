@@ -124,7 +124,7 @@ class ConfirmEmailAddressControllerSpec
             mockAuthWithNoRetrievals()
             mockGetSession(session)
             mockStoreSession(updatedSession)(Right(()))
-            mockJourneyServiceGetPrevious(routes.ConfirmEmailAddressController.confirmEmailAddress(), updatedSession)(
+            mockJourneyServiceGetPrevious(routes.ConfirmEmailAddressController.confirmEmailAddress, updatedSession)(
               mockPreviousCall
             )
           }
@@ -154,7 +154,7 @@ class ConfirmEmailAddressControllerSpec
 
               val form = doc.select("form")
               form
-                .attr("action") shouldBe routes.ConfirmEmailAddressController.confirmEmailAddressSubmit().url
+                .attr("action") shouldBe routes.ConfirmEmailAddressController.confirmEmailAddressSubmit.url
             }
           )
         }
@@ -195,7 +195,7 @@ class ConfirmEmailAddressControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockJourneyServiceGetPrevious(routes.ConfirmEmailAddressController.confirmEmailAddress(), session)(
+            mockJourneyServiceGetPrevious(routes.ConfirmEmailAddressController.confirmEmailAddress, session)(
               mockPreviousCall
             )
           }
@@ -303,7 +303,7 @@ class ConfirmEmailAddressControllerSpec
             mockGetSession(session)
             mockRequestPasscode(UserSelectedEmail(EmailType.GGEmail, ggEmailId))(Right(PasscodeSent))
             mockJourneyServiceUpdateAndNext(
-              routes.ConfirmEmailAddressController.confirmEmailAddress(),
+              routes.ConfirmEmailAddressController.confirmEmailAddress,
               session,
               updatedSession
             )(
@@ -338,7 +338,7 @@ class ConfirmEmailAddressControllerSpec
               Right(updatedUserEmailAnswers.passcodeRequestResult.getOrElse(PasscodeSent))
             )
             mockJourneyServiceUpdateAndNext(
-              routes.ConfirmEmailAddressController.confirmEmailAddress(),
+              routes.ConfirmEmailAddressController.confirmEmailAddress,
               session,
               updatedSession
             )(Right(mockNextCall))

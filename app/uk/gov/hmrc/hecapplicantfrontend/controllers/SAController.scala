@@ -51,7 +51,7 @@ class SAController @Inject() (
 
   val saIncomeStatement: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     request.sessionData.mapAsIndividual { individualSession =>
-      val back             = journeyService.previous(routes.SAController.saIncomeStatement())
+      val back             = journeyService.previous(routes.SAController.saIncomeStatement)
       val saIncomeDeclared = individualSession.userAnswers.fold(_.saIncomeDeclared, _.saIncomeDeclared)
       val form = {
         val emptyForm = SAController.saIncomeDeclarationForm(YesNoAnswer.values)
@@ -69,7 +69,7 @@ class SAController @Inject() (
 
         journeyService
           .updateAndNext(
-            routes.SAController.saIncomeStatement(),
+            routes.SAController.saIncomeStatement,
             individualSession.copy(userAnswers = updatedAnswers)
           )
           .fold(
@@ -86,7 +86,7 @@ class SAController @Inject() (
             Ok(
               saIncomeStatementPage(
                 formWithErrors,
-                journeyService.previous(routes.SAController.saIncomeStatement()),
+                journeyService.previous(routes.SAController.saIncomeStatement),
                 SAController.incomeDeclaredOptions,
                 getTaxYear(timeProvider.currentDate)
               )
@@ -97,12 +97,12 @@ class SAController @Inject() (
   }
 
   val noReturnFound: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
-    val back = journeyService.previous(routes.SAController.noReturnFound())
+    val back = journeyService.previous(routes.SAController.noReturnFound)
     Ok(noReturnFoundPage(back))
   }
 
   val sautrNotFound: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
-    val back = journeyService.previous(routes.SAController.sautrNotFound())
+    val back = journeyService.previous(routes.SAController.sautrNotFound)
     Ok(sautrNotFoundPage(back))
   }
 

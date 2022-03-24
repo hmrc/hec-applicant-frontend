@@ -53,8 +53,8 @@
 
       <ul class="govuk-list govuk-list--bullet govuk-!-margin-bottom-7">
         <li class="js-visible">@Html(messages(s"$key.list1"))</li>
-        <li>@Html(messages(s"$key.list2", routes.TaxCheckCompleteController.emailTaxCheckCode().url))</li>
-        <li>@Html(messages(s"$key.list3", routes.StartController.start().url))</li>
+        <li>@Html(messages(s"$key.list2", routes.TaxCheckCompleteController.emailTaxCheckCode.url))</li>
+        <li>@Html(messages(s"$key.list3", routes.StartController.start.url))</li>
       </ul>
 
       @exitSurveyLink()

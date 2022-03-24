@@ -77,7 +77,7 @@ class TaxChecksListController @Inject() (
   val unexpiredTaxChecksSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     journeyService
       .updateAndNext(
-        routes.TaxChecksListController.unexpiredTaxChecks(),
+        routes.TaxChecksListController.unexpiredTaxChecks,
         request.sessionData.fold(_.copy(emailRequestedForTaxCheck = None), _.copy(emailRequestedForTaxCheck = None))
       )
       .fold(
@@ -99,7 +99,7 @@ class TaxChecksListController @Inject() (
               )
             case Some(taxCheck) =>
               val emailRequestedForTaxCheck = EmailRequestedForTaxCheck(
-                routes.TaxChecksListController.unexpiredTaxChecks().url,
+                routes.TaxChecksListController.unexpiredTaxChecks.url,
                 taxCheck
               )
               val updatedSession            = request.sessionData.fold(
@@ -109,7 +109,7 @@ class TaxChecksListController @Inject() (
 
               journeyService
                 .updateAndNext(
-                  routes.TaxChecksListController.unexpiredTaxChecks(),
+                  routes.TaxChecksListController.unexpiredTaxChecks,
                   updatedSession
                 )
                 .fold(

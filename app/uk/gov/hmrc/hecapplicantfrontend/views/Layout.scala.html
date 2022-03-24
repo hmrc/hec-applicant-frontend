@@ -54,7 +54,7 @@
         @hmrcTimeoutDialogHelper(
             title = Some(messages("hmrcTimeoutDialog.title")),
             signOutUrl = appConfig.signOutUrl(continueUrl = None),
-            timeoutUrl = Some(routes.SignOutController.signOutFromTimeout().url),
+            timeoutUrl = Some(routes.SignOutController.signOutFromTimeout.url),
             countdown = Some(appConfig.authTimeoutCountdownSeconds),
             timeout = Some(appConfig.authTimeoutSeconds)
         )
@@ -81,7 +81,7 @@
     @{ if(appConfig.welshLanguageSupportEnabled) hmrcLanguageSelectHelper() }
     @{
         backLocation map { back =>
-            val url = if (back.url === routes.StartController.start().url) appConfig.applicantServiceGuidanceUrl else back.url
+            val url = if (back.url === routes.StartController.start.url) appConfig.applicantServiceGuidanceUrl else back.url
             govukBackLink(BackLink(href = url, attributes = Map("id" -> "back"), content = Text(messages("button.back"))))
         }
     }

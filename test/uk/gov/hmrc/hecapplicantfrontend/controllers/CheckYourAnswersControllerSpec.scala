@@ -87,32 +87,32 @@ class CheckYourAnswersControllerSpec
         CheckYourAnswersRow(
           messageFromMessageKey("licenceType.title"),
           messageFromMessageKey("licenceType.scrapMetalCollector"),
-          routes.LicenceDetailsController.licenceType().url
+          routes.LicenceDetailsController.licenceType.url
         ),
         CheckYourAnswersRow(
           messageFromMessageKey("licenceTimeTrading.title"),
           messageFromMessageKey("licenceTimeTrading.zeroToTwoYears"),
-          routes.LicenceDetailsController.licenceTimeTrading().url
+          routes.LicenceDetailsController.licenceTimeTrading.url
         ),
         CheckYourAnswersRow(
           messageFromMessageKey("licenceValidityPeriod.title"),
           messageFromMessageKey("licenceValidityPeriod.upToTwoYears"),
-          routes.LicenceDetailsController.recentLicenceLength().url
+          routes.LicenceDetailsController.recentLicenceLength.url
         ),
         CheckYourAnswersRow(
           messageFromMessageKey("entityType.title"),
           messageFromMessageKey("entityType.individual"),
-          routes.EntityTypeController.entityType().url
+          routes.EntityTypeController.entityType.url
         ),
         CheckYourAnswersRow(
           messageFromMessageKey("taxSituation.title", startDate, endDate),
           messageFromMessageKey("taxSituation.PA"),
-          routes.TaxSituationController.taxSituation().url
+          routes.TaxSituationController.taxSituation.url
         ),
         CheckYourAnswersRow(
           messageFromMessageKey("saIncomeDeclared.title"),
           messageFromMessageKey("saIncomeDeclared.yes"),
-          routes.SAController.saIncomeStatement().url
+          routes.SAController.saIncomeStatement.url
         )
       )
 
@@ -121,32 +121,32 @@ class CheckYourAnswersControllerSpec
           CheckYourAnswersRow(
             messageFromMessageKey("licenceType.title"),
             messageFromMessageKey("licenceType.scrapMetalCollector"),
-            routes.LicenceDetailsController.licenceType().url
+            routes.LicenceDetailsController.licenceType.url
           ),
           CheckYourAnswersRow(
             messageFromMessageKey("licenceTimeTrading.title"),
             messageFromMessageKey("licenceTimeTrading.zeroToTwoYears"),
-            routes.LicenceDetailsController.licenceTimeTrading().url
+            routes.LicenceDetailsController.licenceTimeTrading.url
           ),
           CheckYourAnswersRow(
             messageFromMessageKey("licenceValidityPeriod.title"),
             messageFromMessageKey("licenceValidityPeriod.upToTwoYears"),
-            routes.LicenceDetailsController.recentLicenceLength().url
+            routes.LicenceDetailsController.recentLicenceLength.url
           ),
           CheckYourAnswersRow(
             messageFromMessageKey("entityType.title"),
             messageFromMessageKey("entityType.company"),
-            routes.EntityTypeController.entityType().url
+            routes.EntityTypeController.entityType.url
           ),
           CheckYourAnswersRow(
             messageFromMessageKey("crn.title"),
             "1123456",
-            routes.CRNController.companyRegistrationNumber().url
+            routes.CRNController.companyRegistrationNumber.url
           ),
           CheckYourAnswersRow(
             messageFromMessageKey("enterCtutr.title"),
             "1111111111",
-            routes.CompanyDetailsController.enterCtutr().url
+            routes.CompanyDetailsController.enterCtutr.url
           ),
           CheckYourAnswersRow(
             messageFromMessageKey(
@@ -154,17 +154,17 @@ class CheckYourAnswersControllerSpec
               TimeUtils.govDisplayFormat(LocalDate.of(2021, 10, 9))
             ),
             messageFromMessageKey("chargeableForCT.yes"),
-            routes.CompanyDetailsController.chargeableForCorporationTax().url
+            routes.CompanyDetailsController.chargeableForCorporationTax.url
           ),
           CheckYourAnswersRow(
             messageFromMessageKey("ctIncomeDeclared.title"),
             messageFromMessageKey("ctIncomeDeclared.yes"),
-            routes.CompanyDetailsController.ctIncomeStatement().url
+            routes.CompanyDetailsController.ctIncomeStatement.url
           ),
           CheckYourAnswersRow(
             messageFromMessageKey("recentlyStartedTrading.title"),
             messageFromMessageKey("recentlyStartedTrading.yes"),
-            routes.CompanyDetailsController.recentlyStartedTrading().url
+            routes.CompanyDetailsController.recentlyStartedTrading.url
           )
         )
 
@@ -197,14 +197,14 @@ class CheckYourAnswersControllerSpec
         ) = {
 
           val excludedList1 = List(
-            routes.CompanyDetailsController.enterCtutr().url,
-            routes.CompanyDetailsController.recentlyStartedTrading().url
+            routes.CompanyDetailsController.enterCtutr.url,
+            routes.CompanyDetailsController.recentlyStartedTrading.url
           )
 
           val excludedList2 = List(
-            routes.CompanyDetailsController.enterCtutr().url,
-            routes.CompanyDetailsController.chargeableForCorporationTax().url,
-            routes.CompanyDetailsController.ctIncomeStatement().url
+            routes.CompanyDetailsController.enterCtutr.url,
+            routes.CompanyDetailsController.chargeableForCorporationTax.url,
+            routes.CompanyDetailsController.ctIncomeStatement.url
           )
 
           val expectedRows = if (isIndividual) {
@@ -214,7 +214,7 @@ class CheckYourAnswersControllerSpec
             (isRecentlyStartedTrading, isCTUTRPresent) match {
               case (_, true)  =>
                 companyExpectedRows.filterNot(
-                  _.changeUrl === routes.CompanyDetailsController.recentlyStartedTrading().url
+                  _.changeUrl === routes.CompanyDetailsController.recentlyStartedTrading.url
                 )
               case (true, _)  => companyExpectedRows.filterNot(cyar => excludedList2.contains(cyar.changeUrl))
               case (false, _) => companyExpectedRows.filterNot(cyar => excludedList1.contains(cyar.changeUrl))
@@ -226,7 +226,7 @@ class CheckYourAnswersControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockJourneyServiceGetPrevious(routes.CheckYourAnswersController.checkYourAnswers(), session)(
+            mockJourneyServiceGetPrevious(routes.CheckYourAnswersController.checkYourAnswers, session)(
               mockPreviousCall
             )
           }
@@ -441,7 +441,7 @@ class CheckYourAnswersControllerSpec
             mockGetSession(session)
             mockSaveTaxCheck(session, completeAnswers, Language.English)(Right(hecTaxCheck))
             mockJourneyServiceUpdateAndNext(
-              routes.CheckYourAnswersController.checkYourAnswers(),
+              routes.CheckYourAnswersController.checkYourAnswers,
               session,
               updatedSession
             )(Left(Error("")))
@@ -462,7 +462,7 @@ class CheckYourAnswersControllerSpec
             mockGetSession(session)
             mockSaveTaxCheck(session, completeAnswers, Language.Welsh)(Right(hecTaxCheck))
             mockJourneyServiceUpdateAndNext(
-              routes.CheckYourAnswersController.checkYourAnswers(),
+              routes.CheckYourAnswersController.checkYourAnswers,
               session,
               updatedSession
             )(Right(mockNextCall))

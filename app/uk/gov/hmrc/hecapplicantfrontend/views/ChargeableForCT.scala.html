@@ -45,7 +45,7 @@
     )), title = Text(messages("generic.errorSummary"))))
   }
 
-  @formWithCSRF(action = routes.CompanyDetailsController.chargeableForCorporationTaxSubmit()) {
+  @formWithCSRF(action = routes.CompanyDetailsController.chargeableForCorporationTaxSubmit) {
     @govukRadios(Radios(
       fieldset = Some(Fieldset(
         legend = Some(Legend(

@@ -106,7 +106,7 @@ trait AuthAndSessionDataBehaviour { this: ControllerSpec with AuthSupport with S
         mockGetSession(Right(None))
       }
 
-      checkIsRedirect(performAction(), routes.StartController.start())
+      checkIsRedirect(performAction(), routes.StartController.start)
     }
 
   }

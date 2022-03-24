@@ -64,7 +64,7 @@
             content = Text(errorMessage)
         )), title = Text(messages("generic.errorSummary"))))
     }
-    @formWithCSRF(action = routes.JourneyStarterController.journeyStarterSubmit()) {
+    @formWithCSRF(action = routes.JourneyStarterController.journeyStarterSubmit) {
 
         @govukRadios(Radios(
             fieldset = Some(Fieldset(

@@ -48,7 +48,7 @@
       title = Text(messages("generic.errorSummary"))))
   }
 
-  @formWithCSRF(action = routes.LicenceDetailsController.licenceTimeTradingSubmit()) {
+  @formWithCSRF(action = routes.LicenceDetailsController.licenceTimeTradingSubmit) {
     @govukRadios(
       Radios(
         fieldset = Some(Fieldset(

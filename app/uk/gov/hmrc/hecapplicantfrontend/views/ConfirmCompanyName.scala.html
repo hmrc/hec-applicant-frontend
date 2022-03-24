@@ -43,7 +43,7 @@
   }
   <h1 class="govuk-heading-xl">@title</h1>
   <p class="govuk-body" id="company-name">@companyName</p>
-  @formWithCSRF(action = routes.CompanyDetailsController.confirmCompanyDetailsSubmit()) {
+  @formWithCSRF(action = routes.CompanyDetailsController.confirmCompanyDetailsSubmit) {
     @govukRadios(Radios(
       fieldset = Some(Fieldset(
         legend = Some(Legend(

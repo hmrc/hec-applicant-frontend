@@ -57,7 +57,7 @@ class TaxCheckCompleteController @Inject() (
     ensureCompletedTaxCheckAndLicenceType { case (completedTaxCheck, licenceType) =>
       val session                   = request.sessionData
       val emailRequestedForTaxCheck = EmailRequestedForTaxCheck(
-        routes.TaxCheckCompleteController.taxCheckComplete().url,
+        routes.TaxCheckCompleteController.taxCheckComplete.url,
         TaxCheckListItem(
           licenceType,
           completedTaxCheck.taxCheckCode,
@@ -71,7 +71,7 @@ class TaxCheckCompleteController @Inject() (
       )
       journeyService
         .updateAndNext(
-          routes.TaxCheckCompleteController.taxCheckComplete(),
+          routes.TaxCheckCompleteController.taxCheckComplete,
           updatedSession
         )
         .fold(

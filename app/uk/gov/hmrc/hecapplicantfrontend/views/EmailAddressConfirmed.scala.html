@@ -29,7 +29,7 @@
 @layout(pageTitle = Some(title), backLocation = Some(back)) {
   <h1 class ="govuk-heading-xl">@title</h1>
     <p class="govuk-body">@messages(s"$key.p1", userSelectedEmail.value)</p>
-    @formWithCSRF(action = routes.EmailAddressConfirmedController.emailAddressConfirmedSubmit()) {
+    @formWithCSRF(action = routes.EmailAddressConfirmedController.emailAddressConfirmedSubmit) {
         @govukButton(Button(content = Text(messages("button.sendEmail"))))
     }
 }

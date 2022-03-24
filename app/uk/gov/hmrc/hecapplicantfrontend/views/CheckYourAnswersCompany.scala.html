@@ -37,7 +37,7 @@
     ))
     <h2 class="govuk-heading-l">@{messages(s"$key.declaration.heading")}</h2>
     <p class="govuk-body">@{messages(s"$key.declaration.p1")}</p>
-    @formWithCSRF(action = routes.CheckYourAnswersController.checkYourAnswersSubmit()) {
+    @formWithCSRF(action = routes.CheckYourAnswersController.checkYourAnswersSubmit) {
         @govukButton(Button(content = Text(messages("button.confirm"))))
     }
 }

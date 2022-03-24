@@ -55,18 +55,18 @@ class IvFailureController @Inject() (
         _.doThrow("Could not check IV journey error status"),
         { ivErrorStatus =>
           val redirectTo = ivErrorStatus match {
-            case Incomplete           => routes.IvFailureController.technicalIssue()
-            case FailedMatching       => routes.IvFailureController.failedMatching()
-            case FailedIV             => routes.IvFailureController.failedIV()
-            case InsufficientEvidence => routes.IvFailureController.insufficientEvidence()
-            case LockedOut            => routes.IvFailureController.lockedOut()
-            case UserAborted          => routes.IvFailureController.userAborted()
-            case Timeout              => routes.IvFailureController.timedOut()
-            case TechnicalIssue       => routes.IvFailureController.technicalIssue()
-            case IvPreconditionFailed => routes.IvFailureController.preconditionFailed()
+            case Incomplete           => routes.IvFailureController.technicalIssue
+            case FailedMatching       => routes.IvFailureController.failedMatching
+            case FailedIV             => routes.IvFailureController.failedIV
+            case InsufficientEvidence => routes.IvFailureController.insufficientEvidence
+            case LockedOut            => routes.IvFailureController.lockedOut
+            case UserAborted          => routes.IvFailureController.userAborted
+            case Timeout              => routes.IvFailureController.timedOut
+            case TechnicalIssue       => routes.IvFailureController.technicalIssue
+            case IvPreconditionFailed => routes.IvFailureController.preconditionFailed
             case Unknown(value)       =>
               logger.warn(s"Received unknown error response status from IV: $value")
-              routes.IvFailureController.technicalIssue()
+              routes.IvFailureController.technicalIssue
           }
           Redirect(redirectTo)
         }
@@ -98,6 +98,6 @@ class IvFailureController @Inject() (
     authAction(implicit r ⇒ Ok(preconditionFailedPage()))
 
   val retry: Action[AnyContent] =
-    authAction(_ => Redirect(routes.StartController.start()))
+    authAction(_ => Redirect(routes.StartController.start))
 
 }

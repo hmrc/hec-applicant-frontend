@@ -761,7 +761,7 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
             mockGetSession(Right(None))
           }
 
-          checkIsRedirect(performAction(), routes.AgentsController.agentsNotSupported())
+          checkIsRedirect(performAction(), routes.AgentsController.agentsNotSupported)
         }
 
       }

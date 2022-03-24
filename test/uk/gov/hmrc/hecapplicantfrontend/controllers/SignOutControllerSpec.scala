@@ -36,7 +36,7 @@ class SignOutControllerSpec extends ControllerSpec {
           messageFromMessageKey("timedOut.title"),
           { doc =>
             val link = doc.select("a.govuk-button")
-            link.attr("href") shouldBe routes.StartController.start().url
+            link.attr("href") shouldBe routes.StartController.start.url
           }
         )
 

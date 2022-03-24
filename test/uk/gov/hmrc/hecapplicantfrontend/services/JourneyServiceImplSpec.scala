@@ -102,20 +102,21 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             val session = IndividualHECSession
               .newSession(individualLoginData)
               .copy(unexpiredTaxChecks = taxChecks, hasConfirmedDetails = true)
-            journeyService.firstPage(session) shouldBe routes.TaxChecksListController.unexpiredTaxChecks()
+            journeyService.firstPage(session) shouldBe routes.TaxChecksListController.unexpiredTaxChecks
           }
 
           "an individual and hasConfirmedDetails = false" in {
             val session = IndividualHECSession
               .newSession(individualLoginData)
               .copy(unexpiredTaxChecks = taxChecks)
-            journeyService.firstPage(session) shouldBe routes.ConfirmIndividualDetailsController
-              .confirmIndividualDetails()
+            journeyService.firstPage(
+              session
+            ) shouldBe routes.ConfirmIndividualDetailsController.confirmIndividualDetails
           }
 
           "a company" in {
             val session = CompanyHECSession.newSession(companyLoginData).copy(unexpiredTaxChecks = taxChecks)
-            journeyService.firstPage(session) shouldBe routes.TaxChecksListController.unexpiredTaxChecks()
+            journeyService.firstPage(session) shouldBe routes.TaxChecksListController.unexpiredTaxChecks
           }
         }
       }
@@ -126,19 +127,19 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
 
           "an individual and hasConfirmedDetails = true" in {
             val session = IndividualHECSession.newSession(individualLoginData).copy(hasConfirmedDetails = true)
-            journeyService.firstPage(session) shouldBe routes.LicenceDetailsController
-              .licenceType()
+            journeyService.firstPage(session) shouldBe routes.LicenceDetailsController.licenceType
           }
 
           "an individual and hasConfirmedDetails = false" in {
             val session = IndividualHECSession.newSession(individualLoginData)
-            journeyService.firstPage(session) shouldBe routes.ConfirmIndividualDetailsController
-              .confirmIndividualDetails()
+            journeyService.firstPage(
+              session
+            ) shouldBe routes.ConfirmIndividualDetailsController.confirmIndividualDetails
           }
 
           "a company" in {
             val session = CompanyHECSession.newSession(companyLoginData)
-            journeyService.firstPage(session) shouldBe routes.LicenceDetailsController.licenceType()
+            journeyService.firstPage(session) shouldBe routes.LicenceDetailsController.licenceType
           }
 
         }
@@ -156,7 +157,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             requestWithSessionData(session)
 
           val result = journeyService.updateAndNext(
-            routes.ConfirmIndividualDetailsController.confirmIndividualDetailsSubmit(),
+            routes.ConfirmIndividualDetailsController.confirmIndividualDetailsSubmit,
             session
           )
 
@@ -172,7 +173,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
           mockStoreSession(updatedSession)(Left(Error(new Exception("Oh no!"))))
 
           val result = journeyService.updateAndNext(
-            routes.ConfirmIndividualDetailsController.confirmIndividualDetails(),
+            routes.ConfirmIndividualDetailsController.confirmIndividualDetails,
             updatedSession
           )
           await(result.value) shouldBe a[Left[_, _]]
@@ -189,10 +190,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
 
             val result = journeyService.updateAndNext(
-              routes.ConfirmIndividualDetailsController.confirmIndividualDetails(),
+              routes.ConfirmIndividualDetailsController.confirmIndividualDetails,
               session
             )
-            await(result.value) shouldBe Right(routes.LicenceDetailsController.licenceType())
+            await(result.value) shouldBe Right(routes.LicenceDetailsController.licenceType)
           }
 
           "there are preexisting tax check codes" in {
@@ -208,10 +209,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
 
             val result = journeyService.updateAndNext(
-              routes.ConfirmIndividualDetailsController.confirmIndividualDetails(),
+              routes.ConfirmIndividualDetailsController.confirmIndividualDetails,
               session
             )
-            await(result.value) shouldBe Right(routes.TaxChecksListController.unexpiredTaxChecks())
+            await(result.value) shouldBe Right(routes.TaxChecksListController.unexpiredTaxChecks)
           }
         }
 
@@ -221,7 +222,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
 
             val result = journeyService.updateAndNext(
-              routes.TaxChecksListController.unexpiredTaxChecks(),
+              routes.TaxChecksListController.unexpiredTaxChecks,
               session
             )
             await(result.value) shouldBe Right(expectedNext)
@@ -230,7 +231,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
           "no email has been requested" in {
             test(
               IndividualHECSession.newSession(individualLoginData),
-              routes.LicenceDetailsController.licenceType()
+              routes.LicenceDetailsController.licenceType
             )
           }
 
@@ -241,7 +242,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                 .copy(
                   emailRequestedForTaxCheck = Fixtures.emailRequestedForTaxCheck(originUrl = "/url").some
                 ),
-              routes.LicenceDetailsController.licenceType()
+              routes.LicenceDetailsController.licenceType
             )
           }
 
@@ -254,7 +255,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                   .copy(
                     emailRequestedForTaxCheck = Fixtures.emailRequestedForTaxCheck(originUrl = "/url").some
                   ),
-                routes.LicenceDetailsController.licenceType()
+                routes.LicenceDetailsController.licenceType
               )
             }
 
@@ -264,10 +265,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                   .newSession(individualLoginData.copy(emailAddress = None))
                   .copy(
                     emailRequestedForTaxCheck = Fixtures
-                      .emailRequestedForTaxCheck(originUrl = routes.TaxChecksListController.unexpiredTaxChecks().url)
+                      .emailRequestedForTaxCheck(originUrl = routes.TaxChecksListController.unexpiredTaxChecks.url)
                       .some
                   ),
-                routes.EnterEmailAddressController.enterEmailAddress()
+                routes.EnterEmailAddressController.enterEmailAddress
               )
             }
 
@@ -297,10 +298,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             mockStoreSession(updatedSession)(Right(()))
 
             val result = journeyService.updateAndNext(
-              routes.LicenceDetailsController.licenceType(),
+              routes.LicenceDetailsController.licenceType,
               updatedSession
             )
-            await(result.value) shouldBe Right(routes.LicenceDetailsController.licenceTimeTrading())
+            await(result.value) shouldBe Right(routes.LicenceDetailsController.licenceTimeTrading)
           }
 
           "the user is a Company" in {
@@ -318,10 +319,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             mockStoreSession(updatedSession)(Right(()))
 
             val result = journeyService.updateAndNext(
-              routes.LicenceDetailsController.licenceType(),
+              routes.LicenceDetailsController.licenceType,
               updatedSession
             )
-            await(result.value) shouldBe Right(routes.LicenceDetailsController.licenceTimeTrading())
+            await(result.value) shouldBe Right(routes.LicenceDetailsController.licenceTimeTrading)
           }
 
           "max tax check limit has already been exceeded" in {
@@ -351,10 +352,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             }
 
             val result = journeyService.updateAndNext(
-              routes.LicenceDetailsController.licenceType(),
+              routes.LicenceDetailsController.licenceType,
               updatedSession
             )
-            await(result.value) shouldBe Right(routes.LicenceDetailsController.maxTaxChecksExceeded())
+            await(result.value) shouldBe Right(routes.LicenceDetailsController.maxTaxChecksExceeded)
           }
 
         }
@@ -376,10 +377,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             mockStoreSession(updatedSession)(Right(()))
 
             val result = journeyService.updateAndNext(
-              routes.LicenceDetailsController.licenceTimeTrading(),
+              routes.LicenceDetailsController.licenceTimeTrading,
               updatedSession
             )
-            await(result.value) shouldBe Right(routes.LicenceDetailsController.recentLicenceLength())
+            await(result.value) shouldBe Right(routes.LicenceDetailsController.recentLicenceLength)
           }
 
           "when all user answers are complete" in {
@@ -406,10 +407,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             mockStoreSession(updatedSession)(Right(()))
 
             val result = journeyService.updateAndNext(
-              routes.LicenceDetailsController.licenceTimeTrading(),
+              routes.LicenceDetailsController.licenceTimeTrading,
               updatedSession
             )
-            await(result.value) shouldBe Right(routes.CheckYourAnswersController.checkYourAnswers())
+            await(result.value) shouldBe Right(routes.CheckYourAnswersController.checkYourAnswers)
           }
 
         }
@@ -436,7 +437,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
 
             assertThrows[RuntimeException] {
               journeyService.updateAndNext(
-                routes.LicenceDetailsController.recentLicenceLength(),
+                routes.LicenceDetailsController.recentLicenceLength,
                 updatedSession
               )
             }
@@ -463,10 +464,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             mockStoreSession(updatedSession)(Right(()))
 
             val result = journeyService.updateAndNext(
-              routes.LicenceDetailsController.recentLicenceLength(),
+              routes.LicenceDetailsController.recentLicenceLength,
               updatedSession
             )
-            await(result.value) shouldBe Right(routes.TaxSituationController.taxSituation())
+            await(result.value) shouldBe Right(routes.TaxSituationController.taxSituation)
           }
 
           "the licence type in the session is not 'driver of taxis'" in {
@@ -496,10 +497,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                 mockStoreSession(updatedSession)(Right(()))
 
                 val result = journeyService.updateAndNext(
-                  routes.LicenceDetailsController.recentLicenceLength(),
+                  routes.LicenceDetailsController.recentLicenceLength,
                   updatedSession
                 )
-                await(result.value) shouldBe Right(routes.EntityTypeController.entityType())
+                await(result.value) shouldBe Right(routes.EntityTypeController.entityType)
               }
             }
           }
@@ -530,7 +531,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             mockStoreSession(updatedSession)(Right(()))
 
             val result = journeyService.updateAndNext(
-              routes.EntityTypeController.entityType(),
+              routes.EntityTypeController.entityType,
               updatedSession
             )
             await(result.value) shouldBe Right(expectedNext)
@@ -549,26 +550,26 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
 
             assertThrows[RuntimeException] {
               journeyService.updateAndNext(
-                routes.EntityTypeController.entityType(),
+                routes.EntityTypeController.entityType,
                 session
               )
             }
           }
 
           "the user is a individual but has selected company" in {
-            test(individualLoginData, EntityType.Company, routes.EntityTypeController.wrongGGAccount())
+            test(individualLoginData, EntityType.Company, routes.EntityTypeController.wrongGGAccount)
           }
 
           "the user is a company but has selected individual" in {
-            test(companyLoginData, EntityType.Individual, routes.EntityTypeController.wrongGGAccount())
+            test(companyLoginData, EntityType.Individual, routes.EntityTypeController.wrongGGAccount)
           }
 
           "the user is a individual and  has selected individual" in {
-            test(individualLoginData, EntityType.Individual, routes.TaxSituationController.taxSituation())
+            test(individualLoginData, EntityType.Individual, routes.TaxSituationController.taxSituation)
           }
 
           "the user is a company and  has selected company" in {
-            test(companyLoginData, EntityType.Company, routes.CRNController.companyRegistrationNumber())
+            test(companyLoginData, EntityType.Company, routes.CRNController.companyRegistrationNumber)
           }
 
         }
@@ -620,7 +621,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
 
             assertThrows[RuntimeException](
               journeyService.updateAndNext(
-                routes.TaxSituationController.taxSituation(),
+                routes.TaxSituationController.taxSituation,
                 updatedSession
               )
             )
@@ -645,10 +646,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             mockStoreSession(updatedSession)(Right(()))
 
             val result = journeyService.updateAndNext(
-              routes.TaxSituationController.taxSituation(),
+              routes.TaxSituationController.taxSituation,
               updatedSession
             )
-            await(result.value) shouldBe Right(routes.CheckYourAnswersController.checkYourAnswers())
+            await(result.value) shouldBe Right(routes.CheckYourAnswersController.checkYourAnswers)
           }
 
           "tax situation is PAYE" in {
@@ -673,7 +674,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
 
               assertThrows[RuntimeException] {
                 journeyService.updateAndNext(
-                  routes.TaxSituationController.taxSituation(),
+                  routes.TaxSituationController.taxSituation,
                   session
                 )
               }
@@ -704,10 +705,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               }
 
               val result = journeyService.updateAndNext(
-                routes.TaxSituationController.taxSituation(),
+                routes.TaxSituationController.taxSituation,
                 updatedSession
               )
-              await(result.value) shouldBe Right(routes.SAController.sautrNotFound())
+              await(result.value) shouldBe Right(routes.SAController.sautrNotFound)
             }
 
             "applicant type is company" in {
@@ -725,7 +726,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
 
               assertThrows[RuntimeException](
                 journeyService.updateAndNext(
-                  routes.TaxSituationController.taxSituation(),
+                  routes.TaxSituationController.taxSituation,
                   updatedSession
                 )
               )
@@ -747,10 +748,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
 
               mockStoreSession(updatedSession)(Right(()))
               val result = journeyService.updateAndNext(
-                routes.TaxSituationController.taxSituation(),
+                routes.TaxSituationController.taxSituation,
                 updatedSession
               )
-              await(result.value) shouldBe Right(routes.SAController.saIncomeStatement())
+              await(result.value) shouldBe Right(routes.SAController.saIncomeStatement)
             }
 
             "SA status = NoReturnFound" in {
@@ -772,10 +773,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                 mockStoreSession(updatedSession)(Right(()))
               }
               val result = journeyService.updateAndNext(
-                routes.TaxSituationController.taxSituation(),
+                routes.TaxSituationController.taxSituation,
                 updatedSession
               )
-              await(result.value) shouldBe Right(routes.SAController.noReturnFound())
+              await(result.value) shouldBe Right(routes.SAController.noReturnFound)
             }
 
             "SA status = NoticeToFileIssued" in {
@@ -794,10 +795,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
 
               mockStoreSession(updatedSession)(Right(()))
               val result = journeyService.updateAndNext(
-                routes.TaxSituationController.taxSituation(),
+                routes.TaxSituationController.taxSituation,
                 updatedSession
               )
-              await(result.value) shouldBe Right(routes.CheckYourAnswersController.checkYourAnswers())
+              await(result.value) shouldBe Right(routes.CheckYourAnswersController.checkYourAnswers)
             }
           }
 
@@ -816,10 +817,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             requestWithSessionData(session)
 
           val result = journeyService.updateAndNext(
-            routes.SAController.saIncomeStatement(),
+            routes.SAController.saIncomeStatement,
             session
           )
-          await(result.value) shouldBe Right(routes.CheckYourAnswersController.checkYourAnswers())
+          await(result.value) shouldBe Right(routes.CheckYourAnswersController.checkYourAnswers)
         }
 
         "the check your answers page" when {
@@ -833,7 +834,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               await(
                 journeyService
                   .updateAndNext(
-                    routes.CheckYourAnswersController.checkYourAnswers(),
+                    routes.CheckYourAnswersController.checkYourAnswers,
                     session
                   )
                   .value
@@ -860,10 +861,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
 
             val result = journeyService.updateAndNext(
-              routes.CheckYourAnswersController.checkYourAnswers(),
+              routes.CheckYourAnswersController.checkYourAnswers,
               session
             )
-            await(result.value) shouldBe Right(routes.TaxCheckCompleteController.taxCheckComplete())
+            await(result.value) shouldBe Right(routes.TaxCheckCompleteController.taxCheckComplete)
 
           }
 
@@ -877,10 +878,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             implicit val request: RequestWithSessionData[_] = requestWithSessionData(sessionWithBlockedCrn)
 
             val result = journeyService.updateAndNext(
-              routes.CRNController.companyRegistrationNumber(),
+              routes.CRNController.companyRegistrationNumber,
               sessionWithBlockedCrn
             )
-            await(result.value) shouldBe Right(routes.CompanyDetailsController.tooManyCtutrAttempts())
+            await(result.value) shouldBe Right(routes.CompanyDetailsController.tooManyCtutrAttempts)
           }
 
           "the company is found" in {
@@ -898,10 +899,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             mockStoreSession(updatedSession)(Right(()))
 
             val result = journeyService.updateAndNext(
-              routes.CRNController.companyRegistrationNumber(),
+              routes.CRNController.companyRegistrationNumber,
               updatedSession
             )
-            await(result.value) shouldBe Right(routes.CompanyDetailsController.confirmCompanyDetails())
+            await(result.value) shouldBe Right(routes.CompanyDetailsController.confirmCompanyDetails)
           }
 
           "the company is  not found" in {
@@ -919,7 +920,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               await(
                 journeyService
                   .updateAndNext(
-                    routes.CRNController.companyRegistrationNumber(),
+                    routes.CRNController.companyRegistrationNumber,
                     updatedSession
                   )
                   .value
@@ -954,10 +955,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             mockStoreSession(updatedSession)(Right(()))
 
             val result = journeyService.updateAndNext(
-              routes.CompanyDetailsController.confirmCompanyDetails(),
+              routes.CompanyDetailsController.confirmCompanyDetails,
               updatedSession
             )
-            await(result.value) shouldBe Right(routes.CRNController.companyRegistrationNumber())
+            await(result.value) shouldBe Right(routes.CRNController.companyRegistrationNumber)
           }
 
           "the user answer for confirmation of company details is missing" in {
@@ -983,7 +984,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
 
             assertThrows[RuntimeException] {
               journeyService.updateAndNext(
-                routes.CompanyDetailsController.confirmCompanyDetails(),
+                routes.CompanyDetailsController.confirmCompanyDetails,
                 updatedSession
               )
             }
@@ -1002,7 +1003,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
 
             assertThrows[RuntimeException] {
               journeyService.updateAndNext(
-                routes.CompanyDetailsController.confirmCompanyDetails(),
+                routes.CompanyDetailsController.confirmCompanyDetails,
                 updatedSession
               )
             }
@@ -1063,10 +1064,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             mockStoreSession(updatedSession)(Right(()))
 
             val result = journeyService.updateAndNext(
-              routes.CompanyDetailsController.confirmCompanyDetails(),
+              routes.CompanyDetailsController.confirmCompanyDetails,
               updatedSession
             )
-            await(result.value) shouldBe Right(routes.CompanyDetailsController.ctutrNotMatched())
+            await(result.value) shouldBe Right(routes.CompanyDetailsController.ctutrNotMatched)
           }
 
           "DES CTUTR could not be fetched" in {
@@ -1093,10 +1094,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             mockStoreSession(updatedSession)(Right(()))
 
             val result = journeyService.updateAndNext(
-              routes.CompanyDetailsController.confirmCompanyDetails(),
+              routes.CompanyDetailsController.confirmCompanyDetails,
               updatedSession
             )
-            await(result.value) shouldBe Right(routes.CompanyDetailsController.cannotDoTaxCheck())
+            await(result.value) shouldBe Right(routes.CompanyDetailsController.cannotDoTaxCheck)
           }
 
           "enrolments and DES CTUTRs match" when {
@@ -1116,10 +1117,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               mockStoreSession(updatedSession)(Right(()))
 
               val result = journeyService.updateAndNext(
-                routes.CompanyDetailsController.confirmCompanyDetails(),
+                routes.CompanyDetailsController.confirmCompanyDetails,
                 updatedSession
               )
-              await(result.value) shouldBe Right(routes.CompanyDetailsController.chargeableForCorporationTax())
+              await(result.value) shouldBe Right(routes.CompanyDetailsController.chargeableForCorporationTax)
             }
 
             "status = ReturnFound" in {
@@ -1149,10 +1150,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               mockStoreSession(updatedSession)(Right(()))
 
               val result = journeyService.updateAndNext(
-                routes.CompanyDetailsController.confirmCompanyDetails(),
+                routes.CompanyDetailsController.confirmCompanyDetails,
                 updatedSession
               )
-              await(result.value) shouldBe Right(routes.CompanyDetailsController.recentlyStartedTrading())
+              await(result.value) shouldBe Right(routes.CompanyDetailsController.recentlyStartedTrading)
             }
 
             "CT status could not be fetched" in {
@@ -1180,10 +1181,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               mockStoreSession(updatedSession)(Right(()))
 
               val result = journeyService.updateAndNext(
-                routes.CompanyDetailsController.confirmCompanyDetails(),
+                routes.CompanyDetailsController.confirmCompanyDetails,
                 updatedSession
               )
-              await(result.value) shouldBe Right(routes.CompanyDetailsController.cannotDoTaxCheck())
+              await(result.value) shouldBe Right(routes.CompanyDetailsController.cannotDoTaxCheck)
             }
 
           }
@@ -1204,10 +1205,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             mockStoreSession(updatedSession)(Right(()))
 
             val result = journeyService.updateAndNext(
-              routes.CompanyDetailsController.confirmCompanyDetails(),
+              routes.CompanyDetailsController.confirmCompanyDetails,
               updatedSession
             )
-            await(result.value) shouldBe Right(routes.CompanyDetailsController.enterCtutr())
+            await(result.value) shouldBe Right(routes.CompanyDetailsController.enterCtutr)
           }
 
           "no CTUTR found in enrolments and  des CTUTR is not found" in {
@@ -1226,16 +1227,16 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             mockStoreSession(updatedSession)(Right(()))
 
             val result = journeyService.updateAndNext(
-              routes.CompanyDetailsController.confirmCompanyDetails(),
+              routes.CompanyDetailsController.confirmCompanyDetails,
               updatedSession
             )
-            await(result.value) shouldBe Right(routes.CompanyDetailsController.cannotDoTaxCheck())
+            await(result.value) shouldBe Right(routes.CompanyDetailsController.cannotDoTaxCheck)
           }
 
         }
 
         "chargeable for CT page" should {
-          val chargeableForCorporationTaxRoute = routes.CompanyDetailsController.chargeableForCorporationTax()
+          val chargeableForCorporationTaxRoute = routes.CompanyDetailsController.chargeableForCorporationTax
           val date                             = LocalDate.now
 
           "throw" when {
@@ -1303,7 +1304,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                 mockStoreSession(updatedSession)(Right(()))
 
                 val result = journeyService.updateAndNext(chargeableForCorporationTaxRoute, updatedSession)
-                await(result.value) shouldBe Right(routes.CheckYourAnswersController.checkYourAnswers())
+                await(result.value) shouldBe Right(routes.CheckYourAnswersController.checkYourAnswers)
               }
             }
           }
@@ -1347,7 +1348,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             "status = NoticeToFileIssued" in {
               test(
                 status = CTStatus.NoticeToFileIssued,
-                destination = routes.CheckYourAnswersController.checkYourAnswers(),
+                destination = routes.CheckYourAnswersController.checkYourAnswers,
                 None
               )
             }
@@ -1355,7 +1356,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             "status = ReturnFound" in {
               test(
                 status = CTStatus.ReturnFound,
-                destination = routes.CompanyDetailsController.ctIncomeStatement(),
+                destination = routes.CompanyDetailsController.ctIncomeStatement,
                 None
               )
             }
@@ -1363,7 +1364,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             "status = NoReturnFound" in {
               test(
                 status = CTStatus.NoReturnFound,
-                destination = routes.CompanyDetailsController.cannotDoTaxCheck(),
+                destination = routes.CompanyDetailsController.cannotDoTaxCheck,
                 Some(TaxCheckExit.CTNoNoticeToFileOrTaxReturn(_, Language.English))
               )
             }
@@ -1376,10 +1377,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
           implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
 
           val result = journeyService.updateAndNext(
-            routes.CompanyDetailsController.ctIncomeStatement(),
+            routes.CompanyDetailsController.ctIncomeStatement,
             session
           )
-          await(result.value) shouldBe Right(routes.CheckYourAnswersController.checkYourAnswers())
+          await(result.value) shouldBe Right(routes.CheckYourAnswersController.checkYourAnswers)
         }
 
         "Recently started Trading page" when {
@@ -1397,7 +1398,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
 
             assertThrows[RuntimeException] {
               journeyService.updateAndNext(
-                routes.CompanyDetailsController.recentlyStartedTrading(),
+                routes.CompanyDetailsController.recentlyStartedTrading,
                 updatedSession
               )
             }
@@ -1431,18 +1432,18 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             }
 
             val result =
-              journeyService.updateAndNext(routes.CompanyDetailsController.recentlyStartedTrading(), updatedSession)
+              journeyService.updateAndNext(routes.CompanyDetailsController.recentlyStartedTrading, updatedSession)
             await(result.value) shouldBe Right(nextCall)
           }
 
           "applicant select yes" in {
-            testStartTrading(YesNoAnswer.Yes, routes.CheckYourAnswersController.checkYourAnswers(), None)
+            testStartTrading(YesNoAnswer.Yes, routes.CheckYourAnswersController.checkYourAnswers, None)
           }
 
           "applicant select no" in {
             testStartTrading(
               YesNoAnswer.No,
-              routes.CompanyDetailsController.cannotDoTaxCheck(),
+              routes.CompanyDetailsController.cannotDoTaxCheck,
               Some(TaxCheckExit.CTNoAccountingPeriodNotRecentlyStartedTrading(_, Language.English))
             )
           }
@@ -1457,10 +1458,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
 
             val result = journeyService.updateAndNext(
-              routes.CompanyDetailsController.enterCtutr(),
+              routes.CompanyDetailsController.enterCtutr,
               session
             )
-            await(result.value) shouldBe Right(routes.CompanyDetailsController.tooManyCtutrAttempts())
+            await(result.value) shouldBe Right(routes.CompanyDetailsController.tooManyCtutrAttempts)
           }
 
           "number of attempts has not reached the maximum" must {
@@ -1472,7 +1473,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
 
               assertThrows[RuntimeException] {
                 journeyService.updateAndNext(
-                  routes.CompanyDetailsController.enterCtutr(),
+                  routes.CompanyDetailsController.enterCtutr,
                   session
                 )
               }
@@ -1490,7 +1491,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
 
               assertThrows[RuntimeException] {
                 journeyService.updateAndNext(
-                  routes.CompanyDetailsController.enterCtutr(),
+                  routes.CompanyDetailsController.enterCtutr,
                   session
                 )
               }
@@ -1509,7 +1510,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
 
               assertThrows[RuntimeException] {
                 journeyService.updateAndNext(
-                  routes.CompanyDetailsController.enterCtutr(),
+                  routes.CompanyDetailsController.enterCtutr,
                   session
                 )
               }
@@ -1527,10 +1528,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
 
               val result = journeyService.updateAndNext(
-                routes.CompanyDetailsController.enterCtutr(),
+                routes.CompanyDetailsController.enterCtutr,
                 session
               )
-              await(result.value) shouldBe Right(routes.CompanyDetailsController.cannotDoTaxCheck())
+              await(result.value) shouldBe Right(routes.CompanyDetailsController.cannotDoTaxCheck)
             }
 
             "go to recently started trading page when no latest accounting period found" in {
@@ -1545,10 +1546,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
 
               val result = journeyService.updateAndNext(
-                routes.CompanyDetailsController.enterCtutr(),
+                routes.CompanyDetailsController.enterCtutr,
                 session
               )
-              await(result.value) shouldBe Right(routes.CompanyDetailsController.recentlyStartedTrading())
+              await(result.value) shouldBe Right(routes.CompanyDetailsController.recentlyStartedTrading)
             }
 
             "go to chargeable for CT page when latest accounting period found" in {
@@ -1564,10 +1565,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
 
               val result = journeyService.updateAndNext(
-                routes.CompanyDetailsController.enterCtutr(),
+                routes.CompanyDetailsController.enterCtutr,
                 session
               )
-              await(result.value) shouldBe Right(routes.CompanyDetailsController.chargeableForCorporationTax())
+              await(result.value) shouldBe Right(routes.CompanyDetailsController.chargeableForCorporationTax)
             }
           }
         }
@@ -1593,7 +1594,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
 
             val result = journeyService.updateAndNext(
-              routes.TaxCheckCompleteController.taxCheckComplete(),
+              routes.TaxCheckCompleteController.taxCheckComplete,
               session
             )
             await(result.value) shouldBe Right(nextCall)
@@ -1611,7 +1612,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
 
             val result = journeyService.updateAndNext(
-              routes.TaxCheckCompleteController.taxCheckComplete(),
+              routes.TaxCheckCompleteController.taxCheckComplete,
               session
             )
             await(result.value) shouldBe Right(nextCall)
@@ -1621,18 +1622,18 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             "User has email id in GG account" in {
               testIndividual(
                 Some(EmailAddress("user@test.com")),
-                routes.ConfirmEmailAddressController.confirmEmailAddress()
+                routes.ConfirmEmailAddressController.confirmEmailAddress
               )
             }
 
             "User don't has email id in GG account" in {
-              testIndividual(None, routes.EnterEmailAddressController.enterEmailAddress())
+              testIndividual(None, routes.EnterEmailAddressController.enterEmailAddress)
             }
 
             "User  has email id in GG account but is invalid" in {
               testIndividual(
                 Some(EmailAddress("user@123@test.com")),
-                routes.EnterEmailAddressController.enterEmailAddress()
+                routes.EnterEmailAddressController.enterEmailAddress
               )
             }
           }
@@ -1641,18 +1642,18 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             "company has email id in GG account" in {
               testCompany(
                 Some(EmailAddress("user@test.com")),
-                routes.ConfirmEmailAddressController.confirmEmailAddress()
+                routes.ConfirmEmailAddressController.confirmEmailAddress
               )
             }
 
             "company don't has email id in GG account" in {
-              testCompany(None, routes.EnterEmailAddressController.enterEmailAddress())
+              testCompany(None, routes.EnterEmailAddressController.enterEmailAddress)
             }
 
             "company has email id in GG account but is invalid" in {
               testCompany(
                 Some(EmailAddress("user@123@test.com")),
-                routes.EnterEmailAddressController.enterEmailAddress()
+                routes.EnterEmailAddressController.enterEmailAddress
               )
             }
           }
@@ -1681,7 +1682,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
 
             val result = journeyService.updateAndNext(
-              routes.ConfirmEmailAddressController.confirmEmailAddress(),
+              routes.ConfirmEmailAddressController.confirmEmailAddress,
               session
             )
             await(result.value) shouldBe Right(nextCall)
@@ -1697,7 +1698,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                 withClue(s"For user email address : $eachUserEmailAddress") {
                   test(
                     eachUserEmailAddress,
-                    routes.VerifyEmailPasscodeController.verifyEmailPasscode()
+                    routes.VerifyEmailPasscodeController.verifyEmailPasscode
                   )
                 }
               }
@@ -1717,7 +1718,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                 withClue(s"For user email address : $eachUserEmailAddress") {
                   test(
                     eachUserEmailAddress,
-                    routes.EmailAddressConfirmedController.emailAddressConfirmed()
+                    routes.EmailAddressConfirmedController.emailAddressConfirmed
                   )
                 }
               }
@@ -1736,7 +1737,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                 withClue(s"For user email address : $eachUserEmailAddress") {
                   test(
                     eachUserEmailAddress,
-                    routes.TooManyEmailVerificationAttemptController.tooManyEmailVerificationAttempts()
+                    routes.TooManyEmailVerificationAttemptController.tooManyEmailVerificationAttempts
                   )
                 }
               }
@@ -1772,14 +1773,14 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
 
             val result = journeyService.updateAndNext(
-              routes.VerifyEmailPasscodeController.verifyEmailPasscode(),
+              routes.VerifyEmailPasscodeController.verifyEmailPasscode,
               session
             )
             await(result.value) shouldBe Right(nextCall)
           }
 
           "passcode is a match and verified" in {
-            test(PasscodeVerificationResult.Match, routes.EmailAddressConfirmedController.emailAddressConfirmed())
+            test(PasscodeVerificationResult.Match, routes.EmailAddressConfirmedController.emailAddressConfirmed)
           }
 
           "passcode is expired" in {
@@ -1817,7 +1818,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
 
             val result = journeyService.updateAndNext(
-              routes.EmailAddressConfirmedController.emailAddressConfirmed(),
+              routes.EmailAddressConfirmedController.emailAddressConfirmed,
               session
             )
             await(result.value) shouldBe Right(nextCall)
@@ -1855,7 +1856,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
 
             val result = journeyService.updateAndNext(
-              routes.ConfirmEmailAddressController.confirmEmailAddress(),
+              routes.ConfirmEmailAddressController.confirmEmailAddress,
               session
             )
             await(result.value) shouldBe Right(nextCall)
@@ -1863,21 +1864,21 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
           "valid email id is entered and Email Verification Service response = Passcode Sent" in {
             test(
               Fixtures.userEmailAnswers(EmailType.DifferentEmail, otherEmailId, PasscodeSent.some),
-              routes.VerifyEmailPasscodeController.verifyEmailPasscode()
+              routes.VerifyEmailPasscodeController.verifyEmailPasscode
             )
           }
 
           "valid email id is entered and Email Verification Service response = Email Already Verified" in {
             test(
               Fixtures.userEmailAnswers(EmailType.DifferentEmail, otherEmailId, EmailAddressAlreadyVerified.some),
-              routes.EmailAddressConfirmedController.emailAddressConfirmed()
+              routes.EmailAddressConfirmedController.emailAddressConfirmed
             )
           }
 
           "valid email id is entered and Email Verification Service response = Too Many Email attempts in session " in {
             test(
               Fixtures.userEmailAnswers(EmailType.DifferentEmail, otherEmailId, MaximumNumberOfEmailsExceeded.some),
-              routes.TooManyEmailVerificationAttemptController.tooManyEmailVerificationAttempts()
+              routes.TooManyEmailVerificationAttemptController.tooManyEmailVerificationAttempts
             )
           }
 
@@ -1906,7 +1907,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
 
             val result = journeyService.updateAndNext(
-              routes.ResendEmailConfirmationController.resendEmail(),
+              routes.ResendEmailConfirmationController.resendEmail,
               session
             )
             await(result.value) shouldBe Right(nextCall)
@@ -1920,7 +1921,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               withClue(s"For user email address : $eachUserEmailAddress") {
                 test(
                   eachUserEmailAddress,
-                  routes.VerifyResentEmailPasscodeController.verifyResentEmailPasscode()
+                  routes.VerifyResentEmailPasscodeController.verifyResentEmailPasscode
                 )
               }
             }
@@ -1940,7 +1941,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               withClue(s"For user email address : $eachUserEmailAddress") {
                 test(
                   eachUserEmailAddress,
-                  routes.EmailAddressConfirmedController.emailAddressConfirmed()
+                  routes.EmailAddressConfirmedController.emailAddressConfirmed
                 )
               }
             }
@@ -1959,7 +1960,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               withClue(s"For user email address : $eachUserEmailAddress") {
                 test(
                   eachUserEmailAddress,
-                  routes.TooManyEmailVerificationAttemptController.tooManyEmailVerificationAttempts()
+                  routes.TooManyEmailVerificationAttemptController.tooManyEmailVerificationAttempts
                 )
               }
             }
@@ -1995,14 +1996,14 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
 
             val result = journeyService.updateAndNext(
-              routes.VerifyResentEmailPasscodeController.verifyResentEmailPasscode(),
+              routes.VerifyResentEmailPasscodeController.verifyResentEmailPasscode,
               session
             )
             await(result.value) shouldBe Right(nextCall)
           }
 
           "passcode is a match and verified" in {
-            test(PasscodeVerificationResult.Match, routes.EmailAddressConfirmedController.emailAddressConfirmed())
+            test(PasscodeVerificationResult.Match, routes.EmailAddressConfirmedController.emailAddressConfirmed)
           }
 
           "passcode is expired" in {
@@ -2054,10 +2055,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             mockStoreSession(session.copy(userAnswers = completeAnswers))(Right(()))
 
             val result = journeyService.updateAndNext(
-              routes.LicenceDetailsController.licenceTimeTrading(),
+              routes.LicenceDetailsController.licenceTimeTrading,
               session
             )
-            await(result.value) shouldBe Right(routes.CheckYourAnswersController.checkYourAnswers())
+            await(result.value) shouldBe Right(routes.CheckYourAnswersController.checkYourAnswers)
 
           }
 
@@ -2098,10 +2099,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                 mockStoreSession(session.copy(userAnswers = completeAnswers))(Right(()))
 
                 val result = journeyService.updateAndNext(
-                  routes.LicenceDetailsController.licenceTimeTrading(),
+                  routes.LicenceDetailsController.licenceTimeTrading,
                   session
                 )
-                await(result.value) shouldBe Right(routes.CheckYourAnswersController.checkYourAnswers())
+                await(result.value) shouldBe Right(routes.CheckYourAnswersController.checkYourAnswers)
 
               }
 
@@ -2141,10 +2142,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                 mockStoreSession(session.copy(userAnswers = completeAnswers))(Right(()))
 
                 val result = journeyService.updateAndNext(
-                  routes.LicenceDetailsController.licenceTimeTrading(),
+                  routes.LicenceDetailsController.licenceTimeTrading,
                   session
                 )
-                await(result.value) shouldBe Right(routes.CheckYourAnswersController.checkYourAnswers())
+                await(result.value) shouldBe Right(routes.CheckYourAnswersController.checkYourAnswers)
               }
             }
           }
@@ -2186,10 +2187,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                 mockStoreSession(session.copy(userAnswers = completeAnswers))(Right(()))
 
                 val result = journeyService.updateAndNext(
-                  routes.LicenceDetailsController.licenceTimeTrading(),
+                  routes.LicenceDetailsController.licenceTimeTrading,
                   session
                 )
-                await(result.value) shouldBe Right(routes.CheckYourAnswersController.checkYourAnswers())
+                await(result.value) shouldBe Right(routes.CheckYourAnswersController.checkYourAnswers)
               }
             }
           }
@@ -2230,10 +2231,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                 mockStoreSession(session.copy(userAnswers = completeAnswers))(Right(()))
 
                 val result = journeyService.updateAndNext(
-                  routes.LicenceDetailsController.licenceTimeTrading(),
+                  routes.LicenceDetailsController.licenceTimeTrading,
                   session
                 )
-                await(result.value) shouldBe Right(routes.CheckYourAnswersController.checkYourAnswers())
+                await(result.value) shouldBe Right(routes.CheckYourAnswersController.checkYourAnswers)
               }
             }
           }
@@ -2297,10 +2298,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             mockStoreSession(session.copy(userAnswers = completeAnswers))(Right(()))
 
             val result = journeyService.updateAndNext(
-              routes.LicenceDetailsController.licenceTimeTrading(),
+              routes.LicenceDetailsController.licenceTimeTrading,
               session
             )
-            await(result.value) shouldBe Right(routes.CheckYourAnswersController.checkYourAnswers())
+            await(result.value) shouldBe Right(routes.CheckYourAnswersController.checkYourAnswers)
 
           }
 
@@ -2395,10 +2396,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             requestWithSessionData(session)
 
           val result = journeyService.updateAndNext(
-            routes.EntityTypeController.entityType(),
+            routes.EntityTypeController.entityType,
             session
           )
-          await(result.value) shouldBe Right(routes.EntityTypeController.wrongGGAccount())
+          await(result.value) shouldBe Right(routes.EntityTypeController.wrongGGAccount)
         }
 
       }
@@ -2415,7 +2416,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             requestWithSessionData(session)
           assertThrows[RuntimeException](
             journeyService.previous(
-              routes.ConfirmIndividualDetailsController.confirmIndividualDetailsSubmit()
+              routes.ConfirmIndividualDetailsController.confirmIndividualDetailsSubmit
             )
           )
         }
@@ -2430,10 +2431,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             requestWithSessionData(session)
 
           val result = journeyService.previous(
-            routes.StartController.start()
+            routes.StartController.start
           )
 
-          result shouldBe routes.StartController.start()
+          result shouldBe routes.StartController.start
         }
 
         "the confirm individual details page" in {
@@ -2442,10 +2443,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             requestWithSessionData(session)
 
           val result = journeyService.previous(
-            routes.ConfirmIndividualDetailsController.confirmIndividualDetails()
+            routes.ConfirmIndividualDetailsController.confirmIndividualDetails
           )
 
-          result shouldBe routes.StartController.start()
+          result shouldBe routes.StartController.start
         }
 
         "the confirm individual details exit page" in {
@@ -2454,10 +2455,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             requestWithSessionData(session)
 
           val result = journeyService.previous(
-            routes.ConfirmIndividualDetailsController.confirmIndividualDetailsExit()
+            routes.ConfirmIndividualDetailsController.confirmIndividualDetailsExit
           )
 
-          result shouldBe routes.ConfirmIndividualDetailsController.confirmIndividualDetails()
+          result shouldBe routes.ConfirmIndividualDetailsController.confirmIndividualDetails
         }
 
         "the tax check codes page" when {
@@ -2475,8 +2476,8 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
 
             implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
 
-            val result = journeyService.previous(routes.TaxChecksListController.unexpiredTaxChecks())
-            result shouldBe routes.ConfirmIndividualDetailsController.confirmIndividualDetails()
+            val result = journeyService.previous(routes.TaxChecksListController.unexpiredTaxChecks)
+            result shouldBe routes.ConfirmIndividualDetailsController.confirmIndividualDetails
           }
 
           "applicant is company" in {
@@ -2484,8 +2485,8 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
 
             implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
 
-            val result = journeyService.previous(routes.TaxChecksListController.unexpiredTaxChecks())
-            result shouldBe routes.StartController.start()
+            val result = journeyService.previous(routes.TaxChecksListController.unexpiredTaxChecks)
+            result shouldBe routes.StartController.start
           }
         }
 
@@ -2513,10 +2514,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                 requestWithSessionData(session)
 
               val result = journeyService.previous(
-                routes.LicenceDetailsController.licenceType()
+                routes.LicenceDetailsController.licenceType
               )
 
-              result shouldBe routes.TaxChecksListController.unexpiredTaxChecks()
+              result shouldBe routes.TaxChecksListController.unexpiredTaxChecks
             }
 
             "there are no preexisting tax check codes" in {
@@ -2525,10 +2526,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                 requestWithSessionData(session)
 
               val result = journeyService.previous(
-                routes.LicenceDetailsController.licenceType()
+                routes.LicenceDetailsController.licenceType
               )
 
-              result shouldBe routes.ConfirmIndividualDetailsController.confirmIndividualDetails()
+              result shouldBe routes.ConfirmIndividualDetailsController.confirmIndividualDetails
             }
           }
 
@@ -2544,10 +2545,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                 requestWithSessionData(session)
 
               val result = journeyService.previous(
-                routes.LicenceDetailsController.licenceType()
+                routes.LicenceDetailsController.licenceType
               )
 
-              result shouldBe routes.TaxChecksListController.unexpiredTaxChecks()
+              result shouldBe routes.TaxChecksListController.unexpiredTaxChecks
             }
 
             "there are no preexisting tax check codes" in {
@@ -2556,10 +2557,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                 requestWithSessionData(session)
 
               val result = journeyService.previous(
-                routes.LicenceDetailsController.licenceType()
+                routes.LicenceDetailsController.licenceType
               )
 
-              result shouldBe routes.StartController.start()
+              result shouldBe routes.StartController.start
             }
           }
 
@@ -2590,10 +2591,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             requestWithSessionData(session)
 
           val result = journeyService.previous(
-            routes.LicenceDetailsController.maxTaxChecksExceeded()
+            routes.LicenceDetailsController.maxTaxChecksExceeded
           )
 
-          result shouldBe routes.LicenceDetailsController.licenceType()
+          result shouldBe routes.LicenceDetailsController.licenceType
         }
 
         "the licence type exit page" in {
@@ -2602,10 +2603,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             requestWithSessionData(session)
 
           val result = journeyService.previous(
-            routes.LicenceDetailsController.licenceTypeExit()
+            routes.LicenceDetailsController.licenceTypeExit
           )
 
-          result shouldBe routes.LicenceDetailsController.licenceType()
+          result shouldBe routes.LicenceDetailsController.licenceType
         }
 
         "the licence time trading page when the session contains an licence expiry date which is not more than 1 year ago" in {
@@ -2620,10 +2621,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             requestWithSessionData(session)
 
           val result = journeyService.previous(
-            routes.LicenceDetailsController.licenceTimeTrading()
+            routes.LicenceDetailsController.licenceTimeTrading
           )
 
-          result shouldBe routes.LicenceDetailsController.licenceType()
+          result shouldBe routes.LicenceDetailsController.licenceType
         }
 
         "the entity type page" when {
@@ -2646,10 +2647,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                   requestWithSessionData(session)
 
                 val result = journeyService.previous(
-                  routes.EntityTypeController.entityType()
+                  routes.EntityTypeController.entityType
                 )
 
-                result shouldBe routes.LicenceDetailsController.recentLicenceLength()
+                result shouldBe routes.LicenceDetailsController.recentLicenceLength
               }
             }
           }
@@ -2669,10 +2670,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             requestWithSessionData(session)
 
           val result = journeyService.previous(
-            routes.EntityTypeController.wrongGGAccount()
+            routes.EntityTypeController.wrongGGAccount
           )
 
-          result shouldBe routes.EntityTypeController.entityType()
+          result shouldBe routes.EntityTypeController.entityType
         }
 
         "the wrong entity type page" in {
@@ -2687,10 +2688,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             requestWithSessionData(session)
 
           val result = journeyService.previous(
-            routes.EntityTypeController.wrongEntityType()
+            routes.EntityTypeController.wrongEntityType
           )
 
-          result shouldBe routes.EntityTypeController.entityType()
+          result shouldBe routes.EntityTypeController.entityType
         }
 
         "the tax situation page" when {
@@ -2708,10 +2709,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               requestWithSessionData(session)
 
             val result = journeyService.previous(
-              routes.TaxSituationController.taxSituation()
+              routes.TaxSituationController.taxSituation
             )
 
-            result shouldBe routes.LicenceDetailsController.recentLicenceLength()
+            result shouldBe routes.LicenceDetailsController.recentLicenceLength
           }
 
           "the licence type is not 'driver of taxis' and the entity type is correct" in {
@@ -2727,10 +2728,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               requestWithSessionData(session)
 
             val result = journeyService.previous(
-              routes.TaxSituationController.taxSituation()
+              routes.TaxSituationController.taxSituation
             )
 
-            result shouldBe routes.EntityTypeController.entityType()
+            result shouldBe routes.EntityTypeController.entityType
           }
 
         }
@@ -2742,10 +2743,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               requestWithSessionData(session)
 
             val result = journeyService.previous(
-              routes.CheckYourAnswersController.checkYourAnswers()
+              routes.CheckYourAnswersController.checkYourAnswers
             )
 
-            result shouldBe routes.TaxSituationController.taxSituation()
+            result shouldBe routes.TaxSituationController.taxSituation
           }
 
           val individualWithSautr =
@@ -2823,10 +2824,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               requestWithSessionData(session)
 
             val result = journeyService.previous(
-              routes.SAController.saIncomeStatement()
+              routes.SAController.saIncomeStatement
             )
 
-            result shouldBe routes.TaxSituationController.taxSituation()
+            result shouldBe routes.TaxSituationController.taxSituation
           }
 
           def testThrows(taxSituation: TaxSituation) = {
@@ -2837,7 +2838,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
 
             assertThrows[RuntimeException] {
               journeyService.previous(
-                routes.SAController.saIncomeStatement()
+                routes.SAController.saIncomeStatement
               )
             }
           }
@@ -2868,10 +2869,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               requestWithSessionData(session)
 
             val result = journeyService.previous(
-              routes.SAController.noReturnFound()
+              routes.SAController.noReturnFound
             )
 
-            result shouldBe routes.TaxSituationController.taxSituation()
+            result shouldBe routes.TaxSituationController.taxSituation
           }
 
           "tax situation = SA & SA status = NoReturnFound" in {
@@ -2890,7 +2891,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
 
             assertThrows[RuntimeException] {
               journeyService.previous(
-                routes.SAController.noReturnFound()
+                routes.SAController.noReturnFound
               )
             }
           }
@@ -2918,7 +2919,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             requestWithSessionData(session)
 
           val result = journeyService.previous(
-            routes.CRNController.companyRegistrationNumber()
+            routes.CRNController.companyRegistrationNumber
           )
 
           result shouldBe routes.EntityTypeController.entityType
@@ -2938,10 +2939,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             requestWithSessionData(session)
 
           val result = journeyService.previous(
-            routes.CompanyDetailsController.confirmCompanyDetails()
+            routes.CompanyDetailsController.confirmCompanyDetails
           )
 
-          result shouldBe routes.CRNController.companyRegistrationNumber()
+          result shouldBe routes.CRNController.companyRegistrationNumber
 
         }
 
@@ -2978,10 +2979,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
 
           implicit val request: RequestWithSessionData[_] = requestWithSessionData(updatedSession)
           val result                                      = journeyService.previous(
-            routes.CompanyDetailsController.recentlyStartedTrading()
+            routes.CompanyDetailsController.recentlyStartedTrading
           )
 
-          result shouldBe routes.CompanyDetailsController.confirmCompanyDetails()
+          result shouldBe routes.CompanyDetailsController.confirmCompanyDetails
         }
 
         "enter CTUTR page" in {
@@ -3017,20 +3018,20 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
 
           implicit val request: RequestWithSessionData[_] = requestWithSessionData(updatedSession)
           val result                                      = journeyService.previous(
-            routes.CompanyDetailsController.enterCtutr()
+            routes.CompanyDetailsController.enterCtutr
           )
 
-          result shouldBe routes.CompanyDetailsController.confirmCompanyDetails()
+          result shouldBe routes.CompanyDetailsController.confirmCompanyDetails
 
         }
 
         "the 'dont have' CTUTR' page" in {
           implicit val request: RequestWithSessionData[_] = requestWithSessionData(Fixtures.companyHECSession())
           val result                                      = journeyService.previous(
-            routes.CompanyDetailsController.dontHaveUtr()
+            routes.CompanyDetailsController.dontHaveUtr
           )
 
-          result shouldBe routes.CompanyDetailsController.enterCtutr()
+          result shouldBe routes.CompanyDetailsController.enterCtutr
         }
 
         "the 'too many CTUTR attempts' page" in {
@@ -3066,10 +3067,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
 
           implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
           val result                                      = journeyService.previous(
-            routes.CompanyDetailsController.tooManyCtutrAttempts()
+            routes.CompanyDetailsController.tooManyCtutrAttempts
           )
 
-          result shouldBe routes.CRNController.companyRegistrationNumber()
+          result shouldBe routes.CRNController.companyRegistrationNumber
         }
 
         "the Confirm Email Address page" when {
@@ -3093,7 +3094,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
 
             val result = journeyService.previous(
-              routes.ConfirmEmailAddressController.confirmEmailAddress()
+              routes.ConfirmEmailAddressController.confirmEmailAddress
             )
             result shouldBe previousRoute
           }
@@ -3104,7 +3105,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               userEmailAnswers = Fixtures
                 .userEmailAnswers(passcodeVerificationResult = PasscodeVerificationResult.TooManyAttempts.some)
                 .some,
-              routes.TooManyPasscodeVerificationController.tooManyPasscodeVerification()
+              routes.TooManyPasscodeVerificationController.tooManyPasscodeVerification
             )
 
           }
@@ -3136,17 +3137,17 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
           implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
 
           val result = journeyService.previous(presentRoute)
-          result shouldBe routes.EmailAddressConfirmedController.emailAddressConfirmed()
+          result shouldBe routes.EmailAddressConfirmedController.emailAddressConfirmed
         }
 
         "the Email sent page" in {
-          previousIsEmailAddressConfirmed(EmailSendResult.EmailSent, routes.EmailSentController.emailSent())
+          previousIsEmailAddressConfirmed(EmailSendResult.EmailSent, routes.EmailSentController.emailSent)
         }
 
         "the Email sent Failure page" in {
           previousIsEmailAddressConfirmed(
             EmailSendResult.EmailSentFailure,
-            routes.ProblemSendingEmailController.problemSendingEmail()
+            routes.ProblemSendingEmailController.problemSendingEmail
           )
         }
 
@@ -3176,7 +3177,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
 
             val result = journeyService.previous(
-              routes.EnterEmailAddressController.enterEmailAddress()
+              routes.EnterEmailAddressController.enterEmailAddress
             )
             result shouldBe previousRoute
 
@@ -3208,7 +3209,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                   passcode = Passcode("HHHHHH").some
                 )
                 .some,
-              routes.TooManyPasscodeVerificationController.tooManyPasscodeVerification(),
+              routes.TooManyPasscodeVerificationController.tooManyPasscodeVerification,
               true
             )
           }
@@ -3248,24 +3249,24 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
 
             val result = journeyService.previous(
-              routes.ResendEmailConfirmationController.resendEmail()
+              routes.ResendEmailConfirmationController.resendEmail
             )
             result shouldBe previousRoute
           }
 
           "the page is reached via verify passcode page" in {
-            test(false, None, routes.VerifyEmailPasscodeController.verifyEmailPasscode())
+            test(false, None, routes.VerifyEmailPasscodeController.verifyEmailPasscode)
           }
 
           "the page is reached via verify resend passcode page" in {
-            test(true, None, routes.VerifyResentEmailPasscodeController.verifyResentEmailPasscode())
+            test(true, None, routes.VerifyResentEmailPasscodeController.verifyResentEmailPasscode)
           }
 
           "the page is reached via Email passcode confirmation expired" in {
             test(
               true,
               PasscodeVerificationResult.Expired.some,
-              routes.VerificationPasscodeExpiredController.verificationPasscodeExpired()
+              routes.VerificationPasscodeExpiredController.verificationPasscodeExpired
             )
           }
 
@@ -3273,7 +3274,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             test(
               true,
               PasscodeVerificationResult.TooManyAttempts.some,
-              routes.TooManyPasscodeVerificationController.tooManyPasscodeVerification()
+              routes.TooManyPasscodeVerificationController.tooManyPasscodeVerification
             )
           }
 
@@ -3301,9 +3302,9 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
           implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
 
           val result = journeyService.previous(
-            routes.VerifyResentEmailPasscodeController.verifyResentEmailPasscode()
+            routes.VerifyResentEmailPasscodeController.verifyResentEmailPasscode
           )
-          result shouldBe routes.ResendEmailConfirmationController.resendEmail()
+          result shouldBe routes.ResendEmailConfirmationController.resendEmail
 
         }
 
@@ -3328,7 +3329,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
           implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
 
           val result = journeyService.previous(existingRoute)
-          result shouldBe routes.ConfirmEmailAddressController.confirmEmailAddress()
+          result shouldBe routes.ConfirmEmailAddressController.confirmEmailAddress
         }
 
         def previousIsVerificationEmailPage(
@@ -3364,13 +3365,13 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
 
           val result = journeyService.previous(currentCall)
           if (resendFlag)
-            result    shouldBe routes.VerifyResentEmailPasscodeController.verifyResentEmailPasscode()
-          else result shouldBe routes.VerifyEmailPasscodeController.verifyEmailPasscode()
+            result    shouldBe routes.VerifyResentEmailPasscodeController.verifyResentEmailPasscode
+          else result shouldBe routes.VerifyEmailPasscodeController.verifyEmailPasscode
 
         }
 
         "the Verify email passcode controller" in {
-          previousIsConfirmEmailPage(PasscodeSent, routes.VerifyEmailPasscodeController.verifyEmailPasscode())
+          previousIsConfirmEmailPage(PasscodeSent, routes.VerifyEmailPasscodeController.verifyEmailPasscode)
 
         }
 
@@ -3381,14 +3382,14 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             "user selected an email on confirm email page, which is already verified" in {
               previousIsConfirmEmailPage(
                 EmailAddressAlreadyVerified,
-                routes.EmailAddressConfirmedController.emailAddressConfirmed()
+                routes.EmailAddressConfirmedController.emailAddressConfirmed
               )
             }
 
             "user selected an email which was not confirmed already , but got it confirmed by verifying passcode" in {
               previousIsVerificationEmailPage(
                 PasscodeVerificationResult.Match,
-                routes.EmailAddressConfirmedController.emailAddressConfirmed()
+                routes.EmailAddressConfirmedController.emailAddressConfirmed
               )
             }
           }
@@ -3398,7 +3399,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             "user selected an email which was not confirmed already , but got it confirmed by verifying passcode" in {
               previousIsVerificationEmailPage(
                 PasscodeVerificationResult.Match,
-                routes.EmailAddressConfirmedController.emailAddressConfirmed(),
+                routes.EmailAddressConfirmedController.emailAddressConfirmed,
                 true
               )
             }
@@ -3411,14 +3412,14 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
           "the page is not reached via resent journey" in {
             previousIsVerificationEmailPage(
               PasscodeVerificationResult.Expired,
-              routes.VerificationPasscodeExpiredController.verificationPasscodeExpired()
+              routes.VerificationPasscodeExpiredController.verificationPasscodeExpired
             )
           }
 
           "the page is  reached via resent journey" in {
             previousIsVerificationEmailPage(
               PasscodeVerificationResult.Expired,
-              routes.VerificationPasscodeExpiredController.verificationPasscodeExpired(),
+              routes.VerificationPasscodeExpiredController.verificationPasscodeExpired,
               true
             )
           }
@@ -3430,14 +3431,14 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
           "the page is not reached via resent journey" in {
             previousIsVerificationEmailPage(
               PasscodeVerificationResult.TooManyAttempts,
-              routes.TooManyPasscodeVerificationController.tooManyPasscodeVerification()
+              routes.TooManyPasscodeVerificationController.tooManyPasscodeVerification
             )
           }
 
           "the page is reached via resent journey" in {
             previousIsVerificationEmailPage(
               PasscodeVerificationResult.TooManyAttempts,
-              routes.TooManyPasscodeVerificationController.tooManyPasscodeVerification(),
+              routes.TooManyPasscodeVerificationController.tooManyPasscodeVerification,
               true
             )
           }
@@ -3470,7 +3471,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
 
             val result = journeyService.previous(
-              routes.TooManyEmailVerificationAttemptController.tooManyEmailVerificationAttempts()
+              routes.TooManyEmailVerificationAttemptController.tooManyEmailVerificationAttempts
             )
             result shouldBe previousRoute
           }
@@ -3478,22 +3479,22 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
           "there is email Id in ggAccount" when {
 
             "page is achieved via confirm email address page " in {
-              test(ggEmailId.some, false, routes.ConfirmEmailAddressController.confirmEmailAddress())
+              test(ggEmailId.some, false, routes.ConfirmEmailAddressController.confirmEmailAddress)
             }
 
             "page is achieved via resend  email confirmation page " in {
-              test(ggEmailId.some, true, routes.ResendEmailConfirmationController.resendEmail())
+              test(ggEmailId.some, true, routes.ResendEmailConfirmationController.resendEmail)
             }
           }
 
           "there is no email Id in ggAccount" when {
 
             "page is achieved via enter email address page " in {
-              test(None, false, routes.EnterEmailAddressController.enterEmailAddress())
+              test(None, false, routes.EnterEmailAddressController.enterEmailAddress)
             }
 
             "page is achieved via resend  email confirmation page " in {
-              test(None, true, routes.ResendEmailConfirmationController.resendEmail())
+              test(None, true, routes.ResendEmailConfirmationController.resendEmail)
             }
           }
 
@@ -3524,17 +3525,17 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
 
             val result = journeyService.previous(
-              routes.CannotSendVerificationPasscodeController.cannotSendVerificationPasscode()
+              routes.CannotSendVerificationPasscodeController.cannotSendVerificationPasscode
             )
             result shouldBe previousRoute
           }
 
           "there is email Id in ggAccount" in {
-            test(ggEmailId.some, routes.ConfirmEmailAddressController.confirmEmailAddress())
+            test(ggEmailId.some, routes.ConfirmEmailAddressController.confirmEmailAddress)
           }
 
           "there is no email Id in ggAccount" in {
-            test(None, routes.EnterEmailAddressController.enterEmailAddress())
+            test(None, routes.EnterEmailAddressController.enterEmailAddress)
 
           }
 
@@ -3592,10 +3593,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             )
 
           val result = journeyService.previous(
-            routes.LicenceDetailsController.licenceType()
+            routes.LicenceDetailsController.licenceType
           )
 
-          result shouldBe routes.CheckYourAnswersController.checkYourAnswers()
+          result shouldBe routes.CheckYourAnswersController.checkYourAnswers
         }
 
       }

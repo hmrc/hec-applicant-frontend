@@ -61,7 +61,7 @@ class LicenceDetailsController @Inject() (
     with Logging {
 
   val licenceType: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
-    val back        = journeyService.previous(routes.LicenceDetailsController.licenceType())
+    val back        = journeyService.previous(routes.LicenceDetailsController.licenceType)
     val licenceType = request.sessionData.userAnswers.fold(
       _.fold(_.licenceType, _.licenceType.some),
       _.fold(_.licenceType, _.licenceType.some)
@@ -102,7 +102,7 @@ class LicenceDetailsController @Inject() (
             }
           )
       updateAndNextJourneyData(
-        routes.LicenceDetailsController.licenceType(),
+        routes.LicenceDetailsController.licenceType,
         updatedSession
       )
     }
@@ -114,7 +114,7 @@ class LicenceDetailsController @Inject() (
           Ok(
             licenceTypePage(
               formWithErrors,
-              journeyService.previous(routes.LicenceDetailsController.licenceType()),
+              journeyService.previous(routes.LicenceDetailsController.licenceType),
               licenceOptions
             )
           ),
@@ -126,14 +126,14 @@ class LicenceDetailsController @Inject() (
     val licenceOptions = licenceTypeOptions(request.sessionData)
     Ok(
       licenceTypeExitPage(
-        journeyService.previous(routes.LicenceDetailsController.licenceTypeExit()),
+        journeyService.previous(routes.LicenceDetailsController.licenceTypeExit),
         licenceOptions
       )
     )
   }
 
   val licenceTimeTrading: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
-    val back        = journeyService.previous(routes.LicenceDetailsController.licenceTimeTrading())
+    val back        = journeyService.previous(routes.LicenceDetailsController.licenceTimeTrading)
     val timeTrading = request.sessionData.userAnswers.fold(
       _.fold(_.licenceTimeTrading, _.licenceTimeTrading.some),
       _.fold(_.licenceTimeTrading, _.licenceTimeTrading.some)
@@ -156,7 +156,7 @@ class LicenceDetailsController @Inject() (
       )
 
       updateAndNextJourneyData(
-        routes.LicenceDetailsController.licenceTimeTrading(),
+        routes.LicenceDetailsController.licenceTimeTrading,
         updatedSession
       )
     }
@@ -168,7 +168,7 @@ class LicenceDetailsController @Inject() (
           Ok(
             licenceTimeTradingPage(
               formWithErrors,
-              journeyService.previous(routes.LicenceDetailsController.licenceTimeTrading()),
+              journeyService.previous(routes.LicenceDetailsController.licenceTimeTrading),
               licenceTimeTradingOptions
             )
           ),
@@ -183,7 +183,7 @@ class LicenceDetailsController @Inject() (
     )
     licenceTypeOpt match {
       case Some(licenceType) =>
-        val back          = journeyService.previous(routes.LicenceDetailsController.recentLicenceLength())
+        val back          = journeyService.previous(routes.LicenceDetailsController.recentLicenceLength)
         val licenceLength =
           request.sessionData.userAnswers.fold(
             _.fold(_.licenceValidityPeriod, _.licenceValidityPeriod.some),
@@ -212,7 +212,7 @@ class LicenceDetailsController @Inject() (
       )
 
       updateAndNextJourneyData(
-        routes.LicenceDetailsController.recentLicenceLength(),
+        routes.LicenceDetailsController.recentLicenceLength,
         updatedSession
       )
     }
@@ -230,7 +230,7 @@ class LicenceDetailsController @Inject() (
               Ok(
                 licenceValidityPeriodPage(
                   formWithErrors,
-                  journeyService.previous(routes.LicenceDetailsController.recentLicenceLength()),
+                  journeyService.previous(routes.LicenceDetailsController.recentLicenceLength),
                   options
                 )
               ),

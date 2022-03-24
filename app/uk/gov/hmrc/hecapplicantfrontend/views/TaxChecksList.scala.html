@@ -44,7 +44,7 @@
         <a href="#print-dialogue" class="govuk-link">@messages(s"$key.link")</a>
     </p>
 
-    @formWithCSRF(action = routes.TaxChecksListController.unexpiredTaxChecksSubmit()) {
+    @formWithCSRF(action = routes.TaxChecksListController.unexpiredTaxChecksSubmit) {
         @govukButton(Button(content = Text(messages(s"$key.button"))))
     }
 

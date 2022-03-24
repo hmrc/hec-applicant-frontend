@@ -34,7 +34,7 @@
   value = Some(index.toString),
   hint = option.hintKey.map{ h: String => Hint(content = Text(messages(s"$key.$h"))) },
   checked = form.data.values.toList.contains(index.toString)
-)}.toSeq}
+)}}
 
 @layout(pageTitle = Some(title), hasErrors = form.hasErrors, backLocation = Some(back)) {
   @if(form.errors.nonEmpty) {
@@ -43,7 +43,7 @@
       content = Text(s"${messages(s"${e.key}.${e.message}")}")
     )), title = Text(messages("generic.errorSummary"))))
   }
-  @formWithCSRF(action = routes.LicenceDetailsController.licenceTypeSubmit()) {
+  @formWithCSRF(action = routes.LicenceDetailsController.licenceTypeSubmit) {
 
     @govukRadios(Radios(
       fieldset = Some(Fieldset(
@@ -59,7 +59,7 @@
       errorMessage = formErrorMessage(form, key)
     ))
     <p class="govuk-body">
-      <a class="govuk-link" href="@{routes.LicenceDetailsController.licenceTypeExit()}">@messages(s"$key.link")</a>
+      <a class="govuk-link" href="@{routes.LicenceDetailsController.licenceTypeExit}">@messages(s"$key.link")</a>
     </p>
     @govukButton(Button(content = Text(messages("button.continue"))))
   }

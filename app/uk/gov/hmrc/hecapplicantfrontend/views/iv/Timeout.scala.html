@@ -29,6 +29,6 @@
   <h1 class="govuk-heading-xl">@title</h1>
   @govukButton(Button(
     content = Text(messages("button.sign-in")),
-    href = Some(routes.IvFailureController.retry().url)
+    href = Some(routes.IvFailureController.retry.url)
   ))
 }

@@ -41,7 +41,7 @@
       content = Text(s"${messages(s"${e.key}.${e.message}")}")
     )), title = Text(messages("generic.errorSummary"))))
   }
-  @formWithCSRF(action = routes.CompanyDetailsController.recentlyStartedTradingSubmit()) {
+  @formWithCSRF(action = routes.CompanyDetailsController.recentlyStartedTradingSubmit) {
     @govukRadios(Radios(
       fieldset = Some(Fieldset(
         legend = Some(Legend(
