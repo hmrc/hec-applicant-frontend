@@ -421,7 +421,7 @@ agentsNotSupported.link = Find out more about tax checks
 
 #Verify not supported
 verifyNotSupported.title=You cannot use this service at the moment
-verifyNotSupported.p1=You are currently signed using GOV.UK Verify.
+verifyNotSupported.p1=You are currently signed in using GOV.UK Verify.
 verifyNotSupported.p2=The ‘Do a tax check while applying for a licence’ service cannot be accessed using a GOV.UK Verify account.
 verifyNotSupported.p3=To do a tax check, and get a tax check code, you must use a different kind of account called Government Gateway.
 verifyNotSupported.alreadyHaveGG=If you already have a Government Gateway account
