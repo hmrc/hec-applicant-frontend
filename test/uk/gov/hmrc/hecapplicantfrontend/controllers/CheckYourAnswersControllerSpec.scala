@@ -33,6 +33,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.company.{CTAccounting
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR, GGCredId, NINO}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
+import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService.InconsistentSessionState
 import uk.gov.hmrc.hecapplicantfrontend.services.{JourneyService, TaxCheckService}
 import uk.gov.hmrc.hecapplicantfrontend.util.TimeUtils
 import uk.gov.hmrc.hecapplicantfrontend.utils.Fixtures
@@ -182,7 +183,7 @@ class CheckYourAnswersControllerSpec
             mockGetSession(session)
           }
 
-          assertThrows[RuntimeException](await(performAction()))
+          assertThrows[InconsistentSessionState](await(performAction()))
         }
 
       }
@@ -417,7 +418,7 @@ class CheckYourAnswersControllerSpec
             mockAuthWithNoRetrievals()
             mockGetSession(session)
           }
-          assertThrows[RuntimeException](await(performAction(Language.English)))
+          assertThrows[InconsistentSessionState](await(performAction(Language.English)))
 
         }
 

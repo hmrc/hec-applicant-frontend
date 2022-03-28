@@ -28,6 +28,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, EmailType, Error, 
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeRequestResult
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeRequestResult.PasscodeSent
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
+import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService.InconsistentSessionState
 import uk.gov.hmrc.hecapplicantfrontend.services.{EmailVerificationService, JourneyService}
 import uk.gov.hmrc.hecapplicantfrontend.utils.Fixtures
 import uk.gov.hmrc.http.HeaderCarrier
@@ -75,7 +76,7 @@ class ResendEmailConfirmationControllerSpec
             mockAuthWithNoRetrievals()
             mockGetSession(session)
           }
-          assertThrows[RuntimeException](await(performAction()))
+          assertThrows[InconsistentSessionState](await(performAction()))
         }
 
       }
@@ -131,7 +132,7 @@ class ResendEmailConfirmationControllerSpec
             mockAuthWithNoRetrievals()
             mockGetSession(session)
           }
-          assertThrows[RuntimeException](await(performAction()))
+          assertThrows[InconsistentSessionState](await(performAction()))
         }
 
         "Call to request passcode fails" in {

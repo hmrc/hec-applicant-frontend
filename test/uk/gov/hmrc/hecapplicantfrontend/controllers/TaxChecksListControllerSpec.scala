@@ -30,6 +30,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
 import uk.gov.hmrc.hecapplicantfrontend.models.views.LicenceTypeOption
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
+import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService.InconsistentSessionState
 import uk.gov.hmrc.hecapplicantfrontend.services.{AuditService, AuditServiceSupport, JourneyService}
 import uk.gov.hmrc.hecapplicantfrontend.util.TimeUtils
 import uk.gov.hmrc.hecapplicantfrontend.utils.Fixtures
@@ -85,7 +86,7 @@ class TaxChecksListControllerSpec
           mockGetSession(session)
         }
 
-        assertThrows[RuntimeException](await(performAction(Language.English)))
+        assertThrows[InconsistentSessionState](await(performAction(Language.English)))
 
       }
 
@@ -356,7 +357,7 @@ class TaxChecksListControllerSpec
             mockGetSession(session)
           }
 
-          assertThrows[RuntimeException](await(performAction(taxCheckCode)))
+          assertThrows[InconsistentSessionState](await(performAction(taxCheckCode)))
         }
 
         "the user does not have a tax check in session with the " +

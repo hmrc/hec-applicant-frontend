@@ -33,6 +33,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.individual.SAStatusRe
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
 import uk.gov.hmrc.hecapplicantfrontend.models.{Error, TaxSituation, TaxYear}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
+import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService.InconsistentSessionState
 import uk.gov.hmrc.hecapplicantfrontend.services.{JourneyService, TaxCheckService}
 import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging, TimeProvider, TimeUtils}
 import uk.gov.hmrc.hecapplicantfrontend.views.html
@@ -91,7 +92,8 @@ class TaxSituationController @Inject() (
     request.sessionData.mapAsIndividual { individualSession =>
       request.sessionData.ensureLicenceTypePresent { licenceType =>
         val taxYear                                                =
-          individualSession.relevantIncomeTaxYear.getOrElse(sys.error(" tax year not present in the session"))
+          individualSession.relevantIncomeTaxYear
+            .getOrElse(InconsistentSessionState("tax year not present in the session").doThrow)
         def fetchSAStatus(
           individualLoginData: IndividualLoginData,
           taxSituation: TaxSituation

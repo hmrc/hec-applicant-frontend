@@ -31,6 +31,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceValidityPeriod.UpT
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
+import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService.InconsistentSessionState
 import uk.gov.hmrc.hecapplicantfrontend.util.TimeProvider
 import uk.gov.hmrc.hecapplicantfrontend.utils.Fixtures
 
@@ -710,7 +711,7 @@ class LicenceDetailsControllerSpec
             mockAuthWithNoRetrievals()
             mockGetSession(session)
           }
-          assertThrows[RuntimeException](await(performAction()))
+          assertThrows[InconsistentSessionState](await(performAction()))
 
         }
 
@@ -812,7 +813,7 @@ class LicenceDetailsControllerSpec
             mockAuthWithNoRetrievals()
             mockGetSession(session)
           }
-          assertThrows[RuntimeException](await(performAction()))
+          assertThrows[InconsistentSessionState](await(performAction()))
 
         }
 

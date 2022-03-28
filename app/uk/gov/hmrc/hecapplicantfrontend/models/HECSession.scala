@@ -27,6 +27,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.{CompanyRetr
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeRequestResult.PasscodeSent
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{PasscodeRequestResult, PasscodeVerificationResult}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
+import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService.InconsistentSessionState
 
 import java.time.ZonedDateTime
 
@@ -128,12 +129,12 @@ object HECSession {
     def mapAsIndividual[A](f: IndividualHECSession => A): A =
       s.fold(
         f,
-        _ => sys.error("Expected individual session data but got company session data")
+        _ => InconsistentSessionState("Expected individual session data but got company session data").doThrow
       )
 
     def mapAsCompany[A](f: CompanyHECSession => A): A =
       s.fold(
-        _ => sys.error("Expected company session data but got individual session data"),
+        _ => InconsistentSessionState("Expected company session data but got individual session data").doThrow,
         f
       )
 
@@ -180,7 +181,7 @@ object HECSession {
 
       licenceTypeOpt match {
         case Some(licenceType) => f(licenceType)
-        case None              => sys.error("Couldn't find licence type")
+        case None              => InconsistentSessionState("Couldn't find licence type").doThrow
       }
     }
 
@@ -189,19 +190,19 @@ object HECSession {
     def ensureEmailHasBeenRequested[A](f: EmailRequestedForTaxCheck => A): A =
       s.fold(_.emailRequestedForTaxCheck, _.emailRequestedForTaxCheck) match {
         case Some(e) => f(e)
-        case None    => sys.error("Email has not been requested")
+        case None    => InconsistentSessionState("Email has not been requested").doThrow
       }
 
     def ensureGGEmailIdPresent[A](f: EmailAddress => A): A =
       s.fold(_.loginData.emailAddress, _.loginData.emailAddress) match {
         case Some(email) => f(email)
-        case None        => sys.error("No Email Address found in user's login session")
+        case None        => InconsistentSessionState("No Email Address found in user's login session").doThrow
       }
 
     def ensureUserSelectedEmailPresent[A](f: UserSelectedEmail => A): A = s.userEmailAnswers
       .map(_.userSelectedEmail) match {
       case Some(userSelectedEmail) => f(userSelectedEmail)
-      case None                    => sys.error(" No user selected email id in session")
+      case None                    => InconsistentSessionState("No user selected email id in session").doThrow
     }
 
     def verifyPasscodeVerificationResultAndPasscodeRequestResult[A](f: => A): A =
@@ -212,9 +213,9 @@ object HECSession {
         case (Some(pvr), Some(PasscodeSent)) if pvr === PasscodeVerificationResult.Match    => f
         case (None, Some(prr)) if prr === PasscodeRequestResult.EmailAddressAlreadyVerified => f
         case (other, otherPrr)                                                              =>
-          sys.error(
+          InconsistentSessionState(
             s"Passcode verification result 'Match' is expected but got '$other', Passcode Request Result is '$otherPrr' "
-          )
+          ).doThrow
       }
 
   }

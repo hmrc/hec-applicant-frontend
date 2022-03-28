@@ -37,6 +37,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType.DriverOfTaxis
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hecapplicantfrontend.models.views.LicenceTypeOption
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
+import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService.InconsistentSessionState
 import uk.gov.hmrc.hecapplicantfrontend.services.{JourneyService, TaxCheckService}
 import uk.gov.hmrc.hecapplicantfrontend.util.{TimeProvider, TimeUtils}
 import uk.gov.hmrc.hecapplicantfrontend.utils.Fixtures
@@ -122,7 +123,7 @@ class TaxSituationControllerSpec
             mockAuthWithNoRetrievals()
             mockGetSession(session)
           }
-          assertThrows[RuntimeException](await(performAction()))
+          assertThrows[InconsistentSessionState](await(performAction()))
         }
 
       }
@@ -449,7 +450,7 @@ class TaxSituationControllerSpec
             mockGetSession(session)
           }
 
-          assertThrows[RuntimeException](await(performAction()))
+          assertThrows[InconsistentSessionState](await(performAction()))
         }
 
       }
@@ -463,7 +464,7 @@ class TaxSituationControllerSpec
             mockAuthWithNoRetrievals()
             mockGetSession(session)
           }
-          assertThrows[RuntimeException](await(performAction()))
+          assertThrows[InconsistentSessionState](await(performAction()))
 
         }
 
@@ -511,7 +512,7 @@ class TaxSituationControllerSpec
             mockGetSession(session)
           }
 
-          assertThrows[RuntimeException](await(performAction("taxSituation" -> "0")))
+          assertThrows[InconsistentSessionState](await(performAction("taxSituation" -> "0")))
         }
 
       }

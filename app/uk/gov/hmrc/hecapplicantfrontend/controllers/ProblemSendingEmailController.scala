@@ -22,6 +22,7 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailSend.EmailSendResult
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
+import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService.InconsistentSessionState
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.hecapplicantfrontend.views.html
@@ -40,7 +41,8 @@ class ProblemSendingEmailController @Inject() (
     val previous = journeyService.previous(routes.ProblemSendingEmailController.problemSendingEmail)
     request.sessionData.userEmailAnswers.flatMap(_.emailSendResult) match {
       case Some(EmailSendResult.EmailSentFailure) => Ok(problemSendingEmailPage(previous))
-      case other                                  => sys.error(s" Email send result found $other but the expected is EmailSentFailure")
+      case other                                  =>
+        InconsistentSessionState(s" Email send result found $other but the expected is EmailSentFailure").doThrow
     }
 
   }

@@ -27,8 +27,9 @@ import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.RequestWithSessionDa
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeRequestResult.PasscodeSent
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeVerificationResult.Match
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{Passcode, PasscodeRequestResult, PasscodeVerificationResult}
-import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, EmailType, Error, HECSession, UserEmailAnswers, UserSelectedEmail}
+import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, EmailType, Error, UserEmailAnswers, UserSelectedEmail}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
+import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService.InconsistentSessionState
 import uk.gov.hmrc.hecapplicantfrontend.services.{EmailVerificationService, JourneyService}
 import uk.gov.hmrc.hecapplicantfrontend.utils.Fixtures
 import uk.gov.hmrc.http.HeaderCarrier
@@ -73,21 +74,18 @@ class VerifyEmailPasscodeControllerSpec
 
       "return a technical error" when {
 
-        def testTechnicalError(session: HECSession) = {
-          inSequence {
-            mockAuthWithNoRetrievals()
-            mockGetSession(session)
-          }
-          assertThrows[RuntimeException](await(performAction()))
-        }
-
         "there is no user selected email in session " in {
           val session = Fixtures.individualHECSession(
             loginData = Fixtures.individualLoginData(emailAddress = ggEmailId.some),
             emailRequestedForTaxCheck = Fixtures.emailRequestedForTaxCheck().some,
             userEmailAnswers = None
           )
-          testTechnicalError(session)
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+          }
+          assertThrows[InconsistentSessionState](await(performAction()))
         }
 
         "session failed to get updated" in {
@@ -98,7 +96,12 @@ class VerifyEmailPasscodeControllerSpec
             userEmailAnswers =
               Fixtures.userEmailAnswers(passcodeRequestResult = PasscodeRequestResult.PasscodeSent.some).some
           )
-          testTechnicalError(session)
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+          }
+          assertThrows[RuntimeException](await(performAction()))
         }
       }
 
@@ -301,7 +304,7 @@ class VerifyEmailPasscodeControllerSpec
             mockAuthWithNoRetrievals()
             mockGetSession(session)
           }
-          assertThrows[RuntimeException](await(performAction()))
+          assertThrows[InconsistentSessionState](await(performAction()))
         }
 
         "call to verify passcode fails" in {

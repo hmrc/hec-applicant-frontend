@@ -44,6 +44,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.ids._
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType.DriverOfTaxisAndPrivateHires
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceValidityPeriod.UpToOneYear
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
+import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService.InconsistentSessionState
 import uk.gov.hmrc.hecapplicantfrontend.utils.Fixtures
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -435,7 +436,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             implicit val request: RequestWithSessionData[_] =
               requestWithSessionData(session)
 
-            assertThrows[RuntimeException] {
+            assertThrows[InconsistentSessionState] {
               journeyService.updateAndNext(
                 routes.LicenceDetailsController.recentLicenceLength,
                 updatedSession
@@ -548,7 +549,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             implicit val request: RequestWithSessionData[_] =
               requestWithSessionData(session)
 
-            assertThrows[RuntimeException] {
+            assertThrows[InconsistentSessionState] {
               journeyService.updateAndNext(
                 routes.EntityTypeController.entityType,
                 session
@@ -619,7 +620,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             implicit val request: RequestWithSessionData[_] =
               requestWithSessionData(session)
 
-            assertThrows[RuntimeException](
+            assertThrows[InconsistentSessionState](
               journeyService.updateAndNext(
                 routes.TaxSituationController.taxSituation,
                 updatedSession
@@ -672,7 +673,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               implicit val request: RequestWithSessionData[_] =
                 requestWithSessionData(session)
 
-              assertThrows[RuntimeException] {
+              assertThrows[InconsistentSessionState] {
                 journeyService.updateAndNext(
                   routes.TaxSituationController.taxSituation,
                   session
@@ -724,7 +725,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               implicit val request: RequestWithSessionData[_] =
                 requestWithSessionData(session)
 
-              assertThrows[RuntimeException](
+              assertThrows[InconsistentSessionState](
                 journeyService.updateAndNext(
                   routes.TaxSituationController.taxSituation,
                   updatedSession
@@ -830,7 +831,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             implicit val request: RequestWithSessionData[_] =
               requestWithSessionData(session)
 
-            assertThrows[RuntimeException](
+            assertThrows[InconsistentSessionState](
               await(
                 journeyService
                   .updateAndNext(
@@ -916,7 +917,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             implicit val request: RequestWithSessionData[_] =
               requestWithSessionData(session)
 
-            assertThrows[RuntimeException](
+            assertThrows[InconsistentSessionState](
               await(
                 journeyService
                   .updateAndNext(
@@ -982,7 +983,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
 
             implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
 
-            assertThrows[RuntimeException] {
+            assertThrows[InconsistentSessionState] {
               journeyService.updateAndNext(
                 routes.CompanyDetailsController.confirmCompanyDetails,
                 updatedSession
@@ -1001,7 +1002,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
 
             implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
 
-            assertThrows[RuntimeException] {
+            assertThrows[InconsistentSessionState] {
               journeyService.updateAndNext(
                 routes.CompanyDetailsController.confirmCompanyDetails,
                 updatedSession
@@ -1246,7 +1247,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
 
               implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
 
-              assertThrows[RuntimeException] {
+              assertThrows[InconsistentSessionState] {
                 journeyService.updateAndNext(chargeableForCorporationTaxRoute, updatedSession)
               }
             }
@@ -1257,7 +1258,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
 
               implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
 
-              assertThrows[RuntimeException] {
+              assertThrows[InconsistentSessionState] {
                 journeyService.updateAndNext(chargeableForCorporationTaxRoute, updatedSession)
               }
             }
@@ -1275,7 +1276,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
 
               implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
 
-              assertThrows[RuntimeException] {
+              assertThrows[InconsistentSessionState] {
                 journeyService.updateAndNext(chargeableForCorporationTaxRoute, updatedSession)
               }
             }
@@ -1396,7 +1397,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
 
             implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
 
-            assertThrows[RuntimeException] {
+            assertThrows[InconsistentSessionState] {
               journeyService.updateAndNext(
                 routes.CompanyDetailsController.recentlyStartedTrading,
                 updatedSession
@@ -1471,7 +1472,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
 
               implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
 
-              assertThrows[RuntimeException] {
+              assertThrows[InconsistentSessionState] {
                 journeyService.updateAndNext(
                   routes.CompanyDetailsController.enterCtutr,
                   session
@@ -1489,7 +1490,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
 
               implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
 
-              assertThrows[RuntimeException] {
+              assertThrows[InconsistentSessionState] {
                 journeyService.updateAndNext(
                   routes.CompanyDetailsController.enterCtutr,
                   session
@@ -1508,7 +1509,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
 
               implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
 
-              assertThrows[RuntimeException] {
+              assertThrows[InconsistentSessionState] {
                 journeyService.updateAndNext(
                   routes.CompanyDetailsController.enterCtutr,
                   session
@@ -2414,7 +2415,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
           val session                                     = CompanyHECSession.newSession(companyLoginData)
           implicit val request: RequestWithSessionData[_] =
             requestWithSessionData(session)
-          assertThrows[RuntimeException](
+          assertThrows[InconsistentSessionState](
             journeyService.previous(
               routes.ConfirmIndividualDetailsController.confirmIndividualDetailsSubmit
             )
@@ -2836,7 +2837,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             implicit val request: RequestWithSessionData[_] =
               requestWithSessionData(session)
 
-            assertThrows[RuntimeException] {
+            assertThrows[InconsistentSessionState] {
               journeyService.previous(
                 routes.SAController.saIncomeStatement
               )
@@ -2889,7 +2890,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             implicit val request: RequestWithSessionData[_] =
               requestWithSessionData(session)
 
-            assertThrows[RuntimeException] {
+            assertThrows[InconsistentSessionState] {
               journeyService.previous(
                 routes.SAController.noReturnFound
               )

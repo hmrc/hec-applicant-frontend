@@ -36,6 +36,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceValidityPeriod._
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hecapplicantfrontend.models.{CompanyUserAnswers, HECSession, IndividualUserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
+import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService.InconsistentSessionState
 import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging, TimeProvider}
 import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.http.HeaderCarrier
@@ -196,7 +197,7 @@ class LicenceDetailsController @Inject() (
         }
         Ok(licenceValidityPeriodPage(form, back, options))
       case None              =>
-        sys.error("Couldn't find licence Type")
+        InconsistentSessionState("Couldn't find licence Type").doThrow
     }
 
   }
@@ -237,7 +238,7 @@ class LicenceDetailsController @Inject() (
             handleValidLicenceTimePeriod
           )
       case None              =>
-        sys.error("Couldn't find licence Type")
+        InconsistentSessionState("Couldn't find licence Type").doThrow
     }
   }
 

@@ -27,6 +27,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.{DateOfBirth, Error, Name}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
+import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService.InconsistentSessionState
 
 import java.time.LocalDate
 import scala.concurrent.Future
@@ -65,7 +66,7 @@ class ConfirmIndividualDetailsControllerSpec
             mockGetSession(CompanyHECSession.newSession(companyLoginData))
           }
 
-          assertThrows[RuntimeException](await(performAction()))
+          assertThrows[InconsistentSessionState](await(performAction()))
         }
       }
 
@@ -131,7 +132,7 @@ class ConfirmIndividualDetailsControllerSpec
             mockGetSession(CompanyHECSession.newSession(companyLoginData))
           }
 
-          assertThrows[RuntimeException](await(performAction()))
+          assertThrows[InconsistentSessionState](await(performAction()))
         }
 
         "there is a problem getting the next page" in {
@@ -209,7 +210,7 @@ class ConfirmIndividualDetailsControllerSpec
             mockGetSession(CompanyHECSession.newSession(companyLoginData))
           }
 
-          assertThrows[RuntimeException](await(performAction()))
+          assertThrows[InconsistentSessionState](await(performAction()))
         }
       }
 

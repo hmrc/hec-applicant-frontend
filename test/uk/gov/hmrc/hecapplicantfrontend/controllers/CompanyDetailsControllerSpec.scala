@@ -36,6 +36,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.company.{CTStatus, CT
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR, GGCredId}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
+import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService.InconsistentSessionState
 import uk.gov.hmrc.hecapplicantfrontend.services.{AuditService, AuditServiceSupport, CtutrAttemptsService, JourneyService, TaxCheckService}
 import uk.gov.hmrc.hecapplicantfrontend.util.TimeProvider
 import uk.gov.hmrc.hecapplicantfrontend.utils.Fixtures
@@ -45,6 +46,7 @@ import java.time.{LocalDate, ZoneId, ZonedDateTime}
 import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.reflect.ClassTag
 
 class CompanyDetailsControllerSpec
     extends ControllerSpec
@@ -204,20 +206,20 @@ class CompanyDetailsControllerSpec
 
       "return a technical error" when {
 
-        def test(session: HECSession) = {
+        def testInconsistentSessionStateError(session: HECSession) = {
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
           }
-          assertThrows[RuntimeException](await(performAction()))
+          assertThrows[InconsistentSessionState](await(performAction()))
         }
 
         "company name is not populated" in {
-          test(Fixtures.companyHECSession())
+          testInconsistentSessionStateError(Fixtures.companyHECSession())
         }
 
         "applicant is individual" in {
-          test(Fixtures.individualHECSession())
+          testInconsistentSessionStateError(Fixtures.individualHECSession())
 
         }
       }
@@ -294,19 +296,19 @@ class CompanyDetailsControllerSpec
 
       "return a technical error" when {
 
-        def test(session: HECSession, value: String) = {
+        def testInconsistentSessionStateError(session: HECSession, value: String) = {
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
           }
-          assertThrows[RuntimeException](await(performAction("confirmCompanyName" -> value)(Language.English)))
+          assertThrows[InconsistentSessionState](await(performAction("confirmCompanyName" -> value)(Language.English)))
         }
 
         "user answers with a Yes" when {
 
           "CRN is not populated" in {
             // session contains CTUTR from enrolments
-            test(
+            testInconsistentSessionStateError(
               Fixtures.companyHECSession(
                 Fixtures.companyLoginData(ctutr = Some(CTUTR("ctutr"))),
                 retrievedJourneyDataWithCompanyName
@@ -317,8 +319,7 @@ class CompanyDetailsControllerSpec
           }
 
           "the applicant type is individual" in {
-
-            test(Fixtures.individualHECSession(), "0")
+            testInconsistentSessionStateError(Fixtures.individualHECSession(), "0")
           }
 
           "the call to fetch CT status fails" in {
@@ -669,7 +670,7 @@ class CompanyDetailsControllerSpec
             mockGetSession(Fixtures.individualHECSession())
           }
 
-          assertThrows[RuntimeException](await(performAction()))
+          assertThrows[InconsistentSessionState](await(performAction()))
         }
 
         "CT status accounting period is not populated" in {
@@ -685,7 +686,7 @@ class CompanyDetailsControllerSpec
             mockAuthWithNoRetrievals()
             mockGetSession(session)
           }
-          assertThrows[RuntimeException](await(performAction()))
+          assertThrows[InconsistentSessionState](await(performAction()))
 
         }
       }
@@ -748,7 +749,7 @@ class CompanyDetailsControllerSpec
             mockGetSession(Fixtures.individualHECSession())
           }
 
-          assertThrows[RuntimeException](await(performAction()))
+          assertThrows[InconsistentSessionState](await(performAction()))
         }
 
         "CT status accounting period is not populated" in {
@@ -761,7 +762,7 @@ class CompanyDetailsControllerSpec
             mockAuthWithNoRetrievals()
             mockGetSession(session)
           }
-          assertThrows[RuntimeException](await(performAction()))
+          assertThrows[InconsistentSessionState](await(performAction()))
 
         }
 
@@ -926,17 +927,17 @@ class CompanyDetailsControllerSpec
 
       "return a technical error" when {
 
-        def test(session: HECSession) = {
+        def testInconsistentSessionStateError(session: HECSession) = {
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
           }
 
-          assertThrows[RuntimeException](await(performAction()))
+          assertThrows[InconsistentSessionState](await(performAction()))
         }
 
         "applicant is individual" in {
-          test(Fixtures.individualHECSession())
+          testInconsistentSessionStateError(Fixtures.individualHECSession())
         }
 
         "CT status accounting period is not populated" in {
@@ -946,7 +947,7 @@ class CompanyDetailsControllerSpec
               ctStatus = Some(Fixtures.ctStatusResponse(latestAccountingPeriod = None))
             )
           )
-          test(session)
+          testInconsistentSessionStateError(session)
         }
       }
     }
@@ -1000,17 +1001,17 @@ class CompanyDetailsControllerSpec
 
       "return a technical error" when {
 
-        def test(session: HECSession) = {
+        def testInconsistentSessionStateError(session: HECSession) = {
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
           }
 
-          assertThrows[RuntimeException](await(performAction()))
+          assertThrows[InconsistentSessionState](await(performAction()))
         }
 
         "the applicant type is individual" in {
-          test(Fixtures.individualHECSession())
+          testInconsistentSessionStateError(Fixtures.individualHECSession())
         }
 
         "CT status accounting period is not populated" in {
@@ -1018,7 +1019,7 @@ class CompanyDetailsControllerSpec
             companyLoginData,
             retrievedJourneyDataWithCompanyName.copy(ctStatus = Some(CTStatusResponse(CTUTR("utr"), date, date, None)))
           )
-          test(session)
+          testInconsistentSessionStateError(session)
 
         }
 
@@ -1167,7 +1168,7 @@ class CompanyDetailsControllerSpec
             mockGetSession(Fixtures.individualHECSession())
           }
 
-          assertThrows[RuntimeException](await(performAction()))
+          assertThrows[InconsistentSessionState](await(performAction()))
         }
 
       }
@@ -1230,7 +1231,7 @@ class CompanyDetailsControllerSpec
             mockGetSession(Fixtures.individualHECSession())
           }
 
-          assertThrows[RuntimeException](await(performAction()))
+          assertThrows[InconsistentSessionState](await(performAction()))
         }
 
         "the call to update and next fails" in {
@@ -1378,7 +1379,7 @@ class CompanyDetailsControllerSpec
             mockGetSession(Fixtures.individualHECSession())
           }
 
-          assertThrows[RuntimeException](await(performAction()))
+          assertThrows[InconsistentSessionState](await(performAction()))
         }
 
         "DES CTUTR is not populated" in {
@@ -1391,7 +1392,7 @@ class CompanyDetailsControllerSpec
             mockAuthWithNoRetrievals()
             mockGetSession(session)
           }
-          assertThrows[RuntimeException](await(performAction()))
+          assertThrows[InconsistentSessionState](await(performAction()))
         }
       }
     }
@@ -1522,7 +1523,7 @@ class CompanyDetailsControllerSpec
             mockGetSession(Fixtures.individualHECSession())
           }
 
-          assertThrows[RuntimeException](await(performAction()(Language.English)))
+          assertThrows[InconsistentSessionState](await(performAction()(Language.English)))
         }
 
         "CRN answer is missing" in {
@@ -1536,7 +1537,7 @@ class CompanyDetailsControllerSpec
             mockAuthWithNoRetrievals()
             mockGetSession(session)
           }
-          assertThrows[RuntimeException](await(performAction("enterCtutr" -> "some-utr")(Language.English)))
+          assertThrows[InconsistentSessionState](await(performAction("enterCtutr" -> "some-utr")(Language.English)))
         }
 
         "DES CTUTR is not in the session" in {
@@ -1550,7 +1551,7 @@ class CompanyDetailsControllerSpec
             mockAuthWithNoRetrievals()
             mockGetSession(session)
           }
-          assertThrows[RuntimeException](await(performAction("enterCtutr" -> "some-utr")(Language.English)))
+          assertThrows[InconsistentSessionState](await(performAction("enterCtutr" -> "some-utr")(Language.English)))
         }
 
         val companySessionWithCrn = Fixtures.companyHECSession(
@@ -2013,26 +2014,29 @@ class CompanyDetailsControllerSpec
       }
 
       "throw exception" when {
-        def test(session: HECSession) = {
+        def testInconsistentSessionStateError(session: HECSession) = {
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
           }
 
-          assertThrows[RuntimeException](await(performAction()))
+          assertThrows[InconsistentSessionState](await(performAction()))
         }
 
         "session is for individual" in {
-          test(Fixtures.individualHECSession())
+          testInconsistentSessionStateError(Fixtures.individualHECSession())
         }
 
         "CRN is missing in session answers" in {
           val answers = Fixtures.incompleteCompanyUserAnswers(crn = None)
           val session = Fixtures.companyHECSession(userAnswers = answers)
-          test(session)
+          testInconsistentSessionStateError(session)
         }
 
-        def test1(session: HECSession, result: Either[Error, Option[CtutrAttempts]]) = {
+        def testCtutrAttempts[E <: Exception : ClassTag](
+          session: HECSession,
+          result: Either[Error, Option[CtutrAttempts]]
+        ) = {
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
@@ -2042,20 +2046,20 @@ class CompanyDetailsControllerSpec
             mockCtutrAttemptsServiceGet(crn, companyLoginData.ggCredId)(result)
           }
 
-          assertThrows[RuntimeException](await(performAction()))
+          assertThrows[E](await(performAction()))
         }
 
         "fetching ctutr attempts fails" in {
           val answers = Fixtures.incompleteCompanyUserAnswers(crn = Some(crn))
           val session = Fixtures.companyHECSession(userAnswers = answers)
-          test1(session, Left(Error("some error")))
+          testCtutrAttempts[RuntimeException](session, Left(Error("some error")))
 
         }
 
         "fetched ctutr attempts is not blocked" in {
           val answers = Fixtures.incompleteCompanyUserAnswers(crn = Some(crn))
           val session = Fixtures.companyHECSession(userAnswers = answers)
-          test1(session, Right(Some(ctutrAttempts)))
+          testCtutrAttempts[InconsistentSessionState](session, Right(Some(ctutrAttempts)))
 
         }
       }
