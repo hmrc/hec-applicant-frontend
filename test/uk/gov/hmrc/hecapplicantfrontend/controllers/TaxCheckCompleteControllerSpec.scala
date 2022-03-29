@@ -33,6 +33,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, Lice
 import uk.gov.hmrc.hecapplicantfrontend.models.views.LicenceTypeOption
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
+import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService.InconsistentSessionState
 import uk.gov.hmrc.hecapplicantfrontend.utils.Fixtures
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -88,7 +89,7 @@ class TaxCheckCompleteControllerSpec
             mockGetSession(session)
           }
 
-          assertThrows[RuntimeException](await(performAction()))
+          assertThrows[InconsistentSessionState](await(performAction()))
         }
 
         "no licence type can be found in session" in {
@@ -100,7 +101,7 @@ class TaxCheckCompleteControllerSpec
             mockGetSession(session)
           }
 
-          assertThrows[RuntimeException](await(performAction()))
+          assertThrows[InconsistentSessionState](await(performAction()))
         }
 
       }
@@ -172,7 +173,7 @@ class TaxCheckCompleteControllerSpec
             mockGetSession(session)
           }
 
-          assertThrows[RuntimeException](await(performAction()))
+          assertThrows[InconsistentSessionState](await(performAction()))
         }
 
         "no licence type can be found in session" in {
@@ -184,7 +185,7 @@ class TaxCheckCompleteControllerSpec
             mockGetSession(session)
           }
 
-          assertThrows[RuntimeException](await(performAction()))
+          assertThrows[InconsistentSessionState](await(performAction()))
         }
 
         "the call to update and next fails" in {

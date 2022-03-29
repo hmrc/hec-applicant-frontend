@@ -37,6 +37,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.company.{CTAccounting
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR}
 import uk.gov.hmrc.hecapplicantfrontend.models.views.YesNoOption
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
+import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService.InconsistentSessionState
 import uk.gov.hmrc.hecapplicantfrontend.services.{AuditService, CtutrAttemptsService, JourneyService, TaxCheckService}
 import uk.gov.hmrc.hecapplicantfrontend.util.StringUtils.StringOps
 import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging, TimeProvider, TimeUtils}
@@ -479,7 +480,7 @@ class CompanyDetailsController @Inject() (
                   TimeUtils.govDateTimeDisplayFormat(blockedUntil.withZoneSameInstant(ZoneId.of("Europe/London")))
                 Ok(tooManyCTUTRAttemptsPage(back, crn.value, companyName.name, formattedDate))
               case _                                                             =>
-                sys.error("CTUTR attempts is not blocked")
+                InconsistentSessionState("CTUTR attempts is not blocked").doThrow
             }
           )
       }
@@ -550,7 +551,7 @@ class CompanyDetailsController @Inject() (
     companySession.retrievedJourneyData.companyName match {
       case Some(companyName) => f(companyName)
       case None              =>
-        sys.error("Missing company name")
+        InconsistentSessionState("Missing company name").doThrow
     }
 
   private def ensureCompanyDataHasDesCtutr(
@@ -559,7 +560,7 @@ class CompanyDetailsController @Inject() (
     companySession.retrievedJourneyData.desCtutr match {
       case Some(ctutr) => f(ctutr)
       case None        =>
-        sys.error("Missing DES-CTUTR")
+        InconsistentSessionState("Missing DES-CTUTR").doThrow
     }
 
   private def ensureCompanyDataHasCTStatusAccountingPeriod(
@@ -568,9 +569,9 @@ class CompanyDetailsController @Inject() (
     companySession.retrievedJourneyData.ctStatus match {
       case Some(CTStatusResponse(_, _, _, Some(latestAccountingPeriod))) => f(latestAccountingPeriod)
       case Some(_)                                                       =>
-        sys.error("Missing CT status latest accounting period")
+        InconsistentSessionState("Missing CT status latest accounting period").doThrow
       case None                                                          =>
-        sys.error("Missing CT status")
+        InconsistentSessionState("Missing CT status").doThrow
     }
 
   private def ensureUserAnswersHasCRN(
@@ -579,7 +580,7 @@ class CompanyDetailsController @Inject() (
     session.userAnswers.fold(_.crn, _.crn.some) match {
       case Some(crn) => f(crn)
       case None      =>
-        sys.error("CRN is not populated in user answers")
+        InconsistentSessionState("CRN is not populated in user answers").doThrow
     }
 
   private def updateAndNextJourneyData(current: Call, updatedSession: HECSession)(implicit

@@ -44,6 +44,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.individual.{SAStatus,
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
 import uk.gov.hmrc.hecapplicantfrontend.models.{EmailRequestedForTaxCheck, EntityType, Error, HECSession, TaxSituation, YesNoAnswer}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
+import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService.InconsistentSessionState
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyServiceImpl._
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -61,6 +62,16 @@ trait JourneyService {
   def previous(current: Call)(implicit r: RequestWithSessionData[_], hc: HeaderCarrier): Call
 
   def firstPage(session: HECSession): Call
+
+}
+
+object JourneyService {
+
+  final case class InconsistentSessionState(message: String) extends Exception {
+
+    @SuppressWarnings(Array("org.wartremover.warts.Throw"))
+    def doThrow: Nothing = throw this
+  }
 
 }
 
@@ -150,7 +161,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
                              implicit val enableAuditing: EnableAuditing = EnableAuditing(true)
                              upliftedSession.userAnswers.foldByCompleteness(
                                _ =>
-                                 if (currentPageIsCYA) sys.error("All user answers are not complete")
+                                 if (currentPageIsCYA) throwInconsistentSessionStateError("All user answers are not complete")
                                  else paths.get(current).map(_(upliftedSession)),
                                _ =>
                                  if (currentPageIsCYA || upliftedSession.isEmailRequested)
@@ -170,6 +181,9 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
     if (currentSession === updatedSession) EitherT.pure[Future, Error](next)
     else
       sessionStore.store(updatedSession).map(_ => next)
+
+  private def throwInconsistentSessionStateError(message: String): Nothing =
+    InconsistentSessionState(message).doThrow
 
   override def previous(current: Call)(implicit
     r: RequestWithSessionData[_],
@@ -194,13 +208,13 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
           .get(current)
           .map(_(r.sessionData))
           .orElse(loop(routes.ResendEmailConfirmationController.resendEmail))
-          .getOrElse(sys.error(s"Could not find previous for $current"))
+          .getOrElse(throwInconsistentSessionStateError(s"Could not find previous for $current"))
       } else {
         exitPageToPreviousPage
           .get(current)
           .map(_(r.sessionData))
           .orElse(loop(routes.TaxCheckCompleteController.taxCheckComplete))
-          .getOrElse(sys.error(s"Could not find previous for $current"))
+          .getOrElse(throwInconsistentSessionStateError(s"Could not find previous for $current"))
       }
     } else {
       if (current === routes.StartController.start)
@@ -212,7 +226,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
           .get(current)
           .map(_(r.sessionData))
           .orElse(loop(routes.StartController.start))
-          .getOrElse(sys.error(s"Could not find previous for $current"))
+          .getOrElse(throwInconsistentSessionStateError(s"Could not find previous for $current"))
     }
   }
 
@@ -222,7 +236,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
   ): Either[Error, HECSession] =
     paths.get(current).map(_(session)) match {
       case None =>
-        Left(Error(s"Could not find next for $current"))
+        Left(Error(InconsistentSessionState(s"Could not find next for $current")))
 
       case Some(next) =>
         // if we're not on the last page and there is no next page some exit page has been reached
@@ -345,7 +359,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
         } else {
           routes.LicenceDetailsController.licenceTimeTrading
         }
-      case None              => sys.error("Could not find licence type")
+      case None              => throwInconsistentSessionStateError("Could not find licence type")
     }
   }
 
@@ -358,7 +372,9 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
         if (licenceTypeForIndividualAndCompany(licenceType)) routes.EntityTypeController.entityType
         else routes.TaxSituationController.taxSituation
       case None              =>
-        sys.error("Could not find licence type to work out route after licence validity period")
+        throwInconsistentSessionStateError(
+          "Could not find licence type to work out route after licence validity period"
+        )
     }
 
   private def entityTypeRoute(session: HECSession): Call = {
@@ -371,7 +387,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
 
     maybeSelectedEntityType match {
       case None                     =>
-        sys.error("Could not find selected entity type for entity type route")
+        throwInconsistentSessionStateError("Could not find selected entity type for entity type route")
       case Some(selectedEntityType) =>
         if (selectedEntityType === ggEntityType && selectedEntityType === Individual)
           routes.TaxSituationController.taxSituation
@@ -388,7 +404,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
     session.mapAsIndividual { individualSession: IndividualHECSession =>
       individualSession.userAnswers.fold(_.taxSituation, _.taxSituation.some) match {
         case None =>
-          sys.error("Could not find tax situation for tax situation route")
+          throwInconsistentSessionStateError("Could not find tax situation for tax situation route")
 
         case Some(taxSituation) =>
           if (saTaxSituations.contains(taxSituation)) {
@@ -404,7 +420,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
                 }
 
               case (Some(_), IndividualRetrievedJourneyData(None)) =>
-                sys.error("Found SA UTR for tax situation route but no SA status response")
+                throwInconsistentSessionStateError("Found SA UTR for tax situation route but no SA status response")
 
               case (None, _) =>
                 if (enableAuditing.enabled) auditService.sendEvent(TaxCheckExit.SAUTRNotFound(session, r.language))
@@ -422,7 +438,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
         routes.CompanyDetailsController.tooManyCtutrAttempts
       } else {
         companySession.retrievedJourneyData.companyName.fold(
-          sys.error("company name not found")
+          throwInconsistentSessionStateError("company name not found")
         )(_ => routes.CompanyDetailsController.confirmCompanyDetails)
       }
     }
@@ -456,7 +472,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
               routes.CompanyDetailsController.enterCtutr
           }
         case Some(YesNoAnswer.No)  => routes.CRNController.companyRegistrationNumber
-        case None                  => sys.error("Confirm company details answer was not found")
+        case None                  => throwInconsistentSessionStateError("Confirm company details answer was not found")
       }
 
     }
@@ -478,10 +494,10 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
                     auditService.sendEvent(TaxCheckExit.CTNoNoticeToFileOrTaxReturn(session, r.language))
                   routes.CompanyDetailsController.cannotDoTaxCheck
               }
-            case None                   => sys.error("CT status info missing")
+            case None                   => throwInconsistentSessionStateError("CT status info missing")
           }
       } getOrElse {
-        sys.error("Chargeable for CT answer missing")
+        throwInconsistentSessionStateError("Chargeable for CT answer missing")
       }
     }
 
@@ -496,7 +512,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
             auditService.sendEvent(TaxCheckExit.CTNoAccountingPeriodNotRecentlyStartedTrading(session, r.language))
           routes.CompanyDetailsController.cannotDoTaxCheck
       } getOrElse {
-        sys.error("Answer missing for if company has recently started trading")
+        throwInconsistentSessionStateError("Answer missing for if company has recently started trading")
       }
     }
 
@@ -515,10 +531,11 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
               }
             case CompanyRetrievedJourneyData(_, Some(_), None)           =>
               routes.CompanyDetailsController.cannotDoTaxCheck
-            case _                                                       => sys.error("DES CTUTR missing in journey data")
+            case _                                                       =>
+              throwInconsistentSessionStateError("DES CTUTR missing in journey data")
           }
         } getOrElse {
-          sys.error("CTUTR is missing from user answers")
+          throwInconsistentSessionStateError("CTUTR is missing from user answers")
         }
       }
     }
@@ -545,7 +562,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
       case Some(MaximumNumberOfEmailsExceeded) =>
         routes.TooManyEmailVerificationAttemptController.tooManyEmailVerificationAttempts
       case Some(BadEmailAddress)               => routes.CannotSendVerificationPasscodeController.cannotSendVerificationPasscode
-      case _                                   => sys.error("Passcode Result is  invalid/missing from the response")
+      case _                                   => throwInconsistentSessionStateError("Passcode Result is  invalid/missing from the response")
     }
   }
 
@@ -562,7 +579,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
       case Some(MaximumNumberOfEmailsExceeded) =>
         routes.TooManyEmailVerificationAttemptController.tooManyEmailVerificationAttempts
       case Some(BadEmailAddress)               => routes.CannotSendVerificationPasscodeController.cannotSendVerificationPasscode
-      case _                                   => sys.error("Passcode Result is  invalid/missing from the response")
+      case _                                   => throwInconsistentSessionStateError("Passcode Result is  invalid/missing from the response")
     }
   }
 
@@ -573,14 +590,14 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
         routes.VerificationPasscodeExpiredController.verificationPasscodeExpired
       case Some(PasscodeVerificationResult.TooManyAttempts) =>
         routes.TooManyPasscodeVerificationController.tooManyPasscodeVerification
-      case _                                                => sys.error("Passcode Verification Result is  invalid/missing from the response")
+      case _                                                => throwInconsistentSessionStateError("Passcode Verification Result is  invalid/missing from the response")
     }
 
   def emailAddressConfirmedRoute(session: HECSession): Call =
     session.userEmailAnswers.flatMap(_.emailSendResult) match {
       case Some(EmailSendResult.EmailSent)        => routes.EmailSentController.emailSent
       case Some(EmailSendResult.EmailSentFailure) => routes.ProblemSendingEmailController.problemSendingEmail
-      case _                                      => sys.error("Email send Result is  invalid/missing from the response")
+      case _                                      => throwInconsistentSessionStateError("Email send Result is  invalid/missing from the response")
     }
 
   def resendEmailPreviousRoute(session: HECSession): Call =

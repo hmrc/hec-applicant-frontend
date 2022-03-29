@@ -25,6 +25,7 @@ import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, Session
 import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.TaxCheckCodesDisplayed
 import uk.gov.hmrc.hecapplicantfrontend.models.{EmailRequestedForTaxCheck, HECTaxCheckCode}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
+import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService.InconsistentSessionState
 import uk.gov.hmrc.hecapplicantfrontend.services.{AuditService, JourneyService}
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.hecapplicantfrontend.util.StringUtils._
@@ -61,7 +62,7 @@ class TaxChecksListController @Inject() (
   val unexpiredTaxChecks: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
     request.sessionData.unexpiredTaxChecks match {
       case Nil       =>
-        sys.error("No tax check codes found")
+        InconsistentSessionState("No tax check codes found").doThrow
       case taxChecks =>
         auditService.sendEvent(
           TaxCheckCodesDisplayed(
@@ -90,7 +91,7 @@ class TaxChecksListController @Inject() (
     authAction.andThen(sessionDataAction).async { implicit request =>
       request.sessionData.unexpiredTaxChecks match {
         case Nil       =>
-          sys.error("No tax check codes found")
+          InconsistentSessionState("No tax check codes found").doThrow
         case taxChecks =>
           taxChecks.find(t => normalise(t.taxCheckCode) === normalise(taxCheckCode)) match {
             case None           =>

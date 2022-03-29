@@ -26,6 +26,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.EmailAddress
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{Passcode, PasscodeRequestResult}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
+import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService.InconsistentSessionState
 import uk.gov.hmrc.hecapplicantfrontend.utils.Fixtures
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -81,7 +82,7 @@ class TooManyEmailVerificationAttemptControllerSpec
                 mockAuthWithNoRetrievals()
                 mockGetSession(session)
               }
-              assertThrows[RuntimeException](await(performAction()))
+              assertThrows[InconsistentSessionState](await(performAction()))
             }
           }
         }

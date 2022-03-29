@@ -24,6 +24,7 @@ import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, Session
 import uk.gov.hmrc.hecapplicantfrontend.models.CompanyUserAnswers.CompleteCompanyUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.CompleteUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.IndividualUserAnswers.CompleteIndividualUserAnswers
+import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService.InconsistentSessionState
 import uk.gov.hmrc.hecapplicantfrontend.services.{JourneyService, TaxCheckService}
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.hecapplicantfrontend.views.html
@@ -47,7 +48,7 @@ class CheckYourAnswersController @Inject() (
 
   val checkYourAnswers: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
     request.sessionData.userAnswers.foldByCompleteness(
-      _ => sys.error("Could not find complete answers"),
+      _ => InconsistentSessionState("Could not find complete answers").doThrow,
       { complete =>
         val back = journeyService.previous(routes.CheckYourAnswersController.checkYourAnswers)
         complete match {
@@ -58,7 +59,7 @@ class CheckYourAnswersController @Inject() (
                 ci,
                 request.sessionData
                   .mapAsIndividual(_.relevantIncomeTaxYear)
-                  .getOrElse(sys.error("Could not find relevant income tax year"))
+                  .getOrElse(InconsistentSessionState("Could not find relevant income tax year").doThrow)
               )
             )
           case cc: CompleteCompanyUserAnswers    =>
@@ -87,7 +88,7 @@ class CheckYourAnswersController @Inject() (
         )
 
       case _ =>
-        sys.error("Could not find complete answers")
+        InconsistentSessionState("Could not find complete answers").doThrow
     }
   }
 

@@ -21,6 +21,7 @@ import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeRequestResult
+import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService.InconsistentSessionState
 import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -38,7 +39,9 @@ class TooManyEmailVerificationAttemptController @Inject() (
     request.sessionData.userEmailAnswers.flatMap(_.passcodeRequestResult) match {
       case Some(PasscodeRequestResult.MaximumNumberOfEmailsExceeded) => Ok(tooManyEmailVerificationAttemptsPage())
       case other                                                     =>
-        sys.error(s" Passcode Request result found $other but the expected is Maximum Number Of Emails sExceeded")
+        InconsistentSessionState(
+          s"Passcode Request result found $other but the expected is Maximum Number Of Emails sExceeded"
+        ).doThrow
     }
 
   }

@@ -26,6 +26,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.{EmailRequestedForTaxCheck, HECTa
 import uk.gov.hmrc.hecapplicantfrontend.models.IndividualUserAnswers.CompleteIndividualUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
+import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService.InconsistentSessionState
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.hecapplicantfrontend.views.html
@@ -85,7 +86,7 @@ class TaxCheckCompleteController @Inject() (
     f: (HECTaxCheck, LicenceType) => Future[Result]
   )(implicit r: RequestWithSessionData[_]): Future[Result] = {
     val licenceType = r.sessionData.userAnswers.foldByCompleteness(
-      _ => sys.error("Could not find complete answers"),
+      _ => InconsistentSessionState("Could not find complete answers").doThrow,
       {
         case ci: CompleteIndividualUserAnswers => ci.licenceType
         case cc: CompleteCompanyUserAnswers    => cc.licenceType
@@ -94,7 +95,7 @@ class TaxCheckCompleteController @Inject() (
 
     r.sessionData.completedTaxCheck match {
       case Some(taxCheck) => f(taxCheck, licenceType)
-      case None           => sys.error("Completed tax check not found")
+      case None           => InconsistentSessionState("Completed tax check not found").doThrow
     }
   }
 

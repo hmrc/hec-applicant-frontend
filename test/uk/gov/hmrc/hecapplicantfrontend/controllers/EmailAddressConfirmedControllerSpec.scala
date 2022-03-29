@@ -30,6 +30,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.emailSend.{EmailParameters, Email
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{Passcode, PasscodeRequestResult, PasscodeVerificationResult}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
+import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService.InconsistentSessionState
 import uk.gov.hmrc.hecapplicantfrontend.services.{JourneyService, SendEmailService}
 import uk.gov.hmrc.hecapplicantfrontend.util.TimeUtils
 import uk.gov.hmrc.hecapplicantfrontend.utils.Fixtures
@@ -122,7 +123,7 @@ class EmailAddressConfirmedControllerSpec
             mockAuthWithNoRetrievals()
             mockGetSession(session)
           }
-          assertThrows[RuntimeException](await(performAction()))
+          assertThrows[InconsistentSessionState](await(performAction()))
         }
 
         "user selected email is not in session" in {
@@ -259,12 +260,12 @@ class EmailAddressConfirmedControllerSpec
 
       "return a technical error" when {
 
-        def testTechnicalError(session: HECSession) = {
+        def testInconsistentSessionStateError(session: HECSession) = {
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
           }
-          assertThrows[RuntimeException](await(performAction()))
+          assertThrows[InconsistentSessionState](await(performAction()))
         }
 
         "user selected email is not in session" in {
@@ -272,7 +273,7 @@ class EmailAddressConfirmedControllerSpec
             emailRequestedForTaxCheck = emailRequestedForTaxCheck.some,
             userEmailAnswers = None
           )
-          testTechnicalError(session)
+          testInconsistentSessionStateError(session)
         }
 
         "user has not chosen to get an email sent to them" in {
@@ -280,7 +281,7 @@ class EmailAddressConfirmedControllerSpec
             emailRequestedForTaxCheck = None,
             userEmailAnswers = Some(Fixtures.userEmailAnswers())
           )
-          testTechnicalError(session)
+          testInconsistentSessionStateError(session)
         }
 
         "passcode verification code is other than match and passcodeRequestResult = PasscodeSent" in {
@@ -301,7 +302,7 @@ class EmailAddressConfirmedControllerSpec
                   )
                   .some
               )
-              testTechnicalError(session)
+              testInconsistentSessionStateError(session)
             }
           }
 
@@ -324,7 +325,7 @@ class EmailAddressConfirmedControllerSpec
                   )
                   .some
               )
-              testTechnicalError(session)
+              testInconsistentSessionStateError(session)
             }
           }
 
@@ -348,7 +349,7 @@ class EmailAddressConfirmedControllerSpec
                   )
                   .some
               )
-              testTechnicalError(session)
+              testInconsistentSessionStateError(session)
             }
           }
         }

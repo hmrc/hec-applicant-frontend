@@ -23,6 +23,7 @@ import uk.gov.hmrc.hecapplicantfrontend.controllers.VerifyEmailPasscodeControlle
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeRequestResult
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
+import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService.InconsistentSessionState
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -45,7 +46,10 @@ class CannotSendVerificationPasscodeController @Inject() (
           val previous           =
             journeyService.previous(routes.CannotSendVerificationPasscodeController.cannotSendVerificationPasscode)
           Ok(cannotSendVerificationPasscodePage(isGGEmailInSession, previous))
-        case other                                       => sys.error(s" Passcode request result found $other but the expected is Bad Email Request")
+        case other                                       =>
+          InconsistentSessionState(
+            s" Passcode request result found $other but the expected is Bad Email Request"
+          ).doThrow
 
       }
     }

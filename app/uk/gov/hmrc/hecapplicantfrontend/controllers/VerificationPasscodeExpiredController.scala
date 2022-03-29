@@ -21,6 +21,7 @@ import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeVerificationResult
+import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService.InconsistentSessionState
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.hecapplicantfrontend.views.html
@@ -38,7 +39,8 @@ class VerificationPasscodeExpiredController @Inject() (
     authAction.andThen(sessionDataAction).async { implicit request =>
       request.sessionData.userEmailAnswers.flatMap(_.passcodeVerificationResult) match {
         case Some(PasscodeVerificationResult.Expired) => Ok(verificationPasscodeExpiredPage())
-        case other                                    => sys.error(s" Passcode Verification result found $other but the expected is  Expired")
+        case other                                    =>
+          InconsistentSessionState(s" Passcode Verification result found $other but the expected is  Expired").doThrow
       }
     }
 

@@ -17,19 +17,32 @@
 package uk.gov.hmrc.hecapplicantfrontend.config
 
 import javax.inject.{Inject, Singleton}
-
 import play.api.i18n.MessagesApi
-import play.api.mvc.Request
+import play.api.mvc.Results.Redirect
+import play.api.mvc.{Request, RequestHeader, Result}
 import play.twirl.api.Html
+import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
+import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService.InconsistentSessionState
+import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.play.bootstrap.frontend.http.FrontendErrorHandler
 import uk.gov.hmrc.hecapplicantfrontend.views.html.ErrorTemplate
 
 @Singleton
-class ErrorHandler @Inject() (errorTemplate: ErrorTemplate, val messagesApi: MessagesApi) extends FrontendErrorHandler {
+class ErrorHandler @Inject() (errorTemplate: ErrorTemplate, val messagesApi: MessagesApi)
+    extends FrontendErrorHandler
+    with Logging {
 
   override def standardErrorTemplate(pageTitle: String, heading: String, message: String)(implicit
     request: Request[_]
   ): Html =
     errorTemplate(pageTitle, heading, message)
+
+  override def resolveError(rh: RequestHeader, ex: Throwable): Result = ex match {
+    case _: InconsistentSessionState =>
+      Redirect(routes.StartController.start)
+
+    case _ =>
+      super.resolveError(rh, ex)
+  }
 
 }

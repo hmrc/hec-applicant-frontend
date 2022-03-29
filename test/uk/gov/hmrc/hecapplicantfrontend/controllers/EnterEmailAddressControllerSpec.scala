@@ -28,6 +28,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeRequest
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeRequestResult.{EmailAddressAlreadyVerified, PasscodeSent}
 import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, EmailType, Error, UserEmailAnswers, UserSelectedEmail}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
+import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService.InconsistentSessionState
 import uk.gov.hmrc.hecapplicantfrontend.services.{EmailVerificationService, JourneyService}
 import uk.gov.hmrc.hecapplicantfrontend.utils.Fixtures
 import uk.gov.hmrc.http.HeaderCarrier
@@ -85,14 +86,14 @@ class EnterEmailAddressControllerSpec
         "an email has not been requested" in {
           val session = Fixtures.individualHECSession(
             loginData = Fixtures.individualLoginData(),
-            emailRequestedForTaxCheck = Fixtures.emailRequestedForTaxCheck().some
+            emailRequestedForTaxCheck = None
           )
 
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
           }
-          assertThrows[RuntimeException](await(performAction()))
+          assertThrows[InconsistentSessionState](await(performAction()))
         }
 
       }
@@ -206,7 +207,7 @@ class EnterEmailAddressControllerSpec
             mockAuthWithNoRetrievals()
             mockGetSession(session)
           }
-          assertThrows[RuntimeException](await(performAction()))
+          assertThrows[InconsistentSessionState](await(performAction()))
         }
 
         "Call to request passcode fails" in {
