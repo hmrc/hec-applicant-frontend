@@ -44,7 +44,7 @@
   })(window, document, navigator)
   // end copy buttons
 
-  if (window.showUrBanner && window.hideBannerUrl && window.bannerCsrf) {
+  if (window.showUrBanner && window.hideBannerUrl) {
     const urBanner = document.querySelector('.hmrc-user-research-banner')
     if (urBanner) {
       urBanner.classList.add('hmrc-user-research-banner--show')
