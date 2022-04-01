@@ -14,12 +14,10 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.hecapplicantfrontend.views.html.components.CustomHmrcHeader
 @import uk.gov.hmrc.hmrcfrontend.views.Aliases.{Cy, En, Header, UserResearchBanner}
 @import uk.gov.hmrc.govukfrontend.views.Aliases.PhaseBanner
 @import play.twirl.api.Html
 @import play.api.i18n.Messages
-@import play.api.mvc.RequestHeader
 @import play.twirl.api.TwirlFeatureImports.defining
 
 @this(hmrcHeader: CustomHmrcHeader)
@@ -33,7 +31,7 @@
         displayHmrcBanner: Boolean = false,
         additionalBannersBlock: Option[Html] = None,
         containerClasses: String = Header.defaultObject.containerClasses
-)(implicit messages: Messages, request: RequestHeader)
+)(implicit messages: Messages)
 @defining("service.name") { serviceNameKey =>
   @defining(if(messages.isDefinedAt(serviceNameKey)) Some(messages(serviceNameKey)) else None) { serviceNameFromMessages =>
     @hmrcHeader(Header(

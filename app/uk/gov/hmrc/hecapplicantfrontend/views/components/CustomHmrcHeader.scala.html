@@ -16,15 +16,16 @@
 
 @import uk.gov.hmrc.govukfrontend.views.html.components.GovukPhaseBanner
 @import uk.gov.hmrc.hmrcfrontend.views.html.components._
-@import uk.gov.hmrc.hecapplicantfrontend.views.html.components.CustomHmrcUserResearchBanner
+@import cats.syntax.eq._
+@import cats.instances.string._
+@import uk.gov.hmrc.hmrcfrontend.views.Aliases.Header
 
 @this(hmrcBanner: HmrcBanner, hmrcUserResearchBanner: CustomHmrcUserResearchBanner, govukPhaseBanner: GovukPhaseBanner)
 
 @(params: Header)
 @import params._
-
 <header role="banner">
-  <div class="govuk-header @toClasses("hmrc-header", classes) @if(signOutHref.exists(_.nonEmpty) || languageToggle.exists(_.linkMap.nonEmpty)){ hmrc-header--with-additional-navigation}else{}" data-module="govuk-header"
+  <div class="govuk-header @toClasses("hmrc-header", params.classes) @if(signOutHref.exists(_.nonEmpty) || languageToggle.exists(_.linkMap.nonEmpty)){ hmrc-header--with-additional-navigation}else{}" data-module="govuk-header"
     @toAttributes(attributes)>
     <div class="@toClasses("govuk-header__container ", containerClasses)">
       <div class="govuk-header__logo">
@@ -86,11 +87,11 @@
               <ul id="navigation" class="@toClasses("govuk-header__navigation-list", navigationClasses)">
               @for(item <- navigation.getOrElse(Seq.empty).filter(item => item.content.nonEmpty)) {
                 <li class="govuk-header__navigation-item@if(item.active){ govuk-header__navigation-item--active}else{}">
-                  @if(item.href.getOrElse("") != "") {
+                  @if(item.href.exists(_.nonEmpty)) {
                     <a class="govuk-header__link" href="@item.href" @toAttributes(item.attributes)>
                     }
                   @item.content.asHtml
-                  @if(item.href.getOrElse("") != "") {
+                  @if(item.href.exists(_.nonEmpty)) {
                   </a>
                   }
                 </li>
@@ -115,7 +116,7 @@
                 <ul class="govuk-list hmrc-language-select__items">
                 @for((lang, link) <- linkMap) {
                   <li class="govuk-header__navigation-item">
-                    <a @if(lang == language){aria-current="page"}else{class="govuk-header__link"}
+                    <a @if(lang.code === language.code){aria-current="page"}else{class="govuk-header__link"}
                     lang="@lang.code" hreflang="@lang.code" href="@link">@lang.name</a>
                   </li>
                 }
