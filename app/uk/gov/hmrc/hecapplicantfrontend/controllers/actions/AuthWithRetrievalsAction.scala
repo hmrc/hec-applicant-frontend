@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.controllers.actions
 
+import cats.syntax.eq._
+import cats.instances.char._
 import com.google.inject.{Inject, Singleton}
 import play.api.mvc.Results.Redirect
 import play.api.mvc._
@@ -23,7 +25,10 @@ import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 import uk.gov.hmrc.auth.core.retrieve.~
 import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisationException, AuthorisedFunctions, NoActiveSession}
 import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
+import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.ApplicantServiceStartEndPointAccessed
+import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.ApplicantServiceStartEndPointAccessed.AuthenticationStatus
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedGGData
+import uk.gov.hmrc.hecapplicantfrontend.services.AuditService
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
@@ -38,6 +43,7 @@ final case class AuthenticatedRequestWithRetrievedGGData[A](
 @Singleton
 class AuthWithRetrievalsAction @Inject() (
   val authConnector: AuthConnector,
+  auditService: AuditService,
   mcc: MessagesControllerComponents,
   appConfig: AppConfig
 )(implicit val executionContext: ExecutionContext)
@@ -79,7 +85,15 @@ class AuthWithRetrievalsAction @Inject() (
         )
       }
       .recover {
-        case _: NoActiveSession => Redirect(appConfig.signInUrl)
+        case _: NoActiveSession =>
+          auditService.sendEvent(
+            ApplicantServiceStartEndPointAccessed(
+              AuthenticationStatus.NotAuthenticated,
+              Some(appConfig.signInUrl.takeWhile(_ =!= '?')),
+              None
+            )
+          )(hc, ApplicantServiceStartEndPointAccessed.writes, request)
+          Redirect(appConfig.signInUrl)
 
         case e: AuthorisationException => sys.error(s"Could not authorise: ${e.getMessage}")
 

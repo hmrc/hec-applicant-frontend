@@ -16,41 +16,20 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.controllers
 
-import com.typesafe.config.ConfigFactory
-import play.api.Configuration
 import play.api.mvc.Result
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.authorise.EmptyPredicate
 import uk.gov.hmrc.auth.core.retrieve.EmptyRetrieval
 import uk.gov.hmrc.auth.core.{AuthorisationException, BearerTokenExpired, IncorrectCredentialStrength, InsufficientEnrolments, InternalError, InvalidBearerToken, MissingBearerToken, NoActiveSession, SessionRecordNotFound, UnsupportedAffinityGroup, UnsupportedAuthProvider, UnsupportedCredentialRole}
 import uk.gov.hmrc.hecapplicantfrontend.models.Error
-import uk.gov.hmrc.hecapplicantfrontend.util.StringUtils.StringOps
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
 trait AuthAndSessionDataBehaviour { this: ControllerSpec with AuthSupport with SessionSupport =>
 
-  val selfUrl = "http://self:123"
-
-  val signInUrl = "https://sign-in:456"
-
-  val ggOrigin = "ggOrigin"
-
-  override def additionalConfig = Configuration(
-    ConfigFactory.parseString(
-      s"""
-         | self.url = "$selfUrl"
-         | auth {
-         |   sign-in.url = "$signInUrl"
-         |   gg.origin = "$ggOrigin"
-         | }
-         |""".stripMargin
-    )
-  )
-
   def authBehaviour(performAction: () => Future[Result]): Unit = {
-    "redirect to the login page when the user is not logged in" in {
+    "redirect to the start endpoint when the user is not logged in" in {
       List[NoActiveSession](
         BearerTokenExpired(),
         MissingBearerToken(),
@@ -63,14 +42,14 @@ trait AuthAndSessionDataBehaviour { this: ControllerSpec with AuthSupport with S
           val result = performAction()
           checkIsRedirect(
             result,
-            s"$signInUrl?continue=${(s"$selfUrl/tax-check-for-licence/start").urlEncode}&origin=$ggOrigin"
+            routes.StartController.start
           )
         }
       }
 
     }
 
-    "return a techniical error when an AuthorisationException is thrown" in {
+    "return a technical error when an AuthorisationException is thrown" in {
       List[AuthorisationException](
         InsufficientEnrolments(),
         UnsupportedAffinityGroup(),

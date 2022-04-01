@@ -79,7 +79,7 @@ class AppConfig @Inject() (config: Configuration, contactFrontendConfig: Contact
   val authTimeoutCountdownSeconds: Int =
     config.get[FiniteDuration]("auth.sign-out.inactivity-countdown").toSeconds.toInt
 
-  lazy val redirectToIvUplift: Result = {
+  lazy val (redirectToIvUpliftUrl, redirectToIvUpliftResult): (String, Result) = {
     val ivUrl: String = platformHost.getOrElse(config.get[String]("iv.url"))
     val ivLocation    = config.get[String]("iv.location")
 
@@ -99,7 +99,7 @@ class AppConfig @Inject() (config: Configuration, contactFrontendConfig: Contact
 
     val redirectToIvUrl: String = s"$ivUrl$ivLocation/uplift"
 
-    Redirect(
+    redirectToIvUrl -> Redirect(
       redirectToIvUrl,
       Map(
         "origin"          -> Seq(ivOrigin),
