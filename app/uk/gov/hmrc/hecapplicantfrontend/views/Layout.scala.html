@@ -21,6 +21,8 @@
 @import views.html.helper.CSPNonce
 @import uk.gov.hmrc.govukfrontend.views.html.components._
 @import uk.gov.hmrc.hmrcfrontend.views.html.helpers._
+@import uk.gov.hmrc.hecapplicantfrontend.views.html.components.CustomHmrcStandardHeader
+@import uk.gov.hmrc.hmrcfrontend.views.Aliases.UserResearchBanner
 
 @import play.api.i18n.Messages
 @import play.api.mvc.{Call, Request}
@@ -32,7 +34,7 @@
         govukPhaseBanner : GovukPhaseBanner,
         govukBackLink: GovukBackLink,
         hmrcHead: HmrcHead,
-        hmrcStandardHeader: HmrcStandardHeader,
+        hmrcStandardHeader: CustomHmrcStandardHeader,
         hmrcStandardFooter: HmrcStandardFooter,
         hmrcScripts: HmrcScripts,
         hmrcLanguageSelectHelper: HmrcLanguageSelectHelper,
@@ -104,7 +106,7 @@
 @govukLayout(
     pageTitle = Some(documentTitle),
     headBlock = Some(hmrcHead(headBlock = Some(head), nonce = CSPNonce.get)),
-    headerBlock = Some(hmrcStandardHeader(signOutUrl = if(showSignOutLink) Some(appConfig.signOutUrl(continueUrl = None)) else None)),
+    headerBlock = Some(hmrcStandardHeader(userResearchBanner = Some(UserResearchBanner(url = appConfig.userRecruitmentUrl)), signOutUrl = if(showSignOutLink) Some(appConfig.signOutUrl(continueUrl = None)) else None)),
     scriptsBlock = Some(hmrcScripts(scriptsBlock = Some(scripts), nonce = CSPNonce.get)),
     beforeContentBlock = Some(beforeContentBlock),
     footerBlock = Some(hmrcStandardFooter())
