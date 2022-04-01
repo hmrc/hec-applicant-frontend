@@ -41,14 +41,15 @@
         hmrcReportTechnicalIssueHelper: HmrcReportTechnicalIssueHelper,
         hmrcTimeoutDialogHelper: HmrcTimeoutDialogHelper
 )
+
 @(pageTitle: Option[String] = None,
   headBlock: Option[Html] = None,
   scriptsBlock: Option[Html] = None,
   backLocation: Option[Call] = None,
   hasErrors: Boolean = false,
-  showSignOutLink: Boolean = true
+  showSignOutLink: Boolean = true,
+  showUrBanner: Boolean = true
 )(contentBlock: Html)(implicit request: Request[_], messages: Messages)
-
 
 @head = {
     @headBlock.getOrElse(Html(""))
@@ -69,6 +70,9 @@
 
 @scripts = {
     @scriptsBlock.getOrElse(Html(""))
+    @if(showUrBanner) {
+      @Html(s"""<script ${CSPNonce.attr}>window.showUrBanner = true, window.hideBannerUrl = '${routes.UrBannerController.hideBanner.url}'</script>""")
+    }
     @Html(s"""<script src="${controllers.routes.Assets.versioned("javascripts/application.js")}" ${CSPNonce.attr}></script>""")
 }
 

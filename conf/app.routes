@@ -118,3 +118,5 @@ GET  /failed-iv/precondition-failed              uk.gov.hmrc.hecapplicantfronten
 GET /timed-out                                   uk.gov.hmrc.hecapplicantfrontend.controllers.SignOutController.signOutFromTimeout()
 
 GET /exit-survey                                 uk.gov.hmrc.hecapplicantfrontend.controllers.SignOutController.exitSurvey()
+
+GET /hide-ur-banner                             uk.gov.hmrc.hecapplicantfrontend.controllers.UrBannerController.hideBanner()
