@@ -213,6 +213,7 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
       None,
       emailRequestedForTaxCheck = None,
       false,
+      None,
       None
     )
 

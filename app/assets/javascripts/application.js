@@ -44,6 +44,24 @@
   })(window, document, navigator)
   // end copy buttons
 
+  if (window.showUrBanner && window.hideBannerUrl) {
+    const urBanner = document.querySelector('.hmrc-user-research-banner')
+    if (urBanner) {
+      urBanner.classList.add('hmrc-user-research-banner--show')
+      const closeLink = urBanner.querySelector('.hmrc-user-research-banner__close');
+      closeLink.addEventListener('click', noThanksClick)
+      function noThanksClick(event) {
+        event.preventDefault()
+        fetch('/tax-check-for-licence/hide-ur-banner')
+          .then(r => urBanner.classList.remove('hmrc-user-research-banner--show'))
+          .catch((error) => {
+            console.error('Error:', error);
+          })
+      }
+    }
+  }
+
+
   document.querySelectorAll('a[href="#print-dialogue"]')
     .forEach(function(link) {
       link.addEventListener('click', function(event) {

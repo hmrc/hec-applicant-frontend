@@ -143,7 +143,8 @@ object Fixtures {
     relevantIncomeTaxYear: Option[TaxYear] = None,
     emailRequestedForTaxCheck: Option[EmailRequestedForTaxCheck] = None,
     hasResentEmailConfirmation: Boolean = false,
-    userEmailAnswers: Option[UserEmailAnswers] = None
+    userEmailAnswers: Option[UserEmailAnswers] = None,
+    showUserResearchBanner: Option[Boolean] = None
   ): IndividualHECSession =
     IndividualHECSession(
       loginData = loginData,
@@ -156,7 +157,8 @@ object Fixtures {
       relevantIncomeTaxYear = relevantIncomeTaxYear,
       emailRequestedForTaxCheck = emailRequestedForTaxCheck,
       hasResentEmailConfirmation = hasResentEmailConfirmation,
-      userEmailAnswers = userEmailAnswers
+      userEmailAnswers = userEmailAnswers,
+      showUserResearchBanner = showUserResearchBanner
     )
 
   def companyLoginData(
@@ -189,7 +191,8 @@ object Fixtures {
     crnBlocked: Boolean = false,
     emailRequestedForTaxCheck: Option[EmailRequestedForTaxCheck] = None,
     hasResentEmailConfirmation: Boolean = false,
-    userEmailAnswers: Option[UserEmailAnswers] = None
+    userEmailAnswers: Option[UserEmailAnswers] = None,
+    showUserResearchBanner: Option[Boolean] = None
   ): CompanyHECSession = CompanyHECSession(
     loginData = loginData,
     retrievedJourneyData = retrievedJourneyData,
@@ -200,7 +203,8 @@ object Fixtures {
     crnBlocked = crnBlocked,
     emailRequestedForTaxCheck = emailRequestedForTaxCheck,
     hasResentEmailConfirmation = hasResentEmailConfirmation,
-    userEmailAnswers = userEmailAnswers
+    userEmailAnswers = userEmailAnswers,
+    showUserResearchBanner = showUserResearchBanner
   )
 
   def ctStatusResponse(
