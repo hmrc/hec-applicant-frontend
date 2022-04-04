@@ -33,11 +33,11 @@ import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.hecapplicantfrontend.config.{AppConfig, EnrolmentConfig}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.AuthWithRetrievalsAction
 import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.ApplicantServiceStartEndPointAccessed
-import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.ApplicantServiceStartEndPointAccessed.{AuthenticationDetails, AuthenticationStatus}
+import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.ApplicantServiceStartEndPointAccessed.AuthenticationDetails
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, IndividualHECSession}
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CTUTR, GGCredId, NINO, SAUTR}
-import uk.gov.hmrc.hecapplicantfrontend.models.{CitizenDetails, EmailAddress, EntityType, Error, LoginData, RetrievedGGData}
+import uk.gov.hmrc.hecapplicantfrontend.models.{AuthenticationStatus, CitizenDetails, EmailAddress, EntityType, Error, LoginData, RetrievedGGData}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.{AuditService, CitizenDetailsService, JourneyService, TaxCheckService}
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging

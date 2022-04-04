@@ -20,7 +20,7 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.auth.core.{AffinityGroup, ConfidenceLevel}
-import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.ApplicantServiceStartEndPointAccessed.{AuthenticationDetails, AuthenticationStatus}
+import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.ApplicantServiceStartEndPointAccessed.AuthenticationDetails
 import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.CompanyMatchFailure.{EnrolmentCTUTRCompanyMatchFailure, EnterCTUTRCompanyMatchFailure}
 import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.CompanyMatchSuccess.{EnrolmentCTUTRCompanyMatchSuccess, EnterCTUTRCompanyMatchSuccess}
 import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.{ApplicantServiceStartEndPointAccessed, SendTaxCheckCodeNotificationEmail, SubmitEmailAddressVerificationPasscode, SubmitEmailAddressVerificationRequest, TaxCheckCodesDisplayed, TaxCheckExit}

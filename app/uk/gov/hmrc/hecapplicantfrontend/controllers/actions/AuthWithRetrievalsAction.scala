@@ -26,8 +26,7 @@ import uk.gov.hmrc.auth.core.retrieve.~
 import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisationException, AuthorisedFunctions, NoActiveSession}
 import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.ApplicantServiceStartEndPointAccessed
-import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.ApplicantServiceStartEndPointAccessed.AuthenticationStatus
-import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedGGData
+import uk.gov.hmrc.hecapplicantfrontend.models.{AuthenticationStatus, RetrievedGGData}
 import uk.gov.hmrc.hecapplicantfrontend.services.AuditService
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.http.HeaderCarrier

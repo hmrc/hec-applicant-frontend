@@ -32,11 +32,11 @@ import uk.gov.hmrc.auth.core.retrieve.{Credentials, ~}
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.hecapplicantfrontend.config.EnrolmentConfig
 import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.ApplicantServiceStartEndPointAccessed
-import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.ApplicantServiceStartEndPointAccessed.{AuthenticationDetails, AuthenticationStatus}
+import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.ApplicantServiceStartEndPointAccessed.AuthenticationDetails
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, IndividualHECSession}
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CTUTR, GGCredId, NINO, SAUTR}
-import uk.gov.hmrc.hecapplicantfrontend.models.{CitizenDetails, DateOfBirth, EmailAddress, EntityType, Error, HECSession, Language, Name, TaxCheckListItem}
+import uk.gov.hmrc.hecapplicantfrontend.models.{AuthenticationStatus, CitizenDetails, DateOfBirth, EmailAddress, EntityType, Error, HECSession, Language, Name, TaxCheckListItem}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.{AuditService, AuditServiceSupport, CitizenDetailsService, JourneyService, TaxCheckService}
 import uk.gov.hmrc.hecapplicantfrontend.util.StringUtils.StringOps
