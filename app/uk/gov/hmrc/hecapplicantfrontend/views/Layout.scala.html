@@ -16,6 +16,7 @@
 
 @import cats.syntax.eq._
 @import cats.instances.string._
+@import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.RequestWithSessionData
 @import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 @import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 @import views.html.helper.CSPNonce
@@ -47,9 +48,14 @@
   scriptsBlock: Option[Html] = None,
   backLocation: Option[Call] = None,
   hasErrors: Boolean = false,
-  showSignOutLink: Boolean = true,
-  showUrBanner: Boolean = true
+  showSignOutLink: Boolean = true
 )(contentBlock: Html)(implicit request: Request[_], messages: Messages)
+
+@showUrBanner = @{ request match {
+    case r: RequestWithSessionData[_] => r.sessionData.showUserResearchBanner.forall(identity)
+    case _ => false
+}
+}
 
 @head = {
     @headBlock.getOrElse(Html(""))

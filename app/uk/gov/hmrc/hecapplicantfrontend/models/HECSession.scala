@@ -42,7 +42,7 @@ trait HECSession extends Product with Serializable {
   val emailRequestedForTaxCheck: Option[EmailRequestedForTaxCheck]
   val hasResentEmailConfirmation: Boolean //flag added to separate the resend email confirmation journey
   val userEmailAnswers: Option[UserEmailAnswers]
-
+  val showUserResearchBanner: Option[Boolean]
 }
 
 object HECSession {
@@ -58,7 +58,8 @@ object HECSession {
     relevantIncomeTaxYear: Option[TaxYear],
     emailRequestedForTaxCheck: Option[EmailRequestedForTaxCheck],
     hasResentEmailConfirmation: Boolean,
-    userEmailAnswers: Option[UserEmailAnswers]
+    userEmailAnswers: Option[UserEmailAnswers],
+    showUserResearchBanner: Option[Boolean]
   ) extends HECSession {
     override val entityType: EntityType = EntityType.Individual
   }
@@ -77,7 +78,8 @@ object HECSession {
         None,
         None,
         false,
-        None
+        None,
+        Some(true)
       )
 
   }
@@ -92,7 +94,8 @@ object HECSession {
     crnBlocked: Boolean = false,
     emailRequestedForTaxCheck: Option[EmailRequestedForTaxCheck],
     hasResentEmailConfirmation: Boolean,
-    userEmailAnswers: Option[UserEmailAnswers]
+    userEmailAnswers: Option[UserEmailAnswers],
+    showUserResearchBanner: Option[Boolean]
   ) extends HECSession {
     override val entityType: EntityType = EntityType.Company
   }
@@ -109,7 +112,8 @@ object HECSession {
         List.empty,
         emailRequestedForTaxCheck = None,
         hasResentEmailConfirmation = false,
-        userEmailAnswers = None
+        userEmailAnswers = None,
+        showUserResearchBanner = Some(true)
       )
 
   }

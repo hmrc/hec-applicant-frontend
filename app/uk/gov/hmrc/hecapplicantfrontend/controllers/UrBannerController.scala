@@ -19,19 +19,39 @@ package uk.gov.hmrc.hecapplicantfrontend.controllers
 import com.google.inject.{Inject, Singleton}
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
+import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
+import scala.concurrent.ExecutionContext
+
 @Singleton
 class UrBannerController @Inject() (
+  authAction: AuthAction,
+  sessionDataAction: SessionDataAction,
+  sessionStore: SessionStore,
   mcc: MessagesControllerComponents
-) extends FrontendController(mcc)
+)(implicit ec: ExecutionContext)
+    extends FrontendController(mcc)
     with I18nSupport
     with Logging {
 
-  val hideBanner: Action[AnyContent] = Action { _ =>
-    // TODO: update request.session data with something all templates can read
-    Ok("banner dismissed")
+  val hideBanner: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
+    if (request.sessionData.showUserResearchBanner.contains(false))
+      Ok
+    else {
+      val updatedSession = request.sessionData.fold(
+        _.copy(showUserResearchBanner = Some(false)),
+        _.copy(showUserResearchBanner = Some(false))
+      )
+      sessionStore
+        .store(updatedSession)
+        .fold(
+          _.doThrow("Could not update 'showUserResearchBanner'"),
+          _ => Ok
+        )
+    }
   }
 
 }
