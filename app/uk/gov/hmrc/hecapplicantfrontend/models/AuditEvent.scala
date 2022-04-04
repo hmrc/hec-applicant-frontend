@@ -417,9 +417,6 @@ object AuditEvent {
 
       case object NotAuthenticated extends AuthenticationStatus
 
-      @SuppressWarnings(Array("org.wartremover.warts.Throw", "org.wartremover.warts.Equals"))
-      implicit val format: Format[AuthenticationStatus] = Jsonx.formatSealed[AuthenticationStatus]
-
     }
 
     final case class AuthenticationDetails(
@@ -438,7 +435,11 @@ object AuditEvent {
       }
     }
 
-    implicit val writes: OWrites[ApplicantServiceStartEndPointAccessed] = Json.writes
+    implicit val writes: OWrites[ApplicantServiceStartEndPointAccessed] = {
+      @SuppressWarnings(Array("org.wartremover.warts.Throw", "org.wartremover.warts.Equals"))
+      implicit val authenticationStatusFormat: Format[AuthenticationStatus] = Jsonx.formatSealed[AuthenticationStatus]
+      Json.writes
+    }
 
   }
 
