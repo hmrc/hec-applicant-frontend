@@ -20,7 +20,7 @@ import com.google.inject.{Inject, Singleton}
 import play.api.mvc.Results.Redirect
 import play.api.mvc._
 import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisationException, AuthorisedFunctions, NoActiveSession}
-import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
+import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
@@ -34,8 +34,7 @@ final case class AuthenticatedRequest[A](
 @Singleton
 class AuthAction @Inject() (
   val authConnector: AuthConnector,
-  mcc: MessagesControllerComponents,
-  appConfig: AppConfig
+  mcc: MessagesControllerComponents
 )(implicit val executionContext: ExecutionContext)
     extends ActionFunction[MessagesRequest, AuthenticatedRequest]
     with ActionBuilder[AuthenticatedRequest, AnyContent]
@@ -52,7 +51,7 @@ class AuthAction @Inject() (
     authorised()(block(AuthenticatedRequest(new MessagesRequest(request, mcc.messagesApi))))
       .recover {
         case _: NoActiveSession =>
-          Redirect(appConfig.signInUrl)
+          Redirect(routes.StartController.start)
 
         case e: AuthorisationException =>
           sys.error(s"Could not authorise: ${e.getMessage}")

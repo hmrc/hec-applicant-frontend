@@ -67,7 +67,7 @@ trait JourneyService {
 
 object JourneyService {
 
-  final case class InconsistentSessionState(message: String) extends Exception {
+  final case class InconsistentSessionState(message: String) extends Exception(message) {
 
     @SuppressWarnings(Array("org.wartremover.warts.Throw"))
     def doThrow: Nothing = throw this

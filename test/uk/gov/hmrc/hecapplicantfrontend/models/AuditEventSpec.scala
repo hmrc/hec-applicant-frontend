@@ -19,9 +19,11 @@ package uk.gov.hmrc.hecapplicantfrontend.models
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.libs.json.{JsValue, Json}
+import uk.gov.hmrc.auth.core.{AffinityGroup, ConfidenceLevel}
+import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.ApplicantServiceStartEndPointAccessed.AuthenticationDetails
 import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.CompanyMatchFailure.{EnrolmentCTUTRCompanyMatchFailure, EnterCTUTRCompanyMatchFailure}
 import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.CompanyMatchSuccess.{EnrolmentCTUTRCompanyMatchSuccess, EnterCTUTRCompanyMatchSuccess}
-import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.{SendTaxCheckCodeNotificationEmail, SubmitEmailAddressVerificationPasscode, SubmitEmailAddressVerificationRequest, TaxCheckCodesDisplayed, TaxCheckExit}
+import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.{ApplicantServiceStartEndPointAccessed, SendTaxCheckCodeNotificationEmail, SubmitEmailAddressVerificationPasscode, SubmitEmailAddressVerificationRequest, TaxCheckCodesDisplayed, TaxCheckExit}
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.IndividualHECSession
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.IndividualLoginData
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.IndividualRetrievedJourneyData
@@ -718,6 +720,44 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
         )
       }
 
+    }
+
+  }
+
+  "ApplicantServiceStartEndPointAccessed" must {
+
+    "have the correct JSON" in {
+      val auditEvent = ApplicantServiceStartEndPointAccessed(
+        AuthenticationStatus.Authenticated,
+        Some("url"),
+        Some(
+          AuthenticationDetails(
+            "provider",
+            "id",
+            AffinityGroup.Organisation,
+            Some(EntityType.Individual),
+            ConfidenceLevel.L250
+          )
+        )
+      )
+
+      auditEvent.auditType       shouldBe "ApplicantServiceStartEndPointAccessed"
+      auditEvent.transactionName shouldBe "applicant-service-start-end-point-accessed"
+      Json.toJson(auditEvent)    shouldBe Json.parse(
+        """
+          |{
+          |  "authenticationStatus": "Authenticated",
+          |  "redirectionUrl": "url",
+          |  "authenticationDetail": {
+          |    "authenticationProvider": "provider",
+          |    "authenticationProviderCredId": "id",
+          |    "ggAffinityGroup": "Organisation",
+          |    "entityType": "Individual",
+          |    "confidenceLevel": "CL250"
+          |  }
+          |}
+          |""".stripMargin
+      )
     }
 
   }

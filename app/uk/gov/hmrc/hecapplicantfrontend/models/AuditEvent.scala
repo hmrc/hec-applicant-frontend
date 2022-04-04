@@ -16,7 +16,11 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models
 
+import ai.x.play.json.SingletonEncoder.simpleName
+import ai.x.play.json.implicits.formatSingleton
 import play.api.libs.json.{JsObject, JsString, Json, OWrites, Writes}
+import uk.gov.hmrc.auth.core.{AffinityGroup, ConfidenceLevel}
+import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.ApplicantServiceStartEndPointAccessed.AuthenticationDetails
 import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.CompanyMatch.{CTUTRType, MatchResult}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailSend.EmailSendResult
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{Passcode, PasscodeRequestResult, PasscodeVerificationResult}
@@ -390,6 +394,37 @@ object AuditEvent {
           )
         )
       }
+
+  }
+
+  final case class ApplicantServiceStartEndPointAccessed(
+    authenticationStatus: AuthenticationStatus,
+    redirectionUrl: Option[String],
+    authenticationDetail: Option[AuthenticationDetails]
+  ) extends AuditEvent {
+    override val auditType: String       = "ApplicantServiceStartEndPointAccessed"
+    override val transactionName: String = "applicant-service-start-end-point-accessed"
+  }
+
+  object ApplicantServiceStartEndPointAccessed {
+
+    final case class AuthenticationDetails(
+      authenticationProvider: String,
+      authenticationProviderCredId: String,
+      ggAffinityGroup: AffinityGroup,
+      entityType: Option[EntityType],
+      confidenceLevel: ConfidenceLevel
+    )
+
+    object AuthenticationDetails {
+
+      implicit val writes: OWrites[AuthenticationDetails] = {
+        implicit val confidenceLevelWrites: Writes[ConfidenceLevel] = Writes(cl => JsString(s"CL${cl.level}"))
+        Json.writes
+      }
+    }
+
+    implicit val writes: OWrites[ApplicantServiceStartEndPointAccessed] = Json.writes
 
   }
 

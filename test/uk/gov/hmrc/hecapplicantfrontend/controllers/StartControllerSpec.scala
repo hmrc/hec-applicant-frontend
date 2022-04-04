@@ -31,12 +31,14 @@ import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, ~}
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.hecapplicantfrontend.config.EnrolmentConfig
+import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.ApplicantServiceStartEndPointAccessed
+import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.ApplicantServiceStartEndPointAccessed.AuthenticationDetails
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, IndividualHECSession}
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CTUTR, GGCredId, NINO, SAUTR}
-import uk.gov.hmrc.hecapplicantfrontend.models.{CitizenDetails, DateOfBirth, EmailAddress, Error, HECSession, Language, Name, TaxCheckListItem}
+import uk.gov.hmrc.hecapplicantfrontend.models.{AuthenticationStatus, CitizenDetails, DateOfBirth, EmailAddress, EntityType, Error, HECSession, Language, Name, TaxCheckListItem}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
-import uk.gov.hmrc.hecapplicantfrontend.services.{CitizenDetailsService, JourneyService, TaxCheckService}
+import uk.gov.hmrc.hecapplicantfrontend.services.{AuditService, AuditServiceSupport, CitizenDetailsService, JourneyService, TaxCheckService}
 import uk.gov.hmrc.hecapplicantfrontend.util.StringUtils.StringOps
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -45,7 +47,12 @@ import java.time.LocalDate
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSupport with JourneyServiceSupport {
+class StartControllerSpec
+    extends ControllerSpec
+    with AuthSupport
+    with SessionSupport
+    with JourneyServiceSupport
+    with AuditServiceSupport {
 
   import StartControllerSpec._
 
@@ -85,7 +92,8 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
       bind[SessionStore].toInstance(mockSessionStore),
       bind[CitizenDetailsService].toInstance(mockCitizenDetailsService),
       bind[TaxCheckService].toInstance(mockTaxCheckService),
-      bind[JourneyService].toInstance(mockJourneyService)
+      bind[JourneyService].toInstance(mockJourneyService),
+      bind[AuditService].toInstance(mockAuditService)
     )
 
   val retrievals =
@@ -124,8 +132,10 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
       .expects(*)
       .returning(EitherT.fromEither(result))
 
+  val ggProviderType = "GovernmentGateway"
+
   def retrievedGGCredential(ggCredId: GGCredId) =
-    Credentials(ggCredId.value, "GovernmentGateway")
+    Credentials(ggCredId.value, ggProviderType)
 
   def retrievedCtEnrolment(ctutr: CTUTR) = Enrolment(
     EnrolmentConfig.CTEnrolment.key,
@@ -229,13 +239,13 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
             individualRetrievedData: IndividualLoginData,
             citizenDetails: CitizenDetails,
             sautr: Option[SAUTR],
-            affinityGroup: Option[AffinityGroup],
+            affinityGroup: AffinityGroup,
             enrolments: Enrolments
           ) = {
             inSequence {
               mockAuthWithRetrievals(
                 ConfidenceLevel.L250,
-                affinityGroup,
+                Some(affinityGroup),
                 Some(individualRetrievedData.nino),
                 sautr,
                 individualRetrievedData.emailAddress,
@@ -247,13 +257,28 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
               mockGetUnexpiredTaxCheckCodes(Right(List.empty))
               mockStoreSession(session)(Right(()))
               mockFirstPge(session)(mockNextCall)
+              mockSendAuditEvent(
+                ApplicantServiceStartEndPointAccessed(
+                  AuthenticationStatus.Authenticated,
+                  Some(mockNextCall.url),
+                  Some(
+                    AuthenticationDetails(
+                      ggProviderType,
+                      ggCredId.value,
+                      affinityGroup,
+                      Some(EntityType.Individual),
+                      ConfidenceLevel.L250
+                    )
+                  )
+                )
+              )
             }
 
             checkIsRedirect(performAction(), mockNextCall)
           }
 
           "all the necessary data is retrieved for an individual with affinity group " +
-            "'Individaul' and CL250 and email address is valid" in {
+            "'Individual' and CL250 and email address is valid" in {
               List(
                 completeIndividualLoginData,
                 completeIndividualLoginData.copy(emailAddress = None),
@@ -271,7 +296,7 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
                   individualRetrievedData,
                   citizenDetails,
                   None,
-                  AffinityGroup.Individual.some,
+                  AffinityGroup.Individual,
                   Enrolments(Set.empty)
                 )
               }
@@ -295,7 +320,7 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
                 individualRetrievedData,
                 citizenDetails,
                 None,
-                AffinityGroup.Individual.some,
+                AffinityGroup.Individual,
                 Enrolments(Set.empty)
               )
 
@@ -314,7 +339,7 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
               completeIndividualLoginData,
               citizenDetails,
               sautr.some,
-              AffinityGroup.Individual.some,
+              AffinityGroup.Individual,
               Enrolments(Set.empty)
             )
           }
@@ -337,7 +362,7 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
               completeIndividualLoginData,
               citizenDetails,
               ggSautr.some,
-              AffinityGroup.Individual.some,
+              AffinityGroup.Individual,
               Enrolments(Set.empty)
             )
 
@@ -359,7 +384,7 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
                 completeIndividualLoginData,
                 citizenDetails,
                 None,
-                AffinityGroup.Organisation.some,
+                AffinityGroup.Organisation,
                 Enrolments(
                   Set(
                     Enrolment(EnrolmentConfig.SAEnrolment.key),
@@ -390,6 +415,21 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
                 mockGetUnexpiredTaxCheckCodes(Right(List.empty))
                 mockStoreSession(session)(Right(()))
                 mockFirstPge(session)(mockNextCall)
+                mockSendAuditEvent(
+                  ApplicantServiceStartEndPointAccessed(
+                    AuthenticationStatus.Authenticated,
+                    Some(mockNextCall.url),
+                    Some(
+                      AuthenticationDetails(
+                        ggProviderType,
+                        ggCredId.value,
+                        AffinityGroup.Organisation,
+                        Some(EntityType.Company),
+                        ConfidenceLevel.L50
+                      )
+                    )
+                  )
+                )
               }
 
               checkIsRedirect(performAction(), mockNextCall)
@@ -413,6 +453,21 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
               mockGetUnexpiredTaxCheckCodes(Right(List.empty))
               mockStoreSession(session)(Right(()))
               mockFirstPge(session)(mockNextCall)
+              mockSendAuditEvent(
+                ApplicantServiceStartEndPointAccessed(
+                  AuthenticationStatus.Authenticated,
+                  Some(mockNextCall.url),
+                  Some(
+                    AuthenticationDetails(
+                      ggProviderType,
+                      ggCredId.value,
+                      AffinityGroup.Organisation,
+                      Some(EntityType.Company),
+                      ConfidenceLevel.L50
+                    )
+                  )
+                )
+              )
 
             }
 
@@ -492,6 +547,21 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
                 Some(Credentials("id", "OtherProvider"))
               )
               mockGetSession(Right(None))
+              mockSendAuditEvent(
+                ApplicantServiceStartEndPointAccessed(
+                  AuthenticationStatus.Authenticated,
+                  None,
+                  Some(
+                    AuthenticationDetails(
+                      "OtherProvider",
+                      "id",
+                      AffinityGroup.Individual,
+                      Some(EntityType.Individual),
+                      ConfidenceLevel.L50
+                    )
+                  )
+                )
+              )
             }
           )
         }
@@ -674,52 +744,78 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
 
       "redirect to IV uplift" when {
 
-        def testIsRedirectToIVUplift(mockActions: () => Unit): Unit = {
-          val queryString =
-            s"origin=$ivOrigin&confidenceLevel=250&" +
-              s"completionURL=${urlEncode(s"$selfBaseUrl/tax-check-for-licence/start")}&" +
-              s"failureURL=${urlEncode(s"$selfBaseUrl/tax-check-for-licence/failed-iv/callback")}"
-          mockActions()
-          checkIsRedirect(
-            performAction(),
-            s"$ivUrl$ivLocation/uplift?$queryString"
-          )
-        }
+        val queryString =
+          s"origin=$ivOrigin&confidenceLevel=250&" +
+            s"completionURL=${urlEncode(s"$selfBaseUrl/tax-check-for-licence/start")}&" +
+            s"failureURL=${urlEncode(s"$selfBaseUrl/tax-check-for-licence/failed-iv/callback")}"
+
+        val expectedIvUrl = s"$ivUrl$ivLocation/uplift?$queryString"
 
         "the user has CL50 and" when {
           "the affinity group is 'Individual'" in {
-            testIsRedirectToIVUplift(() =>
-              inSequence {
-                mockAuthWithRetrievals(
-                  ConfidenceLevel.L50,
-                  Some(AffinityGroup.Individual),
-                  None,
-                  None,
-                  None,
-                  Enrolments(Set.empty),
-                  Some(retrievedGGCredential(ggCredId))
+            inSequence {
+              mockAuthWithRetrievals(
+                ConfidenceLevel.L50,
+                Some(AffinityGroup.Individual),
+                None,
+                None,
+                None,
+                Enrolments(Set.empty),
+                Some(retrievedGGCredential(ggCredId))
+              )
+              mockGetSession(Right(None))
+              mockSendAuditEvent(
+                ApplicantServiceStartEndPointAccessed(
+                  AuthenticationStatus.Authenticated,
+                  Some(expectedIvUrl.stripSuffix(s"?$queryString")),
+                  Some(
+                    AuthenticationDetails(
+                      ggProviderType,
+                      ggCredId.value,
+                      AffinityGroup.Individual,
+                      Some(EntityType.Individual),
+                      ConfidenceLevel.L50
+                    )
+                  )
                 )
-                mockGetSession(Right(None))
-              }
-            )
+              )
+            }
+
+            checkIsRedirect(performAction(), expectedIvUrl)
 
           }
 
           "the affinity group is 'Organisation' and the only enrolment is an IR-SA one" in {
-            testIsRedirectToIVUplift(() =>
-              inSequence {
-                mockAuthWithRetrievals(
-                  ConfidenceLevel.L50,
-                  Some(AffinityGroup.Organisation),
-                  None,
-                  None,
-                  None,
-                  Enrolments(Set(Enrolment(EnrolmentConfig.SAEnrolment.key, Seq.empty, "state"))),
-                  Some(retrievedGGCredential(ggCredId))
+            inSequence {
+              mockAuthWithRetrievals(
+                ConfidenceLevel.L50,
+                Some(AffinityGroup.Organisation),
+                None,
+                None,
+                None,
+                Enrolments(Set(Enrolment(EnrolmentConfig.SAEnrolment.key, Seq.empty, "state"))),
+                Some(retrievedGGCredential(ggCredId))
+              )
+              mockGetSession(Right(None))
+              mockSendAuditEvent(
+                ApplicantServiceStartEndPointAccessed(
+                  AuthenticationStatus.Authenticated,
+                  Some(expectedIvUrl.stripSuffix(s"?$queryString")),
+                  Some(
+                    AuthenticationDetails(
+                      ggProviderType,
+                      ggCredId.value,
+                      AffinityGroup.Organisation,
+                      Some(EntityType.Individual),
+                      ConfidenceLevel.L50
+                    )
+                  )
                 )
-                mockGetSession(Right(None))
-              }
-            )
+              )
+            }
+
+            checkIsRedirect(performAction(), expectedIvUrl)
+
           }
 
         }
@@ -733,8 +829,13 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
           InvalidBearerToken(),
           SessionRecordNotFound()
         ).foreach { e =>
-          withClue(s"For AuhtorisationException $e: ") {
-            mockAuth(EmptyPredicate, retrievals)(Future.failed(e))
+          withClue(s"For AuthorisationException $e: ") {
+            inSequence {
+              mockAuth(EmptyPredicate, retrievals)(Future.failed(e))
+              mockSendAuditEvent(
+                ApplicantServiceStartEndPointAccessed(AuthenticationStatus.NotAuthenticated, Some(signInUrl), None)
+              )
+            }
 
             val result = performAction()
             checkIsRedirect(
@@ -759,6 +860,21 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
               Some(retrievedGGCredential(completeIndividualLoginData.ggCredId))
             )
             mockGetSession(Right(None))
+            mockSendAuditEvent(
+              ApplicantServiceStartEndPointAccessed(
+                AuthenticationStatus.Authenticated,
+                Some(routes.AgentsController.agentsNotSupported.url),
+                Some(
+                  AuthenticationDetails(
+                    ggProviderType,
+                    ggCredId.value,
+                    AffinityGroup.Agent,
+                    None,
+                    ConfidenceLevel.L50
+                  )
+                )
+              )
+            )
           }
 
           checkIsRedirect(performAction(), routes.AgentsController.agentsNotSupported)
@@ -771,7 +887,7 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
         "the user logs in with Verify" in {
           inSequence {
             mockAuthWithRetrievals(
-              ConfidenceLevel.L50,
+              ConfidenceLevel.L500,
               Some(AffinityGroup.Individual),
               Some(completeIndividualLoginData.nino),
               Some(sautr),
@@ -780,6 +896,21 @@ class StartControllerSpec extends ControllerSpec with AuthSupport with SessionSu
               Some(Credentials("id", "Verify"))
             )
             mockGetSession(Right(None))
+            mockSendAuditEvent(
+              ApplicantServiceStartEndPointAccessed(
+                AuthenticationStatus.Authenticated,
+                Some(routes.VerifyController.verifyNotSupported.url),
+                Some(
+                  AuthenticationDetails(
+                    "Verify",
+                    "id",
+                    AffinityGroup.Individual,
+                    Some(EntityType.Individual),
+                    ConfidenceLevel.L500
+                  )
+                )
+              )
+            )
           }
 
           checkIsRedirect(performAction(), routes.VerifyController.verifyNotSupported)

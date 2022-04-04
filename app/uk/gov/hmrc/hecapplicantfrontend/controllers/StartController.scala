@@ -26,21 +26,24 @@ import cats.syntax.option._
 import cats.syntax.traverse._
 import uk.gov.hmrc.emailaddress.{EmailAddress => EmailAdd}
 import com.google.inject.{Inject, Singleton}
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Request}
+import play.api.mvc.{Action, AnyContent, Call, MessagesControllerComponents, Request, Result}
 import uk.gov.hmrc.auth.core.retrieve.Credentials
 import uk.gov.hmrc.auth.core.{AffinityGroup, ConfidenceLevel, Enrolments}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.hecapplicantfrontend.config.{AppConfig, EnrolmentConfig}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.AuthWithRetrievalsAction
+import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.ApplicantServiceStartEndPointAccessed
+import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.ApplicantServiceStartEndPointAccessed.AuthenticationDetails
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, IndividualHECSession}
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CTUTR, GGCredId, NINO, SAUTR}
-import uk.gov.hmrc.hecapplicantfrontend.models.{CitizenDetails, EmailAddress, Error, LoginData, RetrievedGGData}
+import uk.gov.hmrc.hecapplicantfrontend.models.{AuthenticationStatus, CitizenDetails, EmailAddress, EntityType, Error, LoginData, RetrievedGGData}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
-import uk.gov.hmrc.hecapplicantfrontend.services.{CitizenDetailsService, JourneyService, TaxCheckService}
+import uk.gov.hmrc.hecapplicantfrontend.services.{AuditService, CitizenDetailsService, JourneyService, TaxCheckService}
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
+
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
@@ -49,6 +52,7 @@ class StartController @Inject() (
   citizenDetailsService: CitizenDetailsService,
   taxCheckService: TaxCheckService,
   journeyService: JourneyService,
+  auditService: AuditService,
   sessionStore: SessionStore,
   authWithRetrievalsAction: AuthWithRetrievalsAction,
   mcc: MessagesControllerComponents
@@ -60,26 +64,30 @@ class StartController @Inject() (
 
   val start: Action[AnyContent] = authWithRetrievalsAction.async { implicit request =>
     val result = for {
-      maybeStoredSession <- sessionStore.get().leftMap(BackendError)
-      loginData          <- maybeStoredSession.fold(handleNoSessionData(request.retrievedGGUserData))(storedSession =>
-                              EitherT.pure(storedSession.fold(_.loginData, _.loginData))
-                            )
+      maybeStoredSession                <- sessionStore.get().leftMap(BackendError)
+      details                           <-
+        maybeStoredSession.fold(
+          handleNoSessionData(request.retrievedGGUserData)
+            .map[(Option[AuthenticationDetails], LoginData)] { case (authDetails, loginData) =>
+              Some(authDetails) -> loginData
+            }
+        )(storedSession => EitherT.pure(None -> storedSession.fold(_.loginData, _.loginData)))
+      (authenticationDetails, loginData) = details
+      existingTaxChecks                 <- taxCheckService
+                                             .getUnexpiredTaxCheckCodes()
+                                             .leftMap(BackendError(_): StartError)
+      isConfirmedDetails                 = maybeStoredSession.fold(false)(_.fold(_.hasConfirmedDetails, _ => false))
+      newSession                         = loginData match {
+                                             case i: IndividualLoginData =>
+                                               IndividualHECSession
+                                                 .newSession(i)
+                                                 .copy(unexpiredTaxChecks = existingTaxChecks, hasConfirmedDetails = isConfirmedDetails)
+                                             case c: CompanyLoginData    =>
+                                               CompanyHECSession.newSession(c).copy(unexpiredTaxChecks = existingTaxChecks)
 
-      existingTaxChecks <- taxCheckService
-                             .getUnexpiredTaxCheckCodes()
-                             .leftMap(BackendError(_): StartError)
-      isConfirmedDetails = maybeStoredSession.fold(false)(_.fold(_.hasConfirmedDetails, _ => false))
-      newSession         = loginData match {
-                             case i: IndividualLoginData =>
-                               IndividualHECSession
-                                 .newSession(i)
-                                 .copy(unexpiredTaxChecks = existingTaxChecks, hasConfirmedDetails = isConfirmedDetails)
-                             case c: CompanyLoginData    =>
-                               CompanyHECSession.newSession(c).copy(unexpiredTaxChecks = existingTaxChecks)
-
-                           }
-      _                 <- sessionStore.store(newSession).leftMap(BackendError(_): StartError)
-    } yield newSession
+                                           }
+      _                                 <- sessionStore.store(newSession).leftMap(BackendError(_): StartError)
+    } yield authenticationDetails -> newSession
 
     result.fold(
       {
@@ -89,61 +97,123 @@ class StartController @Inject() (
         case BackendError(e) =>
           sys.error(s"Backend error :: $e")
 
-        case InsufficientConfidenceLevel =>
-          appConfig.redirectToIvUplift
+        case InsufficientConfidenceLevel(authDetails) =>
+          auditLogIn(Some(appConfig.redirectToIvUpliftUrl), authDetails)
+          appConfig.redirectToIvUpliftResult
 
-        case UnsupportedAuthProvider(provider) =>
-          if (provider === "Verify")
-            Redirect(routes.VerifyController.verifyNotSupported)
-          else
-            sys.error(s"Unsupported auth provider: $provider")
+        case UnsupportedAuthProvider(authDetails) =>
+          if (authDetails.authenticationProvider === "Verify")
+            auditLoginAndRedirect(routes.VerifyController.verifyNotSupported, authDetails)
+          else {
+            auditLogIn(None, authDetails)
+            sys.error(s"Unsupported auth provider: ${authDetails.authenticationProvider}")
+          }
 
-        case AgentLogin =>
-          Redirect(routes.AgentsController.agentsNotSupported)
+        case AgentLogin(authDetails) =>
+          auditLoginAndRedirect(routes.AgentsController.agentsNotSupported, authDetails)
 
       },
-      session => Redirect(journeyService.firstPage(session))
+      { case (authDetails, session) =>
+        val firstPage = journeyService.firstPage(session)
+        authDetails.foreach(auditLogIn(Some(firstPage.url), _))
+        Redirect(firstPage)
+      }
     )
+  }
+
+  private def auditLogIn(redirectUrl: Option[String], authenticationDetails: AuthenticationDetails)(implicit
+    r: Request[_],
+    hc: HeaderCarrier
+  ): Unit =
+    auditService.sendEvent(
+      ApplicantServiceStartEndPointAccessed(
+        AuthenticationStatus.Authenticated,
+        redirectUrl,
+        Some(authenticationDetails)
+      )
+    )
+
+  private def auditLoginAndRedirect(redirectTo: Call, authenticationDetails: AuthenticationDetails)(implicit
+    r: Request[_],
+    hc: HeaderCarrier
+  ): Result = {
+    auditLogIn(Some(redirectTo.url), authenticationDetails)
+    Redirect(redirectTo)
   }
 
   private def handleNoSessionData(
     retrievedGGData: RetrievedGGData
-  )(implicit request: Request[_]): EitherT[Future, StartError, LoginData] = {
+  )(implicit request: Request[_]): EitherT[Future, StartError, (AuthenticationDetails, LoginData)] = {
     val RetrievedGGData(cl, affinityGroup, maybeNino, maybeSautr, maybeEmail, enrolments, creds) =
       retrievedGGData
 
-    withGGCredentials(creds) { ggCredId =>
-      affinityGroup match {
-        case Some(AffinityGroup.Individual) =>
-          handleIndividual(
-            cl,
-            maybeNino,
-            maybeSautr,
-            maybeEmail,
-            ggCredId
+    def authenticationDetails(
+      affinityGroup: AffinityGroup,
+      entityType: Option[EntityType]
+    )(credentials: Credentials): AuthenticationDetails =
+      AuthenticationDetails(
+        credentials.providerType,
+        credentials.providerId,
+        affinityGroup,
+        entityType,
+        cl
+      )
+
+    affinityGroup match {
+      case Some(AffinityGroup.Individual) =>
+        EitherT
+          .fromEither[Future](
+            withGGCredIdAndAuthenticationDetails(
+              creds,
+              authenticationDetails(AffinityGroup.Individual, Some(EntityType.Individual))
+            )
           )
-
-        case Some(AffinityGroup.Organisation) =>
-          enrolments.enrolments.toList.filter(_.key =!= EnrolmentConfig.NINOEnrolment.key) match {
-            case enrolment :: Nil if enrolment.key === EnrolmentConfig.SAEnrolment.key =>
-              handleIndividual(
-                cl,
-                maybeNino,
-                maybeSautr,
-                maybeEmail,
-                ggCredId
-              )
-
-            case _ =>
-              handleOrganisation(maybeEmail, enrolments, ggCredId)
+          .flatMap { case (ggCredId, authDetails) =>
+            handleIndividual(cl, maybeNino, maybeSautr, maybeEmail, ggCredId, authDetails)
           }
 
-        case Some(AffinityGroup.Agent) =>
-          EitherT.leftT(AgentLogin)
+      case Some(AffinityGroup.Organisation) =>
+        enrolments.enrolments.toList.filter(_.key =!= EnrolmentConfig.NINOEnrolment.key) match {
+          case enrolment :: Nil if enrolment.key === EnrolmentConfig.SAEnrolment.key =>
+            EitherT
+              .fromEither[Future](
+                withGGCredIdAndAuthenticationDetails(
+                  creds,
+                  authenticationDetails(AffinityGroup.Organisation, Some(EntityType.Individual))
+                )
+              )
+              .flatMap { case (ggCredId, authDetails) =>
+                handleIndividual(cl, maybeNino, maybeSautr, maybeEmail, ggCredId, authDetails)
+              }
 
-        case other =>
-          EitherT.leftT(DataError(s"Unknown affinity group '${other.getOrElse("")}''"))
-      }
+          case _ =>
+            EitherT
+              .fromEither[Future](
+                withGGCredIdAndAuthenticationDetails(
+                  creds,
+                  authenticationDetails(AffinityGroup.Organisation, Some(EntityType.Company))
+                )
+              )
+              .flatMap { case (ggCredId, authDetails) =>
+                handleOrganisation(maybeEmail, enrolments, ggCredId, authDetails)
+              }
+        }
+
+      case Some(AffinityGroup.Agent) =>
+        EitherT
+          .fromEither[Future](
+            withGGCredIdAndAuthenticationDetails(
+              creds,
+              authenticationDetails(AffinityGroup.Agent, None)
+            )
+          )
+          .flatMap { case (_, authDetails) =>
+            EitherT.leftT(AgentLogin(authDetails))
+
+          }
+
+      case other =>
+        EitherT.leftT(DataError(s"Unknown affinity group '${other.getOrElse("")}''"))
     }
   }
 
@@ -152,10 +222,11 @@ class StartController @Inject() (
     maybeNino: Option[String],
     maybeSautr: Option[String],
     maybeEmail: Option[String],
-    ggCredId: GGCredId
+    ggCredId: GGCredId,
+    authenticationDetails: AuthenticationDetails
   )(implicit
     hc: HeaderCarrier
-  ): EitherT[Future, StartError, LoginData] = {
+  ): EitherT[Future, StartError, (AuthenticationDetails, LoginData)] = {
 
     def validateSautrAndBuildIndividualData(
       citizenDetails: CitizenDetails,
@@ -187,7 +258,7 @@ class StartController @Inject() (
     }
 
     if (confidenceLevel < ConfidenceLevel.L250)
-      EitherT.leftT(InsufficientConfidenceLevel)
+      EitherT.leftT(InsufficientConfidenceLevel(authenticationDetails))
     else {
       maybeNino match {
         case None =>
@@ -201,9 +272,9 @@ class StartController @Inject() (
           for {
             citizenDetails <- citizenDetailsFut
             result         <- validateSautrAndBuildIndividualData(citizenDetails, nino)
-          } yield result
+          } yield authenticationDetails -> result
 
-        case Some(_) =>
+        case Some(_)                          =>
           EitherT.leftT(DataError("Invalid NINO format"))
       }
     }
@@ -212,8 +283,9 @@ class StartController @Inject() (
   private def handleOrganisation(
     maybeEmail: Option[String],
     enrolments: Enrolments,
-    ggCredId: GGCredId
-  ): EitherT[Future, StartError, LoginData] = {
+    ggCredId: GGCredId,
+    authenticationDetails: AuthenticationDetails
+  ): EitherT[Future, StartError, (AuthenticationDetails, LoginData)] = {
     val ctutrValidation = enrolments.enrolments
       .find(_.key === EnrolmentConfig.CTEnrolment.key)
       .flatMap(
@@ -230,27 +302,28 @@ class StartController @Inject() (
       )
       .toEither
 
-    EitherT.fromEither[Future](eitherResult)
+    EitherT.fromEither[Future](eitherResult.map(authenticationDetails -> _))
   }
 
   private def validateEmail(emailOpt: Option[String]): Option[EmailAddress] =
     emailOpt.filter(EmailAdd.isValid(_)).map(EmailAddress(_))
 
-  private def withGGCredentials[A](
-    credentials: Option[Credentials]
-  )(
-    f: GGCredId => EitherT[Future, StartError, A]
-  ): EitherT[Future, StartError, A] =
+  private def withGGCredIdAndAuthenticationDetails(
+    credentials: Option[Credentials],
+    toAuthenticationDetails: Credentials => AuthenticationDetails
+  ): Either[StartError, (GGCredId, AuthenticationDetails)] =
     credentials match {
       case None =>
-        EitherT.leftT(DataError("No credentials were retrieved"))
+        Left(DataError("No credentials were retrieved"))
 
-      case Some(Credentials(id, "GovernmentGateway")) =>
-        f(GGCredId(id))
+      case Some(c @ Credentials(id, "GovernmentGateway")) =>
+        val ggCredId = GGCredId(id)
+        Right(ggCredId -> toAuthenticationDetails(c))
 
-      case Some(Credentials(_, otherProvider)) =>
-        EitherT.leftT(UnsupportedAuthProvider(otherProvider))
+      case Some(other)                                    =>
+        Left(UnsupportedAuthProvider(toAuthenticationDetails(other)))
     }
+
 }
 
 object StartController {
@@ -261,10 +334,10 @@ object StartController {
 
   final case class BackendError(error: Error) extends StartError
 
-  final case object InsufficientConfidenceLevel extends StartError
+  final case class InsufficientConfidenceLevel(authenticationDetails: AuthenticationDetails) extends StartError
 
-  final case class UnsupportedAuthProvider(provider: String) extends StartError
+  final case class UnsupportedAuthProvider(authenticationDetails: AuthenticationDetails) extends StartError
 
-  final case object AgentLogin extends StartError
+  final case class AgentLogin(authenticationDetails: AuthenticationDetails) extends StartError
 
 }
