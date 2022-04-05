@@ -91,7 +91,8 @@ class StartController @Inject() (
 
     result.fold(
       {
-        case DataError(msg) =>
+        case DataError(msg, authDetails) =>
+          authDetails.foreach(auditLogIn(None, _))
           sys.error(s"Issue with data: $msg")
 
         case BackendError(e) =>
@@ -148,7 +149,7 @@ class StartController @Inject() (
       retrievedGGData
 
     def authenticationDetails(
-      affinityGroup: AffinityGroup,
+      affinityGroup: Option[AffinityGroup],
       entityType: Option[EntityType]
     )(credentials: Credentials): AuthenticationDetails =
       AuthenticationDetails(
@@ -165,7 +166,7 @@ class StartController @Inject() (
           .fromEither[Future](
             withGGCredIdAndAuthenticationDetails(
               creds,
-              authenticationDetails(AffinityGroup.Individual, Some(EntityType.Individual))
+              authenticationDetails(Some(AffinityGroup.Individual), Some(EntityType.Individual))
             )
           )
           .flatMap { case (ggCredId, authDetails) =>
@@ -179,7 +180,7 @@ class StartController @Inject() (
               .fromEither[Future](
                 withGGCredIdAndAuthenticationDetails(
                   creds,
-                  authenticationDetails(AffinityGroup.Organisation, Some(EntityType.Individual))
+                  authenticationDetails(Some(AffinityGroup.Organisation), Some(EntityType.Individual))
                 )
               )
               .flatMap { case (ggCredId, authDetails) =>
@@ -191,7 +192,7 @@ class StartController @Inject() (
               .fromEither[Future](
                 withGGCredIdAndAuthenticationDetails(
                   creds,
-                  authenticationDetails(AffinityGroup.Organisation, Some(EntityType.Company))
+                  authenticationDetails(Some(AffinityGroup.Organisation), Some(EntityType.Company))
                 )
               )
               .flatMap { case (ggCredId, authDetails) =>
@@ -204,7 +205,7 @@ class StartController @Inject() (
           .fromEither[Future](
             withGGCredIdAndAuthenticationDetails(
               creds,
-              authenticationDetails(AffinityGroup.Agent, None)
+              authenticationDetails(Some(AffinityGroup.Agent), None)
             )
           )
           .flatMap { case (_, authDetails) =>
@@ -213,7 +214,16 @@ class StartController @Inject() (
           }
 
       case other =>
-        EitherT.leftT(DataError(s"Unknown affinity group '${other.getOrElse("")}''"))
+        EitherT
+          .fromEither[Future](
+            withGGCredIdAndAuthenticationDetails(
+              creds,
+              authenticationDetails(None, None)
+            )
+          )
+          .flatMap { _ =>
+            EitherT.leftT(DataError(s"Unknown affinity group '${other.getOrElse("")}' for GG login", None))
+          }
     }
   }
 
@@ -242,7 +252,7 @@ class StartController @Inject() (
 
       val eitherResult: Either[StartError, LoginData] = sautrValidation
         .bimap[StartError, LoginData](
-          DataError,
+          DataError(_, None),
           sautr =>
             IndividualLoginData(
               GGCredId(ggCredId.value),
@@ -262,7 +272,7 @@ class StartController @Inject() (
     else {
       maybeNino match {
         case None =>
-          EitherT.leftT(DataError("Could not find NINO for CL≥250"))
+          EitherT.leftT(DataError("Could not find NINO for CL≥250", None))
 
         case Some(nino) if Nino.isValid(nino) =>
           val citizenDetailsFut = citizenDetailsService
@@ -275,7 +285,7 @@ class StartController @Inject() (
           } yield authenticationDetails -> result
 
         case Some(_)                          =>
-          EitherT.leftT(DataError("Invalid NINO format"))
+          EitherT.leftT(DataError("Invalid NINO format", None))
       }
     }
   }
@@ -297,7 +307,7 @@ class StartController @Inject() (
 
     val eitherResult = ctutrValidation
       .bimap[StartError, LoginData](
-        DataError,
+        DataError(_, None),
         ctutrOpt => CompanyLoginData(GGCredId(ggCredId.value), ctutrOpt, validateEmail(maybeEmail))
       )
       .toEither
@@ -314,7 +324,7 @@ class StartController @Inject() (
   ): Either[StartError, (GGCredId, AuthenticationDetails)] =
     credentials match {
       case None =>
-        Left(DataError("No credentials were retrieved"))
+        Left(DataError("No credentials were retrieved", None))
 
       case Some(c @ Credentials(id, "GovernmentGateway")) =>
         val ggCredId = GGCredId(id)
@@ -330,7 +340,7 @@ object StartController {
 
   sealed trait StartError extends Product with Serializable
 
-  final case class DataError(msg: String) extends StartError
+  final case class DataError(msg: String, authenticationDetails: Option[AuthenticationDetails]) extends StartError
 
   final case class BackendError(error: Error) extends StartError
 

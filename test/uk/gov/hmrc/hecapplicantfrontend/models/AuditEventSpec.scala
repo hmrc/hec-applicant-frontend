@@ -734,7 +734,7 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
           AuthenticationDetails(
             "provider",
             "id",
-            AffinityGroup.Organisation,
+            Some(AffinityGroup.Organisation),
             Some(EntityType.Individual),
             ConfidenceLevel.L250
           )
