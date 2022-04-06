@@ -265,7 +265,7 @@ class StartControllerSpec
                     AuthenticationDetails(
                       ggProviderType,
                       ggCredId.value,
-                      affinityGroup,
+                      Some(affinityGroup),
                       Some(EntityType.Individual),
                       ConfidenceLevel.L250
                     )
@@ -423,7 +423,7 @@ class StartControllerSpec
                       AuthenticationDetails(
                         ggProviderType,
                         ggCredId.value,
-                        AffinityGroup.Organisation,
+                        Some(AffinityGroup.Organisation),
                         Some(EntityType.Company),
                         ConfidenceLevel.L50
                       )
@@ -461,7 +461,7 @@ class StartControllerSpec
                     AuthenticationDetails(
                       ggProviderType,
                       ggCredId.value,
-                      AffinityGroup.Organisation,
+                      Some(AffinityGroup.Organisation),
                       Some(EntityType.Company),
                       ConfidenceLevel.L50
                     )
@@ -555,7 +555,7 @@ class StartControllerSpec
                     AuthenticationDetails(
                       "OtherProvider",
                       "id",
-                      AffinityGroup.Individual,
+                      Some(AffinityGroup.Individual),
                       Some(EntityType.Individual),
                       ConfidenceLevel.L50
                     )
@@ -772,7 +772,7 @@ class StartControllerSpec
                     AuthenticationDetails(
                       ggProviderType,
                       ggCredId.value,
-                      AffinityGroup.Individual,
+                      Some(AffinityGroup.Individual),
                       Some(EntityType.Individual),
                       ConfidenceLevel.L50
                     )
@@ -805,7 +805,7 @@ class StartControllerSpec
                     AuthenticationDetails(
                       ggProviderType,
                       ggCredId.value,
-                      AffinityGroup.Organisation,
+                      Some(AffinityGroup.Organisation),
                       Some(EntityType.Individual),
                       ConfidenceLevel.L50
                     )
@@ -868,7 +868,7 @@ class StartControllerSpec
                   AuthenticationDetails(
                     ggProviderType,
                     ggCredId.value,
-                    AffinityGroup.Agent,
+                    Some(AffinityGroup.Agent),
                     None,
                     ConfidenceLevel.L50
                   )
@@ -888,7 +888,7 @@ class StartControllerSpec
           inSequence {
             mockAuthWithRetrievals(
               ConfidenceLevel.L500,
-              Some(AffinityGroup.Individual),
+              None,
               Some(completeIndividualLoginData.nino),
               Some(sautr),
               completeIndividualLoginData.emailAddress,
@@ -904,8 +904,8 @@ class StartControllerSpec
                   AuthenticationDetails(
                     "Verify",
                     "id",
-                    AffinityGroup.Individual,
-                    Some(EntityType.Individual),
+                    None,
+                    None,
                     ConfidenceLevel.L500
                   )
                 )

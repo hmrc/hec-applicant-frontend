@@ -411,7 +411,7 @@ object AuditEvent {
     final case class AuthenticationDetails(
       authenticationProvider: String,
       authenticationProviderCredId: String,
-      ggAffinityGroup: AffinityGroup,
+      ggAffinityGroup: Option[AffinityGroup],
       entityType: Option[EntityType],
       confidenceLevel: ConfidenceLevel
     )
