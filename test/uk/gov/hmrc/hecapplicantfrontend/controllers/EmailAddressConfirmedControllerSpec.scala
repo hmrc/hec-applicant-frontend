@@ -379,7 +379,14 @@ class EmailAddressConfirmedControllerSpec
 
           val updatedSession =
             session.copy(userEmailAnswers =
-              passcodeSentAndMatchedUserEmailAnswer.copy(emailSendResult = EmailSendResult.EmailSent.some).some
+              passcodeSentAndMatchedUserEmailAnswer
+                .copy(
+                  emailSendResult = EmailSendResult.EmailSent.some,
+                  passcodeRequestResult = None,
+                  passcode = None,
+                  passcodeVerificationResult = None
+                )
+                .some
             )
           inSequence {
             mockAuthWithNoRetrievals()
@@ -402,7 +409,8 @@ class EmailAddressConfirmedControllerSpec
 
         def testRedirect(
           emailParameters: EmailParameters,
-          isEnglish: Boolean
+          isEnglish: Boolean,
+          emailSendSuccessful: Boolean
         ) = {
           val session = Fixtures.companyHECSession(
             loginData = Fixtures.companyLoginData(emailAddress = ggUserSelectedEmail.emailAddress.some),
@@ -412,14 +420,33 @@ class EmailAddressConfirmedControllerSpec
             userEmailAnswers = passcodeSentAndMatchedUserEmailAnswer.some
           )
 
+          val emailSendResult = if (emailSendSuccessful) EmailSendResult.EmailSent else EmailSendResult.EmailSentFailure
+
           val updatedSession =
-            session.copy(userEmailAnswers =
-              passcodeSentAndMatchedUserEmailAnswer.copy(emailSendResult = EmailSendResult.EmailSent.some).some
-            )
+            if (emailSendSuccessful)
+              session.copy(userEmailAnswers =
+                passcodeSentAndMatchedUserEmailAnswer
+                  .copy(
+                    emailSendResult = emailSendResult.some,
+                    passcodeRequestResult = None,
+                    passcode = None,
+                    passcodeVerificationResult = None
+                  )
+                  .some
+              )
+            else
+              session.copy(userEmailAnswers =
+                passcodeSentAndMatchedUserEmailAnswer
+                  .copy(
+                    emailSendResult = emailSendResult.some
+                  )
+                  .some
+              )
+
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockSendEmail(ggUserSelectedEmail, emailParameters = emailParameters)(Right(EmailSendResult.EmailSent))
+            mockSendEmail(ggUserSelectedEmail, emailParameters = emailParameters)(Right(emailSendResult))
             mockJourneyServiceUpdateAndNext(
               routes.EmailAddressConfirmedController.emailAddressConfirmed,
               session,
@@ -431,12 +458,28 @@ class EmailAddressConfirmedControllerSpec
           else checkIsRedirect(performActionCY(), mockNextCall)
         }
 
-        "when the user has selected  English language" in {
-          testRedirect(emailParametersEN, true)
+        "the email is successfully sent and" when {
+
+          "the user has selected  English language" in {
+            testRedirect(emailParametersEN, isEnglish = true, emailSendSuccessful = true)
+          }
+
+          "the user has selected  welsh language" in {
+            testRedirect(emailParametersCY, isEnglish = false, emailSendSuccessful = true)
+          }
+
         }
 
-        "when the user has selected  welsh language" in {
-          testRedirect(emailParametersCY, false)
+        "the email is not successfully sent and" when {
+
+          "the user has selected  English language" in {
+            testRedirect(emailParametersEN, isEnglish = true, emailSendSuccessful = false)
+          }
+
+          "the user has selected  welsh language" in {
+            testRedirect(emailParametersCY, isEnglish = false, emailSendSuccessful = false)
+          }
+
         }
 
       }

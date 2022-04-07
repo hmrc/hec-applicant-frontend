@@ -22,7 +22,7 @@ import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, RequestWithSessionData, SessionDataAction}
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession
-import uk.gov.hmrc.hecapplicantfrontend.models.emailSend.EmailParameters
+import uk.gov.hmrc.hecapplicantfrontend.models.emailSend.{EmailParameters, EmailSendResult}
 import uk.gov.hmrc.hecapplicantfrontend.services.{JourneyService, SendEmailService}
 import uk.gov.hmrc.hecapplicantfrontend.util.StringUtils.StringOps
 import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging, TimeUtils}
@@ -62,7 +62,19 @@ class EmailAddressConfirmedController @Inject() (
           val result = for {
             result             <-
               sendEmailService.sendEmail(userSelectedEmail, emailParameters)
-            updatedEmailAnswers = existingUserEmailAnswers.map(_.copy(emailSendResult = result.some))
+            updatedEmailAnswers = result match {
+                                    case EmailSendResult.EmailSent        =>
+                                      existingUserEmailAnswers.map(
+                                        _.copy(
+                                          emailSendResult = result.some,
+                                          passcodeRequestResult = None,
+                                          passcode = None,
+                                          passcodeVerificationResult = None
+                                        )
+                                      )
+                                    case EmailSendResult.EmailSentFailure =>
+                                      existingUserEmailAnswers.map(_.copy(emailSendResult = result.some))
+                                  }
             updatedSession      =
               request.sessionData
                 .fold(_.copy(userEmailAnswers = updatedEmailAnswers), _.copy(userEmailAnswers = updatedEmailAnswers))
