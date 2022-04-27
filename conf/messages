@@ -430,3 +430,7 @@ verifyNotSupported.noGG=If you do not have a Government Gateway account
 verifyNotSupported.p5=If you do not have a Government Gateway account, you can create one when you start doing the tax check. You must <a href="{0}" class="govuk-link">sign out of GOV.UK Verify</a> first.
 verifyNotSupported.link=Find out more about tax checks
 
+#Access denied
+accessDenied.title = You cannot access this page
+accessDenied.p1 = If you have been sent this link and cannot access it, you may be logged in with the wrong Government Gateway account.
+accessDenied.p2 = If you need any assistance accessing this link, please get in touch with your HMRC contact.

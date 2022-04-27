@@ -17,7 +17,7 @@
 package uk.gov.hmrc.hecapplicantfrontend.controllers.actions
 
 import cats.syntax.eq._
-import cats.instances.char._
+import cats.instances.string._
 import com.google.inject.{Inject, Singleton}
 import play.api.mvc.Results.Redirect
 import play.api.mvc._
@@ -25,6 +25,7 @@ import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 import uk.gov.hmrc.auth.core.retrieve.~
 import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisationException, AuthorisedFunctions, NoActiveSession}
 import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
+import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.ApplicantServiceStartEndPointAccessed
 import uk.gov.hmrc.hecapplicantfrontend.models.{AuthenticationStatus, RetrievedGGData}
 import uk.gov.hmrc.hecapplicantfrontend.services.AuditService
@@ -85,19 +86,26 @@ class AuthWithRetrievalsAction @Inject() (
       }
       .recover {
         case _: NoActiveSession =>
+          val isScotNIPrivateBeta = request.uri === scotNIPrivateBetaUrl
+          val redirectTo          =
+            if (isScotNIPrivateBeta) appConfig.signInUrl(routes.StartController.scotNIPrivateBetaStart())
+            else appConfig.signInUrl(routes.StartController.start)
+
           auditService.sendEvent(
             ApplicantServiceStartEndPointAccessed(
               AuthenticationStatus.NotAuthenticated,
-              Some(appConfig.signInUrl.takeWhile(_ =!= '?')),
+              Some(redirectTo.takeWhile(_ =!= '?')),
               None
             )
           )(hc, ApplicantServiceStartEndPointAccessed.writes, request)
-          Redirect(appConfig.signInUrl)
+          Redirect(redirectTo)
 
         case e: AuthorisationException => sys.error(s"Could not authorise: ${e.getMessage}")
 
       }
   }
+
+  private lazy val scotNIPrivateBetaUrl: String = routes.StartController.scotNIPrivateBetaStart().url
 
   override def parser: BodyParser[AnyContent] = mcc.parsers.defaultBodyParser
 }

@@ -19,7 +19,7 @@ package uk.gov.hmrc.hecapplicantfrontend.config
 import cats.instances.char._
 import cats.syntax.eq._
 import play.api.Configuration
-import play.api.mvc.Result
+import play.api.mvc.{Call, Result}
 import play.api.mvc.Results.Redirect
 import uk.gov.hmrc.auth.core.ConfidenceLevel
 import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
@@ -51,9 +51,9 @@ class AppConfig @Inject() (config: Configuration, contactFrontendConfig: Contact
 
   val ggOrigin: String = config.get[String]("auth.gg.origin")
 
-  lazy val signInUrl: String = {
+  def signInUrl(continue: Call): String = {
     val url: String = config.get[String]("auth.sign-in.url")
-    s"$url?continue=${(s"$selfBaseUrl${routes.StartController.start.url}").urlEncode}&origin=$ggOrigin"
+    s"$url?continue=${(s"$selfBaseUrl${continue.url}").urlEncode}&origin=$ggOrigin"
   }
 
   private val signOutUrlBase: String = config.get[String]("auth.sign-out.url")
@@ -79,25 +79,21 @@ class AppConfig @Inject() (config: Configuration, contactFrontendConfig: Contact
   val authTimeoutCountdownSeconds: Int =
     config.get[FiniteDuration]("auth.sign-out.inactivity-countdown").toSeconds.toInt
 
-  lazy val (redirectToIvUpliftUrl, redirectToIvUpliftResult): (String, Result) = {
-    val ivUrl: String = platformHost.getOrElse(config.get[String]("iv.url"))
-    val ivLocation    = config.get[String]("iv.location")
+  private val ivUrl: String             = platformHost.getOrElse(config.get[String]("iv.url"))
+  private val ivLocation                = config.get[String]("iv.location")
+  private val ivOrigin: String          = config.get[String]("iv.origin")
+  private val ivUseRelativeUrls         = platformHost.isDefined
+  private lazy val ivFailureRelativeUrl = routes.IvFailureController.ivFailure(UUID.randomUUID).url.takeWhile(_ =!= '?')
+  private val redirectToIvUrl: String   = s"$ivUrl$ivLocation/uplift"
 
-    val ivOrigin: String = config.get[String]("iv.origin")
+  def redirectToIvUpliftUrlWithResult(successContinue: Call): (String, Result) = {
+    val successRelativeUrl = successContinue.url
 
-    val (ivSuccessUrl: String, ivFailureUrl: String) = {
-      val useRelativeUrls                          = platformHost.isDefined
-      val (successRelativeUrl, failureRelativeUrl) =
-        routes.StartController.start.url ->
-          routes.IvFailureController.ivFailure(UUID.randomUUID).url.takeWhile(_ =!= '?')
-
-      if (useRelativeUrls)
-        successRelativeUrl                 -> failureRelativeUrl
+    val (ivSuccessUrl: String, ivFailureUrl: String) =
+      if (ivUseRelativeUrls)
+        successRelativeUrl                 -> ivFailureRelativeUrl
       else
-        s"$selfBaseUrl$successRelativeUrl" -> s"$selfBaseUrl$failureRelativeUrl"
-    }
-
-    val redirectToIvUrl: String = s"$ivUrl$ivLocation/uplift"
+        s"$selfBaseUrl$successRelativeUrl" -> s"$selfBaseUrl$ivFailureRelativeUrl"
 
     redirectToIvUrl -> Redirect(
       redirectToIvUrl,
