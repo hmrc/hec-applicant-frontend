@@ -120,3 +120,7 @@ GET /timed-out                                   uk.gov.hmrc.hecapplicantfronten
 GET /exit-survey                                 uk.gov.hmrc.hecapplicantfrontend.controllers.SignOutController.exitSurvey()
 
 GET /hide-ur-banner                             uk.gov.hmrc.hecapplicantfrontend.controllers.UrBannerController.hideBanner()
+
+# ScotNi private beta
+GET /private-beta/start                         uk.gov.hmrc.hecapplicantfrontend.controllers.StartController.scotNIPrivateBetaStart()
+GET /denied-access                              uk.gov.hmrc.hecapplicantfrontend.controllers.AccessDeniedController.scotNIPrivateBetaAccessDenied()

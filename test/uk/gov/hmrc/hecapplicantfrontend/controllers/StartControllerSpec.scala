@@ -44,6 +44,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 
 import java.net.URLEncoder
 import java.time.LocalDate
+import java.util.Locale
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -63,6 +64,8 @@ class StartControllerSpec
   val signInUrl   = "https://sign-in:456"
   val ggOrigin    = "ggOrigin"
 
+  val allowListedEmailAddress = EmailAddress("user@email.com")
+
   override lazy val additionalConfig: Configuration = Configuration(
     ConfigFactory.parseString(
       s"""
@@ -79,6 +82,8 @@ class StartControllerSpec
          |   sign-in.url = "$signInUrl"
          |   gg.origin = "$ggOrigin"
          |}
+         |
+         |scot-ni-email-allow-list = [ "${allowListedEmailAddress.value}" ]
          |""".stripMargin
     )
   )
@@ -148,33 +153,33 @@ class StartControllerSpec
 
   "StartController" when {
 
-    "handling requests to the start endpoint" must {
+    val ggCredId = GGCredId("credId")
 
-      val ggCredId = GGCredId("credId")
+    val sautr = SAUTR("1234567895")
 
-      val sautr = SAUTR("1234567895")
+    val emailAddress = EmailAddress("user@test.com")
 
-      val emailAddress = EmailAddress("user@test.com")
+    val ctutr = CTUTR("1234567895")
 
-      val ctutr = CTUTR("1234567895")
+    val nino = NINO("AB123456C")
 
-      val nino = NINO("AB123456C")
-
-      val completeIndividualLoginData =
-        IndividualLoginData(
-          ggCredId,
-          nino,
-          Some(sautr),
-          Name("First", "Last"),
-          DateOfBirth(LocalDate.now()),
-          Some(emailAddress)
-        )
-
-      val completeCompanyLoginData = CompanyLoginData(
+    val completeIndividualLoginData =
+      IndividualLoginData(
         ggCredId,
-        Some(ctutr),
+        nino,
+        Some(sautr),
+        Name("First", "Last"),
+        DateOfBirth(LocalDate.now()),
         Some(emailAddress)
       )
+
+    val completeCompanyLoginData = CompanyLoginData(
+      ggCredId,
+      Some(ctutr),
+      Some(emailAddress)
+    )
+
+    "handling requests to the start endpoint" must {
 
       def performAction(languageCode: String = Language.English.code): Future[Result] =
         controller.start(FakeRequest().withCookies(Cookie("PLAY_LANG", languageCode)))
@@ -209,18 +214,20 @@ class StartControllerSpec
           }
 
           "it's individual session and hasConfirmedDetails = false, new session should have it as false" in {
-            val session = IndividualHECSession.newSession(completeIndividualLoginData)
+            val session =
+              IndividualHECSession.newSession(completeIndividualLoginData).copy(isScotNIPrivateBeta = Some(false))
             testIsRedirect(session, None, None, Enrolments(Set.empty), None)
           }
 
           "it's individual session and hasConfirmedDetails = true, new session should have it as true" in {
-            val tempSession = IndividualHECSession.newSession(completeIndividualLoginData)
+            val tempSession =
+              IndividualHECSession.newSession(completeIndividualLoginData).copy(isScotNIPrivateBeta = Some(false))
             val session     = tempSession.copy(hasConfirmedDetails = true)
             testIsRedirect(session, None, None, Enrolments(Set.empty), None)
           }
 
           "it's company session" in {
-            val session = CompanyHECSession.newSession(completeCompanyLoginData)
+            val session = CompanyHECSession.newSession(completeCompanyLoginData).copy(isScotNIPrivateBeta = Some(true))
             testIsRedirect(
               session,
               Some(AffinityGroup.Organisation),
@@ -290,7 +297,8 @@ class StartControllerSpec
                   individualRetrievedData.sautr
                 )
 
-                val session = IndividualHECSession.newSession(individualRetrievedData)
+                val session =
+                  IndividualHECSession.newSession(individualRetrievedData).copy(isScotNIPrivateBeta = Some(false))
                 isRedirectTest(
                   session,
                   individualRetrievedData,
@@ -314,7 +322,7 @@ class StartControllerSpec
               val loginData = IndividualHECSession.newSession(individualRetrievedData).loginData
               val session   = IndividualHECSession
                 .newSession(individualRetrievedData)
-                .copy(loginData = loginData.copy(emailAddress = None))
+                .copy(loginData = loginData.copy(emailAddress = None), isScotNIPrivateBeta = Some(false))
               isRedirectTest(
                 session,
                 individualRetrievedData,
@@ -333,7 +341,8 @@ class StartControllerSpec
               None
             )
 
-            val session = IndividualHECSession.newSession(completeIndividualLoginData)
+            val session =
+              IndividualHECSession.newSession(completeIndividualLoginData).copy(isScotNIPrivateBeta = Some(false))
             isRedirectTest(
               session,
               completeIndividualLoginData,
@@ -355,7 +364,9 @@ class StartControllerSpec
             )
 
             val session =
-              IndividualHECSession.newSession(completeIndividualLoginData.copy(sautr = Some(citizenDetailsSautr)))
+              IndividualHECSession
+                .newSession(completeIndividualLoginData.copy(sautr = Some(citizenDetailsSautr)))
+                .copy(isScotNIPrivateBeta = Some(false))
 
             isRedirectTest(
               session,
@@ -377,7 +388,8 @@ class StartControllerSpec
                 completeIndividualLoginData.sautr
               )
 
-              val session = IndividualHECSession.newSession(completeIndividualLoginData)
+              val session =
+                IndividualHECSession.newSession(completeIndividualLoginData).copy(isScotNIPrivateBeta = Some(false))
 
               isRedirectTest(
                 session,
@@ -400,7 +412,7 @@ class StartControllerSpec
               completeCompanyLoginData,
               completeCompanyLoginData.copy(emailAddress = None)
             ).foreach { companyRetrievedData =>
-              val session = CompanyHECSession.newSession(companyRetrievedData)
+              val session = CompanyHECSession.newSession(companyRetrievedData).copy(isScotNIPrivateBeta = Some(false))
               inSequence {
                 mockAuthWithRetrievals(
                   ConfidenceLevel.L50,
@@ -438,7 +450,7 @@ class StartControllerSpec
 
           "no CTUTR can be found for a company" in {
             val companyData = completeCompanyLoginData.copy(ctutr = None)
-            val session     = CompanyHECSession.newSession(companyData)
+            val session     = CompanyHECSession.newSession(companyData).copy(isScotNIPrivateBeta = Some(false))
             inSequence {
               mockAuthWithRetrievals(
                 ConfidenceLevel.L50,
@@ -675,7 +687,7 @@ class StartControllerSpec
               mockGetSession(Right(None))
               mockGetUnexpiredTaxCheckCodes(Right(List.empty))
               mockStoreSession(
-                CompanyHECSession.newSession(completeCompanyLoginData)
+                CompanyHECSession.newSession(completeCompanyLoginData).copy(isScotNIPrivateBeta = Some(false))
               )(Left(Error("")))
             }
           )
@@ -752,6 +764,7 @@ class StartControllerSpec
         val expectedIvUrl = s"$ivUrl$ivLocation/uplift?$queryString"
 
         "the user has CL50 and" when {
+
           "the affinity group is 'Individual'" in {
             inSequence {
               mockAuthWithRetrievals(
@@ -917,6 +930,204 @@ class StartControllerSpec
         }
 
       }
+    }
+
+    "handling requests to the ScotNI private beta start endpoint" must {
+
+      def performAction(): Future[Result] =
+        controller.scotNIPrivateBetaStart(FakeRequest())
+
+      "redirect to the access denied page" when {
+
+        def test(email: Option[EmailAddress]) = {
+          mockAuthWithRetrievals(
+            ConfidenceLevel.L250,
+            Some(AffinityGroup.Individual),
+            Some(nino),
+            Some(sautr),
+            email,
+            Enrolments(Set.empty),
+            Some(retrievedGGCredential(ggCredId))
+          )
+
+          checkIsRedirect(performAction(), routes.AccessDeniedController.scotNIPrivateBetaAccessDenied())
+        }
+
+        "no email address could be retrieved" in {
+          test(None)
+        }
+
+        "an email address is retrieved but it is not on the email allow-list" in {
+          test(Some(EmailAddress(s"different.$allowListedEmailAddress")))
+        }
+
+      }
+
+      "redirect to IV" when {
+
+        "the user is an individual with CL50" in {
+          val queryString =
+            s"origin=$ivOrigin&confidenceLevel=250&" +
+              s"completionURL=${urlEncode(s"$selfBaseUrl/tax-check-for-licence/private-beta/start")}&" +
+              s"failureURL=${urlEncode(s"$selfBaseUrl/tax-check-for-licence/failed-iv/callback")}"
+
+          val expectedIvUrl = s"$ivUrl$ivLocation/uplift?$queryString"
+
+          inSequence {
+            mockAuthWithRetrievals(
+              ConfidenceLevel.L50,
+              Some(AffinityGroup.Individual),
+              None,
+              None,
+              Some(allowListedEmailAddress),
+              Enrolments(Set.empty),
+              Some(retrievedGGCredential(ggCredId))
+            )
+            mockGetSession(Right(None))
+            mockSendAuditEvent(
+              ApplicantServiceStartEndPointAccessed(
+                AuthenticationStatus.Authenticated,
+                Some(expectedIvUrl.stripSuffix(s"?$queryString")),
+                Some(
+                  AuthenticationDetails(
+                    ggProviderType,
+                    ggCredId.value,
+                    Some(AffinityGroup.Individual),
+                    Some(EntityType.Individual),
+                    ConfidenceLevel.L50
+                  )
+                )
+              )
+            )
+          }
+
+          checkIsRedirect(performAction(), expectedIvUrl)
+        }
+
+      }
+
+      "proceed" when {
+
+        "the user is an individual and they have CL250" in {
+          val loginData = completeIndividualLoginData.copy(emailAddress = Some(allowListedEmailAddress))
+
+          val citizenDetails = CitizenDetails(
+            loginData.name,
+            loginData.dateOfBirth,
+            loginData.sautr
+          )
+
+          val session =
+            IndividualHECSession.newSession(loginData).copy(isScotNIPrivateBeta = Some(true))
+
+          inSequence {
+            mockAuthWithRetrievals(
+              ConfidenceLevel.L250,
+              Some(AffinityGroup.Individual),
+              Some(loginData.nino),
+              loginData.sautr,
+              Some(allowListedEmailAddress),
+              Enrolments(Set.empty),
+              Some(retrievedGGCredential(loginData.ggCredId))
+            )
+            mockGetSession(Right(None))
+            mockGetCitizenDetails(loginData.nino)(Right(citizenDetails))
+            mockGetUnexpiredTaxCheckCodes(Right(List.empty))
+            mockStoreSession(session)(Right(()))
+            mockFirstPge(session)(mockNextCall)
+            mockSendAuditEvent(
+              ApplicantServiceStartEndPointAccessed(
+                AuthenticationStatus.Authenticated,
+                Some(mockNextCall.url),
+                Some(
+                  AuthenticationDetails(
+                    ggProviderType,
+                    loginData.ggCredId.value,
+                    Some(AffinityGroup.Individual),
+                    Some(EntityType.Individual),
+                    ConfidenceLevel.L250
+                  )
+                )
+              )
+            )
+          }
+
+          checkIsRedirect(performAction(), mockNextCall)
+
+        }
+
+        "the user is a company" in {
+
+          val allowListedEmailAddressUpperCase = EmailAddress(allowListedEmailAddress.value.toUpperCase(Locale.UK))
+          val loginData                        = completeCompanyLoginData.copy(emailAddress = Some(allowListedEmailAddressUpperCase))
+
+          val session = CompanyHECSession.newSession(loginData).copy(isScotNIPrivateBeta = Some(true))
+          inSequence {
+            mockAuthWithRetrievals(
+              ConfidenceLevel.L50,
+              Some(AffinityGroup.Organisation),
+              None,
+              None,
+              Some(allowListedEmailAddressUpperCase),
+              Enrolments(Set(retrievedCtEnrolment(ctutr))),
+              Some(retrievedGGCredential(loginData.ggCredId))
+            )
+            mockGetSession(Right(None))
+            mockGetUnexpiredTaxCheckCodes(Right(List.empty))
+            mockStoreSession(session)(Right(()))
+            mockFirstPge(session)(mockNextCall)
+            mockSendAuditEvent(
+              ApplicantServiceStartEndPointAccessed(
+                AuthenticationStatus.Authenticated,
+                Some(mockNextCall.url),
+                Some(
+                  AuthenticationDetails(
+                    ggProviderType,
+                    loginData.ggCredId.value,
+                    Some(AffinityGroup.Organisation),
+                    Some(EntityType.Company),
+                    ConfidenceLevel.L50
+                  )
+                )
+              )
+            )
+          }
+
+          checkIsRedirect(performAction(), mockNextCall)
+        }
+
+      }
+
+      "redirect to the login page" when {
+
+        "the user is not logged in" in {
+          List[NoActiveSession](
+            BearerTokenExpired(),
+            MissingBearerToken(),
+            InvalidBearerToken(),
+            SessionRecordNotFound()
+          ).foreach { e =>
+            withClue(s"For AuthorisationException $e: ") {
+              inSequence {
+                mockAuth(EmptyPredicate, retrievals)(Future.failed(e))
+                mockSendAuditEvent(
+                  ApplicantServiceStartEndPointAccessed(AuthenticationStatus.NotAuthenticated, Some(signInUrl), None)
+                )
+              }
+
+              val result =
+                controller.scotNIPrivateBetaStart(FakeRequest(routes.StartController.scotNIPrivateBetaStart()))
+
+              checkIsRedirect(
+                result,
+                s"$signInUrl?continue=${(s"$selfBaseUrl/tax-check-for-licence/private-beta/start").urlEncode}&origin=$ggOrigin"
+              )
+            }
+          }
+        }
+
+      }
+
     }
 
   }

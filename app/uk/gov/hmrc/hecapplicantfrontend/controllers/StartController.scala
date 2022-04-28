@@ -24,14 +24,16 @@ import cats.instances.string._
 import cats.syntax.eq._
 import cats.syntax.option._
 import cats.syntax.traverse._
-import uk.gov.hmrc.emailaddress.{EmailAddress => EmailAdd}
+import configs.syntax._
 import com.google.inject.{Inject, Singleton}
+import play.api.Configuration
 import play.api.mvc.{Action, AnyContent, Call, MessagesControllerComponents, Request, Result}
 import uk.gov.hmrc.auth.core.retrieve.Credentials
 import uk.gov.hmrc.auth.core.{AffinityGroup, ConfidenceLevel, Enrolments}
 import uk.gov.hmrc.domain.Nino
+import uk.gov.hmrc.emailaddress.{EmailAddress => EmailAdd}
 import uk.gov.hmrc.hecapplicantfrontend.config.{AppConfig, EnrolmentConfig}
-import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.AuthWithRetrievalsAction
+import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthWithRetrievalsAction, AuthenticatedRequestWithRetrievedGGData}
 import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.ApplicantServiceStartEndPointAccessed
 import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.ApplicantServiceStartEndPointAccessed.AuthenticationDetails
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, IndividualHECSession}
@@ -44,11 +46,13 @@ import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
+import java.util.Locale
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class StartController @Inject() (
   appConfig: AppConfig,
+  config: Configuration,
   citizenDetailsService: CitizenDetailsService,
   taxCheckService: TaxCheckService,
   journeyService: JourneyService,
@@ -62,7 +66,25 @@ class StartController @Inject() (
 
   import StartController._
 
+  private val scotNIPrivateBetaEmailAllowListLowerCase: List[String] =
+    config.underlying.get[List[String]]("scot-ni-email-allow-list").value.map(_.toLowerCase(Locale.UK))
+
+  val scotNIPrivateBetaStart: Action[AnyContent] = authWithRetrievalsAction.async { implicit request =>
+    val retrievedEmailLowerCase = request.retrievedGGUserData.emailAddress.map(_.toLowerCase(Locale.UK))
+
+    if (retrievedEmailLowerCase.exists(scotNIPrivateBetaEmailAllowListLowerCase.contains(_)))
+      doStart(isScotNIPrivateBeta = true)
+    else
+      Redirect(routes.AccessDeniedController.scotNIPrivateBetaAccessDenied())
+  }
+
   val start: Action[AnyContent] = authWithRetrievalsAction.async { implicit request =>
+    doStart(isScotNIPrivateBeta = false)
+  }
+
+  private def doStart(
+    isScotNIPrivateBeta: Boolean
+  )(implicit request: AuthenticatedRequestWithRetrievedGGData[_]): Future[Result] = {
     val result = for {
       maybeStoredSession                <- sessionStore.get().leftMap(BackendError)
       details                           <-
@@ -77,14 +99,20 @@ class StartController @Inject() (
                                              .getUnexpiredTaxCheckCodes()
                                              .leftMap(BackendError(_): StartError)
       isConfirmedDetails                 = maybeStoredSession.fold(false)(_.fold(_.hasConfirmedDetails, _ => false))
+      scotNIPrivateBeta                  = maybeStoredSession.flatMap(_.isScotNIPrivateBeta).orElse(Some(isScotNIPrivateBeta))
       newSession                         = loginData match {
                                              case i: IndividualLoginData =>
                                                IndividualHECSession
                                                  .newSession(i)
-                                                 .copy(unexpiredTaxChecks = existingTaxChecks, hasConfirmedDetails = isConfirmedDetails)
+                                                 .copy(
+                                                   unexpiredTaxChecks = existingTaxChecks,
+                                                   hasConfirmedDetails = isConfirmedDetails,
+                                                   isScotNIPrivateBeta = scotNIPrivateBeta
+                                                 )
                                              case c: CompanyLoginData    =>
-                                               CompanyHECSession.newSession(c).copy(unexpiredTaxChecks = existingTaxChecks)
-
+                                               CompanyHECSession
+                                                 .newSession(c)
+                                                 .copy(unexpiredTaxChecks = existingTaxChecks, isScotNIPrivateBeta = scotNIPrivateBeta)
                                            }
       _                                 <- sessionStore.store(newSession).leftMap(BackendError(_): StartError)
     } yield authenticationDetails -> newSession
@@ -99,8 +127,15 @@ class StartController @Inject() (
           sys.error(s"Backend error :: $e")
 
         case InsufficientConfidenceLevel(authDetails) =>
-          auditLogIn(Some(appConfig.redirectToIvUpliftUrl), authDetails)
-          appConfig.redirectToIvUpliftResult
+          val successContinue =
+            if (isScotNIPrivateBeta) routes.StartController.scotNIPrivateBetaStart()
+            else routes.StartController.start
+
+          val (redirectToIvUpliftUrl, redirectToIvUpliftResult) =
+            appConfig.redirectToIvUpliftUrlWithResult(successContinue)
+
+          auditLogIn(Some(redirectToIvUpliftUrl), authDetails)
+          redirectToIvUpliftResult
 
         case UnsupportedAuthProvider(authDetails) =>
           if (authDetails.authenticationProvider === "Verify")

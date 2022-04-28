@@ -68,7 +68,9 @@ class LicenceDetailsController @Inject() (
       _.fold(_.licenceType, _.licenceType.some)
     )
 
-    val licenceOptions = licenceTypeOptions(request.sessionData)
+    val licenceOptions =
+      if (request.sessionData.isScotNIPrivateBeta.contains(true)) List.empty
+      else licenceTypeOptions(request.sessionData)
     val form = {
       val emptyForm = licenceTypeForm(licenceOptions)
       licenceType.fold(emptyForm)(emptyForm.fill)
