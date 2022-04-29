@@ -17,15 +17,16 @@
 @import play.api.i18n.Messages
 @import play.api.mvc.Request
 @import uk.gov.hmrc.hecapplicantfrontend.views.html.Layout
+@import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 
 @this(layout: Layout)
 
-@()(implicit request: Request[_], messages: Messages)
+@()(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
 @title = @{messages("iv.insufficientEvidence.title")}
 
 @layout(pageTitle = Some(title)) {
   <h1 class="govuk-heading-xl">@title</h1>
   <p class="govuk-body">@{messages("iv.insufficientEvidence.p1")}</p>
   <p class="govuk-body">@{messages("iv.insufficientEvidence.p2")}</p>
-  <p class="govuk-body"><a href="#" class="govuk-link">@{messages("iv.insufficientEvidence.link")}</a></p>
+  <p class="govuk-body"><a href="@appConfig.contactHmrcUrl" class="govuk-link">@{messages("iv.insufficientEvidence.link")}</a></p>
 }

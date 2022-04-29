@@ -20,6 +20,7 @@ import cats.instances.future._
 import com.google.inject.{Inject, Singleton}
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.AuthAction
 import uk.gov.hmrc.hecapplicantfrontend.models.iv.IvErrorStatus.{PreconditionFailed => IvPreconditionFailed, _}
 import uk.gov.hmrc.hecapplicantfrontend.services.IvService
@@ -43,7 +44,7 @@ class IvFailureController @Inject() (
   technicalIssuesPage: views.html.iv.TechnicalIssue,
   timeoutPage: views.html.iv.Timeout,
   userAbortedPage: views.html.iv.UserAborted
-)(implicit ec: ExecutionContext)
+)(implicit ec: ExecutionContext, appConfig: AppConfig)
     extends FrontendController(mcc)
     with I18nSupport
     with Logging {

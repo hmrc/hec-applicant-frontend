@@ -106,16 +106,18 @@ class AppConfig @Inject() (config: Configuration, contactFrontendConfig: Contact
     )
   }
 
+  val govUkUrl: String                     = config.get[String]("external-url.gov-uk")
   val applicantServiceGuidanceUrl: String  = config.get[String]("external-url.applicant-service-guidance")
   val taxCheckGuidanceUrl: String          = config.get[String]("external-url.tax-check-guidance")
   val registerForSaUrl: String             = config.get[String]("external-url.register-for-sa")
-  val contactHmrcSa: String                = config.get[String]("external-url.contact-hmrc-sa")
+  val contactHmrcSaUrl: String             = config.get[String]("external-url.contact-hmrc-sa")
   val companiesHouseSearchUrl: String      = config.get[String]("external-url.companies-house-search")
   val companiesHouseUpdatesUrl: String     = config.get[String]("external-url.companies-house-updates")
   val registerForCtUrl: String             = config.get[String]("external-url.register-for-ct")
   val accountingPeriodsGuidanceUrl: String = config.get[String]("external-url.accounting-periods-guidance")
   val findLostUtrUrl: String               = config.get[String]("external-url.find-lost-utr")
   val saGuidanceUrl: String                = config.get[String]("external-url.sa-guidance")
+  val contactHmrcUrl: String               = config.get[String]("external-url.contact-hmrc")
 
   val maxCtutrAnswerAttempts: Int = config.get[Int]("ctutr-attempts.maximum-attempts")
 

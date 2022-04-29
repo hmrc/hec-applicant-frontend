@@ -93,7 +93,7 @@ class SAControllerSpec
 
             testLink(doc, routes.TaxSituationController.taxSituation.url)
             testLink(doc, appConfig.registerForSaUrl)
-            testLink(doc, appConfig.contactHmrcSa)
+            testLink(doc, appConfig.contactHmrcSaUrl)
           }
         )
 
@@ -122,7 +122,7 @@ class SAControllerSpec
           messageFromMessageKey("noReturnFound.title"),
           doc => {
             doc.select("#back").attr("href") shouldBe mockPreviousCall.url
-            testLink(doc, appConfig.contactHmrcSa)
+            testLink(doc, appConfig.contactHmrcSaUrl)
           }
         )
 
