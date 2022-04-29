@@ -183,7 +183,8 @@ class IvFailureControllerSpec
 
         checkPageIsDisplayed(
           performAction(),
-          messageFromMessageKey("iv.insufficientEvidence.title")
+          messageFromMessageKey("iv.insufficientEvidence.title"),
+          _.select(".govuk-body > .govuk-link").attr("href") shouldBe appConfig.contactHmrcUrl
         )
       }
 
@@ -200,7 +201,8 @@ class IvFailureControllerSpec
 
         checkPageIsDisplayed(
           performAction(),
-          messageFromMessageKey("iv.lockedOut.title")
+          messageFromMessageKey("iv.lockedOut.title"),
+          _.select(".govuk-body > .govuk-link").attr("href") shouldBe appConfig.govUkUrl
         )
       }
 
@@ -280,7 +282,8 @@ class IvFailureControllerSpec
 
         checkPageIsDisplayed(
           performAction(),
-          messageFromMessageKey("iv.preconditionFailed.title")
+          messageFromMessageKey("iv.preconditionFailed.title"),
+          _.select(".govuk-body > .govuk-link").attr("href") shouldBe appConfig.applicantServiceGuidanceUrl
         )
       }
 
