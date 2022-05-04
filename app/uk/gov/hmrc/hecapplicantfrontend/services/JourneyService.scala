@@ -71,6 +71,7 @@ object JourneyService {
 
     @SuppressWarnings(Array("org.wartremover.warts.Throw"))
     def doThrow: Nothing = throw this
+
   }
 
 }
