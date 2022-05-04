@@ -72,7 +72,7 @@ object JourneyService {
     @SuppressWarnings(Array("org.wartremover.warts.Throw"))
     def doThrow: Nothing = throw this
 
-    override def fillInStackTrace(): Throwable = super.fillInStackTrace()
+    override def fillInStackTrace(): Throwable = this
   }
 
 }
