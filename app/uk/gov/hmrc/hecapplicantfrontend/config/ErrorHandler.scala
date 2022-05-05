@@ -38,7 +38,8 @@ class ErrorHandler @Inject() (errorTemplate: ErrorTemplate, val messagesApi: Mes
     errorTemplate(pageTitle, heading, message)
 
   override def resolveError(rh: RequestHeader, ex: Throwable): Result = ex match {
-    case _: InconsistentSessionState =>
+    case InconsistentSessionState(message) =>
+      logger.warn(s"Found inconsistent session state, redirecting to the start endpoint: $message")
       Redirect(routes.StartController.start)
 
     case _ =>
