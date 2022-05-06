@@ -27,6 +27,8 @@ import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.play.bootstrap.frontend.http.FrontendErrorHandler
 import uk.gov.hmrc.hecapplicantfrontend.views.html.ErrorTemplate
 
+import scala.concurrent.Future
+
 @Singleton
 class ErrorHandler @Inject() (errorTemplate: ErrorTemplate, val messagesApi: MessagesApi)
     extends FrontendErrorHandler
@@ -37,12 +39,13 @@ class ErrorHandler @Inject() (errorTemplate: ErrorTemplate, val messagesApi: Mes
   ): Html =
     errorTemplate(pageTitle, heading, message)
 
-  override def resolveError(rh: RequestHeader, ex: Throwable): Result = ex match {
-    case _: InconsistentSessionState =>
-      Redirect(routes.StartController.start)
+  override def onServerError(request: RequestHeader, exception: Throwable): Future[Result] = exception match {
+    case InconsistentSessionState(message) =>
+      logger.warn(s"Found inconsistent session state for ${request.uri}: $message. Redirecting to the start endpoint.")
+      Future.successful(Redirect(routes.StartController.start))
 
-    case _ =>
-      super.resolveError(rh, ex)
+    case other =>
+      super.onServerError(request, other)
   }
 
 }
