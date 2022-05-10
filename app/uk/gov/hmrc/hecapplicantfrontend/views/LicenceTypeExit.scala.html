@@ -29,6 +29,7 @@
 
 @layout(pageTitle = Some(title), backLocation = Some(back)) {
     <h1 class="govuk-heading-xl">@title</h1>
+    <h2 class="govuk-heading-m">@messages(s"$key.licenceTypes")</h2>
     <p class="govuk-body">@{messages("licenceTypeExit.p1")}</p>
     <ul class="govuk-list govuk-list--bullet">
         @{options.map(option => Html(s"""<li>${messages(s"$key.${LicenceTypeOption.licenceTypeOption(option).messageKey}")}</li>"""))}
