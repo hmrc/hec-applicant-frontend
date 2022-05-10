@@ -109,15 +109,16 @@ licenceType.midSentence.scrapMetalDealer = scrap metal dealer site
 
 # Licence type exit
 licenceTypeExit.title = You may not need to do a tax check
+licenceTypeExit.licenceTypes = See if your licence type is included
 licenceTypeExit.p1 = You only need to do a tax check if you are applying for one of these licence types:
 licenceTypeExit.driverOfTaxis = driver of taxis and private hires, includes hackney carriage and dual licences
 licenceTypeExit.operatorOfPrivateHireVehicles = operator of private hire vehicles
 licenceTypeExit.scrapMetalCollector = scrap metal mobile collector
 licenceTypeExit.scrapMetalDealer = scrap metal dealer site
 licenceTypeExit.link = Find out about tax checks
-licenceTypeExit.wrongAccount = Logged in with the wrong account
-licenceTypeExit.p2 = If you could not see your licence type on the previous page, you may be logged in with the wrong account.
-licenceTypeExit.signBackInLink = Sign in with the correct Government Gateway account
+licenceTypeExit.wrongAccount = Make sure you’re using the correct account
+licenceTypeExit.p2 = If you could not see your licence type on the previous page, you may be logged in with the wrong Government Gateway account.
+licenceTypeExit.signBackInLink = Sign in to the correct Government Gateway account
 
 # Licence time trading
 licenceTimeTrading.title = How many years ago did you first get a licence for this activity?
