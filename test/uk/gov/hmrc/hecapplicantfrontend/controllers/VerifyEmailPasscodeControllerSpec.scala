@@ -136,7 +136,7 @@ class VerifyEmailPasscodeControllerSpec
             { doc =>
               doc.select("#back").attr("href") shouldBe mockPreviousCall.url
 
-              val textBody = doc.select(".govuk-body").text()
+              val textBody = doc.select(".govuk-inset-text").text()
               val htmlBody = doc.select(".govuk-body").html()
 
               textBody should include regex userEmailAnswers
