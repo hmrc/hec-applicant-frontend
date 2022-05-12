@@ -173,9 +173,8 @@ entityType.error.invalid=Select who you are doing a tax check for
 
 # Wrong GG Account
 wrongGGAccount.title=You need to sign in with the correct account
-wrongGGAccount.p1=This is because you are signed in as {0} and you have chosen to do a tax check for {1}
-wrongGGAccount.h2=What you should do next
-wrongGGAccount.link=Sign in with the correct Government Gateway account
+wrongGGAccount.p1=This is because you are signed in as {0} and you have chosen to do a tax check for {1}.
+wrongGGAccount.link=Sign in with the correct account
 wrongGGAccount.individual=an individual
 wrongGGAccount.company=a company
 
