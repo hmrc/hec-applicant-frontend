@@ -53,8 +53,10 @@
       function noThanksClick(event) {
         event.preventDefault()
         fetch('/tax-check-for-licence/hide-ur-banner')
-          .then(r => urBanner.classList.remove('hmrc-user-research-banner--show'))
-          .catch((error) => {
+          .then(function(r) {
+            urBanner.classList.remove('hmrc-user-research-banner--show')
+          })
+          .catch(function(error) {
             console.error('Error:', error);
           })
       }
