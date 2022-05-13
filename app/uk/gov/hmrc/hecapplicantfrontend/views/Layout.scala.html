@@ -79,6 +79,7 @@
     @if(showUrBanner) {
       @Html(s"""<script ${CSPNonce.attr}>window.showUrBanner = true, window.hideBannerUrl = '${routes.UrBannerController.hideBanner.url}'</script>""")
     }
+    @Html(s"""<script src="${controllers.routes.Assets.versioned("javascripts/fetch.umd.js")}" ${CSPNonce.attr}></script>""")
     @Html(s"""<script src="${controllers.routes.Assets.versioned("javascripts/application.js")}" ${CSPNonce.attr}></script>""")
 }
 
