@@ -23,7 +23,7 @@ import com.typesafe.config.ConfigFactory
 import play.api.Configuration
 import play.api.inject.bind
 import play.api.inject.guice.GuiceableModule
-import play.api.mvc.{Cookie, Result}
+import play.api.mvc.{Cookie, Request, Result}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.authorise.EmptyPredicate
@@ -36,8 +36,8 @@ import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.ApplicantServiceStartE
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, IndividualHECSession}
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CTUTR, GGCredId, NINO, SAUTR}
-import uk.gov.hmrc.hecapplicantfrontend.models.{AuthenticationStatus, CitizenDetails, DateOfBirth, EmailAddress, EntityType, Error, HECSession, Language, Name, TaxCheckListItem}
-import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
+import uk.gov.hmrc.hecapplicantfrontend.models.{AuthenticationStatus, CitizenDetails, DateOfBirth, EmailAddress, EntityType, Error, HECSession, Language, Name, TaxCheckListItem, UncertainEntityTypeJourney}
+import uk.gov.hmrc.hecapplicantfrontend.repos.{SessionStore, UncertainEntityTypeJourneyStore}
 import uk.gov.hmrc.hecapplicantfrontend.services.{AuditService, AuditServiceSupport, CitizenDetailsService, JourneyService, TaxCheckService}
 import uk.gov.hmrc.hecapplicantfrontend.util.StringUtils.StringOps
 import uk.gov.hmrc.http.HeaderCarrier
@@ -88,8 +88,9 @@ class StartControllerSpec
     )
   )
 
-  val mockCitizenDetailsService = mock[CitizenDetailsService]
-  val mockTaxCheckService       = mock[TaxCheckService]
+  val mockCitizenDetailsService           = mock[CitizenDetailsService]
+  val mockTaxCheckService                 = mock[TaxCheckService]
+  val mockUncertainEntityTypeJourneyStore = mock[UncertainEntityTypeJourneyStore]
 
   override val overrideBindings =
     List[GuiceableModule](
@@ -98,7 +99,8 @@ class StartControllerSpec
       bind[CitizenDetailsService].toInstance(mockCitizenDetailsService),
       bind[TaxCheckService].toInstance(mockTaxCheckService),
       bind[JourneyService].toInstance(mockJourneyService),
-      bind[AuditService].toInstance(mockAuditService)
+      bind[AuditService].toInstance(mockAuditService),
+      bind[UncertainEntityTypeJourneyStore].toInstance(mockUncertainEntityTypeJourneyStore)
     )
 
   val retrievals =
@@ -149,6 +151,18 @@ class StartControllerSpec
     None
   )
 
+  def mockGetUncertainEntityTypeJourney(result: Either[Error, Option[UncertainEntityTypeJourney]]) =
+    (mockUncertainEntityTypeJourneyStore
+      .get()(_: Request[_]))
+      .expects(*)
+      .returning(EitherT.fromEither(result))
+
+  def mockStoreUncertainEntityTypeJourney(journey: UncertainEntityTypeJourney)(result: Either[Error, Unit]) =
+    (mockUncertainEntityTypeJourneyStore
+      .store(_: UncertainEntityTypeJourney)(_: Request[_]))
+      .expects(journey, *)
+      .returning(EitherT.fromEither(result))
+
   val controller = instanceOf[StartController]
 
   "StartController" when {
@@ -178,6 +192,29 @@ class StartControllerSpec
       Some(ctutr),
       Some(emailAddress)
     )
+
+    val enrolmentCombinationsForIndividuals =
+      List(
+        Set(Enrolment(EnrolmentConfig.SAEnrolment.key)),
+        Set(Enrolment(EnrolmentConfig.MTDITEnrolment.key)),
+        Set(
+          Enrolment(EnrolmentConfig.SAEnrolment.key),
+          Enrolment(EnrolmentConfig.MTDITEnrolment.key)
+        ),
+        Set(
+          Enrolment(EnrolmentConfig.SAEnrolment.key),
+          Enrolment(EnrolmentConfig.NINOEnrolment.key)
+        ),
+        Set(
+          Enrolment(EnrolmentConfig.MTDITEnrolment.key),
+          Enrolment(EnrolmentConfig.NINOEnrolment.key)
+        ),
+        Set(
+          Enrolment(EnrolmentConfig.SAEnrolment.key),
+          Enrolment(EnrolmentConfig.MTDITEnrolment.key),
+          Enrolment(EnrolmentConfig.NINOEnrolment.key)
+        )
+      )
 
     "handling requests to the start endpoint" must {
 
@@ -247,7 +284,8 @@ class StartControllerSpec
             citizenDetails: CitizenDetails,
             sautr: Option[SAUTR],
             affinityGroup: AffinityGroup,
-            enrolments: Enrolments
+            enrolments: Enrolments,
+            mockGetUncertainEntityTypeJourney: Option[() => Unit] = None
           ) = {
             inSequence {
               mockAuthWithRetrievals(
@@ -260,6 +298,7 @@ class StartControllerSpec
                 Some(retrievedGGCredential(individualRetrievedData.ggCredId))
               )
               mockGetSession(Right(None))
+              mockGetUncertainEntityTypeJourney.foreach(_())
               mockGetCitizenDetails(individualRetrievedData.nino)(Right(citizenDetails))
               mockGetUnexpiredTaxCheckCodes(Right(List.empty))
               mockStoreSession(session)(Right(()))
@@ -311,7 +350,7 @@ class StartControllerSpec
             }
 
           "all the necessary data is retrieved for an individual with affinity group " +
-            "'Individaul' and CL250 and  email address is not  valid" in {
+            "'Individual' and CL250 and  email address is not  valid" in {
               val individualRetrievedData = completeIndividualLoginData.copy(emailAddress = EmailAddress("email").some)
               val citizenDetails          = CitizenDetails(
                 individualRetrievedData.name,
@@ -380,8 +419,8 @@ class StartControllerSpec
           }
 
           "all the necessary data is retrieved for an individual with affinity group " +
-            "'Organisation' where the only enrolment other than the NINO enrolment is an IR-SA one " +
-            "and the user has CL250" in {
+            "'Organisation' and " when {
+
               val citizenDetails = CitizenDetails(
                 completeIndividualLoginData.name,
                 completeIndividualLoginData.dateOfBirth,
@@ -389,63 +428,142 @@ class StartControllerSpec
               )
 
               val session =
-                IndividualHECSession.newSession(completeIndividualLoginData).copy(isScotNIPrivateBeta = Some(false))
+                IndividualHECSession
+                  .newSession(completeIndividualLoginData)
+                  .copy(isScotNIPrivateBeta = Some(false))
 
-              isRedirectTest(
-                session,
-                completeIndividualLoginData,
-                citizenDetails,
-                None,
-                AffinityGroup.Organisation,
-                Enrolments(
-                  Set(
-                    Enrolment(EnrolmentConfig.SAEnrolment.key),
-                    Enrolment(EnrolmentConfig.NINOEnrolment.key)
-                  )
-                )
-              )
+              "the enrolments indicate the user is an individual and the user has CL250" in {
+                enrolmentCombinationsForIndividuals.foreach { enrolments =>
+                  withClue(s"For enrolments $enrolments: ") {
+                    isRedirectTest(
+                      session,
+                      completeIndividualLoginData,
+                      citizenDetails,
+                      None,
+                      AffinityGroup.Organisation,
+                      Enrolments(enrolments)
+                    )
+                  }
+                }
+              }
 
-            }
-
-          "all the necessary data is retrieved for a company" in {
-            List(
-              completeCompanyLoginData,
-              completeCompanyLoginData.copy(emailAddress = None)
-            ).foreach { companyRetrievedData =>
-              val session = CompanyHECSession.newSession(companyRetrievedData).copy(isScotNIPrivateBeta = Some(false))
-              inSequence {
-                mockAuthWithRetrievals(
-                  ConfidenceLevel.L50,
-                  Some(AffinityGroup.Organisation),
-                  None,
-                  None,
-                  companyRetrievedData.emailAddress,
-                  Enrolments(Set(retrievedCtEnrolment(ctutr))),
-                  Some(retrievedGGCredential(companyRetrievedData.ggCredId))
-                )
-                mockGetSession(Right(None))
-                mockGetUnexpiredTaxCheckCodes(Right(List.empty))
-                mockStoreSession(session)(Right(()))
-                mockFirstPge(session)(mockNextCall)
-                mockSendAuditEvent(
-                  ApplicantServiceStartEndPointAccessed(
-                    AuthenticationStatus.Authenticated,
-                    Some(mockNextCall.url),
-                    Some(
-                      AuthenticationDetails(
-                        ggProviderType,
-                        ggCredId.value,
-                        Some(AffinityGroup.Organisation),
-                        Some(EntityType.Company),
-                        ConfidenceLevel.L50
+              "it is not clear from the enrolments and the CL what the entity type is but the user has clarified that they are " +
+                "an individual" in {
+                  isRedirectTest(
+                    session,
+                    completeIndividualLoginData,
+                    citizenDetails,
+                    None,
+                    AffinityGroup.Organisation,
+                    Enrolments(Set.empty),
+                    Some(() =>
+                      mockGetUncertainEntityTypeJourney(
+                        Right(
+                          Some(
+                            UncertainEntityTypeJourney(
+                              completeIndividualLoginData.ggCredId,
+                              Some(EntityType.Individual)
+                            )
+                          )
+                        )
                       )
                     )
                   )
-                )
+                }
+
+            }
+
+          "all the necessary data is retrieved for a company" when {
+
+            "it is clear from the enrolments and the confidence level that the user is a company" in {
+              List(
+                completeCompanyLoginData,
+                completeCompanyLoginData.copy(emailAddress = None)
+              ).foreach { companyRetrievedData =>
+                val session = CompanyHECSession.newSession(companyRetrievedData).copy(isScotNIPrivateBeta = Some(false))
+                inSequence {
+                  mockAuthWithRetrievals(
+                    ConfidenceLevel.L50,
+                    Some(AffinityGroup.Organisation),
+                    None,
+                    None,
+                    companyRetrievedData.emailAddress,
+                    Enrolments(Set(retrievedCtEnrolment(ctutr))),
+                    Some(retrievedGGCredential(companyRetrievedData.ggCredId))
+                  )
+                  mockGetSession(Right(None))
+                  mockGetUnexpiredTaxCheckCodes(Right(List.empty))
+                  mockStoreSession(session)(Right(()))
+                  mockFirstPge(session)(mockNextCall)
+                  mockSendAuditEvent(
+                    ApplicantServiceStartEndPointAccessed(
+                      AuthenticationStatus.Authenticated,
+                      Some(mockNextCall.url),
+                      Some(
+                        AuthenticationDetails(
+                          ggProviderType,
+                          ggCredId.value,
+                          Some(AffinityGroup.Organisation),
+                          Some(EntityType.Company),
+                          ConfidenceLevel.L50
+                        )
+                      )
+                    )
+                  )
+                }
+
+                checkIsRedirect(performAction(), mockNextCall)
+              }
+            }
+
+            "it is not clear from the enrolments and the confidence level that the user is a company but " +
+              "the user has clarified that they are a company" in {
+                val session =
+                  CompanyHECSession.newSession(completeCompanyLoginData).copy(isScotNIPrivateBeta = Some(false))
+                inSequence {
+                  mockAuthWithRetrievals(
+                    ConfidenceLevel.L250,
+                    Some(AffinityGroup.Organisation),
+                    None,
+                    None,
+                    completeCompanyLoginData.emailAddress,
+                    Enrolments(Set(retrievedCtEnrolment(ctutr))),
+                    Some(retrievedGGCredential(completeCompanyLoginData.ggCredId))
+                  )
+                  mockGetSession(Right(None))
+                  mockGetUncertainEntityTypeJourney(
+                    Right(
+                      Some(
+                        UncertainEntityTypeJourney(
+                          completeIndividualLoginData.ggCredId,
+                          Some(EntityType.Company)
+                        )
+                      )
+                    )
+                  )
+                  mockGetUnexpiredTaxCheckCodes(Right(List.empty))
+                  mockStoreSession(session)(Right(()))
+                  mockFirstPge(session)(mockNextCall)
+                  mockSendAuditEvent(
+                    ApplicantServiceStartEndPointAccessed(
+                      AuthenticationStatus.Authenticated,
+                      Some(mockNextCall.url),
+                      Some(
+                        AuthenticationDetails(
+                          ggProviderType,
+                          ggCredId.value,
+                          Some(AffinityGroup.Organisation),
+                          Some(EntityType.Company),
+                          ConfidenceLevel.L250
+                        )
+                      )
+                    )
+                  )
+                }
+
+                checkIsRedirect(performAction(), mockNextCall)
               }
 
-              checkIsRedirect(performAction(), mockNextCall)
-            }
           }
 
           "no CTUTR can be found for a company" in {
@@ -485,6 +603,52 @@ class StartControllerSpec
 
             checkIsRedirect(performAction(), mockNextCall)
           }
+
+          "it is not clear from the enrolments and the confidence what the entity type is and the user has not " +
+            "clarified which entity type they are" in {
+              val journey =
+                UncertainEntityTypeJourney(ggCredId, None)
+
+              val next = routes.ConfirmUncertainEntityTypeController.entityType
+
+              List(
+                Some(journey) -> None,
+                None          -> Some(() => mockStoreUncertainEntityTypeJourney(journey)(Right(())))
+              ).foreach { case (existingJourney, mockStoreJourney) =>
+                inSequence {
+                  mockAuthWithRetrievals(
+                    ConfidenceLevel.L250,
+                    Some(AffinityGroup.Organisation),
+                    None,
+                    None,
+                    Some(emailAddress),
+                    Enrolments(Set.empty),
+                    Some(retrievedGGCredential(ggCredId))
+                  )
+                  mockGetSession(Right(None))
+                  mockGetUncertainEntityTypeJourney(Right(existingJourney))
+                  mockStoreJourney.foreach(_())
+                  mockSendAuditEvent(
+                    ApplicantServiceStartEndPointAccessed(
+                      AuthenticationStatus.Authenticated,
+                      Some(next.url),
+                      Some(
+                        AuthenticationDetails(
+                          ggProviderType,
+                          ggCredId.value,
+                          Some(AffinityGroup.Organisation),
+                          None,
+                          ConfidenceLevel.L250
+                        )
+                      )
+                    )
+                  )
+
+                }
+
+                checkIsRedirect(performAction(), next)
+              }
+            }
 
         }
       }
@@ -752,6 +916,44 @@ class StartControllerSpec
           )
         }
 
+        "there is an error retrieving from the UncertainEntityTypeJourneyStore" in {
+          testIsError { () =>
+            inSequence {
+              mockAuthWithRetrievals(
+                ConfidenceLevel.L250,
+                Some(AffinityGroup.Organisation),
+                None,
+                None,
+                Some(emailAddress),
+                Enrolments(Set.empty),
+                Some(retrievedGGCredential(ggCredId))
+              )
+              mockGetSession(Right(None))
+              mockGetUncertainEntityTypeJourney(Left(Error("")))
+            }
+
+          }
+        }
+
+        "there is an error writing to the UncertainEntityTypeJourneyStore" in {
+          testIsError { () =>
+            inSequence {
+              mockAuthWithRetrievals(
+                ConfidenceLevel.L250,
+                Some(AffinityGroup.Organisation),
+                None,
+                None,
+                Some(emailAddress),
+                Enrolments(Set.empty),
+                Some(retrievedGGCredential(ggCredId))
+              )
+              mockGetSession(Right(None))
+              mockGetUncertainEntityTypeJourney(Right(None))
+              mockStoreUncertainEntityTypeJourney(UncertainEntityTypeJourney(ggCredId, None))(Left(Error("")))
+            }
+
+          }
+        }
       }
 
       "redirect to IV uplift" when {
@@ -763,12 +965,12 @@ class StartControllerSpec
 
         val expectedIvUrl = s"$ivUrl$ivLocation/uplift?$queryString"
 
-        "the user has CL50 and" when {
+        "the user has CL<250 and" when {
 
           "the affinity group is 'Individual'" in {
             inSequence {
               mockAuthWithRetrievals(
-                ConfidenceLevel.L50,
+                ConfidenceLevel.L200,
                 Some(AffinityGroup.Individual),
                 None,
                 None,
@@ -787,7 +989,7 @@ class StartControllerSpec
                       ggCredId.value,
                       Some(AffinityGroup.Individual),
                       Some(EntityType.Individual),
-                      ConfidenceLevel.L50
+                      ConfidenceLevel.L200
                     )
                   )
                 )
@@ -798,36 +1000,80 @@ class StartControllerSpec
 
           }
 
-          "the affinity group is 'Organisation' and the only enrolment is an IR-SA one" in {
-            inSequence {
-              mockAuthWithRetrievals(
-                ConfidenceLevel.L50,
-                Some(AffinityGroup.Organisation),
-                None,
-                None,
-                None,
-                Enrolments(Set(Enrolment(EnrolmentConfig.SAEnrolment.key, Seq.empty, "state"))),
-                Some(retrievedGGCredential(ggCredId))
-              )
-              mockGetSession(Right(None))
-              mockSendAuditEvent(
-                ApplicantServiceStartEndPointAccessed(
-                  AuthenticationStatus.Authenticated,
-                  Some(expectedIvUrl.stripSuffix(s"?$queryString")),
-                  Some(
-                    AuthenticationDetails(
-                      ggProviderType,
-                      ggCredId.value,
+          "the affinity group is 'Organisation' and" when {
+
+            "it is clear from the enrolments that the user is an individual" in {
+              enrolmentCombinationsForIndividuals.foreach { enrolments =>
+                withClue(s"For enrolments $enrolments: ") {
+                  inSequence {
+                    mockAuthWithRetrievals(
+                      ConfidenceLevel.L50,
                       Some(AffinityGroup.Organisation),
-                      Some(EntityType.Individual),
-                      ConfidenceLevel.L50
+                      None,
+                      None,
+                      None,
+                      Enrolments(enrolments),
+                      Some(retrievedGGCredential(ggCredId))
                     )
-                  )
-                )
-              )
+                    mockGetSession(Right(None))
+                    mockSendAuditEvent(
+                      ApplicantServiceStartEndPointAccessed(
+                        AuthenticationStatus.Authenticated,
+                        Some(expectedIvUrl.stripSuffix(s"?$queryString")),
+                        Some(
+                          AuthenticationDetails(
+                            ggProviderType,
+                            ggCredId.value,
+                            Some(AffinityGroup.Organisation),
+                            Some(EntityType.Individual),
+                            ConfidenceLevel.L50
+                          )
+                        )
+                      )
+                    )
+                  }
+
+                  checkIsRedirect(performAction(), expectedIvUrl)
+                }
+              }
+
             }
 
-            checkIsRedirect(performAction(), expectedIvUrl)
+            "it is not clear from the enrolments and the CL that the user is an individual but " +
+              "the user has confirmed they are an individual" in {
+                inSequence {
+                  mockAuthWithRetrievals(
+                    ConfidenceLevel.L200,
+                    Some(AffinityGroup.Organisation),
+                    None,
+                    None,
+                    None,
+                    Enrolments(Set.empty),
+                    Some(retrievedGGCredential(ggCredId))
+                  )
+                  mockGetSession(Right(None))
+                  mockGetUncertainEntityTypeJourney(
+                    Right(Some(UncertainEntityTypeJourney(ggCredId, Some(EntityType.Individual))))
+                  )
+                  mockSendAuditEvent(
+                    ApplicantServiceStartEndPointAccessed(
+                      AuthenticationStatus.Authenticated,
+                      Some(expectedIvUrl.stripSuffix(s"?$queryString")),
+                      Some(
+                        AuthenticationDetails(
+                          ggProviderType,
+                          ggCredId.value,
+                          Some(AffinityGroup.Organisation),
+                          Some(EntityType.Individual),
+                          ConfidenceLevel.L200
+                        )
+                      )
+                    )
+                  )
+                }
+
+                checkIsRedirect(performAction(), expectedIvUrl)
+              }
 
           }
 
@@ -1129,7 +1375,6 @@ class StartControllerSpec
       }
 
     }
-
   }
 
   def urlEncode(s: String) = URLEncoder.encode(s, "UTF-8")

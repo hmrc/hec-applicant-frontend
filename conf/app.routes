@@ -5,6 +5,9 @@ GET        /assets/*file            controllers.Assets.versioned(path = "/public
 
 GET        /start                   uk.gov.hmrc.hecapplicantfrontend.controllers.StartController.start
 
+GET        /entity-type             uk.gov.hmrc.hecapplicantfrontend.controllers.ConfirmUncertainEntityTypeController.entityType
+POST       /entity-type             uk.gov.hmrc.hecapplicantfrontend.controllers.ConfirmUncertainEntityTypeController.entityTypeSubmit
+
 GET        /your-tax-check-codes    uk.gov.hmrc.hecapplicantfrontend.controllers.TaxChecksListController.unexpiredTaxChecks
 POST       /your-tax-check-codes    uk.gov.hmrc.hecapplicantfrontend.controllers.TaxChecksListController.unexpiredTaxChecksSubmit
 
