@@ -70,13 +70,13 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
   val individualLoginData: IndividualLoginData =
-    IndividualLoginData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None)
+    IndividualLoginData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None, None)
 
   val companyLoginData: CompanyLoginData =
-    CompanyLoginData(GGCredId(""), None, None)
+    CompanyLoginData(GGCredId(""), None, None, None)
 
   val companyLoginData1: CompanyLoginData =
-    CompanyLoginData(GGCredId(""), Some(CTUTR("4444444444")), None)
+    CompanyLoginData(GGCredId(""), Some(CTUTR("4444444444")), None, None)
 
   val ggEmailId = EmailAddress("user@test.com")
 
@@ -584,6 +584,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               Some(SAUTR("utr")),
               Name("", ""),
               DateOfBirth(LocalDate.now()),
+              None,
               None
             )
 
@@ -3550,6 +3551,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               Some(SAUTR("utr")),
               Name("", ""),
               DateOfBirth(LocalDate.now()),
+              None,
               None
             )
 

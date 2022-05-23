@@ -63,7 +63,8 @@ class SessionStoreImplSpec extends PlaySupport with MongoSupportSpec with Eventu
         CompanyLoginData(
           GGCredId("id"),
           Some(CTUTR("utr")),
-          Some(EmailAddress("email"))
+          Some(EmailAddress("email")),
+          None
         )
       )
 

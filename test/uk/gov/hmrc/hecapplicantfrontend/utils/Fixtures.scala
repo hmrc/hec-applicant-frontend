@@ -120,14 +120,16 @@ object Fixtures {
     sautr: Option[SAUTR] = None,
     name: Name = Name("Sam", "Pull"),
     dateOfBirth: DateOfBirth = DateOfBirth(LocalDate.of(1990, 10, 10)),
-    emailAddress: Option[EmailAddress] = None
+    emailAddress: Option[EmailAddress] = None,
+    didConfirmUncertainEntityType: Option[Boolean] = None
   ): IndividualLoginData = IndividualLoginData(
     ggCredId = ggCredId,
     nino = nino,
     sautr = sautr,
     name = name,
     dateOfBirth = dateOfBirth,
-    emailAddress = emailAddress
+    emailAddress = emailAddress,
+    didConfirmUncertainEntityType = didConfirmUncertainEntityType
   )
 
   def individualRetrievedJourneyData(saStatus: Option[SAStatusResponse] = None): IndividualRetrievedJourneyData =
@@ -166,11 +168,13 @@ object Fixtures {
   def companyLoginData(
     ggCredId: GGCredId = GGCredId("ggCredId"),
     ctutr: Option[CTUTR] = None,
-    emailAddress: Option[EmailAddress] = None
+    emailAddress: Option[EmailAddress] = None,
+    didConfirmUncertainEntityType: Option[Boolean] = None
   ): CompanyLoginData = CompanyLoginData(
     ggCredId = ggCredId,
     ctutr = ctutr,
-    emailAddress = emailAddress
+    emailAddress = emailAddress,
+    didConfirmUncertainEntityType = didConfirmUncertainEntityType
   )
 
   def companyRetrievedJourneyData(

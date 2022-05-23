@@ -33,7 +33,8 @@ object LoginData {
     sautr: Option[SAUTR],
     name: Name,
     dateOfBirth: DateOfBirth,
-    emailAddress: Option[EmailAddress]
+    emailAddress: Option[EmailAddress],
+    didConfirmUncertainEntityType: Option[Boolean]
   ) extends LoginData
 
   object IndividualLoginData {
@@ -45,7 +46,8 @@ object LoginData {
   final case class CompanyLoginData(
     ggCredId: GGCredId,
     ctutr: Option[CTUTR],
-    emailAddress: Option[EmailAddress]
+    emailAddress: Option[EmailAddress],
+    didConfirmUncertainEntityType: Option[Boolean]
   ) extends LoginData
 
   object CompanyLoginData {

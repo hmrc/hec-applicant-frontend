@@ -63,7 +63,7 @@ class EntityTypeController @Inject() (
       entityType.fold(emptyForm)(emptyForm.fill)
     }
 
-    Ok(entityTypePage(form, back, entityTypeOptions))
+    Ok(entityTypePage(form, back, entityTypeOptions, routes.EntityTypeController.entityTypeSubmit))
   }
 
   val entityTypeSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
@@ -94,7 +94,8 @@ class EntityTypeController @Inject() (
             entityTypePage(
               formWithErrors,
               journeyService.previous(routes.EntityTypeController.entityType),
-              entityTypeOptions
+              entityTypeOptions,
+              routes.EntityTypeController.entityTypeSubmit
             )
           ),
         handleValidEntityType

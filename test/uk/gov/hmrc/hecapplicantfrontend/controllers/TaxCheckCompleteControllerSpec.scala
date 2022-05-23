@@ -55,7 +55,7 @@ class TaxCheckCompleteControllerSpec
   val controller = instanceOf[TaxCheckCompleteController]
 
   val individualLoginData =
-    IndividualLoginData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None)
+    IndividualLoginData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None, None)
 
   val completeIndividualAnswers = Fixtures.completeIndividualUserAnswers(
     LicenceType.DriverOfTaxisAndPrivateHires,
@@ -277,7 +277,7 @@ class TaxCheckCompleteControllerSpec
 
         "valid Company data is submitted and" in {
           val companyLoginData =
-            CompanyLoginData(GGCredId(""), None, None)
+            CompanyLoginData(GGCredId(""), None, None, None)
 
           val answers                   = Fixtures.completeCompanyUserAnswers(
             LicenceType.OperatorOfPrivateHireVehicles,

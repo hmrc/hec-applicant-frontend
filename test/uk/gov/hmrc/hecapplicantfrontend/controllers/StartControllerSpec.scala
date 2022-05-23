@@ -184,13 +184,15 @@ class StartControllerSpec
         Some(sautr),
         Name("First", "Last"),
         DateOfBirth(LocalDate.now()),
-        Some(emailAddress)
+        Some(emailAddress),
+        Some(false)
       )
 
     val completeCompanyLoginData = CompanyLoginData(
       ggCredId,
       Some(ctutr),
-      Some(emailAddress)
+      Some(emailAddress),
+      Some(false)
     )
 
     val enrolmentCombinationsForIndividuals =
@@ -449,9 +451,10 @@ class StartControllerSpec
 
               "it is not clear from the enrolments and the CL what the entity type is but the user has clarified that they are " +
                 "an individual" in {
+                  val loginData = completeIndividualLoginData.copy(didConfirmUncertainEntityType = Some(true))
                   isRedirectTest(
-                    session,
-                    completeIndividualLoginData,
+                    session.copy(loginData = loginData),
+                    loginData,
                     citizenDetails,
                     None,
                     AffinityGroup.Organisation,
@@ -461,7 +464,7 @@ class StartControllerSpec
                         Right(
                           Some(
                             UncertainEntityTypeJourney(
-                              completeIndividualLoginData.ggCredId,
+                              loginData.ggCredId,
                               Some(EntityType.Individual)
                             )
                           )
@@ -518,24 +521,25 @@ class StartControllerSpec
 
             "it is not clear from the enrolments and the confidence level that the user is a company but " +
               "the user has clarified that they are a company" in {
-                val session =
-                  CompanyHECSession.newSession(completeCompanyLoginData).copy(isScotNIPrivateBeta = Some(false))
+                val loginData = completeCompanyLoginData.copy(didConfirmUncertainEntityType = Some(true))
+                val session   =
+                  CompanyHECSession.newSession(loginData).copy(isScotNIPrivateBeta = Some(false))
                 inSequence {
                   mockAuthWithRetrievals(
                     ConfidenceLevel.L250,
                     Some(AffinityGroup.Organisation),
                     None,
                     None,
-                    completeCompanyLoginData.emailAddress,
+                    loginData.emailAddress,
                     Enrolments(Set(retrievedCtEnrolment(ctutr))),
-                    Some(retrievedGGCredential(completeCompanyLoginData.ggCredId))
+                    Some(retrievedGGCredential(loginData.ggCredId))
                   )
                   mockGetSession(Right(None))
                   mockGetUncertainEntityTypeJourney(
                     Right(
                       Some(
                         UncertainEntityTypeJourney(
-                          completeIndividualLoginData.ggCredId,
+                          loginData.ggCredId,
                           Some(EntityType.Company)
                         )
                       )
@@ -551,7 +555,7 @@ class StartControllerSpec
                       Some(
                         AuthenticationDetails(
                           ggProviderType,
-                          ggCredId.value,
+                          loginData.ggCredId.value,
                           Some(AffinityGroup.Organisation),
                           Some(EntityType.Company),
                           ConfidenceLevel.L250

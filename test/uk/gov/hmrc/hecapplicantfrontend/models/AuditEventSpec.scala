@@ -204,6 +204,7 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
         None,
         Name("First", "Last"),
         DateOfBirth(LocalDate.of(2000, 1, 2)),
+        None,
         None
       ),
       IndividualRetrievedJourneyData(None),

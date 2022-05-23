@@ -216,7 +216,15 @@ class StartController @Inject() (
       case Some(AffinityGroup.Individual) =>
         withGGCredIdAndAuthenticationDetailsLifted(Some(AffinityGroup.Individual), Some(EntityType.Individual)) {
           case (ggCredId, authDetails) =>
-            handleIndividual(cl, maybeNino, maybeSautr, maybeEmail, ggCredId, authDetails)
+            handleIndividual(
+              cl,
+              maybeNino,
+              maybeSautr,
+              maybeEmail,
+              ggCredId,
+              authDetails,
+              didConfirmUncertainEntityType = Some(false)
+            )
         }
 
       case Some(AffinityGroup.Organisation) =>
@@ -226,12 +234,26 @@ class StartController @Inject() (
         if (enrolmentCombinationsForIndividuals.contains(retrievedEnrolments.map(_.key)))
           withGGCredIdAndAuthenticationDetailsLifted(Some(AffinityGroup.Organisation), Some(EntityType.Individual)) {
             case (ggCredId, authDetails) =>
-              handleIndividual(cl, maybeNino, maybeSautr, maybeEmail, ggCredId, authDetails)
+              handleIndividual(
+                cl,
+                maybeNino,
+                maybeSautr,
+                maybeEmail,
+                ggCredId,
+                authDetails,
+                didConfirmUncertainEntityType = Some(false)
+              )
           }
         else if (cl <= ConfidenceLevel.L50)
           withGGCredIdAndAuthenticationDetailsLifted(Some(AffinityGroup.Organisation), Some(EntityType.Company)) {
             case (ggCredId, authDetails) =>
-              handleOrganisation(maybeEmail, enrolments, ggCredId, authDetails)
+              handleOrganisation(
+                maybeEmail,
+                enrolments,
+                ggCredId,
+                authDetails,
+                didConfirmUncertainEntityType = Some(false)
+              )
           }
         else
           withGGCredIdAndAuthenticationDetailsLifted(Some(AffinityGroup.Organisation), None) {
@@ -282,7 +304,8 @@ class StartController @Inject() (
             maybeSautr,
             maybeEmail,
             ggCredId,
-            authenticationDetails.copy(entityType = Some(EntityType.Individual))
+            authenticationDetails.copy(entityType = Some(EntityType.Individual)),
+            didConfirmUncertainEntityType = Some(true)
           )
 
         case Some(UncertainEntityTypeJourney(_, Some(EntityType.Company))) =>
@@ -290,7 +313,8 @@ class StartController @Inject() (
             maybeEmail,
             enrolments,
             ggCredId,
-            authenticationDetails.copy(entityType = Some(EntityType.Company))
+            authenticationDetails.copy(entityType = Some(EntityType.Company)),
+            didConfirmUncertainEntityType = Some(true)
           )
 
         case other =>
@@ -311,7 +335,8 @@ class StartController @Inject() (
     maybeSautr: Option[String],
     maybeEmail: Option[String],
     ggCredId: GGCredId,
-    authenticationDetails: AuthenticationDetails
+    authenticationDetails: AuthenticationDetails,
+    didConfirmUncertainEntityType: Option[Boolean]
   )(implicit
     hc: HeaderCarrier
   ): EitherT[Future, StartError, (AuthenticationDetails, LoginData)] = {
@@ -338,7 +363,8 @@ class StartController @Inject() (
               sautr,
               citizenDetails.name,
               citizenDetails.dateOfBirth,
-              validateEmail(maybeEmail)
+              validateEmail(maybeEmail),
+              didConfirmUncertainEntityType
             )
         )
         .toEither
@@ -372,7 +398,8 @@ class StartController @Inject() (
     maybeEmail: Option[String],
     enrolments: Enrolments,
     ggCredId: GGCredId,
-    authenticationDetails: AuthenticationDetails
+    authenticationDetails: AuthenticationDetails,
+    didConfirmUncertainEntityType: Option[Boolean]
   ): EitherT[Future, StartError, (AuthenticationDetails, LoginData)] = {
     val ctutrValidation = enrolments.enrolments
       .find(_.key === EnrolmentConfig.CTEnrolment.key)
@@ -386,7 +413,8 @@ class StartController @Inject() (
     val eitherResult = ctutrValidation
       .bimap[StartError, LoginData](
         DataError(_, None),
-        ctutrOpt => CompanyLoginData(GGCredId(ggCredId.value), ctutrOpt, validateEmail(maybeEmail))
+        ctutrOpt =>
+          CompanyLoginData(GGCredId(ggCredId.value), ctutrOpt, validateEmail(maybeEmail), didConfirmUncertainEntityType)
       )
       .toEither
 
