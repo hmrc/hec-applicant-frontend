@@ -38,6 +38,8 @@ trait SessionStore {
     request: Request[_]
   ): EitherT[Future, Error, Unit]
 
+  def delete()(implicit request: Request[_]): EitherT[Future, Error, Unit]
+
 }
 
 @Singleton
@@ -55,12 +57,12 @@ class SessionStoreImpl @Inject() (
     )
     with SessionStore {
 
-  val sessionKey: String = "hec-session"
+  val sessionKey: DataKey[HECSession] = DataKey("hec-session")
 
   def get()(implicit request: Request[_]): EitherT[Future, Error, Option[HECSession]] =
     EitherT(
       preservingMdc {
-        getFromSession[HECSession](DataKey(sessionKey))
+        getFromSession[HECSession](sessionKey)
           .map(Right(_))
           .recover { case e ⇒ Left(Error(e)) }
       }
@@ -70,8 +72,15 @@ class SessionStoreImpl @Inject() (
     sessionData: HECSession
   )(implicit request: Request[_]): EitherT[Future, Error, Unit] =
     EitherT(preservingMdc {
-      putSession[HECSession](DataKey(sessionKey), sessionData)
+      putSession[HECSession](sessionKey, sessionData)
         .map(_ => Right(()))
+        .recover { case e => Left(Error(e)) }
+    })
+
+  def delete()(implicit request: Request[_]): EitherT[Future, Error, Unit] =
+    EitherT(preservingMdc {
+      deleteFromSession(sessionKey)
+        .map(Right(_))
         .recover { case e => Left(Error(e)) }
     })
 

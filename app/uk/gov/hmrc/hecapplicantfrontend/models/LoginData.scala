@@ -23,6 +23,8 @@ sealed trait LoginData extends Product with Serializable {
 
   val ggCredId: GGCredId
 
+  val didConfirmUncertainEntityType: Option[Boolean]
+
 }
 
 object LoginData {
