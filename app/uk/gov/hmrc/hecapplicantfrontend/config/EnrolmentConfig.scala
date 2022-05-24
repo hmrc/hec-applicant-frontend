@@ -26,7 +26,7 @@ object EnrolmentConfig {
 
   object MTDITEnrolment {
 
-    val key = "MDT-IT"
+    val key = "HMRC-MTD-IT"
 
   }
 
