@@ -74,7 +74,7 @@ class ConfirmIndividualDetailsControllerSpecCYSpec
           val dateOfBirth = DateOfBirth(LocalDate.of(2000, 12, 3))
 
           val session = IndividualHECSession.newSession(
-            IndividualLoginData(GGCredId(""), NINO(""), None, name, dateOfBirth, None)
+            IndividualLoginData(GGCredId(""), NINO(""), None, name, dateOfBirth, None, None)
           )
 
           inSequence {

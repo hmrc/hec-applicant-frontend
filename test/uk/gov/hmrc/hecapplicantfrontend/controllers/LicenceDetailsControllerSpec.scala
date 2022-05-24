@@ -58,10 +58,10 @@ class LicenceDetailsControllerSpec
   val controller: LicenceDetailsController = instanceOf[LicenceDetailsController]
 
   val individualLoginData: IndividualLoginData =
-    IndividualLoginData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None)
+    IndividualLoginData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None, None)
 
   val companyLoginData: CompanyLoginData =
-    CompanyLoginData(GGCredId(""), None, None)
+    CompanyLoginData(GGCredId(""), None, None, None)
 
   def mockTimeProviderNow(now: ZonedDateTime) =
     (mockTimeProvider.now _).expects().returning(now)

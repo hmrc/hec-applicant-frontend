@@ -23,6 +23,8 @@ sealed trait LoginData extends Product with Serializable {
 
   val ggCredId: GGCredId
 
+  val didConfirmUncertainEntityType: Option[Boolean]
+
 }
 
 object LoginData {
@@ -33,7 +35,8 @@ object LoginData {
     sautr: Option[SAUTR],
     name: Name,
     dateOfBirth: DateOfBirth,
-    emailAddress: Option[EmailAddress]
+    emailAddress: Option[EmailAddress],
+    didConfirmUncertainEntityType: Option[Boolean]
   ) extends LoginData
 
   object IndividualLoginData {
@@ -45,7 +48,8 @@ object LoginData {
   final case class CompanyLoginData(
     ggCredId: GGCredId,
     ctutr: Option[CTUTR],
-    emailAddress: Option[EmailAddress]
+    emailAddress: Option[EmailAddress],
+    didConfirmUncertainEntityType: Option[Boolean]
   ) extends LoginData
 
   object CompanyLoginData {

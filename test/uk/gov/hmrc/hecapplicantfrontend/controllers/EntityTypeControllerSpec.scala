@@ -57,7 +57,7 @@ class EntityTypeControllerSpec
     Fixtures.individualLoginData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None)
 
   val companyLoginData =
-    CompanyLoginData(GGCredId(""), None, None)
+    CompanyLoginData(GGCredId(""), None, None, None)
 
   "EntityTypeController" when {
 

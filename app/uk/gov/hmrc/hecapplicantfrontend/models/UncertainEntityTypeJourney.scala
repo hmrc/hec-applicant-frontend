@@ -14,34 +14,15 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.hecapplicantfrontend.config
+package uk.gov.hmrc.hecapplicantfrontend.models
 
-object EnrolmentConfig {
+import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.hecapplicantfrontend.models.ids.GGCredId
 
-  object SAEnrolment {
+final case class UncertainEntityTypeJourney(ggCredId: GGCredId, userSuppliedEntityType: Option[EntityType])
 
-    val key = "IR-SA"
+object UncertainEntityTypeJourney {
 
-  }
-
-  object MTDITEnrolment {
-
-    val key = "MDT-IT"
-
-  }
-
-  object CTEnrolment {
-
-    val key = "IR-CT"
-
-    val ctutrIdentifier = "UTR"
-
-  }
-
-  object NINOEnrolment {
-
-    val key = "HMRC-NI"
-
-  }
+  implicit val format: OFormat[UncertainEntityTypeJourney] = Json.format
 
 }

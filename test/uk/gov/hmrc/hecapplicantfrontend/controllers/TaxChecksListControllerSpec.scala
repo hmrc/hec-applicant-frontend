@@ -56,7 +56,7 @@ class TaxChecksListControllerSpec
   val controller = instanceOf[TaxChecksListController]
 
   val individualLoginData =
-    IndividualLoginData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None)
+    IndividualLoginData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None, None)
 
   "TaxChecksListController" when {
 

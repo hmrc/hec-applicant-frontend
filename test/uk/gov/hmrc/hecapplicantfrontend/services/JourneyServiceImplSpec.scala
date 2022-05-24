@@ -70,13 +70,13 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
   val individualLoginData: IndividualLoginData =
-    IndividualLoginData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None)
+    IndividualLoginData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None, None)
 
   val companyLoginData: CompanyLoginData =
-    CompanyLoginData(GGCredId(""), None, None)
+    CompanyLoginData(GGCredId(""), None, None, None)
 
   val companyLoginData1: CompanyLoginData =
-    CompanyLoginData(GGCredId(""), Some(CTUTR("4444444444")), None)
+    CompanyLoginData(GGCredId(""), Some(CTUTR("4444444444")), None, None)
 
   val ggEmailId = EmailAddress("user@test.com")
 
@@ -584,6 +584,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               Some(SAUTR("utr")),
               Name("", ""),
               DateOfBirth(LocalDate.now()),
+              None,
               None
             )
 
@@ -2438,16 +2439,32 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
           result shouldBe routes.StartController.start
         }
 
-        "the confirm individual details page" in {
-          val session                                     = IndividualHECSession.newSession(individualLoginData)
-          implicit val request: RequestWithSessionData[_] =
-            requestWithSessionData(session)
+        "the confirm individual details page" when {
 
-          val result = journeyService.previous(
-            routes.ConfirmIndividualDetailsController.confirmIndividualDetails
-          )
+          def test(session: HECSession, expectedPrevious: Call) = {
+            implicit val request: RequestWithSessionData[_] =
+              requestWithSessionData(session)
 
-          result shouldBe routes.StartController.start
+            val result = journeyService.previous(
+              routes.ConfirmIndividualDetailsController.confirmIndividualDetails
+            )
+
+            result shouldBe expectedPrevious
+          }
+
+          "the user did not have to confirm their entity type" in {
+            test(
+              IndividualHECSession.newSession(individualLoginData.copy(didConfirmUncertainEntityType = Some(false))),
+              routes.StartController.start
+            )
+          }
+
+          "the user did confirm their entity type" in {
+            test(
+              IndividualHECSession.newSession(individualLoginData.copy(didConfirmUncertainEntityType = Some(true))),
+              routes.ConfirmUncertainEntityTypeController.entityType
+            )
+          }
         }
 
         "the confirm individual details exit page" in {
@@ -2481,13 +2498,29 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             result shouldBe routes.ConfirmIndividualDetailsController.confirmIndividualDetails
           }
 
-          "applicant is company" in {
-            val session = CompanyHECSession.newSession(companyLoginData).copy(unexpiredTaxChecks = taxChecks)
+          "applicant is company and" when {
 
-            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+            "the user did not have to confirm their entity type" in {
+              val session = CompanyHECSession.newSession(companyLoginData).copy(unexpiredTaxChecks = taxChecks)
 
-            val result = journeyService.previous(routes.TaxChecksListController.unexpiredTaxChecks)
-            result shouldBe routes.StartController.start
+              implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+
+              val result = journeyService.previous(routes.TaxChecksListController.unexpiredTaxChecks)
+              result shouldBe routes.StartController.start
+            }
+
+            "the user did have to confirm their entity type" in {
+              val session = CompanyHECSession
+                .newSession(companyLoginData.copy(didConfirmUncertainEntityType = Some(true)))
+                .copy(unexpiredTaxChecks = taxChecks)
+
+              implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+
+              val result = journeyService.previous(routes.TaxChecksListController.unexpiredTaxChecks)
+              result shouldBe routes.ConfirmUncertainEntityTypeController.entityType
+
+            }
+
           }
         }
 
@@ -2562,6 +2595,19 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               )
 
               result shouldBe routes.StartController.start
+            }
+
+            "the user had to confirm their entity type and there are no preexisting tax check codes" in {
+              val session                                     =
+                CompanyHECSession.newSession(companyLoginData.copy(didConfirmUncertainEntityType = Some(true)))
+              implicit val request: RequestWithSessionData[_] =
+                requestWithSessionData(session)
+
+              val result = journeyService.previous(
+                routes.LicenceDetailsController.licenceType
+              )
+
+              result shouldBe routes.ConfirmUncertainEntityTypeController.entityType
             }
           }
 
@@ -3550,6 +3596,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               Some(SAUTR("utr")),
               Name("", ""),
               DateOfBirth(LocalDate.now()),
+              None,
               None
             )
 

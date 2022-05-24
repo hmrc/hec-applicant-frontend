@@ -59,6 +59,7 @@ class SAControllerSpec
       None,
       Name("", ""),
       DateOfBirth(LocalDate.now()),
+      None,
       None
     )
 

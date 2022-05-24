@@ -29,7 +29,7 @@ import com.google.inject.{Inject, Singleton}
 import play.api.Configuration
 import play.api.mvc.{Action, AnyContent, Call, MessagesControllerComponents, Request, Result}
 import uk.gov.hmrc.auth.core.retrieve.Credentials
-import uk.gov.hmrc.auth.core.{AffinityGroup, ConfidenceLevel, Enrolments}
+import uk.gov.hmrc.auth.core.{AffinityGroup, ConfidenceLevel, Enrolment, Enrolments}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.emailaddress.{EmailAddress => EmailAdd}
 import uk.gov.hmrc.hecapplicantfrontend.config.{AppConfig, EnrolmentConfig}
@@ -39,8 +39,8 @@ import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.ApplicantServiceStartE
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, IndividualHECSession}
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CTUTR, GGCredId, NINO, SAUTR}
-import uk.gov.hmrc.hecapplicantfrontend.models.{AuthenticationStatus, CitizenDetails, EmailAddress, EntityType, Error, LoginData, RetrievedGGData}
-import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
+import uk.gov.hmrc.hecapplicantfrontend.models.{AuthenticationStatus, CitizenDetails, EmailAddress, EntityType, Error, LoginData, RetrievedGGData, UncertainEntityTypeJourney}
+import uk.gov.hmrc.hecapplicantfrontend.repos.{SessionStore, UncertainEntityTypeJourneyStore}
 import uk.gov.hmrc.hecapplicantfrontend.services.{AuditService, CitizenDetailsService, JourneyService, TaxCheckService}
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.http.HeaderCarrier
@@ -58,6 +58,7 @@ class StartController @Inject() (
   journeyService: JourneyService,
   auditService: AuditService,
   sessionStore: SessionStore,
+  uncertainEntityTypeJourneyStore: UncertainEntityTypeJourneyStore,
   authWithRetrievalsAction: AuthWithRetrievalsAction,
   mcc: MessagesControllerComponents
 )(implicit ec: ExecutionContext)
@@ -148,6 +149,9 @@ class StartController @Inject() (
         case AgentLogin(authDetails) =>
           auditLoginAndRedirect(routes.AgentsController.agentsNotSupported, authDetails)
 
+        case UncertainEntityType(authDetails) =>
+          auditLoginAndRedirect(routes.ConfirmUncertainEntityTypeController.entityType, authDetails)
+
       },
       { case (authDetails, session) =>
         val firstPage = journeyService.firstPage(session)
@@ -195,72 +199,135 @@ class StartController @Inject() (
         cl
       )
 
+    def withGGCredIdAndAuthenticationDetailsLifted[A](
+      affinityGroup: Option[AffinityGroup],
+      entityType: Option[EntityType]
+    )(f: (GGCredId, AuthenticationDetails) => EitherT[Future, StartError, A]): EitherT[Future, StartError, A] =
+      EitherT
+        .fromEither[Future](
+          withGGCredIdAndAuthenticationDetails(
+            creds,
+            authenticationDetails(affinityGroup, entityType)
+          )
+        )
+        .flatMap(f.tupled)
+
     affinityGroup match {
       case Some(AffinityGroup.Individual) =>
-        EitherT
-          .fromEither[Future](
-            withGGCredIdAndAuthenticationDetails(
-              creds,
-              authenticationDetails(Some(AffinityGroup.Individual), Some(EntityType.Individual))
+        withGGCredIdAndAuthenticationDetailsLifted(Some(AffinityGroup.Individual), Some(EntityType.Individual)) {
+          case (ggCredId, authDetails) =>
+            handleIndividual(
+              cl,
+              maybeNino,
+              maybeSautr,
+              maybeEmail,
+              ggCredId,
+              authDetails,
+              didConfirmUncertainEntityType = Some(false)
             )
-          )
-          .flatMap { case (ggCredId, authDetails) =>
-            handleIndividual(cl, maybeNino, maybeSautr, maybeEmail, ggCredId, authDetails)
-          }
-
-      case Some(AffinityGroup.Organisation) =>
-        enrolments.enrolments.toList.filter(_.key =!= EnrolmentConfig.NINOEnrolment.key) match {
-          case enrolment :: Nil if enrolment.key === EnrolmentConfig.SAEnrolment.key =>
-            EitherT
-              .fromEither[Future](
-                withGGCredIdAndAuthenticationDetails(
-                  creds,
-                  authenticationDetails(Some(AffinityGroup.Organisation), Some(EntityType.Individual))
-                )
-              )
-              .flatMap { case (ggCredId, authDetails) =>
-                handleIndividual(cl, maybeNino, maybeSautr, maybeEmail, ggCredId, authDetails)
-              }
-
-          case _ =>
-            EitherT
-              .fromEither[Future](
-                withGGCredIdAndAuthenticationDetails(
-                  creds,
-                  authenticationDetails(Some(AffinityGroup.Organisation), Some(EntityType.Company))
-                )
-              )
-              .flatMap { case (ggCredId, authDetails) =>
-                handleOrganisation(maybeEmail, enrolments, ggCredId, authDetails)
-              }
         }
 
-      case Some(AffinityGroup.Agent) =>
-        EitherT
-          .fromEither[Future](
-            withGGCredIdAndAuthenticationDetails(
-              creds,
-              authenticationDetails(Some(AffinityGroup.Agent), None)
-            )
-          )
-          .flatMap { case (_, authDetails) =>
-            EitherT.leftT(AgentLogin(authDetails))
+      case Some(AffinityGroup.Organisation) =>
+        val retrievedEnrolments: Set[Enrolment] =
+          enrolments.enrolments.filter(_.key =!= EnrolmentConfig.NINOEnrolment.key)
 
+        if (enrolmentCombinationsForIndividuals.contains(retrievedEnrolments.map(_.key)))
+          withGGCredIdAndAuthenticationDetailsLifted(Some(AffinityGroup.Organisation), Some(EntityType.Individual)) {
+            case (ggCredId, authDetails) =>
+              handleIndividual(
+                cl,
+                maybeNino,
+                maybeSautr,
+                maybeEmail,
+                ggCredId,
+                authDetails,
+                didConfirmUncertainEntityType = Some(false)
+              )
           }
+        else if (cl <= ConfidenceLevel.L50)
+          withGGCredIdAndAuthenticationDetailsLifted(Some(AffinityGroup.Organisation), Some(EntityType.Company)) {
+            case (ggCredId, authDetails) =>
+              handleOrganisation(
+                maybeEmail,
+                enrolments,
+                ggCredId,
+                authDetails,
+                didConfirmUncertainEntityType = Some(false)
+              )
+          }
+        else
+          withGGCredIdAndAuthenticationDetailsLifted(Some(AffinityGroup.Organisation), None) {
+            case (ggCredId, authDetails) =>
+              handleUncertainEntityType(cl, maybeNino, maybeSautr, maybeEmail, enrolments, ggCredId, authDetails)
+          }
+
+      case Some(AffinityGroup.Agent) =>
+        withGGCredIdAndAuthenticationDetailsLifted(Some(AffinityGroup.Agent), None) { case (_, authDetails) =>
+          EitherT.leftT(AgentLogin(authDetails))
+
+        }
 
       case other =>
-        EitherT
-          .fromEither[Future](
-            withGGCredIdAndAuthenticationDetails(
-              creds,
-              authenticationDetails(None, None)
-            )
-          )
-          .flatMap { _ =>
-            EitherT.leftT(DataError(s"Unknown affinity group '${other.getOrElse("")}' for GG login", None))
-          }
+        withGGCredIdAndAuthenticationDetailsLifted(None, None) { case _ =>
+          EitherT.leftT(DataError(s"Unknown affinity group '${other.getOrElse("")}' for GG login", None))
+        }
     }
   }
+
+  private val enrolmentCombinationsForIndividuals: List[Set[String]] =
+    List(
+      Set(EnrolmentConfig.SAEnrolment.key),
+      Set(EnrolmentConfig.MTDITEnrolment.key),
+      Set(EnrolmentConfig.SAEnrolment.key, EnrolmentConfig.MTDITEnrolment.key)
+    )
+
+  private def handleUncertainEntityType(
+    confidenceLevel: ConfidenceLevel,
+    maybeNino: Option[String],
+    maybeSautr: Option[String],
+    maybeEmail: Option[String],
+    enrolments: Enrolments,
+    ggCredId: GGCredId,
+    authenticationDetails: AuthenticationDetails
+  )(implicit
+    hc: HeaderCarrier,
+    request: Request[_]
+  ): EitherT[Future, StartError, (AuthenticationDetails, LoginData)] =
+    uncertainEntityTypeJourneyStore
+      .get()
+      .leftMap(e => BackendError(e))
+      .flatMap {
+        case Some(UncertainEntityTypeJourney(_, Some(EntityType.Individual))) =>
+          handleIndividual(
+            confidenceLevel,
+            maybeNino,
+            maybeSautr,
+            maybeEmail,
+            ggCredId,
+            authenticationDetails.copy(entityType = Some(EntityType.Individual)),
+            didConfirmUncertainEntityType = Some(true)
+          )
+
+        case Some(UncertainEntityTypeJourney(_, Some(EntityType.Company))) =>
+          handleOrganisation(
+            maybeEmail,
+            enrolments,
+            ggCredId,
+            authenticationDetails.copy(entityType = Some(EntityType.Company)),
+            didConfirmUncertainEntityType = Some(true)
+          )
+
+        case other =>
+          val result =
+            if (other.nonEmpty) EitherT.pure[Future, StartError](())
+            else
+              uncertainEntityTypeJourneyStore
+                .store(UncertainEntityTypeJourney(ggCredId, None))
+                .leftMap(e => BackendError(e))
+
+          result.subflatMap(_ => Left(UncertainEntityType(authenticationDetails)))
+
+      }
 
   private def handleIndividual(
     confidenceLevel: ConfidenceLevel,
@@ -268,7 +335,8 @@ class StartController @Inject() (
     maybeSautr: Option[String],
     maybeEmail: Option[String],
     ggCredId: GGCredId,
-    authenticationDetails: AuthenticationDetails
+    authenticationDetails: AuthenticationDetails,
+    didConfirmUncertainEntityType: Option[Boolean]
   )(implicit
     hc: HeaderCarrier
   ): EitherT[Future, StartError, (AuthenticationDetails, LoginData)] = {
@@ -295,7 +363,8 @@ class StartController @Inject() (
               sautr,
               citizenDetails.name,
               citizenDetails.dateOfBirth,
-              validateEmail(maybeEmail)
+              validateEmail(maybeEmail),
+              didConfirmUncertainEntityType
             )
         )
         .toEither
@@ -329,7 +398,8 @@ class StartController @Inject() (
     maybeEmail: Option[String],
     enrolments: Enrolments,
     ggCredId: GGCredId,
-    authenticationDetails: AuthenticationDetails
+    authenticationDetails: AuthenticationDetails,
+    didConfirmUncertainEntityType: Option[Boolean]
   ): EitherT[Future, StartError, (AuthenticationDetails, LoginData)] = {
     val ctutrValidation = enrolments.enrolments
       .find(_.key === EnrolmentConfig.CTEnrolment.key)
@@ -343,7 +413,8 @@ class StartController @Inject() (
     val eitherResult = ctutrValidation
       .bimap[StartError, LoginData](
         DataError(_, None),
-        ctutrOpt => CompanyLoginData(GGCredId(ggCredId.value), ctutrOpt, validateEmail(maybeEmail))
+        ctutrOpt =>
+          CompanyLoginData(GGCredId(ggCredId.value), ctutrOpt, validateEmail(maybeEmail), didConfirmUncertainEntityType)
       )
       .toEither
 
@@ -384,5 +455,7 @@ object StartController {
   final case class UnsupportedAuthProvider(authenticationDetails: AuthenticationDetails) extends StartError
 
   final case class AgentLogin(authenticationDetails: AuthenticationDetails) extends StartError
+
+  final case class UncertainEntityType(authenticationDetails: AuthenticationDetails) extends StartError
 
 }

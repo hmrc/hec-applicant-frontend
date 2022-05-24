@@ -222,6 +222,10 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
         current
       else if (current =!= routes.CheckYourAnswersController.checkYourAnswers && hasCompletedAnswers)
         routes.CheckYourAnswersController.checkYourAnswers
+      else if (
+        current === firstPage(r.sessionData) && r.sessionData.loginData.didConfirmUncertainEntityType.contains(true)
+      )
+        routes.ConfirmUncertainEntityTypeController.entityType
       else
         exitPageToPreviousPage
           .get(current)
