@@ -283,7 +283,7 @@ class IvFailureControllerSpec
         checkPageIsDisplayed(
           performAction(),
           messageFromMessageKey("iv.preconditionFailed.title"),
-          _.select(".govuk-body > .govuk-link").attr("href") shouldBe appConfig.applicantServiceGuidanceUrl
+          _.select(".govuk-body > .govuk-button").attr("href") shouldBe appConfig.signOutAndSignBackInUrl
         )
       }
 
