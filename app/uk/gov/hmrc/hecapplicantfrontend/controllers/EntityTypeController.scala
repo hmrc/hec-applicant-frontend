@@ -24,7 +24,7 @@ import play.api.data.Forms.{mapping, of}
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
-import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
+import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, NotRequireDidConfirmUncertainEntityTypeJourneyAction, RequestWithSessionData, SessionDataAction}
 import uk.gov.hmrc.hecapplicantfrontend.models.CompanyUserAnswers.IncompleteCompanyUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.EntityType
 import uk.gov.hmrc.hecapplicantfrontend.models.IndividualUserAnswers.IncompleteIndividualUserAnswers
@@ -32,6 +32,7 @@ import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService.InconsistentSessionState
 import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging}
 import uk.gov.hmrc.hecapplicantfrontend.views.html
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -40,6 +41,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class EntityTypeController @Inject() (
   authAction: AuthAction,
   sessionDataAction: SessionDataAction,
+  uncertainEntityTypeJourneyStore: NotRequireDidConfirmUncertainEntityTypeJourneyAction,
   journeyService: JourneyService,
   mcc: MessagesControllerComponents,
   entityTypePage: html.EntityType,
@@ -117,8 +119,19 @@ class EntityTypeController @Inject() (
 
   }
 
-  val wrongEntityType: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
-    val back = journeyService.previous(routes.EntityTypeController.wrongEntityType)
+  val wrongEntityType: Action[AnyContent] = authAction.andThen(uncertainEntityTypeJourneyStore) { implicit request =>
+    val back =
+      request.sessionDataOrUncertainEntityTypeJourney.fold(
+        session =>
+          if (session.loginData.didConfirmUncertainEntityType.contains(true))
+            routes.ConfirmUncertainEntityTypeController.entityType
+          else
+            journeyService.previous(routes.EntityTypeController.wrongEntityType)(
+              RequestWithSessionData(request.request, session, request.language),
+              implicitly[HeaderCarrier]
+            ),
+        _ => routes.ConfirmUncertainEntityTypeController.entityType
+      )
     Ok(wrongEntityTypePage(back))
   }
 
