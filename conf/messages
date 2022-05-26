@@ -56,10 +56,9 @@ iv.technicalIssue.title=Sorry, there is a problem with the service
 iv.technicalIssue.p1=You’ll need to try again later.
 
 # IV Precondition Failed
-iv.preconditionFailed.title=You cannot use this service
-iv.preconditionFailed.p1=We’ve checked the details in your Government Gateway account.
-iv.preconditionFailed.p2=You do not meet the criteria to use this service.
-iv.preconditionFailed.link=Find out who needs to do a tax check
+iv.preconditionFailed.title=You cannot use this service with your account
+iv.preconditionFailed.p1=We’ve checked your Government Gateway account and you cannot use this service. To do a tax check you will need to create a new Government Gateway account.
+iv.preconditionFailed.link=Create a new account
 
 # Check Personal Details
 confirmIndividualDetails.title=Check your personal details
