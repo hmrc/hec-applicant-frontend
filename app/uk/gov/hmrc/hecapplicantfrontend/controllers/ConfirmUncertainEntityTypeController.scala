@@ -23,7 +23,7 @@ import cats.syntax.eq._
 import com.google.inject.Inject
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, Call, MessagesControllerComponents, Result}
-import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, UncertainEntityTypeJourneyAction}
+import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, RequireDidConfirmUncertainEntityTypeJourneyAction}
 import uk.gov.hmrc.hecapplicantfrontend.models.{EntityType, UncertainEntityTypeJourney}
 import uk.gov.hmrc.hecapplicantfrontend.repos.{SessionStore, UncertainEntityTypeJourneyStore}
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
@@ -35,7 +35,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class ConfirmUncertainEntityTypeController @Inject() (
   authAction: AuthAction,
-  uncertainEntityTypeJourneyAction: UncertainEntityTypeJourneyAction,
+  uncertainEntityTypeJourneyAction: RequireDidConfirmUncertainEntityTypeJourneyAction,
   uncertainEntityTypeJourneyStore: UncertainEntityTypeJourneyStore,
   journeyService: JourneyService,
   sessionStore: SessionStore,

@@ -18,7 +18,6 @@ package uk.gov.hmrc.hecapplicantfrontend.controllers
 
 import cats.data.EitherT
 import cats.instances.future._
-import org.scalamock.handlers.CallHandler1
 import play.api.inject.bind
 import play.api.mvc.{Request, Result}
 import play.api.test.FakeRequest
@@ -29,7 +28,6 @@ import uk.gov.hmrc.hecapplicantfrontend.models.{EntityType, Error, UncertainEnti
 import uk.gov.hmrc.hecapplicantfrontend.repos.{SessionStore, UncertainEntityTypeJourneyStore}
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
 import uk.gov.hmrc.hecapplicantfrontend.utils.Fixtures
-
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -37,9 +35,9 @@ class ConfirmUncertainEntityTypeControllerSpec
     extends ControllerSpec
     with AuthSupport
     with SessionSupport
-    with JourneyServiceSupport {
-
-  val mockUncertainEntityTypeJourneyStore = mock[UncertainEntityTypeJourneyStore]
+    with JourneyServiceSupport
+    with UncertainEntityTypeJourneyStoreSupport
+    with AuthAndUncertainEntityTypeJourneyBehaviour {
 
   override def overrideBindings = List(
     bind[AuthConnector].toInstance(mockAuthConnector),
@@ -49,27 +47,6 @@ class ConfirmUncertainEntityTypeControllerSpec
   )
 
   val controller = instanceOf[ConfirmUncertainEntityTypeController]
-
-  def mockGetUncertainEntityTypeJourney(
-    result: Either[Error, Option[UncertainEntityTypeJourney]]
-  ): CallHandler1[Request[_], EitherT[Future, Error, Option[UncertainEntityTypeJourney]]] =
-    (mockUncertainEntityTypeJourneyStore
-      .get()(_: Request[_]))
-      .expects(*)
-      .returning(EitherT.fromEither(result))
-
-  def mockGetUncertainEntityTypeJourney(
-    journey: UncertainEntityTypeJourney
-  ): CallHandler1[Request[_], EitherT[Future, Error, Option[UncertainEntityTypeJourney]]] =
-    mockGetUncertainEntityTypeJourney(Right(Some(journey)))
-
-  def mockUpdateUncertainEntityTypeJourney(journey: UncertainEntityTypeJourney)(
-    result: Either[Error, Unit]
-  ) =
-    (mockUncertainEntityTypeJourneyStore
-      .store(_: UncertainEntityTypeJourney)(_: Request[_]))
-      .expects(journey, *)
-      .returning(EitherT.fromEither(result))
 
   def mockDeleteSession(result: Either[Error, Unit]) =
     (mockSessionStore
@@ -93,7 +70,7 @@ class ConfirmUncertainEntityTypeControllerSpec
 
       def performAction(): Future[Result] = controller.entityType(FakeRequest())
 
-      behave like commonBehaviour(performAction)
+      behave like authAndUncertainEntityTypeJourneyBehaviour(performAction, requireDidConfirmUncertainEntityType = true)
 
       "display the page" when {
 
@@ -172,6 +149,11 @@ class ConfirmUncertainEntityTypeControllerSpec
 
       def performAction(data: (String, String)*): Future[Result] =
         controller.entityTypeSubmit(FakeRequest().withFormUrlEncodedBody(data: _*))
+
+      behave like authAndUncertainEntityTypeJourneyBehaviour(
+        () => performAction(),
+        requireDidConfirmUncertainEntityType = true
+      )
 
       "show a form error" when {
 
@@ -284,71 +266,6 @@ class ConfirmUncertainEntityTypeControllerSpec
           checkIsRedirect(performAction("entityType" -> "0"), routes.StartController.start)
         }
 
-      }
-
-    }
-  }
-
-  def commonBehaviour(performAction: () => Future[Result]) = {
-
-    "return an error" when {
-
-      "there is ann error getting from the session store" in {
-        inSequence {
-          mockAuthWithNoRetrievals()
-          mockGetSession(Left(Error("")))
-        }
-
-        a[RuntimeException] shouldBe thrownBy(await(performAction()))
-
-      }
-
-      "there is an error getting from the uncertain entity type journey store" in {
-        inSequence {
-          mockAuthWithNoRetrievals()
-          mockGetSession(Right(None))
-          mockGetUncertainEntityTypeJourney(Left(Error("")))
-        }
-
-        a[RuntimeException] shouldBe thrownBy(await(performAction()))
-      }
-
-    }
-
-    "redirect to the start endpoint" when {
-
-      "session data is found but the user never had to confirm their entity type" in {
-        List(
-          Some(false),
-          None
-        ).foreach { didConfirmUncertainEntityType =>
-          withClue(s"For $didConfirmUncertainEntityType ") {
-            inSequence {
-              mockAuthWithNoRetrievals()
-
-              mockGetSession(
-                Fixtures.individualHECSession(
-                  loginData =
-                    Fixtures.individualLoginData(didConfirmUncertainEntityType = didConfirmUncertainEntityType)
-                )
-              )
-            }
-
-            checkIsRedirect(performAction(), routes.StartController.start)
-          }
-
-        }
-
-      }
-
-      "neither session data nor an uncertain entity type journey is found" in {
-        inSequence {
-          mockAuthWithNoRetrievals()
-          mockGetSession(Right(None))
-          mockGetUncertainEntityTypeJourney(Right(None))
-        }
-
-        checkIsRedirect(performAction(), routes.StartController.start)
       }
 
     }

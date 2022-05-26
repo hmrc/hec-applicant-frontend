@@ -17,7 +17,7 @@
 package uk.gov.hmrc.hecapplicantfrontend.controllers
 
 import play.api.inject.bind
-import play.api.mvc.Result
+import play.api.mvc.{Call, Result}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
@@ -29,7 +29,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.{CompanyRetr
 import uk.gov.hmrc.hecapplicantfrontend.models._
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
+import uk.gov.hmrc.hecapplicantfrontend.repos.{SessionStore, UncertainEntityTypeJourneyStore}
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService.InconsistentSessionState
 import uk.gov.hmrc.hecapplicantfrontend.utils.Fixtures
@@ -43,12 +43,15 @@ class EntityTypeControllerSpec
     with AuthSupport
     with SessionSupport
     with AuthAndSessionDataBehaviour
-    with JourneyServiceSupport {
+    with JourneyServiceSupport
+    with UncertainEntityTypeJourneyStoreSupport
+    with AuthAndUncertainEntityTypeJourneyBehaviour {
 
   override def overrideBindings = List(
     bind[AuthConnector].toInstance(mockAuthConnector),
     bind[SessionStore].toInstance(mockSessionStore),
-    bind[JourneyService].toInstance(mockJourneyService)
+    bind[JourneyService].toInstance(mockJourneyService),
+    bind[UncertainEntityTypeJourneyStore].toInstance(mockUncertainEntityTypeJourneyStore)
   )
 
   val controller = instanceOf[EntityTypeController]
@@ -355,23 +358,73 @@ class EntityTypeControllerSpec
 
       def performAction(): Future[Result] = controller.wrongEntityType(FakeRequest())
 
-      behave like authAndSessionDataBehaviour(performAction)
+      behave like authAndUncertainEntityTypeJourneyBehaviour(
+        performAction,
+        requireDidConfirmUncertainEntityType = false
+      )
 
-      "display the page" in {
+      "display the page" when {
 
-        val session = IndividualHECSession.newSession(individualLoginData)
+        def test(
+          session: Option[HECSession],
+          uncertainEntityTypeJourney: Option[UncertainEntityTypeJourney],
+          mockGetPrevious: Option[() => Unit],
+          expectedBack: Call
+        ) = {
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(Right(session))
+            uncertainEntityTypeJourney.foreach(mockGetUncertainEntityTypeJourney)
+            mockGetPrevious.foreach(_())
+          }
 
-        inSequence {
-          mockAuthWithNoRetrievals()
-          mockGetSession(session)
-          mockJourneyServiceGetPrevious(routes.EntityTypeController.wrongEntityType, session)(mockPreviousCall)
+          checkPageIsDisplayed(
+            performAction(),
+            messageFromMessageKey("wrongEntityType.title"),
+            doc => doc.select("#back").attr("href") shouldBe expectedBack.url
+          )
         }
 
-        checkPageIsDisplayed(
-          performAction(),
-          messageFromMessageKey("wrongEntityType.title"),
-          doc => doc.select("#back").attr("href") shouldBe mockPreviousCall.url
-        )
+        "the user has started a session and they did confirm an uncertain entity type" in {
+          test(
+            Some(IndividualHECSession.newSession(individualLoginData.copy(didConfirmUncertainEntityType = Some(true)))),
+            None,
+            None,
+            routes.ConfirmUncertainEntityTypeController.entityType
+          )
+        }
+
+        "the user has started a session and they did not confirm an uncertain entity type" in {
+          List(
+            Some(false),
+            None
+          ).foreach { didConfirmUncertainEntityType =>
+            withClue(s"For didConfirmUncertainEntityType $didConfirmUncertainEntityType: ") {
+              val session = IndividualHECSession.newSession(
+                individualLoginData.copy(didConfirmUncertainEntityType = didConfirmUncertainEntityType)
+              )
+              test(
+                Some(session),
+                None,
+                Some(() =>
+                  mockJourneyServiceGetPrevious(routes.EntityTypeController.wrongEntityType, session)(mockPreviousCall)
+                ),
+                mockPreviousCall
+              )
+            }
+
+          }
+        }
+
+        "the user has not started a session and they are in the process of confirming an uncertain entity type" in {
+          test(
+            None,
+            Some(UncertainEntityTypeJourney(GGCredId("id"), None)),
+            None,
+            routes.ConfirmUncertainEntityTypeController.entityType
+          )
+
+        }
 
       }
 

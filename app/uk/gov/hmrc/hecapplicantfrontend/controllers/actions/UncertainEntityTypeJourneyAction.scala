@@ -28,8 +28,7 @@ import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 
 import scala.concurrent.{ExecutionContext, Future}
 
-// Left(HECSession) indicates user has started the HEC service properly and they did originally have to confirm their
-// entity type.
+// Left(HECSession) indicates user has started the HEC service properly
 // Right(UncertainEntityTypeJourney) indicates the user has not started the HEC service properly yet but the service has
 // recognised a need for the user to clarify their entity type
 final case class RequestWithUncertainEntityTypeJourney[A](
@@ -38,12 +37,19 @@ final case class RequestWithUncertainEntityTypeJourney[A](
   language: Language
 ) extends WrappedRequest[A](request)
 
-class UncertainEntityTypeJourneyAction @Inject() (
-  sessionStore: SessionStore,
-  uncertainEntityTypeJourneyStore: UncertainEntityTypeJourneyStore
-)(implicit val executionContext: ExecutionContext)
+trait UncertainEntityTypeJourneyAction
     extends ActionRefiner[AuthenticatedRequest, RequestWithUncertainEntityTypeJourney]
     with Logging {
+
+  // if true, session will not be returned on the left if didConfirmUncertainEntityType is not true
+  // if false, session will be returned on the left even if  didConfirmUncertainEntityType is not defined or false
+  val requireDidConfirmUncertainEntityType: Boolean
+
+  val sessionStore: SessionStore
+
+  val uncertainEntityTypeJourneyStore: UncertainEntityTypeJourneyStore
+
+  implicit val executionContext: ExecutionContext
 
   private lazy val start: Call = routes.StartController.start
 
@@ -56,7 +62,8 @@ class UncertainEntityTypeJourneyAction @Inject() (
     val result        = sessionStore
       .get()(request)
       .flatMap[Error, Either[Result, RequestWithUncertainEntityTypeJourney[A]]] {
-        case Some(s) if s.loginData.didConfirmUncertainEntityType.contains(true) =>
+        case Some(s)
+            if !requireDidConfirmUncertainEntityType || s.loginData.didConfirmUncertainEntityType.contains(true) =>
           val r = RequestWithUncertainEntityTypeJourney(request, Left(s), language)
           EitherT.pure(Right(r))
 
@@ -79,4 +86,24 @@ class UncertainEntityTypeJourneyAction @Inject() (
       .leftMap(_.doThrow("Could not perform action"))
       .merge
   }
+}
+
+class RequireDidConfirmUncertainEntityTypeJourneyAction @Inject() (
+  val sessionStore: SessionStore,
+  val uncertainEntityTypeJourneyStore: UncertainEntityTypeJourneyStore
+)(implicit val executionContext: ExecutionContext)
+    extends UncertainEntityTypeJourneyAction {
+
+  override val requireDidConfirmUncertainEntityType: Boolean = true
+
+}
+
+class NotRequireDidConfirmUncertainEntityTypeJourneyAction @Inject() (
+  val sessionStore: SessionStore,
+  val uncertainEntityTypeJourneyStore: UncertainEntityTypeJourneyStore
+)(implicit val executionContext: ExecutionContext)
+    extends UncertainEntityTypeJourneyAction {
+
+  override val requireDidConfirmUncertainEntityType: Boolean = false
+
 }
