@@ -26,6 +26,7 @@
 
 @layout(pageTitle = Some(title)) {
   <h1 class="govuk-heading-xl">@title</h1>
-  <p class="govuk-body">@{messages("iv.preconditionFailed.p1", appConfig.signOutAndSignBackInUrl)}</p>
+  <p class="govuk-body">@{messages("iv.preconditionFailed.p1")}</p>
+  <p class="govuk-body">@{messages("iv.preconditionFailed.p2", appConfig.signOutAndSignBackInUrl)}</p>
   <p class="govuk-body"><a href="@appConfig.signOutAndSignBackInUrl" class="govuk-button" role="button" data-module="govuk-button">@{messages("iv.preconditionFailed.link")}</a></p>
 }
