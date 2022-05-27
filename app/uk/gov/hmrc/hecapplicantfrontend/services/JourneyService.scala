@@ -34,6 +34,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.CompanyUserAnswers.{CompleteCompa
 import uk.gov.hmrc.hecapplicantfrontend.models.EntityType.{Company, Individual}
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, IndividualHECSession}
 import uk.gov.hmrc.hecapplicantfrontend.models.IndividualUserAnswers.{CompleteIndividualUserAnswers, IncompleteIndividualUserAnswers}
+import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.IndividualLoginData
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.{CompanyRetrievedJourneyData, IndividualRetrievedJourneyData}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailSend.EmailSendResult
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeRequestResult._
@@ -378,8 +379,11 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
       _.fold(_.licenceType, _.licenceType.some)
     ) match {
       case Some(licenceType) =>
-        if (licenceTypeForIndividualAndCompany(licenceType)) routes.EntityTypeController.entityType
-        else routes.TaxSituationController.taxSituation
+        val didConfirmUncertainEntityType = session.loginData.didConfirmUncertainEntityType.contains(true)
+        if (licenceTypeForIndividualAndCompany(licenceType) && !didConfirmUncertainEntityType)
+          routes.EntityTypeController.entityType
+        else
+          routes.TaxSituationController.taxSituation
       case None              =>
         throwInconsistentSessionStateError(
           "Could not find licence type to work out route after licence validity period"
@@ -643,12 +647,18 @@ object JourneyServiceImpl {
   /**
     * Expect the entity type to be specified when licence type is suitable for both individual and company
     */
-  private def checkEntityTypePresentIfRequired(licenceType: LicenceType, entityType: Option[EntityType]): Boolean =
+  private def checkEntityTypePresentIfRequired(
+    licenceType: LicenceType,
+    entityType: Option[EntityType],
+    individualLoginData: IndividualLoginData
+  ): Boolean = {
+    val didConfirmUncertainEntityType: Boolean = individualLoginData.didConfirmUncertainEntityType.contains(true)
     entityType match {
-      case Some(_) if licenceTypeForIndividualAndCompany(licenceType) => true
-      case None if !licenceTypeForIndividualAndCompany(licenceType)   => true
-      case _                                                          => false
+      case Some(_) if licenceTypeForIndividualAndCompany(licenceType) && !didConfirmUncertainEntityType => true
+      case None if !licenceTypeForIndividualAndCompany(licenceType) || didConfirmUncertainEntityType    => true
+      case _                                                                                            => false
     }
+  }
 
   /**
     * Expect the SA income to be declared only for an SA tax situation whose return has been found
@@ -718,11 +728,11 @@ object JourneyServiceImpl {
             saIncomeDeclared,
             entityType
           ) =>
-        val licenceTypeCheck      = checkEntityTypePresentIfRequired(licenceType, entityType)
+        val entityTypeCheck       = checkEntityTypePresentIfRequired(licenceType, entityType, session.loginData)
         val taxSituationCheck     = checkTaxSituation(taxSituation, session)
         val saIncomeDeclaredCheck =
           checkSAIncomeDeclared(taxSituation, saIncomeDeclared, session.retrievedJourneyData)
-        licenceTypeCheck && taxSituationCheck && saIncomeDeclaredCheck
+        entityTypeCheck && taxSituationCheck && saIncomeDeclaredCheck
 
       case _ => false
     }

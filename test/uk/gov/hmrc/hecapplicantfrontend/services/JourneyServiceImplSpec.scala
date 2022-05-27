@@ -471,38 +471,54 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             await(result.value) shouldBe Right(routes.TaxSituationController.taxSituation)
           }
 
-          "the licence type in the session is not 'driver of taxis'" in {
-            List(
-              LicenceType.OperatorOfPrivateHireVehicles,
-              LicenceType.ScrapMetalDealerSite,
-              LicenceType.ScrapMetalMobileCollector
-            ).foreach { licenceType =>
-              withClue(s"For licence type $licenceType: ") {
-                val answers        = IndividualUserAnswers.empty.copy(licenceType = Some(licenceType))
-                val session        =
-                  Fixtures.individualHECSession(
-                    individualLoginData,
-                    IndividualRetrievedJourneyData.empty,
-                    answers
+          "the licence type in the session is not 'driver of taxis' and" when {
+
+            def test(didConfirmUncertainEntityType: Option[Boolean], expectedNext: Call): Unit =
+              List(
+                LicenceType.OperatorOfPrivateHireVehicles,
+                LicenceType.ScrapMetalDealerSite,
+                LicenceType.ScrapMetalMobileCollector
+              ).foreach { licenceType =>
+                withClue(s"For licence type $licenceType: ") {
+                  val answers        = IndividualUserAnswers.empty.copy(licenceType = Some(licenceType))
+                  val loginData      =
+                    individualLoginData.copy(didConfirmUncertainEntityType = didConfirmUncertainEntityType)
+                  val session        =
+                    Fixtures.individualHECSession(
+                      loginData,
+                      IndividualRetrievedJourneyData.empty,
+                      answers
+                    )
+                  val updatedSession =
+                    Fixtures.individualHECSession(
+                      loginData,
+                      IndividualRetrievedJourneyData.empty,
+                      answers.copy(licenceValidityPeriod = Some(LicenceValidityPeriod.UpToOneYear))
+                    )
+
+                  implicit val request: RequestWithSessionData[_] =
+                    requestWithSessionData(session)
+
+                  mockStoreSession(updatedSession)(Right(()))
+
+                  val result = journeyService.updateAndNext(
+                    routes.LicenceDetailsController.recentLicenceLength,
+                    updatedSession
                   )
-                val updatedSession =
-                  Fixtures.individualHECSession(
-                    individualLoginData,
-                    IndividualRetrievedJourneyData.empty,
-                    answers.copy(licenceValidityPeriod = Some(LicenceValidityPeriod.UpToOneYear))
-                  )
-
-                implicit val request: RequestWithSessionData[_] =
-                  requestWithSessionData(session)
-
-                mockStoreSession(updatedSession)(Right(()))
-
-                val result = journeyService.updateAndNext(
-                  routes.LicenceDetailsController.recentLicenceLength,
-                  updatedSession
-                )
-                await(result.value) shouldBe Right(routes.EntityTypeController.entityType)
+                  await(result.value) shouldBe Right(expectedNext)
+                }
               }
+
+            "didConfirmUncertainEntityType is true" in {
+              test(Some(true), routes.TaxSituationController.taxSituation)
+            }
+
+            "didConfirmUncertainEntityType is false" in {
+              test(Some(false), routes.EntityTypeController.entityType)
+            }
+
+            "didConfirmUncertainEntityType is not defined" in {
+              test(None, routes.EntityTypeController.entityType)
             }
           }
 
@@ -3682,11 +3698,31 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
           ) shouldBe false
         }
 
-        "entity type is present" in {
-          JourneyServiceImpl.allIndividualAnswersComplete(
-            incompleteUserAnswers = incompleteAnswersBase.copy(entityType = Some(EntityType.Individual)),
-            IndividualHECSession.newSession(individualLoginData)
-          ) shouldBe false
+        "entity type is present when it shouldn't be" when {
+
+          "the user did not have to confirm an uncertain entity type previously and " +
+            "the licence type does not require an entity type" in {
+              JourneyServiceImpl.allIndividualAnswersComplete(
+                incompleteUserAnswers = incompleteAnswersBase.copy(entityType = Some(EntityType.Individual)),
+                IndividualHECSession.newSession(individualLoginData)
+              ) shouldBe false
+
+              JourneyServiceImpl.allIndividualAnswersComplete(
+                incompleteUserAnswers = incompleteAnswersBase.copy(entityType = Some(EntityType.Individual)),
+                IndividualHECSession.newSession(individualLoginData.copy(didConfirmUncertainEntityType = Some(false)))
+              ) shouldBe false
+            }
+
+          "the user has already confirmed an uncertain entity type previously" in {
+            JourneyServiceImpl.allIndividualAnswersComplete(
+              incompleteUserAnswers = incompleteAnswersBase
+                .copy(
+                  licenceType = Some(LicenceType.ScrapMetalMobileCollector),
+                  entityType = Some(EntityType.Individual)
+                ),
+              IndividualHECSession.newSession(individualLoginData.copy(didConfirmUncertainEntityType = Some(true)))
+            ) shouldBe false
+          }
         }
 
         "tax situation contains SA and" when {
@@ -3769,11 +3805,32 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
 
       "return true" when {
 
-        "entity type is missing" in {
+        "entity type is not present when it's not needed" in {
           JourneyServiceImpl.allIndividualAnswersComplete(
             incompleteAnswersBase,
             IndividualHECSession.newSession(individualLoginData)
           ) shouldBe true
+        }
+
+        "entity type is present when it's needed" when {
+
+          "the user has not had to confirm an uncertain entity type previously and the licence " +
+            "type requires an entity type" in {
+              val answers = incompleteAnswersBase.copy(
+                entityType = Some(EntityType.Individual),
+                licenceType = Some(LicenceType.ScrapMetalMobileCollector)
+              )
+
+              JourneyServiceImpl.allIndividualAnswersComplete(
+                answers,
+                IndividualHECSession.newSession(individualLoginData)
+              ) shouldBe true
+
+              JourneyServiceImpl.allIndividualAnswersComplete(
+                answers,
+                IndividualHECSession.newSession(individualLoginData.copy(didConfirmUncertainEntityType = Some(false)))
+              ) shouldBe true
+            }
         }
 
         "tax situation = non-SA (irrespective of whether income declared is missing or present)" in {
