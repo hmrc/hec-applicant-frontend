@@ -232,15 +232,28 @@ class ConfirmUncertainEntityTypeControllerSpec
 
       "redirect to the next page without performing an update when the answer has not changed and" when {
 
-        "the user had already started a session" in {
-          inSequence {
-            mockAuthWithNoRetrievals()
-            mockGetSession(individualSession)
-            mockFirstPge(individualSession)(mockNextCall)
+        "the user had already started a session" when {
 
+          "the session does not contain complete answers" in {
+            inSequence {
+              mockAuthWithNoRetrievals()
+              mockGetSession(individualSession)
+              mockFirstPge(individualSession)(mockNextCall)
+
+            }
+
+            checkIsRedirect(performAction("entityType" -> "0"), mockNextCall)
           }
 
-          checkIsRedirect(performAction("entityType" -> "0"), mockNextCall)
+          "the session contains complete answers" in {
+            val session = individualSession.copy(userAnswers = Fixtures.completeIndividualUserAnswers())
+            inSequence {
+              mockAuthWithNoRetrievals()
+              mockGetSession(session)
+            }
+
+            checkIsRedirect(performAction("entityType" -> "0"), routes.CheckYourAnswersController.checkYourAnswers)
+          }
         }
 
         "the user had not already started a session" in {

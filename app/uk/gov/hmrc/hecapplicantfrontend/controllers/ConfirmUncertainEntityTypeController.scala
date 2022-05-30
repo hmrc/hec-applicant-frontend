@@ -55,15 +55,23 @@ class ConfirmUncertainEntityTypeController @Inject() (
   private def calculateBack(
     sessionDataOrUncertainEntityTypeJourney: Either[HECSession, UncertainEntityTypeJourney]
   ): Call =
-    sessionDataOrUncertainEntityTypeJourney match {
-      case Left(s: HECSession)                  =>
-        s.userAnswers match {
-          case _: CompleteUserAnswers   => routes.CheckYourAnswersController.checkYourAnswers
-          case _: IncompleteUserAnswers => start
-        }
-      case Right(_: UncertainEntityTypeJourney) =>
-        start
-    }
+    if (isSessionWithCompleteAnswers(sessionDataOrUncertainEntityTypeJourney))
+      routes.CheckYourAnswersController.checkYourAnswers
+    else
+      start
+
+  private def isSessionWithCompleteAnswers(
+    sessionDataOrUncertainEntityTypeJourney: Either[HECSession, UncertainEntityTypeJourney]
+  ) = sessionDataOrUncertainEntityTypeJourney match {
+    case Left(s: HECSession) =>
+      s.userAnswers match {
+        case _: CompleteUserAnswers   => true
+        case _: IncompleteUserAnswers => false
+      }
+
+    case Right(_: UncertainEntityTypeJourney) =>
+      false
+  }
 
   val entityType: Action[AnyContent] = authAction.andThen(uncertainEntityTypeJourneyAction).async { implicit request =>
     val existingAnswer = request.sessionDataOrUncertainEntityTypeJourney.fold(
@@ -82,7 +90,12 @@ class ConfirmUncertainEntityTypeController @Inject() (
       def handleValidEntityType(entityType: EntityType): Future[Result] =
         request.sessionDataOrUncertainEntityTypeJourney match {
           case Left(session) if session.entityType === entityType =>
-            Redirect(journeyService.firstPage(session))
+            val redirectTo =
+              if (isSessionWithCompleteAnswers(request.sessionDataOrUncertainEntityTypeJourney))
+                routes.CheckYourAnswersController.checkYourAnswers
+              else
+                journeyService.firstPage(session)
+            Redirect(redirectTo)
 
           case Right(journey) if journey.userSuppliedEntityType.contains(entityType) =>
             redirectToStart
