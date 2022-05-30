@@ -94,7 +94,7 @@ object Fixtures {
     licenceType: LicenceType = LicenceType.DriverOfTaxisAndPrivateHires,
     licenceTimeTrading: LicenceTimeTrading = LicenceTimeTrading.ZeroToTwoYears,
     licenceValidityPeriod: LicenceValidityPeriod = LicenceValidityPeriod.UpToOneYear,
-    entityType: EntityType = EntityType.Company,
+    entityType: Option[EntityType] = Some(EntityType.Company),
     crn: CRN = CRN("crn"),
     companyDetailsConfirmed: YesNoAnswer = YesNoAnswer.Yes,
     chargeableForCT: Option[YesNoAnswer] = None,

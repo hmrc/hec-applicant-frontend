@@ -473,28 +473,52 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
 
           "the licence type in the session is not 'driver of taxis' and" when {
 
-            def test(didConfirmUncertainEntityType: Option[Boolean], expectedNext: Call): Unit =
+            def test(entityType: EntityType, didConfirmUncertainEntityType: Option[Boolean], expectedNext: Call): Unit =
               List(
                 LicenceType.OperatorOfPrivateHireVehicles,
                 LicenceType.ScrapMetalDealerSite,
                 LicenceType.ScrapMetalMobileCollector
               ).foreach { licenceType =>
                 withClue(s"For licence type $licenceType: ") {
-                  val answers        = IndividualUserAnswers.empty.copy(licenceType = Some(licenceType))
-                  val loginData      =
-                    individualLoginData.copy(didConfirmUncertainEntityType = didConfirmUncertainEntityType)
-                  val session        =
-                    Fixtures.individualHECSession(
-                      loginData,
-                      IndividualRetrievedJourneyData.empty,
-                      answers
-                    )
-                  val updatedSession =
-                    Fixtures.individualHECSession(
-                      loginData,
-                      IndividualRetrievedJourneyData.empty,
-                      answers.copy(licenceValidityPeriod = Some(LicenceValidityPeriod.UpToOneYear))
-                    )
+                  val (session, updatedSession) =
+                    entityType match {
+                      case EntityType.Individual =>
+                        val answers        = IndividualUserAnswers.empty.copy(licenceType = Some(licenceType))
+                        val loginData      =
+                          individualLoginData.copy(didConfirmUncertainEntityType = didConfirmUncertainEntityType)
+                        val session        =
+                          Fixtures.individualHECSession(
+                            loginData,
+                            IndividualRetrievedJourneyData.empty,
+                            answers
+                          )
+                        val updatedSession =
+                          Fixtures.individualHECSession(
+                            loginData,
+                            IndividualRetrievedJourneyData.empty,
+                            answers.copy(licenceValidityPeriod = Some(LicenceValidityPeriod.UpToOneYear))
+                          )
+
+                        (session, updatedSession)
+
+                      case EntityType.Company =>
+                        val answers        = CompanyUserAnswers.empty.copy(licenceType = Some(licenceType))
+                        val loginData      =
+                          companyLoginData.copy(didConfirmUncertainEntityType = didConfirmUncertainEntityType)
+                        val session        =
+                          Fixtures.companyHECSession(
+                            loginData,
+                            CompanyRetrievedJourneyData.empty,
+                            answers
+                          )
+                        val updatedSession =
+                          Fixtures.companyHECSession(
+                            loginData,
+                            CompanyRetrievedJourneyData.empty,
+                            answers.copy(licenceValidityPeriod = Some(LicenceValidityPeriod.UpToOneYear))
+                          )
+                        (session, updatedSession)
+                    }
 
                   implicit val request: RequestWithSessionData[_] =
                     requestWithSessionData(session)
@@ -509,17 +533,36 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                 }
               }
 
-            "didConfirmUncertainEntityType is true" in {
-              test(Some(true), routes.TaxSituationController.taxSituation)
+            "the user is an individual and" when {
+
+              "didConfirmUncertainEntityType is true" in {
+                test(EntityType.Individual, Some(true), routes.TaxSituationController.taxSituation)
+              }
+
+              "didConfirmUncertainEntityType is false" in {
+                test(EntityType.Individual, Some(false), routes.EntityTypeController.entityType)
+              }
+
+              "didConfirmUncertainEntityType is not defined" in {
+                test(EntityType.Individual, None, routes.EntityTypeController.entityType)
+              }
             }
 
-            "didConfirmUncertainEntityType is false" in {
-              test(Some(false), routes.EntityTypeController.entityType)
+            "the user is a company and" when {
+
+              "didConfirmUncertainEntityType is true" in {
+                test(EntityType.Company, Some(true), routes.CRNController.companyRegistrationNumber)
+              }
+
+              "didConfirmUncertainEntityType is false" in {
+                test(EntityType.Company, Some(false), routes.EntityTypeController.entityType)
+              }
+
+              "didConfirmUncertainEntityType is not defined" in {
+                test(EntityType.Company, None, routes.EntityTypeController.entityType)
+              }
             }
 
-            "didConfirmUncertainEntityType is not defined" in {
-              test(None, routes.EntityTypeController.entityType)
-            }
           }
 
         }
@@ -2275,14 +2318,16 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             chargeableForCTOpt: Option[YesNoAnswer],
             ctIncomeDeclaredOpt: Option[YesNoAnswer],
             recentlyStartedTradingOpt: Option[YesNoAnswer],
-            ctStatusResponse: Option[CTStatusResponse]
+            ctStatusResponse: Option[CTStatusResponse],
+            entityType: Option[EntityType],
+            didConfirmUncertainEntityType: Option[Boolean]
           ): (CompleteCompanyUserAnswers, CompanyHECSession) = {
 
             val completeAnswers   = Fixtures.completeCompanyUserAnswers(
               licenceType,
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToOneYear,
-              entityType = EntityType.Company,
+              entityType = entityType,
               crn = CRN("1123456"),
               companyDetailsConfirmed = YesNoAnswer.Yes,
               chargeableForCT = chargeableForCTOpt,
@@ -2293,7 +2338,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               Some(completeAnswers.licenceType),
               Some(completeAnswers.licenceTimeTrading),
               Some(completeAnswers.licenceValidityPeriod),
-              entityType = Some(EntityType.Company),
+              entityType = entityType,
               crn = Some(CRN("1123456")),
               companyDetailsConfirmed = Some(YesNoAnswer.Yes),
               chargeableForCT = chargeableForCTOpt,
@@ -2302,7 +2347,10 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             )
 
             val session = Fixtures.companyHECSession(
-              Fixtures.companyLoginData(ctutr = Some(CTUTR("1111111111"))),
+              Fixtures.companyLoginData(
+                ctutr = Some(CTUTR("1111111111")),
+                didConfirmUncertainEntityType = didConfirmUncertainEntityType
+              ),
               Fixtures.companyRetrievedJourneyData(ctStatus = ctStatusResponse),
               userAnswers = incompleteAnswers
             )
@@ -2329,17 +2377,27 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               LicenceType.ScrapMetalMobileCollector,
               LicenceType.OperatorOfPrivateHireVehicles
             ).foreach { licenceType =>
-              withClue(s"For licence type $licenceType: ") {
+              List(
+                Some(EntityType.Company) -> Some(false),
+                Some(EntityType.Company) -> None,
+                None                     -> Some(true)
+              ).foreach { case (entityType, didConfirmUncertainEntityType) =>
+                withClue(
+                  s"For licence type $licenceType, entity type answer $entityType, didConfirmUncertainEntityType = $didConfirmUncertainEntityType: "
+                ) {
 
-                val (completeAnswers, session) = getCompanySessionData(
-                  licenceType,
-                  Some(YesNoAnswer.Yes),
-                  Some(YesNoAnswer.Yes),
-                  Some(YesNoAnswer.Yes),
-                  Some(createCTStatus(Some(CTAccountingPeriodDigital(startDate, endDate, CTStatus.ReturnFound))))
-                )
-                nextPageIsCYA(session, completeAnswers)
+                  val (completeAnswers, session) = getCompanySessionData(
+                    licenceType,
+                    Some(YesNoAnswer.Yes),
+                    Some(YesNoAnswer.Yes),
+                    Some(YesNoAnswer.Yes),
+                    Some(createCTStatus(Some(CTAccountingPeriodDigital(startDate, endDate, CTStatus.ReturnFound)))),
+                    entityType,
+                    didConfirmUncertainEntityType
+                  )
+                  nextPageIsCYA(session, completeAnswers)
 
+                }
               }
 
             }
@@ -2352,7 +2410,9 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               recentlyStartedTradingOpt = Some(YesNoAnswer.Yes),
               ctStatusResponse = Some(createCTStatus(None)),
               ctIncomeDeclaredOpt = None,
-              chargeableForCTOpt = None
+              chargeableForCTOpt = None,
+              entityType = Some(EntityType.Company),
+              didConfirmUncertainEntityType = Some(false)
             )
             nextPageIsCYA(session, completeAnswers)
 
@@ -2370,7 +2430,9 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                   createCTStatus(Some(CTAccountingPeriodDigital(startDate, endDate, CTStatus.NoticeToFileIssued)))
                 ),
                 ctIncomeDeclaredOpt = None,
-                chargeableForCTOpt = Some(yesNo)
+                chargeableForCTOpt = Some(yesNo),
+                entityType = Some(EntityType.Company),
+                didConfirmUncertainEntityType = None
               )
               nextPageIsCYA(session, completeAnswers)
             }
@@ -2383,7 +2445,9 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               ctStatusResponse =
                 Some(createCTStatus(Some(CTAccountingPeriodDigital(startDate, endDate, CTStatus.NoReturnFound)))),
               ctIncomeDeclaredOpt = None,
-              chargeableForCTOpt = Some(YesNoAnswer.No)
+              chargeableForCTOpt = Some(YesNoAnswer.No),
+              entityType = None,
+              didConfirmUncertainEntityType = Some(true)
             )
             nextPageIsCYA(session, completeAnswers)
           }
@@ -3941,11 +4005,14 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
         ctIncomeDeclaredOpt: Option[YesNoAnswer],
         recentlyStartedTradingOpt: Option[YesNoAnswer],
         latestAccountingPeriod: Option[CTAccountingPeriod],
-        licenceType: Some[LicenceType] = Some(LicenceType.ScrapMetalDealerSite)
+        licenceType: Some[LicenceType] = Some(LicenceType.ScrapMetalDealerSite),
+        entityType: Option[EntityType] = Some(EntityType.Company),
+        didConfirmUncertainEntityType: Option[Boolean] = Some(true)
       ) = {
         val date                = LocalDate.now()
         val companyData         = companyLoginData.copy(
-          ctutr = Some(CTUTR("ctutr"))
+          ctutr = Some(CTUTR("ctutr")),
+          didConfirmUncertainEntityType = didConfirmUncertainEntityType
         )
         val anyCTStatusResponse = CTStatusResponse(
           ctutr = CTUTR("utr"),
@@ -3961,7 +4028,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
 
         val incompleteAnswers = incompleteAnswersBase.copy(
           licenceType = licenceType,
-          entityType = Some(Company),
+          entityType = entityType,
           crn = Some(CRN("1234567")),
           companyDetailsConfirmed = Some(YesNoAnswer.Yes),
           chargeableForCT = chargeableForCTOpt,
@@ -4000,10 +4067,15 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
           ) shouldBe false
         }
 
-        "entity type is missing" in {
+        "entity type is missing when the user has not confirmed an uncertain entity type" in {
           JourneyServiceImpl.allCompanyAnswersComplete(
             incompleteUserAnswers = incompleteAnswersBase,
-            CompanyHECSession.newSession(companyLoginData)
+            CompanyHECSession.newSession(companyLoginData.copy(didConfirmUncertainEntityType = Some(false)))
+          ) shouldBe false
+
+          JourneyServiceImpl.allCompanyAnswersComplete(
+            incompleteUserAnswers = incompleteAnswersBase,
+            CompanyHECSession.newSession(companyLoginData.copy(didConfirmUncertainEntityType = None))
           ) shouldBe false
         }
 
@@ -4137,6 +4209,17 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             ) shouldBe true
           }
 
+        }
+
+        "the entity type is missing but the user has confirmed an uncertain entity type" in {
+          checkCompanyDataComplete(
+            None,
+            None,
+            Some(YesNoAnswer.Yes),
+            None,
+            entityType = None,
+            didConfirmUncertainEntityType = Some(true)
+          ) shouldBe true
         }
 
       }

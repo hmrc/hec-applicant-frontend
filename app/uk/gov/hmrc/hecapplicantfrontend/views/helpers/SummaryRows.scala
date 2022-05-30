@@ -96,13 +96,16 @@ class SummaryRows {
     messages: Messages
   ): List[SummaryListRow] = {
 
-    val entityTypeRow             =
-      summaryListRow(
-        messages("entityType.title"),
-        messages(s"entityType.${EntityTypeOption.entityTypeOption(completeAnswers.entityType).messageKey}"),
-        routes.EntityTypeController.entityType,
-        messages(s"$messageKey.entityType.screenReaderText")
-      )
+    val entityTypeRow =
+      completeAnswers.entityType.map { e =>
+        summaryListRow(
+          messages("entityType.title"),
+          messages(s"entityType.${EntityTypeOption.entityTypeOption(e).messageKey}"),
+          routes.EntityTypeController.entityType,
+          messages(s"$messageKey.entityType.screenReaderText")
+        )
+      }
+
     val crnRow                    =
       summaryListRow(
         messages("crn.title"),
@@ -158,7 +161,7 @@ class SummaryRows {
       }
 
     List(
-      Some(entityTypeRow),
+      entityTypeRow,
       Some(crnRow),
       ctutrRow,
       recentlyStartedTradingRow,

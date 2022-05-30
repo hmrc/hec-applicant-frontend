@@ -17,7 +17,6 @@
 package uk.gov.hmrc.hecapplicantfrontend.controllers
 
 import cats.instances.future._
-import cats.syntax.option._
 import com.google.inject.{Inject, Singleton}
 import play.api.data.Form
 import play.api.data.Forms.{mapping, of}
@@ -58,7 +57,7 @@ class EntityTypeController @Inject() (
     val back       = journeyService.previous(routes.EntityTypeController.entityType)
     val entityType = request.sessionData.userAnswers.fold(
       _.fold(_.entityType, _.entityType),
-      _.fold(_.entityType, _.entityType.some)
+      _.fold(_.entityType, _.entityType)
     )
     val form = {
       val emptyForm = entityTypeForm(entityTypeOptions)
@@ -107,7 +106,7 @@ class EntityTypeController @Inject() (
   val wrongGGAccount: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
     request.sessionData.userAnswers.fold(
       _.fold(_.entityType, _.entityType),
-      _.fold(_.entityType, _.entityType.some)
+      _.fold(_.entityType, _.entityType)
     ) match {
       case Some(entityType) =>
         val back = journeyService.previous(routes.EntityTypeController.wrongGGAccount)
