@@ -214,7 +214,7 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
         LicenceType.DriverOfTaxisAndPrivateHires,
         LicenceTimeTrading.TwoToFourYears,
         LicenceValidityPeriod.UpToTwoYears,
-        EntityType.Company,
+        Some(EntityType.Company),
         CRN("crn"),
         YesNoAnswer.Yes
       )
@@ -247,7 +247,7 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
           LicenceType.DriverOfTaxisAndPrivateHires,
           LicenceTimeTrading.ZeroToTwoYears,
           LicenceValidityPeriod.UpToThreeYears,
-          EntityType.Company,
+          Some(EntityType.Company),
           CRN("crn"),
           YesNoAnswer.Yes
         )
@@ -300,7 +300,7 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
           LicenceType.DriverOfTaxisAndPrivateHires,
           LicenceTimeTrading.ZeroToTwoYears,
           LicenceValidityPeriod.UpToThreeYears,
-          EntityType.Company,
+          Some(EntityType.Company),
           CRN("crn"),
           YesNoAnswer.Yes
         )

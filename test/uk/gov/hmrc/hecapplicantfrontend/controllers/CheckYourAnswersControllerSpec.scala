@@ -284,7 +284,7 @@ class CheckYourAnswersControllerSpec
             LicenceType.ScrapMetalMobileCollector,
             LicenceTimeTrading.ZeroToTwoYears,
             LicenceValidityPeriod.UpToTwoYears,
-            entityType = EntityType.Company,
+            entityType = Some(EntityType.Company),
             crn = CRN("1123456"),
             ctutr = ctutr,
             companyDetailsConfirmed = YesNoAnswer.Yes,

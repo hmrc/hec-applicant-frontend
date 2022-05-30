@@ -259,7 +259,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
                   Some(licenceType),
                   Some(licenceTimeTrading),
                   Some(licenceValidityPeriod),
-                  Some(entityType),
+                  entityType,
                   Some(crn),
                   Some(companyDetailsConfirmed),
                   chargeableForCT,
@@ -383,8 +383,12 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
         if (licenceTypeForIndividualAndCompany(licenceType) && !didConfirmUncertainEntityType)
           routes.EntityTypeController.entityType
         else
-          routes.TaxSituationController.taxSituation
-      case None              =>
+          session.entityType match {
+            case EntityType.Individual => routes.TaxSituationController.taxSituation
+            case EntityType.Company    => routes.CRNController.companyRegistrationNumber
+          }
+
+      case None =>
         throwInconsistentSessionStateError(
           "Could not find licence type to work out route after licence validity period"
         )
@@ -394,7 +398,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
     val maybeSelectedEntityType =
       session.userAnswers.fold(
         _.fold(_.entityType, _.entityType),
-        _.fold(_.entityType, _.entityType.some)
+        _.fold(_.entityType, _.entityType)
       )
     val ggEntityType            = session.entityType
 
@@ -679,21 +683,25 @@ object JourneyServiceImpl {
     chargeableForCTOpt: Option[YesNoAnswer],
     ctIncomeDeclaredOpt: Option[YesNoAnswer],
     recentlyStartedTradingOpt: Option[YesNoAnswer],
+    entityType: Option[EntityType],
     companySession: CompanyHECSession
   ): Boolean =
-    companySession.retrievedJourneyData.ctStatus match {
-      case None                   => false
-      case Some(ctStatusResponse) =>
-        ctStatusResponse.latestAccountingPeriod.map(_.ctStatus) match {
-          case None                              => recentlyStartedTradingOpt.contains(YesNoAnswer.Yes)
-          case Some(CTStatus.NoticeToFileIssued) => chargeableForCTOpt.isDefined
-          case Some(CTStatus.NoReturnFound)      => chargeableForCTOpt.contains(YesNoAnswer.No)
-          case Some(CTStatus.ReturnFound)        =>
-            chargeableForCTOpt.contains(YesNoAnswer.No) || (chargeableForCTOpt.contains(
-              YesNoAnswer.Yes
-            ) && ctIncomeDeclaredOpt.nonEmpty)
-        }
-    }
+    if (!companySession.loginData.didConfirmUncertainEntityType.contains(true) && entityType.isEmpty)
+      false
+    else
+      companySession.retrievedJourneyData.ctStatus match {
+        case None                   => false
+        case Some(ctStatusResponse) =>
+          ctStatusResponse.latestAccountingPeriod.map(_.ctStatus) match {
+            case None                              => recentlyStartedTradingOpt.contains(YesNoAnswer.Yes)
+            case Some(CTStatus.NoticeToFileIssued) => chargeableForCTOpt.isDefined
+            case Some(CTStatus.NoReturnFound)      => chargeableForCTOpt.contains(YesNoAnswer.No)
+            case Some(CTStatus.ReturnFound)        =>
+              chargeableForCTOpt.contains(YesNoAnswer.No) || (chargeableForCTOpt.contains(
+                YesNoAnswer.Yes
+              ) && ctIncomeDeclaredOpt.nonEmpty)
+          }
+      }
 
   /**
     * Is the tax situation one that would allow the user to progress to get a tax check?
@@ -754,7 +762,7 @@ object JourneyServiceImpl {
             Some(_),
             Some(_),
             Some(_),
-            Some(_),
+            entityType,
             Some(_),
             Some(_),
             chargeableForCT,
@@ -762,7 +770,7 @@ object JourneyServiceImpl {
             recentlyStartedTrading,
             _
           ) =>
-        checkCompanyDataComplete(chargeableForCT, ctIncomeDeclared, recentlyStartedTrading, session)
+        checkCompanyDataComplete(chargeableForCT, ctIncomeDeclared, recentlyStartedTrading, entityType, session)
       case _ => false
     }
 }
