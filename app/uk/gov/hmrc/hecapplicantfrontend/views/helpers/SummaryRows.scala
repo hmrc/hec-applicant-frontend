@@ -22,7 +22,7 @@ import uk.gov.hmrc.govukfrontend.views.html.components._
 import uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.getTaxPeriodStrings
 import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 import uk.gov.hmrc.hecapplicantfrontend.models.CompanyUserAnswers.CompleteCompanyUserAnswers
-import uk.gov.hmrc.hecapplicantfrontend.models.{CompleteUserAnswers, RetrievedJourneyData, TaxYear}
+import uk.gov.hmrc.hecapplicantfrontend.models.{CompleteUserAnswers, EntityType, LoginData, RetrievedJourneyData, TaxYear}
 import uk.gov.hmrc.hecapplicantfrontend.models.views.{LicenceTimeTradingOption, LicenceTypeOption, LicenceValidityPeriodOption}
 import uk.gov.hmrc.hecapplicantfrontend.models.IndividualUserAnswers.CompleteIndividualUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.CompanyRetrievedJourneyData
@@ -53,6 +53,25 @@ class SummaryRows {
         )
       )
     )
+
+  def confirmUncertainEntityTypeRow(loginData: LoginData)(implicit messages: Messages): List[SummaryListRow] = {
+    val entityType = loginData match {
+      case i: LoginData.IndividualLoginData if i.didConfirmUncertainEntityType.contains(true) =>
+        Some(EntityType.Individual)
+      case c: LoginData.CompanyLoginData if c.didConfirmUncertainEntityType.contains(true)    =>
+        Some(EntityType.Company)
+      case _                                                                                  =>
+        None
+    }
+    entityType.map { e =>
+      summaryListRow(
+        messages("entityType.title"),
+        messages(s"entityType.${EntityTypeOption.entityTypeOption(e).messageKey}"),
+        routes.ConfirmUncertainEntityTypeController.entityType,
+        messages(s"$messageKey.entityType.screenReaderText")
+      )
+    }.toList
+  }
 
   def licenceDetailsRows(completeAnswers: CompleteUserAnswers)(implicit messages: Messages): List[SummaryListRow] = {
     val licenceTypeRow: SummaryListRow =

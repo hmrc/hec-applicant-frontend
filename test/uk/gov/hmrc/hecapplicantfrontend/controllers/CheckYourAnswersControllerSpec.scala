@@ -84,7 +84,7 @@ class CheckYourAnswersControllerSpec
 
     "handling requests to display the check your answers page" must {
 
-      def checkYourAnswersRows(startDate: String, endDate: String) = List(
+      def expectedIndividualRows(startDate: String, endDate: String): List[CheckYourAnswersRow] = List(
         CheckYourAnswersRow(
           messageFromMessageKey("licenceType.title"),
           messageFromMessageKey("licenceType.scrapMetalCollector"),
@@ -197,31 +197,48 @@ class CheckYourAnswersControllerSpec
           isCTUTRPresent: Boolean
         ) = {
 
-          val excludedList1 = List(
+          val didConfirmUncertainEntityType = session.loginData.didConfirmUncertainEntityType.contains(true)
+
+          val confirmUncertainEntityTypeRow =
+            CheckYourAnswersRow(
+              messageFromMessageKey("entityType.title"),
+              messageFromMessageKey(s"entityType.${if (isIndividual) "individual" else "company"}"),
+              routes.ConfirmUncertainEntityTypeController.entityType.url
+            )
+
+          val excludedChangeUrlList1 = List(
             routes.CompanyDetailsController.enterCtutr.url,
             routes.CompanyDetailsController.recentlyStartedTrading.url
           )
 
-          val excludedList2 = List(
+          val excludedChangeUrlList2 = List(
             routes.CompanyDetailsController.enterCtutr.url,
             routes.CompanyDetailsController.chargeableForCorporationTax.url,
             routes.CompanyDetailsController.ctIncomeStatement.url
           )
 
-          val expectedRows = if (isIndividual) {
-            val (startDate, endDate) = getTaxPeriodStrings(TaxYear(2020))
-            checkYourAnswersRows(startDate, endDate)
-          } else {
-            (isRecentlyStartedTrading, isCTUTRPresent) match {
-              case (_, true)  =>
-                companyExpectedRows.filterNot(
-                  _.changeUrl === routes.CompanyDetailsController.recentlyStartedTrading.url
-                )
-              case (true, _)  => companyExpectedRows.filterNot(cyar => excludedList2.contains(cyar.changeUrl))
-              case (false, _) => companyExpectedRows.filterNot(cyar => excludedList1.contains(cyar.changeUrl))
-              case _          => companyExpectedRows
+          val expectedRows = {
+            val rows = if (isIndividual) {
+              val (startDate, endDate) = getTaxPeriodStrings(TaxYear(2020))
+              expectedIndividualRows(startDate, endDate)
+            } else {
+              (isRecentlyStartedTrading, isCTUTRPresent) match {
+                case (_, true)  =>
+                  companyExpectedRows.filterNot(
+                    _.changeUrl === routes.CompanyDetailsController.recentlyStartedTrading.url
+                  )
+                case (true, _)  => companyExpectedRows.filterNot(row => excludedChangeUrlList2.contains(row.changeUrl))
+                case (false, _) => companyExpectedRows.filterNot(row => excludedChangeUrlList1.contains(row.changeUrl))
+                case _          => companyExpectedRows
+              }
             }
 
+            if (didConfirmUncertainEntityType)
+              confirmUncertainEntityTypeRow :: rows.filterNot(
+                _.changeUrl === routes.EntityTypeController.entityType.url
+              )
+            else
+              rows
           }
 
           inSequence {
@@ -252,7 +269,8 @@ class CheckYourAnswersControllerSpec
 
         }
 
-        "applicant is an Individual" in {
+        "applicant is an Individual and" when {
+
           val answers = Fixtures.completeIndividualUserAnswers(
             LicenceType.ScrapMetalMobileCollector,
             LicenceTimeTrading.ZeroToTwoYears,
@@ -269,8 +287,22 @@ class CheckYourAnswersControllerSpec
               answers,
               relevantIncomeTaxYear = Some(TaxYear(2020))
             )
-          test(session, true, false, false)
 
+          "the user did not confirm an uncertain entity type" in {
+            test(session, true, false, false)
+          }
+
+          "the user did confirm an uncertain entity type" in {
+            test(
+              session.copy(
+                loginData = individualLoginData.copy(didConfirmUncertainEntityType = Some(true)),
+                userAnswers = answers.copy(entityType = None)
+              ),
+              true,
+              false,
+              false
+            )
+          }
         }
 
         "applicant is a Company and " when {
@@ -279,12 +311,13 @@ class CheckYourAnswersControllerSpec
             chargeableForCTOpt: Option[YesNoAnswer],
             ctIncomeDeclaredOpt: Option[YesNoAnswer],
             recentlyStartedTrading: Option[YesNoAnswer],
-            ctutr: Option[CTUTR] = None
+            ctutr: Option[CTUTR] = None,
+            entityType: Option[EntityType] = Some(EntityType.Company)
           ) = Fixtures.completeCompanyUserAnswers(
             LicenceType.ScrapMetalMobileCollector,
             LicenceTimeTrading.ZeroToTwoYears,
             LicenceValidityPeriod.UpToTwoYears,
-            entityType = Some(EntityType.Company),
+            entityType = entityType,
             crn = CRN("1123456"),
             ctutr = ctutr,
             companyDetailsConfirmed = YesNoAnswer.Yes,
@@ -356,6 +389,32 @@ class CheckYourAnswersControllerSpec
             val session =
               Fixtures.companyHECSession(
                 companyLoginData,
+                Fixtures.companyRetrievedJourneyData(
+                  companyName = Some(CompanyHouseName("Test Tech Ltd")),
+                  desCtutr = Some(CTUTR("1111111111")),
+                  ctStatus = createCTStatus(
+                    Some(
+                      CTAccountingPeriodDigital(
+                        LocalDate.of(2020, 10, 9),
+                        LocalDate.of(2021, 10, 9),
+                        CTStatus.ReturnFound
+                      )
+                    )
+                  )
+                ),
+                answers
+              )
+
+            test(session, false, false, true)
+          }
+
+          "the user confirmed an uncertain entity type" in {
+            val answers =
+              createCompleteAnswers(Some(YesNoAnswer.Yes), Some(YesNoAnswer.Yes), None, Some(CTUTR("1111111111")), None)
+
+            val session =
+              Fixtures.companyHECSession(
+                companyLoginData.copy(didConfirmUncertainEntityType = Some(true)),
                 Fixtures.companyRetrievedJourneyData(
                   companyName = Some(CompanyHouseName("Test Tech Ltd")),
                   desCtutr = Some(CTUTR("1111111111")),
