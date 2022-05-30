@@ -18,13 +18,14 @@
 @import play.api.mvc.{Call, Request}
 @import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 @import uk.gov.hmrc.hecapplicantfrontend.models.IndividualUserAnswers.CompleteIndividualUserAnswers
+@import uk.gov.hmrc.hecapplicantfrontend.models.LoginData
 @import uk.gov.hmrc.govukfrontend.views.html.components._
 @import uk.gov.hmrc.hecapplicantfrontend.views.helpers.SummaryRows
 @import uk.gov.hmrc.hecapplicantfrontend.models.TaxYear
 
 @this(layout: Layout, govukSummaryList : GovukSummaryList, govukButton: GovukButton, formWithCSRF: FormWithCSRF, summaryRows: SummaryRows)
 
-@(back: Call, completeAnswers: CompleteIndividualUserAnswers, relevantTaxYear: TaxYear)(implicit request: Request[_], messages: Messages)
+@(back: Call, completeAnswers: CompleteIndividualUserAnswers, loginData: LoginData, relevantTaxYear: TaxYear)(implicit request: Request[_], messages: Messages)
 
 @key = @{"checkYourAnswers"}
 @title = @{messages(s"$key.title")}
@@ -32,7 +33,11 @@
 @layout(pageTitle = Some(title), backLocation = Some(back)) {
     <h1 class="govuk-heading-xl">@title</h1>
     <p class="govuk-body">@messages(s"$key.p1")</p>
-    @govukSummaryList(SummaryList(rows = summaryRows.licenceDetailsRows(completeAnswers) ::: summaryRows.individualRows(completeAnswers, relevantTaxYear)))
+    @govukSummaryList(SummaryList(rows =
+        summaryRows.confirmUncertainEntityTypeRow(loginData) :::
+                summaryRows.licenceDetailsRows(completeAnswers) :::
+                        summaryRows.individualRows(completeAnswers, relevantTaxYear)
+    ))
     <h2 class="govuk-heading-l">@{messages(s"$key.declaration.heading")}</h2>
     <p class="govuk-body">@{messages(s"$key.declaration.p1")}</p>
     @formWithCSRF(action = routes.CheckYourAnswersController.checkYourAnswersSubmit) {

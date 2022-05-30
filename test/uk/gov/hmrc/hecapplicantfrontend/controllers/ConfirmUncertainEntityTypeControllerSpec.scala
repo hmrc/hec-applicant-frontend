@@ -75,13 +75,14 @@ class ConfirmUncertainEntityTypeControllerSpec
       "display the page" when {
 
         def testPage(
-          expectedSelectedOption: Option[EntityType]
+          expectedSelectedOption: Option[EntityType],
+          expectedBackUrl: String
         ) =
           checkPageIsDisplayed(
             performAction(),
             messageFromMessageKey("entityType.title"),
             { doc =>
-              doc.select("#back").attr("href") shouldBe appConfig.applicantServiceGuidanceUrl
+              doc.select("#back").attr("href") shouldBe expectedBackUrl
 
               doc
                 .select("form")
@@ -102,10 +103,10 @@ class ConfirmUncertainEntityTypeControllerSpec
             mockGetUncertainEntityTypeJourney(UncertainEntityTypeJourney(ggCredId, None))
           }
 
-          testPage(None)
+          testPage(None, appConfig.applicantServiceGuidanceUrl)
         }
 
-        "there is an active session and the user previously confirmed their entity type" in {
+        "there is an active session with incomplete answers and the user previously confirmed their entity type" in {
           List(
             EntityType.Company    -> companySession,
             EntityType.Individual -> individualSession
@@ -116,7 +117,24 @@ class ConfirmUncertainEntityTypeControllerSpec
                 mockGetSession(Right(Some(session)))
               }
 
-              testPage(Some(expectedOption))
+              testPage(Some(expectedOption), appConfig.applicantServiceGuidanceUrl)
+            }
+
+          }
+        }
+
+        "there is an active session with complete answers and the user previously confirmed their entity type" in {
+          List(
+            EntityType.Company    -> companySession.copy(userAnswers = Fixtures.completeCompanyUserAnswers()),
+            EntityType.Individual -> individualSession.copy(userAnswers = Fixtures.completeIndividualUserAnswers())
+          ).foreach { case (expectedOption, session) =>
+            withClue(s"For entity type $expectedOption: ") {
+              inSequence {
+                mockAuthWithNoRetrievals()
+                mockGetSession(Right(Some(session)))
+              }
+
+              testPage(Some(expectedOption), routes.CheckYourAnswersController.checkYourAnswers.url)
             }
 
           }
@@ -135,7 +153,7 @@ class ConfirmUncertainEntityTypeControllerSpec
                   mockGetUncertainEntityTypeJourney(UncertainEntityTypeJourney(ggCredId, Some(expectedOption)))
                 }
 
-                testPage(Some(expectedOption))
+                testPage(Some(expectedOption), appConfig.applicantServiceGuidanceUrl)
               }
             }
 

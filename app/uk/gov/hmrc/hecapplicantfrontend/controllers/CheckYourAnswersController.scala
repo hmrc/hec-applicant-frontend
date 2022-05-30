@@ -57,13 +57,21 @@ class CheckYourAnswersController @Inject() (
               checkYourAnswersIndividualPage(
                 back,
                 ci,
+                request.sessionData.loginData,
                 request.sessionData
                   .mapAsIndividual(_.relevantIncomeTaxYear)
                   .getOrElse(InconsistentSessionState("Could not find relevant income tax year").doThrow)
               )
             )
           case cc: CompleteCompanyUserAnswers    =>
-            Ok(checkYourAnswersCompanyPage(back, cc, request.sessionData.retrievedJourneyData))
+            Ok(
+              checkYourAnswersCompanyPage(
+                back,
+                cc,
+                request.sessionData.retrievedJourneyData,
+                request.sessionData.loginData
+              )
+            )
         }
       }
     )

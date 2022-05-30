@@ -24,7 +24,7 @@ import com.google.inject.Inject
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, Call, MessagesControllerComponents, Result}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, RequireDidConfirmUncertainEntityTypeJourneyAction}
-import uk.gov.hmrc.hecapplicantfrontend.models.{EntityType, UncertainEntityTypeJourney}
+import uk.gov.hmrc.hecapplicantfrontend.models.{CompleteUserAnswers, EntityType, HECSession, IncompleteUserAnswers, UncertainEntityTypeJourney}
 import uk.gov.hmrc.hecapplicantfrontend.repos.{SessionStore, UncertainEntityTypeJourneyStore}
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
@@ -52,6 +52,19 @@ class ConfirmUncertainEntityTypeController @Inject() (
 
   private lazy val redirectToStart: Result = Redirect(start)
 
+  private def calculateBack(
+    sessionDataOrUncertainEntityTypeJourney: Either[HECSession, UncertainEntityTypeJourney]
+  ): Call =
+    sessionDataOrUncertainEntityTypeJourney match {
+      case Left(s: HECSession)                  =>
+        s.userAnswers match {
+          case _: CompleteUserAnswers   => routes.CheckYourAnswersController.checkYourAnswers
+          case _: IncompleteUserAnswers => start
+        }
+      case Right(_: UncertainEntityTypeJourney) =>
+        start
+    }
+
   val entityType: Action[AnyContent] = authAction.andThen(uncertainEntityTypeJourneyAction).async { implicit request =>
     val existingAnswer = request.sessionDataOrUncertainEntityTypeJourney.fold(
       _.entityType.some,
@@ -59,8 +72,9 @@ class ConfirmUncertainEntityTypeController @Inject() (
     )
     val emptyForm      = entityTypeForm(entityTypeOptions)
     val form           = existingAnswer.fold(emptyForm)(emptyForm.fill)
+    val back           = calculateBack(request.sessionDataOrUncertainEntityTypeJourney)
 
-    Ok(entityTypePage(form, start, entityTypeOptions, routes.ConfirmUncertainEntityTypeController.entityTypeSubmit))
+    Ok(entityTypePage(form, back, entityTypeOptions, routes.ConfirmUncertainEntityTypeController.entityTypeSubmit))
   }
 
   val entityTypeSubmit: Action[AnyContent] =
@@ -97,7 +111,7 @@ class ConfirmUncertainEntityTypeController @Inject() (
             Ok(
               entityTypePage(
                 formWithErrors,
-                start,
+                calculateBack(request.sessionDataOrUncertainEntityTypeJourney),
                 entityTypeOptions,
                 routes.EntityTypeController.entityTypeSubmit
               )
