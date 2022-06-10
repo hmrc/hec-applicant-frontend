@@ -99,7 +99,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         Name("first", "last"),
         DateOfBirth(LocalDate.now()),
         Some(email),
-        None
+        Some(true)
       )
 
       val completeAnswers = Fixtures.completeIndividualUserAnswers(
@@ -133,7 +133,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         ),
         zonedDateTimeNow,
         HECTaxCheckSource.Digital,
-        preferredLanguage
+        preferredLanguage,
+        Some(true)
       )
 
       val taxCheckCode = HECTaxCheckCode("code")

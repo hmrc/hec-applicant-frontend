@@ -181,7 +181,8 @@ class TaxCheckServiceImpl @Inject() (hecConnector: HECConnector)(implicit ec: Ex
             sys.error("taxCheckStartDateTime is not present")
           ),
           HECTaxCheckSource.Digital,
-          languagePreference
+          languagePreference,
+          loginData.didConfirmUncertainEntityType
         )
 
       case (
@@ -230,7 +231,8 @@ class TaxCheckServiceImpl @Inject() (hecConnector: HECConnector)(implicit ec: Ex
             sys.error("taxCheckStartDateTime is not present")
           ),
           HECTaxCheckSource.Digital,
-          languagePreference
+          languagePreference,
+          companyLoginData.didConfirmUncertainEntityType
         )
 
       case _ => sys.error("Invalid session & complete answers combination")
