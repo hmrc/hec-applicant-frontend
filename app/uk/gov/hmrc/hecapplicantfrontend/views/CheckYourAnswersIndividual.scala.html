@@ -25,7 +25,13 @@
 
 @this(layout: Layout, govukSummaryList : GovukSummaryList, govukButton: GovukButton, formWithCSRF: FormWithCSRF, summaryRows: SummaryRows)
 
-@(back: Call, completeAnswers: CompleteIndividualUserAnswers, loginData: LoginData, relevantTaxYear: TaxYear)(implicit request: Request[_], messages: Messages)
+@(
+        back: Call,
+        completeAnswers: CompleteIndividualUserAnswers,
+        loginData: LoginData,
+        relevantTaxYear: TaxYear,
+        isScotNIPrivateBeta: Option[Boolean]
+)(implicit request: Request[_], messages: Messages)
 
 @key = @{"checkYourAnswers"}
 @title = @{messages(s"$key.title")}
@@ -35,7 +41,7 @@
     <p class="govuk-body">@messages(s"$key.p1")</p>
     @govukSummaryList(SummaryList(rows =
         summaryRows.confirmUncertainEntityTypeRow(loginData) :::
-                summaryRows.licenceDetailsRows(completeAnswers) :::
+                summaryRows.licenceDetailsRows(completeAnswers, isScotNIPrivateBeta) :::
                         summaryRows.individualRows(completeAnswers, relevantTaxYear)
     ))
     <h2 class="govuk-heading-l">@{messages(s"$key.declaration.heading")}</h2>

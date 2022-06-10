@@ -106,7 +106,8 @@ class EmailSentControllerSpec
         val session: HECSession = Fixtures.individualHECSession(
           loginData = Fixtures.individualLoginData(emailAddress = ggEmailId.some),
           emailRequestedForTaxCheck = Some(emailRequestedForTaxCheck),
-          userEmailAnswers = userEmailAnswer.some
+          userEmailAnswers = userEmailAnswer.some,
+          isScotNIPrivateBeta = None
         )
 
         inSequence {
@@ -126,7 +127,7 @@ class EmailSentControllerSpec
             doc.select(".govuk-body").html         should include regex messageFromMessageKey(
               "emailSent.p2",
               messageFromMessageKey(
-                s"licenceType.midSentence.${LicenceTypeOption.licenceTypeOption(emailRequestedForTaxCheck.taxCheck.licenceType).messageKey}"
+                s"licenceType.midSentence.${LicenceTypeOption.licenceTypeOption(emailRequestedForTaxCheck.taxCheck.licenceType, None).messageKey}"
               ),
               "8 January 2020"
             )

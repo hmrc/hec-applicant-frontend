@@ -29,12 +29,20 @@
 
 @this(layout: Layout, govukErrorSummary: GovukErrorSummary, govukRadios: GovukRadios, govukButton: GovukButton, formWithCSRF: FormWithCSRF, hmrcNewTabLink: HmrcNewTabLink)
 
-
-@(form: Form[models.TaxSituation], back: Call, options: List[models.TaxSituation], taxPeriodStartDate: String, taxPeriodEndDate: String, licenceType: models.licence.LicenceType)(implicit request:
+@(
+        form: Form[models.TaxSituation],
+        back: Call,
+        options: List[models.TaxSituation],
+        taxPeriodStartDate: String,
+        taxPeriodEndDate: String,
+        licenceType: models.licence.LicenceType,
+        isScotNIPrivateBeta: Option[Boolean]
+)(implicit request:
 Request[_], messages: Messages, appConfig: AppConfig)
+
 @key = @{"taxSituation"}
 @title = @{messages(s"$key.title", taxPeriodStartDate, taxPeriodEndDate)}
-@labelWithLicenceType = @{messages(s"$key.label.${LicenceTypeOption.licenceTypeOption(licenceType).messageKey}")}
+@labelWithLicenceType = @{messages(s"$key.label.${LicenceTypeOption.licenceTypeOption(licenceType, isScotNIPrivateBeta).messageKey}")}
 @optionViewModels = @{options.map(TaxSituationOption.taxSituationOption)}
 @radioOptions = @{optionViewModels.zipWithIndex.map{ case (option, index) =>
     RadioItem(

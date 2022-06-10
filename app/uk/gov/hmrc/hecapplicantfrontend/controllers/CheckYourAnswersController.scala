@@ -60,7 +60,8 @@ class CheckYourAnswersController @Inject() (
                 request.sessionData.loginData,
                 request.sessionData
                   .mapAsIndividual(_.relevantIncomeTaxYear)
-                  .getOrElse(InconsistentSessionState("Could not find relevant income tax year").doThrow)
+                  .getOrElse(InconsistentSessionState("Could not find relevant income tax year").doThrow),
+                request.sessionData.isScotNIPrivateBeta
               )
             )
           case cc: CompleteCompanyUserAnswers    =>
@@ -69,7 +70,8 @@ class CheckYourAnswersController @Inject() (
                 back,
                 cc,
                 request.sessionData.retrievedJourneyData,
-                request.sessionData.loginData
+                request.sessionData.loginData,
+                request.sessionData.isScotNIPrivateBeta
               )
             )
         }

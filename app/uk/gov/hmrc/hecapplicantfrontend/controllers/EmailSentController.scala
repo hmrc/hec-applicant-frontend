@@ -36,7 +36,13 @@ class EmailSentController @Inject() (
   val emailSent: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
     request.sessionData.ensureEmailHasBeenRequested { emailRequested =>
       request.sessionData.ensureUserSelectedEmailPresent { userSelectedEmail =>
-        Ok(emailSentPage(userSelectedEmail.emailAddress, emailRequested.taxCheck))
+        Ok(
+          emailSentPage(
+            userSelectedEmail.emailAddress,
+            emailRequested.taxCheck,
+            request.sessionData.isScotNIPrivateBeta
+          )
+        )
       }
     }
   }

@@ -645,7 +645,9 @@ object JourneyServiceImpl {
 
   def licenceTypeForIndividualAndCompany(licenceType: LicenceType): Boolean = licenceType match {
     case LicenceType.DriverOfTaxisAndPrivateHires => false
-    case _                                        => true
+    case LicenceType.OperatorOfPrivateHireVehicles | LicenceType.BookingOffice | LicenceType.ScrapMetalMobileCollector |
+        LicenceType.ScrapMetalDealerSite =>
+      true
   }
 
   /**

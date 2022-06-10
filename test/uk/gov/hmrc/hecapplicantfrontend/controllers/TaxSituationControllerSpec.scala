@@ -162,7 +162,7 @@ class TaxSituationControllerSpec
               form
                 .attr("action")            shouldBe routes.TaxSituationController.taxSituationSubmit.url
               form.select("legend").text() shouldBe messageFromMessageKey(
-                s"taxSituation.label.${LicenceTypeOption.licenceTypeOption(LicenceType.DriverOfTaxisAndPrivateHires).messageKey}"
+                s"taxSituation.label.${LicenceTypeOption.licenceTypeOption(LicenceType.DriverOfTaxisAndPrivateHires, session.isScotNIPrivateBeta).messageKey}"
               )
             }
           )
@@ -203,12 +203,14 @@ class TaxSituationControllerSpec
         }
 
         def testPage(currentDate: LocalDate, taxYear: Int) = {
+          val isScotNIPrivateBeta  = Some(true)
           val session              = Fixtures.individualHECSession(
             individualLoginData,
             IndividualRetrievedJourneyData.empty,
             IndividualUserAnswers.empty.copy(
               licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)
-            )
+            ),
+            isScotNIPrivateBeta = isScotNIPrivateBeta
           )
           val updatedSession       = session.copy(relevantIncomeTaxYear = TaxYear(taxYear).some)
           val (startDate, endDate) = getTaxPeriodStrings(TaxYear(taxYear))
@@ -237,7 +239,7 @@ class TaxSituationControllerSpec
               form
                 .attr("action")            shouldBe routes.TaxSituationController.taxSituationSubmit.url
               form.select("legend").text() shouldBe messageFromMessageKey(
-                s"taxSituation.label.${LicenceTypeOption.licenceTypeOption(LicenceType.DriverOfTaxisAndPrivateHires).messageKey}"
+                s"taxSituation.label.${LicenceTypeOption.licenceTypeOption(LicenceType.DriverOfTaxisAndPrivateHires, isScotNIPrivateBeta).messageKey}"
               )
             }
           )
@@ -277,10 +279,13 @@ class TaxSituationControllerSpec
           "display only relevant options" when {
 
             "licence type = DriverOfTaxisAndPrivateHires" in {
+              val isScotNIPrivateBeta = Some(false)
+
               val session              = Fixtures.individualHECSession(
                 individualLoginData,
                 IndividualRetrievedJourneyData.empty,
-                IndividualUserAnswers.empty.copy(licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires))
+                IndividualUserAnswers.empty.copy(licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)),
+                isScotNIPrivateBeta = isScotNIPrivateBeta
               )
               val updatedSession       = session.copy(relevantIncomeTaxYear = TaxYear(2020).some)
               val (startDate, endDate) = getTaxPeriodStrings(TaxYear(2020))
@@ -309,7 +314,7 @@ class TaxSituationControllerSpec
                   form
                     .attr("action")            shouldBe routes.TaxSituationController.taxSituationSubmit.url
                   form.select("legend").text() shouldBe messageFromMessageKey(
-                    s"taxSituation.label.${LicenceTypeOption.licenceTypeOption(LicenceType.DriverOfTaxisAndPrivateHires).messageKey}"
+                    s"taxSituation.label.${LicenceTypeOption.licenceTypeOption(LicenceType.DriverOfTaxisAndPrivateHires, isScotNIPrivateBeta).messageKey}"
                   )
                 }
               )
@@ -319,15 +324,19 @@ class TaxSituationControllerSpec
               List(
                 LicenceType.ScrapMetalDealerSite,
                 LicenceType.ScrapMetalMobileCollector,
-                LicenceType.OperatorOfPrivateHireVehicles
+                LicenceType.OperatorOfPrivateHireVehicles,
+                LicenceType.BookingOffice
               ).foreach { licenceType =>
                 withClue(s"For licence type $licenceType: ") {
+                  val isScotNIPrivateBeta = Some(true)
+
                   val session              = Fixtures.individualHECSession(
                     individualLoginData,
                     IndividualRetrievedJourneyData.empty,
                     IndividualUserAnswers.empty.copy(
                       licenceType = Some(licenceType)
-                    )
+                    ),
+                    isScotNIPrivateBeta = isScotNIPrivateBeta
                   )
                   val updatedSession       = session.copy(relevantIncomeTaxYear = TaxYear(2020).some)
                   val (startDate, endDate) = getTaxPeriodStrings(TaxYear(2020))
@@ -356,7 +365,7 @@ class TaxSituationControllerSpec
                       form
                         .attr("action")            shouldBe routes.TaxSituationController.taxSituationSubmit.url
                       form.select("legend").text() shouldBe messageFromMessageKey(
-                        s"taxSituation.label.${LicenceTypeOption.licenceTypeOption(licenceType).messageKey}"
+                        s"taxSituation.label.${LicenceTypeOption.licenceTypeOption(licenceType, isScotNIPrivateBeta).messageKey}"
                       )
                     }
                   )

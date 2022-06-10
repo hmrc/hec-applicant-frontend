@@ -75,7 +75,7 @@ class LicenceDetailsController @Inject() (
       val emptyForm = licenceTypeForm(licenceOptions)
       licenceType.fold(emptyForm)(emptyForm.fill)
     }
-    Ok(licenceTypePage(form, back, licenceOptions))
+    Ok(licenceTypePage(form, back, licenceOptions, request.sessionData.isScotNIPrivateBeta))
   }
 
   val maxTaxChecksExceeded: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
@@ -118,7 +118,8 @@ class LicenceDetailsController @Inject() (
             licenceTypePage(
               formWithErrors,
               journeyService.previous(routes.LicenceDetailsController.licenceType),
-              licenceOptions
+              licenceOptions,
+              request.sessionData.isScotNIPrivateBeta
             )
           ),
         handleValidLicenceType
@@ -130,7 +131,8 @@ class LicenceDetailsController @Inject() (
     Ok(
       licenceTypeExitPage(
         journeyService.previous(routes.LicenceDetailsController.licenceTypeExit),
-        licenceOptions
+        licenceOptions,
+        request.sessionData.isScotNIPrivateBeta
       )
     )
   }

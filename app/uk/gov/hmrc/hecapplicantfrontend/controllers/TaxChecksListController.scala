@@ -71,7 +71,7 @@ class TaxChecksListController @Inject() (
             request.language
           )
         )
-        Ok(taxChecksListPage(taxChecks))
+        Ok(taxChecksListPage(taxChecks, request.sessionData.isScotNIPrivateBeta))
     }
   }
 

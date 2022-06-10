@@ -25,7 +25,16 @@
 @import java.time.ZonedDateTime
 
 @this(layout: Layout, govukButton: GovukButton, formWithCSRF: FormWithCSRF, taxCheckDetails: TaxCheckCodeDetails, exitSurveyLink: ExitSurveyLink)
-@(taxChecks: List[TaxCheckListItem])(implicit request: Request[_], messages: Messages, dateOrdering: Ordering[ZonedDateTime], licenceTypeOrdering: Ordering[LicenceTypeModel])
+@(
+        taxChecks: List[TaxCheckListItem],
+        isScotNIPrivateBeta: Option[Boolean]
+)(implicit
+        request: Request[_],
+        messages: Messages,
+        dateOrdering: Ordering[ZonedDateTime],
+        licenceTypeOrdering: Ordering[LicenceTypeModel]
+)
+
 @key = @{"taxChecksList"}
 @title = @{messages(s"$key.title")}
 @taxChecksGrouped = @{
@@ -38,7 +47,7 @@
 
 @layout(pageTitle = Some(title)) {
     <h1 class="govuk-heading-xl">@title</h1>
-    @taxChecksGrouped.map(taxCheckDetails(_))
+    @taxChecksGrouped.map(taxCheckDetails(_, isScotNIPrivateBeta))
     <p class="govuk-body">@messages(s"$key.p1")</p>
     <p class="govuk-body js-visible">
         <a href="#print-dialogue" class="govuk-link">@messages(s"$key.link")</a>
