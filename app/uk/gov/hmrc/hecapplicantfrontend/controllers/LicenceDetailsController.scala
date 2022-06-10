@@ -68,9 +68,7 @@ class LicenceDetailsController @Inject() (
       _.fold(_.licenceType, _.licenceType.some)
     )
 
-    val licenceOptions =
-      if (request.sessionData.isScotNIPrivateBeta.contains(true)) List.empty
-      else licenceTypeOptions(request.sessionData)
+    val licenceOptions = licenceTypeOptions(request.sessionData)
     val form = {
       val emptyForm = licenceTypeForm(licenceOptions)
       licenceType.fold(emptyForm)(emptyForm.fill)
@@ -267,6 +265,7 @@ object LicenceDetailsController {
   val licenceTypes: List[LicenceType] = List(
     DriverOfTaxisAndPrivateHires,
     OperatorOfPrivateHireVehicles,
+    BookingOffice,
     ScrapMetalMobileCollector,
     ScrapMetalDealerSite
   )
@@ -283,9 +282,14 @@ object LicenceDetailsController {
 
   private val validityPeriodList = List(UpToOneYear, UpToTwoYears, UpToThreeYears, UpToFourYears, UpToFiveYears)
 
-  def licenceTypeOptions(session: HECSession): List[LicenceType] = session.loginData match {
-    case _: IndividualLoginData => individualLicenceTypeOptions
-    case _: CompanyLoginData    => companyLicenceTypeOptions
+  def licenceTypeOptions(session: HECSession): List[LicenceType] = {
+    val isScotNIPrivateBeta = session.isScotNIPrivateBeta.getOrElse(false)
+
+    val options = session.loginData match {
+      case _: IndividualLoginData => individualLicenceTypeOptions
+      case _: CompanyLoginData    => companyLicenceTypeOptions
+    }
+    if (isScotNIPrivateBeta) options else options.filterNot(_ === BookingOffice)
   }
 
   def licenceValidityPeriodOptions(licenceType: LicenceType): List[LicenceValidityPeriod] =

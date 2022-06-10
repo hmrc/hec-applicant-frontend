@@ -97,6 +97,8 @@ class LicenceDetailsControllerSpec
             val form = doc.select("form")
             form
               .attr("action") shouldBe routes.LicenceDetailsController.licenceTypeSubmit.url
+
+            doc.select("#back").attr("href") shouldBe mockPreviousCall.url
           }
         )
       }
@@ -120,21 +122,9 @@ class LicenceDetailsControllerSpec
             val form = doc.select("form")
             form
               .attr("action") shouldBe routes.LicenceDetailsController.licenceTypeSubmit.url
+
+            doc.select("#back").attr("href") shouldBe mockPreviousCall.url
           }
-        )
-      }
-
-      def backUrlTest(session: HECSession) = {
-        inSequence {
-          mockAuthWithNoRetrievals()
-          mockGetSession(session)
-          mockJourneyServiceGetPrevious(routes.LicenceDetailsController.licenceType, session)(mockPreviousCall)
-        }
-
-        checkPageIsDisplayed(
-          performAction(),
-          messageFromMessageKey("licenceType.title"),
-          _.select("#back").attr("href") shouldBe mockPreviousCall.url
         )
       }
 
@@ -142,20 +132,39 @@ class LicenceDetailsControllerSpec
 
       "display the page" when {
 
-        val allLicenceRadioTexts: List[String] = List(
-          s"${messageFromMessageKey("licenceType.driverOfTaxis")}" +
-            s" ${messageFromMessageKey("licenceType.driverOfTaxis.hint")}",
-          messageFromMessageKey("licenceType.operatorOfPrivateHireVehicles"),
-          messageFromMessageKey("licenceType.scrapMetalCollector"),
-          messageFromMessageKey("licenceType.scrapMetalDealer")
-        )
-
         "user is Individual" when {
 
-          "the user has not previously answered the question" in {
-            val session = IndividualHECSession.newSession(individualLoginData)
-            checkPageDetailsWithNoPreviousAns(session, allLicenceRadioTexts)
+          "the user has not previously answered the question and isScotNIPrivateBeta is false" in {
+            val session = IndividualHECSession.newSession(individualLoginData).copy(isScotNIPrivateBeta = Some(false))
+            checkPageDetailsWithNoPreviousAns(
+              session,
+              List(
+                messageFromMessageKey("licenceType.driverOfTaxis") +
+                  s" ${messageFromMessageKey("licenceType.driverOfTaxis.hint")}",
+                messageFromMessageKey("licenceType.operatorOfPrivateHireVehicles"),
+                messageFromMessageKey("licenceType.scrapMetalCollector"),
+                messageFromMessageKey("licenceType.scrapMetalDealer")
+              )
+            )
+          }
 
+          "the user has not previously answered the question and isScotNIPrivateBeta is true" in {
+            val session = IndividualHECSession.newSession(individualLoginData).copy(isScotNIPrivateBeta = Some(true))
+            checkPageDetailsWithNoPreviousAns(
+              session,
+              List(
+                messageFromMessageKey("licenceType.driverOfTaxis") +
+                  s" ${messageFromMessageKey("licenceType.driverOfTaxis.hint.scotNI")}",
+                messageFromMessageKey("licenceType.operatorOfPrivateHireVehicles") +
+                  s" ${messageFromMessageKey("licenceType.operatorOfPrivateHireVehicles.hint")}",
+                messageFromMessageKey("licenceType.bookingOffice") +
+                  s" ${messageFromMessageKey("licenceType.bookingOffice.hint")}",
+                messageFromMessageKey("licenceType.scrapMetalCollector.scotNI") +
+                  s" ${messageFromMessageKey("licenceType.scrapMetalCollector.hint")}",
+                messageFromMessageKey("licenceType.scrapMetalDealer") +
+                  s" ${messageFromMessageKey("licenceType.scrapMetalDealer.hint")}"
+              )
+            )
           }
 
           "the user has previously answered the question" in {
@@ -176,21 +185,37 @@ class LicenceDetailsControllerSpec
             checkPageDetailsWithPreviousAns(session, "0")
           }
 
-          "the back location is the start endpoint" in {
-
-            val session = IndividualHECSession.newSession(individualLoginData)
-            backUrlTest(session)
-
-          }
-
         }
 
         "user is Company" when {
 
-          "the user has not previously answered the question" in {
-            val session = CompanyHECSession.newSession(companyLoginData)
-            checkPageDetailsWithNoPreviousAns(session, allLicenceRadioTexts.takeRight(3))
+          "the user has not previously answered the question and isScotNIPrivateBeta is false" in {
+            val session = CompanyHECSession.newSession(companyLoginData).copy(isScotNIPrivateBeta = None)
+            checkPageDetailsWithNoPreviousAns(
+              session,
+              List(
+                messageFromMessageKey("licenceType.operatorOfPrivateHireVehicles"),
+                messageFromMessageKey("licenceType.scrapMetalCollector"),
+                messageFromMessageKey("licenceType.scrapMetalDealer")
+              )
+            )
+          }
 
+          "the user has not previously answered the question and isScotNIPrivateBeta is true" in {
+            val session = CompanyHECSession.newSession(companyLoginData).copy(isScotNIPrivateBeta = Some(true))
+            checkPageDetailsWithNoPreviousAns(
+              session,
+              List(
+                messageFromMessageKey("licenceType.operatorOfPrivateHireVehicles") +
+                  s" ${messageFromMessageKey("licenceType.operatorOfPrivateHireVehicles.hint")}",
+                messageFromMessageKey("licenceType.bookingOffice") +
+                  s" ${messageFromMessageKey("licenceType.bookingOffice.hint")}",
+                messageFromMessageKey("licenceType.scrapMetalCollector.scotNI") +
+                  s" ${messageFromMessageKey("licenceType.scrapMetalCollector.hint")}",
+                messageFromMessageKey("licenceType.scrapMetalDealer") +
+                  s" ${messageFromMessageKey("licenceType.scrapMetalDealer.hint")}"
+              )
+            )
           }
 
           "the user has previously answered the question" in {
@@ -206,11 +231,6 @@ class LicenceDetailsControllerSpec
               )
 
             checkPageDetailsWithPreviousAns(session, "2")
-          }
-
-          "the back location is the start endpoint" in {
-            val session = IndividualHECSession.newSession(individualLoginData)
-            backUrlTest(session)
           }
 
         }
