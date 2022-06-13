@@ -90,8 +90,11 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
 
     "handling requests to save a tax check" must {
 
-      val sautr               = SAUTR("sautr")
-      val email               = EmailAddress("email")
+      val sautr                         = SAUTR("sautr")
+      val email                         = EmailAddress("email")
+      val didConfirmUncertainEntityType = Some(true)
+      val isScotNIPrivateBeta           = Some(false)
+
       val individualLoginData = IndividualLoginData(
         GGCredId("cred"),
         NINO("nino"),
@@ -99,7 +102,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         Name("first", "last"),
         DateOfBirth(LocalDate.now()),
         Some(email),
-        Some(true)
+        didConfirmUncertainEntityType
       )
 
       val completeAnswers = Fixtures.completeIndividualUserAnswers(
@@ -134,7 +137,8 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         zonedDateTimeNow,
         HECTaxCheckSource.Digital,
         preferredLanguage,
-        Some(true)
+        didConfirmUncertainEntityType,
+        isScotNIPrivateBeta
       )
 
       val taxCheckCode = HECTaxCheckCode("code")
@@ -148,13 +152,15 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
         None,
         Some(zonedDateTimeNow),
         List.empty,
-        incomeTaxYear.some
+        incomeTaxYear.some,
+        isScotNIPrivateBeta = isScotNIPrivateBeta
       )
       val individualSession2 = Fixtures.individualHECSession(
         individualLoginData,
         retrievedJourneyData,
         completeAnswers,
-        relevantIncomeTaxYear = incomeTaxYear.some
+        relevantIncomeTaxYear = incomeTaxYear.some,
+        isScotNIPrivateBeta = isScotNIPrivateBeta
       )
 
       "return an error" when {
