@@ -25,10 +25,11 @@
 
 @this(layout: Layout, govukErrorSummary: GovukErrorSummary, govukRadios: GovukRadios, govukButton: GovukButton, formWithCSRF: FormWithCSRF)
 
-@(form: Form[licence.LicenceType], back: Call, options: List[licence.LicenceType])(implicit request: Request[_], messages: Messages)
+@(form: Form[licence.LicenceType], back: Call, options: List[licence.LicenceType], isScotNIPrivateBeta: Option[Boolean])(implicit request: Request[_], messages: Messages)
+
 @key = @{"licenceType"}
 @title = @{messages(s"$key.title")}
-@optionViewModels = @{options.map(LicenceTypeOption.licenceTypeOption)}
+@optionViewModels = @{options.map(LicenceTypeOption.licenceTypeOption(_, isScotNIPrivateBeta))}
 @radioOptions = @{optionViewModels.zipWithIndex.map{ case (option, index) => RadioItem(
   content = Text(messages(s"$key.${option.messageKey}")),
   value = Some(index.toString),

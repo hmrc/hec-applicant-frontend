@@ -34,6 +34,8 @@ object LicenceType {
 
   case object ScrapMetalDealerSite extends LicenceType
 
+  case object BookingOffice extends LicenceType
+
   implicit val eq: Eq[LicenceType] = Eq.fromUniversalEquals
 
   @SuppressWarnings(Array("org.wartremover.warts.Throw", "org.wartremover.warts.Equals"))

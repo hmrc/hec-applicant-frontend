@@ -71,7 +71,17 @@ class TaxSituationController @Inject() (
         individualSession.relevantIncomeTaxYear match {
           case Some(taxYear) =>
             val (startDate, endDate) = getTaxPeriodStrings(taxYear)
-            Ok(taxSituationPage(form, back, options, startDate, endDate, licenceType))
+            Ok(
+              taxSituationPage(
+                form,
+                back,
+                options,
+                startDate,
+                endDate,
+                licenceType,
+                individualSession.isScotNIPrivateBeta
+              )
+            )
           case None          =>
             val taxYear              = getTaxYear(timeProvider.currentDate)
             val (startDate, endDate) = getTaxPeriodStrings(taxYear)
@@ -80,7 +90,18 @@ class TaxSituationController @Inject() (
               .store(updatedSession)
               .fold(
                 _.doThrow("Could not update session with tax year"),
-                _ => Ok(taxSituationPage(form, back, options, startDate, endDate, licenceType))
+                _ =>
+                  Ok(
+                    taxSituationPage(
+                      form,
+                      back,
+                      options,
+                      startDate,
+                      endDate,
+                      licenceType,
+                      individualSession.isScotNIPrivateBeta
+                    )
+                  )
               )
         }
 
@@ -91,9 +112,10 @@ class TaxSituationController @Inject() (
   val taxSituationSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     request.sessionData.mapAsIndividual { individualSession =>
       request.sessionData.ensureLicenceTypePresent { licenceType =>
-        val taxYear                                                =
+        val taxYear =
           individualSession.relevantIncomeTaxYear
             .getOrElse(InconsistentSessionState("tax year not present in the session").doThrow)
+
         def fetchSAStatus(
           individualLoginData: IndividualLoginData,
           taxSituation: TaxSituation
@@ -142,7 +164,8 @@ class TaxSituationController @Inject() (
                   options,
                   startDate,
                   endDate,
-                  licenceType
+                  licenceType,
+                  individualSession.isScotNIPrivateBeta
                 )
               )
             },
@@ -171,7 +194,7 @@ object TaxSituationController {
     licenceType match {
       case LicenceType.DriverOfTaxisAndPrivateHires => allTaxSituations
       case LicenceType.OperatorOfPrivateHireVehicles | LicenceType.ScrapMetalMobileCollector |
-          LicenceType.ScrapMetalDealerSite =>
+          LicenceType.ScrapMetalDealerSite | LicenceType.BookingOffice =>
         nonPAYETaxSituations
     }
 

@@ -71,8 +71,10 @@ object FormUtils {
           }
     }
 
-  def licenceTypeFormat(licenceType: LicenceType)(implicit messages: Messages): String = {
-    val licenceTypeMessage = LicenceTypeOption.licenceTypeOption(licenceType)
+  def licenceTypeFormat(licenceType: LicenceType, isScotNIPrivateBeta: Option[Boolean])(implicit
+    messages: Messages
+  ): String = {
+    val licenceTypeMessage = LicenceTypeOption.licenceTypeOption(licenceType, isScotNIPrivateBeta)
     messages(s"licenceType.${licenceTypeMessage.messageKey}")
   }
 

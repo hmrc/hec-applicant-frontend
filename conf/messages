@@ -94,17 +94,27 @@ date.afterNoon = pm
 
 # Licence type
 licenceType.title = What type of licence are you applying for?
+
 licenceType.driverOfTaxis = Driver of taxis and private hires
 licenceType.driverOfTaxis.hint = Includes hackney carriage and dual licences.
+licenceType.driverOfTaxis.hint.scotNI = Includes dual licences and hackney carriage licences.
 licenceType.operatorOfPrivateHireVehicles = Operator of private hire vehicles
+licenceType.operatorOfPrivateHireVehicles.hint = (England and Wales only)
+licenceType.bookingOffice = Booking office
+licenceType.bookingOffice.hint = (Scotland only)
 licenceType.scrapMetalCollector = Scrap metal mobile collector
+licenceType.scrapMetalCollector.scotNI = Mobile or itinerant scrap metal collector
+licenceType.scrapMetalCollector.hint = (England, Wales and Scotland only)
 licenceType.scrapMetalDealer = Scrap metal dealer site
+licenceType.scrapMetalDealer.hint = (England, Wales and Scotland only)
 licenceType.link = Find out what to do if you cannot see your licence type
 licenceType.error.required = Select the type of licence you are applying for
 licenceType.error.invalid = Select the type of licence you are applying for
 licenceType.midSentence.driverOfTaxis = driver of taxis and private hires
 licenceType.midSentence.operatorOfPrivateHireVehicles = operator of private hire vehicles
+licenceType.midSentence.bookingOffice = booking office
 licenceType.midSentence.scrapMetalCollector = scrap metal mobile collector
+licenceType.midSentence.scrapMetalCollector.scotNI = mobile or itinerant scrap metal collector
 licenceType.midSentence.scrapMetalDealer = scrap metal dealer site
 
 # Licence type exit
@@ -113,7 +123,9 @@ licenceTypeExit.licenceTypes = See if your licence type is included
 licenceTypeExit.p1 = You only need to do a tax check if you are applying for one of these licence types:
 licenceTypeExit.driverOfTaxis = driver of taxis and private hires, includes hackney carriage and dual licences
 licenceTypeExit.operatorOfPrivateHireVehicles = operator of private hire vehicles
+licenceTypeExit.bookingOffice = booking office
 licenceTypeExit.scrapMetalCollector = scrap metal mobile collector
+licenceTypeExit.scrapMetalCollector.scotNI = mobile or itinerant scrap metal collector
 licenceTypeExit.scrapMetalDealer = scrap metal dealer site
 licenceTypeExit.link = Find out about tax checks
 licenceTypeExit.wrongAccount = Make sure you’re using the correct account
@@ -146,7 +158,9 @@ taxSituation.title = Tax status for the tax year {0} to {1}
 taxSituation.p1 = This question relates to your tax status for any work carried out using the same type of licence you are doing a tax check for. This is for the tax year {0} to {1} only.
 taxSituation.label.driverOfTaxis = For your driver of taxis and private hires licence(s), which of the following apply?
 taxSituation.label.operatorOfPrivateHireVehicles = For your operator of private hire vehicles licence(s), which of the following apply?
+taxSituation.label.bookingOffice = For your booking office licence(s), which of the following apply?
 taxSituation.label.scrapMetalCollector = For your scrap metal mobile collector licence(s), which of the following apply?
+taxSituation.label.scrapMetalCollector.scotNI = For your mobile or itinerant scrap metal collector licence(s), which of the following apply?
 taxSituation.label.scrapMetalDealer = For your scrap metal dealer site licence(s), which of the following apply?
 
 taxSituation.PA = I was an employee only

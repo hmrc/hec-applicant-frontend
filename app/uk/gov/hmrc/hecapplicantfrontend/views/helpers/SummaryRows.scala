@@ -73,12 +73,14 @@ class SummaryRows {
     }.toList
   }
 
-  def licenceDetailsRows(completeAnswers: CompleteUserAnswers)(implicit messages: Messages): List[SummaryListRow] = {
+  def licenceDetailsRows(completeAnswers: CompleteUserAnswers, isScotNIPrivateBeta: Option[Boolean])(implicit
+    messages: Messages
+  ): List[SummaryListRow] = {
     val licenceTypeRow: SummaryListRow =
       summaryListRow(
         messages("licenceType.title"),
         messages(
-          s"licenceType.${LicenceTypeOption.licenceTypeOption(completeAnswers.foldOnEntityType(_.licenceType, _.licenceType)).messageKey}"
+          s"licenceType.${LicenceTypeOption.licenceTypeOption(completeAnswers.foldOnEntityType(_.licenceType, _.licenceType), isScotNIPrivateBeta).messageKey}"
         ),
         routes.LicenceDetailsController.licenceType,
         messages(s"$messageKey.licenceType.screenReaderText")

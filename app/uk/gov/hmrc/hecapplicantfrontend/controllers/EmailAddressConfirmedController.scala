@@ -95,7 +95,8 @@ class EmailAddressConfirmedController @Inject() (
     session.ensureEmailHasBeenRequested { emailRequested =>
       EmailParameters(
         currentDate = s"${TimeUtils.govDisplayFormat(emailRequested.taxCheck.createDate.toLocalDate)}",
-        licenceType = s"${FormUtils.licenceTypeFormat(emailRequested.taxCheck.licenceType)}",
+        licenceType =
+          s"${FormUtils.licenceTypeFormat(emailRequested.taxCheck.licenceType, request.sessionData.isScotNIPrivateBeta)}",
         hecTaxCheckCode = s"${emailRequested.taxCheck.taxCheckCode.value.removeWhitespace.grouped(3).mkString(" ")}",
         expiresAfter = s"${TimeUtils.govDisplayFormat(emailRequested.taxCheck.expiresAfter)}"
       )
