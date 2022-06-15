@@ -182,7 +182,8 @@ class TaxCheckServiceImpl @Inject() (hecConnector: HECConnector)(implicit ec: Ex
           ),
           HECTaxCheckSource.Digital,
           languagePreference,
-          loginData.didConfirmUncertainEntityType
+          loginData.didConfirmUncertainEntityType,
+          session.isScotNIPrivateBeta
         )
 
       case (
@@ -232,7 +233,8 @@ class TaxCheckServiceImpl @Inject() (hecConnector: HECConnector)(implicit ec: Ex
           ),
           HECTaxCheckSource.Digital,
           languagePreference,
-          companyLoginData.didConfirmUncertainEntityType
+          companyLoginData.didConfirmUncertainEntityType,
+          session.isScotNIPrivateBeta
         )
 
       case _ => sys.error("Invalid session & complete answers combination")
