@@ -264,7 +264,7 @@ timedOut.signIn = Sign in
 
 # CRN
 crn.title = What is your company registration number?
-crn.hint = Companies House sent this to you when you set up your company. This is also called a company number. For example, SN898989 or 12345678.
+crn.hint = Companies House sent this to you when you set up your company. This is also called a company number. For example, SC898989 or 12345678.
 crn.link = Search for a company registration number
 crn.error.required = Enter your Company Registration Number
 crn.error.nonAlphanumericChars = Your company registration number must only contain letters and numbers
