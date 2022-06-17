@@ -158,11 +158,12 @@ class TaxSituationControllerSpec
                 case None        => selectedOptions.isEmpty       shouldBe true
               }
 
-              val form = doc.select("form")
+              val form      = doc.select("form")
+              val optionKey = if (session.isScotNIPrivateBeta.contains(true)) "taxSituation.scotNI" else "taxSituation"
               form
                 .attr("action")            shouldBe routes.TaxSituationController.taxSituationSubmit.url
               form.select("legend").text() shouldBe messageFromMessageKey(
-                s"taxSituation.label.${LicenceTypeOption.licenceTypeOption(LicenceType.DriverOfTaxisAndPrivateHires, session.isScotNIPrivateBeta).messageKey}"
+                s"$optionKey.label.${LicenceTypeOption.licenceTypeOption(LicenceType.DriverOfTaxisAndPrivateHires, session.isScotNIPrivateBeta).messageKey}"
               )
             }
           )
@@ -234,12 +235,12 @@ class TaxSituationControllerSpec
 
               val selectedOptions = doc.select(".govuk-radios__input[checked]")
               selectedOptions.isEmpty shouldBe true
-
-              val form = doc.select("form")
+              val optionKey = if (isScotNIPrivateBeta.contains(true)) "taxSituation.scotNI" else "taxSituation"
+              val form      = doc.select("form")
               form
                 .attr("action")            shouldBe routes.TaxSituationController.taxSituationSubmit.url
               form.select("legend").text() shouldBe messageFromMessageKey(
-                s"taxSituation.label.${LicenceTypeOption.licenceTypeOption(LicenceType.DriverOfTaxisAndPrivateHires, isScotNIPrivateBeta).messageKey}"
+                s"$optionKey.label.${LicenceTypeOption.licenceTypeOption(LicenceType.DriverOfTaxisAndPrivateHires, isScotNIPrivateBeta).messageKey}"
               )
             }
           )
@@ -309,12 +310,12 @@ class TaxSituationControllerSpec
 
                   val selectedOptions = doc.select(".govuk-radios__input[checked]")
                   selectedOptions.isEmpty shouldBe true
-
-                  val form = doc.select("form")
+                  val optionKey = if (isScotNIPrivateBeta.contains(true)) "taxSituation.scotNI" else "taxSituation"
+                  val form      = doc.select("form")
                   form
                     .attr("action")            shouldBe routes.TaxSituationController.taxSituationSubmit.url
                   form.select("legend").text() shouldBe messageFromMessageKey(
-                    s"taxSituation.label.${LicenceTypeOption.licenceTypeOption(LicenceType.DriverOfTaxisAndPrivateHires, isScotNIPrivateBeta).messageKey}"
+                    s"$optionKey.label.${LicenceTypeOption.licenceTypeOption(LicenceType.DriverOfTaxisAndPrivateHires, isScotNIPrivateBeta).messageKey}"
                   )
                 }
               )
@@ -361,11 +362,12 @@ class TaxSituationControllerSpec
                       val selectedOptions = doc.select(".govuk-radios__input[checked]")
                       selectedOptions.isEmpty shouldBe true
 
-                      val form = doc.select("form")
+                      val form      = doc.select("form")
+                      val optionKey = if (isScotNIPrivateBeta.contains(true)) "taxSituation.scotNI" else "taxSituation"
                       form
                         .attr("action")            shouldBe routes.TaxSituationController.taxSituationSubmit.url
                       form.select("legend").text() shouldBe messageFromMessageKey(
-                        s"taxSituation.label.${LicenceTypeOption.licenceTypeOption(licenceType, isScotNIPrivateBeta).messageKey}"
+                        s"$optionKey.label.${LicenceTypeOption.licenceTypeOption(licenceType, isScotNIPrivateBeta).messageKey}"
                       )
                     }
                   )

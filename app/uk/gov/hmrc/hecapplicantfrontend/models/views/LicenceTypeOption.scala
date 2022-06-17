@@ -27,7 +27,7 @@ object LicenceTypeOption {
     licenceType match {
       case LicenceType.DriverOfTaxisAndPrivateHires =>
         val key  = "driverOfTaxis"
-        val hint = if (isScotNI) s"$key.hint.scotNI" else s"$key.hint"
+        val hint = s"$key.hint"
         LicenceTypeOption(key, Some(hint))
 
       case LicenceType.OperatorOfPrivateHireVehicles =>
@@ -41,7 +41,7 @@ object LicenceTypeOption {
 
       case LicenceType.ScrapMetalMobileCollector =>
         val key = "scrapMetalCollector"
-        if (isScotNI) LicenceTypeOption(s"$key.scotNI", Some(s"$key.hint"))
+        if (isScotNI) LicenceTypeOption(key, Some(s"$key.hint"))
         else LicenceTypeOption(key, None)
 
       case LicenceType.ScrapMetalDealerSite =>

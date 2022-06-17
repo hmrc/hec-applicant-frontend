@@ -41,8 +41,9 @@
 Request[_], messages: Messages, appConfig: AppConfig)
 
 @key = @{"taxSituation"}
+@optionKey = @{ if(isScotNIPrivateBeta.contains(true)) s"$key.scotNI" else key}
 @title = @{messages(s"$key.title", taxPeriodStartDate, taxPeriodEndDate)}
-@labelWithLicenceType = @{messages(s"$key.label.${LicenceTypeOption.licenceTypeOption(licenceType, isScotNIPrivateBeta).messageKey}")}
+@labelWithLicenceType = @{messages(s"$optionKey.label.${LicenceTypeOption.licenceTypeOption(licenceType, isScotNIPrivateBeta).messageKey}")}
 @optionViewModels = @{options.map(TaxSituationOption.taxSituationOption)}
 @radioOptions = @{optionViewModels.zipWithIndex.map{ case (option, index) =>
     RadioItem(
