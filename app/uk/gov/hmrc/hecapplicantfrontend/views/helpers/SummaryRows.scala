@@ -76,11 +76,12 @@ class SummaryRows {
   def licenceDetailsRows(completeAnswers: CompleteUserAnswers, isScotNIPrivateBeta: Option[Boolean])(implicit
     messages: Messages
   ): List[SummaryListRow] = {
+    val optionKey                      = if (isScotNIPrivateBeta.contains(true)) "licenceType.scotNI" else "licenceType"
     val licenceTypeRow: SummaryListRow =
       summaryListRow(
         messages("licenceType.title"),
         messages(
-          s"licenceType.${LicenceTypeOption.licenceTypeOption(completeAnswers.foldOnEntityType(_.licenceType, _.licenceType), isScotNIPrivateBeta).messageKey}"
+          s"$optionKey.${LicenceTypeOption.licenceTypeOption(completeAnswers.foldOnEntityType(_.licenceType, _.licenceType), isScotNIPrivateBeta).messageKey}"
         ),
         routes.LicenceDetailsController.licenceType,
         messages(s"$messageKey.licenceType.screenReaderText")

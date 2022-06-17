@@ -97,36 +97,52 @@ licenceType.title = What type of licence are you applying for?
 
 licenceType.driverOfTaxis = Driver of taxis and private hires
 licenceType.driverOfTaxis.hint = Includes hackney carriage and dual licences.
-licenceType.driverOfTaxis.hint.scotNI = Includes dual licences and hackney carriage licences.
 licenceType.operatorOfPrivateHireVehicles = Operator of private hire vehicles
-licenceType.operatorOfPrivateHireVehicles.hint = (England and Wales only)
-licenceType.bookingOffice = Booking office
-licenceType.bookingOffice.hint = (Scotland only)
 licenceType.scrapMetalCollector = Scrap metal mobile collector
-licenceType.scrapMetalCollector.scotNI = Mobile or itinerant scrap metal collector
-licenceType.scrapMetalCollector.hint = (England, Wales and Scotland only)
 licenceType.scrapMetalDealer = Scrap metal dealer site
-licenceType.scrapMetalDealer.hint = (England, Wales and Scotland only)
+
+licenceType.scotNI.driverOfTaxis = Driver of taxis and private hires
+licenceType.scotNI.driverOfTaxis.hint = Includes dual licences and hackney carriage licences.
+licenceType.scotNI.operatorOfPrivateHireVehicles = Operator of private hire vehicles
+licenceType.scotNI.operatorOfPrivateHireVehicles.hint = (England and Wales only)
+licenceType.scotNI.bookingOffice = Booking office
+licenceType.scotNI.bookingOffice.hint = (Scotland only)
+licenceType.scotNI.scrapMetalCollector = Mobile or itinerant scrap metal collector
+licenceType.scotNI.scrapMetalCollector.hint = (England, Wales and Scotland only)
+licenceType.scotNI.scrapMetalDealer = Scrap metal dealer site
+licenceType.scotNI.scrapMetalDealer.hint = (England, Wales and Scotland only)
+
 licenceType.link = Find out what to do if you cannot see your licence type
 licenceType.error.required = Select the type of licence you are applying for
 licenceType.error.invalid = Select the type of licence you are applying for
+
 licenceType.midSentence.driverOfTaxis = driver of taxis and private hires
 licenceType.midSentence.operatorOfPrivateHireVehicles = operator of private hire vehicles
-licenceType.midSentence.bookingOffice = booking office
 licenceType.midSentence.scrapMetalCollector = scrap metal mobile collector
-licenceType.midSentence.scrapMetalCollector.scotNI = mobile or itinerant scrap metal collector
 licenceType.midSentence.scrapMetalDealer = scrap metal dealer site
+
+licenceType.scotNI.midSentence.driverOfTaxis = driver of taxis and private hires
+licenceType.scotNI.midSentence.operatorOfPrivateHireVehicles = operator of private hire vehicles
+licenceType.scotNI.midSentence.bookingOffice = booking office
+licenceType.scotNI.midSentence.scrapMetalCollector = mobile or itinerant scrap metal collector
+licenceType.scotNI.midSentence.scrapMetalDealer = scrap metal dealer site
 
 # Licence type exit
 licenceTypeExit.title = You may not need to do a tax check
 licenceTypeExit.licenceTypes = See if your licence type is included
 licenceTypeExit.p1 = You only need to do a tax check if you are applying for one of these licence types:
-licenceTypeExit.driverOfTaxis = driver of taxis and private hires, includes hackney carriage and dual licences
-licenceTypeExit.operatorOfPrivateHireVehicles = operator of private hire vehicles
-licenceTypeExit.bookingOffice = booking office
-licenceTypeExit.scrapMetalCollector = scrap metal mobile collector
-licenceTypeExit.scrapMetalCollector.scotNI = mobile or itinerant scrap metal collector
-licenceTypeExit.scrapMetalDealer = scrap metal dealer site
+
+licenceTypeExit.driverOfTaxis = Driver of taxis and private hires, includes hackney carriage and dual licences
+licenceTypeExit.operatorOfPrivateHireVehicles = Operator of private hire vehicles
+licenceTypeExit.scrapMetalCollector = Scrap metal mobile collector
+licenceTypeExit.scrapMetalDealer = Scrap metal dealer site
+
+licenceTypeExit.scotNI.driverOfTaxis = Driver of taxis and private hires, includes dual licences and hackney carriage licences
+licenceTypeExit.scotNI.operatorOfPrivateHireVehicles = Operator of private hire vehicles (England and Wales only)
+licenceTypeExit.scotNI.bookingOffice = Booking office (Scotland only)
+licenceTypeExit.scotNI.scrapMetalCollector = Mobile or itinerant scrap metal collector (England, Wales and Scotland only)
+licenceTypeExit.scotNI.scrapMetalDealer = Scrap metal dealer site (England, Wales and Scotland only)
+
 licenceTypeExit.link = Find out about tax checks
 licenceTypeExit.wrongAccount = Make sure you’re using the correct account
 licenceTypeExit.p2 = If you could not see your licence type on the previous page, you may be logged in with the wrong Government Gateway account.
@@ -156,12 +172,16 @@ licenceValidityPeriod.error.invalid=Select the number of years your most recent 
 # Tax Situation
 taxSituation.title = Tax status for the tax year {0} to {1}
 taxSituation.p1 = This question relates to your tax status for any work carried out using the same type of licence you are doing a tax check for. This is for the tax year {0} to {1} only.
+
 taxSituation.label.driverOfTaxis = For your driver of taxis and private hires licence(s), which of the following apply?
 taxSituation.label.operatorOfPrivateHireVehicles = For your operator of private hire vehicles licence(s), which of the following apply?
-taxSituation.label.bookingOffice = For your booking office licence(s), which of the following apply?
 taxSituation.label.scrapMetalCollector = For your scrap metal mobile collector licence(s), which of the following apply?
-taxSituation.label.scrapMetalCollector.scotNI = For your mobile or itinerant scrap metal collector licence(s), which of the following apply?
 taxSituation.label.scrapMetalDealer = For your scrap metal dealer site licence(s), which of the following apply?
+
+taxSituation.scotNI.label.driverOfTaxis = For your driver of taxis and private hires licence(s), which of the following apply?
+taxSituation.scotNI.label.bookingOffice = For your booking office licence(s), which of the following apply?
+taxSituation.scotNI.label.scrapMetalCollector = For your mobile or itinerant scrap metal collector licence(s), which of the following apply?
+taxSituation.scotNI.label.scrapMetalDealer = For your scrap metal dealer site licence(s), which of the following apply?
 
 taxSituation.PA = I was an employee only
 taxSituation.PA.hint = For work using this licence you paid tax through PAYE.

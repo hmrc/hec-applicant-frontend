@@ -27,6 +27,7 @@
 
 @(hecTaxCheck: HECTaxCheck, licenceType: licence.LicenceType, isScotNIPrivateBeta: Option[Boolean])(implicit request: Request[_], messages: Messages)
 @key = @{"taxCheckComplete"}
+@optionKey = @{ if(isScotNIPrivateBeta.contains(true)) s"licenceType.scotNI" else "licenceType"}
 @title = @{messages(s"$key.title")}
 
 @layout(pageTitle = Some(title)) {
@@ -37,7 +38,7 @@
     ))
 
     <p class="govuk-body">@messages(s"$key.p1")</p>
-    <p class="govuk-body">@Html(messages(s"$key.p2", messages(s"licenceType.midSentence.${LicenceTypeOption.licenceTypeOption(licenceType, isScotNIPrivateBeta).messageKey}"), TimeUtils.govDisplayFormat(hecTaxCheck.expiresAfter)))</p>
+    <p class="govuk-body">@Html(messages(s"$key.p2", messages(s"$optionKey.midSentence.${LicenceTypeOption.licenceTypeOption(licenceType, isScotNIPrivateBeta).messageKey}"), TimeUtils.govDisplayFormat(hecTaxCheck.expiresAfter)))</p>
 
     <div class="govuk-!-display-none-print">
       <div class="govuk-!-margin-top-2">

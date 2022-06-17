@@ -28,12 +28,13 @@
 @(form: Form[licence.LicenceType], back: Call, options: List[licence.LicenceType], isScotNIPrivateBeta: Option[Boolean])(implicit request: Request[_], messages: Messages)
 
 @key = @{"licenceType"}
+@optionKey = @{ if(isScotNIPrivateBeta.contains(true)) s"$key.scotNI" else key}
 @title = @{messages(s"$key.title")}
 @optionViewModels = @{options.map(LicenceTypeOption.licenceTypeOption(_, isScotNIPrivateBeta))}
 @radioOptions = @{optionViewModels.zipWithIndex.map{ case (option, index) => RadioItem(
-  content = Text(messages(s"$key.${option.messageKey}")),
+  content = Text(messages(s"$optionKey.${option.messageKey}")),
   value = Some(index.toString),
-  hint = option.hintKey.map{ h: String => Hint(content = Text(messages(s"$key.$h"))) },
+  hint = option.hintKey.map{ h: String => Hint(content = Text(messages(s"$optionKey.$h"))) },
   checked = form.data.values.toList.contains(index.toString)
 )}}
 

@@ -153,16 +153,16 @@ class LicenceDetailsControllerSpec
             checkPageDetailsWithNoPreviousAns(
               session,
               List(
-                messageFromMessageKey("licenceType.driverOfTaxis") +
-                  s" ${messageFromMessageKey("licenceType.driverOfTaxis.hint.scotNI")}",
-                messageFromMessageKey("licenceType.operatorOfPrivateHireVehicles") +
-                  s" ${messageFromMessageKey("licenceType.operatorOfPrivateHireVehicles.hint")}",
-                messageFromMessageKey("licenceType.bookingOffice") +
-                  s" ${messageFromMessageKey("licenceType.bookingOffice.hint")}",
-                messageFromMessageKey("licenceType.scrapMetalCollector.scotNI") +
-                  s" ${messageFromMessageKey("licenceType.scrapMetalCollector.hint")}",
-                messageFromMessageKey("licenceType.scrapMetalDealer") +
-                  s" ${messageFromMessageKey("licenceType.scrapMetalDealer.hint")}"
+                messageFromMessageKey("licenceType.scotNI.driverOfTaxis") +
+                  s" ${messageFromMessageKey("licenceType.scotNI.driverOfTaxis.hint")}",
+                messageFromMessageKey("licenceType.scotNI.operatorOfPrivateHireVehicles") +
+                  s" ${messageFromMessageKey("licenceType.scotNI.operatorOfPrivateHireVehicles.hint")}",
+                messageFromMessageKey("licenceType.scotNI.bookingOffice") +
+                  s" ${messageFromMessageKey("licenceType.scotNI.bookingOffice.hint")}",
+                messageFromMessageKey("licenceType.scotNI.scrapMetalCollector") +
+                  s" ${messageFromMessageKey("licenceType.scotNI.scrapMetalCollector.hint")}",
+                messageFromMessageKey("licenceType.scotNI.scrapMetalDealer") +
+                  s" ${messageFromMessageKey("licenceType.scotNI.scrapMetalDealer.hint")}"
               )
             )
           }
@@ -206,14 +206,14 @@ class LicenceDetailsControllerSpec
             checkPageDetailsWithNoPreviousAns(
               session,
               List(
-                messageFromMessageKey("licenceType.operatorOfPrivateHireVehicles") +
-                  s" ${messageFromMessageKey("licenceType.operatorOfPrivateHireVehicles.hint")}",
-                messageFromMessageKey("licenceType.bookingOffice") +
-                  s" ${messageFromMessageKey("licenceType.bookingOffice.hint")}",
-                messageFromMessageKey("licenceType.scrapMetalCollector.scotNI") +
-                  s" ${messageFromMessageKey("licenceType.scrapMetalCollector.hint")}",
-                messageFromMessageKey("licenceType.scrapMetalDealer") +
-                  s" ${messageFromMessageKey("licenceType.scrapMetalDealer.hint")}"
+                messageFromMessageKey("licenceType.scotNI.operatorOfPrivateHireVehicles") +
+                  s" ${messageFromMessageKey("licenceType.scotNI.operatorOfPrivateHireVehicles.hint")}",
+                messageFromMessageKey("licenceType.scotNI.bookingOffice") +
+                  s" ${messageFromMessageKey("licenceType.scotNI.bookingOffice.hint")}",
+                messageFromMessageKey("licenceType.scotNI.scrapMetalCollector") +
+                  s" ${messageFromMessageKey("licenceType.scotNI.scrapMetalCollector.hint")}",
+                messageFromMessageKey("licenceType.scotNI.scrapMetalDealer") +
+                  s" ${messageFromMessageKey("licenceType.scotNI.scrapMetalDealer.hint")}"
               )
             )
           }

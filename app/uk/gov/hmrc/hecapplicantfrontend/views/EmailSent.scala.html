@@ -29,6 +29,7 @@
 Request[_], messages: Messages)
 @key = @{"emailSent"}
 @title = @{messages(s"$key.title")}
+@optionKey = @{if (isScotNIPrivateBeta.contains(true)) "licenceType.scotNI" else "licenceType" }
 
 @layout(pageTitle = Some(title)) {
     <h1 class ="govuk-heading-xl">@title</h1>
@@ -36,7 +37,7 @@ Request[_], messages: Messages)
     <p class="govuk-body">@Html(
         messages(
             s"$key.p2",
-            messages(s"licenceType.midSentence.${LicenceTypeOption.licenceTypeOption(taxCheck.licenceType, isScotNIPrivateBeta).messageKey}"),
+            messages(s"$optionKey.midSentence.${LicenceTypeOption.licenceTypeOption(taxCheck.licenceType, isScotNIPrivateBeta).messageKey}"),
             TimeUtils.govDisplayFormat(taxCheck.expiresAfter)
         )
     )</p>
