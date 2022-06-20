@@ -75,7 +75,8 @@ object FormUtils {
     messages: Messages
   ): String = {
     val licenceTypeMessage = LicenceTypeOption.licenceTypeOption(licenceType, isScotNIPrivateBeta)
-    messages(s"licenceType.${licenceTypeMessage.messageKey}")
+    val optionKey          = if (isScotNIPrivateBeta.contains(true)) "licenceType.scotNI" else "licenceType"
+    messages(s"$optionKey.${licenceTypeMessage.messageKey}")
   }
 
 }
