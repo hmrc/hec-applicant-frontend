@@ -358,13 +358,19 @@ class EmailAddressConfirmedControllerSpec
           val session = Fixtures.companyHECSession(
             loginData = Fixtures.companyLoginData(emailAddress = ggUserSelectedEmail.emailAddress.some),
             emailRequestedForTaxCheck = emailRequestedForTaxCheck.some,
-            userEmailAnswers = passcodeSentAndMatchedUserEmailAnswer.some
+            userEmailAnswers = passcodeSentAndMatchedUserEmailAnswer.some,
+            userAnswers = Fixtures.completeCompanyUserAnswers(licenceType = LicenceType.BookingOffice),
+            isScotNIPrivateBeta = Some(true)
           )
 
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
-            mockSendEmail(ggUserSelectedEmail, emailParameters = emailParametersEN)(Left(Error("")))
+            mockSendEmail(
+              ggUserSelectedEmail,
+              emailParameters =
+                emailParametersEN.copy(licenceType = messageFromMessageKey("licenceType.scotNI.driverOfTaxis"))
+            )(Left(Error("")))
           }
 
           assertThrows[RuntimeException](await(performAction()))
