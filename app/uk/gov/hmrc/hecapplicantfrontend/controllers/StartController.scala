@@ -90,7 +90,7 @@ class StartController @Inject() (
       maybeStoredSession                <- sessionStore.get().leftMap(BackendError)
       details                           <-
         maybeStoredSession.fold(
-          handleNoSessionData(request.retrievedGGUserData)
+          handleNoSessionData(request.retrievedGGUserData, isScotNIPrivateBeta)
             .map[(Option[AuthenticationDetails], LoginData)] { case (authDetails, loginData) =>
               Some(authDetails) -> loginData
             }
@@ -182,7 +182,8 @@ class StartController @Inject() (
   }
 
   private def handleNoSessionData(
-    retrievedGGData: RetrievedGGData
+    retrievedGGData: RetrievedGGData,
+    isScotNIPrivateBeta: Boolean
   )(implicit request: Request[_]): EitherT[Future, StartError, (AuthenticationDetails, LoginData)] = {
     val RetrievedGGData(cl, affinityGroup, maybeNino, maybeSautr, maybeEmail, enrolments, creds) =
       retrievedGGData
@@ -258,7 +259,16 @@ class StartController @Inject() (
         else
           withGGCredIdAndAuthenticationDetailsLifted(Some(AffinityGroup.Organisation), None) {
             case (ggCredId, authDetails) =>
-              handleUncertainEntityType(cl, maybeNino, maybeSautr, maybeEmail, enrolments, ggCredId, authDetails)
+              handleUncertainEntityType(
+                cl,
+                maybeNino,
+                maybeSautr,
+                maybeEmail,
+                enrolments,
+                ggCredId,
+                authDetails,
+                isScotNIPrivateBeta
+              )
           }
 
       case Some(AffinityGroup.Agent) =>
@@ -288,7 +298,8 @@ class StartController @Inject() (
     maybeEmail: Option[String],
     enrolments: Enrolments,
     ggCredId: GGCredId,
-    authenticationDetails: AuthenticationDetails
+    authenticationDetails: AuthenticationDetails,
+    isScotNIPrivateBeta: Boolean
   )(implicit
     hc: HeaderCarrier,
     request: Request[_]
@@ -297,7 +308,7 @@ class StartController @Inject() (
       .get()
       .leftMap(e => BackendError(e))
       .flatMap {
-        case Some(UncertainEntityTypeJourney(_, Some(EntityType.Individual))) =>
+        case Some(UncertainEntityTypeJourney(_, Some(EntityType.Individual), _)) =>
           handleIndividual(
             confidenceLevel,
             maybeNino,
@@ -308,7 +319,7 @@ class StartController @Inject() (
             didConfirmUncertainEntityType = Some(true)
           )
 
-        case Some(UncertainEntityTypeJourney(_, Some(EntityType.Company))) =>
+        case Some(UncertainEntityTypeJourney(_, Some(EntityType.Company), _)) =>
           handleOrganisation(
             maybeEmail,
             enrolments,
@@ -322,7 +333,7 @@ class StartController @Inject() (
             if (other.nonEmpty) EitherT.pure[Future, StartError](())
             else
               uncertainEntityTypeJourneyStore
-                .store(UncertainEntityTypeJourney(ggCredId, None))
+                .store(UncertainEntityTypeJourney(ggCredId, None, Some(isScotNIPrivateBeta)))
                 .leftMap(e => BackendError(e))
 
           result.subflatMap(_ => Left(UncertainEntityType(authenticationDetails)))

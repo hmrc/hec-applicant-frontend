@@ -465,7 +465,8 @@ class StartControllerSpec
                           Some(
                             UncertainEntityTypeJourney(
                               loginData.ggCredId,
-                              Some(EntityType.Individual)
+                              Some(EntityType.Individual),
+                              Some(false)
                             )
                           )
                         )
@@ -540,7 +541,8 @@ class StartControllerSpec
                       Some(
                         UncertainEntityTypeJourney(
                           loginData.ggCredId,
-                          Some(EntityType.Company)
+                          Some(EntityType.Company),
+                          Some(false)
                         )
                       )
                     )
@@ -611,7 +613,7 @@ class StartControllerSpec
           "it is not clear from the enrolments and the confidence what the entity type is and the user has not " +
             "clarified which entity type they are" in {
               val journey =
-                UncertainEntityTypeJourney(ggCredId, None)
+                UncertainEntityTypeJourney(ggCredId, None, Some(false))
 
               val next = routes.ConfirmUncertainEntityTypeController.entityType
 
@@ -953,7 +955,9 @@ class StartControllerSpec
               )
               mockGetSession(Right(None))
               mockGetUncertainEntityTypeJourney(Right(None))
-              mockStoreUncertainEntityTypeJourney(UncertainEntityTypeJourney(ggCredId, None))(Left(Error("")))
+              mockStoreUncertainEntityTypeJourney(UncertainEntityTypeJourney(ggCredId, None, Some(false)))(
+                Left(Error(""))
+              )
             }
 
           }
@@ -1057,7 +1061,7 @@ class StartControllerSpec
                   )
                   mockGetSession(Right(None))
                   mockGetUncertainEntityTypeJourney(
-                    Right(Some(UncertainEntityTypeJourney(ggCredId, Some(EntityType.Individual))))
+                    Right(Some(UncertainEntityTypeJourney(ggCredId, Some(EntityType.Individual), Some(false))))
                   )
                   mockSendAuditEvent(
                     ApplicantServiceStartEndPointAccessed(
@@ -1344,6 +1348,52 @@ class StartControllerSpec
           }
 
           checkIsRedirect(performAction(), mockNextCall)
+        }
+
+        "the user needs to confirm an uncertain entity type" in {
+          val journey =
+            UncertainEntityTypeJourney(ggCredId, None, Some(true))
+
+          val next = routes.ConfirmUncertainEntityTypeController.entityType
+
+          List(
+            Some(journey) -> None,
+            None          -> Some(() => mockStoreUncertainEntityTypeJourney(journey)(Right(())))
+          ).foreach { case (existingJourney, mockStoreJourney) =>
+            inSequence {
+              mockAuthWithRetrievals(
+                ConfidenceLevel.L250,
+                Some(AffinityGroup.Organisation),
+                None,
+                None,
+                Some(allowListedEmailAddress),
+                Enrolments(Set.empty),
+                Some(retrievedGGCredential(ggCredId))
+              )
+              mockGetSession(Right(None))
+              mockGetUncertainEntityTypeJourney(Right(existingJourney))
+              mockStoreJourney.foreach(_())
+              mockSendAuditEvent(
+                ApplicantServiceStartEndPointAccessed(
+                  AuthenticationStatus.Authenticated,
+                  Some(next.url),
+                  Some(
+                    AuthenticationDetails(
+                      ggProviderType,
+                      ggCredId.value,
+                      Some(AffinityGroup.Organisation),
+                      None,
+                      ConfidenceLevel.L250
+                    )
+                  )
+                )
+              )
+
+            }
+
+            checkIsRedirect(performAction(), next)
+          }
+
         }
 
       }

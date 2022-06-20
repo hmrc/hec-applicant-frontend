@@ -19,7 +19,11 @@ package uk.gov.hmrc.hecapplicantfrontend.models
 import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.GGCredId
 
-final case class UncertainEntityTypeJourney(ggCredId: GGCredId, userSuppliedEntityType: Option[EntityType])
+final case class UncertainEntityTypeJourney(
+  ggCredId: GGCredId,
+  userSuppliedEntityType: Option[EntityType],
+  isScotNIPrivateBeta: Option[Boolean]
+)
 
 object UncertainEntityTypeJourney {
 
