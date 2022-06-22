@@ -147,7 +147,8 @@ object Fixtures {
     hasResentEmailConfirmation: Boolean = false,
     userEmailAnswers: Option[UserEmailAnswers] = None,
     showUserResearchBanner: Option[Boolean] = None,
-    isScotNIPrivateBeta: Option[Boolean] = None
+    isScotNIPrivateBeta: Option[Boolean] = None,
+    isScotNIPrivateBetaEngWalUser: Option[Boolean] = None
   ): IndividualHECSession =
     IndividualHECSession(
       loginData = loginData,
@@ -162,7 +163,8 @@ object Fixtures {
       hasResentEmailConfirmation = hasResentEmailConfirmation,
       userEmailAnswers = userEmailAnswers,
       showUserResearchBanner = showUserResearchBanner,
-      isScotNIPrivateBeta = isScotNIPrivateBeta
+      isScotNIPrivateBeta = isScotNIPrivateBeta,
+      isScotNIPrivateBetaEngWalUser = isScotNIPrivateBetaEngWalUser
     )
 
   def companyLoginData(
@@ -199,7 +201,8 @@ object Fixtures {
     hasResentEmailConfirmation: Boolean = false,
     userEmailAnswers: Option[UserEmailAnswers] = None,
     showUserResearchBanner: Option[Boolean] = None,
-    isScotNIPrivateBeta: Option[Boolean] = None
+    isScotNIPrivateBeta: Option[Boolean] = None,
+    isScotNIPrivateBetaEngWalUser: Option[Boolean] = None
   ): CompanyHECSession = CompanyHECSession(
     loginData = loginData,
     retrievedJourneyData = retrievedJourneyData,
@@ -212,7 +215,8 @@ object Fixtures {
     hasResentEmailConfirmation = hasResentEmailConfirmation,
     userEmailAnswers = userEmailAnswers,
     showUserResearchBanner = showUserResearchBanner,
-    isScotNIPrivateBeta = isScotNIPrivateBeta
+    isScotNIPrivateBeta = isScotNIPrivateBeta,
+    isScotNIPrivateBetaEngWalUser = isScotNIPrivateBetaEngWalUser
   )
 
   def ctStatusResponse(

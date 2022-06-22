@@ -218,6 +218,7 @@ class AuditEventSpec extends Matchers with AnyWordSpecLike {
       false,
       None,
       None,
+      None,
       None
     )
 

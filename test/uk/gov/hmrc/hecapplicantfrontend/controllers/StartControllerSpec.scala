@@ -64,7 +64,8 @@ class StartControllerSpec
   val signInUrl   = "https://sign-in:456"
   val ggOrigin    = "ggOrigin"
 
-  val allowListedEmailAddress = EmailAddress("user@email.com")
+  val allowListedEmailAddressNonEngWalUser = EmailAddress("user@email.com")
+  val allowListedEmailAddressEngWalUser    = EmailAddress("user1@email.com")
 
   override lazy val additionalConfig: Configuration = Configuration(
     ConfigFactory.parseString(
@@ -83,7 +84,16 @@ class StartControllerSpec
          |   gg.origin = "$ggOrigin"
          |}
          |
-         |scot-ni-email-allow-list = [ "${allowListedEmailAddress.value}" ]
+         |scot-ni-email-allow-list = [
+         |  {
+         |    email = "${allowListedEmailAddressNonEngWalUser.value}"
+         |    is-england-or-wales = false
+         |  },
+         |  {
+         |    email = "${allowListedEmailAddressEngWalUser.value}"
+         |    is-england-or-wales = true
+         |  }
+         |]
          |""".stripMargin
     )
   )
@@ -466,7 +476,8 @@ class StartControllerSpec
                             UncertainEntityTypeJourney(
                               loginData.ggCredId,
                               Some(EntityType.Individual),
-                              Some(false)
+                              Some(false),
+                              None
                             )
                           )
                         )
@@ -542,7 +553,8 @@ class StartControllerSpec
                         UncertainEntityTypeJourney(
                           loginData.ggCredId,
                           Some(EntityType.Company),
-                          Some(false)
+                          Some(false),
+                          None
                         )
                       )
                     )
@@ -613,7 +625,7 @@ class StartControllerSpec
           "it is not clear from the enrolments and the confidence what the entity type is and the user has not " +
             "clarified which entity type they are" in {
               val journey =
-                UncertainEntityTypeJourney(ggCredId, None, Some(false))
+                UncertainEntityTypeJourney(ggCredId, None, Some(false), None)
 
               val next = routes.ConfirmUncertainEntityTypeController.entityType
 
@@ -955,7 +967,7 @@ class StartControllerSpec
               )
               mockGetSession(Right(None))
               mockGetUncertainEntityTypeJourney(Right(None))
-              mockStoreUncertainEntityTypeJourney(UncertainEntityTypeJourney(ggCredId, None, Some(false)))(
+              mockStoreUncertainEntityTypeJourney(UncertainEntityTypeJourney(ggCredId, None, Some(false), None))(
                 Left(Error(""))
               )
             }
@@ -1061,7 +1073,7 @@ class StartControllerSpec
                   )
                   mockGetSession(Right(None))
                   mockGetUncertainEntityTypeJourney(
-                    Right(Some(UncertainEntityTypeJourney(ggCredId, Some(EntityType.Individual), Some(false))))
+                    Right(Some(UncertainEntityTypeJourney(ggCredId, Some(EntityType.Individual), Some(false), None)))
                   )
                   mockSendAuditEvent(
                     ApplicantServiceStartEndPointAccessed(
@@ -1212,7 +1224,7 @@ class StartControllerSpec
         }
 
         "an email address is retrieved but it is not on the email allow-list" in {
-          test(Some(EmailAddress(s"different.$allowListedEmailAddress")))
+          test(Some(EmailAddress(s"different.$allowListedEmailAddressNonEngWalUser")))
         }
 
       }
@@ -1233,7 +1245,7 @@ class StartControllerSpec
               Some(AffinityGroup.Individual),
               None,
               None,
-              Some(allowListedEmailAddress),
+              Some(allowListedEmailAddressNonEngWalUser),
               Enrolments(Set.empty),
               Some(retrievedGGCredential(ggCredId))
             )
@@ -1263,7 +1275,7 @@ class StartControllerSpec
       "proceed" when {
 
         "the user is an individual and they have CL250" in {
-          val loginData = completeIndividualLoginData.copy(emailAddress = Some(allowListedEmailAddress))
+          val loginData = completeIndividualLoginData.copy(emailAddress = Some(allowListedEmailAddressEngWalUser))
 
           val citizenDetails = CitizenDetails(
             loginData.name,
@@ -1272,7 +1284,9 @@ class StartControllerSpec
           )
 
           val session =
-            IndividualHECSession.newSession(loginData).copy(isScotNIPrivateBeta = Some(true))
+            IndividualHECSession
+              .newSession(loginData)
+              .copy(isScotNIPrivateBeta = Some(true), isScotNIPrivateBetaEngWalUser = Some(true))
 
           inSequence {
             mockAuthWithRetrievals(
@@ -1280,7 +1294,7 @@ class StartControllerSpec
               Some(AffinityGroup.Individual),
               Some(loginData.nino),
               loginData.sautr,
-              Some(allowListedEmailAddress),
+              Some(allowListedEmailAddressEngWalUser),
               Enrolments(Set.empty),
               Some(retrievedGGCredential(loginData.ggCredId))
             )
@@ -1312,10 +1326,13 @@ class StartControllerSpec
 
         "the user is a company" in {
 
-          val allowListedEmailAddressUpperCase = EmailAddress(allowListedEmailAddress.value.toUpperCase(Locale.UK))
+          val allowListedEmailAddressUpperCase =
+            EmailAddress(allowListedEmailAddressNonEngWalUser.value.toUpperCase(Locale.UK))
           val loginData                        = completeCompanyLoginData.copy(emailAddress = Some(allowListedEmailAddressUpperCase))
 
-          val session = CompanyHECSession.newSession(loginData).copy(isScotNIPrivateBeta = Some(true))
+          val session = CompanyHECSession
+            .newSession(loginData)
+            .copy(isScotNIPrivateBeta = Some(true), isScotNIPrivateBetaEngWalUser = Some(false))
           inSequence {
             mockAuthWithRetrievals(
               ConfidenceLevel.L50,
@@ -1352,21 +1369,32 @@ class StartControllerSpec
 
         "the user needs to confirm an uncertain entity type" in {
           val journey =
-            UncertainEntityTypeJourney(ggCredId, None, Some(true))
+            UncertainEntityTypeJourney(ggCredId, None, Some(true), Some(false))
 
           val next = routes.ConfirmUncertainEntityTypeController.entityType
 
           List(
-            Some(journey) -> None,
-            None          -> Some(() => mockStoreUncertainEntityTypeJourney(journey)(Right(())))
-          ).foreach { case (existingJourney, mockStoreJourney) =>
+            (allowListedEmailAddressNonEngWalUser, Some(journey), None),
+            (
+              allowListedEmailAddressNonEngWalUser,
+              None,
+              Some(() => mockStoreUncertainEntityTypeJourney(journey)(Right(())))
+            ),
+            (
+              allowListedEmailAddressEngWalUser,
+              None,
+              Some(() =>
+                mockStoreUncertainEntityTypeJourney(journey.copy(isScotNIPrivateBetaEngWalUser = Some(true)))(Right(()))
+              )
+            )
+          ).foreach { case (email, existingJourney, mockStoreJourney) =>
             inSequence {
               mockAuthWithRetrievals(
                 ConfidenceLevel.L250,
                 Some(AffinityGroup.Organisation),
                 None,
                 None,
-                Some(allowListedEmailAddress),
+                Some(email),
                 Enrolments(Set.empty),
                 Some(retrievedGGCredential(ggCredId))
               )

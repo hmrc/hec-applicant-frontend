@@ -419,7 +419,7 @@ class EntityTypeControllerSpec
         "the user has not started a session and they are in the process of confirming an uncertain entity type" in {
           test(
             None,
-            Some(UncertainEntityTypeJourney(GGCredId("id"), None, None)),
+            Some(UncertainEntityTypeJourney(GGCredId("id"), None, None, None)),
             None,
             routes.ConfirmUncertainEntityTypeController.entityType
           )
