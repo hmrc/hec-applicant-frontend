@@ -85,14 +85,13 @@ class StartControllerSpec
          |}
          |
          |scot-ni-email-allow-list = [
-         |  {
-         |    email = "${allowListedEmailAddressNonEngWalUser.value}"
-         |    is-england-or-wales = false
-         |  },
-         |  {
-         |    email = "${allowListedEmailAddressEngWalUser.value}"
-         |    is-england-or-wales = true
-         |  }
+         |   "${allowListedEmailAddressNonEngWalUser.value}",
+         |   "${allowListedEmailAddressEngWalUser.value}"
+         |]
+         |
+         |scot-ni-email-allow-list-is-england-or-wales = [
+         |  false,
+         |  true
          |]
          |""".stripMargin
     )

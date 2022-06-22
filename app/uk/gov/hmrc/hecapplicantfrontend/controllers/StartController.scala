@@ -68,13 +68,23 @@ class StartController @Inject() (
   import StartController._
 
   private val scotNIPrivateBetaEmailAllowListLowerCase: Map[EmailAddress, ScotNIPrivateBetaConfig] = {
-    val configs =
+    val emails =
       config.underlying
-        .get[List[ScotNIPrivateBetaConfig]]("scot-ni-email-allow-list")
+        .get[List[String]]("scot-ni-email-allow-list")
         .value
-        .map(c => c.copy(email = c.email.toLowerCase(Locale.UK)))
+        .map(s => EmailAddress(s.toLowerCase(Locale.UK)))
 
-    configs.map(c => EmailAddress(c.email)).zip(configs).toMap
+    val isEngWalUsers =
+      config.underlying
+        .get[List[Boolean]]("scot-ni-email-allow-list-is-england-or-wales")
+        .value
+
+    if (emails.size =!= isEngWalUsers.size)
+      sys.error("Number of emails did not match the number of isEnglandOrWales flags")
+
+    val configs = emails.zip(isEngWalUsers).map(ScotNIPrivateBetaConfig.tupled(_))
+
+    emails.zip(configs).toMap
   }
 
   val scotNIPrivateBetaStart: Action[AnyContent] = authWithRetrievalsAction.async { implicit request =>
@@ -494,6 +504,6 @@ object StartController {
 
   final case class UncertainEntityType(authenticationDetails: AuthenticationDetails) extends StartError
 
-  private final case class ScotNIPrivateBetaConfig(email: String, isEnglandOrWales: Boolean)
+  private final case class ScotNIPrivateBetaConfig(email: EmailAddress, isEnglandOrWales: Boolean)
 
 }
