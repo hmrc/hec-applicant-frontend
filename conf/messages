@@ -97,6 +97,7 @@ licenceType.title = What type of licence are you applying for?
 
 licenceType.driverOfTaxis = Driver of taxis and private hires
 licenceType.driverOfTaxis.hint = Includes hackney carriage and dual licences.
+licenceType.bookingOffice = Booking office
 licenceType.operatorOfPrivateHireVehicles = Operator of private hire vehicles
 licenceType.scrapMetalCollector = Scrap metal mobile collector
 licenceType.scrapMetalDealer = Scrap metal dealer site
@@ -118,6 +119,7 @@ licenceType.error.invalid = Select the type of licence you are applying for
 
 licenceType.midSentence.driverOfTaxis = driver of taxis and private hires
 licenceType.midSentence.operatorOfPrivateHireVehicles = operator of private hire vehicles
+licenceType.midSentence.bookingOffice = booking office
 licenceType.midSentence.scrapMetalCollector = scrap metal mobile collector
 licenceType.midSentence.scrapMetalDealer = scrap metal dealer site
 
