@@ -31,7 +31,6 @@ import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceValidityPeriod.UpT
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
-import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService.InconsistentSessionState
 import uk.gov.hmrc.hecapplicantfrontend.util.TimeProvider
 import uk.gov.hmrc.hecapplicantfrontend.utils.Fixtures
 
@@ -722,24 +721,9 @@ class LicenceDetailsControllerSpec
 
       behave like authAndSessionDataBehaviour(performAction)
 
-      "return a technical error" when {
-
-        "a licence type cannot be found in session" in {
-          val session = IndividualHECSession.newSession(individualLoginData)
-
-          inSequence {
-            mockAuthWithNoRetrievals()
-            mockGetSession(session)
-          }
-          assertThrows[InconsistentSessionState](await(performAction()))
-
-        }
-
-      }
-
       "display the page" when {
 
-        def displayPageTest(session: HECSession, value: Option[String], isPrivateHire: Boolean) = {
+        def displayPageTest(session: HECSession, value: Option[String]) = {
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
@@ -755,9 +739,7 @@ class LicenceDetailsControllerSpec
               doc.select("#back").attr("href") shouldBe mockPreviousCall.url
 
               val options = doc.select(".govuk-radios__item")
-              if (isPrivateHire)
-                options.size()    shouldBe 5
-              else options.size() shouldBe 3
+              options.size() shouldBe 5
 
               val selectedOptions = doc.select(".govuk-radios__input[checked]")
 
@@ -773,7 +755,7 @@ class LicenceDetailsControllerSpec
           )
         }
 
-        "the user has selected a licence type of 'operator of private hire vehicles'" in {
+        "the user has not selected an option before" in {
           val session = Fixtures.individualHECSession(
             individualLoginData,
             IndividualRetrievedJourneyData.empty,
@@ -782,34 +764,26 @@ class LicenceDetailsControllerSpec
             )
           )
 
-          displayPageTest(session, None, true)
+          displayPageTest(session, None)
 
         }
 
-        "the user has selected a licence type which isn't 'Operator of Private Hire Vehicles'" in {
-          List(
-            LicenceType.DriverOfTaxisAndPrivateHires,
-            LicenceType.ScrapMetalMobileCollector,
-            LicenceType.ScrapMetalDealerSite
-          ).foreach { licenceType =>
-            withClue(s"For licence type $licenceType: ") {
-              val session =
-                Fixtures.individualHECSession(
-                  individualLoginData,
-                  IndividualRetrievedJourneyData.empty,
-                  Fixtures.completeIndividualUserAnswers(
-                    licenceType,
-                    LicenceTimeTrading.TwoToFourYears,
-                    LicenceValidityPeriod.UpToThreeYears,
-                    TaxSituation.SA,
-                    Some(YesNoAnswer.Yes),
-                    Some(EntityType.Individual)
-                  )
-                )
+        "the user has selected an option before'" in {
+          val session =
+            Fixtures.individualHECSession(
+              individualLoginData,
+              IndividualRetrievedJourneyData.empty,
+              Fixtures.completeIndividualUserAnswers(
+                LicenceType.BookingOffice,
+                LicenceTimeTrading.TwoToFourYears,
+                LicenceValidityPeriod.UpToThreeYears,
+                TaxSituation.SA,
+                Some(YesNoAnswer.Yes),
+                Some(EntityType.Individual)
+              )
+            )
 
-              displayPageTest(session, Some("2"), false)
-            }
-          }
+          displayPageTest(session, Some("2"))
 
         }
 
@@ -825,17 +799,6 @@ class LicenceDetailsControllerSpec
       behave like authAndSessionDataBehaviour(() => performAction())
 
       "return a technical error" when {
-
-        "a licence type cannot be found in session" in {
-          val session = IndividualHECSession.newSession(individualLoginData)
-
-          inSequence {
-            mockAuthWithNoRetrievals()
-            mockGetSession(session)
-          }
-          assertThrows[InconsistentSessionState](await(performAction()))
-
-        }
 
         "the call to update and next fails" in {
           val answers        = IndividualUserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
