@@ -148,6 +148,7 @@ class TaxCheckServiceImpl @Inject() (hecConnector: HECConnector)(implicit ec: Ex
               _,
               _,
               _,
+              _,
               _
             ),
             answers: CompleteIndividualUserAnswers
@@ -183,7 +184,7 @@ class TaxCheckServiceImpl @Inject() (hecConnector: HECConnector)(implicit ec: Ex
           HECTaxCheckSource.Digital,
           languagePreference,
           loginData.didConfirmUncertainEntityType,
-          session.isScotNIPrivateBeta
+          filterFromFileTransfer(session)
         )
 
       case (
@@ -193,6 +194,7 @@ class TaxCheckServiceImpl @Inject() (hecConnector: HECConnector)(implicit ec: Ex
               _,
               _,
               taxCheckStartDateTime,
+              _,
               _,
               _,
               _,
@@ -234,10 +236,16 @@ class TaxCheckServiceImpl @Inject() (hecConnector: HECConnector)(implicit ec: Ex
           HECTaxCheckSource.Digital,
           languagePreference,
           companyLoginData.didConfirmUncertainEntityType,
-          session.isScotNIPrivateBeta
+          filterFromFileTransfer(session)
         )
 
       case _ => sys.error("Invalid session & complete answers combination")
+    }
+
+  private def filterFromFileTransfer(session: HECSession): Option[Boolean] =
+    session.isScotNIPrivateBeta match {
+      case Some(true) => Some(session.isScotNIPrivateBetaEngWalUser.forall(!_))
+      case other      => other
     }
 
   def getUnexpiredTaxCheckCodes()(implicit hc: HeaderCarrier): EitherT[Future, Error, List[TaxCheckListItem]] =

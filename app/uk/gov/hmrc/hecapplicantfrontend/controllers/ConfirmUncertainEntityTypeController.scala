@@ -114,7 +114,8 @@ class ConfirmUncertainEntityTypeController @Inject() (
                      UncertainEntityTypeJourney(
                        originalState.fold(_.loginData.ggCredId, _.ggCredId),
                        Some(entityType),
-                       isScotNIPrivateBeta
+                       isScotNIPrivateBeta,
+                       originalState.fold(_.isScotNIPrivateBetaEngWalUser, _.isScotNIPrivateBetaEngWalUser)
                      )
                    )
             } yield ()

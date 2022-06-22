@@ -44,6 +44,7 @@ trait HECSession extends Product with Serializable {
   val userEmailAnswers: Option[UserEmailAnswers]
   val showUserResearchBanner: Option[Boolean]
   val isScotNIPrivateBeta: Option[Boolean]
+  val isScotNIPrivateBetaEngWalUser: Option[Boolean]
 }
 
 object HECSession {
@@ -61,7 +62,8 @@ object HECSession {
     hasResentEmailConfirmation: Boolean,
     userEmailAnswers: Option[UserEmailAnswers],
     showUserResearchBanner: Option[Boolean],
-    isScotNIPrivateBeta: Option[Boolean]
+    isScotNIPrivateBeta: Option[Boolean],
+    isScotNIPrivateBetaEngWalUser: Option[Boolean]
   ) extends HECSession {
     override val entityType: EntityType = EntityType.Individual
   }
@@ -82,6 +84,7 @@ object HECSession {
         false,
         None,
         Some(true),
+        None,
         None
       )
 
@@ -99,7 +102,8 @@ object HECSession {
     hasResentEmailConfirmation: Boolean,
     userEmailAnswers: Option[UserEmailAnswers],
     showUserResearchBanner: Option[Boolean],
-    isScotNIPrivateBeta: Option[Boolean]
+    isScotNIPrivateBeta: Option[Boolean],
+    isScotNIPrivateBetaEngWalUser: Option[Boolean]
   ) extends HECSession {
     override val entityType: EntityType = EntityType.Company
   }
@@ -118,7 +122,8 @@ object HECSession {
         hasResentEmailConfirmation = false,
         userEmailAnswers = None,
         showUserResearchBanner = Some(true),
-        isScotNIPrivateBeta = None
+        isScotNIPrivateBeta = None,
+        isScotNIPrivateBetaEngWalUser = None
       )
 
   }
