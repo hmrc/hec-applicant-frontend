@@ -36,7 +36,6 @@ import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceValidityPeriod._
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hecapplicantfrontend.models.{CompanyUserAnswers, HECSession, IndividualUserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
-import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService.InconsistentSessionState
 import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging, TimeProvider}
 import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.http.HeaderCarrier
@@ -180,28 +179,19 @@ class LicenceDetailsController @Inject() (
   }
 
   val recentLicenceLength: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
-    val licenceTypeOpt = request.sessionData.userAnswers.fold(
-      _.fold(_.licenceType, _.licenceType.some),
-      _.fold(_.licenceType, _.licenceType.some)
-    )
-    licenceTypeOpt match {
-      case Some(licenceType) =>
-        val back          = journeyService.previous(routes.LicenceDetailsController.recentLicenceLength)
-        val licenceLength =
-          request.sessionData.userAnswers.fold(
-            _.fold(_.licenceValidityPeriod, _.licenceValidityPeriod.some),
-            _.fold(_.licenceValidityPeriod, _.licenceValidityPeriod.some)
-          )
-        val options       = licenceValidityPeriodOptions(licenceType)
-        val form = {
-          val emptyForm = licenceValidityPeriodForm(options)
-          licenceLength.fold(emptyForm)(emptyForm.fill)
-        }
-        Ok(licenceValidityPeriodPage(form, back, options))
-      case None              =>
-        InconsistentSessionState("Couldn't find licence Type").doThrow
+    val back          = journeyService.previous(routes.LicenceDetailsController.recentLicenceLength)
+    val licenceLength =
+      request.sessionData.userAnswers.fold(
+        _.fold(_.licenceValidityPeriod, _.licenceValidityPeriod.some),
+        _.fold(_.licenceValidityPeriod, _.licenceValidityPeriod.some)
+      )
+    val options       = licenceValidityPeriodOptions
+    val form = {
+      val emptyForm = licenceValidityPeriodForm(options)
+      licenceLength.fold(emptyForm)(emptyForm.fill)
     }
 
+    Ok(licenceValidityPeriodPage(form, back, options))
   }
 
   val recentLicenceLengthSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
@@ -219,29 +209,21 @@ class LicenceDetailsController @Inject() (
         updatedSession
       )
     }
-    val licenceTypeOpt = request.sessionData.userAnswers.fold(
-      _.fold(_.licenceType, _.licenceType.some),
-      _.fold(_.licenceType, _.licenceType.some)
-    )
-    licenceTypeOpt match {
-      case Some(licenceType) =>
-        val options: List[LicenceValidityPeriod] = licenceValidityPeriodOptions(licenceType)
-        licenceValidityPeriodForm(options)
-          .bindFromRequest()
-          .fold(
-            formWithErrors =>
-              Ok(
-                licenceValidityPeriodPage(
-                  formWithErrors,
-                  journeyService.previous(routes.LicenceDetailsController.recentLicenceLength),
-                  options
-                )
-              ),
-            handleValidLicenceTimePeriod
-          )
-      case None              =>
-        InconsistentSessionState("Couldn't find licence Type").doThrow
-    }
+
+    val options: List[LicenceValidityPeriod] = licenceValidityPeriodOptions
+    licenceValidityPeriodForm(options)
+      .bindFromRequest()
+      .fold(
+        formWithErrors =>
+          Ok(
+            licenceValidityPeriodPage(
+              formWithErrors,
+              journeyService.previous(routes.LicenceDetailsController.recentLicenceLength),
+              options
+            )
+          ),
+        handleValidLicenceTimePeriod
+      )
   }
 
   private def updateAndNextJourneyData(current: Call, updatedSession: HECSession)(implicit
@@ -280,7 +262,8 @@ object LicenceDetailsController {
     EightYearsOrMore
   )
 
-  private val validityPeriodList = List(UpToOneYear, UpToTwoYears, UpToThreeYears, UpToFourYears, UpToFiveYears)
+  val licenceValidityPeriodOptions: List[LicenceValidityPeriod] =
+    List(UpToOneYear, UpToTwoYears, UpToThreeYears, UpToFourYears, UpToFiveYears)
 
   def licenceTypeOptions(session: HECSession): List[LicenceType] = {
     val isScotNIPrivateBeta = session.isScotNIPrivateBeta.getOrElse(false)
@@ -291,12 +274,6 @@ object LicenceDetailsController {
     }
     if (isScotNIPrivateBeta) options else options.filterNot(_ === BookingOffice)
   }
-
-  def licenceValidityPeriodOptions(licenceType: LicenceType): List[LicenceValidityPeriod] =
-    licenceType match {
-      case OperatorOfPrivateHireVehicles => validityPeriodList
-      case _                             => validityPeriodList.take(3)
-    }
 
   def licenceTypeForm(options: List[LicenceType]): Form[LicenceType] =
     Form(
