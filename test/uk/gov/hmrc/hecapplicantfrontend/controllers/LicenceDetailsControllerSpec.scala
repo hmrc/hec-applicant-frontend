@@ -133,35 +133,21 @@ class LicenceDetailsControllerSpec
 
         "user is Individual" when {
 
-          "the user has not previously answered the question and isScotNIPrivateBeta is false" in {
-            val session = IndividualHECSession.newSession(individualLoginData).copy(isScotNIPrivateBeta = Some(false))
+          "the user has not previously answered the question" in {
+            val session = IndividualHECSession.newSession(individualLoginData)
             checkPageDetailsWithNoPreviousAns(
               session,
               List(
                 messageFromMessageKey("licenceType.driverOfTaxis") +
                   s" ${messageFromMessageKey("licenceType.driverOfTaxis.hint")}",
-                messageFromMessageKey("licenceType.operatorOfPrivateHireVehicles"),
-                messageFromMessageKey("licenceType.scrapMetalCollector"),
-                messageFromMessageKey("licenceType.scrapMetalDealer")
-              )
-            )
-          }
-
-          "the user has not previously answered the question and isScotNIPrivateBeta is true" in {
-            val session = IndividualHECSession.newSession(individualLoginData).copy(isScotNIPrivateBeta = Some(true))
-            checkPageDetailsWithNoPreviousAns(
-              session,
-              List(
-                messageFromMessageKey("licenceType.scotNI.driverOfTaxis") +
-                  s" ${messageFromMessageKey("licenceType.scotNI.driverOfTaxis.hint")}",
-                messageFromMessageKey("licenceType.scotNI.operatorOfPrivateHireVehicles") +
-                  s" ${messageFromMessageKey("licenceType.scotNI.operatorOfPrivateHireVehicles.hint")}",
-                messageFromMessageKey("licenceType.scotNI.bookingOffice") +
-                  s" ${messageFromMessageKey("licenceType.scotNI.bookingOffice.hint")}",
-                messageFromMessageKey("licenceType.scotNI.scrapMetalCollector") +
-                  s" ${messageFromMessageKey("licenceType.scotNI.scrapMetalCollector.hint")}",
-                messageFromMessageKey("licenceType.scotNI.scrapMetalDealer") +
-                  s" ${messageFromMessageKey("licenceType.scotNI.scrapMetalDealer.hint")}"
+                messageFromMessageKey("licenceType.operatorOfPrivateHireVehicles") +
+                  s" ${messageFromMessageKey("licenceType.operatorOfPrivateHireVehicles.hint")}",
+                messageFromMessageKey("licenceType.bookingOffice") +
+                  s" ${messageFromMessageKey("licenceType.bookingOffice.hint")}",
+                messageFromMessageKey("licenceType.scrapMetalCollector") +
+                  s" ${messageFromMessageKey("licenceType.scrapMetalCollector.hint")}",
+                messageFromMessageKey("licenceType.scrapMetalDealer") +
+                  s" ${messageFromMessageKey("licenceType.scrapMetalDealer.hint")}"
               )
             )
           }
@@ -188,31 +174,19 @@ class LicenceDetailsControllerSpec
 
         "user is Company" when {
 
-          "the user has not previously answered the question and isScotNIPrivateBeta is false" in {
-            val session = CompanyHECSession.newSession(companyLoginData).copy(isScotNIPrivateBeta = None)
+          "the user has not previously answered the question" in {
+            val session = CompanyHECSession.newSession(companyLoginData)
             checkPageDetailsWithNoPreviousAns(
               session,
               List(
-                messageFromMessageKey("licenceType.operatorOfPrivateHireVehicles"),
-                messageFromMessageKey("licenceType.scrapMetalCollector"),
-                messageFromMessageKey("licenceType.scrapMetalDealer")
-              )
-            )
-          }
-
-          "the user has not previously answered the question and isScotNIPrivateBeta is true" in {
-            val session = CompanyHECSession.newSession(companyLoginData).copy(isScotNIPrivateBeta = Some(true))
-            checkPageDetailsWithNoPreviousAns(
-              session,
-              List(
-                messageFromMessageKey("licenceType.scotNI.operatorOfPrivateHireVehicles") +
-                  s" ${messageFromMessageKey("licenceType.scotNI.operatorOfPrivateHireVehicles.hint")}",
-                messageFromMessageKey("licenceType.scotNI.bookingOffice") +
-                  s" ${messageFromMessageKey("licenceType.scotNI.bookingOffice.hint")}",
-                messageFromMessageKey("licenceType.scotNI.scrapMetalCollector") +
-                  s" ${messageFromMessageKey("licenceType.scotNI.scrapMetalCollector.hint")}",
-                messageFromMessageKey("licenceType.scotNI.scrapMetalDealer") +
-                  s" ${messageFromMessageKey("licenceType.scotNI.scrapMetalDealer.hint")}"
+                messageFromMessageKey("licenceType.operatorOfPrivateHireVehicles") +
+                  s" ${messageFromMessageKey("licenceType.operatorOfPrivateHireVehicles.hint")}",
+                messageFromMessageKey("licenceType.bookingOffice") +
+                  s" ${messageFromMessageKey("licenceType.bookingOffice.hint")}",
+                messageFromMessageKey("licenceType.scrapMetalCollector") +
+                  s" ${messageFromMessageKey("licenceType.scrapMetalCollector.hint")}",
+                messageFromMessageKey("licenceType.scrapMetalDealer") +
+                  s" ${messageFromMessageKey("licenceType.scrapMetalDealer.hint")}"
               )
             )
           }
@@ -229,7 +203,7 @@ class LicenceDetailsControllerSpec
                 )
               )
 
-            checkPageDetailsWithPreviousAns(session, "2")
+            checkPageDetailsWithPreviousAns(session, "3")
           }
 
         }
@@ -356,7 +330,7 @@ class LicenceDetailsControllerSpec
               Some(EntityType.Individual)
             )
             val updatedAnswers =
-              IndividualUserAnswers.empty.copy(licenceType = Some(LicenceType.ScrapMetalMobileCollector))
+              IndividualUserAnswers.empty.copy(licenceType = Some(LicenceType.BookingOffice))
             val session        =
               Fixtures.individualHECSession(
                 individualLoginData,
@@ -385,7 +359,7 @@ class LicenceDetailsControllerSpec
               taxCheckStartDateTime = Some(now)
             )
             val updatedSession = session.copy(userAnswers = updatedAnswers, taxCheckStartDateTime = Some(now))
-            nextPageRedirectTest(session, updatedSession, "2", None)
+            nextPageRedirectTest(session, updatedSession, "3", None)
           }
 
           "the user has not changed the licence type they have already submitted previously" in {
@@ -435,7 +409,7 @@ class LicenceDetailsControllerSpec
               LicenceValidityPeriod.UpToOneYear
             )
             val updatedAnswers =
-              CompanyUserAnswers.empty.copy(licenceType = Some(LicenceType.ScrapMetalMobileCollector))
+              CompanyUserAnswers.empty.copy(licenceType = Some(LicenceType.BookingOffice))
             val session        =
               Fixtures.companyHECSession(companyLoginData, CompanyRetrievedJourneyData.empty, answers)
             val updatedSession = session.copy(userAnswers = updatedAnswers, taxCheckStartDateTime = Some(now))
@@ -445,12 +419,12 @@ class LicenceDetailsControllerSpec
 
           "a tax check start date time is already in session" in {
             val answers        = Fixtures.completeCompanyUserAnswers(
-              LicenceType.DriverOfTaxisAndPrivateHires,
+              LicenceType.ScrapMetalMobileCollector,
               LicenceTimeTrading.ZeroToTwoYears,
               LicenceValidityPeriod.UpToOneYear
             )
             val updatedAnswers =
-              CompanyUserAnswers.empty.copy(licenceType = Some(LicenceType.ScrapMetalMobileCollector))
+              CompanyUserAnswers.empty.copy(licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles))
             val session        =
               Fixtures.companyHECSession(
                 companyLoginData,
@@ -462,7 +436,7 @@ class LicenceDetailsControllerSpec
               )
             val updatedSession = session.copy(userAnswers = updatedAnswers, taxCheckStartDateTime = Some(now))
 
-            nextPageRedirectTest(session, updatedSession, "1", None)
+            nextPageRedirectTest(session, updatedSession, "0", None)
           }
 
           "the user has not changed the licence type they have already submitted previously" in {

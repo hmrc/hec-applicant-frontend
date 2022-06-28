@@ -48,12 +48,9 @@ class ConfirmUncertainEntityTypeController @Inject() (
 
   import EntityTypeController._
 
-  private def start(isScotNIPrivateBeta: Option[Boolean]): Call =
-    if (isScotNIPrivateBeta.contains(true)) routes.StartController.scotNIPrivateBetaStart
-    else routes.StartController.start
+  private lazy val start: Call = routes.StartController.start
 
-  private def redirectToStart(isScotNIPrivateBeta: Option[Boolean]): Result =
-    Redirect(start(isScotNIPrivateBeta))
+  private lazy val redirectToStart: Result = Redirect(start)
 
   private def calculateBack(
     sessionDataOrUncertainEntityTypeJourney: Either[HECSession, UncertainEntityTypeJourney]
@@ -61,7 +58,7 @@ class ConfirmUncertainEntityTypeController @Inject() (
     if (isSessionWithCompleteAnswers(sessionDataOrUncertainEntityTypeJourney))
       routes.CheckYourAnswersController.checkYourAnswers
     else
-      start(sessionDataOrUncertainEntityTypeJourney.fold(_.isScotNIPrivateBeta, _.isScotNIPrivateBeta))
+      start
 
   private def isSessionWithCompleteAnswers(
     sessionDataOrUncertainEntityTypeJourney: Either[HECSession, UncertainEntityTypeJourney]
@@ -101,11 +98,10 @@ class ConfirmUncertainEntityTypeController @Inject() (
             Redirect(redirectTo)
 
           case Right(journey) if journey.userSuppliedEntityType.contains(entityType) =>
-            redirectToStart(journey.isScotNIPrivateBeta)
+            redirectToStart
 
           case originalState =>
-            val isScotNIPrivateBeta = originalState.fold(_.isScotNIPrivateBeta, _.isScotNIPrivateBeta)
-            val result              = for {
+            val result = for {
               _ <- originalState.fold(
                      _ => sessionStore.delete(),
                      _ => EitherT.pure(())
@@ -113,14 +109,12 @@ class ConfirmUncertainEntityTypeController @Inject() (
               _ <- uncertainEntityTypeJourneyStore.store(
                      UncertainEntityTypeJourney(
                        originalState.fold(_.loginData.ggCredId, _.ggCredId),
-                       Some(entityType),
-                       isScotNIPrivateBeta,
-                       originalState.fold(_.isScotNIPrivateBetaEngWalUser, _.isScotNIPrivateBetaEngWalUser)
+                       Some(entityType)
                      )
                    )
             } yield ()
 
-            result.fold(_.doThrow("Could not perform update"), _ => redirectToStart(isScotNIPrivateBeta))
+            result.fold(_.doThrow("Could not perform update"), _ => redirectToStart)
         }
 
       entityTypeForm(entityTypeOptions)

@@ -114,7 +114,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
 
       val retrievedJourneyData = IndividualRetrievedJourneyData(None)
 
-      def individualTaxCheckData(preferredLanguage: Language, filterFromFileTransfer: Option[Boolean]) =
+      def individualTaxCheckData(preferredLanguage: Language) =
         IndividualHECTaxCheckData(
           IndividualApplicantDetails(
             individualLoginData.ggCredId,
@@ -138,14 +138,14 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
           HECTaxCheckSource.Digital,
           preferredLanguage,
           didConfirmUncertainEntityType,
-          filterFromFileTransfer
+          filterFromFileTransfer = None
         )
 
       val taxCheckCode = HECTaxCheckCode("code")
       val taxCheck     = HECTaxCheck(taxCheckCode, LocalDate.now().plusDays(2L), ZonedDateTime.now())
       val taxCheckJson = Json.toJson(taxCheck)
 
-      def individualSession(isScotNIPrivateBeta: Option[Boolean], isScotNIPrivateBetaEngWalUser: Option[Boolean]) =
+      val individualSession =
         Fixtures.individualHECSession(
           individualLoginData,
           retrievedJourneyData,
@@ -153,43 +153,41 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
           None,
           Some(zonedDateTimeNow),
           List.empty,
-          incomeTaxYear.some,
-          isScotNIPrivateBeta = isScotNIPrivateBeta,
-          isScotNIPrivateBetaEngWalUser = isScotNIPrivateBetaEngWalUser
+          incomeTaxYear.some
         )
 
       "return an error" when {
 
         "the http call fails" in {
-          mockSaveTaxCheck(individualTaxCheckData(Language.English, None))(Left(Error("")))
+          mockSaveTaxCheck(individualTaxCheckData(Language.English))(Left(Error("")))
 
-          val result = service.saveTaxCheck(individualSession(None, None), completeAnswers, Language.English)
+          val result = service.saveTaxCheck(individualSession, completeAnswers, Language.English)
           await(result.value) shouldBe a[Left[_, _]]
         }
 
         "the http response does not come back with status 201 (created)" in {
-          mockSaveTaxCheck(individualTaxCheckData(Language.Welsh, None))(
+          mockSaveTaxCheck(individualTaxCheckData(Language.Welsh))(
             Right(HttpResponse(OK, taxCheckJson, emptyHeaders))
           )
 
-          val result = service.saveTaxCheck(individualSession(None, None), completeAnswers, Language.Welsh)
+          val result = service.saveTaxCheck(individualSession, completeAnswers, Language.Welsh)
           await(result.value) shouldBe a[Left[_, _]]
         }
 
         "there is no json in the response" in {
-          mockSaveTaxCheck(individualTaxCheckData(Language.English, None))(Right(HttpResponse(CREATED, "hi")))
+          mockSaveTaxCheck(individualTaxCheckData(Language.English))(Right(HttpResponse(CREATED, "hi")))
 
-          val result = service.saveTaxCheck(individualSession(None, None), completeAnswers, Language.English)
+          val result = service.saveTaxCheck(individualSession, completeAnswers, Language.English)
           await(result.value) shouldBe a[Left[_, _]]
         }
 
         "the json in the response cannot be parsed" in {
           val json = Json.parse("""{ "a" : 1 }""")
-          mockSaveTaxCheck(individualTaxCheckData(Language.Welsh, None))(
+          mockSaveTaxCheck(individualTaxCheckData(Language.Welsh))(
             Right(HttpResponse(CREATED, json, emptyHeaders))
           )
 
-          val result = service.saveTaxCheck(individualSession(None, None), completeAnswers, Language.Welsh)
+          val result = service.saveTaxCheck(individualSession, completeAnswers, Language.Welsh)
           await(result.value) shouldBe a[Left[_, _]]
         }
 
@@ -198,8 +196,7 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
             individualLoginData,
             retrievedJourneyData,
             completeAnswers,
-            relevantIncomeTaxYear = incomeTaxYear.some,
-            isScotNIPrivateBeta = None
+            relevantIncomeTaxYear = incomeTaxYear.some
           )
 
           assertThrows[RuntimeException](
@@ -212,31 +209,12 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
       "return successfully" when {
 
         "the tax check has been saved and the json response can be parsed" in {
-          List(
-            (None, None, None),
-            (Some(false), None, Some(false)),
-            (Some(true), None, Some(true)),
-            (Some(true), Some(false), Some(true)),
-            (Some(true), Some(true), Some(false))
-          ).foreach { case (isScotNIPrivateBeta, isScotNIPrivateBetaEngWalUser, filterFromFileTransfer) =>
-            withClue(
-              s"For isScotNIPrivateBeta = $isScotNIPrivateBeta, " +
-                s"isScotNIPrivateBetaEngWalUser = $isScotNIPrivateBetaEngWalUser, " +
-                s"filterFromFileTransfer = $filterFromFileTransfer"
-            ) {
-              mockSaveTaxCheck(individualTaxCheckData(Language.English, filterFromFileTransfer))(
-                Right(HttpResponse(CREATED, taxCheckJson, emptyHeaders))
-              )
+          mockSaveTaxCheck(individualTaxCheckData(Language.English))(
+            Right(HttpResponse(CREATED, taxCheckJson, emptyHeaders))
+          )
 
-              val result = service.saveTaxCheck(
-                individualSession(isScotNIPrivateBeta, isScotNIPrivateBetaEngWalUser),
-                completeAnswers,
-                Language.English
-              )
-              await(result.value) shouldBe Right(taxCheck)
-            }
-          }
-
+          val result = service.saveTaxCheck(individualSession, completeAnswers, Language.English)
+          await(result.value) shouldBe Right(taxCheck)
         }
 
       }

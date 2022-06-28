@@ -274,8 +274,6 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
                 _,
                 _,
                 _,
-                _,
-                _,
                 _
               ) if allCompanyAnswersComplete(companyAnswers, companySession) =>
             val completeAnswers =
@@ -304,8 +302,6 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
                   saIncomeDeclared,
                   entityType
                 ),
-                _,
-                _,
                 _,
                 _,
                 _,

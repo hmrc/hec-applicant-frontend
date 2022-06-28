@@ -39,8 +39,7 @@ class EmailSentController @Inject() (
         Ok(
           emailSentPage(
             userSelectedEmail.emailAddress,
-            emailRequested.taxCheck,
-            request.sessionData.isScotNIPrivateBeta
+            emailRequested.taxCheck
           )
         )
       }

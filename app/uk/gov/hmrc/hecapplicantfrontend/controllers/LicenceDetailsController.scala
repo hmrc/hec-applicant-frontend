@@ -72,7 +72,7 @@ class LicenceDetailsController @Inject() (
       val emptyForm = licenceTypeForm(licenceOptions)
       licenceType.fold(emptyForm)(emptyForm.fill)
     }
-    Ok(licenceTypePage(form, back, licenceOptions, request.sessionData.isScotNIPrivateBeta))
+    Ok(licenceTypePage(form, back, licenceOptions))
   }
 
   val maxTaxChecksExceeded: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
@@ -115,8 +115,7 @@ class LicenceDetailsController @Inject() (
             licenceTypePage(
               formWithErrors,
               journeyService.previous(routes.LicenceDetailsController.licenceType),
-              licenceOptions,
-              request.sessionData.isScotNIPrivateBeta
+              licenceOptions
             )
           ),
         handleValidLicenceType
@@ -128,8 +127,7 @@ class LicenceDetailsController @Inject() (
     Ok(
       licenceTypeExitPage(
         journeyService.previous(routes.LicenceDetailsController.licenceTypeExit),
-        licenceOptions,
-        request.sessionData.isScotNIPrivateBeta
+        licenceOptions
       )
     )
   }
@@ -265,15 +263,11 @@ object LicenceDetailsController {
   val licenceValidityPeriodOptions: List[LicenceValidityPeriod] =
     List(UpToOneYear, UpToTwoYears, UpToThreeYears, UpToFourYears, UpToFiveYears)
 
-  def licenceTypeOptions(session: HECSession): List[LicenceType] = {
-    val isScotNIPrivateBeta = session.isScotNIPrivateBeta.getOrElse(false)
-
-    val options = session.loginData match {
+  def licenceTypeOptions(session: HECSession): List[LicenceType] =
+    session.loginData match {
       case _: IndividualLoginData => individualLicenceTypeOptions
       case _: CompanyLoginData    => companyLicenceTypeOptions
     }
-    if (isScotNIPrivateBeta) options else options.filterNot(_ === BookingOffice)
-  }
 
   def licenceTypeForm(options: List[LicenceType]): Form[LicenceType] =
     Form(

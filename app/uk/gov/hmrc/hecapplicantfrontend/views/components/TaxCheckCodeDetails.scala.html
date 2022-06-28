@@ -24,9 +24,8 @@
 
 @this(copyButton: CopyButton)
 
-@(taxCheckDetails: (LicenceType, List[TaxCheckListItem]), isScotNIPrivateBeta: Option[Boolean])(implicit messages: Messages)
-@optionKey = @{ if(isScotNIPrivateBeta.contains(true)) s"licenceType.scotNI" else "licenceType"}
-@licenceType = @{messages(s"$optionKey.${LicenceTypeOption.licenceTypeOption(taxCheckDetails._1, isScotNIPrivateBeta).messageKey}")}
+@(taxCheckDetails: (LicenceType, List[TaxCheckListItem]))(implicit messages: Messages)
+@licenceType = @{messages(s"licenceType.${LicenceTypeOption.licenceTypeOption(taxCheckDetails._1).messageKey}")}
 <div class="licence-type-group">
   <h2 class="govuk-heading-l">
     @licenceType

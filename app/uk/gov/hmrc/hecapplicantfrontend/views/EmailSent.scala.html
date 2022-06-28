@@ -25,11 +25,10 @@
 
 @this(layout: Layout, exitSurveyLink: ExitSurveyLink)
 
-@(email: EmailAddress, taxCheck: TaxCheckListItem, isScotNIPrivateBeta: Option[Boolean])(implicit request:
+@(email: EmailAddress, taxCheck: TaxCheckListItem)(implicit request:
 Request[_], messages: Messages)
 @key = @{"emailSent"}
 @title = @{messages(s"$key.title")}
-@optionKey = @{if (isScotNIPrivateBeta.contains(true)) "licenceType.scotNI" else "licenceType" }
 
 @layout(pageTitle = Some(title)) {
     <h1 class ="govuk-heading-xl">@title</h1>
@@ -37,7 +36,7 @@ Request[_], messages: Messages)
     <p class="govuk-body">@Html(
         messages(
             s"$key.p2",
-            messages(s"$optionKey.midSentence.${LicenceTypeOption.licenceTypeOption(taxCheck.licenceType, isScotNIPrivateBeta).messageKey}"),
+            messages(s"licenceType.midSentence.${LicenceTypeOption.licenceTypeOption(taxCheck.licenceType).messageKey}"),
             TimeUtils.govDisplayFormat(taxCheck.expiresAfter)
         )
     )</p>

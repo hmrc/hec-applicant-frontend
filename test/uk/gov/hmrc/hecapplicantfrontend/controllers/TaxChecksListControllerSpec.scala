@@ -134,16 +134,13 @@ class TaxChecksListControllerSpec
           operatorTodayTaxCheck
         )
 
-        val isScotNIPrivateBeta = Some(false)
-
         val session = Fixtures.individualHECSession(
           individualLoginData,
           IndividualRetrievedJourneyData.empty,
           answers,
           None,
           None,
-          unsortedTaxChecks,
-          isScotNIPrivateBeta = isScotNIPrivateBeta
+          unsortedTaxChecks
         )
 
         inSequence {
@@ -165,7 +162,7 @@ class TaxChecksListControllerSpec
         ) = {
           val heading = element.select("h2")
           heading
-            .text() shouldBe s"${messageFromMessageKey(s"licenceType.${LicenceTypeOption.licenceTypeOption(licenceType, isScotNIPrivateBeta).messageKey}")}"
+            .text() shouldBe s"${messageFromMessageKey(s"licenceType.${LicenceTypeOption.licenceTypeOption(licenceType).messageKey}")}"
           val taxCheckItems = element.select(".existing-code")
           taxCheckItems.size() shouldBe expectedTaxChecks.size
           expectedTaxChecks.zipWithIndex.map { case (t, index) =>
@@ -198,7 +195,7 @@ class TaxChecksListControllerSpec
           copyButton.select(".copied-content").text()        shouldBe s"${messageFromMessageKey("button.copied")}"
           copyButton.select(".govuk-visually-hidden").text() shouldBe s"${messageFromMessageKey(
             "taxChecksList.copyButtonScreenReaderText",
-            messageFromMessageKey(s"licenceType.${LicenceTypeOption.licenceTypeOption(item.licenceType, isScotNIPrivateBeta).messageKey}"),
+            messageFromMessageKey(s"licenceType.${LicenceTypeOption.licenceTypeOption(item.licenceType).messageKey}"),
             item.taxCheckCode.value
           )}"
           element.select("a.desktop-email-link").html()      shouldBe

@@ -113,8 +113,7 @@ class TaxCheckCompleteControllerSpec
             individualLoginData,
             IndividualRetrievedJourneyData.empty,
             completeIndividualAnswers,
-            Some(completedTaxCheck),
-            isScotNIPrivateBeta = Some(true)
+            Some(completedTaxCheck)
           )
 
           inSequence {
@@ -139,7 +138,7 @@ class TaxCheckCompleteControllerSpec
               doc.select(".govuk-body").html should include regex messageFromMessageKey(
                 "taxCheckComplete.p2",
                 messageFromMessageKey(
-                  s"licenceType.midSentence.${LicenceTypeOption.licenceTypeOption(completeIndividualAnswers.licenceType, Some(true)).messageKey}"
+                  s"licenceType.midSentence.${LicenceTypeOption.licenceTypeOption(completeIndividualAnswers.licenceType).messageKey}"
                 ),
                 "8 January 2020"
               )

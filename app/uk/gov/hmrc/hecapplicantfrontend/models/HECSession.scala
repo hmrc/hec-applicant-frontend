@@ -43,8 +43,6 @@ trait HECSession extends Product with Serializable {
   val hasResentEmailConfirmation: Boolean //flag added to separate the resend email confirmation journey
   val userEmailAnswers: Option[UserEmailAnswers]
   val showUserResearchBanner: Option[Boolean]
-  val isScotNIPrivateBeta: Option[Boolean]
-  val isScotNIPrivateBetaEngWalUser: Option[Boolean]
 }
 
 object HECSession {
@@ -61,9 +59,7 @@ object HECSession {
     emailRequestedForTaxCheck: Option[EmailRequestedForTaxCheck],
     hasResentEmailConfirmation: Boolean,
     userEmailAnswers: Option[UserEmailAnswers],
-    showUserResearchBanner: Option[Boolean],
-    isScotNIPrivateBeta: Option[Boolean],
-    isScotNIPrivateBetaEngWalUser: Option[Boolean]
+    showUserResearchBanner: Option[Boolean]
   ) extends HECSession {
     override val entityType: EntityType = EntityType.Individual
   }
@@ -83,9 +79,7 @@ object HECSession {
         None,
         false,
         None,
-        Some(true),
-        None,
-        None
+        Some(true)
       )
 
   }
@@ -101,9 +95,7 @@ object HECSession {
     emailRequestedForTaxCheck: Option[EmailRequestedForTaxCheck],
     hasResentEmailConfirmation: Boolean,
     userEmailAnswers: Option[UserEmailAnswers],
-    showUserResearchBanner: Option[Boolean],
-    isScotNIPrivateBeta: Option[Boolean],
-    isScotNIPrivateBetaEngWalUser: Option[Boolean]
+    showUserResearchBanner: Option[Boolean]
   ) extends HECSession {
     override val entityType: EntityType = EntityType.Company
   }
@@ -121,9 +113,7 @@ object HECSession {
         emailRequestedForTaxCheck = None,
         hasResentEmailConfirmation = false,
         userEmailAnswers = None,
-        showUserResearchBanner = Some(true),
-        isScotNIPrivateBeta = None,
-        isScotNIPrivateBetaEngWalUser = None
+        showUserResearchBanner = Some(true)
       )
 
   }

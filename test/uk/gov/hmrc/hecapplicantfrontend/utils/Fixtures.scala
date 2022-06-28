@@ -146,9 +146,7 @@ object Fixtures {
     emailRequestedForTaxCheck: Option[EmailRequestedForTaxCheck] = None,
     hasResentEmailConfirmation: Boolean = false,
     userEmailAnswers: Option[UserEmailAnswers] = None,
-    showUserResearchBanner: Option[Boolean] = None,
-    isScotNIPrivateBeta: Option[Boolean] = None,
-    isScotNIPrivateBetaEngWalUser: Option[Boolean] = None
+    showUserResearchBanner: Option[Boolean] = None
   ): IndividualHECSession =
     IndividualHECSession(
       loginData = loginData,
@@ -162,9 +160,7 @@ object Fixtures {
       emailRequestedForTaxCheck = emailRequestedForTaxCheck,
       hasResentEmailConfirmation = hasResentEmailConfirmation,
       userEmailAnswers = userEmailAnswers,
-      showUserResearchBanner = showUserResearchBanner,
-      isScotNIPrivateBeta = isScotNIPrivateBeta,
-      isScotNIPrivateBetaEngWalUser = isScotNIPrivateBetaEngWalUser
+      showUserResearchBanner = showUserResearchBanner
     )
 
   def companyLoginData(
@@ -200,9 +196,7 @@ object Fixtures {
     emailRequestedForTaxCheck: Option[EmailRequestedForTaxCheck] = None,
     hasResentEmailConfirmation: Boolean = false,
     userEmailAnswers: Option[UserEmailAnswers] = None,
-    showUserResearchBanner: Option[Boolean] = None,
-    isScotNIPrivateBeta: Option[Boolean] = None,
-    isScotNIPrivateBetaEngWalUser: Option[Boolean] = None
+    showUserResearchBanner: Option[Boolean] = None
   ): CompanyHECSession = CompanyHECSession(
     loginData = loginData,
     retrievedJourneyData = retrievedJourneyData,
@@ -214,9 +208,7 @@ object Fixtures {
     emailRequestedForTaxCheck = emailRequestedForTaxCheck,
     hasResentEmailConfirmation = hasResentEmailConfirmation,
     userEmailAnswers = userEmailAnswers,
-    showUserResearchBanner = showUserResearchBanner,
-    isScotNIPrivateBeta = isScotNIPrivateBeta,
-    isScotNIPrivateBetaEngWalUser = isScotNIPrivateBetaEngWalUser
+    showUserResearchBanner = showUserResearchBanner
   )
 
   def ctStatusResponse(

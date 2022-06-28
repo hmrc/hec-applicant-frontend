@@ -96,10 +96,8 @@
     @{
         backLocation map { back =>
             val url =
-                if (back.url === routes.StartController.start.url || back.url === routes.StartController.scotNIPrivateBetaStart.url)
-                    appConfig.applicantServiceGuidanceUrl
-                else
-                    back.url
+                if (back.url === routes.StartController.start.url) appConfig.applicantServiceGuidanceUrl
+                else back.url
             govukBackLink(BackLink(href = url, attributes = Map("id" -> "back"), content = Text(messages("button.back"))))
         }
     }

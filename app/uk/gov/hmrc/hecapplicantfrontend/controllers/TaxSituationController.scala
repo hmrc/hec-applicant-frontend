@@ -78,8 +78,7 @@ class TaxSituationController @Inject() (
                 options,
                 startDate,
                 endDate,
-                licenceType,
-                individualSession.isScotNIPrivateBeta
+                licenceType
               )
             )
           case None          =>
@@ -98,8 +97,7 @@ class TaxSituationController @Inject() (
                       options,
                       startDate,
                       endDate,
-                      licenceType,
-                      individualSession.isScotNIPrivateBeta
+                      licenceType
                     )
                   )
               )
@@ -164,8 +162,7 @@ class TaxSituationController @Inject() (
                   options,
                   startDate,
                   endDate,
-                  licenceType,
-                  individualSession.isScotNIPrivateBeta
+                  licenceType
                 )
               )
             },

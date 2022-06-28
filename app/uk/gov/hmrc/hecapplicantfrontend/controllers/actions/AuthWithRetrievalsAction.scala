@@ -17,7 +17,6 @@
 package uk.gov.hmrc.hecapplicantfrontend.controllers.actions
 
 import cats.syntax.eq._
-import cats.instances.string._
 import com.google.inject.{Inject, Singleton}
 import play.api.mvc.Results.Redirect
 import play.api.mvc._
@@ -86,11 +85,7 @@ class AuthWithRetrievalsAction @Inject() (
       }
       .recover {
         case _: NoActiveSession =>
-          val isScotNIPrivateBeta = request.uri === scotNIPrivateBetaUrl
-          val redirectTo          =
-            if (isScotNIPrivateBeta) appConfig.signInUrl(routes.StartController.scotNIPrivateBetaStart())
-            else appConfig.signInUrl(routes.StartController.start)
-
+          val redirectTo = appConfig.signInUrl(routes.StartController.start)
           auditService.sendEvent(
             ApplicantServiceStartEndPointAccessed(
               AuthenticationStatus.NotAuthenticated,
@@ -104,8 +99,6 @@ class AuthWithRetrievalsAction @Inject() (
 
       }
   }
-
-  private lazy val scotNIPrivateBetaUrl: String = routes.StartController.scotNIPrivateBetaStart().url
 
   override def parser: BodyParser[AnyContent] = mcc.parsers.defaultBodyParser
 }
