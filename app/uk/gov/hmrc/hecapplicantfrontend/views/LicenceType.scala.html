@@ -25,16 +25,15 @@
 
 @this(layout: Layout, govukErrorSummary: GovukErrorSummary, govukRadios: GovukRadios, govukButton: GovukButton, formWithCSRF: FormWithCSRF)
 
-@(form: Form[licence.LicenceType], back: Call, options: List[licence.LicenceType], isScotNIPrivateBeta: Option[Boolean])(implicit request: Request[_], messages: Messages)
+@(form: Form[licence.LicenceType], back: Call, options: List[licence.LicenceType])(implicit request: Request[_], messages: Messages)
 
 @key = @{"licenceType"}
-@optionKey = @{ if(isScotNIPrivateBeta.contains(true)) s"$key.scotNI" else key}
 @title = @{messages(s"$key.title")}
-@optionViewModels = @{options.map(LicenceTypeOption.licenceTypeOption(_, isScotNIPrivateBeta))}
+@optionViewModels = @{options.map(LicenceTypeOption.licenceTypeOption)}
 @radioOptions = @{optionViewModels.zipWithIndex.map{ case (option, index) => RadioItem(
-  content = Text(messages(s"$optionKey.${option.messageKey}")),
+  content = Text(messages(s"$key.${option.messageKey}")),
   value = Some(index.toString),
-  hint = option.hintKey.map{ h: String => Hint(content = Text(messages(s"$optionKey.$h"))) },
+  hint = option.hintKey.map{ h: String => Hint(content = Text(messages(s"$key.$h"))) },
   checked = form.data.values.toList.contains(index.toString)
 )}}
 

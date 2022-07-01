@@ -158,12 +158,11 @@ class TaxSituationControllerSpec
                 case None        => selectedOptions.isEmpty       shouldBe true
               }
 
-              val form      = doc.select("form")
-              val optionKey = if (session.isScotNIPrivateBeta.contains(true)) "taxSituation.scotNI" else "taxSituation"
+              val form = doc.select("form")
               form
                 .attr("action")            shouldBe routes.TaxSituationController.taxSituationSubmit.url
               form.select("legend").text() shouldBe messageFromMessageKey(
-                s"$optionKey.label.${LicenceTypeOption.licenceTypeOption(LicenceType.DriverOfTaxisAndPrivateHires, session.isScotNIPrivateBeta).messageKey}"
+                s"taxSituation.label.${LicenceTypeOption.licenceTypeOption(LicenceType.DriverOfTaxisAndPrivateHires).messageKey}"
               )
             }
           )
@@ -204,14 +203,12 @@ class TaxSituationControllerSpec
         }
 
         def testPage(currentDate: LocalDate, taxYear: Int) = {
-          val isScotNIPrivateBeta  = Some(true)
           val session              = Fixtures.individualHECSession(
             individualLoginData,
             IndividualRetrievedJourneyData.empty,
             IndividualUserAnswers.empty.copy(
               licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)
-            ),
-            isScotNIPrivateBeta = isScotNIPrivateBeta
+            )
           )
           val updatedSession       = session.copy(relevantIncomeTaxYear = TaxYear(taxYear).some)
           val (startDate, endDate) = getTaxPeriodStrings(TaxYear(taxYear))
@@ -235,12 +232,11 @@ class TaxSituationControllerSpec
 
               val selectedOptions = doc.select(".govuk-radios__input[checked]")
               selectedOptions.isEmpty shouldBe true
-              val optionKey = if (isScotNIPrivateBeta.contains(true)) "taxSituation.scotNI" else "taxSituation"
-              val form      = doc.select("form")
+              val form = doc.select("form")
               form
                 .attr("action")            shouldBe routes.TaxSituationController.taxSituationSubmit.url
               form.select("legend").text() shouldBe messageFromMessageKey(
-                s"$optionKey.label.${LicenceTypeOption.licenceTypeOption(LicenceType.DriverOfTaxisAndPrivateHires, isScotNIPrivateBeta).messageKey}"
+                s"taxSituation.label.${LicenceTypeOption.licenceTypeOption(LicenceType.DriverOfTaxisAndPrivateHires).messageKey}"
               )
             }
           )
@@ -280,13 +276,11 @@ class TaxSituationControllerSpec
           "display only relevant options" when {
 
             "licence type = DriverOfTaxisAndPrivateHires" in {
-              val isScotNIPrivateBeta = Some(false)
 
               val session              = Fixtures.individualHECSession(
                 individualLoginData,
                 IndividualRetrievedJourneyData.empty,
-                IndividualUserAnswers.empty.copy(licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)),
-                isScotNIPrivateBeta = isScotNIPrivateBeta
+                IndividualUserAnswers.empty.copy(licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires))
               )
               val updatedSession       = session.copy(relevantIncomeTaxYear = TaxYear(2020).some)
               val (startDate, endDate) = getTaxPeriodStrings(TaxYear(2020))
@@ -310,12 +304,11 @@ class TaxSituationControllerSpec
 
                   val selectedOptions = doc.select(".govuk-radios__input[checked]")
                   selectedOptions.isEmpty shouldBe true
-                  val optionKey = if (isScotNIPrivateBeta.contains(true)) "taxSituation.scotNI" else "taxSituation"
-                  val form      = doc.select("form")
+                  val form = doc.select("form")
                   form
                     .attr("action")            shouldBe routes.TaxSituationController.taxSituationSubmit.url
                   form.select("legend").text() shouldBe messageFromMessageKey(
-                    s"$optionKey.label.${LicenceTypeOption.licenceTypeOption(LicenceType.DriverOfTaxisAndPrivateHires, isScotNIPrivateBeta).messageKey}"
+                    s"taxSituation.label.${LicenceTypeOption.licenceTypeOption(LicenceType.DriverOfTaxisAndPrivateHires).messageKey}"
                   )
                 }
               )
@@ -329,15 +322,12 @@ class TaxSituationControllerSpec
                 LicenceType.BookingOffice
               ).foreach { licenceType =>
                 withClue(s"For licence type $licenceType: ") {
-                  val isScotNIPrivateBeta = Some(true)
-
                   val session              = Fixtures.individualHECSession(
                     individualLoginData,
                     IndividualRetrievedJourneyData.empty,
                     IndividualUserAnswers.empty.copy(
                       licenceType = Some(licenceType)
-                    ),
-                    isScotNIPrivateBeta = isScotNIPrivateBeta
+                    )
                   )
                   val updatedSession       = session.copy(relevantIncomeTaxYear = TaxYear(2020).some)
                   val (startDate, endDate) = getTaxPeriodStrings(TaxYear(2020))
@@ -362,12 +352,11 @@ class TaxSituationControllerSpec
                       val selectedOptions = doc.select(".govuk-radios__input[checked]")
                       selectedOptions.isEmpty shouldBe true
 
-                      val form      = doc.select("form")
-                      val optionKey = if (isScotNIPrivateBeta.contains(true)) "taxSituation.scotNI" else "taxSituation"
+                      val form = doc.select("form")
                       form
                         .attr("action")            shouldBe routes.TaxSituationController.taxSituationSubmit.url
                       form.select("legend").text() shouldBe messageFromMessageKey(
-                        s"$optionKey.label.${LicenceTypeOption.licenceTypeOption(licenceType, isScotNIPrivateBeta).messageKey}"
+                        s"taxSituation.label.${LicenceTypeOption.licenceTypeOption(licenceType).messageKey}"
                       )
                     }
                   )

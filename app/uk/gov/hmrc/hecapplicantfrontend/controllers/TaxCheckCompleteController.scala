@@ -50,7 +50,7 @@ class TaxCheckCompleteController @Inject() (
     */
   val taxCheckComplete: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     ensureCompletedTaxCheckAndLicenceType { case (completedTaxCheck, licenceType) =>
-      Ok(taxCheckCompletePage(completedTaxCheck, licenceType, request.sessionData.isScotNIPrivateBeta))
+      Ok(taxCheckCompletePage(completedTaxCheck, licenceType))
     }
   }
 

@@ -24,16 +24,14 @@ import cats.instances.string._
 import cats.syntax.eq._
 import cats.syntax.option._
 import cats.syntax.traverse._
-import configs.syntax._
 import com.google.inject.{Inject, Singleton}
-import play.api.Configuration
 import play.api.mvc.{Action, AnyContent, Call, MessagesControllerComponents, Request, Result}
 import uk.gov.hmrc.auth.core.retrieve.Credentials
 import uk.gov.hmrc.auth.core.{AffinityGroup, ConfidenceLevel, Enrolment, Enrolments}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.emailaddress.{EmailAddress => EmailAdd}
 import uk.gov.hmrc.hecapplicantfrontend.config.{AppConfig, EnrolmentConfig}
-import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthWithRetrievalsAction, AuthenticatedRequestWithRetrievedGGData}
+import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.AuthWithRetrievalsAction
 import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.ApplicantServiceStartEndPointAccessed
 import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.ApplicantServiceStartEndPointAccessed.AuthenticationDetails
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, IndividualHECSession}
@@ -46,13 +44,11 @@ import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
-import java.util.Locale
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class StartController @Inject() (
   appConfig: AppConfig,
-  config: Configuration,
   citizenDetailsService: CitizenDetailsService,
   taxCheckService: TaxCheckService,
   journeyService: JourneyService,
@@ -67,49 +63,12 @@ class StartController @Inject() (
 
   import StartController._
 
-  private val scotNIPrivateBetaEmailAllowListLowerCase: Map[EmailAddress, ScotNIPrivateBetaConfig] = {
-    val emails =
-      config.underlying
-        .get[List[String]]("scot-ni-email-allow-list")
-        .value
-        .map(s => EmailAddress(s.toLowerCase(Locale.UK)))
-
-    val isEngWalUsers =
-      config.underlying
-        .get[List[Boolean]]("scot-ni-email-allow-list-is-england-or-wales")
-        .value
-
-    if (emails.size =!= isEngWalUsers.size)
-      sys.error("Number of emails did not match the number of isEnglandOrWales flags")
-
-    val configs = emails.zip(isEngWalUsers).map(ScotNIPrivateBetaConfig.tupled(_))
-
-    emails.zip(configs).toMap
-  }
-
-  val scotNIPrivateBetaStart: Action[AnyContent] = authWithRetrievalsAction.async { implicit request =>
-    val retrievedEmailLowerCase = request.retrievedGGUserData.emailAddress.map(_.toLowerCase(Locale.UK))
-
-    retrievedEmailLowerCase.flatMap(e => scotNIPrivateBetaEmailAllowListLowerCase.get(EmailAddress(e))) match {
-      case Some(scotNIPrivateBetaConfig) =>
-        doStart(Some(scotNIPrivateBetaConfig))
-      case None                          =>
-        Redirect(routes.AccessDeniedController.scotNIPrivateBetaAccessDenied())
-    }
-  }
-
   val start: Action[AnyContent] = authWithRetrievalsAction.async { implicit request =>
-    doStart(None)
-  }
-
-  private def doStart(
-    scotNIPrivateBetaConfig: Option[ScotNIPrivateBetaConfig]
-  )(implicit request: AuthenticatedRequestWithRetrievedGGData[_]): Future[Result] = {
     val result = for {
       maybeStoredSession                <- sessionStore.get().leftMap(BackendError)
       details                           <-
         maybeStoredSession.fold(
-          handleNoSessionData(request.retrievedGGUserData, scotNIPrivateBetaConfig)
+          handleNoSessionData(request.retrievedGGUserData)
             .map[(Option[AuthenticationDetails], LoginData)] { case (authDetails, loginData) =>
               Some(authDetails) -> loginData
             }
@@ -119,29 +78,16 @@ class StartController @Inject() (
                                              .getUnexpiredTaxCheckCodes()
                                              .leftMap(BackendError(_): StartError)
       isConfirmedDetails                 = maybeStoredSession.fold(false)(_.fold(_.hasConfirmedDetails, _ => false))
-      isScotNIPrivateBeta                =
-        maybeStoredSession.flatMap(_.isScotNIPrivateBeta).orElse(Some(scotNIPrivateBetaConfig.isDefined))
-      isScotNIPrivateBetaEngWalUser      = maybeStoredSession
-                                             .flatMap(_.isScotNIPrivateBetaEngWalUser)
-                                             .orElse(scotNIPrivateBetaConfig.map(_.isEnglandOrWales))
       newSession                         = loginData match {
                                              case i: IndividualLoginData =>
                                                IndividualHECSession
                                                  .newSession(i)
                                                  .copy(
                                                    unexpiredTaxChecks = existingTaxChecks,
-                                                   hasConfirmedDetails = isConfirmedDetails,
-                                                   isScotNIPrivateBeta = isScotNIPrivateBeta,
-                                                   isScotNIPrivateBetaEngWalUser = isScotNIPrivateBetaEngWalUser
+                                                   hasConfirmedDetails = isConfirmedDetails
                                                  )
                                              case c: CompanyLoginData    =>
-                                               CompanyHECSession
-                                                 .newSession(c)
-                                                 .copy(
-                                                   unexpiredTaxChecks = existingTaxChecks,
-                                                   isScotNIPrivateBeta = isScotNIPrivateBeta,
-                                                   isScotNIPrivateBetaEngWalUser = isScotNIPrivateBetaEngWalUser
-                                                 )
+                                               CompanyHECSession.newSession(c).copy(unexpiredTaxChecks = existingTaxChecks)
                                            }
       _                                 <- sessionStore.store(newSession).leftMap(BackendError(_): StartError)
     } yield authenticationDetails -> newSession
@@ -156,12 +102,8 @@ class StartController @Inject() (
           sys.error(s"Backend error :: $e")
 
         case InsufficientConfidenceLevel(authDetails) =>
-          val successContinue =
-            if (scotNIPrivateBetaConfig.isDefined) routes.StartController.scotNIPrivateBetaStart()
-            else routes.StartController.start
-
           val (redirectToIvUpliftUrl, redirectToIvUpliftResult) =
-            appConfig.redirectToIvUpliftUrlWithResult(successContinue)
+            appConfig.redirectToIvUpliftUrlWithResult(routes.StartController.start)
 
           auditLogIn(Some(redirectToIvUpliftUrl), authDetails)
           redirectToIvUpliftResult
@@ -210,8 +152,7 @@ class StartController @Inject() (
   }
 
   private def handleNoSessionData(
-    retrievedGGData: RetrievedGGData,
-    scotNIPrivateBetaConfig: Option[ScotNIPrivateBetaConfig]
+    retrievedGGData: RetrievedGGData
   )(implicit request: Request[_]): EitherT[Future, StartError, (AuthenticationDetails, LoginData)] = {
     val RetrievedGGData(cl, affinityGroup, maybeNino, maybeSautr, maybeEmail, enrolments, creds) =
       retrievedGGData
@@ -294,8 +235,7 @@ class StartController @Inject() (
                 maybeEmail,
                 enrolments,
                 ggCredId,
-                authDetails,
-                scotNIPrivateBetaConfig
+                authDetails
               )
           }
 
@@ -326,8 +266,7 @@ class StartController @Inject() (
     maybeEmail: Option[String],
     enrolments: Enrolments,
     ggCredId: GGCredId,
-    authenticationDetails: AuthenticationDetails,
-    scotNIPrivateBetaConfig: Option[ScotNIPrivateBetaConfig]
+    authenticationDetails: AuthenticationDetails
   )(implicit
     hc: HeaderCarrier,
     request: Request[_]
@@ -336,7 +275,7 @@ class StartController @Inject() (
       .get()
       .leftMap(e => BackendError(e))
       .flatMap {
-        case Some(UncertainEntityTypeJourney(_, Some(EntityType.Individual), _, _)) =>
+        case Some(UncertainEntityTypeJourney(_, Some(EntityType.Individual))) =>
           handleIndividual(
             confidenceLevel,
             maybeNino,
@@ -347,7 +286,7 @@ class StartController @Inject() (
             didConfirmUncertainEntityType = Some(true)
           )
 
-        case Some(UncertainEntityTypeJourney(_, Some(EntityType.Company), _, _)) =>
+        case Some(UncertainEntityTypeJourney(_, Some(EntityType.Company))) =>
           handleOrganisation(
             maybeEmail,
             enrolments,
@@ -361,14 +300,7 @@ class StartController @Inject() (
             if (other.nonEmpty) EitherT.pure[Future, StartError](())
             else
               uncertainEntityTypeJourneyStore
-                .store(
-                  UncertainEntityTypeJourney(
-                    ggCredId,
-                    None,
-                    Some(scotNIPrivateBetaConfig.isDefined),
-                    scotNIPrivateBetaConfig.map(_.isEnglandOrWales)
-                  )
-                )
+                .store(UncertainEntityTypeJourney(ggCredId, None))
                 .leftMap(e => BackendError(e))
 
           result.subflatMap(_ => Left(UncertainEntityType(authenticationDetails)))
@@ -503,7 +435,5 @@ object StartController {
   final case class AgentLogin(authenticationDetails: AuthenticationDetails) extends StartError
 
   final case class UncertainEntityType(authenticationDetails: AuthenticationDetails) extends StartError
-
-  private final case class ScotNIPrivateBetaConfig(email: EmailAddress, isEnglandOrWales: Boolean)
 
 }

@@ -100,7 +100,7 @@ class ConfirmUncertainEntityTypeControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(Right(None))
-            mockGetUncertainEntityTypeJourney(UncertainEntityTypeJourney(ggCredId, None, Some(true), None))
+            mockGetUncertainEntityTypeJourney(UncertainEntityTypeJourney(ggCredId, None))
           }
 
           testPage(None, appConfig.applicantServiceGuidanceUrl)
@@ -151,7 +151,7 @@ class ConfirmUncertainEntityTypeControllerSpec
                   mockAuthWithNoRetrievals()
                   mockGetSession(Right(None))
                   mockGetUncertainEntityTypeJourney(
-                    UncertainEntityTypeJourney(ggCredId, Some(expectedOption), Some(false), None)
+                    UncertainEntityTypeJourney(ggCredId, Some(expectedOption))
                   )
                 }
 
@@ -181,7 +181,7 @@ class ConfirmUncertainEntityTypeControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(Right(None))
-            mockGetUncertainEntityTypeJourney(UncertainEntityTypeJourney(ggCredId, None, None, None))
+            mockGetUncertainEntityTypeJourney(UncertainEntityTypeJourney(ggCredId, None))
           }
 
           checkFormErrorIsDisplayed(
@@ -221,9 +221,9 @@ class ConfirmUncertainEntityTypeControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(Right(None))
-            mockGetUncertainEntityTypeJourney(UncertainEntityTypeJourney(ggCredId, None, Some(true), Some(false)))
+            mockGetUncertainEntityTypeJourney(UncertainEntityTypeJourney(ggCredId, None))
             mockUpdateUncertainEntityTypeJourney(
-              UncertainEntityTypeJourney(ggCredId, Some(EntityType.Company), Some(true), Some(false))
+              UncertainEntityTypeJourney(ggCredId, Some(EntityType.Company))
             )(
               Left(Error(""))
             )
@@ -260,34 +260,16 @@ class ConfirmUncertainEntityTypeControllerSpec
           }
         }
 
-        "the user had not already started a session and" when {
-
-          "the user is not on a scotNI private beta journey" in {
-            List(Some(false), None).foreach { isScotNI =>
-              inSequence {
-                mockAuthWithNoRetrievals()
-                mockGetSession(Right(None))
-                mockGetUncertainEntityTypeJourney(
-                  UncertainEntityTypeJourney(ggCredId, Some(EntityType.Company), isScotNI, None)
-                )
-              }
-
-              checkIsRedirect(performAction("entityType" -> "1"), routes.StartController.start)
-            }
-
+        "the user had not already started a session" in {
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(Right(None))
+            mockGetUncertainEntityTypeJourney(
+              UncertainEntityTypeJourney(ggCredId, Some(EntityType.Company))
+            )
           }
 
-          "the user is on a scotNI private beta journey" in {
-            inSequence {
-              mockAuthWithNoRetrievals()
-              mockGetSession(Right(None))
-              mockGetUncertainEntityTypeJourney(
-                UncertainEntityTypeJourney(ggCredId, Some(EntityType.Company), Some(true), Some(false))
-              )
-            }
-
-            checkIsRedirect(performAction("entityType" -> "1"), routes.StartController.scotNIPrivateBetaStart)
-          }
+          checkIsRedirect(performAction("entityType" -> "1"), routes.StartController.start)
         }
 
       }
@@ -297,13 +279,9 @@ class ConfirmUncertainEntityTypeControllerSpec
         "the user had already started a session" in {
           inSequence {
             mockAuthWithNoRetrievals()
-            mockGetSession(
-              individualSession.copy(isScotNIPrivateBeta = Some(false), isScotNIPrivateBetaEngWalUser = Some(false))
-            )
+            mockGetSession(individualSession)
             mockDeleteSession(Right(()))
-            mockUpdateUncertainEntityTypeJourney(
-              UncertainEntityTypeJourney(ggCredId, Some(EntityType.Company), Some(false), Some(false))
-            )(
+            mockUpdateUncertainEntityTypeJourney(UncertainEntityTypeJourney(ggCredId, Some(EntityType.Company)))(
               Right(())
             )
           }
@@ -312,7 +290,7 @@ class ConfirmUncertainEntityTypeControllerSpec
         }
 
         "the user had not already started a session" in {
-          val journey = UncertainEntityTypeJourney(ggCredId, None, Some(true), None)
+          val journey = UncertainEntityTypeJourney(ggCredId, None)
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(Right(None))
@@ -322,7 +300,7 @@ class ConfirmUncertainEntityTypeControllerSpec
             )
           }
 
-          checkIsRedirect(performAction("entityType" -> "0"), routes.StartController.scotNIPrivateBetaStart)
+          checkIsRedirect(performAction("entityType" -> "0"), routes.StartController.start)
         }
 
       }

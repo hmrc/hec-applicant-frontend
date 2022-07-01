@@ -29,8 +29,7 @@
         back: Call,
         completeAnswers: CompleteIndividualUserAnswers,
         loginData: LoginData,
-        relevantTaxYear: TaxYear,
-        isScotNIPrivateBeta: Option[Boolean]
+        relevantTaxYear: TaxYear
 )(implicit request: Request[_], messages: Messages)
 
 @key = @{"checkYourAnswers"}
@@ -41,7 +40,7 @@
     <p class="govuk-body">@messages(s"$key.p1")</p>
     @govukSummaryList(SummaryList(rows =
         summaryRows.confirmUncertainEntityTypeRow(loginData) :::
-                summaryRows.licenceDetailsRows(completeAnswers, isScotNIPrivateBeta) :::
+                summaryRows.licenceDetailsRows(completeAnswers) :::
                         summaryRows.individualRows(completeAnswers, relevantTaxYear)
     ))
     <h2 class="govuk-heading-l">@{messages(s"$key.declaration.heading")}</h2>

@@ -359,8 +359,7 @@ class EmailAddressConfirmedControllerSpec
             loginData = Fixtures.companyLoginData(emailAddress = ggUserSelectedEmail.emailAddress.some),
             emailRequestedForTaxCheck = emailRequestedForTaxCheck.some,
             userEmailAnswers = passcodeSentAndMatchedUserEmailAnswer.some,
-            userAnswers = Fixtures.completeCompanyUserAnswers(licenceType = LicenceType.BookingOffice),
-            isScotNIPrivateBeta = Some(true)
+            userAnswers = Fixtures.completeCompanyUserAnswers(licenceType = LicenceType.BookingOffice)
           )
 
           inSequence {
@@ -368,8 +367,7 @@ class EmailAddressConfirmedControllerSpec
             mockGetSession(session)
             mockSendEmail(
               ggUserSelectedEmail,
-              emailParameters =
-                emailParametersEN.copy(licenceType = messageFromMessageKey("licenceType.scotNI.driverOfTaxis"))
+              emailParameters = emailParametersEN.copy(licenceType = messageFromMessageKey("licenceType.driverOfTaxis"))
             )(Left(Error("")))
           }
 

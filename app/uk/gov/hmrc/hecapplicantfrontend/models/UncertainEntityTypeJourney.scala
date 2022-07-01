@@ -21,9 +21,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.ids.GGCredId
 
 final case class UncertainEntityTypeJourney(
   ggCredId: GGCredId,
-  userSuppliedEntityType: Option[EntityType],
-  isScotNIPrivateBeta: Option[Boolean],
-  isScotNIPrivateBetaEngWalUser: Option[Boolean]
+  userSuppliedEntityType: Option[EntityType]
 )
 
 object UncertainEntityTypeJourney {
