@@ -39,7 +39,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.views.LicenceTypeOption
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService.InconsistentSessionState
 import uk.gov.hmrc.hecapplicantfrontend.services.{JourneyService, TaxCheckService}
-import uk.gov.hmrc.hecapplicantfrontend.util.{TimeProvider, TimeUtils}
+import uk.gov.hmrc.hecapplicantfrontend.util.TimeProvider
 import uk.gov.hmrc.hecapplicantfrontend.utils.Fixtures
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -61,7 +61,7 @@ class TaxSituationControllerSpec
   def mockGetSAStatus(utr: SAUTR, taxYear: TaxYear)(result: Either[Error, SAStatusResponse]) =
     (mockTaxCheckService
       .getSAStatus(_: SAUTR, _: TaxYear)(_: HeaderCarrier))
-      .expects(utr, TaxYear(taxYear.startYear - 1), *)
+      .expects(utr, taxYear, *)
       .returning(EitherT.fromEither(result))
 
   override def overrideBindings = List(
@@ -130,16 +130,18 @@ class TaxSituationControllerSpec
 
       "display the page" when {
 
-        def displayPageTest(session: HECSession, updatedSession: HECSession, value: Option[String]) = {
-          val (startDate, endDate) = getTaxPeriodStrings(TaxYear(2020))
+        val taxYear2020 = TaxYear(2020)
+
+        def displayPageTest(session: HECSession, updatedSession: Option[HECSession], value: Option[String]) = {
+          val (startDate, endDate) = getTaxPeriodStrings(taxYear2020)
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
             mockJourneyServiceGetPrevious(routes.TaxSituationController.taxSituation, session)(
               mockPreviousCall
             )
-            mockTimeProviderToday(TimeUtils.today())
-            mockStoreSession(updatedSession)(Right(()))
+            mockTimeProviderToday(LocalDate.of(2022, 1, 1))
+            updatedSession.foreach(mockStoreSession(_)(Right(())))
           }
 
           checkPageIsDisplayed(
@@ -179,27 +181,58 @@ class TaxSituationControllerSpec
               )
             )
 
-            val updatedSession = session.copy(relevantIncomeTaxYear = TaxYear(2020).some)
-            displayPageTest(session, updatedSession, None)
+            val updatedSession = session.copy(relevantIncomeTaxYear = taxYear2020.some)
+            displayPageTest(session, Some(updatedSession), None)
           }
 
         }
 
-        "the user has previously answered the question" in {
-          val session        =
-            Fixtures.individualHECSession(
-              individualLoginData,
-              IndividualRetrievedJourneyData.empty,
-              Fixtures.completeIndividualUserAnswers(
-                LicenceType.DriverOfTaxisAndPrivateHires,
-                LicenceTimeTrading.TwoToFourYears,
-                LicenceValidityPeriod.UpToThreeYears,
-                TaxSituation.PAYE,
-                Some(YesNoAnswer.Yes)
+        "the user has previously answered the question" when {
+
+          "the tax year has not changed" in {
+            val session =
+              Fixtures.individualHECSession(
+                individualLoginData,
+                IndividualRetrievedJourneyData.empty,
+                Fixtures.completeIndividualUserAnswers(
+                  LicenceType.DriverOfTaxisAndPrivateHires,
+                  LicenceTimeTrading.TwoToFourYears,
+                  LicenceValidityPeriod.UpToThreeYears,
+                  TaxSituation.PAYE,
+                  Some(YesNoAnswer.Yes)
+                ),
+                relevantIncomeTaxYear = Some(taxYear2020)
+              )
+            displayPageTest(session, None, Some("0"))
+          }
+
+          "the tax year has changed" in {
+            val session        =
+              Fixtures.individualHECSession(
+                individualLoginData,
+                IndividualRetrievedJourneyData.empty,
+                Fixtures.completeIndividualUserAnswers(
+                  LicenceType.DriverOfTaxisAndPrivateHires,
+                  LicenceTimeTrading.TwoToFourYears,
+                  LicenceValidityPeriod.UpToThreeYears,
+                  TaxSituation.PAYE,
+                  Some(YesNoAnswer.Yes)
+                ),
+                relevantIncomeTaxYear = Some(TaxYear(2019))
+              )
+            val updatedSession = session.copy(
+              relevantIncomeTaxYear = taxYear2020.some,
+              userAnswers = Fixtures.incompleteIndividualUserAnswers(
+                Some(LicenceType.DriverOfTaxisAndPrivateHires),
+                Some(LicenceTimeTrading.TwoToFourYears),
+                Some(LicenceValidityPeriod.UpToThreeYears),
+                None,
+                None
               )
             )
-          val updatedSession = session.copy(relevantIncomeTaxYear = TaxYear(2020).some)
-          displayPageTest(session, updatedSession, Some("0"))
+            displayPageTest(session, Some(updatedSession), None)
+          }
+
         }
 
         def testPage(currentDate: LocalDate, taxYear: Int) = {
@@ -290,7 +323,7 @@ class TaxSituationControllerSpec
                 mockJourneyServiceGetPrevious(routes.TaxSituationController.taxSituation, session)(
                   mockPreviousCall
                 )
-                mockTimeProviderToday(TimeUtils.today())
+                mockTimeProviderToday(LocalDate.of(2022, 1, 1))
                 mockStoreSession(updatedSession)(Right(()))
               }
 
@@ -337,7 +370,7 @@ class TaxSituationControllerSpec
                     mockJourneyServiceGetPrevious(routes.TaxSituationController.taxSituation, session)(
                       mockPreviousCall
                     )
-                    mockTimeProviderToday(TimeUtils.today())
+                    mockTimeProviderToday(LocalDate.of(2022, 1, 1))
                     mockStoreSession(updatedSession)(Right(()))
                   }
 
@@ -568,7 +601,7 @@ class TaxSituationControllerSpec
           individualData,
           IndividualRetrievedJourneyData.empty,
           answers,
-          relevantIncomeTaxYear = TaxYear(2019).some
+          relevantIncomeTaxYear = TaxYear(2020).some
         )
 
         val updatedAnswers = answers.copy(taxSituation = Some(taxSituation))
@@ -594,12 +627,15 @@ class TaxSituationControllerSpec
       }
 
       "redirect to next page after fetching SA status" when {
+
         "tax situation = SA" in {
           testSA(TaxSituation.SA, individual.SAStatusResponse(SAUTR("utr"), TaxYear(2020), SAStatus.ReturnFound))
         }
+
         "tax situation = SAPAYE" in {
           testSA(TaxSituation.SAPAYE, individual.SAStatusResponse(SAUTR("utr"), TaxYear(2020), SAStatus.ReturnFound))
         }
+
       }
 
       "throw technical error if call to fetch SA status fails" in {
@@ -611,7 +647,7 @@ class TaxSituationControllerSpec
             individualData,
             IndividualRetrievedJourneyData.empty,
             answers,
-            relevantIncomeTaxYear = TaxYear(2019).some
+            relevantIncomeTaxYear = TaxYear(2020).some
           )
 
         inSequence {
@@ -654,46 +690,88 @@ class TaxSituationControllerSpec
             checkIsRedirect(performAction("taxSituation" -> "0"), mockNextCall)
           }
 
-          "the user has previously completed answering questions" in {
-            val answers = Fixtures.completeIndividualUserAnswers(
-              LicenceType.DriverOfTaxisAndPrivateHires,
-              LicenceTimeTrading.ZeroToTwoYears,
-              LicenceValidityPeriod.UpToThreeYears,
-              TaxSituation.PAYE,
-              Some(YesNoAnswer.Yes),
-              Some(EntityType.Individual)
-            )
+          "the user has previously completed answering questions and" when {
 
-            val session = Fixtures.individualHECSession(
-              individualLoginData.copy(sautr = Some(SAUTR("utr"))),
-              IndividualRetrievedJourneyData.empty,
-              answers,
-              relevantIncomeTaxYear = TaxYear(2020).some
-            )
-
-            val updatedAnswers = Fixtures.incompleteIndividualUserAnswers(
-              Some(LicenceType.DriverOfTaxisAndPrivateHires),
-              Some(LicenceTimeTrading.ZeroToTwoYears),
-              Some(LicenceValidityPeriod.UpToThreeYears),
-              Some(TaxSituation.PAYE),
-              None,
-              Some(EntityType.Individual)
-            )
-            val updatedSession = session.copy(userAnswers = updatedAnswers)
-
-            inSequence {
-              mockAuthWithNoRetrievals()
-              mockGetSession(session)
-              mockJourneyServiceUpdateAndNext(
-                routes.TaxSituationController.taxSituation,
-                session,
-                updatedSession
-              )(
-                Right(mockNextCall)
+            "the answer has not changed" in {
+              val answers = Fixtures.completeIndividualUserAnswers(
+                LicenceType.DriverOfTaxisAndPrivateHires,
+                LicenceTimeTrading.ZeroToTwoYears,
+                LicenceValidityPeriod.UpToThreeYears,
+                TaxSituation.PAYE,
+                Some(YesNoAnswer.Yes),
+                Some(EntityType.Individual)
               )
+
+              val session = Fixtures.individualHECSession(
+                individualLoginData.copy(sautr = Some(SAUTR("utr"))),
+                IndividualRetrievedJourneyData.empty,
+                answers,
+                relevantIncomeTaxYear = TaxYear(2020).some
+              )
+
+              inSequence {
+                mockAuthWithNoRetrievals()
+                mockGetSession(session)
+                mockJourneyServiceUpdateAndNext(
+                  routes.TaxSituationController.taxSituation,
+                  session,
+                  session
+                )(
+                  Right(mockNextCall)
+                )
+              }
+
+              checkIsRedirect(performAction("taxSituation" -> "0"), mockNextCall)
             }
 
-            checkIsRedirect(performAction("taxSituation" -> "0"), mockNextCall)
+            "the answer has changed" in {
+              val answers = Fixtures.completeIndividualUserAnswers(
+                LicenceType.DriverOfTaxisAndPrivateHires,
+                LicenceTimeTrading.ZeroToTwoYears,
+                LicenceValidityPeriod.UpToThreeYears,
+                TaxSituation.SA,
+                Some(YesNoAnswer.Yes),
+                Some(EntityType.Individual)
+              )
+
+              val session = Fixtures.individualHECSession(
+                individualLoginData.copy(sautr = Some(SAUTR("utr"))),
+                IndividualRetrievedJourneyData.empty,
+                answers,
+                relevantIncomeTaxYear = TaxYear(2020).some
+              )
+
+              val saStatusResponse = individual.SAStatusResponse(SAUTR("utr"), TaxYear(2020), SAStatus.ReturnFound)
+
+              val updatedAnswers = Fixtures.incompleteIndividualUserAnswers(
+                Some(LicenceType.DriverOfTaxisAndPrivateHires),
+                Some(LicenceTimeTrading.ZeroToTwoYears),
+                Some(LicenceValidityPeriod.UpToThreeYears),
+                Some(TaxSituation.SAPAYE),
+                None,
+                Some(EntityType.Individual)
+              )
+              val updatedSession = session.copy(
+                userAnswers = updatedAnswers,
+                retrievedJourneyData = IndividualRetrievedJourneyData(Some(saStatusResponse))
+              )
+
+              inSequence {
+                mockAuthWithNoRetrievals()
+                mockGetSession(session)
+                mockGetSAStatus(saStatusResponse.sautr, TaxYear(2020))(Right(saStatusResponse))
+                mockJourneyServiceUpdateAndNext(
+                  routes.TaxSituationController.taxSituation,
+                  session,
+                  updatedSession
+                )(
+                  Right(mockNextCall)
+                )
+              }
+
+              checkIsRedirect(performAction("taxSituation" -> "2"), mockNextCall)
+            }
+
           }
         }
 

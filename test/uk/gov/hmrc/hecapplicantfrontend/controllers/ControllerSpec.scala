@@ -55,7 +55,6 @@ trait ControllerSpec extends PlaySupport {
 
     val doc = Jsoup.parse(contentAsString(result))
     doc.select("h1").text shouldBe expectedTitle
-
     val bodyText = doc.select("body").text
     val regex    = """not_found_message\((.*?)\)""".r
 
