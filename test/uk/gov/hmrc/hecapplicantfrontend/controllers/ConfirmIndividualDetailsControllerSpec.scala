@@ -117,7 +117,7 @@ class ConfirmIndividualDetailsControllerSpec
 
     "handling submits on the confirm individual details page" must {
 
-      def performAction(): Future[Result] = controller.confirmIndividualDetailsSubmit(FakeRequest())
+      def performAction(): Future[Result] = controller.confirmIndividualDetailsSubmit(FakeRequest().withMethod(POST))
 
       behave like (authAndSessionDataBehaviour(performAction))
 

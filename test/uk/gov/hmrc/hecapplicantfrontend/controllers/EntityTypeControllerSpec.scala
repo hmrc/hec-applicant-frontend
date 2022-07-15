@@ -127,7 +127,7 @@ class EntityTypeControllerSpec
     "handling submits to the entity type page" must {
 
       def performAction(data: (String, String)*): Future[Result] =
-        controller.entityTypeSubmit(FakeRequest().withFormUrlEncodedBody(data: _*))
+        controller.entityTypeSubmit(FakeRequest().withMethod(POST).withFormUrlEncodedBody(data: _*))
 
       behave like authAndSessionDataBehaviour(() => performAction())
 

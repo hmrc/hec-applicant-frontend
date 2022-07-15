@@ -253,10 +253,10 @@ class EmailAddressConfirmedControllerSpec
     "handling submit to email address confirmed page" must {
 
       def performAction(): Future[Result] =
-        controller.emailAddressConfirmedSubmit(FakeRequest().withFormUrlEncodedBody())
+        controller.emailAddressConfirmedSubmit(FakeRequest().withMethod(POST))
 
       def performActionCY(): Future[Result] =
-        controller.emailAddressConfirmedSubmit(FakeRequest().withCookies(Cookie("PLAY_LANG", "cy")))
+        controller.emailAddressConfirmedSubmit(FakeRequest().withMethod(POST).withCookies(Cookie("PLAY_LANG", "cy")))
 
       "return a technical error" when {
 

@@ -197,7 +197,7 @@ class SAControllerSpec
     "handling submits to the SA income statement page" must {
 
       def performAction(data: (String, String)*): Future[Result] =
-        controller.saIncomeStatementSubmit(FakeRequest().withFormUrlEncodedBody(data: _*))
+        controller.saIncomeStatementSubmit(FakeRequest().withMethod(POST).withFormUrlEncodedBody(data: _*))
 
       behave like authAndSessionDataBehaviour(() => performAction())
 

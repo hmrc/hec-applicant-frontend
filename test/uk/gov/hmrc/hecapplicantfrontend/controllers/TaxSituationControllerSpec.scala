@@ -406,7 +406,7 @@ class TaxSituationControllerSpec
 
     "handling submits on the tax situation page" must {
       def performAction(data: (String, String)*): Future[Result] =
-        controller.taxSituationSubmit(FakeRequest().withFormUrlEncodedBody(data: _*))
+        controller.taxSituationSubmit(FakeRequest().withMethod(POST).withFormUrlEncodedBody(data: _*))
 
       behave like authAndSessionDataBehaviour(() => performAction())
 

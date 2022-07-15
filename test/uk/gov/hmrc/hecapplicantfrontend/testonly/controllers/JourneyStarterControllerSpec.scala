@@ -123,7 +123,7 @@ class JourneyStarterControllerSpec extends ControllerSpec {
     "handling submits on the start journey page" must {
 
       def performAction(data: (String, String)*): Future[Result] =
-        controller.journeyStarterSubmit(FakeRequest().withFormUrlEncodedBody(data: _*))
+        controller.journeyStarterSubmit(FakeRequest().withMethod(POST).withFormUrlEncodedBody(data: _*))
 
       val expectedRedirectUrl = s"${appConfig.selfBaseUrl}${nonTestOnlyRoutes.StartController.start.url}"
 

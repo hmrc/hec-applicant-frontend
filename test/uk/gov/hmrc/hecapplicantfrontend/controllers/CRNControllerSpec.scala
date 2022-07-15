@@ -152,7 +152,7 @@ class CRNControllerSpec
     "handling submit on the CRN page" must {
 
       def performAction(data: (String, String)*): Future[Result] =
-        controller.companyRegistrationNumberSubmit(FakeRequest().withFormUrlEncodedBody(data: _*))
+        controller.companyRegistrationNumberSubmit(FakeRequest().withMethod(POST).withFormUrlEncodedBody(data: _*))
 
       behave like authAndSessionDataBehaviour(() => performAction())
 

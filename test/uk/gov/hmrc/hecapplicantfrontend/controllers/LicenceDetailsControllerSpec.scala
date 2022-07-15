@@ -215,7 +215,7 @@ class LicenceDetailsControllerSpec
     "handling submits on the licence type page" must {
 
       def performAction(data: (String, String)*): Future[Result] =
-        controller.licenceTypeSubmit(FakeRequest().withFormUrlEncodedBody(data: _*))
+        controller.licenceTypeSubmit(FakeRequest().withMethod(POST).withFormUrlEncodedBody(data: _*))
 
       val now = ZonedDateTime.now()
 
@@ -552,7 +552,7 @@ class LicenceDetailsControllerSpec
     "handling submits on the licence time trading page" must {
 
       def performAction(data: (String, String)*): Future[Result] =
-        controller.licenceTimeTradingSubmit(FakeRequest().withFormUrlEncodedBody(data: _*))
+        controller.licenceTimeTradingSubmit(FakeRequest().withMethod(POST).withFormUrlEncodedBody(data: _*))
 
       behave like authAndSessionDataBehaviour(() => performAction())
 
@@ -768,7 +768,7 @@ class LicenceDetailsControllerSpec
     "handling submits on the licence time validity period page" must {
 
       def performAction(data: (String, String)*): Future[Result] =
-        controller.recentLicenceLengthSubmit(FakeRequest().withFormUrlEncodedBody(data: _*))
+        controller.recentLicenceLengthSubmit(FakeRequest().withMethod(POST).withFormUrlEncodedBody(data: _*))
 
       behave like authAndSessionDataBehaviour(() => performAction())
 

@@ -151,7 +151,7 @@ class EnterEmailAddressControllerSpec
     "handling submit to enter email address page" must {
 
       def performAction(data: (String, String)*): Future[Result] =
-        controller.enterEmailAddressSubmit(FakeRequest().withFormUrlEncodedBody(data: _*))
+        controller.enterEmailAddressSubmit(FakeRequest().withMethod(POST).withFormUrlEncodedBody(data: _*))
 
       val session = Fixtures.companyHECSession(
         loginData = Fixtures.companyLoginData(),

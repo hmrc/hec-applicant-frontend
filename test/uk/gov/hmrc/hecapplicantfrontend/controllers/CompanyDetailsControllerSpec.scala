@@ -23,7 +23,7 @@ import play.api.Configuration
 import play.api.inject.bind
 import play.api.mvc.{Cookie, Result}
 import play.api.test.FakeRequest
-import play.api.test.Helpers.{await, defaultAwaitTimeout}
+import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.hecapplicantfrontend.controllers.CompanyDetailsController.calculateLookBackPeriod
 import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.CompanyMatchFailure.{EnrolmentCTUTRCompanyMatchFailure, EnterCTUTRCompanyMatchFailure}
@@ -229,7 +229,10 @@ class CompanyDetailsControllerSpec
 
       def performAction(data: (String, String)*)(language: Language): Future[Result] =
         controller.confirmCompanyDetailsSubmit(
-          FakeRequest().withCookies(Cookie("PLAY_LANG", language.code)).withFormUrlEncodedBody(data: _*)
+          FakeRequest()
+            .withMethod(POST)
+            .withCookies(Cookie("PLAY_LANG", language.code))
+            .withFormUrlEncodedBody(data: _*)
         )
 
       behave like authAndSessionDataBehaviour(() => performAction()(Language.English))
@@ -248,7 +251,9 @@ class CompanyDetailsControllerSpec
             mockGetSession(session)
           }
 
-          val result = controller.confirmCompanyDetailsSubmit(FakeRequest().withCookies(Cookie("PLAY_LANG", "fr")))
+          val result = controller.confirmCompanyDetailsSubmit(
+            FakeRequest().withMethod(POST).withCookies(Cookie("PLAY_LANG", "fr"))
+          )
           a[RuntimeException] shouldBe thrownBy(await(result))
         }
 
@@ -703,7 +708,7 @@ class CompanyDetailsControllerSpec
       )
 
       def performAction(data: (String, String)*): Future[Result] =
-        controller.chargeableForCorporationTaxSubmit(FakeRequest().withFormUrlEncodedBody(data: _*))
+        controller.chargeableForCorporationTaxSubmit(FakeRequest().withMethod(POST).withFormUrlEncodedBody(data: _*))
 
       behave like authAndSessionDataBehaviour(() => performAction())
 
@@ -961,7 +966,7 @@ class CompanyDetailsControllerSpec
       )
 
       def performAction(data: (String, String)*): Future[Result] =
-        controller.ctIncomeStatementSubmit(FakeRequest().withFormUrlEncodedBody(data: _*))
+        controller.ctIncomeStatementSubmit(FakeRequest().withMethod(POST).withFormUrlEncodedBody(data: _*))
 
       behave like authAndSessionDataBehaviour(() => performAction())
 
@@ -1185,7 +1190,7 @@ class CompanyDetailsControllerSpec
       )
 
       def performAction(data: (String, String)*): Future[Result] =
-        controller.recentlyStartedTradingSubmit(FakeRequest().withFormUrlEncodedBody(data: _*))
+        controller.recentlyStartedTradingSubmit(FakeRequest().withMethod(POST).withFormUrlEncodedBody(data: _*))
 
       behave like authAndSessionDataBehaviour(() => performAction())
 
@@ -1407,7 +1412,10 @@ class CompanyDetailsControllerSpec
 
       def performAction(data: (String, String)*)(language: Language): Future[Result] =
         controller.enterCtutrSubmit(
-          FakeRequest().withCookies(Cookie("PLAY_LANG", language.code)).withFormUrlEncodedBody(data: _*)
+          FakeRequest()
+            .withMethod(POST)
+            .withCookies(Cookie("PLAY_LANG", language.code))
+            .withFormUrlEncodedBody(data: _*)
         )
 
       behave like authAndSessionDataBehaviour(() => performAction()(Language.English))

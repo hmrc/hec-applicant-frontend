@@ -442,7 +442,9 @@ class CheckYourAnswersControllerSpec
     "handling submits on the check your answers page" must {
 
       def performAction(language: Language) =
-        controller.checkYourAnswersSubmit(FakeRequest().withCookies(Cookie("PLAY_LANG", language.code)))
+        controller.checkYourAnswersSubmit(
+          FakeRequest().withMethod(POST).withCookies(Cookie("PLAY_LANG", language.code))
+        )
 
       behave like authAndSessionDataBehaviour(() => performAction(Language.English))
 
