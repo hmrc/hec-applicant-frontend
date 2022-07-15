@@ -63,14 +63,14 @@ class TaxSituationController @Inject() (
         val back            = journeyService.previous(routes.TaxSituationController.taxSituation)
         val taxSituationOpt = individualSession.userAnswers.fold(_.taxSituation, _.taxSituation.some)
         val options         = taxSituationOptions(licenceType)
-        val form = {
-          val emptyForm = taxSituationForm(options)
-          taxSituationOpt.fold(emptyForm)(emptyForm.fill)
-        }
+        val emptyForm       = taxSituationForm(options)
+
+        val calculatedTaxYear    = getTaxYear(timeProvider.currentDate)
+        val (startDate, endDate) = getTaxPeriodStrings(calculatedTaxYear)
 
         individualSession.relevantIncomeTaxYear match {
-          case Some(taxYear) =>
-            val (startDate, endDate) = getTaxPeriodStrings(taxYear)
+          case Some(taxYear) if taxYear === calculatedTaxYear =>
+            val form = taxSituationOpt.fold(emptyForm)(emptyForm.fill)
             Ok(
               taxSituationPage(
                 form,
@@ -81,10 +81,14 @@ class TaxSituationController @Inject() (
                 licenceType
               )
             )
-          case None          =>
-            val taxYear              = getTaxYear(timeProvider.currentDate)
-            val (startDate, endDate) = getTaxPeriodStrings(taxYear)
-            val updatedSession       = individualSession.copy(relevantIncomeTaxYear = Some(taxYear))
+
+          // tax year has not been calculated or stored before or the tax year has changed since the user
+          // last has the tax year calculated and stored
+          case _                                              =>
+            val updatedSession = individualSession.copy(
+              relevantIncomeTaxYear = Some(calculatedTaxYear),
+              userAnswers = individualSession.userAnswers.unset(_.taxSituation).unset(_.saIncomeDeclared)
+            )
             sessionStore
               .store(updatedSession)
               .fold(
@@ -92,7 +96,7 @@ class TaxSituationController @Inject() (
                 _ =>
                   Ok(
                     taxSituationPage(
-                      form,
+                      emptyForm,
                       back,
                       options,
                       startDate,
@@ -102,7 +106,6 @@ class TaxSituationController @Inject() (
                   )
               )
         }
-
       }
     }
   }
@@ -118,29 +121,33 @@ class TaxSituationController @Inject() (
           individualLoginData: IndividualLoginData,
           taxSituation: TaxSituation
         ): EitherT[Future, models.Error, Option[SAStatusResponse]] =
-          if (saTaxSituations.contains(taxSituation)) {
+          if (saTaxSituations.contains(taxSituation))
             individualLoginData.sautr
               .traverse[EitherT[Future, Error, *], SAStatusResponse](taxCheckService.getSAStatus(_, taxYear))
-          } else {
+          else
             EitherT.pure[Future, models.Error](None)
-          }
 
         def handleValidTaxSituation(taxSituation: TaxSituation): Future[Result] = {
+          val updatedSessionF =
+            if (individualSession.userAnswers.fold(_.taxSituation, c => Some(c.taxSituation)).contains(taxSituation))
+              EitherT.pure[Future, Error](individualSession)
+            else
+              fetchSAStatus(individualSession.loginData, taxSituation).map { maybeSaStatus =>
+                val updatedRetrievedData = individualSession.retrievedJourneyData.copy(saStatus = maybeSaStatus)
+                // wipe the SA income declared answer since it is dependent on the tax situation answer
+                val updatedAnswers       = individualSession.userAnswers
+                  .unset(_.taxSituation)
+                  .unset(_.saIncomeDeclared)
+                  .copy(taxSituation = Some(taxSituation))
+                individualSession.copy(
+                  userAnswers = updatedAnswers,
+                  retrievedJourneyData = updatedRetrievedData
+                )
+              }
+
           val result = for {
-            maybeSaStatus <- fetchSAStatus(individualSession.loginData, taxSituation)
-
-            updatedRetrievedData = individualSession.retrievedJourneyData.copy(saStatus = maybeSaStatus)
-            // wipe the SA income declared answer since it is dependent on the tax situation answer
-            updatedAnswers       = individualSession.userAnswers
-                                     .unset(_.taxSituation)
-                                     .unset(_.saIncomeDeclared)
-                                     .copy(taxSituation = Some(taxSituation))
-            updatedRequest       = individualSession.copy(
-                                     userAnswers = updatedAnswers,
-                                     retrievedJourneyData = updatedRetrievedData
-                                   )
-
-            next <- journeyService.updateAndNext(routes.TaxSituationController.taxSituation, updatedRequest)
+            updatedSession <- updatedSessionF
+            next           <- journeyService.updateAndNext(routes.TaxSituationController.taxSituation, updatedSession)
           } yield next
 
           result.fold(

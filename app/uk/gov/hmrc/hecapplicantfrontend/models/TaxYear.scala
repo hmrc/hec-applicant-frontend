@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models
 
+import cats.Eq
 import play.api.libs.json.{Format, Json}
 
 final case class TaxYear(startYear: Int) extends AnyVal
@@ -23,5 +24,7 @@ final case class TaxYear(startYear: Int) extends AnyVal
 object TaxYear {
 
   implicit val format: Format[TaxYear] = Json.valueFormat[TaxYear]
+
+  implicit val eq: Eq[TaxYear] = Eq.fromUniversalEquals
 
 }
