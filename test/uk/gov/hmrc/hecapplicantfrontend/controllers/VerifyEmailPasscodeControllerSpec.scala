@@ -208,7 +208,7 @@ class VerifyEmailPasscodeControllerSpec
     "handling submit to verify email passcode page" must {
 
       def performAction(data: (String, String)*): Future[Result] =
-        controller.verifyEmailPasscodeSubmit(FakeRequest().withFormUrlEncodedBody(data: _*))
+        controller.verifyEmailPasscodeSubmit(FakeRequest().withMethod(POST).withFormUrlEncodedBody(data: _*))
 
       behave like authAndSessionDataBehaviour(() => performAction())
 

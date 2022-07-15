@@ -119,7 +119,7 @@ class ResendEmailConfirmationControllerSpec
 
     "handling submit to resend email confirmation page " must {
       def performAction(): Future[Result] =
-        controller.resendEmailSubmit(FakeRequest().withFormUrlEncodedBody())
+        controller.resendEmailSubmit(FakeRequest().withMethod(POST).withFormUrlEncodedBody())
 
       "return a technical error" when {
 

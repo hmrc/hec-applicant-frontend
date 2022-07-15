@@ -179,7 +179,7 @@ class ConfirmEmailAddressControllerSpec
     "handling submit to confirm email address page" must {
 
       def performAction(data: (String, String)*): Future[Result] =
-        controller.confirmEmailAddressSubmit(FakeRequest().withFormUrlEncodedBody(data: _*))
+        controller.confirmEmailAddressSubmit(FakeRequest().withMethod(POST).withFormUrlEncodedBody(data: _*))
 
       val session = Fixtures.companyHECSession(
         loginData = Fixtures.companyLoginData(emailAddress = EmailAddress("user@test.com").some),

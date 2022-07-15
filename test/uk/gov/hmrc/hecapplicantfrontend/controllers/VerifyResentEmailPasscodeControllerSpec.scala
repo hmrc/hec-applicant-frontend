@@ -213,7 +213,7 @@ class VerifyResentEmailPasscodeControllerSpec
 
     "handling submit on verify resent email confirmation code" must {
       def performAction(data: (String, String)*): Future[Result] =
-        controller.verifyResentEmailPasscodeSubmit(FakeRequest().withFormUrlEncodedBody(data: _*))
+        controller.verifyResentEmailPasscodeSubmit(FakeRequest().withMethod(POST).withFormUrlEncodedBody(data: _*))
 
       behave like authAndSessionDataBehaviour(() => performAction())
 

@@ -277,7 +277,7 @@ class TaxChecksListControllerSpec
 
     "handling requests to submits on the tax check codes page" must {
 
-      def performAction() = controller.unexpiredTaxChecksSubmit(FakeRequest())
+      def performAction() = controller.unexpiredTaxChecksSubmit(FakeRequest().withMethod(POST))
 
       behave like (authAndSessionDataBehaviour(performAction))
 
