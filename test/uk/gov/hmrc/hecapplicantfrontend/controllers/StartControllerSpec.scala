@@ -1138,41 +1138,6 @@ class StartControllerSpec
 
       }
 
-      "redirect to the 'Verify no supported' page" when {
-
-        "the user logs in with Verify" in {
-          inSequence {
-            mockAuthWithRetrievals(
-              ConfidenceLevel.L500,
-              None,
-              Some(completeIndividualLoginData.nino),
-              Some(sautr),
-              completeIndividualLoginData.emailAddress,
-              Enrolments(Set.empty),
-              Some(Credentials("id", "Verify"))
-            )
-            mockGetSession(Right(None))
-            mockSendAuditEvent(
-              ApplicantServiceStartEndPointAccessed(
-                AuthenticationStatus.Authenticated,
-                Some(routes.VerifyController.verifyNotSupported.url),
-                Some(
-                  AuthenticationDetails(
-                    "Verify",
-                    "id",
-                    None,
-                    None,
-                    ConfidenceLevel.L500
-                  )
-                )
-              )
-            )
-          }
-
-          checkIsRedirect(performAction(), routes.VerifyController.verifyNotSupported)
-        }
-
-      }
     }
 
   }

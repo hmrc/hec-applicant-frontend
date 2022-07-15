@@ -313,13 +313,4 @@ agentsNotSupported.title=Ni allwch gael mynediad at y gwasanaeth hwn
 agentsNotSupported.p1=Ni fydd yn bosib i chi wneud gwiriad treth gan eich bod wedi mewngofnodi gan ddefnyddio Dynodydd Defnyddiwr (ID) Porth y Llywodraeth ar gyfer cyfrif gwasanaethau asiant.
 agentsNotSupported.p2=Os oes angen i’ch cleient wneud gwiriad treth, bydd rhaid iddo wneud hynny ei hun gan ddefnyddio ei gyfrif Porth y Llywodraeth ei hun. Os nad oes ganddo Ddynodydd Defnyddiwr (ID) Porth y Llywodraeth, gall greu un pan fydd yn dechrau’r gwiriad.
 agentsNotSupported.link=Dysgwch ragor am wiriadau treth
-verifyNotSupported.title=Ni allwch ddefnyddio’r gwasanaeth hwn ar hyn o bryd
-verifyNotSupported.p1=Ar hyn o bryd, rydych wedi mewngofnodi gyda GOV.UK Verify.
-verifyNotSupported.p2=Nid yw’n bosib cael mynediad at y gwasanaeth i wneud gwiriad treth wrth wneud cais am drwydded gan ddefnyddio cyfrif GOV.UK Verify.
-verifyNotSupported.p3=I wneud gwiriad treth a chael cod gwirio treth, mae’n rhaid i chi ddefnyddio math arall o gyfrif o’r enw Porth y Llywodraeth.
-verifyNotSupported.alreadyHaveGG=Os oes gennych gyfrif Porth y Llywodraeth eisoes
-verifyNotSupported.p4=Bydd angen i chi <a href="{0}" class="govuk-link">allgofnodi o’ch cyfrif GOV.UK Verify ac yna fewngofnodi i’ch cyfrif Porth y Llywodraeth</a> i wneud gwiriad treth.
-verifyNotSupported.noGG=Os nad oes gennych gyfrif Porth y Llywodraeth
-verifyNotSupported.p5=Os nad oes gennych gyfrif Porth y Llywodraeth, gallwch greu un pan fyddwch yn dechrau ar y gwiriad treth. Mae angen i chi <a href="{0}" class="govuk-link">allgofnodi o GOV.UK Verify</a> yn gyntaf.
-verifyNotSupported.link=Dysgwch ragor am wiriadau treth
 
