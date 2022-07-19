@@ -16,8 +16,11 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.controllers
 
+import cats.Eq
 import cats.data.EitherT
-import cats.implicits._
+import cats.syntax.eq._
+import cats.syntax.option._
+import cats.syntax.traverse._
 import com.google.inject.Inject
 import play.api.data.Form
 import play.api.data.Forms.{mapping, nonEmptyText, of}
@@ -25,7 +28,7 @@ import play.api.data.validation.{Constraint, Invalid, Valid}
 import play.api.i18n.I18nSupport
 import play.api.mvc._
 import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
-import uk.gov.hmrc.hecapplicantfrontend.controllers.CompanyDetailsController.{enterCtutrForm, enterCtutrFormKey}
+import uk.gov.hmrc.hecapplicantfrontend.controllers.CompanyDetailsController.{calculateLookBackPeriod, enterCtutrForm, enterCtutrFormKey}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, RequestWithSessionData, SessionDataAction}
 import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.CompanyMatchFailure.{EnrolmentCTUTRCompanyMatchFailure, EnterCTUTRCompanyMatchFailure}
 import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.CompanyMatchSuccess.{EnrolmentCTUTRCompanyMatchSuccess, EnterCTUTRCompanyMatchSuccess}
@@ -201,19 +204,21 @@ class CompanyDetailsController @Inject() (
   val recentlyStartedTrading: Action[AnyContent] =
     authAction.andThen(sessionDataAction).async { implicit request =>
       request.sessionData mapAsCompany { companySession =>
-        val recentlyStartedTrading =
-          companySession.userAnswers.fold(_.recentlyStartedTrading, _.recentlyStartedTrading)
-        val form = {
-          val emptyForm = CompanyDetailsController.yesNoForm("recentlyStartedTrading", YesNoAnswer.values)
-          recentlyStartedTrading.fold(emptyForm)(emptyForm.fill)
-        }
-        Ok(
-          recentlyStartedTradingPage(
-            form = form,
-            back = journeyService.previous(routes.CompanyDetailsController.recentlyStartedTrading),
-            options = YesNoOption.yesNoOptions
+        ensureUpToDateCTStatus(routes.CompanyDetailsController.recentlyStartedTrading, companySession) { _ =>
+          val recentlyStartedTrading =
+            companySession.userAnswers.fold(_.recentlyStartedTrading, _.recentlyStartedTrading)
+          val form = {
+            val emptyForm = CompanyDetailsController.yesNoForm("recentlyStartedTrading", YesNoAnswer.values)
+            recentlyStartedTrading.fold(emptyForm)(emptyForm.fill)
+          }
+          Ok(
+            recentlyStartedTradingPage(
+              form = form,
+              back = journeyService.previous(routes.CompanyDetailsController.recentlyStartedTrading),
+              options = YesNoOption.yesNoOptions
+            )
           )
-        )
+        }
       }
     }
 
@@ -251,21 +256,25 @@ class CompanyDetailsController @Inject() (
   val chargeableForCorporationTax: Action[AnyContent] =
     authAction.andThen(sessionDataAction).async { implicit request =>
       request.sessionData mapAsCompany { companySession =>
-        ensureCompanyDataHasCTStatusAccountingPeriod(companySession) { latestAccountingPeriod =>
-          val chargeableForCT = companySession.userAnswers.fold(_.chargeableForCT, _.chargeableForCT)
-          val endDateStr      = TimeUtils.govDisplayFormat(latestAccountingPeriod.endDate)
-          val form = {
-            val emptyForm = CompanyDetailsController.yesNoForm("chargeableForCT", YesNoAnswer.values, List(endDateStr))
-            chargeableForCT.fold(emptyForm)(emptyForm.fill)
-          }
-          Ok(
-            chargeableForCTPage(
-              form = form,
-              back = journeyService.previous(routes.CompanyDetailsController.chargeableForCorporationTax),
-              date = endDateStr,
-              options = YesNoOption.yesNoOptions
-            )
-          )
+        ensureUpToDateCTStatus(routes.CompanyDetailsController.chargeableForCorporationTax, companySession) {
+          ctStatusResponse =>
+            ensureCompanyDataHasCTStatusAccountingPeriod(ctStatusResponse) { latestAccountingPeriod =>
+              val chargeableForCT = companySession.userAnswers.fold(_.chargeableForCT, _.chargeableForCT)
+              val endDateStr      = TimeUtils.govDisplayFormat(latestAccountingPeriod.endDate)
+              val form = {
+                val emptyForm =
+                  CompanyDetailsController.yesNoForm("chargeableForCT", YesNoAnswer.values, List(endDateStr))
+                chargeableForCT.fold(emptyForm)(emptyForm.fill)
+              }
+              Ok(
+                chargeableForCTPage(
+                  form = form,
+                  back = journeyService.previous(routes.CompanyDetailsController.chargeableForCorporationTax),
+                  date = endDateStr,
+                  options = YesNoOption.yesNoOptions
+                )
+              )
+            }
         }
       }
     }
@@ -289,7 +298,6 @@ class CompanyDetailsController @Inject() (
             companySession.copy(userAnswers = updatedAnswers)
           )
         }
-
         ensureCompanyDataHasCTStatusAccountingPeriod(companySession) { latestAccountingPeriod =>
           val endDateStr = TimeUtils.govDisplayFormat(latestAccountingPeriod.endDate)
           CompanyDetailsController
@@ -563,16 +571,59 @@ class CompanyDetailsController @Inject() (
         InconsistentSessionState("Missing DES-CTUTR").doThrow
     }
 
+  private implicit val localDateEq: Eq[LocalDate] = Eq.fromUniversalEquals
+
+  private def ensureUpToDateCTStatus(
+    current: Call,
+    companySession: CompanyHECSession
+  )(f: CTStatusResponse => Future[Result])(implicit r: RequestWithSessionData[_], hc: HeaderCarrier): Future[Result] =
+    companySession.retrievedJourneyData.ctStatus match {
+      case Some(ctStatusResponse) =>
+        val currentLookBackPeriod = calculateLookBackPeriod(timeProvider.currentDate)
+        if (
+          ctStatusResponse.startDate === currentLookBackPeriod._1 && ctStatusResponse.endDate === currentLookBackPeriod._2
+        )
+          f(ctStatusResponse)
+        else {
+          val updateResult = for {
+            newCtStatusResponse        <-
+              taxCheckService.getCTStatus(ctStatusResponse.ctutr, currentLookBackPeriod._1, currentLookBackPeriod._2)
+            updatedRetrievedJourneyData = companySession.retrievedJourneyData.copy(ctStatus = newCtStatusResponse)
+            updatedAnswers              = companySession.userAnswers
+                                            .unset(_.recentlyStartedTrading)
+                                            .unset(_.chargeableForCT)
+                                            .unset(_.ctIncomeDeclared)
+            next                       <- journeyService.updateAndNext(
+                                            current,
+                                            companySession.copy(
+                                              userAnswers = updatedAnswers,
+                                              retrievedJourneyData = updatedRetrievedJourneyData
+                                            )
+                                          )
+          } yield next
+
+          updateResult.fold(
+            _.doThrow("Could not update CT status response"),
+            Redirect(_)
+          )
+        }
+      case None                   =>
+        InconsistentSessionState("Missing CT status").doThrow
+    }
+
   private def ensureCompanyDataHasCTStatusAccountingPeriod(
     companySession: CompanyHECSession
   )(f: CTAccountingPeriod => Future[Result]): Future[Result] =
-    companySession.retrievedJourneyData.ctStatus match {
-      case Some(CTStatusResponse(_, _, _, Some(latestAccountingPeriod))) => f(latestAccountingPeriod)
-      case Some(_)                                                       =>
-        InconsistentSessionState("Missing CT status latest accounting period").doThrow
-      case None                                                          =>
-        InconsistentSessionState("Missing CT status").doThrow
-    }
+    companySession.retrievedJourneyData.ctStatus.fold(InconsistentSessionState("Missing CT status").doThrow)(
+      ensureCompanyDataHasCTStatusAccountingPeriod(_)(f)
+    )
+
+  private def ensureCompanyDataHasCTStatusAccountingPeriod(
+    ctStatusResponse: CTStatusResponse
+  )(f: CTAccountingPeriod => Future[Result]): Future[Result] =
+    ctStatusResponse.latestAccountingPeriod.fold(
+      InconsistentSessionState("Missing CT status latest accounting period").doThrow
+    )(f)
 
   private def ensureUserAnswersHasCRN(
     session: CompanyHECSession
