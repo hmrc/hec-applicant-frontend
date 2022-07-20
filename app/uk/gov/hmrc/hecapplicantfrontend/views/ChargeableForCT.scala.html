@@ -25,10 +25,25 @@
 @import uk.gov.hmrc.hmrcfrontend.views.html.components.HmrcNewTabLink
 @import uk.gov.hmrc.hmrcfrontend.views.viewmodels.newtablink.NewTabLink
 @import uk.gov.hmrc.hecapplicantfrontend.views.helpers.FormErrorMessage.formErrorMessage
+@import uk.gov.hmrc.hecapplicantfrontend.views.html.components.NewRelevantAccountingPeriodNotification
 
-@this(layout: Layout, govukErrorSummary: GovukErrorSummary, govukRadios: GovukRadios, govukButton: GovukButton, formWithCSRF: FormWithCSRF, hmrcNewTabLink: HmrcNewTabLink)
+@this(
+        layout: Layout,
+        govukErrorSummary: GovukErrorSummary,
+        govukRadios: GovukRadios,
+        govukButton: GovukButton,
+        formWithCSRF: FormWithCSRF,
+        hmrcNewTabLink: HmrcNewTabLink,
+        newRelevantAccountingPeriodNotification: NewRelevantAccountingPeriodNotification
+)
 
-@(form: Form[YesNoAnswer], back: Call, date: String, options: List[YesNoOption])(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
+@(
+        form: Form[YesNoAnswer],
+        back: Call,
+        date: String,
+        options: List[YesNoOption],
+        newRelevantAccountingPeriodConsidered: Boolean
+)(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
 @key = @{"chargeableForCT"}
 @title = @{messages(s"$key.title", date)}
 @radioOptions = @{options.zipWithIndex.map{ case (option, index) => RadioItem(
@@ -44,6 +59,10 @@
       content = Text(messages(s"${e.key}.${e.message}", e.args: _*))
     )), title = Text(messages("generic.errorSummary"))))
   }
+
+    @if(newRelevantAccountingPeriodConsidered) {
+        @newRelevantAccountingPeriodNotification()
+    }
 
   @formWithCSRF(action = routes.CompanyDetailsController.chargeableForCorporationTaxSubmit) {
     @govukRadios(Radios(

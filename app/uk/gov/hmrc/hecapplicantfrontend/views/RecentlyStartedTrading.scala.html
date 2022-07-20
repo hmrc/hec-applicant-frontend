@@ -22,10 +22,24 @@
 @import uk.gov.hmrc.hecapplicantfrontend.models.YesNoAnswer
 @import uk.gov.hmrc.hecapplicantfrontend.models.views.YesNoOption
 @import uk.gov.hmrc.hecapplicantfrontend.views.helpers.FormErrorMessage.formErrorMessage
+@import uk.gov.hmrc.hecapplicantfrontend.views.html.components.NewRelevantAccountingPeriodNotification
 
-@this(layout: Layout, govukErrorSummary: GovukErrorSummary, govukRadios: GovukRadios, govukButton: GovukButton, formWithCSRF: FormWithCSRF)
+@this(
+        layout: Layout,
+        govukErrorSummary: GovukErrorSummary,
+        govukRadios: GovukRadios,
+        govukButton: GovukButton,
+        formWithCSRF: FormWithCSRF,
+        newRelevantAccountingPeriodNotification: NewRelevantAccountingPeriodNotification
+)
 
-@(form: Form[YesNoAnswer], back: Call, options: List[YesNoOption])(implicit request: Request[_], messages: Messages)
+@(
+        form: Form[YesNoAnswer],
+        back: Call,
+        options: List[YesNoOption],
+        newRelevantAccountingPeriodConsidered: Boolean
+)(implicit request: Request[_], messages: Messages)
+
 @key = @{"recentlyStartedTrading"}
 @title = @{messages(s"$key.title")}
 @radioOptions = @{options.zipWithIndex.map{ case (option, index) => RadioItem(
@@ -35,12 +49,18 @@
 )}}
 
 @layout(pageTitle = Some(title), hasErrors = form.hasErrors, backLocation = Some(back)) {
-  @if(form.errors.nonEmpty) {
+
+    @if(form.errors.nonEmpty) {
     @govukErrorSummary(ErrorSummary(errorList = form.errors.map(e => ErrorLink(
       href = Some(s"#${e.key}"),
       content = Text(s"${messages(s"${e.key}.${e.message}")}")
     )), title = Text(messages("generic.errorSummary"))))
   }
+
+    @if(newRelevantAccountingPeriodConsidered) {
+        @newRelevantAccountingPeriodNotification()
+    }
+
   @formWithCSRF(action = routes.CompanyDetailsController.recentlyStartedTradingSubmit) {
     @govukRadios(Radios(
       fieldset = Some(Fieldset(

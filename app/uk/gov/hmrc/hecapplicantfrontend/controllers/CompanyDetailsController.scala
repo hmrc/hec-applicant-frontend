@@ -213,9 +213,10 @@ class CompanyDetailsController @Inject() (
           }
           Ok(
             recentlyStartedTradingPage(
-              form = form,
-              back = journeyService.previous(routes.CompanyDetailsController.recentlyStartedTrading),
-              options = YesNoOption.yesNoOptions
+              form,
+              journeyService.previous(routes.CompanyDetailsController.recentlyStartedTrading),
+              YesNoOption.yesNoOptions,
+              companySession.newRelevantAccountingPeriodConsidered.contains(true)
             )
           )
         }
@@ -243,9 +244,10 @@ class CompanyDetailsController @Inject() (
             formWithErrors =>
               Ok(
                 recentlyStartedTradingPage(
-                  form = formWithErrors,
-                  back = journeyService.previous(routes.CompanyDetailsController.recentlyStartedTrading),
-                  options = YesNoOption.yesNoOptions
+                  formWithErrors,
+                  journeyService.previous(routes.CompanyDetailsController.recentlyStartedTrading),
+                  YesNoOption.yesNoOptions,
+                  companySession.newRelevantAccountingPeriodConsidered.contains(true)
                 )
               ),
             handleValidAnswer
@@ -268,10 +270,11 @@ class CompanyDetailsController @Inject() (
               }
               Ok(
                 chargeableForCTPage(
-                  form = form,
-                  back = journeyService.previous(routes.CompanyDetailsController.chargeableForCorporationTax),
-                  date = endDateStr,
-                  options = YesNoOption.yesNoOptions
+                  form,
+                  journeyService.previous(routes.CompanyDetailsController.chargeableForCorporationTax),
+                  endDateStr,
+                  YesNoOption.yesNoOptions,
+                  companySession.newRelevantAccountingPeriodConsidered.contains(true)
                 )
               )
             }
@@ -307,10 +310,11 @@ class CompanyDetailsController @Inject() (
               formWithErrors =>
                 Ok(
                   chargeableForCTPage(
-                    form = formWithErrors,
-                    back = journeyService.previous(routes.CompanyDetailsController.chargeableForCorporationTax),
-                    date = endDateStr,
-                    options = YesNoOption.yesNoOptions
+                    formWithErrors,
+                    journeyService.previous(routes.CompanyDetailsController.chargeableForCorporationTax),
+                    endDateStr,
+                    YesNoOption.yesNoOptions,
+                    companySession.newRelevantAccountingPeriodConsidered.contains(true)
                   )
                 ),
               handleValidAnswer
@@ -582,29 +586,39 @@ class CompanyDetailsController @Inject() (
         val currentLookBackPeriod = calculateLookBackPeriod(timeProvider.currentDate)
         if (
           ctStatusResponse.startDate === currentLookBackPeriod._1 && ctStatusResponse.endDate === currentLookBackPeriod._2
-        )
-          f(ctStatusResponse)
-        else {
+        ) {
+          val updateResult =
+            if (companySession.newRelevantAccountingPeriodConsidered.contains(true))
+              sessionStore.store(companySession.copy(newRelevantAccountingPeriodConsidered = None))
+            else
+              EitherT.pure[Future, Error](())
+
+          updateResult.foldF(_.doThrow("Could not update session"), _ => f(ctStatusResponse))
+        } else {
           val updateResult = for {
-            newCtStatusResponse        <-
+            newCtStatusResponse                  <-
               taxCheckService.getCTStatus(ctStatusResponse.ctutr, currentLookBackPeriod._1, currentLookBackPeriod._2)
-            updatedRetrievedJourneyData = companySession.retrievedJourneyData.copy(ctStatus = newCtStatusResponse)
-            updatedAnswers              = companySession.userAnswers
-                                            .unset(_.recentlyStartedTrading)
-                                            .unset(_.chargeableForCT)
-                                            .unset(_.ctIncomeDeclared)
-            next                       <- journeyService.updateAndNext(
-                                            current,
-                                            companySession.copy(
-                                              userAnswers = updatedAnswers,
-                                              retrievedJourneyData = updatedRetrievedJourneyData
-                                            )
-                                          )
+            updatedRetrievedJourneyData           = companySession.retrievedJourneyData.copy(ctStatus = newCtStatusResponse)
+            updatedAnswers                        = companySession.userAnswers
+                                                      .unset(_.recentlyStartedTrading)
+                                                      .unset(_.chargeableForCT)
+                                                      .unset(_.ctIncomeDeclared)
+            newRelevantAccountingPeriodConsidered = newCtStatusResponse.flatMap(
+                                                      _.latestAccountingPeriod.map(_.endDate)
+                                                    ) =!= ctStatusResponse.latestAccountingPeriod.map(_.endDate)
+            next                                 <- journeyService.updateAndNext(
+                                                      current,
+                                                      companySession.copy(
+                                                        userAnswers = updatedAnswers,
+                                                        retrievedJourneyData = updatedRetrievedJourneyData,
+                                                        newRelevantAccountingPeriodConsidered = Some(newRelevantAccountingPeriodConsidered)
+                                                      )
+                                                    )
           } yield next
 
           updateResult.fold(
             _.doThrow("Could not update CT status response"),
-            Redirect(_)
+            Redirect
           )
         }
       case None                   =>
