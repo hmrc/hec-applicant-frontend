@@ -434,4 +434,4 @@ agentsNotSupported.p2 = If your client needs to do a tax check, they must do it 
 agentsNotSupported.link = Find out more about tax checks
 
 # New relevant accounting period considered notification
-newRelevantAccountingPeriod.notification=We are asking about a different accounting period now because the date has changed since your answer
+newRelevantAccountingPeriod.notification=Read carefully: the accounting period referred to in this question has changed
