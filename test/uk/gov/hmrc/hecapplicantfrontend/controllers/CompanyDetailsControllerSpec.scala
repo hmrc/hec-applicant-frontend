@@ -610,13 +610,13 @@ class CompanyDetailsControllerSpec
 
       "display the page" when {
 
-        def test(session: CompanyHECSession, value: Option[String]) = {
+        def test(session: CompanyHECSession, value: Option[String], newTaxPeriodMessage: Option[String]) = {
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
             mockTimeProviderToday(date)
-            if (session.newRelevantAccountingPeriodConsidered.contains(true))
-              mockStoreSession(session.copy(newRelevantAccountingPeriodConsidered = None))(Right(()))
+            if (session.newCompanyTaxPeriodConsidered.isDefined)
+              mockStoreSession(session.copy(newCompanyTaxPeriodConsidered = None))(Right(()))
             mockJourneyServiceGetPrevious(routes.CompanyDetailsController.chargeableForCorporationTax, session)(
               mockPreviousCall
             )
@@ -629,12 +629,7 @@ class CompanyDetailsControllerSpec
               doc.select("#back").attr("href") shouldBe mockPreviousCall.url
 
               val newRelevantAccountingPeriodNotification = doc.select(".govuk-notification-banner__content")
-              val expectedNotificationText                =
-                if (session.newRelevantAccountingPeriodConsidered.contains(true))
-                  messageFromMessageKey("newTaxPeriod.notification.Company")
-                else ""
-
-              newRelevantAccountingPeriodNotification.text() shouldBe expectedNotificationText
+              newRelevantAccountingPeriodNotification.text() shouldBe newTaxPeriodMessage.getOrElse("")
 
               val selectedOptions = doc.select(".govuk-radios__input[checked]")
 
@@ -655,7 +650,7 @@ class CompanyDetailsControllerSpec
           val session =
             Fixtures.companyHECSession(companyLoginData, companyData, CompanyUserAnswers.empty)
 
-          test(session, None)
+          test(session, None, None)
         }
 
         "the user has previously answered the question" in {
@@ -673,20 +668,47 @@ class CompanyDetailsControllerSpec
             .copy(chargeableForCT = Some(YesNoAnswer.Yes))
           val updatedSession = session.copy(userAnswers = updatedAnswers)
 
-          test(updatedSession, Some("0"))
+          test(updatedSession, Some("0"), None)
 
         }
 
-        "a new relevant income tax year has been considered" in {
-          val session =
-            Fixtures.companyHECSession(
-              companyLoginData,
-              companyData,
-              CompanyUserAnswers.empty,
-              newRelevantAccountingPeriodConsidered = Some(true)
-            )
+        "a new relevant income tax year has been considered and" when {
 
-          test(session, None)
+          "an accounting period was present before" in {
+            val session =
+              Fixtures.companyHECSession(
+                companyLoginData,
+                companyData,
+                CompanyUserAnswers.empty,
+                newRelevantAccountingPeriodConsidered = Some(
+                  NewCompanyTaxPeriodConsidered(
+                    Fixtures.ctStatusResponse(latestAccountingPeriod = Some(Fixtures.ctAccountingPeriod()))
+                  )
+                )
+              )
+
+            test(
+              session,
+              None,
+              Some(messageFromMessageKey("newTaxPeriod.notification.company.accountingPeriodChanged"))
+            )
+          }
+
+          "an accounting period was not present before" in {
+            val session =
+              Fixtures.companyHECSession(
+                companyLoginData,
+                companyData,
+                CompanyUserAnswers.empty,
+                newRelevantAccountingPeriodConsidered = Some(
+                  NewCompanyTaxPeriodConsidered(
+                    Fixtures.ctStatusResponse(latestAccountingPeriod = None)
+                  )
+                )
+              )
+
+            test(session, None, Some(messageFromMessageKey("newTaxPeriod.notification.company.newAccountingPeriod")))
+          }
         }
 
       }
@@ -1141,13 +1163,13 @@ class CompanyDetailsControllerSpec
       "display the page" when {
         val companyData = retrievedJourneyDataWithCompanyName.copy(ctStatus = Some(ctStatusResponse))
 
-        def test(session: CompanyHECSession, value: Option[String]) = {
+        def test(session: CompanyHECSession, value: Option[String], newTaxPeriodMessage: Option[String]) = {
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
             mockTimeProviderToday(date)
-            if (session.newRelevantAccountingPeriodConsidered.contains(true))
-              mockStoreSession(session.copy(newRelevantAccountingPeriodConsidered = None))(Right(()))
+            if (session.newCompanyTaxPeriodConsidered.isDefined)
+              mockStoreSession(session.copy(newCompanyTaxPeriodConsidered = None))(Right(()))
             mockJourneyServiceGetPrevious(recentlyStartedTradingRoute, session)(mockPreviousCall)
           }
 
@@ -1158,12 +1180,7 @@ class CompanyDetailsControllerSpec
               doc.select("#back").attr("href") shouldBe mockPreviousCall.url
 
               val newRelevantAccountingPeriodNotification = doc.select(".govuk-notification-banner__content")
-              val expectedNotificationText                =
-                if (session.newRelevantAccountingPeriodConsidered.contains(true))
-                  messageFromMessageKey("newTaxPeriod.notification.Company")
-                else ""
-
-              newRelevantAccountingPeriodNotification.text() shouldBe expectedNotificationText
+              newRelevantAccountingPeriodNotification.text() shouldBe newTaxPeriodMessage.getOrElse("")
 
               val selectedOptions = doc.select(".govuk-radios__input[checked]")
               value match {
@@ -1178,15 +1195,13 @@ class CompanyDetailsControllerSpec
         }
 
         "the user has not previously answered the question " in {
-
           val session =
             Fixtures.companyHECSession(companyLoginData, companyData, CompanyUserAnswers.empty)
-          test(session, None)
+          test(session, None, None)
 
         }
 
         "the user has previously answered the question" in {
-
           val answers = Fixtures.completeCompanyUserAnswers(
             licenceType = LicenceType.OperatorOfPrivateHireVehicles,
             licenceTimeTrading = LicenceTimeTrading.ZeroToTwoYears,
@@ -1201,7 +1216,7 @@ class CompanyDetailsControllerSpec
             .copy(recentlyStartedTrading = Some(YesNoAnswer.No))
           val updatedSession = session.copy(userAnswers = updatedAnswers)
 
-          test(updatedSession, Some("1"))
+          test(updatedSession, Some("1"), None)
         }
 
         "a new relevant income tax year has been considered" in {
@@ -1210,10 +1225,16 @@ class CompanyDetailsControllerSpec
               companyLoginData,
               companyData,
               CompanyUserAnswers.empty,
-              newRelevantAccountingPeriodConsidered = Some(true)
+              newRelevantAccountingPeriodConsidered = Some(
+                NewCompanyTaxPeriodConsidered(
+                  Fixtures.ctStatusResponse(
+                    latestAccountingPeriod = Some(Fixtures.ctAccountingPeriod())
+                  )
+                )
+              )
             )
 
-          test(session, None)
+          test(session, None, Some(messageFromMessageKey("newTaxPeriod.notification.company.noAccountingPeriod")))
         }
 
       }
@@ -2174,13 +2195,15 @@ class CompanyDetailsControllerSpec
           val session =
             Fixtures.companyHECSession(
               retrievedJourneyData = Fixtures.companyRetrievedJourneyData(ctStatus = Some(todayCtStatusResponse)),
-              newRelevantAccountingPeriodConsidered = Some(true)
+              newRelevantAccountingPeriodConsidered = Some(
+                NewCompanyTaxPeriodConsidered(Fixtures.ctStatusResponse())
+              )
             )
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
             mockTimeProviderToday(today)
-            mockStoreSession(session.copy(newRelevantAccountingPeriodConsidered = None))(Left(Error("")))
+            mockStoreSession(session.copy(newCompanyTaxPeriodConsidered = None))(Left(Error("")))
           }
 
           a[RuntimeException] shouldBe thrownBy(await(performAction()))
@@ -2210,19 +2233,16 @@ class CompanyDetailsControllerSpec
         }
 
         "updating the session fails" in {
-          val answers = Fixtures.completeCompanyUserAnswers(
+          val answers                  = Fixtures.completeCompanyUserAnswers(
             chargeableForCT = Some(YesNoAnswer.Yes),
             recentlyStartedTrading = Some(YesNoAnswer.No),
             ctIncomeDeclared = Some(YesNoAnswer.Yes)
           )
-          val session =
+          val originalCtStatusResponse = yesterdayCtStatusResponse.copy(latestAccountingPeriod = None)
+          val session                  =
             Fixtures.companyHECSession(
               retrievedJourneyData = Fixtures.companyRetrievedJourneyData(
-                ctStatus = Some(
-                  yesterdayCtStatusResponse.copy(
-                    latestAccountingPeriod = None
-                  )
-                )
+                ctStatus = Some(originalCtStatusResponse)
               ),
               userAnswers = answers
             )
@@ -2248,7 +2268,7 @@ class CompanyDetailsControllerSpec
                 answers.ctutr
               ),
               retrievedJourneyData = session.retrievedJourneyData.copy(ctStatus = Some(updatedCtStatusResponse)),
-              newRelevantAccountingPeriodConsidered = Some(true)
+              newCompanyTaxPeriodConsidered = Some(NewCompanyTaxPeriodConsidered(originalCtStatusResponse))
             )
 
           inSequence {
@@ -2288,7 +2308,7 @@ class CompanyDetailsControllerSpec
         "the 'newRelevantAccountingPeriodConsidered' in session is not defined" in {
           inSequence {
             mockAuthWithNoRetrievals()
-            mockGetSession(session.copy(newRelevantAccountingPeriodConsidered = None))
+            mockGetSession(session.copy(newCompanyTaxPeriodConsidered = None))
             mockTimeProviderToday(yesterday)
             mockJourneyServiceGetPrevious(currentEndpoint, session)(mockPreviousCall)
           }
@@ -2296,27 +2316,16 @@ class CompanyDetailsControllerSpec
           status(performAction()) shouldBe OK
         }
 
-        "the 'newRelevantAccountingPeriodConsidered' in session is false" in {
-          val initialSession = session.copy(newRelevantAccountingPeriodConsidered = Some(false))
+        "the 'newRelevantAccountingPeriodConsidered' in session is defined" in {
+          val initialSession = session.copy(newCompanyTaxPeriodConsidered =
+            Some(NewCompanyTaxPeriodConsidered(Fixtures.ctStatusResponse()))
+          )
 
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(initialSession)
             mockTimeProviderToday(yesterday)
-            mockJourneyServiceGetPrevious(currentEndpoint, initialSession)(mockPreviousCall)
-          }
-
-          status(performAction()) shouldBe OK
-        }
-
-        "the 'newRelevantAccountingPeriodConsidered' in session is true" in {
-          val initialSession = session.copy(newRelevantAccountingPeriodConsidered = Some(true))
-
-          inSequence {
-            mockAuthWithNoRetrievals()
-            mockGetSession(initialSession)
-            mockTimeProviderToday(yesterday)
-            mockStoreSession(initialSession.copy(newRelevantAccountingPeriodConsidered = None))(Right(()))
+            mockStoreSession(initialSession.copy(newCompanyTaxPeriodConsidered = None))(Right(()))
             mockJourneyServiceGetPrevious(currentEndpoint, initialSession)(mockPreviousCall)
           }
 
@@ -2356,7 +2365,7 @@ class CompanyDetailsControllerSpec
               ctIncomeDeclared = None
             ),
             retrievedJourneyData = session.retrievedJourneyData.copy(ctStatus = Some(todayCtStatusResponse)),
-            newRelevantAccountingPeriodConsidered = Some(false)
+            newCompanyTaxPeriodConsidered = None
           )
 
         inSequence {
@@ -2387,18 +2396,16 @@ class CompanyDetailsControllerSpec
       }
 
       "the relevant accounting period has changed" in {
-        val answers = Fixtures.incompleteCompanyUserAnswers()
-
-        val session =
+        val answers                  = Fixtures.incompleteCompanyUserAnswers()
+        val originalCtStatusResponse = successfulCtStatusResponse.copy(
+          startDate = yesterdayLookBackPeriodStart,
+          endDate = yesterdayLookBackPeriodEnd
+        )
+        val session                  =
           Fixtures.companyHECSession(
             userAnswers = answers,
-            retrievedJourneyData = Fixtures.companyRetrievedJourneyData(ctStatus =
-              Some(
-                successfulCtStatusResponse.copy(
-                  startDate = yesterdayLookBackPeriodStart,
-                  endDate = yesterdayLookBackPeriodEnd
-                )
-              )
+            retrievedJourneyData = Fixtures.companyRetrievedJourneyData(
+              ctStatus = Some(originalCtStatusResponse)
             )
           )
 
@@ -2410,7 +2417,7 @@ class CompanyDetailsControllerSpec
           session.copy(
             userAnswers = answers,
             retrievedJourneyData = session.retrievedJourneyData.copy(ctStatus = Some(updatedCtStatusResponse)),
-            newRelevantAccountingPeriodConsidered = Some(true)
+            newCompanyTaxPeriodConsidered = Some(NewCompanyTaxPeriodConsidered(originalCtStatusResponse))
           )
 
         inSequence {

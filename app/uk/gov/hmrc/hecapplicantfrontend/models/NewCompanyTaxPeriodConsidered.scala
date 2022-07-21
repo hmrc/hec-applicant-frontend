@@ -1,4 +1,4 @@
-@*
+/*
  * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,16 +12,17 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *@
+ */
 
-@import uk.gov.hmrc.govukfrontend.views.viewmodels.notificationbanner.NotificationBanner
-@import uk.gov.hmrc.govukfrontend.views.html.components.GovukNotificationBanner
-@import uk.gov.hmrc.govukfrontend.views.viewmodels.content.Text
+package uk.gov.hmrc.hecapplicantfrontend.models
 
-@this(govukNotificationBanner: GovukNotificationBanner)
+import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.company.CTStatusResponse
 
-@(message: String))
+final case class NewCompanyTaxPeriodConsidered(previousCtStatusResponse: CTStatusResponse)
 
-@govukNotificationBanner(
-    NotificationBanner(content = Text(message))
-)
+object NewCompanyTaxPeriodConsidered {
+
+  implicit val format: OFormat[NewCompanyTaxPeriodConsidered] = Json.format
+
+}

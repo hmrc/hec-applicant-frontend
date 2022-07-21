@@ -197,7 +197,7 @@ object Fixtures {
     hasResentEmailConfirmation: Boolean = false,
     userEmailAnswers: Option[UserEmailAnswers] = None,
     showUserResearchBanner: Option[Boolean] = None,
-    newRelevantAccountingPeriodConsidered: Option[Boolean] = None
+    newRelevantAccountingPeriodConsidered: Option[NewCompanyTaxPeriodConsidered] = None
   ): CompanyHECSession = CompanyHECSession(
     loginData = loginData,
     retrievedJourneyData = retrievedJourneyData,
@@ -210,7 +210,7 @@ object Fixtures {
     hasResentEmailConfirmation = hasResentEmailConfirmation,
     userEmailAnswers = userEmailAnswers,
     showUserResearchBanner = showUserResearchBanner,
-    newRelevantAccountingPeriodConsidered = newRelevantAccountingPeriodConsidered
+    newCompanyTaxPeriodConsidered = newRelevantAccountingPeriodConsidered
   )
 
   def ctStatusResponse(

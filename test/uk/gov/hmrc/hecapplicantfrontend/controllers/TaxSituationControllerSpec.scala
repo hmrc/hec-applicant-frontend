@@ -158,7 +158,7 @@ class TaxSituationControllerSpec
               val newIncomeTaxYearNotification = doc.select(".govuk-notification-banner__content")
               val expectedNotificationText     =
                 if (relevantIncomeTaxYearChanged)
-                  messageFromMessageKey("newTaxPeriod.notification.Individual")
+                  messageFromMessageKey("newTaxPeriod.notification.individual")
                 else ""
 
               newIncomeTaxYearNotification.text() shouldBe expectedNotificationText

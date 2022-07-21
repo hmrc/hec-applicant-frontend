@@ -216,7 +216,7 @@ class CompanyDetailsController @Inject() (
               form,
               journeyService.previous(routes.CompanyDetailsController.recentlyStartedTrading),
               YesNoOption.yesNoOptions,
-              companySession.newRelevantAccountingPeriodConsidered.contains(true)
+              companySession.newCompanyTaxPeriodConsidered
             )
           )
         }
@@ -247,7 +247,7 @@ class CompanyDetailsController @Inject() (
                   formWithErrors,
                   journeyService.previous(routes.CompanyDetailsController.recentlyStartedTrading),
                   YesNoOption.yesNoOptions,
-                  companySession.newRelevantAccountingPeriodConsidered.contains(true)
+                  companySession.newCompanyTaxPeriodConsidered
                 )
               ),
             handleValidAnswer
@@ -274,7 +274,7 @@ class CompanyDetailsController @Inject() (
                   journeyService.previous(routes.CompanyDetailsController.chargeableForCorporationTax),
                   endDateStr,
                   YesNoOption.yesNoOptions,
-                  companySession.newRelevantAccountingPeriodConsidered.contains(true)
+                  companySession.newCompanyTaxPeriodConsidered
                 )
               )
             }
@@ -314,7 +314,7 @@ class CompanyDetailsController @Inject() (
                     journeyService.previous(routes.CompanyDetailsController.chargeableForCorporationTax),
                     endDateStr,
                     YesNoOption.yesNoOptions,
-                    companySession.newRelevantAccountingPeriodConsidered.contains(true)
+                    companySession.newCompanyTaxPeriodConsidered
                   )
                 ),
               handleValidAnswer
@@ -588,8 +588,8 @@ class CompanyDetailsController @Inject() (
           ctStatusResponse.startDate === currentLookBackPeriod._1 && ctStatusResponse.endDate === currentLookBackPeriod._2
         ) {
           val updateResult =
-            if (companySession.newRelevantAccountingPeriodConsidered.contains(true))
-              sessionStore.store(companySession.copy(newRelevantAccountingPeriodConsidered = None))
+            if (companySession.newCompanyTaxPeriodConsidered.isDefined)
+              sessionStore.store(companySession.copy(newCompanyTaxPeriodConsidered = None))
             else
               EitherT.pure[Future, Error](())
 
@@ -603,15 +603,18 @@ class CompanyDetailsController @Inject() (
                                                       .unset(_.recentlyStartedTrading)
                                                       .unset(_.chargeableForCT)
                                                       .unset(_.ctIncomeDeclared)
-            newRelevantAccountingPeriodConsidered = newCtStatusResponse.flatMap(
-                                                      _.latestAccountingPeriod.map(_.endDate)
-                                                    ) =!= ctStatusResponse.latestAccountingPeriod.map(_.endDate)
+            oldLatestAccountingPeriodEndDate      = ctStatusResponse.latestAccountingPeriod.map(_.endDate)
+            newLatestAccountingPeriodEndDate      = newCtStatusResponse.flatMap(_.latestAccountingPeriod.map(_.endDate))
+            accountingPeriodChanged               = oldLatestAccountingPeriodEndDate =!= newLatestAccountingPeriodEndDate
+            newRelevantAccountingPeriodConsidered = if (accountingPeriodChanged)
+                                                      Some(NewCompanyTaxPeriodConsidered(ctStatusResponse))
+                                                    else None
             next                                 <- journeyService.updateAndNext(
                                                       current,
                                                       companySession.copy(
                                                         userAnswers = updatedAnswers,
                                                         retrievedJourneyData = updatedRetrievedJourneyData,
-                                                        newRelevantAccountingPeriodConsidered = Some(newRelevantAccountingPeriodConsidered)
+                                                        newCompanyTaxPeriodConsidered = newRelevantAccountingPeriodConsidered
                                                       )
                                                     )
           } yield next

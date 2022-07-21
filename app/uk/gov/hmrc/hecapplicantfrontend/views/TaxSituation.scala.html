@@ -74,7 +74,7 @@ Request[_], messages: Messages, appConfig: AppConfig)
     }
 
     @if(newRelevantIncomeTaxYearConsidered){
-        @newTaxPeriodNotification(models.EntityType.Individual)
+        @newTaxPeriodNotification(messages("newTaxPeriod.notification.individual"))
     }
 
     <h1 class="govuk-heading-l">
