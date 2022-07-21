@@ -19,16 +19,31 @@
 @import play.api.mvc.{Call, Request}
 @import uk.gov.hmrc.govukfrontend.views.html.components._
 @import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
-@import uk.gov.hmrc.hecapplicantfrontend.models.YesNoAnswer
+@import uk.gov.hmrc.hecapplicantfrontend.models
 @import uk.gov.hmrc.hecapplicantfrontend.models.views.YesNoOption
 @import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 @import uk.gov.hmrc.hmrcfrontend.views.html.components.HmrcNewTabLink
 @import uk.gov.hmrc.hmrcfrontend.views.viewmodels.newtablink.NewTabLink
 @import uk.gov.hmrc.hecapplicantfrontend.views.helpers.FormErrorMessage.formErrorMessage
+@import uk.gov.hmrc.hecapplicantfrontend.views.html.components.NewTaxPeriodNotification
 
-@this(layout: Layout, govukErrorSummary: GovukErrorSummary, govukRadios: GovukRadios, govukButton: GovukButton, formWithCSRF: FormWithCSRF, hmrcNewTabLink: HmrcNewTabLink)
+@this(
+        layout: Layout,
+        govukErrorSummary: GovukErrorSummary,
+        govukRadios: GovukRadios,
+        govukButton: GovukButton,
+        formWithCSRF: FormWithCSRF,
+        hmrcNewTabLink: HmrcNewTabLink,
+        newTaxPeriodNotification: NewTaxPeriodNotification
+)
 
-@(form: Form[YesNoAnswer], back: Call, date: String, options: List[YesNoOption])(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
+@(
+        form: Form[models.YesNoAnswer],
+        back: Call,
+        date: String,
+        options: List[YesNoOption],
+        newRelevantAccountingPeriodConsidered: Option[models.NewCompanyTaxPeriodConsidered]
+)(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
 @key = @{"chargeableForCT"}
 @title = @{messages(s"$key.title", date)}
 @radioOptions = @{options.zipWithIndex.map{ case (option, index) => RadioItem(
@@ -36,6 +51,14 @@
   value = Some(index.toString),
   checked = form.data.values.toList.contains(index.toString)
 )}}
+@newTaxPeriodNotificationMessageKey = @{
+    newRelevantAccountingPeriodConsidered.map(
+        _.previousCtStatusResponse.latestAccountingPeriod.fold(
+            "newTaxPeriod.notification.company.newAccountingPeriod"
+        )(_ => "newTaxPeriod.notification.company.accountingPeriodChanged")
+    )
+}
+
 
 @layout(pageTitle = Some(title), hasErrors = form.hasErrors, backLocation = Some(back)) {
   @if(form.errors.nonEmpty) {
@@ -44,6 +67,8 @@
       content = Text(messages(s"${e.key}.${e.message}", e.args: _*))
     )), title = Text(messages("generic.errorSummary"))))
   }
+
+  @newTaxPeriodNotificationMessageKey.map(key => newTaxPeriodNotification(messages(key)))
 
   @formWithCSRF(action = routes.CompanyDetailsController.chargeableForCorporationTaxSubmit) {
     @govukRadios(Radios(

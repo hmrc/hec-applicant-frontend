@@ -78,13 +78,14 @@ class TaxSituationController @Inject() (
                 options,
                 startDate,
                 endDate,
-                licenceType
+                licenceType,
+                false
               )
             )
 
           // tax year has not been calculated or stored before or the tax year has changed since the user
           // last has the tax year calculated and stored
-          case _                                              =>
+          case maybeStoredTaxYear                             =>
             val updatedSession = individualSession.copy(
               relevantIncomeTaxYear = Some(calculatedTaxYear),
               userAnswers = individualSession.userAnswers.unset(_.taxSituation).unset(_.saIncomeDeclared)
@@ -101,7 +102,8 @@ class TaxSituationController @Inject() (
                       options,
                       startDate,
                       endDate,
-                      licenceType
+                      licenceType,
+                      maybeStoredTaxYear.isDefined
                     )
                   )
               )
@@ -169,7 +171,8 @@ class TaxSituationController @Inject() (
                   options,
                   startDate,
                   endDate,
-                  licenceType
+                  licenceType,
+                  false
                 )
               )
             },
