@@ -433,5 +433,6 @@ agentsNotSupported.p1 = You will not be able to do a tax check because you are l
 agentsNotSupported.p2 = If your client needs to do a tax check, they must do it themselves using their own Government Gateway account. If they do not have a Government Gateway user ID, they can create one when they start the check.
 agentsNotSupported.link = Find out more about tax checks
 
-# New relevant accounting period considered notification
-newRelevantAccountingPeriod.notification=Read carefully: the accounting period referred to in this question has changed
+# New relevant accounting period or income tax year considered notification
+newTaxPeriod.notification.Company=Read carefully: the accounting period referred to in this question has changed
+newTaxPeriod.notification.Individual=Read carefully: the tax year in this question has changed

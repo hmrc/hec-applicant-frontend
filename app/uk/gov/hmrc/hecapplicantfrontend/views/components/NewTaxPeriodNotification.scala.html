@@ -18,11 +18,12 @@
 @import uk.gov.hmrc.govukfrontend.views.viewmodels.notificationbanner.NotificationBanner
 @import uk.gov.hmrc.govukfrontend.views.html.components.GovukNotificationBanner
 @import uk.gov.hmrc.govukfrontend.views.viewmodels.content.Text
+@import uk.gov.hmrc.hecapplicantfrontend.models.EntityType
 
 @this(govukNotificationBanner: GovukNotificationBanner)
 
-@()(implicit messages: Messages)
+@(entityType: EntityType)(implicit messages: Messages)
 
 @govukNotificationBanner(
-    NotificationBanner(content = Text(messages("newRelevantAccountingPeriod.notification")))
+    NotificationBanner(content = Text(messages(s"newTaxPeriod.notification.${entityType.toString}")))
 )

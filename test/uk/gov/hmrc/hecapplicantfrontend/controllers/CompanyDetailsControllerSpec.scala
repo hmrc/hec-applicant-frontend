@@ -631,7 +631,7 @@ class CompanyDetailsControllerSpec
               val newRelevantAccountingPeriodNotification = doc.select(".govuk-notification-banner__content")
               val expectedNotificationText                =
                 if (session.newRelevantAccountingPeriodConsidered.contains(true))
-                  messageFromMessageKey("newRelevantAccountingPeriod.notification")
+                  messageFromMessageKey("newTaxPeriod.notification.Company")
                 else ""
 
               newRelevantAccountingPeriodNotification.text() shouldBe expectedNotificationText
@@ -1160,7 +1160,7 @@ class CompanyDetailsControllerSpec
               val newRelevantAccountingPeriodNotification = doc.select(".govuk-notification-banner__content")
               val expectedNotificationText                =
                 if (session.newRelevantAccountingPeriodConsidered.contains(true))
-                  messageFromMessageKey("newRelevantAccountingPeriod.notification")
+                  messageFromMessageKey("newTaxPeriod.notification.Company")
                 else ""
 
               newRelevantAccountingPeriodNotification.text() shouldBe expectedNotificationText

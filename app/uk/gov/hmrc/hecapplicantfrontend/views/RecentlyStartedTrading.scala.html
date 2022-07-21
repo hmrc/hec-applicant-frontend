@@ -19,10 +19,10 @@
 @import play.api.mvc.{Call, Request}
 @import uk.gov.hmrc.govukfrontend.views.html.components._
 @import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
-@import uk.gov.hmrc.hecapplicantfrontend.models.YesNoAnswer
+@import uk.gov.hmrc.hecapplicantfrontend.models
 @import uk.gov.hmrc.hecapplicantfrontend.models.views.YesNoOption
 @import uk.gov.hmrc.hecapplicantfrontend.views.helpers.FormErrorMessage.formErrorMessage
-@import uk.gov.hmrc.hecapplicantfrontend.views.html.components.NewRelevantAccountingPeriodNotification
+@import uk.gov.hmrc.hecapplicantfrontend.views.html.components.NewTaxPeriodNotification
 
 @this(
         layout: Layout,
@@ -30,11 +30,11 @@
         govukRadios: GovukRadios,
         govukButton: GovukButton,
         formWithCSRF: FormWithCSRF,
-        newRelevantAccountingPeriodNotification: NewRelevantAccountingPeriodNotification
+        newTaxPeriodNotification: NewTaxPeriodNotification
 )
 
 @(
-        form: Form[YesNoAnswer],
+        form: Form[models.YesNoAnswer],
         back: Call,
         options: List[YesNoOption],
         newRelevantAccountingPeriodConsidered: Boolean
@@ -58,7 +58,7 @@
   }
 
     @if(newRelevantAccountingPeriodConsidered) {
-        @newRelevantAccountingPeriodNotification()
+        @newTaxPeriodNotification(models.EntityType.Company)
     }
 
   @formWithCSRF(action = routes.CompanyDetailsController.recentlyStartedTradingSubmit) {

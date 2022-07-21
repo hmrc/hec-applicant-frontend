@@ -19,13 +19,13 @@
 @import play.api.mvc.{Call, Request}
 @import uk.gov.hmrc.govukfrontend.views.html.components._
 @import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
-@import uk.gov.hmrc.hecapplicantfrontend.models.YesNoAnswer
+@import uk.gov.hmrc.hecapplicantfrontend.models
 @import uk.gov.hmrc.hecapplicantfrontend.models.views.YesNoOption
 @import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 @import uk.gov.hmrc.hmrcfrontend.views.html.components.HmrcNewTabLink
 @import uk.gov.hmrc.hmrcfrontend.views.viewmodels.newtablink.NewTabLink
 @import uk.gov.hmrc.hecapplicantfrontend.views.helpers.FormErrorMessage.formErrorMessage
-@import uk.gov.hmrc.hecapplicantfrontend.views.html.components.NewRelevantAccountingPeriodNotification
+@import uk.gov.hmrc.hecapplicantfrontend.views.html.components.NewTaxPeriodNotification
 
 @this(
         layout: Layout,
@@ -34,11 +34,11 @@
         govukButton: GovukButton,
         formWithCSRF: FormWithCSRF,
         hmrcNewTabLink: HmrcNewTabLink,
-        newRelevantAccountingPeriodNotification: NewRelevantAccountingPeriodNotification
+        newTaxPeriodNotification: NewTaxPeriodNotification
 )
 
 @(
-        form: Form[YesNoAnswer],
+        form: Form[models.YesNoAnswer],
         back: Call,
         date: String,
         options: List[YesNoOption],
@@ -61,7 +61,7 @@
   }
 
     @if(newRelevantAccountingPeriodConsidered) {
-        @newRelevantAccountingPeriodNotification()
+        @newTaxPeriodNotification(models.EntityType.Company)
     }
 
   @formWithCSRF(action = routes.CompanyDetailsController.chargeableForCorporationTaxSubmit) {
