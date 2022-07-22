@@ -95,22 +95,21 @@ class JourneyStarterControllerSpec extends ControllerSpec {
           controller.journeyStarter(FakeRequest()),
           "Start a journey",
           { doc =>
-            testRadioButtonOptions(
-              doc,
-              List(
-                "Individual, no SA UTR",
-                "Individual, no SA UTR, no GG email address",
-                "Individual, SA return found",
-                "Individual, SA notice to file issued (but return not found)",
-                "Individual, SA no return found (and no notice to file issued)",
-                "Individual, SA return found with existing tax check",
-                "Company, no CT enrolment",
-                "Company, CT return found",
-                "Company, CT notice to file issued (but return not found)",
-                "Company, CT no return found (and no notice to file issued)",
-                "Company, CT no accounting period found"
-              )
+            val radioLabels = List(
+              "Individual, no SA UTR",
+              "Individual, no SA UTR, no GG email address",
+              "Individual, SA return found",
+              "Individual, SA notice to file issued (but return not found)",
+              "Individual, SA no return found (and no notice to file issued)",
+              "Individual, SA return found with existing tax check",
+              "Company, no CT enrolment",
+              "Company, CT return found",
+              "Company, CT notice to file issued (but return not found)",
+              "Company, CT no return found (and no notice to file issued)",
+              "Company, CT no accounting period found"
             )
+
+            testRadioButtonOptions(doc, radioLabels, List.fill(radioLabels.size)(None))
 
             doc.select("form").attr("action") shouldBe routes.JourneyStarterController.journeyStarterSubmit.url
           }

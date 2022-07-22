@@ -113,9 +113,11 @@ class ConfirmEmailAddressControllerSpec
 
       "display the page" when {
 
+        val ggEmailAddress = EmailAddress("user@test.com")
+
         def test(userEmailAnswers: Option[UserEmailAnswers], selected: Option[String]) = {
           val session = Fixtures.companyHECSession(
-            loginData = Fixtures.companyLoginData(emailAddress = EmailAddress("user@test.com").some),
+            loginData = Fixtures.companyLoginData(emailAddress = ggEmailAddress.some),
             emailRequestedForTaxCheck = Fixtures.emailRequestedForTaxCheck().some,
             userEmailAnswers = userEmailAnswers
           )
@@ -136,11 +138,21 @@ class ConfirmEmailAddressControllerSpec
             { doc =>
               doc.select("#back").attr("href") shouldBe mockPreviousCall.url
 
-              val selectedOptions            = doc.select(".govuk-radios__input[checked]")
+              testRadioButtonOptions(
+                doc,
+                List(
+                  ggEmailAddress.value,
+                  messageFromMessageKey("confirmEmailAddress.differentEmail")
+                ),
+                List(None, None)
+              )
+
+              val selectedOptions = doc.select(".govuk-radios__input[checked]")
               selected match {
                 case Some(value) => selectedOptions.attr("value") shouldBe value
                 case None        => selectedOptions.isEmpty       shouldBe true
               }
+
               val differentEmailAddressValue = doc.select("#differentEmail").attr("value")
               val expectedEmailAddressValue  = userEmailAnswers
                 .flatMap { emailAnswers =>

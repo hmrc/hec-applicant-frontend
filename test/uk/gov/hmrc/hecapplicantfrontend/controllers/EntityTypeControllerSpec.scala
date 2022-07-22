@@ -85,12 +85,25 @@ class EntityTypeControllerSpec
             { doc =>
               doc.select("#back").attr("href") shouldBe mockPreviousCall.url
 
+              testRadioButtonOptions(
+                doc,
+                List(
+                  messageFromMessageKey("entityType.individual"),
+                  messageFromMessageKey("entityType.company")
+                ),
+                List(
+                  Some(messageFromMessageKey("entityType.individual.hint")),
+                  Some(messageFromMessageKey("entityType.company.hint"))
+                )
+              )
+
               val selectedOptions = doc.select(".govuk-radios__input[checked]")
               value match {
                 case Some(index) => selectedOptions.attr("value") shouldBe index
                 case None        => selectedOptions.isEmpty       shouldBe true
               }
-              val form            = doc.select("form")
+
+              val form = doc.select("form")
               form
                 .attr("action") shouldBe routes.EntityTypeController.entityTypeSubmit.url
             }

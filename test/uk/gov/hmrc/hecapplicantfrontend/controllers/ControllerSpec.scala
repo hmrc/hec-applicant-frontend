@@ -27,6 +27,7 @@ import play.api._
 import uk.gov.hmrc.hecapplicantfrontend.utils.PlaySupport
 
 import scala.concurrent.Future
+import scala.collection.JavaConverters._
 
 trait ControllerSpec extends PlaySupport {
 
@@ -85,12 +86,17 @@ trait ControllerSpec extends PlaySupport {
       expectedStatus
     )
 
-  def testRadioButtonOptions(doc: Document, expectedRadioOptionsTexts: List[String]) = {
-    val radioOptions = doc.select(".govuk-radios__item")
-    radioOptions.size shouldBe expectedRadioOptionsTexts.size
-    expectedRadioOptionsTexts.zipWithIndex.map({ case (text, i) =>
-      radioOptions.get(i).text() shouldBe text
-    })
+  def testRadioButtonOptions(
+    doc: Document,
+    expectedRadioLabels: List[String],
+    expectedRadioHintTexts: List[Option[String]]
+  ) = {
+    val radios = doc.select(".govuk-radios__item").iterator().asScala.toList
+    val labels = radios.map(_.select(".govuk-label").text())
+    val hints  = radios.map(r => Option(r.select(".govuk-hint").text()).filter(_.nonEmpty))
+
+    labels shouldBe expectedRadioLabels
+    hints  shouldBe expectedRadioHintTexts
   }
 
 }

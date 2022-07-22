@@ -19,7 +19,6 @@ package uk.gov.hmrc.hecapplicantfrontend.controllers
 import cats.data.EitherT
 import cats.implicits.catsSyntaxOptionId
 import cats.instances.future._
-import org.jsoup.nodes.Document
 import play.api.inject.bind
 import play.api.mvc.{Request, Result}
 import play.api.test.FakeRequest
@@ -95,22 +94,28 @@ class TaxSituationControllerSpec
 
       def performAction(): Future[Result] = controller.taxSituation(FakeRequest())
 
-      val allRadioTexts     = List(
-        s"${messageFromMessageKey("taxSituation.PA")} ${messageFromMessageKey("taxSituation.PA.hint")}",
-        s"${messageFromMessageKey("taxSituation.SA")} ${messageFromMessageKey("taxSituation.SA.hint")}",
-        s"${messageFromMessageKey("taxSituation.SAPAYE")} ${messageFromMessageKey("taxSituation.SAPAYE.hint")}",
-        s"${messageFromMessageKey("taxSituation.NotChargeable")} ${messageFromMessageKey("taxSituation.NotChargeable.hint")}"
-      )
-      val nonPAYERadioTexts = List(
-        s"${messageFromMessageKey("taxSituation.SA")} ${messageFromMessageKey("taxSituation.SA.hint")}",
-        s"${messageFromMessageKey("taxSituation.NotChargeable")} ${messageFromMessageKey("taxSituation.NotChargeable.hint")}"
-      )
+      val allRadioLabels    = List(
+        "taxSituation.PA",
+        "taxSituation.SA",
+        "taxSituation.SAPAYE",
+        "taxSituation.NotChargeable"
+      ).map(messageFromMessageKey(_))
+      val allRadioHintTexts = List(
+        "taxSituation.PA.hint",
+        "taxSituation.SA.hint",
+        "taxSituation.SAPAYE.hint",
+        "taxSituation.NotChargeable.hint"
+      ).map(key => Some(messageFromMessageKey(key)))
 
-      def testAllTaxSituationsRadioOptions(doc: Document) =
-        testRadioButtonOptions(doc, allRadioTexts)
+      val nonPAYERadioLabels = List(
+        "taxSituation.SA",
+        "taxSituation.NotChargeable"
+      ).map(messageFromMessageKey(_))
 
-      def testNonPAYETaxSituationsRadioOptions(doc: Document) =
-        testRadioButtonOptions(doc, nonPAYERadioTexts)
+      val nonPAYERadioHintTexts = List(
+        "taxSituation.SA.hint",
+        "taxSituation.NotChargeable.hint"
+      ).map(key => Some(messageFromMessageKey(key)))
 
       behave like authAndSessionDataBehaviour(performAction)
 
@@ -277,7 +282,7 @@ class TaxSituationControllerSpec
             { doc =>
               doc.select("#back").attr("href") shouldBe mockPreviousCall.url
 
-              testAllTaxSituationsRadioOptions(doc)
+              testRadioButtonOptions(doc, allRadioLabels, allRadioHintTexts)
 
               val selectedOptions = doc.select(".govuk-radios__input[checked]")
               selectedOptions.isEmpty shouldBe true
@@ -349,7 +354,7 @@ class TaxSituationControllerSpec
                 { doc =>
                   doc.select("#back").attr("href") shouldBe mockPreviousCall.url
 
-                  testAllTaxSituationsRadioOptions(doc)
+                  testRadioButtonOptions(doc, allRadioLabels, allRadioHintTexts)
 
                   val selectedOptions = doc.select(".govuk-radios__input[checked]")
                   selectedOptions.isEmpty shouldBe true
@@ -396,7 +401,7 @@ class TaxSituationControllerSpec
                     { doc =>
                       doc.select("#back").attr("href") shouldBe mockPreviousCall.url
 
-                      testNonPAYETaxSituationsRadioOptions(doc)
+                      testRadioButtonOptions(doc, nonPAYERadioLabels, nonPAYERadioHintTexts)
 
                       val selectedOptions = doc.select(".govuk-radios__input[checked]")
                       selectedOptions.isEmpty shouldBe true

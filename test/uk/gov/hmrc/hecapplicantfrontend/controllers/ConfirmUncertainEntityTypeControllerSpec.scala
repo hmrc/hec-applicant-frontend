@@ -88,6 +88,18 @@ class ConfirmUncertainEntityTypeControllerSpec
                 .select("form")
                 .attr("action") shouldBe routes.ConfirmUncertainEntityTypeController.entityTypeSubmit.url
 
+              testRadioButtonOptions(
+                doc,
+                List(
+                  messageFromMessageKey("entityType.individual"),
+                  messageFromMessageKey("entityType.company")
+                ),
+                List(
+                  Some(messageFromMessageKey("entityType.individual.hint")),
+                  Some(messageFromMessageKey("entityType.company.hint"))
+                )
+              )
+
               val individualOption = doc.select("#entityType")
               val companyOption    = doc.select("#entityType-2")
 
