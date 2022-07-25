@@ -433,8 +433,9 @@ agentsNotSupported.p1 = You will not be able to do a tax check because you are l
 agentsNotSupported.p2 = If your client needs to do a tax check, they must do it themselves using their own Government Gateway account. If they do not have a Government Gateway user ID, they can create one when they start the check.
 agentsNotSupported.link = Find out more about tax checks
 
-# New relevant accounting period or income tax year considered notification
-newTaxPeriod.notification.company.accountingPeriodChanged=Read carefully: the accounting period referred to in this question has changed
-newTaxPeriod.notification.company.newAccountingPeriod=Read carefully: you are now being asked about an accounting period
-newTaxPeriod.notification.company.noAccountingPeriod=Read carefully: no accounting period now
-newTaxPeriod.notification.individual=Read carefully: the tax year in this question has changed
+#New relevant accounting period or income tax year considered notification
+newTaxPeriod.notification.title=Important
+newTaxPeriod.notification.company.accountingPeriodChanged=The relevant accounting period has changed since you last answered this question
+newTaxPeriod.notification.company.newAccountingPeriod=You are now being asked about an accounting period
+newTaxPeriod.notification.company.noAccountingPeriod=The date has changed and we now cannot find a relevant accounting period for your company
+newTaxPeriod.notification.individual=The relevant tax year has changed since you last answered this question

@@ -14,14 +14,17 @@
  * limitations under the License.
  *@
 
+@import play.api.i18n.Messages
 @import uk.gov.hmrc.govukfrontend.views.viewmodels.notificationbanner.NotificationBanner
 @import uk.gov.hmrc.govukfrontend.views.html.components.GovukNotificationBanner
 @import uk.gov.hmrc.govukfrontend.views.viewmodels.content.Text
 
 @this(govukNotificationBanner: GovukNotificationBanner)
 
-@(message: String))
+@(message: String)(implicit messages: Messages)
 
 @govukNotificationBanner(
-    NotificationBanner(content = Text(message))
+    NotificationBanner(
+     title = Text(messages("newTaxPeriod.notification.title")),
+     content = Text(message))
 )

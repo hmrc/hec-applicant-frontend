@@ -628,8 +628,14 @@ class CompanyDetailsControllerSpec
             { doc =>
               doc.select("#back").attr("href") shouldBe mockPreviousCall.url
 
-              val newRelevantAccountingPeriodNotification = doc.select(".govuk-notification-banner__content")
-              newRelevantAccountingPeriodNotification.text() shouldBe newTaxPeriodMessage.getOrElse("")
+              val expectedNotificationTitle   =
+                newTaxPeriodMessage
+                  .map(_ => messageFromMessageKey("newTaxPeriod.notification.title"))
+                  .getOrElse("")
+              val expectedNotificationContent = newTaxPeriodMessage.getOrElse("")
+
+              doc.select(".govuk-notification-banner__title").text()   shouldBe expectedNotificationTitle
+              doc.select(".govuk-notification-banner__content").text() shouldBe expectedNotificationContent
 
               val selectedOptions = doc.select(".govuk-radios__input[checked]")
 
@@ -1179,8 +1185,14 @@ class CompanyDetailsControllerSpec
             { doc =>
               doc.select("#back").attr("href") shouldBe mockPreviousCall.url
 
-              val newRelevantAccountingPeriodNotification = doc.select(".govuk-notification-banner__content")
-              newRelevantAccountingPeriodNotification.text() shouldBe newTaxPeriodMessage.getOrElse("")
+              val expectedNotificationTitle   =
+                newTaxPeriodMessage
+                  .map(_ => messageFromMessageKey("newTaxPeriod.notification.title"))
+                  .getOrElse("")
+              val expectedNotificationContent = newTaxPeriodMessage.getOrElse("")
+
+              doc.select(".govuk-notification-banner__title").text()   shouldBe expectedNotificationTitle
+              doc.select(".govuk-notification-banner__content").text() shouldBe expectedNotificationContent
 
               val selectedOptions = doc.select(".govuk-radios__input[checked]")
               value match {

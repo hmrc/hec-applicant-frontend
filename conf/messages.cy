@@ -313,9 +313,3 @@ agentsNotSupported.title=Ni allwch gael mynediad at y gwasanaeth hwn
 agentsNotSupported.p1=Ni fydd yn bosib i chi wneud gwiriad treth gan eich bod wedi mewngofnodi gan ddefnyddio Dynodydd Defnyddiwr (ID) Porth y Llywodraeth ar gyfer cyfrif gwasanaethau asiant.
 agentsNotSupported.p2=Os oes angen i’ch cleient wneud gwiriad treth, bydd rhaid iddo wneud hynny ei hun gan ddefnyddio ei gyfrif Porth y Llywodraeth ei hun. Os nad oes ganddo Ddynodydd Defnyddiwr (ID) Porth y Llywodraeth, gall greu un pan fydd yn dechrau’r gwiriad.
 agentsNotSupported.link=Dysgwch ragor am wiriadau treth
-
-newTaxPeriod.notification.company.accountingPeriodChanged=Darllenwch yn ofalus: mae’r cyfnod cyfrifyddu y cyfeirir ato yn y cwestiwn hwn wedi newid
-newTaxPeriod.notification.company.newAccountingPeriod=Darllenwch yn ofalus: rydych nawr yn cael eich holi am gyfnod cyfrifyddu
-newTaxPeriod.notification.company.noAccountingPeriod=Read carefully: no accounting period now
-newTaxPeriod.notification.individual=Darllenwch yn ofalus: mae’r flwyddyn dreth yn y cwestiwn hwn wedi newid
-

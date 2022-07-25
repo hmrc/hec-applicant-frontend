@@ -155,13 +155,16 @@ class TaxSituationControllerSpec
             { doc =>
               doc.select("#back").attr("href") shouldBe mockPreviousCall.url
 
-              val newIncomeTaxYearNotification = doc.select(".govuk-notification-banner__content")
-              val expectedNotificationText     =
+              val (expectedNotificationTitle, expectedNotificationContent) =
                 if (relevantIncomeTaxYearChanged)
-                  messageFromMessageKey("newTaxPeriod.notification.individual")
-                else ""
+                  messageFromMessageKey("newTaxPeriod.notification.title") -> messageFromMessageKey(
+                    "newTaxPeriod.notification.individual"
+                  )
+                else
+                  ""                                                       -> ""
 
-              newIncomeTaxYearNotification.text() shouldBe expectedNotificationText
+              doc.select(".govuk-notification-banner__title").text() shouldBe expectedNotificationTitle
+              doc.select(".govuk-notification-banner__content").text() shouldBe expectedNotificationContent
 
               val options = doc.select(".govuk-radios__item")
               options.size() shouldBe 4
