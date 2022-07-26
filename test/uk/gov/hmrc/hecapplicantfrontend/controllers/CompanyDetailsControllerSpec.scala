@@ -637,6 +637,12 @@ class CompanyDetailsControllerSpec
               doc.select(".govuk-notification-banner__title").text()   shouldBe expectedNotificationTitle
               doc.select(".govuk-notification-banner__content").text() shouldBe expectedNotificationContent
 
+              testRadioButtonOptions(
+                doc,
+                List(messageFromMessageKey("chargeableForCT.yes"), messageFromMessageKey("chargeableForCT.no")),
+                List(None, None)
+              )
+
               val selectedOptions = doc.select(".govuk-radios__input[checked]")
 
               value match {
@@ -941,6 +947,12 @@ class CompanyDetailsControllerSpec
                 .select("#ctIncomeDeclared-hint")
                 .text()                        shouldBe "This is your Company Tax Return for the accounting period ending 5 October 2020."
 
+              testRadioButtonOptions(
+                doc,
+                List(messageFromMessageKey("ctIncomeDeclared.yes"), messageFromMessageKey("ctIncomeDeclared.no")),
+                List(None, None)
+              )
+
               val selectedOptions = doc.select(".govuk-radios__input[checked]")
               value match {
                 case Some(index) => selectedOptions.attr("value") shouldBe index
@@ -1193,6 +1205,15 @@ class CompanyDetailsControllerSpec
 
               doc.select(".govuk-notification-banner__title").text()   shouldBe expectedNotificationTitle
               doc.select(".govuk-notification-banner__content").text() shouldBe expectedNotificationContent
+
+              testRadioButtonOptions(
+                doc,
+                List(
+                  messageFromMessageKey("recentlyStartedTrading.yes"),
+                  messageFromMessageKey("recentlyStartedTrading.no")
+                ),
+                List(None, None)
+              )
 
               val selectedOptions = doc.select(".govuk-radios__input[checked]")
               value match {
