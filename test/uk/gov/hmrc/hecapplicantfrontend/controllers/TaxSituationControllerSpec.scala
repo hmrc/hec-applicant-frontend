@@ -132,7 +132,12 @@ class TaxSituationControllerSpec
 
         val taxYear2020 = TaxYear(2020)
 
-        def displayPageTest(session: HECSession, updatedSession: Option[HECSession], value: Option[String]) = {
+        def displayPageTest(
+          session: HECSession,
+          updatedSession: Option[HECSession],
+          value: Option[String],
+          relevantIncomeTaxYearChanged: Boolean
+        ) = {
           val (startDate, endDate) = getTaxPeriodStrings(taxYear2020)
           inSequence {
             mockAuthWithNoRetrievals()
@@ -149,6 +154,17 @@ class TaxSituationControllerSpec
             messageFromMessageKey("taxSituation.title", startDate, endDate),
             { doc =>
               doc.select("#back").attr("href") shouldBe mockPreviousCall.url
+
+              val (expectedNotificationTitle, expectedNotificationContent) =
+                if (relevantIncomeTaxYearChanged)
+                  messageFromMessageKey("newTaxPeriod.notification.title") -> messageFromMessageKey(
+                    "newTaxPeriod.notification.individual"
+                  )
+                else
+                  ""                                                       -> ""
+
+              doc.select(".govuk-notification-banner__title").text() shouldBe expectedNotificationTitle
+              doc.select(".govuk-notification-banner__content").text() shouldBe expectedNotificationContent
 
               val options = doc.select(".govuk-radios__item")
               options.size() shouldBe 4
@@ -182,7 +198,7 @@ class TaxSituationControllerSpec
             )
 
             val updatedSession = session.copy(relevantIncomeTaxYear = taxYear2020.some)
-            displayPageTest(session, Some(updatedSession), None)
+            displayPageTest(session, Some(updatedSession), None, false)
           }
 
         }
@@ -203,7 +219,7 @@ class TaxSituationControllerSpec
                 ),
                 relevantIncomeTaxYear = Some(taxYear2020)
               )
-            displayPageTest(session, None, Some("0"))
+            displayPageTest(session, None, Some("0"), false)
           }
 
           "the tax year has changed" in {
@@ -230,7 +246,7 @@ class TaxSituationControllerSpec
                 None
               )
             )
-            displayPageTest(session, Some(updatedSession), None)
+            displayPageTest(session, Some(updatedSession), None, true)
           }
 
         }

@@ -21,7 +21,7 @@ import cats.instances.future._
 import com.typesafe.config.ConfigFactory
 import play.api.Configuration
 import play.api.inject.bind
-import play.api.mvc.{Cookie, Result}
+import play.api.mvc.{Call, Cookie, Result}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
@@ -30,6 +30,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.CompanyMatchFailure.{E
 import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.CompanyMatchSuccess.{EnrolmentCTUTRCompanyMatchSuccess, EnterCTUTRCompanyMatchSuccess}
 import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.TaxCheckExit
 import uk.gov.hmrc.hecapplicantfrontend.models.CompanyUserAnswers.IncompleteCompanyUserAnswers
+import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.CompanyHECSession
 import uk.gov.hmrc.hecapplicantfrontend.models._
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.company.CTAccountingPeriod.CTAccountingPeriodDigital
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.company.{CTStatus, CTStatusResponse}
@@ -145,7 +146,6 @@ class CompanyDetailsControllerSpec
       "display the page" when {
 
         def test(session: HECSession, value: Option[String]) = {
-
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
@@ -174,17 +174,14 @@ class CompanyDetailsControllerSpec
         }
 
         "the user has not previously answered the question " in {
-
           val session = Fixtures.companyHECSession(
             companyLoginData,
             retrievedJourneyDataWithCompanyName
           )
           test(session, None)
-
         }
 
         "the user has previously answered the question" in {
-
           val answers = Fixtures.completeCompanyUserAnswers(
             licenceType = LicenceType.OperatorOfPrivateHireVehicles,
             licenceTimeTrading = LicenceTimeTrading.ZeroToTwoYears,
@@ -590,28 +587,36 @@ class CompanyDetailsControllerSpec
 
     "handling requests to the chargeable for CT page " must {
 
-      val date = LocalDate.of(2020, 10, 5)
+      val date                                             = LocalDate.of(2020, 10, 5)
+      val (lookBackPeriodStartDate, lookBackPeriodEndDate) = CompanyDetailsController.calculateLookBackPeriod(date)
+      val ctStatusResponse                                 =
+        CTStatusResponse(
+          CTUTR("utr"),
+          lookBackPeriodStartDate,
+          lookBackPeriodEndDate,
+          Some(CTAccountingPeriodDigital(date, date, CTStatus.ReturnFound))
+        )
 
       def performAction(): Future[Result] = controller.chargeableForCorporationTax(FakeRequest())
 
       behave like authAndSessionDataBehaviour(performAction)
 
-      "display the page" when {
-        val companyData = retrievedJourneyDataWithCompanyName.copy(
-          ctStatus = Some(
-            CTStatusResponse(
-              CTUTR("utr"),
-              date,
-              date,
-              Some(CTAccountingPeriodDigital(date, date, CTStatus.ReturnFound))
-            )
-          )
-        )
+      behave like ensureLatestCTStatusBehaviour(
+        performAction,
+        routes.CompanyDetailsController.chargeableForCorporationTax,
+        ctStatusResponse,
+        date
+      )
 
-        def test(session: HECSession, value: Option[String]) = {
+      "display the page" when {
+
+        def test(session: CompanyHECSession, value: Option[String], newTaxPeriodMessage: Option[String]) = {
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
+            mockTimeProviderToday(date)
+            if (session.newCompanyTaxPeriodConsidered.isDefined)
+              mockStoreSession(session.copy(newCompanyTaxPeriodConsidered = None))(Right(()))
             mockJourneyServiceGetPrevious(routes.CompanyDetailsController.chargeableForCorporationTax, session)(
               mockPreviousCall
             )
@@ -622,6 +627,15 @@ class CompanyDetailsControllerSpec
             messageFromMessageKey("chargeableForCT.title", "5 October 2020"),
             { doc =>
               doc.select("#back").attr("href") shouldBe mockPreviousCall.url
+
+              val expectedNotificationTitle   =
+                newTaxPeriodMessage
+                  .map(_ => messageFromMessageKey("newTaxPeriod.notification.title"))
+                  .getOrElse("")
+              val expectedNotificationContent = newTaxPeriodMessage.getOrElse("")
+
+              doc.select(".govuk-notification-banner__title").text()   shouldBe expectedNotificationTitle
+              doc.select(".govuk-notification-banner__content").text() shouldBe expectedNotificationContent
 
               val selectedOptions = doc.select(".govuk-radios__input[checked]")
 
@@ -636,17 +650,16 @@ class CompanyDetailsControllerSpec
           )
         }
 
-        "the user has not previously answered the question " in {
+        val companyData = retrievedJourneyDataWithCompanyName.copy(ctStatus = Some(ctStatusResponse))
 
+        "the user has not previously answered the question" in {
           val session =
             Fixtures.companyHECSession(companyLoginData, companyData, CompanyUserAnswers.empty)
 
-          test(session, None)
-
+          test(session, None, None)
         }
 
         "the user has previously answered the question" in {
-
           val answers = Fixtures.completeCompanyUserAnswers(
             LicenceType.OperatorOfPrivateHireVehicles,
             LicenceTimeTrading.ZeroToTwoYears,
@@ -661,8 +674,47 @@ class CompanyDetailsControllerSpec
             .copy(chargeableForCT = Some(YesNoAnswer.Yes))
           val updatedSession = session.copy(userAnswers = updatedAnswers)
 
-          test(updatedSession, Some("0"))
+          test(updatedSession, Some("0"), None)
 
+        }
+
+        "a new relevant income tax year has been considered and" when {
+
+          "an accounting period was present before" in {
+            val session =
+              Fixtures.companyHECSession(
+                companyLoginData,
+                companyData,
+                CompanyUserAnswers.empty,
+                newRelevantAccountingPeriodConsidered = Some(
+                  NewCompanyTaxPeriodConsidered(
+                    Fixtures.ctStatusResponse(latestAccountingPeriod = Some(Fixtures.ctAccountingPeriod()))
+                  )
+                )
+              )
+
+            test(
+              session,
+              None,
+              Some(messageFromMessageKey("newTaxPeriod.notification.company.accountingPeriodChanged"))
+            )
+          }
+
+          "an accounting period was not present before" in {
+            val session =
+              Fixtures.companyHECSession(
+                companyLoginData,
+                companyData,
+                CompanyUserAnswers.empty,
+                newRelevantAccountingPeriodConsidered = Some(
+                  NewCompanyTaxPeriodConsidered(
+                    Fixtures.ctStatusResponse(latestAccountingPeriod = None)
+                  )
+                )
+              )
+
+            test(session, None, Some(messageFromMessageKey("newTaxPeriod.notification.company.newAccountingPeriod")))
+          }
         }
 
       }
@@ -682,7 +734,7 @@ class CompanyDetailsControllerSpec
           val session = Fixtures.companyHECSession(
             companyLoginData,
             retrievedJourneyDataWithCompanyName.copy(
-              ctStatus = Some(CTStatusResponse(CTUTR("utr"), date, date, None))
+              ctStatus = Some(CTStatusResponse(CTUTR("utr"), lookBackPeriodStartDate, lookBackPeriodEndDate, None))
             ),
             CompanyUserAnswers.empty
           )
@@ -690,6 +742,7 @@ class CompanyDetailsControllerSpec
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
+            mockTimeProviderToday(date)
           }
           assertThrows[InconsistentSessionState](await(performAction()))
 
@@ -1090,7 +1143,15 @@ class CompanyDetailsControllerSpec
 
     "handling requests to recently started trading page " must {
 
-      val date                              = LocalDate.of(2020, 10, 5)
+      val date                                             = LocalDate.of(2020, 10, 5)
+      val (lookBackPeriodStartDate, lookBackPeriodEndDate) = CompanyDetailsController.calculateLookBackPeriod(date)
+      val ctStatusResponse                                 = CTStatusResponse(
+        CTUTR("utr"),
+        lookBackPeriodStartDate,
+        lookBackPeriodEndDate,
+        None
+      )
+
       val recentlyStartedTradingRoute       = routes.CompanyDetailsController.recentlyStartedTrading
       val recentlyStartedTradingSubmitRoute = routes.CompanyDetailsController.recentlyStartedTradingSubmit
 
@@ -1098,22 +1159,23 @@ class CompanyDetailsControllerSpec
 
       behave like authAndSessionDataBehaviour(performAction)
 
-      "display the page" when {
-        val companyData = retrievedJourneyDataWithCompanyName.copy(
-          ctStatus = Some(
-            CTStatusResponse(
-              CTUTR("utr"),
-              date,
-              date,
-              None
-            )
-          )
-        )
+      behave like ensureLatestCTStatusBehaviour(
+        performAction,
+        routes.CompanyDetailsController.recentlyStartedTrading,
+        ctStatusResponse,
+        date
+      )
 
-        def test(session: HECSession, value: Option[String]) = {
+      "display the page" when {
+        val companyData = retrievedJourneyDataWithCompanyName.copy(ctStatus = Some(ctStatusResponse))
+
+        def test(session: CompanyHECSession, value: Option[String], newTaxPeriodMessage: Option[String]) = {
           inSequence {
             mockAuthWithNoRetrievals()
             mockGetSession(session)
+            mockTimeProviderToday(date)
+            if (session.newCompanyTaxPeriodConsidered.isDefined)
+              mockStoreSession(session.copy(newCompanyTaxPeriodConsidered = None))(Right(()))
             mockJourneyServiceGetPrevious(recentlyStartedTradingRoute, session)(mockPreviousCall)
           }
 
@@ -1122,6 +1184,15 @@ class CompanyDetailsControllerSpec
             messageFromMessageKey("recentlyStartedTrading.title"),
             { doc =>
               doc.select("#back").attr("href") shouldBe mockPreviousCall.url
+
+              val expectedNotificationTitle   =
+                newTaxPeriodMessage
+                  .map(_ => messageFromMessageKey("newTaxPeriod.notification.title"))
+                  .getOrElse("")
+              val expectedNotificationContent = newTaxPeriodMessage.getOrElse("")
+
+              doc.select(".govuk-notification-banner__title").text()   shouldBe expectedNotificationTitle
+              doc.select(".govuk-notification-banner__content").text() shouldBe expectedNotificationContent
 
               val selectedOptions = doc.select(".govuk-radios__input[checked]")
               value match {
@@ -1136,15 +1207,13 @@ class CompanyDetailsControllerSpec
         }
 
         "the user has not previously answered the question " in {
-
           val session =
             Fixtures.companyHECSession(companyLoginData, companyData, CompanyUserAnswers.empty)
-          test(session, None)
+          test(session, None, None)
 
         }
 
         "the user has previously answered the question" in {
-
           val answers = Fixtures.completeCompanyUserAnswers(
             licenceType = LicenceType.OperatorOfPrivateHireVehicles,
             licenceTimeTrading = LicenceTimeTrading.ZeroToTwoYears,
@@ -1159,8 +1228,25 @@ class CompanyDetailsControllerSpec
             .copy(recentlyStartedTrading = Some(YesNoAnswer.No))
           val updatedSession = session.copy(userAnswers = updatedAnswers)
 
-          test(updatedSession, Some("1"))
+          test(updatedSession, Some("1"), None)
+        }
 
+        "a new relevant income tax year has been considered" in {
+          val session =
+            Fixtures.companyHECSession(
+              companyLoginData,
+              companyData,
+              CompanyUserAnswers.empty,
+              newRelevantAccountingPeriodConsidered = Some(
+                NewCompanyTaxPeriodConsidered(
+                  Fixtures.ctStatusResponse(
+                    latestAccountingPeriod = Some(Fixtures.ctAccountingPeriod())
+                  )
+                )
+              )
+            )
+
+          test(session, None, Some(messageFromMessageKey("newTaxPeriod.notification.company.noAccountingPeriod")))
         }
 
       }
@@ -2070,6 +2156,295 @@ class CompanyDetailsControllerSpec
           testCtutrAttempts[InconsistentSessionState](session, Right(Some(ctutrAttempts)))
 
         }
+      }
+
+    }
+
+  }
+
+  def ensureLatestCTStatusBehaviour(
+    performAction: () => Future[Result],
+    currentEndpoint: Call,
+    successfulCtStatusResponse: CTStatusResponse,
+    today: LocalDate
+  ): Unit = {
+    val yesterday =
+      today.minusDays(1L)
+
+    val (yesterdayLookBackPeriodStart, yesterdayLookBackPeriodEnd) =
+      CompanyDetailsController.calculateLookBackPeriod(yesterday)
+
+    val yesterdayCtStatusResponse =
+      successfulCtStatusResponse.copy(
+        startDate = yesterdayLookBackPeriodStart,
+        endDate = yesterdayLookBackPeriodEnd
+      )
+
+    val (todayLookBackPeriodStart, todayLookBackPeriodEnd) = CompanyDetailsController.calculateLookBackPeriod(today)
+
+    val todayCtStatusResponse =
+      successfulCtStatusResponse.copy(
+        startDate = todayLookBackPeriodStart,
+        endDate = todayLookBackPeriodEnd
+      )
+
+    "return an error" when {
+
+      "no ct status response can be found in session" in {
+        inSequence {
+          mockAuthWithNoRetrievals()
+          mockGetSession(
+            Fixtures.companyHECSession(retrievedJourneyData = Fixtures.companyRetrievedJourneyData(ctStatus = None))
+          )
+        }
+
+        an[InconsistentSessionState] shouldBe thrownBy(await(performAction()))
+      }
+
+      "a new CT status API response is not required and" when {
+
+        "there is an error while resetting a 'newRelevantAccountingPeriodConsidered' flag in session" in {
+          val session =
+            Fixtures.companyHECSession(
+              retrievedJourneyData = Fixtures.companyRetrievedJourneyData(ctStatus = Some(todayCtStatusResponse)),
+              newRelevantAccountingPeriodConsidered = Some(
+                NewCompanyTaxPeriodConsidered(Fixtures.ctStatusResponse())
+              )
+            )
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockTimeProviderToday(today)
+            mockStoreSession(session.copy(newCompanyTaxPeriodConsidered = None))(Left(Error("")))
+          }
+
+          a[RuntimeException] shouldBe thrownBy(await(performAction()))
+        }
+
+      }
+
+      "a new CT status API response is required and" when {
+
+        "the call to get a new CT status API response fails" in {
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(
+              Fixtures.companyHECSession(retrievedJourneyData =
+                Fixtures.companyRetrievedJourneyData(ctStatus = Some(yesterdayCtStatusResponse))
+              )
+            )
+            mockTimeProviderToday(today)
+            mockTaxCheckServiceGetCtStatus(
+              successfulCtStatusResponse.ctutr,
+              todayLookBackPeriodStart,
+              todayLookBackPeriodEnd
+            )(Left(Error("")))
+          }
+
+          a[RuntimeException] shouldBe thrownBy(await(performAction()))
+        }
+
+        "updating the session fails" in {
+          val answers                  = Fixtures.completeCompanyUserAnswers(
+            chargeableForCT = Some(YesNoAnswer.Yes),
+            recentlyStartedTrading = Some(YesNoAnswer.No),
+            ctIncomeDeclared = Some(YesNoAnswer.Yes)
+          )
+          val originalCtStatusResponse = yesterdayCtStatusResponse.copy(latestAccountingPeriod = None)
+          val session                  =
+            Fixtures.companyHECSession(
+              retrievedJourneyData = Fixtures.companyRetrievedJourneyData(
+                ctStatus = Some(originalCtStatusResponse)
+              ),
+              userAnswers = answers
+            )
+
+          val updatedCtStatusResponse =
+            todayCtStatusResponse.copy(
+              latestAccountingPeriod =
+                Some(CTAccountingPeriodDigital(LocalDate.MIN, LocalDate.MAX, CTStatus.NoticeToFileIssued))
+            )
+
+          val updatedSession =
+            session.copy(
+              userAnswers = IncompleteCompanyUserAnswers(
+                Some(answers.licenceType),
+                Some(answers.licenceTimeTrading),
+                Some(answers.licenceValidityPeriod),
+                answers.entityType,
+                Some(answers.crn),
+                Some(answers.companyDetailsConfirmed),
+                None,
+                None,
+                None,
+                answers.ctutr
+              ),
+              retrievedJourneyData = session.retrievedJourneyData.copy(ctStatus = Some(updatedCtStatusResponse)),
+              newCompanyTaxPeriodConsidered = Some(NewCompanyTaxPeriodConsidered(originalCtStatusResponse))
+            )
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockTimeProviderToday(today)
+            mockTaxCheckServiceGetCtStatus(
+              successfulCtStatusResponse.ctutr,
+              todayLookBackPeriodStart,
+              todayLookBackPeriodEnd
+            )(Right(Some(updatedCtStatusResponse)))
+            mockJourneyServiceUpdateAndNext(currentEndpoint, session, updatedSession)(Left(Error("")))
+          }
+
+          a[RuntimeException] shouldBe thrownBy(await(performAction()))
+        }
+      }
+
+    }
+
+    "proceed without retrieving a new CT status response" when {
+
+      "the look back period start and end dates have not changed and" when {
+
+        val answers = Fixtures.incompleteCompanyUserAnswers(
+          chargeableForCT = Some(YesNoAnswer.Yes),
+          recentlyStartedTrading = Some(YesNoAnswer.No),
+          ctIncomeDeclared = Some(YesNoAnswer.Yes)
+        )
+
+        val session =
+          Fixtures.companyHECSession(
+            userAnswers = answers,
+            retrievedJourneyData = Fixtures.companyRetrievedJourneyData(ctStatus = Some(yesterdayCtStatusResponse))
+          )
+
+        "the 'newRelevantAccountingPeriodConsidered' in session is not defined" in {
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session.copy(newCompanyTaxPeriodConsidered = None))
+            mockTimeProviderToday(yesterday)
+            mockJourneyServiceGetPrevious(currentEndpoint, session)(mockPreviousCall)
+          }
+
+          status(performAction()) shouldBe OK
+        }
+
+        "the 'newRelevantAccountingPeriodConsidered' in session is defined" in {
+          val initialSession = session.copy(newCompanyTaxPeriodConsidered =
+            Some(NewCompanyTaxPeriodConsidered(Fixtures.ctStatusResponse()))
+          )
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(initialSession)
+            mockTimeProviderToday(yesterday)
+            mockStoreSession(initialSession.copy(newCompanyTaxPeriodConsidered = None))(Right(()))
+            mockJourneyServiceGetPrevious(currentEndpoint, initialSession)(mockPreviousCall)
+          }
+
+          status(performAction()) shouldBe OK
+        }
+      }
+
+    }
+
+    "retrieve a new CT status response and redirect to the next page" when {
+
+      def test(storedStartDate: LocalDate, storedEndDate: LocalDate) = {
+        val answers = Fixtures.incompleteCompanyUserAnswers(
+          chargeableForCT = Some(YesNoAnswer.Yes),
+          recentlyStartedTrading = Some(YesNoAnswer.No),
+          ctIncomeDeclared = Some(YesNoAnswer.Yes)
+        )
+
+        val session =
+          Fixtures.companyHECSession(
+            userAnswers = answers,
+            retrievedJourneyData = Fixtures.companyRetrievedJourneyData(ctStatus =
+              Some(
+                successfulCtStatusResponse.copy(
+                  startDate = storedStartDate,
+                  endDate = storedEndDate
+                )
+              )
+            )
+          )
+
+        val updatedSession =
+          session.copy(
+            userAnswers = answers.copy(
+              chargeableForCT = None,
+              recentlyStartedTrading = None,
+              ctIncomeDeclared = None
+            ),
+            retrievedJourneyData = session.retrievedJourneyData.copy(ctStatus = Some(todayCtStatusResponse)),
+            newCompanyTaxPeriodConsidered = None
+          )
+
+        inSequence {
+          mockAuthWithNoRetrievals()
+          mockGetSession(session)
+          mockTimeProviderToday(today)
+          mockTaxCheckServiceGetCtStatus(
+            successfulCtStatusResponse.ctutr,
+            todayLookBackPeriodStart,
+            todayLookBackPeriodEnd
+          )(Right(Some(todayCtStatusResponse)))
+          mockJourneyServiceUpdateAndNext(currentEndpoint, session, updatedSession)(Right(mockNextCall))
+        }
+
+        checkIsRedirect(performAction(), mockNextCall)
+      }
+
+      "the look back period start date has changed" in {
+        test(yesterdayLookBackPeriodEnd, todayLookBackPeriodEnd)
+      }
+
+      "the look back period end date has changed" in {
+        test(todayLookBackPeriodStart, yesterdayLookBackPeriodEnd)
+      }
+
+      "both the look back period start and end date has changed" in {
+        test(yesterdayLookBackPeriodEnd, yesterdayLookBackPeriodEnd)
+      }
+
+      "the relevant accounting period has changed" in {
+        val answers                  = Fixtures.incompleteCompanyUserAnswers()
+        val originalCtStatusResponse = successfulCtStatusResponse.copy(
+          startDate = yesterdayLookBackPeriodStart,
+          endDate = yesterdayLookBackPeriodEnd
+        )
+        val session                  =
+          Fixtures.companyHECSession(
+            userAnswers = answers,
+            retrievedJourneyData = Fixtures.companyRetrievedJourneyData(
+              ctStatus = Some(originalCtStatusResponse)
+            )
+          )
+
+        val updatedCtStatusResponse = todayCtStatusResponse.copy(
+          latestAccountingPeriod = Some(CTAccountingPeriodDigital(LocalDate.MIN, LocalDate.MAX, CTStatus.ReturnFound))
+        )
+
+        val updatedSession =
+          session.copy(
+            userAnswers = answers,
+            retrievedJourneyData = session.retrievedJourneyData.copy(ctStatus = Some(updatedCtStatusResponse)),
+            newCompanyTaxPeriodConsidered = Some(NewCompanyTaxPeriodConsidered(originalCtStatusResponse))
+          )
+
+        inSequence {
+          mockAuthWithNoRetrievals()
+          mockGetSession(session)
+          mockTimeProviderToday(today)
+          mockTaxCheckServiceGetCtStatus(
+            successfulCtStatusResponse.ctutr,
+            todayLookBackPeriodStart,
+            todayLookBackPeriodEnd
+          )(Right(Some(updatedCtStatusResponse)))
+          mockJourneyServiceUpdateAndNext(currentEndpoint, session, updatedSession)(Right(mockNextCall))
+        }
+
+        checkIsRedirect(performAction(), mockNextCall)
       }
 
     }
