@@ -71,7 +71,11 @@ class LicenceDetailsControllerSpec
 
       def performAction(): Future[Result] = controller.licenceType(FakeRequest())
 
-      def checkPageDetailsWithNoPreviousAns(session: HECSession, radioTextList: List[String]) = {
+      def checkPageDetailsWithNoPreviousAns(
+        session: HECSession,
+        radioLabels: List[String],
+        radioHintTexts: List[Option[String]]
+      ) = {
 
         inSequence {
           mockAuthWithNoRetrievals()
@@ -87,7 +91,7 @@ class LicenceDetailsControllerSpec
             val selectedOptions = doc.select(".govuk-radios__input[checked]")
             selectedOptions.isEmpty shouldBe true
 
-            testRadioButtonOptions(doc, radioTextList)
+            testRadioButtonOptions(doc, radioLabels, radioHintTexts)
 
             doc
               .select(".govuk-body > .govuk-link")
@@ -102,7 +106,12 @@ class LicenceDetailsControllerSpec
         )
       }
 
-      def checkPageDetailsWithPreviousAns(session: HECSession, value: String) = {
+      def checkPageDetailsWithPreviousAns(
+        session: HECSession,
+        value: String,
+        radioLabels: List[String],
+        radioHintTexts: List[Option[String]]
+      ) = {
 
         inSequence {
           mockAuthWithNoRetrievals()
@@ -114,6 +123,8 @@ class LicenceDetailsControllerSpec
           messageFromMessageKey("licenceType.title"),
           { doc =>
             doc.select("#back").attr("href") shouldBe mockPreviousCall.url
+
+            testRadioButtonOptions(doc, radioLabels, radioHintTexts)
 
             val selectedOptions = doc.select(".govuk-radios__input[checked]")
             selectedOptions.attr("value") shouldBe value
@@ -133,22 +144,30 @@ class LicenceDetailsControllerSpec
 
         "user is Individual" when {
 
+          val expectedIndividualRadioLabels =
+            List(
+              "licenceType.driverOfTaxis",
+              "licenceType.operatorOfPrivateHireVehicles",
+              "licenceType.bookingOffice",
+              "licenceType.scrapMetalCollector",
+              "licenceType.scrapMetalDealer"
+            ).map(messageFromMessageKey(_))
+
+          val expectedIndividualRadioHints =
+            List(
+              "licenceType.driverOfTaxis.hint",
+              "licenceType.operatorOfPrivateHireVehicles.hint",
+              "licenceType.bookingOffice.hint",
+              "licenceType.scrapMetalCollector.hint",
+              "licenceType.scrapMetalDealer.hint"
+            ).map(key => Some(messageFromMessageKey(key)))
+
           "the user has not previously answered the question" in {
             val session = IndividualHECSession.newSession(individualLoginData)
             checkPageDetailsWithNoPreviousAns(
               session,
-              List(
-                messageFromMessageKey("licenceType.driverOfTaxis") +
-                  s" ${messageFromMessageKey("licenceType.driverOfTaxis.hint")}",
-                messageFromMessageKey("licenceType.operatorOfPrivateHireVehicles") +
-                  s" ${messageFromMessageKey("licenceType.operatorOfPrivateHireVehicles.hint")}",
-                messageFromMessageKey("licenceType.bookingOffice") +
-                  s" ${messageFromMessageKey("licenceType.bookingOffice.hint")}",
-                messageFromMessageKey("licenceType.scrapMetalCollector") +
-                  s" ${messageFromMessageKey("licenceType.scrapMetalCollector.hint")}",
-                messageFromMessageKey("licenceType.scrapMetalDealer") +
-                  s" ${messageFromMessageKey("licenceType.scrapMetalDealer.hint")}"
-              )
+              expectedIndividualRadioLabels,
+              expectedIndividualRadioHints
             )
           }
 
@@ -167,27 +186,35 @@ class LicenceDetailsControllerSpec
                 )
               )
 
-            checkPageDetailsWithPreviousAns(session, "0")
+            checkPageDetailsWithPreviousAns(session, "0", expectedIndividualRadioLabels, expectedIndividualRadioHints)
           }
 
         }
 
         "user is Company" when {
 
+          val expectedCompanyRadioLabels =
+            List(
+              "licenceType.operatorOfPrivateHireVehicles",
+              "licenceType.bookingOffice",
+              "licenceType.scrapMetalCollector",
+              "licenceType.scrapMetalDealer"
+            ).map(messageFromMessageKey(_))
+
+          val expectedCompanyRadioHints =
+            List(
+              "licenceType.operatorOfPrivateHireVehicles.hint",
+              "licenceType.bookingOffice.hint",
+              "licenceType.scrapMetalCollector.hint",
+              "licenceType.scrapMetalDealer.hint"
+            ).map(key => Some(messageFromMessageKey(key)))
+
           "the user has not previously answered the question" in {
             val session = CompanyHECSession.newSession(companyLoginData)
             checkPageDetailsWithNoPreviousAns(
               session,
-              List(
-                messageFromMessageKey("licenceType.operatorOfPrivateHireVehicles") +
-                  s" ${messageFromMessageKey("licenceType.operatorOfPrivateHireVehicles.hint")}",
-                messageFromMessageKey("licenceType.bookingOffice") +
-                  s" ${messageFromMessageKey("licenceType.bookingOffice.hint")}",
-                messageFromMessageKey("licenceType.scrapMetalCollector") +
-                  s" ${messageFromMessageKey("licenceType.scrapMetalCollector.hint")}",
-                messageFromMessageKey("licenceType.scrapMetalDealer") +
-                  s" ${messageFromMessageKey("licenceType.scrapMetalDealer.hint")}"
-              )
+              expectedCompanyRadioLabels,
+              expectedCompanyRadioHints
             )
           }
 
@@ -203,7 +230,12 @@ class LicenceDetailsControllerSpec
                 )
               )
 
-            checkPageDetailsWithPreviousAns(session, "3")
+            checkPageDetailsWithPreviousAns(
+              session,
+              "3",
+              expectedCompanyRadioLabels,
+              expectedCompanyRadioHints
+            )
           }
 
         }
@@ -494,6 +526,13 @@ class LicenceDetailsControllerSpec
 
       "display the page" when {
 
+        val licenceTimeTradingOptions = List(
+          messageFromMessageKey("licenceTimeTrading.zeroToTwoYears"),
+          messageFromMessageKey("licenceTimeTrading.twoToFourYears"),
+          messageFromMessageKey("licenceTimeTrading.fourToEightYears"),
+          messageFromMessageKey("licenceTimeTrading.eightYearsOrMore")
+        )
+
         def testDisplayPage(session: HECSession, value: Option[String]) = {
           inSequence {
             mockAuthWithNoRetrievals()
@@ -508,6 +547,14 @@ class LicenceDetailsControllerSpec
             messageFromMessageKey("licenceTimeTrading.title"),
             { doc =>
               doc.select("#back").attr("href") shouldBe mockPreviousCall.url
+
+              doc.select(".govuk-hint").text shouldBe messageFromMessageKey("licenceTimeTrading.hint")
+
+              testRadioButtonOptions(
+                doc,
+                licenceTimeTradingOptions,
+                List.fill(licenceTimeTradingOptions.size)(None)
+              )
 
               val selectedOptions = doc.select(".govuk-radios__input[checked]")
               value match {
@@ -697,6 +744,14 @@ class LicenceDetailsControllerSpec
 
       "display the page" when {
 
+        val licenceValidityPeriodOptions = List(
+          messageFromMessageKey("licenceValidityPeriod.upToOneYear"),
+          messageFromMessageKey("licenceValidityPeriod.upToTwoYears"),
+          messageFromMessageKey("licenceValidityPeriod.upToThreeYears"),
+          messageFromMessageKey("licenceValidityPeriod.upToFourYears"),
+          messageFromMessageKey("licenceValidityPeriod.upToFiveYears")
+        )
+
         def displayPageTest(session: HECSession, value: Option[String]) = {
           inSequence {
             mockAuthWithNoRetrievals()
@@ -712,11 +767,15 @@ class LicenceDetailsControllerSpec
             { doc =>
               doc.select("#back").attr("href") shouldBe mockPreviousCall.url
 
-              val options = doc.select(".govuk-radios__item")
-              options.size() shouldBe 5
+              doc.select(".govuk-hint").text shouldBe messageFromMessageKey("licenceValidityPeriod.hint")
+
+              testRadioButtonOptions(
+                doc,
+                licenceValidityPeriodOptions,
+                List.fill(licenceValidityPeriodOptions.size)(None)
+              )
 
               val selectedOptions = doc.select(".govuk-radios__input[checked]")
-
               value match {
                 case Some(index) => selectedOptions.attr("value") shouldBe index
                 case None        => selectedOptions.isEmpty       shouldBe true

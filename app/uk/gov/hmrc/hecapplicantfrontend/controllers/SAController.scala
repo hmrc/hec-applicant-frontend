@@ -23,12 +23,12 @@ import play.api.data.Forms.{mapping, of}
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
-import uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.getTaxYear
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
 import uk.gov.hmrc.hecapplicantfrontend.models.YesNoAnswer
 import uk.gov.hmrc.hecapplicantfrontend.models.views.YesNoOption
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
-import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging, TimeProvider}
+import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService.InconsistentSessionState
+import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging}
 import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
@@ -40,7 +40,6 @@ class SAController @Inject() (
   sessionDataAction: SessionDataAction,
   journeyService: JourneyService,
   mcc: MessagesControllerComponents,
-  timeProvider: TimeProvider,
   sautrNotFoundPage: html.SautrNotFound,
   noReturnFoundPage: html.NoReturnFound,
   saIncomeStatementPage: html.SAIncomeStatement
@@ -51,18 +50,23 @@ class SAController @Inject() (
 
   val saIncomeStatement: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     request.sessionData.mapAsIndividual { individualSession =>
-      val back             = journeyService.previous(routes.SAController.saIncomeStatement)
-      val saIncomeDeclared = individualSession.userAnswers.fold(_.saIncomeDeclared, _.saIncomeDeclared)
+      val back                  = journeyService.previous(routes.SAController.saIncomeStatement)
+      val saIncomeDeclared      = individualSession.userAnswers.fold(_.saIncomeDeclared, _.saIncomeDeclared)
+      val relevantIncomeTaxYear = individualSession.relevantIncomeTaxYear
+        .getOrElse(InconsistentSessionState("Could not find relevant income tax year").doThrow)
       val form = {
         val emptyForm = SAController.saIncomeDeclarationForm(YesNoAnswer.values)
         saIncomeDeclared.fold(emptyForm)(emptyForm.fill)
       }
-      Ok(saIncomeStatementPage(form, back, SAController.incomeDeclaredOptions, getTaxYear(timeProvider.currentDate)))
+      Ok(saIncomeStatementPage(form, back, SAController.incomeDeclaredOptions, relevantIncomeTaxYear))
     }
   }
 
   val saIncomeStatementSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     request.sessionData.mapAsIndividual { individualSession =>
+      val relevantIncomeTaxYear = individualSession.relevantIncomeTaxYear
+        .getOrElse(InconsistentSessionState("Could not find relevant income tax year").doThrow)
+
       def handleValidAnswer(incomeDeclared: YesNoAnswer): Future[Result] = {
         val updatedAnswers =
           individualSession.userAnswers.unset(_.saIncomeDeclared).copy(saIncomeDeclared = Some(incomeDeclared))
@@ -88,7 +92,7 @@ class SAController @Inject() (
                 formWithErrors,
                 journeyService.previous(routes.SAController.saIncomeStatement),
                 SAController.incomeDeclaredOptions,
-                getTaxYear(timeProvider.currentDate)
+                relevantIncomeTaxYear
               )
             ),
           handleValidAnswer
