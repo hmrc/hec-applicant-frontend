@@ -65,7 +65,7 @@ class TaxSituationController @Inject() (
         val options         = taxSituationOptions(licenceType)
         val emptyForm       = taxSituationForm(options)
 
-        val calculatedTaxYear    = getTaxYear(timeProvider.currentDate)
+        val calculatedTaxYear    = getRelevantIncomeTaxYear(timeProvider.currentDate)
         val (startDate, endDate) = getTaxPeriodStrings(calculatedTaxYear)
 
         individualSession.relevantIncomeTaxYear match {
@@ -212,7 +212,7 @@ object TaxSituationController {
       )(identity)(Some(_))
     )
 
-  def getTaxYear(currentDate: LocalDate): TaxYear = {
+  def getRelevantIncomeTaxYear(currentDate: LocalDate): TaxYear = {
     val currentYear             = currentDate.getYear
     val currentYearTaxStartDate = LocalDate.of(currentYear, 4, 6)
     val sixMonthEarlierDate     = currentDate.minusMonths(6L)
