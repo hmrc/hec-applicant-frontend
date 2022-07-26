@@ -945,7 +945,7 @@ class CompanyDetailsControllerSpec
               doc.select("#back").attr("href") shouldBe mockPreviousCall.url
               doc
                 .select("#ctIncomeDeclared-hint")
-                .text()                        shouldBe "This is your Company Tax Return for the accounting period ending 5 October 2020."
+                .text()                        shouldBe messageFromMessageKey("ctIncomeDeclared.hint", "5 October 2020")
 
               testRadioButtonOptions(
                 doc,

@@ -31,6 +31,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
+import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService.InconsistentSessionState
 import uk.gov.hmrc.hecapplicantfrontend.utils.Fixtures
 
 import java.time.LocalDate
@@ -137,7 +138,25 @@ class SAControllerSpec
 
       behave like authAndSessionDataBehaviour(performAction)
 
+      "return an error" when {
+
+        "no relevant income tax year can be found" in {
+          val session = IndividualHECSession.newSession(individualLoginData)
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockJourneyServiceGetPrevious(routes.SAController.saIncomeStatement, session)(mockPreviousCall)
+          }
+
+          an[InconsistentSessionState] shouldBe thrownBy(await(performAction()))
+        }
+
+      }
+
       "display the page" when {
+
+        val relevantIncomeTaxYear = TaxYear(2020)
 
         def displayPageTest(session: HECSession, value: Option[String]) = {
           inSequence {
@@ -151,7 +170,17 @@ class SAControllerSpec
             messageFromMessageKey("saIncomeDeclared.title"),
             { doc =>
               doc.select("#back").attr("href") shouldBe mockPreviousCall.url
+              doc.select(".govuk-hint").text   shouldBe messageFromMessageKey(
+                "saIncomeDeclared.hint",
+                relevantIncomeTaxYear.startYear.toString,
+                (relevantIncomeTaxYear.startYear + 1).toString
+              )
 
+              testRadioButtonOptions(
+                doc,
+                List(messageFromMessageKey("saIncomeDeclared.yes"), messageFromMessageKey("saIncomeDeclared.no")),
+                List(None, None)
+              )
               val selectedOptions = doc.select(".govuk-radios__input[checked]")
 
               value match {
@@ -167,7 +196,9 @@ class SAControllerSpec
         }
 
         "the user has not previously answered the question" in {
-          val session = IndividualHECSession.newSession(individualLoginData)
+          val session = IndividualHECSession
+            .newSession(individualLoginData)
+            .copy(relevantIncomeTaxYear = Some(relevantIncomeTaxYear))
 
           displayPageTest(session, None)
 
@@ -175,18 +206,20 @@ class SAControllerSpec
 
         "the user has previously answered the question" in {
           val session =
-            Fixtures.individualHECSession(
-              individualLoginData,
-              IndividualRetrievedJourneyData.empty,
-              Fixtures.completeIndividualUserAnswers(
-                LicenceType.DriverOfTaxisAndPrivateHires,
-                LicenceTimeTrading.ZeroToTwoYears,
-                LicenceValidityPeriod.UpToTwoYears,
-                TaxSituation.PAYE,
-                Some(YesNoAnswer.Yes),
-                Some(EntityType.Individual)
+            Fixtures
+              .individualHECSession(
+                individualLoginData,
+                IndividualRetrievedJourneyData.empty,
+                Fixtures.completeIndividualUserAnswers(
+                  LicenceType.DriverOfTaxisAndPrivateHires,
+                  LicenceTimeTrading.ZeroToTwoYears,
+                  LicenceValidityPeriod.UpToTwoYears,
+                  TaxSituation.PAYE,
+                  Some(YesNoAnswer.Yes),
+                  Some(EntityType.Individual)
+                )
               )
-            )
+              .copy(relevantIncomeTaxYear = Some(relevantIncomeTaxYear))
           displayPageTest(session, Some("0"))
         }
 
@@ -199,11 +232,14 @@ class SAControllerSpec
       def performAction(data: (String, String)*): Future[Result] =
         controller.saIncomeStatementSubmit(FakeRequest().withMethod(POST).withFormUrlEncodedBody(data: _*))
 
+      val relevantIncomeTaxYear = TaxYear(2020)
+
       behave like authAndSessionDataBehaviour(() => performAction())
 
       "show a form error" when {
 
-        val session = IndividualHECSession.newSession(individualLoginData)
+        val session =
+          IndividualHECSession.newSession(individualLoginData).copy(relevantIncomeTaxYear = Some(relevantIncomeTaxYear))
 
         def formErrorTest(data: (String, String)*)(errorMessageKey: String) = {
           inSequence {
@@ -235,15 +271,26 @@ class SAControllerSpec
 
       "return a technical error" when {
 
+        "no relevant income tax year can be found" in {
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(IndividualHECSession.newSession(individualLoginData))
+          }
+
+          an[InconsistentSessionState] shouldBe thrownBy(await(performAction()))
+        }
+
         "the call to update and next fails" in {
           val answers        = IndividualUserAnswers.empty
           val updatedAnswers = IndividualUserAnswers.empty.copy(saIncomeDeclared = Some(YesNoAnswer.Yes))
           val session        =
-            Fixtures.individualHECSession(
-              individualLoginData,
-              IndividualRetrievedJourneyData.empty,
-              answers
-            )
+            Fixtures
+              .individualHECSession(
+                individualLoginData,
+                IndividualRetrievedJourneyData.empty,
+                answers
+              )
+              .copy(relevantIncomeTaxYear = Some(relevantIncomeTaxYear))
           val updatedSession = session.copy(userAnswers = updatedAnswers)
 
           inSequence {
@@ -278,11 +325,13 @@ class SAControllerSpec
             val answers        = IndividualUserAnswers.empty
             val updatedAnswers = IndividualUserAnswers.empty.copy(saIncomeDeclared = Some(YesNoAnswer.No))
             val session        =
-              Fixtures.individualHECSession(
-                individualLoginData,
-                IndividualRetrievedJourneyData.empty,
-                answers
-              )
+              Fixtures
+                .individualHECSession(
+                  individualLoginData,
+                  IndividualRetrievedJourneyData.empty,
+                  answers
+                )
+                .copy(relevantIncomeTaxYear = Some(relevantIncomeTaxYear))
             val updatedSession = session.copy(userAnswers = updatedAnswers)
             redirectTest(session, updatedSession, "1")
           }
@@ -299,11 +348,13 @@ class SAControllerSpec
               .fromCompleteAnswers(answers)
               .copy(saIncomeDeclared = Some(YesNoAnswer.No))
             val session        =
-              Fixtures.individualHECSession(
-                individualLoginData,
-                IndividualRetrievedJourneyData.empty,
-                answers
-              )
+              Fixtures
+                .individualHECSession(
+                  individualLoginData,
+                  IndividualRetrievedJourneyData.empty,
+                  answers
+                )
+                .copy(relevantIncomeTaxYear = Some(relevantIncomeTaxYear))
             val updatedSession = session.copy(userAnswers = updatedAnswers)
             redirectTest(session, updatedSession, "1")
 

@@ -136,6 +136,8 @@ class VerifyEmailPasscodeControllerSpec
             { doc =>
               doc.select("#back").attr("href") shouldBe mockPreviousCall.url
 
+              doc.select(".govuk-hint").text shouldBe messageFromMessageKey("verifyPasscode.hint")
+
               val textBody = doc.select(".govuk-inset-text").text()
               val htmlBody = doc.select(".govuk-body").html()
 

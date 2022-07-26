@@ -548,6 +548,8 @@ class LicenceDetailsControllerSpec
             { doc =>
               doc.select("#back").attr("href") shouldBe mockPreviousCall.url
 
+              doc.select(".govuk-hint").text shouldBe messageFromMessageKey("licenceTimeTrading.hint")
+
               testRadioButtonOptions(
                 doc,
                 licenceTimeTradingOptions,
@@ -764,6 +766,8 @@ class LicenceDetailsControllerSpec
             messageFromMessageKey("licenceValidityPeriod.title"),
             { doc =>
               doc.select("#back").attr("href") shouldBe mockPreviousCall.url
+
+              doc.select(".govuk-hint").text shouldBe messageFromMessageKey("licenceValidityPeriod.hint")
 
               testRadioButtonOptions(
                 doc,

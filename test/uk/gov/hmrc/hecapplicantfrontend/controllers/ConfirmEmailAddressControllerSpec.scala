@@ -138,6 +138,8 @@ class ConfirmEmailAddressControllerSpec
             { doc =>
               doc.select("#back").attr("href") shouldBe mockPreviousCall.url
 
+              doc.select(".govuk-hint").text shouldBe messageFromMessageKey("confirmEmailAddress.hint")
+
               testRadioButtonOptions(
                 doc,
                 List(
