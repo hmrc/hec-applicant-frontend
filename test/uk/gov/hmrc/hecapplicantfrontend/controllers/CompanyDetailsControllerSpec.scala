@@ -2313,7 +2313,9 @@ class CompanyDetailsControllerSpec
               todayLookBackPeriodStart,
               todayLookBackPeriodEnd
             )(Right(Some(updatedCtStatusResponse)))
-            mockJourneyServiceUpdateAndNext(currentEndpoint, session, updatedSession)(Left(Error("")))
+            mockJourneyServiceUpdateAndNext(routes.CompanyDetailsController.enterCtutr, session, updatedSession)(
+              Left(Error(""))
+            )
           }
 
           a[RuntimeException] shouldBe thrownBy(await(performAction()))
@@ -2370,7 +2372,7 @@ class CompanyDetailsControllerSpec
 
     "retrieve a new CT status response and redirect to the next page" when {
 
-      def test(storedStartDate: LocalDate, storedEndDate: LocalDate) = {
+      def test(storedStartDate: LocalDate, storedEndDate: LocalDate, retrievedGGCtutr: Option[CTUTR]) = {
         val answers = Fixtures.incompleteCompanyUserAnswers(
           chargeableForCT = Some(YesNoAnswer.Yes),
           recentlyStartedTrading = Some(YesNoAnswer.No),
@@ -2387,7 +2389,8 @@ class CompanyDetailsControllerSpec
                   endDate = storedEndDate
                 )
               )
-            )
+            ),
+            loginData = Fixtures.companyLoginData(ctutr = retrievedGGCtutr)
           )
 
         val updatedSession =
@@ -2410,22 +2413,28 @@ class CompanyDetailsControllerSpec
             todayLookBackPeriodStart,
             todayLookBackPeriodEnd
           )(Right(Some(todayCtStatusResponse)))
-          mockJourneyServiceUpdateAndNext(currentEndpoint, session, updatedSession)(Right(mockNextCall))
+          mockJourneyServiceUpdateAndNext(
+            retrievedGGCtutr.fold(routes.CompanyDetailsController.enterCtutr)(_ =>
+              routes.CompanyDetailsController.confirmCompanyDetails
+            ),
+            session,
+            updatedSession
+          )(Right(mockNextCall))
         }
 
         checkIsRedirect(performAction(), mockNextCall)
       }
 
       "the look back period start date has changed" in {
-        test(yesterdayLookBackPeriodEnd, todayLookBackPeriodEnd)
+        test(yesterdayLookBackPeriodEnd, todayLookBackPeriodEnd, None)
       }
 
       "the look back period end date has changed" in {
-        test(todayLookBackPeriodStart, yesterdayLookBackPeriodEnd)
+        test(todayLookBackPeriodStart, yesterdayLookBackPeriodEnd, Some(CTUTR("12345")))
       }
 
       "both the look back period start and end date has changed" in {
-        test(yesterdayLookBackPeriodEnd, yesterdayLookBackPeriodEnd)
+        test(yesterdayLookBackPeriodEnd, yesterdayLookBackPeriodEnd, None)
       }
 
       "the relevant accounting period has changed" in {
@@ -2462,7 +2471,9 @@ class CompanyDetailsControllerSpec
             todayLookBackPeriodStart,
             todayLookBackPeriodEnd
           )(Right(Some(updatedCtStatusResponse)))
-          mockJourneyServiceUpdateAndNext(currentEndpoint, session, updatedSession)(Right(mockNextCall))
+          mockJourneyServiceUpdateAndNext(routes.CompanyDetailsController.enterCtutr, session, updatedSession)(
+            Right(mockNextCall)
+          )
         }
 
         checkIsRedirect(performAction(), mockNextCall)

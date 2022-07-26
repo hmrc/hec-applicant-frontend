@@ -204,7 +204,7 @@ class CompanyDetailsController @Inject() (
   val recentlyStartedTrading: Action[AnyContent] =
     authAction.andThen(sessionDataAction).async { implicit request =>
       request.sessionData mapAsCompany { companySession =>
-        ensureUpToDateCTStatus(routes.CompanyDetailsController.recentlyStartedTrading, companySession) { _ =>
+        ensureUpToDateCTStatus(companySession) { _ =>
           val recentlyStartedTrading =
             companySession.userAnswers.fold(_.recentlyStartedTrading, _.recentlyStartedTrading)
           val form = {
@@ -258,26 +258,25 @@ class CompanyDetailsController @Inject() (
   val chargeableForCorporationTax: Action[AnyContent] =
     authAction.andThen(sessionDataAction).async { implicit request =>
       request.sessionData mapAsCompany { companySession =>
-        ensureUpToDateCTStatus(routes.CompanyDetailsController.chargeableForCorporationTax, companySession) {
-          ctStatusResponse =>
-            ensureCompanyDataHasCTStatusAccountingPeriod(ctStatusResponse) { latestAccountingPeriod =>
-              val chargeableForCT = companySession.userAnswers.fold(_.chargeableForCT, _.chargeableForCT)
-              val endDateStr      = TimeUtils.govDisplayFormat(latestAccountingPeriod.endDate)
-              val form = {
-                val emptyForm =
-                  CompanyDetailsController.yesNoForm("chargeableForCT", YesNoAnswer.values, List(endDateStr))
-                chargeableForCT.fold(emptyForm)(emptyForm.fill)
-              }
-              Ok(
-                chargeableForCTPage(
-                  form,
-                  journeyService.previous(routes.CompanyDetailsController.chargeableForCorporationTax),
-                  endDateStr,
-                  YesNoOption.yesNoOptions,
-                  companySession.newCompanyTaxPeriodConsidered
-                )
-              )
+        ensureUpToDateCTStatus(companySession) { ctStatusResponse =>
+          ensureCompanyDataHasCTStatusAccountingPeriod(ctStatusResponse) { latestAccountingPeriod =>
+            val chargeableForCT = companySession.userAnswers.fold(_.chargeableForCT, _.chargeableForCT)
+            val endDateStr      = TimeUtils.govDisplayFormat(latestAccountingPeriod.endDate)
+            val form = {
+              val emptyForm =
+                CompanyDetailsController.yesNoForm("chargeableForCT", YesNoAnswer.values, List(endDateStr))
+              chargeableForCT.fold(emptyForm)(emptyForm.fill)
             }
+            Ok(
+              chargeableForCTPage(
+                form,
+                journeyService.previous(routes.CompanyDetailsController.chargeableForCorporationTax),
+                endDateStr,
+                YesNoOption.yesNoOptions,
+                companySession.newCompanyTaxPeriodConsidered
+              )
+            )
+          }
         }
       }
     }
@@ -578,7 +577,6 @@ class CompanyDetailsController @Inject() (
   private implicit val localDateEq: Eq[LocalDate] = Eq.fromUniversalEquals
 
   private def ensureUpToDateCTStatus(
-    current: Call,
     companySession: CompanyHECSession
   )(f: CTStatusResponse => Future[Result])(implicit r: RequestWithSessionData[_], hc: HeaderCarrier): Future[Result] =
     companySession.retrievedJourneyData.ctStatus match {
@@ -610,7 +608,9 @@ class CompanyDetailsController @Inject() (
                                                       Some(NewCompanyTaxPeriodConsidered(ctStatusResponse))
                                                     else None
             next                                 <- journeyService.updateAndNext(
-                                                      current,
+                                                      companySession.loginData.ctutr.fold(routes.CompanyDetailsController.enterCtutr)(_ =>
+                                                        routes.CompanyDetailsController.confirmCompanyDetails
+                                                      ),
                                                       companySession.copy(
                                                         userAnswers = updatedAnswers,
                                                         retrievedJourneyData = updatedRetrievedJourneyData,
