@@ -115,6 +115,11 @@ GET  /failed-iv/time-out                         uk.gov.hmrc.hecapplicantfronten
 GET  /failed-iv/technical-issue                  uk.gov.hmrc.hecapplicantfrontend.controllers.IvFailureController.technicalIssue()
 GET  /failed-iv/precondition-failed              uk.gov.hmrc.hecapplicantfrontend.controllers.IvFailureController.preconditionFailed()
 
+GET  /determine-relevant-income-tax-year-changed  uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.determineIfRelevantIncomeTaxYearChanged
+GET  /proceed-new-relevant-income-tax-year        uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.proceedWithNewRelevantIncomeTaxYear
+POST /proceed-new-relevant-income-tax-year        uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.proceedWithNewRelevantIncomeTaxYearSubmit
+
+
 # Timeout from auth
 GET /timed-out                                   uk.gov.hmrc.hecapplicantfrontend.controllers.SignOutController.signOutFromTimeout()
 

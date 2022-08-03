@@ -61,7 +61,7 @@ Request[_], messages: Messages, appConfig: AppConfig)
     )
 }}
 
-@layout(pageTitle = Some(title), hasErrors = form.hasErrors, backLocation = Some(back)) {
+@layout(pageTitle = Some(title), hasErrors = form.hasErrors, backLocation = if(newRelevantIncomeTaxYearConsidered) None else Some(back)) {
 
     @if(form.errors.nonEmpty) {
         @govukErrorSummary(ErrorSummary(errorList = form.errors.map(e =>
