@@ -106,23 +106,23 @@ GET        /agent-cannot-access                  uk.gov.hmrc.hecapplicantfronten
 # IV
 GET  /failed-iv/callback                         uk.gov.hmrc.hecapplicantfrontend.controllers.IvFailureController.ivFailure(journeyId: java.util.UUID)
 GET  /failed-iv/retry                            uk.gov.hmrc.hecapplicantfrontend.controllers.IvFailureController.retry
-GET  /failed-iv/failed-matching                  uk.gov.hmrc.hecapplicantfrontend.controllers.IvFailureController.failedMatching()
-GET  /failed-iv                                  uk.gov.hmrc.hecapplicantfrontend.controllers.IvFailureController.failedIV()
-GET  /failed-iv/insufficient-evidence            uk.gov.hmrc.hecapplicantfrontend.controllers.IvFailureController.insufficientEvidence()
-GET  /failed-iv/locked-out                       uk.gov.hmrc.hecapplicantfrontend.controllers.IvFailureController.lockedOut()
-GET  /failed-iv/user-aborted                     uk.gov.hmrc.hecapplicantfrontend.controllers.IvFailureController.userAborted()
-GET  /failed-iv/time-out                         uk.gov.hmrc.hecapplicantfrontend.controllers.IvFailureController.timedOut()
-GET  /failed-iv/technical-issue                  uk.gov.hmrc.hecapplicantfrontend.controllers.IvFailureController.technicalIssue()
-GET  /failed-iv/precondition-failed              uk.gov.hmrc.hecapplicantfrontend.controllers.IvFailureController.preconditionFailed()
+GET  /failed-iv/failed-matching                  uk.gov.hmrc.hecapplicantfrontend.controllers.IvFailureController.failedMatching
+GET  /failed-iv                                  uk.gov.hmrc.hecapplicantfrontend.controllers.IvFailureController.failedIV
+GET  /failed-iv/insufficient-evidence            uk.gov.hmrc.hecapplicantfrontend.controllers.IvFailureController.insufficientEvidence
+GET  /failed-iv/locked-out                       uk.gov.hmrc.hecapplicantfrontend.controllers.IvFailureController.lockedOut
+GET  /failed-iv/user-aborted                     uk.gov.hmrc.hecapplicantfrontend.controllers.IvFailureController.userAborted
+GET  /failed-iv/time-out                         uk.gov.hmrc.hecapplicantfrontend.controllers.IvFailureController.timedOut
+GET  /failed-iv/technical-issue                  uk.gov.hmrc.hecapplicantfrontend.controllers.IvFailureController.technicalIssue
+GET  /failed-iv/precondition-failed              uk.gov.hmrc.hecapplicantfrontend.controllers.IvFailureController.preconditionFailed
 
-GET  /determine-relevant-income-tax-year-changed  uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.determineIfRelevantIncomeTaxYearChanged
-GET  /proceed-new-relevant-income-tax-year        uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.proceedWithNewRelevantIncomeTaxYear
-POST /proceed-new-relevant-income-tax-year        uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.proceedWithNewRelevantIncomeTaxYearSubmit
+GET  /determine-relevant-income-tax-year-changed uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.determineIfRelevantIncomeTaxYearChanged
+GET  /change-answer-sa                           uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.proceedWithNewRelevantIncomeTaxYear
+POST /change-answer-sa                           uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.proceedWithNewRelevantIncomeTaxYearSubmit
 
 
 # Timeout from auth
-GET /timed-out                                   uk.gov.hmrc.hecapplicantfrontend.controllers.SignOutController.signOutFromTimeout()
+GET /timed-out                                   uk.gov.hmrc.hecapplicantfrontend.controllers.SignOutController.signOutFromTimeout
 
-GET /exit-survey                                 uk.gov.hmrc.hecapplicantfrontend.controllers.SignOutController.exitSurvey()
+GET /exit-survey                                 uk.gov.hmrc.hecapplicantfrontend.controllers.SignOutController.exitSurvey
 
-GET /hide-ur-banner                             uk.gov.hmrc.hecapplicantfrontend.controllers.UrBannerController.hideBanner()
+GET /hide-ur-banner                             uk.gov.hmrc.hecapplicantfrontend.controllers.UrBannerController.hideBanner
