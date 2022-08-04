@@ -257,6 +257,7 @@ maxTaxChecksLimitExceeded.p1=Rydych wedi ceisio gwneud gwiriad treth gormod o we
 maxTaxChecksLimitExceeded.link=<a href="{0}" class="govuk-link">Bwriwch olwg dros eich codau gwirio treth presennol</a> neu <a href="{1}" class="govuk-link">ewch yn ôl a dewis math gwahanol o drwydded</a>
 confirmEmailAddress.title=Pa gyfeiriad e-bost yr hoffech ei ddefnyddio?
 confirmEmailAddress.hint=Mae’n rhaid i chi gael mynediad at y cyfeiriad e-bost hwn. Ni fydd unrhyw gyfeiriadau e-bost eraill rydych wedi’u cadw gyda ni’n cael eu newid.
+confirmEmailAddress.differentEmail=Cyfeiriad e-bost gwahanol
 confirmEmailAddress.error.required=Dewiswch pa gyfeiriad e-bost yr hoffech ei ddefnyddio
 confirmEmailAddress.error.invalid=Dewiswch pa gyfeiriad e-bost yr hoffech ei ddefnyddio
 differentEmail.label=Nodwch gyfeiriad e-bost
