@@ -917,8 +917,10 @@ class TaxSituationControllerSpec
           performAction(),
           messageFromMessageKey("proceedWithNewRelevantIncomeTaxYear.title"),
           { doc =>
-            doc.select("#back").attr("href") shouldBe routes.CheckYourAnswersController.checkYourAnswers.url
-
+            doc.select("#back").attr("href")             shouldBe routes.CheckYourAnswersController.checkYourAnswers.url
+            doc.select(".govuk-fieldset__legend").text() shouldBe messageFromMessageKey(
+              "proceedWithNewRelevantIncomeTaxYear.label"
+            )
             testRadioButtonOptions(
               doc,
               List(

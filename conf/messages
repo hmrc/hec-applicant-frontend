@@ -441,8 +441,10 @@ newTaxPeriod.notification.company.noAccountingPeriod=The date has changed and we
 newTaxPeriod.notification.individual=The relevant tax year has changed since you last answered this question
 
 #Proceed with new relevant accounting period
-proceedWithNewRelevantIncomeTaxYear.title=Uh oh, new tax year
+proceedWithNewRelevantIncomeTaxYear.title=Change your answer
+proceedWithNewRelevantIncomeTaxYear.p1=The date has changed since you answered questions as part of doing a tax check. This means we may need to ask you the same questions about a different tax year.
+proceedWithNewRelevantIncomeTaxYear.label=Do you want to continue?
 proceedWithNewRelevantIncomeTaxYear.yes=Yes
-proceedWithNewRelevantIncomeTaxYear.no=No
-proceedWithNewRelevantIncomeTaxYear.error.required=Select something
-proceedWithNewRelevantIncomeTaxYear.error.invalid=Select something
+proceedWithNewRelevantIncomeTaxYear.no=No - return to the previous page
+proceedWithNewRelevantIncomeTaxYear.error.required=Select yes if you want to continue
+proceedWithNewRelevantIncomeTaxYear.error.invalid=Select yes if you want to continue
