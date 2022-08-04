@@ -140,7 +140,7 @@ entityType.error.required=Dewiswch pwy rydych yn gwneud gwiriad treth ar ei gyfe
 entityType.error.invalid=Dewiswch pwy rydych yn gwneud gwiriad treth ar ei gyfer
 wrongGGAccount.title=Mae angen i chi fewngofnodi â’r cyfrif cywir
 wrongGGAccount.p1=Y rheswm dros hyn yw eich bod wedi mewngofnodi fel {0} a’ch bod wedi dewis gwneud gwiriad treth ar gyfer {1}
-wrongGGAccount.link=Mewngofnodi â’r cyfrif Porth y Llywodraeth cywir
+wrongGGAccount.link=Mewngofnodi â’r cyfrif cywir
 wrongGGAccount.individual=unigolyn
 wrongGGAccount.company=cwmni
 wrongEntityType.title=Nid oes angen i chi wneud gwiriad treth
@@ -202,9 +202,9 @@ crn.error.required=Nodwch eich Rhif Cofrestru’r Cwmni
 crn.error.nonAlphanumericChars=Mae’n rhaid i rif cofrestru’ch cwmni gynnwys llythrennau a rhifau yn unig
 crn.error.crnInvalid=Nodwch rif cofrestru cwmni dilys
 crn.error.notFoundInCompaniesHouse=Nid yw rhif cofrestru’ch cwmni’n cyd-fynd â chofnodion Tŷ’r Cwmnïau
-taxCheck.expiryKey=Y diwrnod olaf y gellir defnyddio’r cod hwn yw:
-taxCheck.codeKey=Cod gwirio treth:
-taxCheck.emailLink=Anfon drwy e-bost<span class="govuk-visually-hidden">
+taxCheck.expiryKey=Y diwrnod olaf y gellir defnyddio’ch cod
+taxCheck.codeKey=Cod gwirio treth
+taxCheck.emailLink=Anfon drwy e-bost<span class="govuk-visually-hidden"> eich cod gwirio treth {0}</span>
 taxChecksList.title=Eich codau gwirio treth
 taxChecksList.copyButtonScreenReaderText=eich {0} cod gwirio treth {1}
 taxChecksList.button=Gwneud gwiriad treth newydd
@@ -256,8 +256,7 @@ maxTaxChecksLimitExceeded.title=Ni allwch wneud gwiriad treth arall ar gyfer y m
 maxTaxChecksLimitExceeded.p1=Rydych wedi ceisio gwneud gwiriad treth gormod o weithiau ar gyfer y math hwn o drwydded.
 maxTaxChecksLimitExceeded.link=<a href="{0}" class="govuk-link">Bwriwch olwg dros eich codau gwirio treth presennol</a> neu <a href="{1}" class="govuk-link">ewch yn ôl a dewis math gwahanol o drwydded</a>
 confirmEmailAddress.title=Pa gyfeiriad e-bost yr hoffech ei ddefnyddio?
-confirmEmailAddress.hint=Caiff eich cod gwirio treth ei anfon i’r e-bost hwn, ac ni fydd unrhyw gyfeiriadau e-bost eraill rydych wedi’u cadw gyda ni’n cael eu newid
-confirmEmailAddress.differentEmail=Cyfeiriad e-bost gwahanol
+confirmEmailAddress.hint=Mae’n rhaid i chi gael mynediad at y cyfeiriad e-bost hwn. Ni fydd unrhyw gyfeiriadau e-bost eraill rydych wedi’u cadw gyda ni’n cael eu newid.
 confirmEmailAddress.error.required=Dewiswch pa gyfeiriad e-bost yr hoffech ei ddefnyddio
 confirmEmailAddress.error.invalid=Dewiswch pa gyfeiriad e-bost yr hoffech ei ddefnyddio
 differentEmail.label=Nodwch gyfeiriad e-bost
@@ -282,7 +281,7 @@ verifyPasscode.p5=Gwiriwch eich ffolder sbam neu sothach – os nad yw wedi cyrr
 emailAddressConfirmed.title=Cyfeiriad e-bost wedi’i gadarnhau
 emailAddressConfirmed.p1=Mae’ch cyfeiriad e-bost wedi’i gadarnhau. Caiff eich cod gwirio treth ei anfon i {0}
 emailSent.title=Mae’ch cod gwirio treth wedi’i e-bostio atoch
-emailSent.p1=Rydym wedi anfon eich cod gwirio treth i <b>{1}</b>
+emailSent.p1=Eich cod gwirio treth yw <b>{0}</b>. Rydym wedi’i anfon i <b>{1}</b>
 emailSent.p2=Y diwrnod olaf y gellir ei ddefnyddio yn eich cais am drwydded yw <strong>{1}</strong>.
 emailSent.p3=<a href="{0}" class="govuk-link">Gweld fy nghodau gwirio treth</a>
 enterEmailAddress.title=Pa gyfeiriad e-bost yr hoffech ei ddefnyddio?
