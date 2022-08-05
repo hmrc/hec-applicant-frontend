@@ -148,12 +148,12 @@ class SummaryRows {
         summaryListRow(
           messages("recentlyStartedTrading.title"),
           messages(s"recentlyStartedTrading.${YesNoOption.yesNoOption(recentlyStartedTrading).messageKey}"),
-          routes.CompanyDetailsController.recentlyStartedTrading,
+          routes.CompanyDetailsController.determineIfRelevantAccountingPeriodChanged,
           messages(s"$messageKey.recentlyStartedTrading.screenReaderText")
         )
       }
 
-    val chargeableForCTRow  =
+    val chargeableForCTRow =
       completeAnswers.chargeableForCT.map { chargeableForCT =>
         val latestAccountingPeriod = retrievedJourneyData match {
           case c: CompanyRetrievedJourneyData =>
@@ -166,11 +166,11 @@ class SummaryRows {
         summaryListRow(
           messages("chargeableForCT.title", TimeUtils.govDisplayFormat(latestAccountingPeriod.endDate)),
           messages(s"chargeableForCT.${YesNoOption.yesNoOption(chargeableForCT).messageKey}"),
-          routes.CompanyDetailsController.chargeableForCorporationTax,
+          routes.CompanyDetailsController.determineIfRelevantAccountingPeriodChanged,
           messages(s"$messageKey.chargeableForCT.screenReaderText")
         )
-
       }
+
     val ctIncomeDeclaredRow =
       completeAnswers.ctIncomeDeclared.map { ctIncomeDeclared =>
         summaryListRow(

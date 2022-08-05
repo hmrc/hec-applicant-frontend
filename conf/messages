@@ -440,7 +440,7 @@ newTaxPeriod.notification.company.newAccountingPeriod=You are now being asked ab
 newTaxPeriod.notification.company.noAccountingPeriod=The date has changed and we now cannot find a relevant accounting period for your company
 newTaxPeriod.notification.individual=The relevant tax year has changed since you last answered this question
 
-#Proceed with new relevant accounting period
+#Proceed with new relevant income tax year
 proceedWithNewRelevantIncomeTaxYear.title=Change your answer
 proceedWithNewRelevantIncomeTaxYear.p1=The date has changed since you answered questions as part of doing a tax check. This means we may need to ask you the same questions about a different tax year.
 proceedWithNewRelevantIncomeTaxYear.label=Do you want to continue?
@@ -448,3 +448,14 @@ proceedWithNewRelevantIncomeTaxYear.yes=Yes
 proceedWithNewRelevantIncomeTaxYear.no=No - return to the previous page
 proceedWithNewRelevantIncomeTaxYear.error.required=Select yes if you want to continue
 proceedWithNewRelevantIncomeTaxYear.error.invalid=Select yes if you want to continue
+
+#Proceed with new relevant accounting period
+proceedWithNewRelevantAccountingPeriod.title=Change your answer
+proceedWithNewRelevantAccountingPeriod.p1=The date has changed since you answered questions as part of doing a tax check. This means we may need to ask you the same questions about a different accounting period.
+proceedWithNewRelevantAccountingPeriod.label=Do you want to continue?
+proceedWithNewRelevantAccountingPeriod.yes=Yes
+proceedWithNewRelevantAccountingPeriod.no=No - return to the previous page
+proceedWithNewRelevantAccountingPeriod.error.required=Select yes if you want to continue
+proceedWithNewRelevantAccountingPeriod.error.invalid=Select yes if you want to continue
+
+

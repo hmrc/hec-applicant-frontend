@@ -42,7 +42,7 @@
         back: Call,
         date: String,
         options: List[YesNoOption],
-        newRelevantAccountingPeriodConsidered: Option[models.NewCompanyTaxPeriodConsidered]
+        newRelevantAccountingPeriodConsidered: Option[models.NewRelevantAccountingPeriodConsidered]
 )(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
 @key = @{"chargeableForCT"}
 @title = @{messages(s"$key.title", date)}
@@ -60,7 +60,11 @@
 }
 
 
-@layout(pageTitle = Some(title), hasErrors = form.hasErrors, backLocation = Some(back)) {
+@layout(
+    pageTitle = Some(title),
+    hasErrors = form.hasErrors,
+    backLocation = if(newRelevantAccountingPeriodConsidered.isEmpty) Some(back) else None
+) {
   @if(form.errors.nonEmpty) {
     @govukErrorSummary(ErrorSummary(errorList = form.errors.map(e => ErrorLink(
       href = Some(s"#${e.key}"),

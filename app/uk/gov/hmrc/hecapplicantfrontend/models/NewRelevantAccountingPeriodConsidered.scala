@@ -19,10 +19,13 @@ package uk.gov.hmrc.hecapplicantfrontend.models
 import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.company.CTStatusResponse
 
-final case class NewCompanyTaxPeriodConsidered(previousCtStatusResponse: CTStatusResponse)
+final case class NewRelevantAccountingPeriodConsidered(
+  previousCtStatusResponse: CTStatusResponse,
+  newCtStatusResponse: CTStatusResponse
+)
 
-object NewCompanyTaxPeriodConsidered {
+object NewRelevantAccountingPeriodConsidered {
 
-  implicit val format: OFormat[NewCompanyTaxPeriodConsidered] = Json.format
+  implicit val format: OFormat[NewRelevantAccountingPeriodConsidered] = Json.format
 
 }
