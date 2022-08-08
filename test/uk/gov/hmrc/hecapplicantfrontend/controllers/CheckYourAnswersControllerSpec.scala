@@ -108,7 +108,7 @@ class CheckYourAnswersControllerSpec
         CheckYourAnswersRow(
           messageFromMessageKey("taxSituation.title", startDate, endDate),
           messageFromMessageKey("taxSituation.PA"),
-          routes.TaxSituationController.taxSituation.url
+          routes.TaxSituationController.determineIfRelevantIncomeTaxYearChanged.url
         ),
         CheckYourAnswersRow(
           messageFromMessageKey("saIncomeDeclared.title"),

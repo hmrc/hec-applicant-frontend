@@ -146,7 +146,8 @@ object Fixtures {
     emailRequestedForTaxCheck: Option[EmailRequestedForTaxCheck] = None,
     hasResentEmailConfirmation: Boolean = false,
     userEmailAnswers: Option[UserEmailAnswers] = None,
-    showUserResearchBanner: Option[Boolean] = None
+    showUserResearchBanner: Option[Boolean] = None,
+    newRelevantIncomeTaxYear: Option[TaxYear] = None
   ): IndividualHECSession =
     IndividualHECSession(
       loginData = loginData,
@@ -160,7 +161,8 @@ object Fixtures {
       emailRequestedForTaxCheck = emailRequestedForTaxCheck,
       hasResentEmailConfirmation = hasResentEmailConfirmation,
       userEmailAnswers = userEmailAnswers,
-      showUserResearchBanner = showUserResearchBanner
+      showUserResearchBanner = showUserResearchBanner,
+      newRelevantIncomeTaxYear = newRelevantIncomeTaxYear
     )
 
   def companyLoginData(

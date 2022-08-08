@@ -59,7 +59,8 @@ object HECSession {
     emailRequestedForTaxCheck: Option[EmailRequestedForTaxCheck],
     hasResentEmailConfirmation: Boolean,
     userEmailAnswers: Option[UserEmailAnswers],
-    showUserResearchBanner: Option[Boolean]
+    showUserResearchBanner: Option[Boolean],
+    newRelevantIncomeTaxYear: Option[TaxYear]
   ) extends HECSession {
     override val entityType: EntityType = EntityType.Individual
   }
@@ -79,7 +80,8 @@ object HECSession {
         None,
         false,
         None,
-        Some(true)
+        Some(true),
+        None
       )
 
   }

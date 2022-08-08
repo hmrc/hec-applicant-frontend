@@ -209,7 +209,7 @@ class SummaryRows {
       summaryListRow(
         messages("taxSituation.title", startDate, endDate),
         messages(s"taxSituation.${TaxSituationOption.taxSituationOption(completeAnswers.taxSituation).messageKey}"),
-        routes.TaxSituationController.taxSituation,
+        routes.TaxSituationController.determineIfRelevantIncomeTaxYearChanged,
         messages(s"$messageKey.taxSituation.screenReaderText")
       )
     }

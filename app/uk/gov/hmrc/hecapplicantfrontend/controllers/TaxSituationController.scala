@@ -22,16 +22,18 @@ import com.google.inject.{Inject, Singleton}
 import play.api.data.Form
 import play.api.data.Forms.{mapping, of}
 import play.api.i18n.{I18nSupport, Messages}
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Request, Result}
 import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 import uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController._
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
 import uk.gov.hmrc.hecapplicantfrontend.models
+import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.IndividualHECSession
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.IndividualLoginData
 import uk.gov.hmrc.hecapplicantfrontend.models.TaxSituation._
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.individual.SAStatusResponse
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
-import uk.gov.hmrc.hecapplicantfrontend.models.{Error, TaxSituation, TaxYear}
+import uk.gov.hmrc.hecapplicantfrontend.models.views.YesNoOption
+import uk.gov.hmrc.hecapplicantfrontend.models.{Error, TaxSituation, TaxYear, YesNoAnswer}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService.InconsistentSessionState
 import uk.gov.hmrc.hecapplicantfrontend.services.{JourneyService, TaxCheckService}
@@ -51,7 +53,8 @@ class TaxSituationController @Inject() (
   taxCheckService: TaxCheckService,
   mcc: MessagesControllerComponents,
   timeProvider: TimeProvider,
-  taxSituationPage: html.TaxSituation
+  taxSituationPage: html.TaxSituation,
+  proceedWithNewRelevantIncomeTaxYearPage: html.ProceedWithNewRelevantIncomeTaxYear
 )(implicit ec: ExecutionContext, appConfig: AppConfig)
     extends FrontendController(mcc)
     with I18nSupport
@@ -60,53 +63,54 @@ class TaxSituationController @Inject() (
   val taxSituation: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     request.sessionData.mapAsIndividual { implicit individualSession =>
       request.sessionData.ensureLicenceTypePresent { licenceType =>
-        val back            = journeyService.previous(routes.TaxSituationController.taxSituation)
-        val taxSituationOpt = individualSession.userAnswers.fold(_.taxSituation, _.taxSituation.some)
-        val options         = taxSituationOptions(licenceType)
-        val emptyForm       = taxSituationForm(options)
+        checkIfNewRelevantIncomeTaxYearConsidered(individualSession) { newRelevantIncomeTaxYearConsidered =>
+          val back            = journeyService.previous(routes.TaxSituationController.taxSituation)
+          val taxSituationOpt = individualSession.userAnswers.fold(_.taxSituation, _.taxSituation.some)
+          val options         = taxSituationOptions(licenceType)
+          val emptyForm       = taxSituationForm(options)
 
-        val calculatedTaxYear    = getRelevantIncomeTaxYear(timeProvider.currentDate)
-        val (startDate, endDate) = getTaxPeriodStrings(calculatedTaxYear)
+          individualSession.relevantIncomeTaxYear match {
+            case Some(taxYear) =>
+              val (startDate, endDate) = getTaxPeriodStrings(taxYear)
 
-        individualSession.relevantIncomeTaxYear match {
-          case Some(taxYear) if taxYear === calculatedTaxYear =>
-            val form = taxSituationOpt.fold(emptyForm)(emptyForm.fill)
-            Ok(
-              taxSituationPage(
-                form,
-                back,
-                options,
-                startDate,
-                endDate,
-                licenceType,
-                false
+              val form = taxSituationOpt.fold(emptyForm)(emptyForm.fill)
+              Ok(
+                taxSituationPage(
+                  form,
+                  back,
+                  options,
+                  startDate,
+                  endDate,
+                  licenceType,
+                  newRelevantIncomeTaxYearConsidered
+                )
               )
-            )
 
-          // tax year has not been calculated or stored before or the tax year has changed since the user
-          // last has the tax year calculated and stored
-          case maybeStoredTaxYear                             =>
-            val updatedSession = individualSession.copy(
-              relevantIncomeTaxYear = Some(calculatedTaxYear),
-              userAnswers = individualSession.userAnswers.unset(_.taxSituation).unset(_.saIncomeDeclared)
-            )
-            sessionStore
-              .store(updatedSession)
-              .fold(
-                _.doThrow("Could not update session with tax year"),
-                _ =>
-                  Ok(
-                    taxSituationPage(
-                      emptyForm,
-                      back,
-                      options,
-                      startDate,
-                      endDate,
-                      licenceType,
-                      maybeStoredTaxYear.isDefined
+            case None =>
+              val calculatedTaxYear    = getRelevantIncomeTaxYear(timeProvider.currentDate)
+              val (startDate, endDate) = getTaxPeriodStrings(calculatedTaxYear)
+              val updatedSession       = individualSession.copy(
+                relevantIncomeTaxYear = Some(calculatedTaxYear),
+                userAnswers = individualSession.userAnswers.unset(_.taxSituation).unset(_.saIncomeDeclared)
+              )
+              sessionStore
+                .store(updatedSession)
+                .fold(
+                  _.doThrow("Could not update session with tax year"),
+                  _ =>
+                    Ok(
+                      taxSituationPage(
+                        emptyForm,
+                        back,
+                        options,
+                        startDate,
+                        endDate,
+                        licenceType,
+                        newRelevantIncomeTaxYearConsidered
+                      )
                     )
-                  )
-              )
+                )
+          }
         }
       }
     }
@@ -183,6 +187,105 @@ class TaxSituationController @Inject() (
     }
   }
 
+  val determineIfRelevantIncomeTaxYearChanged: Action[AnyContent] =
+    authAction.andThen(sessionDataAction).async { implicit request =>
+      request.sessionData.mapAsIndividual { implicit individualSession =>
+        val storedTaxYear     =
+          individualSession.relevantIncomeTaxYear.getOrElse(
+            InconsistentSessionState("Could not find relevant income tax year in session").doThrow
+          )
+        val calculatedTaxYear = getRelevantIncomeTaxYear(timeProvider.currentDate)
+
+        if (storedTaxYear === calculatedTaxYear)
+          Redirect(routes.TaxSituationController.taxSituation)
+        else {
+          sessionStore
+            .store(
+              individualSession.copy(newRelevantIncomeTaxYear = Some(calculatedTaxYear))
+            )
+            .fold(
+              _.doThrow("Could not update session"),
+              _ => Redirect(routes.TaxSituationController.proceedWithNewRelevantIncomeTaxYear)
+            )
+        }
+      }
+    }
+
+  val proceedWithNewRelevantIncomeTaxYear: Action[AnyContent] =
+    authAction.andThen(sessionDataAction).async { implicit request =>
+      Ok(
+        proceedWithNewRelevantIncomeTaxYearPage(
+          proceedWithNewRelevantIncomeTaxYearForm(YesNoAnswer.values),
+          routes.CheckYourAnswersController.checkYourAnswers,
+          proceedWithNewRelevantIncomeTaxYearOptions
+        )
+      )
+    }
+
+  val proceedWithNewRelevantIncomeTaxYearSubmit: Action[AnyContent] =
+    authAction.andThen(sessionDataAction).async { implicit request =>
+      request.sessionData.mapAsIndividual { implicit individualSession =>
+        val newRelevantIncomeTaxYear =
+          individualSession.newRelevantIncomeTaxYear.getOrElse(
+            InconsistentSessionState("Could not find new relevant income tax year").doThrow
+          )
+
+        def handleValidAnswer(proceed: YesNoAnswer): Future[Result] = {
+          val updatedSession =
+            if (proceed === YesNoAnswer.No)
+              individualSession.copy(newRelevantIncomeTaxYear = None)
+            else
+              individualSession.copy(
+                relevantIncomeTaxYear = Some(newRelevantIncomeTaxYear),
+                userAnswers = individualSession.userAnswers
+                  .unset(_.taxSituation)
+                  .unset(_.saIncomeDeclared)
+              )
+
+          sessionStore
+            .store(updatedSession)
+            .fold(
+              _.doThrow("Could not update session"),
+              _ =>
+                proceed match {
+                  case YesNoAnswer.Yes => Redirect(routes.TaxSituationController.taxSituation)
+                  case YesNoAnswer.No  => Redirect(routes.CheckYourAnswersController.checkYourAnswers)
+                }
+            )
+        }
+
+        proceedWithNewRelevantIncomeTaxYearForm(YesNoAnswer.values)
+          .bindFromRequest()
+          .fold(
+            formWithErrors =>
+              Ok(
+                proceedWithNewRelevantIncomeTaxYearPage(
+                  formWithErrors,
+                  routes.CheckYourAnswersController.checkYourAnswers,
+                  proceedWithNewRelevantIncomeTaxYearOptions
+                )
+              ),
+            handleValidAnswer
+          )
+      }
+    }
+
+  private def checkIfNewRelevantIncomeTaxYearConsidered(
+    session: IndividualHECSession
+  )(f: Boolean => Future[Result])(implicit r: Request[_]): Future[Result] =
+    session.newRelevantIncomeTaxYear match {
+      case None =>
+        f(false)
+
+      case Some(_) =>
+        sessionStore
+          .store(session.copy(newRelevantIncomeTaxYear = None))
+          .foldF(
+            _.doThrow("Could not update session"),
+            _ => f(true)
+          )
+    }
+
 }
 
 object TaxSituationController {
@@ -209,6 +312,15 @@ object TaxSituationController {
     Form(
       mapping(
         "taxSituation" -> of(FormUtils.radioFormFormatter(options))
+      )(identity)(Some(_))
+    )
+
+  val proceedWithNewRelevantIncomeTaxYearOptions: List[YesNoOption] = YesNoAnswer.values.map(YesNoOption.yesNoOption)
+
+  def proceedWithNewRelevantIncomeTaxYearForm(options: List[YesNoAnswer]): Form[YesNoAnswer] =
+    Form(
+      mapping(
+        "proceedWithNewRelevantIncomeTaxYear" -> of(FormUtils.radioFormFormatter(options))
       )(identity)(Some(_))
     )
 
