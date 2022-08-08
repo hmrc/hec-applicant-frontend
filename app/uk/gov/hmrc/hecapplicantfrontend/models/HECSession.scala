@@ -98,7 +98,7 @@ object HECSession {
     hasResentEmailConfirmation: Boolean,
     userEmailAnswers: Option[UserEmailAnswers],
     showUserResearchBanner: Option[Boolean],
-    newCompanyTaxPeriodConsidered: Option[NewCompanyTaxPeriodConsidered]
+    newRelevantAccountingPeriodConsidered: Option[NewRelevantAccountingPeriodConsidered]
   ) extends HECSession {
     override val entityType: EntityType = EntityType.Company
   }
@@ -117,7 +117,7 @@ object HECSession {
         hasResentEmailConfirmation = false,
         userEmailAnswers = None,
         showUserResearchBanner = Some(true),
-        newCompanyTaxPeriodConsidered = None
+        newRelevantAccountingPeriodConsidered = None
       )
 
   }

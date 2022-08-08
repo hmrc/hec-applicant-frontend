@@ -84,6 +84,8 @@ class CheckYourAnswersControllerSpec
 
     "handling requests to display the check your answers page" must {
 
+      val chargeableForCTTitleDate = LocalDate.of(2021, 10, 9)
+
       def expectedIndividualRows(startDate: String, endDate: String): List[CheckYourAnswersRow] = List(
         CheckYourAnswersRow(
           messageFromMessageKey("licenceType.title"),
@@ -152,10 +154,10 @@ class CheckYourAnswersControllerSpec
           CheckYourAnswersRow(
             messageFromMessageKey(
               "chargeableForCT.title",
-              TimeUtils.govDisplayFormat(LocalDate.of(2021, 10, 9))
+              TimeUtils.govDisplayFormat(chargeableForCTTitleDate)
             ),
             messageFromMessageKey("chargeableForCT.yes"),
-            routes.CompanyDetailsController.chargeableForCorporationTax.url
+            routes.CompanyDetailsController.determineIfRelevantAccountingPeriodChanged.url
           ),
           CheckYourAnswersRow(
             messageFromMessageKey("ctIncomeDeclared.title"),
@@ -165,7 +167,7 @@ class CheckYourAnswersControllerSpec
           CheckYourAnswersRow(
             messageFromMessageKey("recentlyStartedTrading.title"),
             messageFromMessageKey("recentlyStartedTrading.yes"),
-            routes.CompanyDetailsController.recentlyStartedTrading.url
+            routes.CompanyDetailsController.determineIfRelevantAccountingPeriodChanged.url
           )
         )
 
@@ -206,15 +208,18 @@ class CheckYourAnswersControllerSpec
               routes.ConfirmUncertainEntityTypeController.entityType.url
             )
 
-          val excludedChangeUrlList1 = List(
-            routes.CompanyDetailsController.enterCtutr.url,
-            routes.CompanyDetailsController.recentlyStartedTrading.url
+          val excludedChangeTitleList1 = List(
+            messageFromMessageKey("enterCtutr.title"),
+            messageFromMessageKey("recentlyStartedTrading.title")
           )
 
-          val excludedChangeUrlList2 = List(
-            routes.CompanyDetailsController.enterCtutr.url,
-            routes.CompanyDetailsController.chargeableForCorporationTax.url,
-            routes.CompanyDetailsController.ctIncomeStatement.url
+          val excludedChangeTitleList2 = List(
+            messageFromMessageKey("enterCtutr.title"),
+            messageFromMessageKey(
+              "chargeableForCT.title",
+              TimeUtils.govDisplayFormat(chargeableForCTTitleDate)
+            ),
+            messageFromMessageKey("ctIncomeDeclared.title")
           )
 
           val expectedRows = {
@@ -225,10 +230,10 @@ class CheckYourAnswersControllerSpec
               (isRecentlyStartedTrading, isCTUTRPresent) match {
                 case (_, true)  =>
                   companyExpectedRows.filterNot(
-                    _.changeUrl === routes.CompanyDetailsController.recentlyStartedTrading.url
+                    _.question === messageFromMessageKey("recentlyStartedTrading.title")
                   )
-                case (true, _)  => companyExpectedRows.filterNot(row => excludedChangeUrlList2.contains(row.changeUrl))
-                case (false, _) => companyExpectedRows.filterNot(row => excludedChangeUrlList1.contains(row.changeUrl))
+                case (true, _)  => companyExpectedRows.filterNot(row => excludedChangeTitleList2.contains(row.question))
+                case (false, _) => companyExpectedRows.filterNot(row => excludedChangeTitleList1.contains(row.question))
                 case _          => companyExpectedRows
               }
             }
@@ -361,7 +366,7 @@ class CheckYourAnswersControllerSpec
             test(session, false, false, false)
           }
 
-          "company has  recently started trading" in {
+          "company has recently started trading" in {
 
             val answers = createCompleteAnswers(None, None, Some(YesNoAnswer.Yes))
 

@@ -119,6 +119,10 @@ GET  /determine-relevant-income-tax-year-changed uk.gov.hmrc.hecapplicantfronten
 GET  /change-answer-sa                           uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.proceedWithNewRelevantIncomeTaxYear
 POST /change-answer-sa                           uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.proceedWithNewRelevantIncomeTaxYearSubmit
 
+GET  /determine-relevant-accounting-period-changed uk.gov.hmrc.hecapplicantfrontend.controllers.CompanyDetailsController.determineIfRelevantAccountingPeriodChanged
+GET  /change-answer-ct                             uk.gov.hmrc.hecapplicantfrontend.controllers.CompanyDetailsController.proceedWithNewRelevantAccountingPeriod
+POST /change-answer-ct                             uk.gov.hmrc.hecapplicantfrontend.controllers.CompanyDetailsController.proceedWithNewRelevantAccountingPeriodSubmit
+
 
 # Timeout from auth
 GET /timed-out                                   uk.gov.hmrc.hecapplicantfrontend.controllers.SignOutController.signOutFromTimeout
