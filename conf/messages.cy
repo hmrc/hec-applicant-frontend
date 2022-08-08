@@ -165,7 +165,7 @@ checkYourAnswers.ctIncomeDeclared.screenReaderText=os gwnaethoch gynnwys yr holl
 taxCheckComplete.title=Gwiriad Treth wedi’i gwblhau
 taxCheckComplete.subtitle=Eich cod gwirio treth
 taxCheckComplete.p1=Mae eich cod gwirio treth yn ddilys am 120 diwrnod.
-taxCheckComplete.p2=Y diwrnod olaf y gellir ei ddefnyddio yn eich cais am drwydded yw <strong>{1}</strong>.
+taxCheckComplete.p2=Y diwrnod olaf mae modd ei ddefnyddio yn eich cais am drwydded <strong>{0}</strong> yw <strong>{1}</strong>.
 taxCheckComplete.p3=Gallwch hefyd wneud y canlynol:
 taxCheckComplete.list1=<a class="govuk-link" href="#print-dialogue">argraffu neu gadw’r dudalen hon fel PDF</a>
 taxCheckComplete.list2=<a class="govuk-link" href="{0}">trefnu bod eich cod gwirio treth yn cael ei anfon i gyfeiriad e-bost</a>
@@ -283,7 +283,7 @@ emailAddressConfirmed.title=Cyfeiriad e-bost wedi’i gadarnhau
 emailAddressConfirmed.p1=Mae’ch cyfeiriad e-bost wedi’i gadarnhau. Caiff eich cod gwirio treth ei anfon i {0}
 emailSent.title=Mae’ch cod gwirio treth wedi’i e-bostio atoch
 emailSent.p1=Eich cod gwirio treth yw <b>{0}</b>. Rydym wedi’i anfon i <b>{1}</b>
-emailSent.p2=Y diwrnod olaf y gellir ei ddefnyddio yn eich cais am drwydded yw <strong>{1}</strong>.
+emailSent.p2= Y diwrnod olaf mae modd ei ddefnyddio yn eich cais am drwydded <strong>{0}</strong> yw <strong>{1}</strong>.
 emailSent.p3=<a href="{0}" class="govuk-link">Gweld fy nghodau gwirio treth</a>
 enterEmailAddress.title=Pa gyfeiriad e-bost yr hoffech ei ddefnyddio?
 enterEmailAddress.hint=Mae’n rhaid i chi gael mynediad at y cyfeiriad e-bost hwn.
