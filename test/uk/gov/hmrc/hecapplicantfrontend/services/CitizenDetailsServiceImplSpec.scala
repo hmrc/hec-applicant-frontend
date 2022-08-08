@@ -198,6 +198,19 @@ class CitizenDetailsServiceImplSpec extends AnyWordSpec with Matchers with MockF
 
       }
 
+      "return an empty response" when {
+
+        "the response comes back with status 404 (not found)" in {
+          val nino = NINO("AB123456C")
+
+          mockGetCitizenDetails(nino)(Right(HttpResponse(404, "")))
+
+          val result = citizenDetailsService.getCitizenDetails(nino)
+          await(result.value) shouldBe Right(None)
+        }
+
+      }
+
       "return the details found" when {
 
         "the response from citizen details is OK and the json body can be parsed" in {
@@ -227,7 +240,7 @@ class CitizenDetailsServiceImplSpec extends AnyWordSpec with Matchers with MockF
           mockGetCitizenDetails(nino)(Right(HttpResponse(200, json, responseHeaders)))
 
           val result = citizenDetailsService.getCitizenDetails(nino)
-          await(result.value) shouldBe Right(citizenDetails)
+          await(result.value) shouldBe Right(Some(citizenDetails))
         }
 
       }

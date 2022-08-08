@@ -458,4 +458,7 @@ proceedWithNewRelevantAccountingPeriod.no=No - return to the previous page
 proceedWithNewRelevantAccountingPeriod.error.required=Select yes if you want to continue
 proceedWithNewRelevantAccountingPeriod.error.invalid=Select yes if you want to continue
 
+# Cannot find individual details
+cannotFindIndividualDetails.title = You cannot do a tax check at the moment
+cannotFindIndividualDetails.p1 = You’ll need to <a href="{0}" class="govuk-link">contact HMRC</a> before doing your tax check.
 

@@ -19,12 +19,10 @@ package uk.gov.hmrc.hecapplicantfrontend.services
 import cats.data.Validated.Valid
 import cats.data.{EitherT, Validated, ValidatedNel}
 import cats.instances.future._
-import cats.instances.int._
 import cats.syntax.apply._
 import cats.syntax.either._
 import cats.syntax.option._
-import cats.syntax.eq._
-import play.api.http.Status.OK
+import play.api.http.Status.{NOT_FOUND, OK}
 import play.api.libs.json.{Json, Reads}
 import uk.gov.hmrc.hecapplicantfrontend.connectors.CitizenDetailsConnector
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{NINO, SAUTR}
@@ -41,7 +39,7 @@ import scala.util.Try
 @ImplementedBy(classOf[CitizenDetailsServiceImpl])
 trait CitizenDetailsService {
 
-  def getCitizenDetails(nino: NINO)(implicit hc: HeaderCarrier): EitherT[Future, Error, CitizenDetails]
+  def getCitizenDetails(nino: NINO)(implicit hc: HeaderCarrier): EitherT[Future, Error, Option[CitizenDetails]]
 
 }
 
@@ -53,16 +51,23 @@ class CitizenDetailsServiceImpl @Inject() (
 
   import CitizenDetailServiceImpl._
 
-  override def getCitizenDetails(nino: NINO)(implicit hc: HeaderCarrier): EitherT[Future, Error, CitizenDetails] =
+  override def getCitizenDetails(
+    nino: NINO
+  )(implicit hc: HeaderCarrier): EitherT[Future, Error, Option[CitizenDetails]] =
     citizenDetailsConnector.getCitizenDetails(nino).subflatMap { httpResponse =>
-      if (httpResponse.status =!= OK)
-        Left(Error(s"Response to get citizen details came back with status ${httpResponse.status}"))
-      else
-        httpResponse
-          .parseJSON[CidPerson]
-          .leftMap(Error(_))
-          .flatMap(toCitizenDetails)
+      httpResponse.status match {
+        case OK =>
+          httpResponse
+            .parseJSON[CidPerson]
+            .leftMap(Error(_))
+            .flatMap(toCitizenDetails(_).map(Some(_)))
 
+        case NOT_FOUND =>
+          Right(None)
+
+        case _ =>
+          Left(Error(s"Response to get citizen details came back with status ${httpResponse.status}"))
+      }
     }
 
   @SuppressWarnings(Array("org.wartremover.warts.Any"))
