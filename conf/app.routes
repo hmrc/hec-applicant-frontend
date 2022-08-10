@@ -4,6 +4,7 @@
 GET        /assets/*file            controllers.Assets.versioned(path = "/public", file: controllers.Assets.Asset)
 
 GET        /start                   uk.gov.hmrc.hecapplicantfrontend.controllers.StartController.start
+GET        /no-record-found         uk.gov.hmrc.hecapplicantfrontend.controllers.ConfirmIndividualDetailsController.cannotFindDetails
 
 GET        /who-tax-check-for-organisation   uk.gov.hmrc.hecapplicantfrontend.controllers.ConfirmUncertainEntityTypeController.entityType
 POST       /who-tax-check-for-organisation   uk.gov.hmrc.hecapplicantfrontend.controllers.ConfirmUncertainEntityTypeController.entityTypeSubmit

@@ -318,3 +318,5 @@ newTaxPeriod.notification.company.accountingPeriodChanged=Mae’r cyfnod cyfrify
 newTaxPeriod.notification.company.newAccountingPeriod=Rydych nawr yn cael eich holi am gyfnod cyfrifyddu
 newTaxPeriod.notification.company.noAccountingPeriod=Mae’r dyddiad wedi newid ac nid ydym yn gallu dod o hyd i gyfnod cyfrifyddu perthnasol i’ch cwmni mwyach
 newTaxPeriod.notification.individual=Mae’r flwyddyn dreth berthnasol wedi newid ers i chi ateb y cwestiwn hwn ddiwethaf
+cannotFindIndividualDetails.title=Ni allwch wneud gwiriad treth ar hyn o bryd
+cannotFindIndividualDetails.p1=Bydd angen i chi <a href="{0}" class="govuk-link">gysylltu â CThEM</a> cyn gwneud eich gwiriad treth.

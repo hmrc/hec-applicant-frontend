@@ -21,6 +21,7 @@ import cats.data.{EitherT, Validated}
 import cats.instances.future._
 import cats.instances.option._
 import cats.instances.string._
+import cats.syntax.either._
 import cats.syntax.eq._
 import cats.syntax.option._
 import cats.syntax.traverse._
@@ -117,6 +118,9 @@ class StartController @Inject() (
 
         case UncertainEntityType(authDetails) =>
           auditLoginAndRedirect(routes.ConfirmUncertainEntityTypeController.entityType, authDetails)
+
+        case CitizenDetailsNotFound(authDetails) =>
+          auditLoginAndRedirect(routes.ConfirmIndividualDetailsController.cannotFindDetails, authDetails)
 
       },
       { case (authDetails, session) =>
@@ -355,7 +359,10 @@ class StartController @Inject() (
         case Some(nino) if Nino.isValid(nino) =>
           val citizenDetailsFut = citizenDetailsService
             .getCitizenDetails(NINO(nino))
-            .leftMap(BackendError(_): StartError)
+            .leftMap[StartError](BackendError(_))
+            .subflatMap(
+              Either.fromOption(_, CitizenDetailsNotFound(authenticationDetails))
+            )
 
           for {
             citizenDetails <- citizenDetailsFut
@@ -423,6 +430,8 @@ object StartController {
   final case class DataError(msg: String, authenticationDetails: Option[AuthenticationDetails]) extends StartError
 
   final case class BackendError(error: Error) extends StartError
+
+  final case class CitizenDetailsNotFound(authenticationDetails: AuthenticationDetails) extends StartError
 
   final case class InsufficientConfidenceLevel(authenticationDetails: AuthenticationDetails) extends StartError
 

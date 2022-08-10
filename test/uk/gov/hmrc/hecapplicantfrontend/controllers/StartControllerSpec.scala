@@ -122,7 +122,7 @@ class StartControllerSpec
       )
     )
 
-  def mockGetCitizenDetails(nino: NINO)(result: Either[Error, CitizenDetails]) =
+  def mockGetCitizenDetails(nino: NINO)(result: Either[Error, Option[CitizenDetails]]) =
     (mockCitizenDetailsService
       .getCitizenDetails(_: NINO)(_: HeaderCarrier))
       .expects(nino, *)
@@ -275,7 +275,7 @@ class StartControllerSpec
 
           def isRedirectTest(
             session: HECSession,
-            individualRetrievedData: IndividualLoginData,
+            individualLoginData: IndividualLoginData,
             citizenDetails: CitizenDetails,
             sautr: Option[SAUTR],
             affinityGroup: AffinityGroup,
@@ -286,15 +286,15 @@ class StartControllerSpec
               mockAuthWithRetrievals(
                 ConfidenceLevel.L250,
                 Some(affinityGroup),
-                Some(individualRetrievedData.nino),
+                Some(individualLoginData.nino),
                 sautr,
-                individualRetrievedData.emailAddress,
+                individualLoginData.emailAddress,
                 enrolments,
-                Some(retrievedGGCredential(individualRetrievedData.ggCredId))
+                Some(retrievedGGCredential(individualLoginData.ggCredId))
               )
               mockGetSession(Right(None))
               mockGetUncertainEntityTypeJourney.foreach(_())
-              mockGetCitizenDetails(individualRetrievedData.nino)(Right(citizenDetails))
+              mockGetCitizenDetails(individualLoginData.nino)(Right(citizenDetails.some))
               mockGetUnexpiredTaxCheckCodes(Right(List.empty))
               mockStoreSession(session)(Right(()))
               mockFirstPge(session)(mockNextCall)
@@ -825,7 +825,7 @@ class StartControllerSpec
                 Some(retrievedGGCredential(completeIndividualLoginData.ggCredId))
               )
               mockGetSession(Right(None))
-              mockGetCitizenDetails(completeIndividualLoginData.nino)(Right(citizenDetails))
+              mockGetCitizenDetails(completeIndividualLoginData.nino)(Right(citizenDetails.some))
               mockGetUnexpiredTaxCheckCodes(Left(Error("")))
             }
           )
@@ -871,7 +871,7 @@ class StartControllerSpec
                 Some(retrievedGGCredential(completeIndividualLoginData.ggCredId))
               )
               mockGetSession(Right(None))
-              mockGetCitizenDetails(completeIndividualLoginData.nino)(Right(citizenDetails))
+              mockGetCitizenDetails(completeIndividualLoginData.nino)(Right(citizenDetails.some))
             }
           )
         }
@@ -1134,6 +1134,43 @@ class StartControllerSpec
           }
 
           checkIsRedirect(performAction(), routes.AgentsController.agentsNotSupported)
+        }
+
+      }
+
+      "redirect to the 'individual details not found' page" when {
+
+        "the call to citizen details doesn't return any data" in {
+          inSequence {
+            mockAuthWithRetrievals(
+              ConfidenceLevel.L250,
+              Some(AffinityGroup.Individual),
+              Some(completeIndividualLoginData.nino),
+              None,
+              completeIndividualLoginData.emailAddress,
+              Enrolments(Set.empty),
+              Some(retrievedGGCredential(completeIndividualLoginData.ggCredId))
+            )
+            mockGetSession(Right(None))
+            mockGetCitizenDetails(completeIndividualLoginData.nino)(Right(None))
+            mockSendAuditEvent(
+              ApplicantServiceStartEndPointAccessed(
+                AuthenticationStatus.Authenticated,
+                Some(routes.ConfirmIndividualDetailsController.cannotFindDetails.url),
+                Some(
+                  AuthenticationDetails(
+                    ggProviderType,
+                    ggCredId.value,
+                    Some(AffinityGroup.Individual),
+                    Some(EntityType.Individual),
+                    ConfidenceLevel.L250
+                  )
+                )
+              )
+            )
+          }
+
+          checkIsRedirect(performAction(), routes.ConfirmIndividualDetailsController.cannotFindDetails)
         }
 
       }

@@ -36,7 +36,8 @@ class ConfirmIndividualDetailsController @Inject() (
   journeyService: JourneyService,
   mcc: MessagesControllerComponents,
   confirmIndividualDetailsPage: html.ConfirmIndividualDetails,
-  confirmIndividualDetailsExitPage: html.ConfirmIndividualDetailsExit
+  confirmIndividualDetailsExitPage: html.ConfirmIndividualDetailsExit,
+  cannotFindDetailsPage: html.CannotFindIndividualDetails
 )(implicit appConfig: AppConfig, ec: ExecutionContext)
     extends FrontendController(mcc)
     with I18nSupport
@@ -70,6 +71,11 @@ class ConfirmIndividualDetailsController @Inject() (
         val back = journeyService.previous(routes.ConfirmIndividualDetailsController.confirmIndividualDetailsExit)
         Ok(confirmIndividualDetailsExitPage(back))
       }
+    }
+
+  val cannotFindDetails: Action[AnyContent] =
+    authAction { implicit request =>
+      Ok(cannotFindDetailsPage())
     }
 
 }

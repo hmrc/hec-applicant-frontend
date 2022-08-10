@@ -257,6 +257,31 @@ class ConfirmIndividualDetailsControllerSpec
 
     }
 
+    "handling requests to the cannot find details page" must {
+
+      def performAction(): Future[Result] = controller.cannotFindDetails(FakeRequest())
+
+      behave like authBehaviour(performAction)
+
+      "display the page" in {
+        mockAuthWithNoRetrievals()
+
+        checkPageIsDisplayed(
+          performAction(),
+          messageFromMessageKey("cannotFindIndividualDetails.title"),
+          { doc =>
+            doc.select("#back").isEmpty            shouldBe true
+            doc.select(".govuk-body").first().html shouldBe messageFromMessageKey(
+              "cannotFindIndividualDetails.p1",
+              appConfig.contactHmrcSaUrl
+            )
+          }
+        )
+
+      }
+
+    }
+
   }
 
 }
