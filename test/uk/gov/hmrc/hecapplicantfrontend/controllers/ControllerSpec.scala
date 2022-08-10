@@ -62,6 +62,9 @@ trait ControllerSpec extends PlaySupport {
     val regexResult = regex.findAllMatchIn(bodyText).toList
     if (regexResult.nonEmpty) fail(s"Missing message keys: ${regexResult.map(_.group(1)).mkString(", ")}")
 
+    doc.select(".hmrc-language-select__list").text should include regex "English"
+    doc.select(".hmrc-language-select__list").text should include regex "Cymraeg"
+
     contentChecks(doc)
   }
 

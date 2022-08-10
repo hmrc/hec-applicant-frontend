@@ -92,7 +92,7 @@
         )),
         content = HtmlContent(messages("phaseBanner.text", appConfig.betaFeedbackUrl))
     ))
-    @{ if(appConfig.welshLanguageSupportEnabled) hmrcLanguageSelectHelper() }
+    @hmrcLanguageSelectHelper()
     @{
         backLocation map { back =>
             val url =
