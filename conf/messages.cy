@@ -46,10 +46,14 @@ confirmIndividualDetails.intro=Byddwn yn defnyddio’r manylion hyn i wneud gwir
 confirmIndividualDetails.firstName=Enw cyntaf
 confirmIndividualDetails.lastName=Enw olaf
 confirmIndividualDetails.dob=Dyddiad geni
-confirmIndividualDetails.link=Nid fy manylion i yw’r rhain
-confirmIndividualDetailsExit.title=Os nad eich manylion chi yw’r rhain
-confirmIndividualDetailsExit.p1=Bydd yn rhaid i chi wirio’r Dynodydd Defnyddiwr (ID) a’r cyfrinair a ddefnyddiwyd gennych i fewngofnodi i Borth y Llywodraeth.
-confirmIndividualDetailsExit.p2=Efallai y bydd angen i chi <a href="{0}" class="govuk-link">allgofnodi</a> a mewngofnodi gan ddefnyddio’r Dynodydd Defnyddiwr (ID) a’r cyfrinair cywir ar gyfer Porth y Llywodraeth.
+confirmIndividualDetails.link=Nid fy manylion i yw’r rhain, neu mae’r manylion yn anghywir
+confirmIndividualDetailsExit.title=Nid fy manylion i yw’r rhain, neu mae’r manylion yn anghywir
+confirmIndividualDetailsExit.wrongAccount.heading = Gwnewch yn siŵr eich bod yn defnyddio’r cyfrif cywir
+confirmIndividualDetailsExit.wrongAccount.p1=Bydd yn rhaid i chi wirio’r Dynodydd Defnyddiwr (ID) a’r cyfrinair a ddefnyddiwyd gennych i fewngofnodi i Borth y Llywodraeth.
+confirmIndividualDetailsExit.wrongAccount.p2=Efallai y bydd angen i chi <a href="{0}" class="govuk-link">allgofnodi</a> ac yna fewngofnodi gan ddefnyddio’r Dynodydd Defnyddiwr a’r cyfrinair cywir ar gyfer Porth y Llywodraeth.
+confirmIndividualDetailsExit.incorrectDetails.heading = Gwnewch yn siŵr bod eich manylion yn gywir
+confirmIndividualDetailsExit.incorrectDetails.p1 = Gallwch <a href="{0}" class="govuk-link">ddiweddaru’ch enw ar-lein</a>. Os oes angen i chi gywiro’ch dyddiad geni, bydd yn rhaid i chi <a href="{1}" class="govuk-link">ffonio Gwasanaeth Cwsmeriaid Cymraeg CThEM</a>.
+
 date.1=Ionawr
 date.2=Chwefror
 date.3=Mawrth

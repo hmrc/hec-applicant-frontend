@@ -67,12 +67,15 @@ confirmIndividualDetails.intro=We’ll use these details to do a tax check, conf
 confirmIndividualDetails.firstName=First name
 confirmIndividualDetails.lastName=Last name
 confirmIndividualDetails.dob=Date of birth
-confirmIndividualDetails.link=These are not my details
+confirmIndividualDetails.link=These details are not mine, or are incorrect
 
 # Check Personal Details Exit
-confirmIndividualDetailsExit.title=If these are not your details
-confirmIndividualDetailsExit.p1=You’ll need to check the user ID and password you used to sign in to Government Gateway.
-confirmIndividualDetailsExit.p2=You may need to <a href="{0}" class="govuk-link">sign out</a> and sign in using the correct Government Gateway user ID and password.
+confirmIndividualDetailsExit.title=These details are not mine, or are incorrect
+confirmIndividualDetailsExit.wrongAccount.heading = Make sure you’re using the right account
+confirmIndividualDetailsExit.wrongAccount.p1=You’ll need to check the user ID and password you used to sign in to Government Gateway.
+confirmIndividualDetailsExit.wrongAccount.p2=You may need to <a href="{0}" class="govuk-link">sign out</a> and sign in using the correct Government Gateway user ID and password.
+confirmIndividualDetailsExit.incorrectDetails.heading = Make sure your details are correct
+confirmIndividualDetailsExit.incorrectDetails.p1 = You can <a href="{0}" class="govuk-link">update your name online</a>. If you need to correct your date of birth you will need to <a href="{1}" class="govuk-link">phone HMRC’s income tax general enquiries line</a>.
 
 # Months
 date.1=January
