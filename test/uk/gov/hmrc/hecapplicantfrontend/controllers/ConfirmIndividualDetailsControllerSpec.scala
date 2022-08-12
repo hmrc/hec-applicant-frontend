@@ -32,6 +32,7 @@ import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService.InconsistentSess
 import java.time.LocalDate
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.collection.JavaConverters._
 
 class ConfirmIndividualDetailsControllerSpec
     extends ControllerSpec
@@ -245,9 +246,19 @@ class ConfirmIndividualDetailsControllerSpec
             messageFromMessageKey("confirmIndividualDetailsExit.title"),
             { doc =>
               doc.select("#back").attr("href") shouldBe mockPreviousCall.url
-              val link = doc.select(s"p > a[href=${appConfig.signOutUrl(continueUrl = None)}]")
-              link.isEmpty shouldBe false
+              val paragraphs = doc.select(".govuk-body").iterator().asScala.toList
+              paragraphs.size shouldBe 3
 
+              paragraphs(0).text shouldBe messageFromMessageKey("confirmIndividualDetailsExit.wrongAccount.p1")
+              paragraphs(1).html shouldBe messageFromMessageKey(
+                "confirmIndividualDetailsExit.wrongAccount.p2",
+                appConfig.signOutUrl(continueUrl = None)
+              )
+              paragraphs(2).html shouldBe messageFromMessageKey(
+                "confirmIndividualDetailsExit.incorrectDetails.p1",
+                appConfig.changeNameUrl,
+                appConfig.incomeTaxEnquiriesUrl
+              )
             }
           )
 
