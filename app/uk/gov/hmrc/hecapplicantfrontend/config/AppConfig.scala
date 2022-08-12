@@ -115,6 +115,8 @@ class AppConfig @Inject() (config: Configuration, contactFrontendConfig: Contact
   val findLostUtrUrl: String               = config.get[String]("external-url.find-lost-utr")
   val saGuidanceUrl: String                = config.get[String]("external-url.sa-guidance")
   val contactHmrcUrl: String               = config.get[String]("external-url.contact-hmrc")
+  val changeNameUrl: String                = config.get[String]("external-url.change-name")
+  val incomeTaxEnquiriesUrl: String        = config.get[String]("external-url.income-tax-enquiries")
 
   val maxCtutrAnswerAttempts: Int = config.get[Int]("ctutr-attempts.maximum-attempts")
 
