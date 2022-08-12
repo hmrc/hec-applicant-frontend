@@ -324,3 +324,17 @@ newTaxPeriod.notification.company.noAccountingPeriod=Mae’r dyddiad wedi newid 
 newTaxPeriod.notification.individual=Mae’r flwyddyn dreth berthnasol wedi newid ers i chi ateb y cwestiwn hwn ddiwethaf
 cannotFindIndividualDetails.title=Ni allwch wneud gwiriad treth ar hyn o bryd
 cannotFindIndividualDetails.p1=Bydd angen i chi <a href="{0}" class="govuk-link">gysylltu â CThEM</a> cyn gwneud eich gwiriad treth.
+proceedWithNewRelevantIncomeTaxYear.title=Newid eich ateb
+proceedWithNewRelevantIncomeTaxYear.p1=Mae’r dyddiad wedi newid ers i chi ateb cwestiynau fel rhan o wiriad treth. Mae hyn yn golygu y gallai fod yn rhaid i ni ofyn cwestiynau i chi am flwyddyn dreth wahanol.
+proceedWithNewRelevantIncomeTaxYear.label=A hoffech fynd yn eich blaen?
+proceedWithNewRelevantIncomeTaxYear.yes=Iawn
+proceedWithNewRelevantIncomeTaxYear.no=Na - yn ôl i’r dudalen flaenorol
+proceedWithNewRelevantIncomeTaxYear.error.required=Dewiswch ‘Iawn’ i fynd yn eich blaen
+proceedWithNewRelevantIncomeTaxYear.error.invalid=Dewiswch ‘Iawn’ i fynd yn eich blaen
+proceedWithNewRelevantAccountingPeriod.title=Newid eich ateb
+proceedWithNewRelevantAccountingPeriod.p1=Mae’r dyddiad wedi newid ers i chi ateb cwestiynau fel rhan o wiriad treth. Mae hyn yn golygu y gallai fod yn rhaid i ni ofyn cwestiynau i chi am gyfnod cyfrifyddu gwahanol.
+proceedWithNewRelevantAccountingPeriod.label=A hoffech fynd yn eich blaen?
+proceedWithNewRelevantAccountingPeriod.yes=Iawn
+proceedWithNewRelevantAccountingPeriod.no=Na - yn ôl i’r dudalen flaenorol
+proceedWithNewRelevantAccountingPeriod.error.required=Dewiswch ‘Iawn’ i fynd yn eich blaen
+proceedWithNewRelevantAccountingPeriod.error.invalid=Dewiswch ‘Iawn’ i fynd yn eich blaen

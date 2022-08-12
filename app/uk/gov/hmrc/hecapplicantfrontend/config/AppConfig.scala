@@ -44,9 +44,6 @@ class AppConfig @Inject() (config: Configuration, contactFrontendConfig: Contact
 
   val betaFeedbackUrl: String = s"$contactFrontendUrl/contact/beta-feedback?service=$contactFormServiceIdentifier"
 
-  val welshLanguageSupportEnabled: Boolean =
-    config.getOptional[Boolean]("features.welsh-language-support").getOrElse(false)
-
   val selfBaseUrl: String = platformHost.getOrElse(config.get[String]("self.url"))
 
   val ggOrigin: String = config.get[String]("auth.gg.origin")

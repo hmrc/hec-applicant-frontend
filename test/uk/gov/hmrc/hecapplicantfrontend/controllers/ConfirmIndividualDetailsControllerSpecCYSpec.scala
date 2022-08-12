@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.controllers
 
-import com.typesafe.config.ConfigFactory
-import play.api.Configuration
 import play.api.i18n.Lang
 import play.api.inject.bind
 import play.api.mvc.{Cookie, Result}
@@ -49,17 +47,6 @@ class ConfirmIndividualDetailsControllerSpecCYSpec
 
   val controller = instanceOf[ConfirmIndividualDetailsController]
 
-  override def additionalConfig = super.additionalConfig.withFallback(
-    Configuration(
-      ConfigFactory.parseString(
-        s"""
-           | features.welsh-language-support = true
-           | play.i18n.langs = ["en", "cy"]
-           |""".stripMargin
-      )
-    )
-  )
-
   "CompanyDetailsControllerSpec" when {
 
     "handling requests to the confirm individual details page" must {
@@ -67,7 +54,7 @@ class ConfirmIndividualDetailsControllerSpecCYSpec
         controller.confirmIndividualDetails(FakeRequest().withCookies(Cookie("PLAY_LANG", "cy")))
       behave like (authAndSessionDataBehaviour(performAction))
 
-      "display the page when language toggle is on" when {
+      "display the page in Welsh" when {
 
         "the user is logged in and individual data can be found" in {
           val name        = Name("First", "Last")
@@ -102,9 +89,7 @@ class ConfirmIndividualDetailsControllerSpecCYSpec
               form
                 .attr("action") shouldBe routes.ConfirmIndividualDetailsController.confirmIndividualDetailsSubmit.url
 
-              doc.select("#back").attr("href")             shouldBe mockPreviousCall.url
-              doc.select(".hmrc-language-select__list").text should include regex "English"
-              doc.select(".hmrc-language-select__list").text should include regex "Cymraeg"
+              doc.select("#back").attr("href") shouldBe mockPreviousCall.url
             }
           )
 
