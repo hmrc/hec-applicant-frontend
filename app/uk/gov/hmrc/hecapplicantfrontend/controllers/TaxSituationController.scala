@@ -22,7 +22,7 @@ import com.google.inject.{Inject, Singleton}
 import play.api.data.Form
 import play.api.data.Forms.{mapping, of}
 import play.api.i18n.{I18nSupport, Messages}
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Request, Result}
+import play.api.mvc.{Action, AnyContent, Call, MessagesControllerComponents, Request, Result}
 import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 import uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController._
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
@@ -129,7 +129,8 @@ class TaxSituationController @Inject() (
         ): EitherT[Future, models.Error, Option[SAStatusResponse]] =
           if (saTaxSituations.contains(taxSituation))
             individualLoginData.sautr
-              .traverse[EitherT[Future, Error, *], SAStatusResponse](taxCheckService.getSAStatus(_, taxYear))
+              .map(taxCheckService.getSAStatus(_, taxYear))
+              .getOrElse(EitherT.pure[Future, models.Error](None))
           else
             EitherT.pure[Future, models.Error](None)
 
@@ -153,7 +154,9 @@ class TaxSituationController @Inject() (
 
           val result = for {
             updatedSession <- updatedSessionF
-            next           <- journeyService.updateAndNext(routes.TaxSituationController.taxSituation, updatedSession)
+            next           <-
+              journeyService
+                .updateAndNext(getRedirectCall(updatedSession, saTaxSituations.contains(taxSituation)), updatedSession)
           } yield next
 
           result.fold(
@@ -161,6 +164,12 @@ class TaxSituationController @Inject() (
             Redirect
           )
         }
+
+        def getRedirectCall(individualHECSession: IndividualHECSession, isSaTaxSituation: Boolean): Call =
+          individualHECSession.retrievedJourneyData.saStatus match {
+            case None if isSaTaxSituation => routes.SAController.sautrNotFound
+            case _                        => routes.TaxSituationController.taxSituation
+          }
 
         val options = taxSituationOptions(licenceType)
         taxSituationForm(options)
