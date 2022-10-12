@@ -697,7 +697,7 @@ class TaxSituationControllerSpec
           mockGetSession(session)
           mockGetSAStatus(SAUTR("utr"), TaxYear(2020))(Right(None))
           mockJourneyServiceUpdateAndNext(
-            routes.SAController.sautrNotFound,
+            routes.TaxSituationController.taxSituation,
             session,
             updatedSession
           )(
