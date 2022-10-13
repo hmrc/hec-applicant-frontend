@@ -437,7 +437,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
                 }
 
               case (Some(_), IndividualRetrievedJourneyData(None)) =>
-                throwInconsistentSessionStateError("Found SA UTR for tax situation route but no SA status response")
+                routes.SAController.sautrNotFound
 
               case (None, _) =>
                 if (enableAuditing.enabled) auditService.sendEvent(TaxCheckExit.SAUTRNotFound(session, r.language))

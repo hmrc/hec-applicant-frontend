@@ -22,7 +22,7 @@ import com.google.inject.{Inject, Singleton}
 import play.api.data.Form
 import play.api.data.Forms.{mapping, of}
 import play.api.i18n.{I18nSupport, Messages}
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Request, Result}
+import play.api.mvc._
 import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 import uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController._
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
@@ -127,17 +127,19 @@ class TaxSituationController @Inject() (
           individualLoginData: IndividualLoginData,
           taxSituation: TaxSituation
         ): EitherT[Future, models.Error, Option[SAStatusResponse]] =
-          if (saTaxSituations.contains(taxSituation))
+          if (saTaxSituations.contains(taxSituation)) {
             individualLoginData.sautr
-              .traverse[EitherT[Future, Error, *], SAStatusResponse](taxCheckService.getSAStatus(_, taxYear))
-          else
+              .map(taxCheckService.getSAStatus(_, taxYear))
+              .getOrElse(EitherT.pure[Future, models.Error](None))
+          } else {
             EitherT.pure[Future, models.Error](None)
+          }
 
         def handleValidTaxSituation(taxSituation: TaxSituation): Future[Result] = {
           val updatedSessionF =
-            if (individualSession.userAnswers.fold(_.taxSituation, c => Some(c.taxSituation)).contains(taxSituation))
+            if (individualSession.userAnswers.fold(_.taxSituation, c => Some(c.taxSituation)).contains(taxSituation)) {
               EitherT.pure[Future, Error](individualSession)
-            else
+            } else {
               fetchSAStatus(individualSession.loginData, taxSituation).map { maybeSaStatus =>
                 val updatedRetrievedData = individualSession.retrievedJourneyData.copy(saStatus = maybeSaStatus)
                 // wipe the SA income declared answer since it is dependent on the tax situation answer
@@ -150,6 +152,7 @@ class TaxSituationController @Inject() (
                   retrievedJourneyData = updatedRetrievedData
                 )
               }
+            }
 
           val result = for {
             updatedSession <- updatedSessionF

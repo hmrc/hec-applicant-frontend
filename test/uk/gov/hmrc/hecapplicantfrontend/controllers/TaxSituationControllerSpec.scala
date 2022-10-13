@@ -58,7 +58,7 @@ class TaxSituationControllerSpec
 
   val mockTaxCheckService = mock[TaxCheckService]
 
-  def mockGetSAStatus(utr: SAUTR, taxYear: TaxYear)(result: Either[Error, SAStatusResponse]) =
+  def mockGetSAStatus(utr: SAUTR, taxYear: TaxYear)(result: Either[Error, Option[SAStatusResponse]]) =
     (mockTaxCheckService
       .getSAStatus(_: SAUTR, _: TaxYear)(_: HeaderCarrier))
       .expects(utr, taxYear, *)
@@ -649,7 +649,7 @@ class TaxSituationControllerSpec
         inSequence {
           mockAuthWithNoRetrievals()
           mockGetSession(session)
-          mockGetSAStatus(statusResponse.sautr, TaxYear(2020))(Right(statusResponse))
+          mockGetSAStatus(statusResponse.sautr, TaxYear(2020))(Right(Some(statusResponse)))
           mockJourneyServiceUpdateAndNext(
             routes.TaxSituationController.taxSituation,
             session,
@@ -671,6 +671,41 @@ class TaxSituationControllerSpec
         "tax situation = SAPAYE" in {
           testSA(TaxSituation.SAPAYE, individual.SAStatusResponse(SAUTR("utr"), TaxYear(2020), SAStatus.ReturnFound))
         }
+
+      }
+
+      "redirect to SA Utr not found page when SA status is not found" in {
+        val answers        = IndividualUserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
+        val individualData =
+          individualLoginData.copy(sautr = Some(SAUTR("utr")))
+        val session        =
+          Fixtures.individualHECSession(
+            individualData,
+            IndividualRetrievedJourneyData.empty,
+            answers,
+            relevantIncomeTaxYear = TaxYear(2020).some
+          )
+
+        val updatedAnswers = answers.copy(taxSituation = Some(TaxSituation.SA))
+        val updatedSession = session.copy(
+          userAnswers = updatedAnswers,
+          retrievedJourneyData = session.retrievedJourneyData.copy(saStatus = None)
+        )
+
+        inSequence {
+          mockAuthWithNoRetrievals()
+          mockGetSession(session)
+          mockGetSAStatus(SAUTR("utr"), TaxYear(2020))(Right(None))
+          mockJourneyServiceUpdateAndNext(
+            routes.TaxSituationController.taxSituation,
+            session,
+            updatedSession
+          )(
+            Right(mockNextCall)
+          )
+        }
+
+        checkIsRedirect(performAction("taxSituation" -> optionIndexMap(TaxSituation.SA)), mockNextCall)
 
       }
 
@@ -795,7 +830,7 @@ class TaxSituationControllerSpec
               inSequence {
                 mockAuthWithNoRetrievals()
                 mockGetSession(session)
-                mockGetSAStatus(saStatusResponse.sautr, TaxYear(2020))(Right(saStatusResponse))
+                mockGetSAStatus(saStatusResponse.sautr, TaxYear(2020))(Right(Some(saStatusResponse)))
                 mockJourneyServiceUpdateAndNext(
                   routes.TaxSituationController.taxSituation,
                   session,

@@ -54,7 +54,9 @@ trait TaxCheckService {
     languagePreference: Language
   )(implicit hc: HeaderCarrier): EitherT[Future, Error, HECTaxCheck]
 
-  def getSAStatus(sautr: SAUTR, taxYear: TaxYear)(implicit hc: HeaderCarrier): EitherT[Future, Error, SAStatusResponse]
+  def getSAStatus(sautr: SAUTR, taxYear: TaxYear)(implicit
+    hc: HeaderCarrier
+  ): EitherT[Future, Error, Option[SAStatusResponse]]
 
   def getCTStatus(ctutr: CTUTR, startDate: LocalDate, endDate: LocalDate)(implicit
     hc: HeaderCarrier
@@ -88,14 +90,17 @@ class TaxCheckServiceImpl @Inject() (hecConnector: HECConnector)(implicit ec: Ex
 
   def getSAStatus(sautr: SAUTR, taxYear: TaxYear)(implicit
     hc: HeaderCarrier
-  ): EitherT[Future, Error, SAStatusResponse] =
+  ): EitherT[Future, Error, Option[SAStatusResponse]] =
     hecConnector
       .getSAStatus(sautr, taxYear)
       .subflatMap { response =>
-        if (response.status =!= OK)
-          Left(Error(s"Call to get SA status came back with status ${response.status}. Body is ${response.body}"))
-        else
-          response.parseJSON[SAStatusResponse].leftMap(Error(_))
+        response.status match {
+          case NOT_FOUND               => Right(None)
+          case status if status =!= OK =>
+            Left(Error(s"Call to get SA status came back with status ${response.status}. Body is ${response.body}"))
+          case _                       =>
+            response.parseJSON[SAStatusResponse].leftMap(Error(_)).map(Some(_))
+        }
       }
 
   def getCTStatus(ctutr: CTUTR, startDate: LocalDate, endDate: LocalDate)(implicit
@@ -255,5 +260,6 @@ class TaxCheckServiceImpl @Inject() (hecConnector: HECConnector)(implicit ec: Ex
 
 object TaxCheckService {
   final case class CTUTRFromCRNResponse(ctutr: CTUTR)
+
   implicit val format: OFormat[CTUTRFromCRNResponse] = Json.format
 }

@@ -269,7 +269,14 @@ class TaxCheckServiceImplSpec extends AnyWordSpec with Matchers with MockFactory
           mockGetSAStatus(sautr, taxYear)(Right(HttpResponse(OK, saStatusResponseJson, emptyHeaders)))
 
           val result = service.getSAStatus(sautr, taxYear)
-          await(result.value) shouldBe Right(saStatusResponse)
+          await(result.value) shouldBe Right(Some(saStatusResponse))
+        }
+
+        "the http call response is SA status NOT FOUND return none" in {
+          mockGetSAStatus(sautr, taxYear)(Right(HttpResponse(NOT_FOUND, Json.parse("{ }"), emptyHeaders)))
+
+          val result = service.getSAStatus(sautr, taxYear)
+          await(result.value) shouldBe Right(None)
         }
 
       }

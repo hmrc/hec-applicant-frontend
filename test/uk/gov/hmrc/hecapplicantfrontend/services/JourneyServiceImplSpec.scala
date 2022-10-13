@@ -733,12 +733,12 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               implicit val request: RequestWithSessionData[_] =
                 requestWithSessionData(session)
 
-              assertThrows[InconsistentSessionState] {
-                journeyService.updateAndNext(
-                  routes.TaxSituationController.taxSituation,
-                  session
-                )
-              }
+              val result = journeyService.updateAndNext(
+                routes.TaxSituationController.taxSituation,
+                session
+              )
+
+              await(result.value) shouldBe Right(routes.SAController.sautrNotFound)
             }
 
             "SAUTR is missing" in {
