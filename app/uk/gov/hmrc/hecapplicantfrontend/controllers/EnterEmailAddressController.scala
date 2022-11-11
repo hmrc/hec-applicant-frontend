@@ -60,7 +60,7 @@ class EnterEmailAddressController @Inject() (
           _.doThrow("Could not update session and proceed"),
           _ => {
             val req  = request.copy(sessionData = updatedSession)
-            //reason for explicitly passing req and hc is same as mentioned in ConfirmEmailAddressController
+            // reason for explicitly passing req and hc is same as mentioned in ConfirmEmailAddressController
             val back = journeyService.previous(routes.EnterEmailAddressController.enterEmailAddress)(req, hc)
             val form =
               userEmailAnswerOpt.fold(enterEmailAddressForm)(uea => enterEmailAddressForm.fill(uea.userSelectedEmail))

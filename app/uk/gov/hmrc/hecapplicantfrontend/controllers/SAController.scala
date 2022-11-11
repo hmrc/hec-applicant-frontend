@@ -54,7 +54,7 @@ class SAController @Inject() (
       val saIncomeDeclared      = individualSession.userAnswers.fold(_.saIncomeDeclared, _.saIncomeDeclared)
       val relevantIncomeTaxYear = individualSession.relevantIncomeTaxYear
         .getOrElse(InconsistentSessionState("Could not find relevant income tax year").doThrow)
-      val form = {
+      val form                  = {
         val emptyForm = SAController.saIncomeDeclarationForm(YesNoAnswer.values)
         saIncomeDeclared.fold(emptyForm)(emptyForm.fill)
       }

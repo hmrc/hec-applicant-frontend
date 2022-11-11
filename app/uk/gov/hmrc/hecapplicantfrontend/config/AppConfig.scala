@@ -50,7 +50,7 @@ class AppConfig @Inject() (config: Configuration, contactFrontendConfig: Contact
 
   def signInUrl(continue: Call): String = {
     val url: String = config.get[String]("auth.sign-in.url")
-    s"$url?continue=${(s"$selfBaseUrl${continue.url}").urlEncode}&origin=$ggOrigin"
+    s"$url?continue=${s"$selfBaseUrl${continue.url}".urlEncode}&origin=$ggOrigin"
   }
 
   private val signOutUrlBase: String = config.get[String]("auth.sign-out.url")

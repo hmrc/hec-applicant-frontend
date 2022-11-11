@@ -19,8 +19,7 @@ package uk.gov.hmrc.hecapplicantfrontend.models.ids
 import cats.Eq
 import play.api.libs.json.{Format, Json}
 
-/**
-  * Validated Government Gateway ID
+/** Validated Government Gateway ID
   */
 final case class GGCredId(value: String) extends AnyVal
 

@@ -45,8 +45,7 @@ class TaxCheckCompleteController @Inject() (
     with I18nSupport
     with Logging {
 
-  /**
-    * Fetches tax check data (code & expiry date) for authenticated user
+  /** Fetches tax check data (code & expiry date) for authenticated user
     */
   val taxCheckComplete: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     ensureCompletedTaxCheckAndLicenceType { case (completedTaxCheck, licenceType) =>

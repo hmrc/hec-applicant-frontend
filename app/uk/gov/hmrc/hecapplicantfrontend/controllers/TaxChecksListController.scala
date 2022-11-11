@@ -56,8 +56,7 @@ class TaxChecksListController @Inject() (
       LicenceDetailsController.licenceTypes.indexOf(l1) < LicenceDetailsController.licenceTypes.indexOf(l2)
     }
 
-  /**
-    * Fetches unexpired tax check codes for applicant
+  /** Fetches unexpired tax check codes for applicant
     */
   val unexpiredTaxChecks: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
     request.sessionData.unexpiredTaxChecks match {

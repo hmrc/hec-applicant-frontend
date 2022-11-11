@@ -95,7 +95,7 @@ class CompanyDetailsController @Inject() (
       ensureCompanyDataHasCompanyName(companySession) { companyHouseName =>
         val companyDetailsConfirmed =
           companySession.userAnswers.fold(_.companyDetailsConfirmed, _.companyDetailsConfirmed.some)
-        val form = {
+        val form                    = {
           val emptyForm = CompanyDetailsController.yesNoForm("confirmCompanyName", YesNoAnswer.values)
           companyDetailsConfirmed.fold(emptyForm)(emptyForm.fill)
         }
@@ -208,7 +208,7 @@ class CompanyDetailsController @Inject() (
         checkIfNewRelevantAccountingPeriodConsidered(companySession) { newRelevantAccountingPeriodConsidered =>
           val recentlyStartedTrading =
             companySession.userAnswers.fold(_.recentlyStartedTrading, _.recentlyStartedTrading)
-          val form = {
+          val form                   = {
             val emptyForm = CompanyDetailsController.yesNoForm("recentlyStartedTrading", YesNoAnswer.values)
             recentlyStartedTrading.fold(emptyForm)(emptyForm.fill)
           }
@@ -263,7 +263,7 @@ class CompanyDetailsController @Inject() (
           checkIfNewRelevantAccountingPeriodConsidered(companySession) { newRelevantAccountingPeriodConsidered =>
             val chargeableForCT = companySession.userAnswers.fold(_.chargeableForCT, _.chargeableForCT)
             val endDateStr      = TimeUtils.govDisplayFormat(latestAccountingPeriod.endDate)
-            val form = {
+            val form            = {
               val emptyForm =
                 CompanyDetailsController.yesNoForm("chargeableForCT", YesNoAnswer.values, List(endDateStr))
               chargeableForCT.fold(emptyForm)(emptyForm.fill)
@@ -504,7 +504,7 @@ class CompanyDetailsController @Inject() (
       ensureCompanyDataHasCTStatusAccountingPeriod(companySession) { latestAccountingPeriod =>
         val back             = journeyService.previous(routes.CompanyDetailsController.ctIncomeStatement)
         val ctIncomeDeclared = companySession.userAnswers.fold(_.ctIncomeDeclared, _.ctIncomeDeclared)
-        val form = {
+        val form             = {
           val emptyForm = CompanyDetailsController.yesNoForm("ctIncomeDeclared", YesNoAnswer.values)
           ctIncomeDeclared.fold(emptyForm)(emptyForm.fill)
         }
@@ -772,11 +772,10 @@ object CompanyDetailsController {
       )(identity)(Some(_))
     )
 
-  /**
-    * Calculate the lookback period based on today's date.
-    * The lookback period is the the most recent accounting period of the company to have ended 12 months or more
-    * before the day on which the tax check is initiated. (These are the dates used when retrieving the Corporation tax
-    * records for the Applicant's company using the Get Company Accounting Periods API.)
+  /** Calculate the lookback period based on today's date. The lookback period is the the most recent accounting period
+    * of the company to have ended 12 months or more before the day on which the tax check is initiated. (These are the
+    * dates used when retrieving the Corporation tax records for the Applicant's company using the Get Company
+    * Accounting Periods API.)
     */
   def calculateLookBackPeriod(today: LocalDate): (LocalDate, LocalDate) = {
     val currentDay = if (today.getMonth.getValue === 2 && today.getDayOfMonth === 29) today.plusDays(1) else today

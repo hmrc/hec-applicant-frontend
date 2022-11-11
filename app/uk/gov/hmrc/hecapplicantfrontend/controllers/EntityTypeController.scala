@@ -59,7 +59,7 @@ class EntityTypeController @Inject() (
       _.fold(_.entityType, _.entityType),
       _.fold(_.entityType, _.entityType)
     )
-    val form = {
+    val form       = {
       val emptyForm = entityTypeForm(entityTypeOptions)
       entityType.fold(emptyForm)(emptyForm.fill)
     }

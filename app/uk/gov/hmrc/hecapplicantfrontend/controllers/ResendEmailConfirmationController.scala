@@ -58,7 +58,7 @@ class ResendEmailConfirmationController @Inject() (
           updatedSession       =
             request.sessionData
               .fold(
-                //Sets the resend flag true as soon as Resend button is clicked
+                // Sets the resend flag true as soon as Resend button is clicked
                 _.copy(userEmailAnswers = updatedEmailAnswers, hasResentEmailConfirmation = true),
                 _.copy(userEmailAnswers = updatedEmailAnswers, hasResentEmailConfirmation = true)
               )

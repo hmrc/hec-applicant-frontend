@@ -1096,7 +1096,7 @@ class StartControllerSpec
             val result = performAction()
             checkIsRedirect(
               result,
-              s"$signInUrl?continue=${(s"$selfBaseUrl/tax-check-for-licence/start").urlEncode}&origin=$ggOrigin"
+              s"$signInUrl?continue=${s"$selfBaseUrl/tax-check-for-licence/start".urlEncode}&origin=$ggOrigin"
             )
           }
         }

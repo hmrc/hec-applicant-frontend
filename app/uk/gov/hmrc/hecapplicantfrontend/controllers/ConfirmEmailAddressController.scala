@@ -54,9 +54,9 @@ class ConfirmEmailAddressController @Inject() (
   val confirmEmailAddress: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     request.sessionData.ensureEmailHasBeenRequested { _ =>
       request.sessionData.ensureGGEmailIdPresent { ggEmail =>
-        //updating the session to false here and enter email address page, cause this is the main email journey but sometime this page has to reach via the resend journey
-        //This hasResentEmailConfirmation flag can't be set to false in previous page because it's verify resend confirmation email
-        //and we need flag true there in order to load the page properly (previous route calculation)
+        // updating the session to false here and enter email address page, cause this is the main email journey but sometime this page has to reach via the resend journey
+        // This hasResentEmailConfirmation flag can't be set to false in previous page because it's verify resend confirmation email
+        // and we need flag true there in order to load the page properly (previous route calculation)
         val updatedSession =
           request.sessionData
             .fold(_.copy(hasResentEmailConfirmation = false), _.copy(hasResentEmailConfirmation = false))

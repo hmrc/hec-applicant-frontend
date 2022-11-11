@@ -60,11 +60,9 @@ class CtutrAttemptsServiceImpl @Inject() (
   private val maxCtutrStoreExpiryInSeconds: Long =
     config.get[FiniteDuration]("ctutr-attempts.store-expiry-time").toSeconds
 
-  /**
-    * Update & return CtutrAttempts object
-    * If maximum attempts reached i.e. lock period is set -> just return fetched data
-    * If number of attempts is one less than max allowed -> increment attempts & set the lock period
-    * If number of attempts is < (max allowed - 1) -> only increment attempts
+  /** Update & return CtutrAttempts object If maximum attempts reached i.e. lock period is set -> just return fetched
+    * data If number of attempts is one less than max allowed -> increment attempts & set the lock period If number of
+    * attempts is < (max allowed - 1) -> only increment attempts
     */
   def updateAttempts(ctutrAttempts: CtutrAttempts): EitherT[Future, models.Error, CtutrAttempts] =
     if (ctutrAttempts.isBlocked) {
@@ -80,8 +78,7 @@ class CtutrAttemptsServiceImpl @Inject() (
   def delete(crn: CRN, ggCredId: GGCredId): EitherT[Future, models.Error, Unit] =
     ctutrAttemptsStore.delete(crn, ggCredId)
 
-  /**
-    * Fetch CTUTR attempts using CRN and GGCredId, if none found, return default with number of attempts set to 0
+  /** Fetch CTUTR attempts using CRN and GGCredId, if none found, return default with number of attempts set to 0
     */
   def getWithDefault(
     crn: CRN,

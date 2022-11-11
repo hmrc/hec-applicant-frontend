@@ -20,8 +20,7 @@ import play.api.libs.json.{Format, Json}
 import uk.gov.hmrc.hecapplicantfrontend.util.StringUtils._
 import uk.gov.hmrc.referencechecker.SelfAssessmentReferenceChecker
 
-/**
-  * Self Assessment (Individual) Unique Taxpayer Reference number
+/** Self Assessment (Individual) Unique Taxpayer Reference number
   */
 final case class SAUTR(value: String) extends AnyVal
 

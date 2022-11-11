@@ -132,7 +132,7 @@ class TooManyPasscodeVerificationControllerSpec
           test(ggEmailId.some)
         }
 
-        "there is no email in GGAccount" in { test(None) }
+        "there is no email in GGAccount" in test(None)
 
       }
 
