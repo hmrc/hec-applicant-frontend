@@ -160,7 +160,7 @@ class TaxSituationControllerSpec
                 else
                   ""                                                       -> ""
 
-              doc.select(".govuk-notification-banner__title").text() shouldBe expectedNotificationTitle
+              doc.select(".govuk-notification-banner__title").text()   shouldBe expectedNotificationTitle
               doc.select(".govuk-notification-banner__content").text() shouldBe expectedNotificationContent
 
               val options = doc.select(".govuk-radios__item")

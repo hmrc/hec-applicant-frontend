@@ -204,7 +204,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
     lazy val hasCompletedAnswers = r.sessionData.userAnswers.foldByCompleteness(_ => false, _ => true)
 
     if (r.sessionData.isEmailRequested) {
-      //checks if resend flag is on, then the journey start point is ResendEmailConfirmationController else TaxCheckCompleteController
+      // checks if resend flag is on, then the journey start point is ResendEmailConfirmationController else TaxCheckCompleteController
       if (r.sessionData.hasResentEmailConfirmation) {
         exitPageToPreviousPage
           .get(current)
@@ -484,7 +484,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
             case (_, CompanyRetrievedJourneyData(_, None, _))                                           =>
               routes.CompanyDetailsController.cannotDoTaxCheck
 
-            //enrollment CTUTR is not present
+            // enrollment CTUTR is not present
             case (None, _)                                                                              =>
               routes.CompanyDetailsController.enterCtutr
           }
@@ -650,8 +650,7 @@ object JourneyServiceImpl {
       true
   }
 
-  /**
-    * Expect the entity type to be specified when licence type is suitable for both individual and company
+  /** Expect the entity type to be specified when licence type is suitable for both individual and company
     */
   private def checkEntityTypePresentIfRequired(
     licenceType: LicenceType,
@@ -666,8 +665,7 @@ object JourneyServiceImpl {
     }
   }
 
-  /**
-    * Expect the SA income to be declared only for an SA tax situation whose return has been found
+  /** Expect the SA income to be declared only for an SA tax situation whose return has been found
     */
   private def checkSAIncomeDeclared(
     taxSituation: TaxSituation,
@@ -705,8 +703,7 @@ object JourneyServiceImpl {
           }
       }
 
-  /**
-    * Is the tax situation one that would allow the user to progress to get a tax check?
+  /** Is the tax situation one that would allow the user to progress to get a tax check?
     */
   private def checkTaxSituation(taxSituation: TaxSituation, session: IndividualHECSession): Boolean =
     taxSituation match {
@@ -717,13 +714,15 @@ object JourneyServiceImpl {
       case _                                     => true
     }
 
-  /**
-    * Process the incomplete individual answers and retrieved user data to determine if all answers have
-    * been given by the user
+  /** Process the incomplete individual answers and retrieved user data to determine if all answers have been given by
+    * the user
     *
-    * @param incompleteUserAnswers Individual incomplete answers
-    * @param session Individual session data
-    * @return A boolean representing whether or not the user has completed answering all relevant questions
+    * @param incompleteUserAnswers
+    *   Individual incomplete answers
+    * @param session
+    *   Individual session data
+    * @return
+    *   A boolean representing whether or not the user has completed answering all relevant questions
     */
   def allIndividualAnswersComplete(
     incompleteUserAnswers: IncompleteIndividualUserAnswers,
@@ -747,13 +746,15 @@ object JourneyServiceImpl {
       case _ => false
     }
 
-  /**
-    * Process the incomplete company answers and retrieved user data to determine if all answers have
-    * been given by the user
+  /** Process the incomplete company answers and retrieved user data to determine if all answers have been given by the
+    * user
     *
-    * @param incompleteUserAnswers Company incomplete answers
-    * @param session Company session data
-    * @return A boolean representing whether or not the user has completed answering all relevant questions
+    * @param incompleteUserAnswers
+    *   Company incomplete answers
+    * @param session
+    *   Company session data
+    * @return
+    *   A boolean representing whether or not the user has completed answering all relevant questions
     */
   def allCompanyAnswersComplete(
     incompleteUserAnswers: IncompleteCompanyUserAnswers,

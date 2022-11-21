@@ -64,7 +64,7 @@ class VerifyEmailPasscodeController @Inject() (
           _.copy(hasResentEmailConfirmation = false, userEmailAnswers = updatedEmailAddress)
         )
 
-      //update the hasResentEmailConfirmation here cause the flag set at Resend confirmation flag was not working as expected.
+      // update the hasResentEmailConfirmation here cause the flag set at Resend confirmation flag was not working as expected.
 
       sessionStore
         .store(updatedSession)

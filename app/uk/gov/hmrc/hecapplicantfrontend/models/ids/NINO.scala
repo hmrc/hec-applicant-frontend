@@ -18,8 +18,7 @@ package uk.gov.hmrc.hecapplicantfrontend.models.ids
 
 import play.api.libs.json.{Format, Json}
 
-/**
-  * National Insurance number
+/** National Insurance number
   */
 final case class NINO(value: String) extends AnyVal
 

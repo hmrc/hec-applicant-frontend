@@ -194,10 +194,10 @@ class TaxChecksListControllerSpec
           copyButton.select(".copy-content").text()          shouldBe s"${messageFromMessageKey("button.copy")}"
           copyButton.select(".copied-content").text()        shouldBe s"${messageFromMessageKey("button.copied")}"
           copyButton.select(".govuk-visually-hidden").text() shouldBe s"${messageFromMessageKey(
-            "taxChecksList.copyButtonScreenReaderText",
-            messageFromMessageKey(s"licenceType.${LicenceTypeOption.licenceTypeOption(item.licenceType).messageKey}"),
-            item.taxCheckCode.value
-          )}"
+              "taxChecksList.copyButtonScreenReaderText",
+              messageFromMessageKey(s"licenceType.${LicenceTypeOption.licenceTypeOption(item.licenceType).messageKey}"),
+              item.taxCheckCode.value
+            )}"
           element.select("a.desktop-email-link").html()      shouldBe
             messageFromMessageKey(
               "taxCheck.emailLink",

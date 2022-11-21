@@ -68,7 +68,7 @@ class LicenceDetailsController @Inject() (
     )
 
     val licenceOptions = licenceTypeOptions(request.sessionData)
-    val form = {
+    val form           = {
       val emptyForm = licenceTypeForm(licenceOptions)
       licenceType.fold(emptyForm)(emptyForm.fill)
     }
@@ -80,7 +80,7 @@ class LicenceDetailsController @Inject() (
   }
 
   val licenceTypeSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
-    val licenceOptions = licenceTypeOptions(request.sessionData)
+    val licenceOptions                                                   = licenceTypeOptions(request.sessionData)
     def handleValidLicenceType(licenceType: LicenceType): Future[Result] = {
       val taxCheckStartDateTime = request.sessionData.taxCheckStartDateTime.getOrElse(timeProvider.now)
       val licenceTypeAnswer     = request.sessionData.userAnswers.fold(
@@ -138,7 +138,7 @@ class LicenceDetailsController @Inject() (
       _.fold(_.licenceTimeTrading, _.licenceTimeTrading.some),
       _.fold(_.licenceTimeTrading, _.licenceTimeTrading.some)
     )
-    val form = {
+    val form        = {
       val emptyForm: Form[LicenceTimeTrading] = licenceTimeTradingForm(licenceTimeTradingOptions)
       timeTrading.fold(emptyForm)(emptyForm.fill)
     }
@@ -184,7 +184,7 @@ class LicenceDetailsController @Inject() (
         _.fold(_.licenceValidityPeriod, _.licenceValidityPeriod.some)
       )
     val options       = licenceValidityPeriodOptions
-    val form = {
+    val form          = {
       val emptyForm = licenceValidityPeriodForm(options)
       licenceLength.fold(emptyForm)(emptyForm.fill)
     }

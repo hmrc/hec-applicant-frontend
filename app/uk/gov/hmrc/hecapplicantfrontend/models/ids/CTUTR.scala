@@ -21,8 +21,7 @@ import play.api.libs.json.{Format, Json}
 import uk.gov.hmrc.hecapplicantfrontend.util.StringUtils.StringOps
 import uk.gov.hmrc.referencechecker.CorporationTaxReferenceChecker
 
-/**
-  * Corporation Tax Unique Taxpayer Reference number
+/** Corporation Tax Unique Taxpayer Reference number
   */
 final case class CTUTR(value: String) extends AnyVal {
   def stripped: String     = CTUTR.strip(value)
@@ -40,13 +39,14 @@ object CTUTR {
     if (CorporationTaxReferenceChecker.isValid(withoutSpaces)) Some(CTUTR(withoutSpaces)) else None
   }
 
-  /**
-    * For a correctly formatted CTUTR (10/13 digit string with/out a prefixed/suffixed 'k' or 'K')
-    * - strips first/last character if it is equal to 'k' or 'K'
-    * - if remaining string length = 13, strip the first 3 characters
-    * Note: For an incorrectly formatted CTUTR, the string is returned as is
-    * @param ctutr The CTUTR string
-    * @return The stripped CTUTR if valid, the unchanged string if invalid
+  /** For a correctly formatted CTUTR (10/13 digit string with/out a prefixed/suffixed 'k' or 'K')
+    *   - strips first/last character if it is equal to 'k' or 'K'
+    *   - if remaining string length = 13, strip the first 3 characters Note: For an incorrectly formatted CTUTR, the
+    *     string is returned as is
+    * @param ctutr
+    *   The CTUTR string
+    * @return
+    *   The stripped CTUTR if valid, the unchanged string if invalid
     */
   def strip(ctutr: String): String = {
     val k10  = """^[kK]\d{10}$"""

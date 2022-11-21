@@ -195,7 +195,7 @@ class SummaryRows {
     completeAnswers: CompleteIndividualUserAnswers,
     relevantTaxYear: TaxYear
   )(implicit messages: Messages): List[SummaryListRow] = {
-    val entityTypeRow =
+    val entityTypeRow   =
       completeAnswers.entityType.map { entityType =>
         summaryListRow(
           messages("entityType.title"),

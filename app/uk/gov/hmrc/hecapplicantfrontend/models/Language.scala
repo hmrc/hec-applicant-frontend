@@ -46,7 +46,7 @@ object Language {
     }
 
   implicit val format: Format[Language] = Format(
-    Reads({
+    Reads {
       case JsString(s) =>
         s match {
           case "English" => JsSuccess(English)
@@ -55,7 +55,7 @@ object Language {
         }
 
       case other => JsError(s"Expected string but got ${other.getClass.getSimpleName}")
-    }),
+    },
     Writes(l => JsString(l.toString))
   )
 

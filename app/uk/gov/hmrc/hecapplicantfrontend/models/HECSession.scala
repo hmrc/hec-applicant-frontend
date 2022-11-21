@@ -40,7 +40,7 @@ trait HECSession extends Product with Serializable {
   val taxCheckStartDateTime: Option[ZonedDateTime]
   val unexpiredTaxChecks: List[TaxCheckListItem]
   val emailRequestedForTaxCheck: Option[EmailRequestedForTaxCheck]
-  val hasResentEmailConfirmation: Boolean //flag added to separate the resend email confirmation journey
+  val hasResentEmailConfirmation: Boolean // flag added to separate the resend email confirmation journey
   val userEmailAnswers: Option[UserEmailAnswers]
   val showUserResearchBanner: Option[Boolean]
 }
@@ -146,15 +146,21 @@ object HECSession {
         f
       )
 
-    /**
-      * Replaces a field value in the session
-      * @param session The session
-      * @param individualLens Lens for individual incomplete user answers
-      * @param companyLens Lens for company incomplete user answers
-      * @param individualUpdate Update method for individual incomplete user answers
-      * @param companyUpdate Update method for company incomplete user answers
-      * @tparam A Represents the field value type of the field being replaced
-      * @return The updated session
+    /** Replaces a field value in the session
+      * @param session
+      *   The session
+      * @param individualLens
+      *   Lens for individual incomplete user answers
+      * @param companyLens
+      *   Lens for company incomplete user answers
+      * @param individualUpdate
+      *   Update method for individual incomplete user answers
+      * @param companyUpdate
+      *   Update method for company incomplete user answers
+      * @tparam A
+      *   Represents the field value type of the field being replaced
+      * @return
+      *   The updated session
       */
     def replaceField[A](
       session: HECSession,

@@ -369,7 +369,7 @@ class StartController @Inject() (
             result         <- validateSautrAndBuildIndividualData(citizenDetails, nino)
           } yield authenticationDetails -> result
 
-        case Some(_)                          =>
+        case Some(_) =>
           EitherT.leftT(DataError("Invalid NINO format", None))
       }
     }
@@ -417,7 +417,7 @@ class StartController @Inject() (
         val ggCredId = GGCredId(id)
         Right(ggCredId -> toAuthenticationDetails(c))
 
-      case Some(other)                                    =>
+      case Some(other) =>
         Left(UnsupportedAuthProvider(toAuthenticationDetails(other)))
     }
 
