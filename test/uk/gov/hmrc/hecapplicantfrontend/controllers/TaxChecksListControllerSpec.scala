@@ -444,8 +444,8 @@ class TaxChecksListControllerSpec
 
         "a tax check code has expired for an individual" in {
           val taxCheckCode = HECTaxCheckCode("RF2JBRT2N")
-          val taxCheck = Fixtures.taxCheckListItem(taxCheckCode = taxCheckCode)
-          val session = Fixtures.individualHECSession(unexpiredTaxChecks = List(taxCheck))
+          val taxCheck     = Fixtures.taxCheckListItem(taxCheckCode = taxCheckCode)
+          val session      = Fixtures.individualHECSession(unexpiredTaxChecks = List(taxCheck))
 
           val updatedSession = session.copy(
             emailRequestedForTaxCheck =
@@ -478,9 +478,9 @@ class TaxChecksListControllerSpec
 
         "a tax check code has expired for an organisation" in {
           val taxCheckCode = HECTaxCheckCode("CC4JBRT4N")
-          val taxCheck =
+          val taxCheck     =
             Fixtures.taxCheckListItem(licenceType = OperatorOfPrivateHireVehicles, taxCheckCode = taxCheckCode)
-          val session = Fixtures.companyHECSession(unexpiredTaxChecks = List(taxCheck))
+          val session      = Fixtures.companyHECSession(unexpiredTaxChecks = List(taxCheck))
 
           val updatedSession = session.copy(
             emailRequestedForTaxCheck =
@@ -510,7 +510,6 @@ class TaxChecksListControllerSpec
             mockNextCall
           )
         }
-
 
       }
 
