@@ -28,7 +28,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.IndividualRe
 import uk.gov.hmrc.hecapplicantfrontend.models._
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
-import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType.OperatorOfPrivateHireVehicles
+import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType.{DriverOfTaxisAndPrivateHires, OperatorOfPrivateHireVehicles}
 import uk.gov.hmrc.hecapplicantfrontend.models.views.LicenceTypeOption
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService.InconsistentSessionState
