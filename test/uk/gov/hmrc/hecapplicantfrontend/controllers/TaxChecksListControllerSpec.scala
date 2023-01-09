@@ -28,7 +28,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.IndividualRe
 import uk.gov.hmrc.hecapplicantfrontend.models._
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
-import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType.DriverOfTaxisAndPrivateHires
+import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType.{DriverOfTaxisAndPrivateHires, OperatorOfPrivateHireVehicles}
 import uk.gov.hmrc.hecapplicantfrontend.models.views.LicenceTypeOption
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService.InconsistentSessionState
@@ -36,6 +36,7 @@ import uk.gov.hmrc.hecapplicantfrontend.services.{AuditService, AuditServiceSupp
 import uk.gov.hmrc.hecapplicantfrontend.util.TimeUtils
 import uk.gov.hmrc.hecapplicantfrontend.utils.Fixtures
 
+import java.time.ZoneOffset.UTC
 import java.time.{LocalDate, ZonedDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -440,6 +441,75 @@ class TaxChecksListControllerSpec
             )
 
           }
+
+        "a tax check code has expired for an individual" in {
+          val taxCheckCode = HECTaxCheckCode("RF2JBRT2N")
+          val taxCheck     = Fixtures.taxCheckListItem(taxCheckCode = taxCheckCode)
+          val session      = Fixtures.individualHECSession(unexpiredTaxChecks = List(taxCheck))
+
+          val updatedSession = session.copy(
+            emailRequestedForTaxCheck =
+              Some(EmailRequestedForTaxCheck(routes.TaxChecksListController.unexpiredTaxChecks.url, taxCheck)),
+            unexpiredTaxChecks = List(
+              TaxCheckListItem(
+                DriverOfTaxisAndPrivateHires,
+                taxCheckCode,
+                session.unexpiredTaxChecks.headOption.map(_.expiresAfter).getOrElse(LocalDate.now(UTC)),
+                session.unexpiredTaxChecks.headOption.map(_.createDate).getOrElse(ZonedDateTime.now(UTC))
+              )
+            )
+          )
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockJourneyServiceUpdateAndNext(
+              routes.TaxChecksListController.unexpiredTaxChecks,
+              session,
+              updatedSession
+            )(Right(mockNextCall))
+          }
+
+          checkIsRedirect(
+            performAction(HECTaxCheckCode("RF2JBRT2N")),
+            mockNextCall
+          )
+        }
+
+        "a tax check code has expired for an organisation" in {
+          val taxCheckCode = HECTaxCheckCode("CC4JBRT4N")
+          val taxCheck     =
+            Fixtures.taxCheckListItem(licenceType = OperatorOfPrivateHireVehicles, taxCheckCode = taxCheckCode)
+          val session      = Fixtures.companyHECSession(unexpiredTaxChecks = List(taxCheck))
+
+          val updatedSession = session.copy(
+            emailRequestedForTaxCheck =
+              Some(EmailRequestedForTaxCheck(routes.TaxChecksListController.unexpiredTaxChecks.url, taxCheck)),
+            unexpiredTaxChecks = List(
+              TaxCheckListItem(
+                OperatorOfPrivateHireVehicles,
+                taxCheckCode,
+                session.unexpiredTaxChecks.headOption.map(_.expiresAfter).getOrElse(LocalDate.now(UTC)),
+                session.unexpiredTaxChecks.headOption.map(_.createDate).getOrElse(ZonedDateTime.now(UTC))
+              )
+            )
+          )
+
+          inSequence {
+            mockAuthWithNoRetrievals()
+            mockGetSession(session)
+            mockJourneyServiceUpdateAndNext(
+              routes.TaxChecksListController.unexpiredTaxChecks,
+              session,
+              updatedSession
+            )(Right(mockNextCall))
+          }
+
+          checkIsRedirect(
+            performAction(HECTaxCheckCode("CC4JBRT4N")),
+            mockNextCall
+          )
+        }
 
       }
 
