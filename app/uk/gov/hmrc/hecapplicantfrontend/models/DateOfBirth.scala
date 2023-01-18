@@ -16,13 +16,20 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models
 
-import play.api.libs.json.{Format, Json}
+import play.api.libs.functional.syntax.toInvariantFunctorOps
+import play.api.libs.json.Format
 
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 final case class DateOfBirth(value: LocalDate) extends AnyVal
 
 object DateOfBirth {
 
-  implicit val format: Format[DateOfBirth] = Json.valueFormat
+  private val dateFormatter = DateTimeFormatter.ISO_LOCAL_DATE
+
+  implicit val format: Format[DateOfBirth] =
+    implicitly[Format[String]]
+      .inmap(s => DateOfBirth(LocalDate.parse(s, dateFormatter)), d => dateFormatter.format(d.value))
+
 }
