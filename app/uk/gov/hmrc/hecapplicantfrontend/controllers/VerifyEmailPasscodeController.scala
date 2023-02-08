@@ -74,7 +74,7 @@ class VerifyEmailPasscodeController @Inject() (
             val req                           = request.copy(sessionData = updatedSession)
             val passcodeOpt: Option[Passcode] =
               session.fold(_.userEmailAnswers.flatMap(_.passcode), _.userEmailAnswers.flatMap(_.passcode))
-            val form                          = passcodeOpt.fold(verifyPasscodeForm)(verifyPasscodeForm.fill)
+            val form                          = passcodeOpt.fold(verifyPasscodeForm())(verifyPasscodeForm().fill)
             val back                          = journeyService.previous(routes.VerifyEmailPasscodeController.verifyEmailPasscode)(req, hc)
             Ok(verifyPasscodePage(form, back, userSelectedEmail.emailAddress, isGGEmailInSession))
           }

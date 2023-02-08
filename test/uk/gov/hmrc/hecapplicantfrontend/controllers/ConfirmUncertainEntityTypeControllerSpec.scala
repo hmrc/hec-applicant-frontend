@@ -70,7 +70,10 @@ class ConfirmUncertainEntityTypeControllerSpec
 
       def performAction(): Future[Result] = controller.entityType(FakeRequest())
 
-      behave like authAndUncertainEntityTypeJourneyBehaviour(performAction, requireDidConfirmUncertainEntityType = true)
+      behave like authAndUncertainEntityTypeJourneyBehaviour(
+        () => performAction(),
+        requireDidConfirmUncertainEntityType = true
+      )
 
       "display the page" when {
 

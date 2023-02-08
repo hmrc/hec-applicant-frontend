@@ -34,7 +34,6 @@ object LicenceValidityPeriod {
 
   implicit val eq: Eq[LicenceValidityPeriod] = Eq.fromUniversalEquals
 
-  @SuppressWarnings(Array("org.wartremover.warts.Throw", "org.wartremover.warts.Equals"))
   implicit val format: Format[LicenceValidityPeriod] = Jsonx.formatSealed[LicenceValidityPeriod]
 
 }

@@ -41,8 +41,8 @@ object EitherUtils {
 
       override def writes(o: Either[A, B]): JsValue =
         o.fold(
-          a ⇒ JsObject(Seq(leftFieldName → Json.toJson(a))),
-          b ⇒ JsObject(Seq(rightFieldName → Json.toJson(b)))
+          a => JsObject(Seq(leftFieldName -> Json.toJson(a))),
+          b => JsObject(Seq(rightFieldName -> Json.toJson(b)))
         )
     }
 

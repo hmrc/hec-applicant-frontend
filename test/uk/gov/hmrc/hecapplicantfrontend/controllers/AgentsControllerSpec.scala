@@ -43,7 +43,7 @@ class AgentsControllerSpec
 
       def performAction(): Future[Result] = controller.agentsNotSupported(FakeRequest())
 
-      behave like authBehaviour(performAction)
+      behave like authBehaviour(() => performAction())
 
       "display the page" in {
         mockAuthWithNoRetrievals()

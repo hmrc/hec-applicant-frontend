@@ -75,7 +75,7 @@ class SAControllerSpec
 
       def performAction(): Future[Result] = controller.sautrNotFound(FakeRequest())
 
-      behave like authAndSessionDataBehaviour(performAction)
+      behave like authAndSessionDataBehaviour(() => performAction())
 
       "display the page" in {
 
@@ -107,7 +107,7 @@ class SAControllerSpec
 
       def performAction(): Future[Result] = controller.noReturnFound(FakeRequest())
 
-      behave like authAndSessionDataBehaviour(performAction)
+      behave like authAndSessionDataBehaviour(() => performAction())
 
       "display the page" in {
 
@@ -136,7 +136,7 @@ class SAControllerSpec
 
       def performAction(): Future[Result] = controller.saIncomeStatement(FakeRequest())
 
-      behave like authAndSessionDataBehaviour(performAction)
+      behave like authAndSessionDataBehaviour(() => performAction())
 
       "return an error" when {
 

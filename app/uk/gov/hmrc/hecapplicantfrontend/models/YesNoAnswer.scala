@@ -32,7 +32,6 @@ object YesNoAnswer {
 
   implicit val eq: Eq[YesNoAnswer] = Eq.fromUniversalEquals
 
-  @SuppressWarnings(Array("org.wartremover.warts.Throw", "org.wartremover.warts.Equals"))
   implicit val format: Format[YesNoAnswer] = Jsonx.formatSealed[YesNoAnswer]
 
   val values: List[YesNoAnswer] = List(Yes, No)

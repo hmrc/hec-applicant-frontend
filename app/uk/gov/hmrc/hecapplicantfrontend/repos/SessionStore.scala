@@ -64,7 +64,7 @@ class SessionStoreImpl @Inject() (
       preservingMdc {
         getFromSession[HECSession](sessionKey)
           .map(Right(_))
-          .recover { case e ⇒ Left(Error(e)) }
+          .recover { case e => Left(Error(e)) }
       }
     )
 

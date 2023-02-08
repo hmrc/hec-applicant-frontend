@@ -68,7 +68,7 @@ class EntityTypeControllerSpec
 
       def performAction(): Future[Result] = controller.entityType(FakeRequest())
 
-      behave like authAndSessionDataBehaviour(performAction)
+      behave like authAndSessionDataBehaviour(() => performAction())
 
       "display the page" when {
 
@@ -294,7 +294,7 @@ class EntityTypeControllerSpec
 
       def performAction(): Future[Result] = controller.wrongGGAccount(FakeRequest())
 
-      behave like authAndSessionDataBehaviour(performAction)
+      behave like authAndSessionDataBehaviour(() => performAction())
 
       "return an InternalServerError" when {
 
@@ -372,7 +372,7 @@ class EntityTypeControllerSpec
       def performAction(): Future[Result] = controller.wrongEntityType(FakeRequest())
 
       behave like authAndUncertainEntityTypeJourneyBehaviour(
-        performAction,
+        () => performAction(),
         requireDidConfirmUncertainEntityType = false
       )
 

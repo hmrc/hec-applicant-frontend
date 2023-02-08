@@ -70,7 +70,6 @@ class CitizenDetailsServiceImpl @Inject() (
       }
     }
 
-  @SuppressWarnings(Array("org.wartremover.warts.Any"))
   private def toCitizenDetails(cidPerson: CidPerson): Either[Error, CitizenDetails] = {
     val nameValidation: ValidatedNel[String, Name] =
       cidPerson.name.flatMap(_.current) match {

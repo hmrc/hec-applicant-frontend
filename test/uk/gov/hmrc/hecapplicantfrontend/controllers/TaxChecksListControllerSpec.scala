@@ -281,7 +281,7 @@ class TaxChecksListControllerSpec
 
       def performAction() = controller.unexpiredTaxChecksSubmit(FakeRequest().withMethod(POST))
 
-      behave like (authAndSessionDataBehaviour(performAction))
+      behave like (authAndSessionDataBehaviour(() => performAction()))
 
       "return an error" when {
 

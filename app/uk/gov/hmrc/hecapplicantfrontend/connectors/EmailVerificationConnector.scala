@@ -60,7 +60,7 @@ class EmailVerificationConnectorImpl @Inject() (
       http
         .POST[PasscodeRequest, HttpResponse](requestPasscodeUrl, passcodeRequest)
         .map(Right(_))
-        .recover { case e ⇒
+        .recover { case e =>
           Left(Error(e))
         }
     )
@@ -71,7 +71,7 @@ class EmailVerificationConnectorImpl @Inject() (
       http
         .POST[PasscodeVerificationRequest, HttpResponse](verifyPasscodeUrl, passcodeVerificationRequest)
         .map(Right(_))
-        .recover { case e ⇒
+        .recover { case e =>
           Left(Error(e))
         }
     )

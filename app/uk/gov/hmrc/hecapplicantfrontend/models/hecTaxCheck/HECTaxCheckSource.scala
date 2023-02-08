@@ -27,7 +27,6 @@ object HECTaxCheckSource {
 
   case object Digital extends HECTaxCheckSource
 
-  @SuppressWarnings(Array("org.wartremover.warts.Throw", "org.wartremover.warts.Equals"))
   implicit val format: Format[HECTaxCheckSource] = Jsonx.formatSealed[HECTaxCheckSource]
 
 }

@@ -34,7 +34,6 @@ object SAStatus {
 
   implicit val eq: Eq[SAStatus] = Eq.fromUniversalEquals
 
-  @SuppressWarnings(Array("org.wartremover.warts.All"))
   implicit val format: Format[SAStatus] = Jsonx.formatSealed[SAStatus]
 
 }

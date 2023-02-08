@@ -34,7 +34,6 @@ object CTStatus {
 
   implicit val eq: Eq[CTStatus] = Eq.fromUniversalEquals
 
-  @SuppressWarnings(Array("org.wartremover.warts.All"))
   implicit val format: Format[CTStatus] = Jsonx.formatSealed[CTStatus]
 
 }

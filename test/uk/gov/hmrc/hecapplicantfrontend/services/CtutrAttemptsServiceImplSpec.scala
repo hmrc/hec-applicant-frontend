@@ -67,7 +67,7 @@ class CtutrAttemptsServiceImplSpec extends AnyWordSpec with Matchers with MockFa
       .expects(crn, ggCredId)
       .returning(EitherT.fromEither(result))
 
-  private def mockTimeProviderNow(d: ZonedDateTime) = (mockTimeProvider.now _).expects().returning(d)
+  private def mockTimeProviderNow(d: ZonedDateTime) = (() => mockTimeProvider.now).expects().returning(d)
 
   "CtutrAttemptsServiceImpl" when {
 

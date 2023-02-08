@@ -69,10 +69,7 @@ trait JourneyService {
 object JourneyService {
 
   final case class InconsistentSessionState(message: String) extends Exception(message) {
-
-    @SuppressWarnings(Array("org.wartremover.warts.Throw"))
     def doThrow: Nothing = throw this
-
   }
 
 }
@@ -148,6 +145,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
       case _: IndividualHECSession                                               => routes.ConfirmIndividualDetailsController.confirmIndividualDetails
       case _: CompanyHECSession if hasTaxCheckCodes                              => routes.TaxChecksListController.unexpiredTaxChecks
       case _: CompanyHECSession                                                  => routes.LicenceDetailsController.licenceType
+      case e                                                                     => InconsistentSessionState(s"Unexpected session type: $e").doThrow
     }
   }
 
@@ -358,6 +356,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
       case Some(licenceType) =>
         val taxCheckCountForLicenceType = session.unexpiredTaxChecks
           .groupBy(_.licenceType)
+          .view
           .mapValues(_.length)
           .getOrElse(licenceType, 0)
 

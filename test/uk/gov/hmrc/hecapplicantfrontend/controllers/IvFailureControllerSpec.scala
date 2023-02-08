@@ -133,7 +133,7 @@ class IvFailureControllerSpec
 
       def performAction(): Future[Result] = controller.failedMatching(FakeRequest())
 
-      behave like authBehaviour(performAction)
+      behave like authBehaviour(() => performAction())
 
       "display the page" in {
         mockAuthWithNoRetrievals()
@@ -155,7 +155,7 @@ class IvFailureControllerSpec
 
       def performAction(): Future[Result] = controller.failedIV(FakeRequest())
 
-      behave like authBehaviour(performAction)
+      behave like authBehaviour(() => performAction())
 
       "display the page" in {
         mockAuthWithNoRetrievals()
@@ -176,7 +176,7 @@ class IvFailureControllerSpec
 
       def performAction(): Future[Result] = controller.insufficientEvidence(FakeRequest())
 
-      behave like authBehaviour(performAction)
+      behave like authBehaviour(() => performAction())
 
       "display the page" in {
         mockAuthWithNoRetrievals()
@@ -194,7 +194,7 @@ class IvFailureControllerSpec
 
       def performAction(): Future[Result] = controller.lockedOut(FakeRequest())
 
-      behave like authBehaviour(performAction)
+      behave like authBehaviour(() => performAction())
 
       "display the page" in {
         mockAuthWithNoRetrievals()
@@ -212,7 +212,7 @@ class IvFailureControllerSpec
 
       def performAction(): Future[Result] = controller.userAborted(FakeRequest())
 
-      behave like authBehaviour(performAction)
+      behave like authBehaviour(() => performAction())
 
       "display the page" in {
         mockAuthWithNoRetrievals()
@@ -233,7 +233,7 @@ class IvFailureControllerSpec
 
       def performAction(): Future[Result] = controller.timedOut(FakeRequest())
 
-      behave like authBehaviour(performAction)
+      behave like authBehaviour(() => performAction())
 
       "display the page" in {
         mockAuthWithNoRetrievals()
@@ -254,7 +254,7 @@ class IvFailureControllerSpec
 
       def performAction(): Future[Result] = controller.technicalIssue(FakeRequest())
 
-      behave like authBehaviour(performAction)
+      behave like authBehaviour(() => performAction())
 
       "display the page" in {
         mockAuthWithNoRetrievals()
@@ -275,7 +275,7 @@ class IvFailureControllerSpec
 
       def performAction(): Future[Result] = controller.preconditionFailed(FakeRequest())
 
-      behave like authBehaviour(performAction)
+      behave like authBehaviour(() => performAction())
 
       "display the page" in {
         mockAuthWithNoRetrievals()
@@ -293,7 +293,7 @@ class IvFailureControllerSpec
 
       def performAction(): Future[Result] = controller.retry(FakeRequest())
 
-      behave like authBehaviour(performAction)
+      behave like authBehaviour(() => performAction())
 
       "redirect to the start endpoint" in {
         mockAuthWithNoRetrievals()

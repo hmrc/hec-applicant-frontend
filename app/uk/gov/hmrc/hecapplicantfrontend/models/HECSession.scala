@@ -19,7 +19,7 @@ package uk.gov.hmrc.hecapplicantfrontend.models
 import cats.Eq
 import cats.implicits.catsSyntaxEq
 import monocle.Lens
-import play.api.libs.json.{JsObject, JsResult, JsValue, Json, OFormat}
+import play.api.libs.json._
 import uk.gov.hmrc.hecapplicantfrontend.models.CompanyUserAnswers.IncompleteCompanyUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.IndividualUserAnswers.IncompleteIndividualUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
@@ -132,6 +132,7 @@ object HECSession {
     def fold[A](ifIndividual: IndividualHECSession => A, ifCompany: CompanyHECSession => A): A = s match {
       case i: IndividualHECSession => ifIndividual(i)
       case c: CompanyHECSession    => ifCompany(c)
+      case e                       => InconsistentSessionState(s"Unexpected session type: $e").doThrow
     }
 
     def mapAsIndividual[A](f: IndividualHECSession => A): A =
@@ -191,6 +192,7 @@ object HECSession {
       val licenceTypeOpt = s match {
         case i: IndividualHECSession => i.userAnswers.fold(_.licenceType, _.licenceType.some)
         case c: CompanyHECSession    => c.userAnswers.fold(_.licenceType, _.licenceType.some)
+        case e                       => InconsistentSessionState(s"Unexpected session type: $e").doThrow
       }
 
       licenceTypeOpt match {
@@ -249,6 +251,7 @@ object HECSession {
       val json = o match {
         case i: IndividualHECSession => Json.writes[IndividualHECSession].writes(i)
         case c: CompanyHECSession    => Json.writes[CompanyHECSession].writes(c)
+        case e                       => InconsistentSessionState(s"Invalid session type: $e").doThrow
       }
       json ++ Json.obj("type" -> o.entityType)
     }

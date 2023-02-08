@@ -35,6 +35,5 @@ object LicenceTimeTrading {
 
   implicit val eq: Eq[LicenceTimeTrading] = Eq.fromUniversalEquals
 
-  @SuppressWarnings(Array("org.wartremover.warts.Throw", "org.wartremover.warts.Equals"))
   implicit val format: Format[LicenceTimeTrading] = Jsonx.formatSealed[LicenceTimeTrading]
 }
