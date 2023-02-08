@@ -34,7 +34,6 @@ lazy val microservice = Project(appName, file("."))
       "-Wconf:src=routes/.*:s",
       "-Ymacro-annotations"
     ),
-//    Test / scalacOptions --= Seq("-Ywarn-value-discard"),
     Compile / doc / sources := Seq.empty
   )
   .configs(IntegrationTest)
