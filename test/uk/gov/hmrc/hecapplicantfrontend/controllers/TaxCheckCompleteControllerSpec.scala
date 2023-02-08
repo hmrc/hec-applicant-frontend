@@ -76,7 +76,7 @@ class TaxCheckCompleteControllerSpec
 
       def performAction(): Future[Result] = controller.taxCheckComplete(FakeRequest())
 
-      behave like authAndSessionDataBehaviour(performAction)
+      behave like authAndSessionDataBehaviour(() => performAction())
 
       "return a technical error" when {
 

@@ -80,10 +80,10 @@ class AuthLoginStubServiceImplSpec extends Matchers with AnyWordSpecLike with Mo
       .returning(result)
 
   def mockWsResponseStatus(status: Int) =
-    (mockWSResponse.status _).expects().returning(status)
+    (() => mockWSResponse.status).expects().returning(status)
 
   def mockWsResponseBody(result: String) =
-    (mockWSResponse.body _).expects().returning(result)
+    (() => mockWSResponse.body).expects().returning(result)
 
   def mockWsResponseHeader(headerName: String)(result: Option[String]) =
     (mockWSResponse.header _).expects(headerName).returning(result)

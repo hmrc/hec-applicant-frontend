@@ -75,28 +75,28 @@ class IvFailureController @Inject() (
   }
 
   val failedMatching: Action[AnyContent] =
-    authAction(implicit r ⇒ Ok(failedMatchingPage()))
+    authAction(implicit r => Ok(failedMatchingPage()))
 
   val failedIV: Action[AnyContent] =
-    authAction(implicit r ⇒ Ok(failedIvPage()))
+    authAction(implicit r => Ok(failedIvPage()))
 
   val insufficientEvidence: Action[AnyContent] =
-    authAction(implicit r ⇒ Ok(insufficientEvidencePage()))
+    authAction(implicit r => Ok(insufficientEvidencePage()))
 
   val lockedOut: Action[AnyContent] =
-    authAction(implicit r ⇒ Ok(lockedOutPage()))
+    authAction(implicit r => Ok(lockedOutPage()))
 
   val userAborted: Action[AnyContent] =
-    authAction(implicit r ⇒ Ok(userAbortedPage()))
+    authAction(implicit r => Ok(userAbortedPage()))
 
   val timedOut: Action[AnyContent] =
-    authAction(implicit r ⇒ Ok(timeoutPage()))
+    authAction(implicit r => Ok(timeoutPage()))
 
   val technicalIssue: Action[AnyContent] =
-    authAction(implicit r ⇒ Ok(technicalIssuesPage()))
+    authAction(implicit r => Ok(technicalIssuesPage()))
 
   val preconditionFailed: Action[AnyContent] =
-    authAction(implicit r ⇒ Ok(preconditionFailedPage()))
+    authAction(implicit r => Ok(preconditionFailedPage()))
 
   val retry: Action[AnyContent] =
     authAction(_ => Redirect(routes.StartController.start))

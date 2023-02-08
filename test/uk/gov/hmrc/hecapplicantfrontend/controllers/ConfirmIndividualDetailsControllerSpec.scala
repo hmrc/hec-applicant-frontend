@@ -32,7 +32,7 @@ import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService.InconsistentSess
 import java.time.LocalDate
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 class ConfirmIndividualDetailsControllerSpec
     extends ControllerSpec
@@ -54,7 +54,7 @@ class ConfirmIndividualDetailsControllerSpec
     "handling requests to the confirm individual details page" must {
       def performAction(): Future[Result] = controller.confirmIndividualDetails(FakeRequest())
 
-      behave like (authAndSessionDataBehaviour(performAction))
+      behave like (authAndSessionDataBehaviour(() => performAction()))
 
       "throw an exception" when {
 
@@ -120,7 +120,7 @@ class ConfirmIndividualDetailsControllerSpec
 
       def performAction(): Future[Result] = controller.confirmIndividualDetailsSubmit(FakeRequest().withMethod(POST))
 
-      behave like (authAndSessionDataBehaviour(performAction))
+      behave like (authAndSessionDataBehaviour(() => performAction()))
 
       "throw an exception" when {
 
@@ -200,7 +200,7 @@ class ConfirmIndividualDetailsControllerSpec
 
       def performAction(): Future[Result] = controller.confirmIndividualDetailsExit(FakeRequest())
 
-      behave like (authAndSessionDataBehaviour(performAction))
+      behave like (authAndSessionDataBehaviour(() => performAction()))
 
       "throw an exception" when {
 
@@ -272,7 +272,7 @@ class ConfirmIndividualDetailsControllerSpec
 
       def performAction(): Future[Result] = controller.cannotFindDetails(FakeRequest())
 
-      behave like authBehaviour(performAction)
+      behave like authBehaviour(() => performAction())
 
       "display the page" in {
         mockAuthWithNoRetrievals()

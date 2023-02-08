@@ -31,6 +31,5 @@ object EmailSendResult {
 
   implicit val eq: Eq[EmailSendResult] = Eq.fromUniversalEquals
 
-  @SuppressWarnings(Array("org.wartremover.warts.All"))
   implicit val format: Format[EmailSendResult] = Jsonx.formatSealed[EmailSendResult]
 }

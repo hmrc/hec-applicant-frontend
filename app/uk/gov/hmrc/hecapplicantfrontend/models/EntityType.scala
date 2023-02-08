@@ -32,7 +32,6 @@ object EntityType {
 
   implicit val eq: Eq[EntityType] = Eq.fromUniversalEquals
 
-  @SuppressWarnings(Array("org.wartremover.warts.Throw", "org.wartremover.warts.Equals"))
   implicit val format: Format[EntityType] = Jsonx.formatSealed[EntityType]
 
 }

@@ -52,7 +52,7 @@ class ConfirmIndividualDetailsControllerSpecCYSpec
     "handling requests to the confirm individual details page" must {
       def performAction(): Future[Result] =
         controller.confirmIndividualDetails(FakeRequest().withCookies(Cookie("PLAY_LANG", "cy")))
-      behave like (authAndSessionDataBehaviour(performAction))
+      behave like (authAndSessionDataBehaviour(() => performAction()))
 
       "display the page in Welsh" when {
 

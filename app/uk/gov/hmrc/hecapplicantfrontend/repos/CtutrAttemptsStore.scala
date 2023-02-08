@@ -65,27 +65,27 @@ class CtutrAttemptsStoreImpl @Inject() (
         findById(id(crn, ggCredId))
           .map { maybeCache =>
             val response: OptionT[Either[Error, *], CtutrAttempts] = for {
-              cache ← OptionT.fromOption[Either[Error, *]](maybeCache)
+              cache      <- OptionT.fromOption[Either[Error, *]](maybeCache)
               // even if there is no data found, cache returns with -> {"id" : "code1", data : {}}
               // if the json is empty, return None
               // if not, proceed to validate json
               cacheLength = cache.data.keys.size
               data       <- OptionT.fromOption[Either[Error, *]](if (cacheLength == 0) None else Some(cache.data))
-              result ← OptionT.liftF[Either[Error, *], CtutrAttempts](
-                         (data \ dataKey)
-                           .validate[CtutrAttempts]
-                           .asEither
-                           .leftMap(e ⇒
-                             Error(
-                               s"Could not parse session data from mongo: ${e.mkString("; ")}"
-                             )
-                           )
-                       )
+              result     <- OptionT.liftF[Either[Error, *], CtutrAttempts](
+                              (data \ dataKey)
+                                .validate[CtutrAttempts]
+                                .asEither
+                                .leftMap(e =>
+                                  Error(
+                                    s"Could not parse session data from mongo: ${e.mkString("; ")}"
+                                  )
+                                )
+                            )
             } yield result
 
             response.value
           }
-          .recover { case e ⇒ Left(Error(e)) }
+          .recover { case e => Left(Error(e)) }
       }
     )
 

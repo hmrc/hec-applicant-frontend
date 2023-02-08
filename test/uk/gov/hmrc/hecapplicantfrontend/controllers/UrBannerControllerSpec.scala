@@ -47,7 +47,7 @@ class UrBannerControllerSpec
 
       def performAction(): Future[Result] = controller.hideBanner(FakeRequest())
 
-      behave like authAndSessionDataBehaviour(performAction)
+      behave like authAndSessionDataBehaviour(() => performAction())
 
       "throw an error" when {
 

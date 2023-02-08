@@ -65,7 +65,7 @@ class AuthLoginStubConnectorImplSpec extends ConnectorSpec with Matchers with An
       (mockWsRequest
         .post[String](_: String)(_: BodyWritable[String]))
         .expects(
-          where { case (actualBody: String, _) =>
+          where[String, BodyWritable[String]] { case (actualBody: String, _: BodyWritable[String]) =>
             val expectedFormKeyValues = body.split("&").toSet
             val actualFormKeyValues   = actualBody.split("&").toSet
             val (unexpected, missing) =

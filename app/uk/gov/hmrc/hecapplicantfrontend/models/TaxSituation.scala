@@ -36,6 +36,5 @@ object TaxSituation {
 
   implicit val eq: Eq[TaxSituation] = Eq.fromUniversalEquals
 
-  @SuppressWarnings(Array("org.wartremover.warts.Throw", "org.wartremover.warts.Equals"))
   implicit val format: Format[TaxSituation] = Jsonx.formatSealed[TaxSituation]
 }

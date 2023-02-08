@@ -29,7 +29,6 @@ object AuthenticationStatus {
 
   case object NotAuthenticated extends AuthenticationStatus
 
-  @SuppressWarnings(Array("org.wartremover.warts.Throw", "org.wartremover.warts.Equals"))
   implicit val format: Format[AuthenticationStatus] = Jsonx.formatSealed[AuthenticationStatus]
 
 }

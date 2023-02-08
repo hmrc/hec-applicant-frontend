@@ -62,7 +62,7 @@ class UncertainEntityTypeJourneyStoreImpl @Inject() (
       preservingMdc {
         getFromSession[UncertainEntityTypeJourney](DataKey(sessionKey))
           .map(Right(_))
-          .recover { case e ⇒ Left(Error(e)) }
+          .recover { case e => Left(Error(e)) }
       }
     )
 

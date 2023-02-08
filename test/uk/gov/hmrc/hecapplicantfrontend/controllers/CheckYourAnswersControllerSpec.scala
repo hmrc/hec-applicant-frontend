@@ -40,7 +40,7 @@ import uk.gov.hmrc.hecapplicantfrontend.utils.Fixtures
 import uk.gov.hmrc.http.HeaderCarrier
 
 import java.time.{LocalDate, ZoneId, ZonedDateTime}
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class CheckYourAnswersControllerSpec
@@ -173,7 +173,7 @@ class CheckYourAnswersControllerSpec
 
       def performAction() = controller.checkYourAnswers(FakeRequest())
 
-      behave like (authAndSessionDataBehaviour(performAction))
+      behave like (authAndSessionDataBehaviour(() => performAction()))
 
       "show an error page" when {
 

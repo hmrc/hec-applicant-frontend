@@ -72,7 +72,7 @@ class TaxSituationControllerSpec
     bind[TaxCheckService].toInstance(mockTaxCheckService)
   )
 
-  def mockTimeProviderToday(d: LocalDate) = (mockTimeProvider.currentDate _).expects().returning(d)
+  def mockTimeProviderToday(d: LocalDate) = (() => mockTimeProvider.currentDate).expects().returning(d)
 
   def mockStoreSession(individualSession: HECSession)(result: Either[Error, Unit]) = (mockSessionStore
     .store(_: HECSession)(_: Request[_]))
@@ -118,7 +118,7 @@ class TaxSituationControllerSpec
         "taxSituation.NotChargeable.hint"
       ).map(key => Some(messageFromMessageKey(key)))
 
-      behave like authAndSessionDataBehaviour(performAction)
+      behave like authAndSessionDataBehaviour(() => performAction())
 
       "return a technical error" when {
 
@@ -855,7 +855,7 @@ class TaxSituationControllerSpec
       def performAction(): Future[Result] =
         controller.determineIfRelevantIncomeTaxYearChanged(FakeRequest())
 
-      behave like authAndSessionDataBehaviour(performAction)
+      behave like authAndSessionDataBehaviour(() => performAction())
 
       val today = LocalDate.now()
 
@@ -940,7 +940,7 @@ class TaxSituationControllerSpec
       def performAction(): Future[Result] =
         controller.proceedWithNewRelevantIncomeTaxYear(FakeRequest())
 
-      behave like authAndSessionDataBehaviour(performAction)
+      behave like authAndSessionDataBehaviour(() => performAction())
 
       "display the page" in {
         inSequence {

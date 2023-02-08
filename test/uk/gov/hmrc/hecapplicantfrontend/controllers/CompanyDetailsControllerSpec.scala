@@ -45,7 +45,7 @@ import uk.gov.hmrc.hecapplicantfrontend.utils.Fixtures
 import uk.gov.hmrc.http.HeaderCarrier
 
 import java.time.{LocalDate, ZoneId, ZonedDateTime}
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.reflect.ClassTag
@@ -72,7 +72,7 @@ class CompanyDetailsControllerSpec
     bind[AuditService].toInstance(mockAuditService)
   )
 
-  def mockTimeProviderToday(d: LocalDate) = (mockTimeProvider.currentDate _).expects().returning(d)
+  def mockTimeProviderToday(d: LocalDate) = (() => mockTimeProvider.currentDate).expects().returning(d)
 
   def mockTaxCheckServiceGetCtutr(crn: CRN)(result: Either[Error, Option[CTUTR]]) =
     (mockTaxCheckService
@@ -142,7 +142,7 @@ class CompanyDetailsControllerSpec
 
       def performAction(): Future[Result] = controller.confirmCompanyDetails(FakeRequest())
 
-      behave like authAndSessionDataBehaviour(performAction)
+      behave like authAndSessionDataBehaviour(() => performAction())
 
       "display the page" when {
 
@@ -600,7 +600,7 @@ class CompanyDetailsControllerSpec
 
       def performAction(): Future[Result] = controller.chargeableForCorporationTax(FakeRequest())
 
-      behave like authAndSessionDataBehaviour(performAction)
+      behave like authAndSessionDataBehaviour(() => performAction())
 
       "display the page" when {
 
@@ -918,7 +918,7 @@ class CompanyDetailsControllerSpec
 
       def performAction(): Future[Result] = controller.ctIncomeStatement(FakeRequest())
 
-      behave like authAndSessionDataBehaviour(performAction)
+      behave like authAndSessionDataBehaviour(() => performAction())
 
       "display the page" when {
         val companyData = retrievedJourneyDataWithCompanyName.copy(
@@ -1170,7 +1170,7 @@ class CompanyDetailsControllerSpec
 
       def performAction(): Future[Result] = controller.recentlyStartedTrading(FakeRequest())
 
-      behave like authAndSessionDataBehaviour(performAction)
+      behave like authAndSessionDataBehaviour(() => performAction())
 
       "display the page" when {
         val companyData = retrievedJourneyDataWithCompanyName.copy(ctStatus = Some(ctStatusResponse))
@@ -1432,7 +1432,7 @@ class CompanyDetailsControllerSpec
 
       def performAction(): Future[Result] = controller.enterCtutr(FakeRequest())
 
-      behave like authAndSessionDataBehaviour(performAction)
+      behave like authAndSessionDataBehaviour(() => performAction())
 
       "display the page" when {
         val companyData = retrievedJourneyDataWithCompanyName.copy(
@@ -2037,7 +2037,7 @@ class CompanyDetailsControllerSpec
 
       def performAction() = controller.dontHaveUtr(FakeRequest())
 
-      behave like authAndSessionDataBehaviour(performAction)
+      behave like authAndSessionDataBehaviour(() => performAction())
 
       "display the page" in {
         val session = Fixtures.companyHECSession()
@@ -2070,7 +2070,7 @@ class CompanyDetailsControllerSpec
 
       def performAction() = controller.ctutrNotMatched(FakeRequest())
 
-      behave like authAndSessionDataBehaviour(performAction)
+      behave like authAndSessionDataBehaviour(() => performAction())
 
       "display the page" in {
         val session = Fixtures.companyHECSession()
@@ -2101,7 +2101,7 @@ class CompanyDetailsControllerSpec
 
       def performAction() = controller.tooManyCtutrAttempts(FakeRequest())
 
-      behave like authAndSessionDataBehaviour(performAction)
+      behave like authAndSessionDataBehaviour(() => performAction())
 
       val crn                  = CRN("crn")
       val companyName          = CompanyHouseName("test company")
@@ -2219,7 +2219,7 @@ class CompanyDetailsControllerSpec
       def todayCtStatusResponse(latestAccountingPeriod: Option[CTAccountingPeriod]) =
         CTStatusResponse(ctutr, todayLookBackPeriodStart, todayLookBackPeriodEnd, latestAccountingPeriod)
 
-      behave like authAndSessionDataBehaviour(performAction)
+      behave like authAndSessionDataBehaviour(() => performAction())
 
       "return an error" when {
 
@@ -2445,7 +2445,7 @@ class CompanyDetailsControllerSpec
       def performAction(): Future[Result] =
         controller.proceedWithNewRelevantAccountingPeriod(FakeRequest())
 
-      behave like authAndSessionDataBehaviour(performAction)
+      behave like authAndSessionDataBehaviour(() => performAction())
 
       "display the page" in {
         inSequence {

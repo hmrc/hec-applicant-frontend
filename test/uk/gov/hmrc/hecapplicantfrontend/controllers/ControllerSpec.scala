@@ -27,7 +27,7 @@ import play.api._
 import uk.gov.hmrc.hecapplicantfrontend.utils.PlaySupport
 
 import scala.concurrent.Future
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 trait ControllerSpec extends PlaySupport {
 

@@ -63,7 +63,7 @@ class LicenceDetailsControllerSpec
     CompanyLoginData(GGCredId(""), None, None, None)
 
   def mockTimeProviderNow(now: ZonedDateTime) =
-    (mockTimeProvider.now _).expects().returning(now)
+    (() => mockTimeProvider.now).expects().returning(now)
 
   "LicenceDetailsController" when {
 
@@ -138,7 +138,7 @@ class LicenceDetailsControllerSpec
         )
       }
 
-      behave like authAndSessionDataBehaviour(performAction)
+      behave like authAndSessionDataBehaviour(() => performAction())
 
       "display the page" when {
 
@@ -498,7 +498,7 @@ class LicenceDetailsControllerSpec
 
       def performAction(): Future[Result] = controller.licenceTypeExit(FakeRequest())
 
-      behave like authAndSessionDataBehaviour(performAction)
+      behave like authAndSessionDataBehaviour(() => performAction())
 
       "display the page" in {
         val session = IndividualHECSession.newSession(individualLoginData)
@@ -522,7 +522,7 @@ class LicenceDetailsControllerSpec
 
       def performAction(): Future[Result] = controller.licenceTimeTrading(FakeRequest())
 
-      behave like authAndSessionDataBehaviour(performAction)
+      behave like authAndSessionDataBehaviour(() => performAction())
 
       "display the page" when {
 
@@ -740,7 +740,7 @@ class LicenceDetailsControllerSpec
 
       def performAction(): Future[Result] = controller.recentLicenceLength(FakeRequest())
 
-      behave like authAndSessionDataBehaviour(performAction)
+      behave like authAndSessionDataBehaviour(() => performAction())
 
       "display the page" when {
 

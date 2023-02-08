@@ -36,7 +36,6 @@ object PasscodeRequestResult {
 
   implicit val eq: Eq[PasscodeRequestResult] = Eq.fromUniversalEquals
 
-  @SuppressWarnings(Array("org.wartremover.warts.All"))
   implicit val format: Format[PasscodeRequestResult] = Jsonx.formatSealed[PasscodeRequestResult]
 
 }

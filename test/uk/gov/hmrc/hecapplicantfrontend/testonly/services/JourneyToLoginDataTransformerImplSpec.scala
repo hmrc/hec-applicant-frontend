@@ -48,12 +48,12 @@ class JourneyToLoginDataTransformerImplSpec extends Matchers with AnyWordSpecLik
       .returning(uuid)
 
   def mockTimeProviderCurrentDate(date: LocalDate) =
-    (mockTimeProvider.currentDate _)
+    (() => mockTimeProvider.currentDate)
       .expects()
       .returning(date)
 
   def mockTimeProviderNow(now: ZonedDateTime) =
-    (mockTimeProvider.now _)
+    (() => mockTimeProvider.now)
       .expects()
       .returning(now)
 
