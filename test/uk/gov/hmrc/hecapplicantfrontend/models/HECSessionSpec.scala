@@ -91,14 +91,16 @@ class HECSessionSpec extends AnyWordSpec with Matchers {
 
       "session type is individual" in {
 
-        Fixtures.individualHECSession()
+        Fixtures
+          .individualHECSession()
           .copy(userAnswers = Fixtures.completeIndividualUserAnswers())
           .ensureLicenceTypePresent(_ => true) shouldBe true
       }
 
       "session type is company" in {
 
-        Fixtures.companyHECSession()
+        Fixtures
+          .companyHECSession()
           .copy(userAnswers = Fixtures.completeCompanyUserAnswers())
           .ensureLicenceTypePresent(_ => true) shouldBe true
       }
@@ -107,17 +109,18 @@ class HECSessionSpec extends AnyWordSpec with Matchers {
 }
 
 object Foo extends HECSession {
-  override val entityType: EntityType = Individual
-  override val userAnswers: UserAnswers = IncompleteIndividualUserAnswers(None, None, None, None, None, None)
-  override val loginData: LoginData = IndividualLoginData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None, None)
-  override val retrievedJourneyData: RetrievedJourneyData = IndividualRetrievedJourneyData(None)
-  override val completedTaxCheck: Option[HECTaxCheck] = None
-  override val taxCheckStartDateTime: Option[ZonedDateTime] = None
-  override val unexpiredTaxChecks: List[TaxCheckListItem] = Nil
+  override val entityType: EntityType                                       = Individual
+  override val userAnswers: UserAnswers                                     = IncompleteIndividualUserAnswers(None, None, None, None, None, None)
+  override val loginData: LoginData                                         =
+    IndividualLoginData(GGCredId(""), NINO(""), None, Name("", ""), DateOfBirth(LocalDate.now()), None, None)
+  override val retrievedJourneyData: RetrievedJourneyData                   = IndividualRetrievedJourneyData(None)
+  override val completedTaxCheck: Option[HECTaxCheck]                       = None
+  override val taxCheckStartDateTime: Option[ZonedDateTime]                 = None
+  override val unexpiredTaxChecks: List[TaxCheckListItem]                   = Nil
   override val emailRequestedForTaxCheck: Option[EmailRequestedForTaxCheck] = None
-  override val hasResentEmailConfirmation: Boolean = false
-  override val userEmailAnswers: Option[UserEmailAnswers] = None
-  override val showUserResearchBanner: Option[Boolean] = None
+  override val hasResentEmailConfirmation: Boolean                          = false
+  override val userEmailAnswers: Option[UserEmailAnswers]                   = None
+  override val showUserResearchBanner: Option[Boolean]                      = None
 
   override def productArity: Int = 0
 
