@@ -68,19 +68,19 @@
         )
     }
 
-    @Html(s"""<link rel="stylesheet" media="screen" href="${controllers.routes.Assets.versioned("stylesheets/application.css")}" ${CSPNonce.attr}>""")
-    @Html(s"""<link rel="stylesheet" media="print" href="${controllers.routes.Assets.versioned("stylesheets/print.css")}" ${CSPNonce.attr}>""")
+    @Html(s"""<link rel="stylesheet" media="screen" href="${controllers.routes.Assets.versioned("stylesheets/application.css")}" @CSPNonce.attr>""")
+    @Html(s"""<link rel="stylesheet" media="print" href="${controllers.routes.Assets.versioned("stylesheets/print.css")}" @CSPNonce.attr>""")
 
 }
 
 @scripts = {
     @scriptsBlock.getOrElse(Html(""))
     @if(showUrBanner) {
-      @Html(s"""<script ${CSPNonce.attr}>window.showUrBanner = true, window.hideBannerUrl = '${routes.UrBannerController.hideBanner.url}'</script>""")
+      @Html(s"""<script @CSPNonce.attr>window.showUrBanner = true, window.hideBannerUrl = '${routes.UrBannerController.hideBanner.url}'</script>""")
     }
-    @Html(s"""<script src="${controllers.routes.Assets.versioned("javascripts/promise-polyfill.js")}" ${CSPNonce.attr}></script>""")
-    @Html(s"""<script src="${controllers.routes.Assets.versioned("javascripts/fetch.umd.js")}" ${CSPNonce.attr}></script>""")
-    @Html(s"""<script src="${controllers.routes.Assets.versioned("javascripts/application.js")}" ${CSPNonce.attr}></script>""")
+    @Html(s"""<script @CSPNonce.attr src="${controllers.routes.Assets.versioned("javascripts/promise-polyfill.js")}"></script>""")
+    @Html(s"""<script @CSPNonce.attr src="${controllers.routes.Assets.versioned("javascripts/fetch.umd.js")}"></script>""")
+    @Html(s"""<script @CSPNonce.attr src="${controllers.routes.Assets.versioned("javascripts/application.js")}"></script>""")
 }
 
 @beforeContentBlock = {
@@ -112,9 +112,9 @@
 
 @govukLayout(
     pageTitle = Some(documentTitle),
-    headBlock = Some(hmrcHead(headBlock = Some(head), nonce = CSPNonce.get)),
+    headBlock = Some(hmrcHead(headBlock = Some(head))),
     headerBlock = Some(hmrcStandardHeader(userResearchBanner = Some(UserResearchBanner(url = appConfig.userRecruitmentUrl)), signOutUrl = if(showSignOutLink) Some(appConfig.signOutUrl(continueUrl = None)) else None)),
-    scriptsBlock = Some(hmrcScripts(scriptsBlock = Some(scripts), nonce = CSPNonce.get)),
+    scriptsBlock = Some(hmrcScripts(scriptsBlock = Some(scripts))),
     beforeContentBlock = Some(beforeContentBlock),
     footerBlock = Some(hmrcStandardFooter())
 )(content)
