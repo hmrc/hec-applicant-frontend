@@ -68,19 +68,19 @@
         )
     }
 
-    @Html(s"""<link rel="stylesheet" media="screen" href="${controllers.routes.Assets.versioned("stylesheets/application.css")}" @CSPNonce.attr>""")
-    @Html(s"""<link rel="stylesheet" media="print" href="${controllers.routes.Assets.versioned("stylesheets/print.css")}" @CSPNonce.attr>""")
+    <link rel="stylesheet" media="screen" href='@controllers.routes.Assets.versioned("stylesheets/application.css")'>
+    <link rel="stylesheet" media="print" href='@controllers.routes.Assets.versioned("stylesheets/print.css")'>
 
 }
 
 @scripts = {
     @scriptsBlock.getOrElse(Html(""))
     @if(showUrBanner) {
-      @Html(s"""<script @CSPNonce.attr>window.showUrBanner = true, window.hideBannerUrl = '${routes.UrBannerController.hideBanner.url}'</script>""")
+        <script @CSPNonce.attr>window.showUrBanner = true, window.hideBannerUrl = '${routes.UrBannerController.hideBanner.url}'</script>
     }
-    @Html(s"""<script @CSPNonce.attr src="${controllers.routes.Assets.versioned("javascripts/promise-polyfill.js")}"></script>""")
-    @Html(s"""<script @CSPNonce.attr src="${controllers.routes.Assets.versioned("javascripts/fetch.umd.js")}"></script>""")
-    @Html(s"""<script @CSPNonce.attr src="${controllers.routes.Assets.versioned("javascripts/application.js")}"></script>""")
+        <script @CSPNonce.attr src='@controllers.routes.Assets.versioned("javascripts/promise-polyfill.js")'></script>
+        <script @CSPNonce.attr src='@controllers.routes.Assets.versioned("javascripts/fetch.umd.js")'></script>
+        <script @CSPNonce.attr src='@controllers.routes.Assets.versioned("javascripts/application.js")'></script>
 }
 
 @beforeContentBlock = {
