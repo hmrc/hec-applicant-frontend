@@ -31,6 +31,7 @@ import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, Session
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.CRN
 import uk.gov.hmrc.hecapplicantfrontend.models.{Error, HECSession}
 import uk.gov.hmrc.hecapplicantfrontend.services.{CompanyDetailsService, CtutrAttemptsService, JourneyService}
+import uk.gov.hmrc.hecapplicantfrontend.util.ControllerUtils.noXssChars
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.hecapplicantfrontend.util.StringUtils.StringOps
 import uk.gov.hmrc.hecapplicantfrontend.views.html
@@ -162,6 +163,7 @@ object CRNController {
     Form(
       mapping(
         "crn" -> nonEmptyText
+          .verifying(noXssChars("error.nonAlphanumericChars"))
           .transform[CRN](
             s => CRN(s.removeWhitespace.toUpperCase(Locale.UK)),
             _.value
