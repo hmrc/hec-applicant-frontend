@@ -25,12 +25,13 @@ import play.api.i18n.I18nSupport
 import play.api.mvc._
 import uk.gov.hmrc.hecapplicantfrontend.controllers.VerifyEmailPasscodeController.{getNextOrNoMatchResult, verifyGGEmailInSession, verifyPasscodeForm}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, RequestWithSessionData, SessionDataAction}
-import uk.gov.hmrc.hecapplicantfrontend.models.{HECSession, _}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{Passcode, PasscodeVerificationResult}
+import uk.gov.hmrc.hecapplicantfrontend.models.{HECSession, _}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.{EmailVerificationService, JourneyService}
+import uk.gov.hmrc.hecapplicantfrontend.util.ControllerUtils.noXssChars
+import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 import uk.gov.hmrc.hecapplicantfrontend.util.StringUtils._
-import uk.gov.hmrc.hecapplicantfrontend.util.{ControllerUtils, Logging}
 import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -138,7 +139,7 @@ object VerifyEmailPasscodeController {
   def verifyPasscodeForm(): Form[Passcode] = Form(
     mapping(
       "passcode" -> nonEmptyText
-        .verifying(ControllerUtils.noXssChars("error.format"))
+        .verifying(noXssChars("error.format"))
         .transform[Passcode](p => Passcode(p.removeWhitespace.toUpperCase(Locale.UK)), _.value)
         .verifying("error.format", p => p.value.length === 6 && !p.value.exists(upperCaseVowels.contains(_)))
     )(identity)(Some(_))
