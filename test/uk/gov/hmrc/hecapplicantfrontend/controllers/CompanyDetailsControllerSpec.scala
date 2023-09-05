@@ -1589,6 +1589,10 @@ class CompanyDetailsControllerSpec
           test("enterCtutr.error.ctutrChecksumFailed", "enterCtutr" -> "1234567890")
         }
 
+        "CTUTR rejects XSS Chars" in {
+          test("enterCtutr.error.ctutrInvalidFormat", "enterCtutr" -> """1^[^3<7>"2&]5*8$6""")
+        }
+
         "input CTUTR does not match DES CTUTR & CRN is not blocked" in {
           val crn            = CRN("crn")
           val userAnswers    = Fixtures.incompleteCompanyUserAnswers(

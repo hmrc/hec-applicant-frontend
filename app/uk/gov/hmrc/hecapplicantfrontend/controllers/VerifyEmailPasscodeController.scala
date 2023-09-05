@@ -18,24 +18,23 @@ package uk.gov.hmrc.hecapplicantfrontend.controllers
 
 import cats.data.EitherT
 import cats.implicits._
-import cats.implicits.catsSyntaxOptionId
 import com.google.inject.Inject
+import play.api.data.Form
+import play.api.data.Forms.{mapping, nonEmptyText}
 import play.api.i18n.I18nSupport
-import play.api.mvc.{Action, AnyContent, Call, MessagesControllerComponents, Result}
+import play.api.mvc._
+import uk.gov.hmrc.hecapplicantfrontend.controllers.VerifyEmailPasscodeController.{getNextOrNoMatchResult, verifyGGEmailInSession, verifyPasscodeForm}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, RequestWithSessionData, SessionDataAction}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{Passcode, PasscodeVerificationResult}
-import play.api.data.Form
-import uk.gov.hmrc.hecapplicantfrontend.models._
-import play.api.data.Forms.{mapping, nonEmptyText}
-import uk.gov.hmrc.hecapplicantfrontend.controllers.VerifyEmailPasscodeController.{getNextOrNoMatchResult, verifyGGEmailInSession, verifyPasscodeForm}
-import uk.gov.hmrc.hecapplicantfrontend.models.HECSession
+import uk.gov.hmrc.hecapplicantfrontend.models.{HECSession, _}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.{EmailVerificationService, JourneyService}
+import uk.gov.hmrc.hecapplicantfrontend.util.ControllerUtils.noXssChars
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
-import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.hecapplicantfrontend.util.StringUtils._
 import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
 import java.util.Locale
 import scala.concurrent.{ExecutionContext, Future}
@@ -140,6 +139,7 @@ object VerifyEmailPasscodeController {
   def verifyPasscodeForm(): Form[Passcode] = Form(
     mapping(
       "passcode" -> nonEmptyText
+        .verifying(noXssChars("error.format"))
         .transform[Passcode](p => Passcode(p.removeWhitespace.toUpperCase(Locale.UK)), _.value)
         .verifying("error.format", p => p.value.length === 6 && !p.value.exists(upperCaseVowels.contains(_)))
     )(identity)(Some(_))

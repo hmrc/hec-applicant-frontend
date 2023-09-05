@@ -257,6 +257,12 @@ class VerifyEmailPasscodeControllerSpec
           }
         }
 
+        "the submitted code contains XSS chars" in {
+          List("^", "[", "^", "<", ">", "&", "]", "*", "$").foreach { chr =>
+            testFormError(Some("passcode" -> s"1234${chr}567"))("passcode.error.format")
+          }
+        }
+
         "No match passcode is entered" in {
           val passcode         = Passcode("FFFFFF")
           val userEmailAnswers = Fixtures

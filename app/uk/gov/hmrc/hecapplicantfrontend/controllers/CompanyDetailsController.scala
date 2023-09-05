@@ -42,6 +42,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.views.YesNoOption
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService.InconsistentSessionState
 import uk.gov.hmrc.hecapplicantfrontend.services.{AuditService, CtutrAttemptsService, JourneyService, TaxCheckService}
+import uk.gov.hmrc.hecapplicantfrontend.util.ControllerUtils.noXssChars
 import uk.gov.hmrc.hecapplicantfrontend.util.StringUtils.StringOps
 import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging, TimeProvider, TimeUtils}
 import uk.gov.hmrc.hecapplicantfrontend.views.html
@@ -801,6 +802,7 @@ object CompanyDetailsController {
     Form(
       mapping(
         enterCtutrFormKey -> nonEmptyText
+          .verifying(noXssChars("error.ctutrInvalidFormat"))
           .transform[CTUTR](
             s => CTUTR(s.removeWhitespace),
             _.value
