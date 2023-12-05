@@ -20,7 +20,7 @@
 @import cats.instances.string._
 @import uk.gov.hmrc.hmrcfrontend.views.Aliases.Header
 
-@this(hmrcBanner: HmrcBanner, hmrcUserResearchBanner: CustomHmrcUserResearchBanner, govukPhaseBanner: GovukPhaseBanner)
+@this(hmrcBanner: HmrcBanner, govukPhaseBanner: GovukPhaseBanner)
 
 @(params: Header)
 @import params._
@@ -129,9 +129,7 @@
       } else {}
     </div>
   </div>
-  @userResearchBanner.map { urb =>
-    @hmrcUserResearchBanner(UserResearchBanner(language, urb.url))
-  }
+
   @phaseBanner.map { pb =>
     <div class="govuk-width-container">
       @govukPhaseBanner(pb)
