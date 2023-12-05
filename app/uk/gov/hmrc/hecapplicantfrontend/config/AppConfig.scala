@@ -127,6 +127,4 @@ class AppConfig @Inject() (config: Configuration, contactFrontendConfig: Contact
     s"$baseUrl/feedback/$contactFormServiceIdentifier"
   }
 
-  val userRecruitmentUrl: String = config.get[String]("external-url.user-recruitment")
-
 }
