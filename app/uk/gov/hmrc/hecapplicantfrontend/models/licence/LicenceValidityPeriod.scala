@@ -19,20 +19,20 @@ package uk.gov.hmrc.hecapplicantfrontend.models.licence
 import cats.Eq
 import play.api.libs.json._
 
-sealed abstract class LicenceValidityPeriod(val licensePeriod: String) extends Product with Serializable
+sealed trait LicenceValidityPeriod extends Product with Serializable
 
 object LicenceValidityPeriod {
 
-  case object UpToOneYear extends LicenceValidityPeriod("UpToOneYear")
-  case object UpToTwoYears extends LicenceValidityPeriod("UpToTwoYears")
-  case object UpToThreeYears extends LicenceValidityPeriod("UpToThreeYears")
-  case object UpToFourYears extends LicenceValidityPeriod("UpToFourYears")
-  case object UpToFiveYears extends LicenceValidityPeriod("UpToFiveYears")
+  case object UpToOneYear extends LicenceValidityPeriod
+  case object UpToTwoYears extends LicenceValidityPeriod
+  case object UpToThreeYears extends LicenceValidityPeriod
+  case object UpToFourYears extends LicenceValidityPeriod
+  case object UpToFiveYears extends LicenceValidityPeriod
 
   implicit val eq: Eq[LicenceValidityPeriod] = Eq.fromUniversalEquals
 
   implicit val format: Format[LicenceValidityPeriod] = new Format[LicenceValidityPeriod] {
-    override def writes(o: LicenceValidityPeriod): JsValue = JsString(o.licensePeriod)
+    override def writes(o: LicenceValidityPeriod): JsValue = JsString(o.toString)
 
     override def reads(json: JsValue): JsResult[LicenceValidityPeriod] = json match {
       case JsString("UpToOneYear")    => JsSuccess(UpToOneYear)

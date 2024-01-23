@@ -16,11 +16,8 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models
 
-import ai.x.play.json.Jsonx
-import ai.x.play.json.SingletonEncoder.simpleName
-import ai.x.play.json.implicits.formatSingleton
 import cats.Eq
-import play.api.libs.json.Format
+import play.api.libs.json._
 
 sealed trait TaxSituation extends Product with Serializable
 
@@ -36,5 +33,15 @@ object TaxSituation {
 
   implicit val eq: Eq[TaxSituation] = Eq.fromUniversalEquals
 
-  implicit val format: Format[TaxSituation] = Jsonx.formatSealed[TaxSituation]
+  implicit val format: Format[TaxSituation] = new Format[TaxSituation] {
+    override def reads(json: JsValue): JsResult[TaxSituation] = json match {
+      case JsString("PAYE")          => JsSuccess(PAYE)
+      case JsString("SA")            => JsSuccess(SA)
+      case JsString("SAPAYE")        => JsSuccess(SAPAYE)
+      case JsString("NotChargeable") => JsSuccess(NotChargeable)
+      case _                         => JsError(s"Unknown tax situation: ${json.toString()}")
+    }
+
+    override def writes(o: TaxSituation): JsValue = JsString(o.toString)
+  }
 }

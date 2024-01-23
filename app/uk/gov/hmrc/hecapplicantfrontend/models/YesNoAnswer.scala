@@ -16,11 +16,8 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models
 
-import ai.x.play.json.Jsonx
-import ai.x.play.json.SingletonEncoder.simpleName
-import ai.x.play.json.implicits.formatSingleton
 import cats.Eq
-import play.api.libs.json.Format
+import play.api.libs.json._
 
 sealed trait YesNoAnswer extends Product with Serializable
 
@@ -32,7 +29,15 @@ object YesNoAnswer {
 
   implicit val eq: Eq[YesNoAnswer] = Eq.fromUniversalEquals
 
-  implicit val format: Format[YesNoAnswer] = Jsonx.formatSealed[YesNoAnswer]
+  implicit val format: Format[YesNoAnswer] = new Format[YesNoAnswer] {
+    override def reads(json: JsValue): JsResult[YesNoAnswer] = json match {
+      case JsString("Yes") => JsSuccess(Yes)
+      case JsString("No")  => JsSuccess(No)
+      case _               => JsError(s"Unknown yes/no answer: ${json.toString()}")
+    }
+
+    override def writes(o: YesNoAnswer): JsValue = JsString(o.toString)
+  }
 
   val values: List[YesNoAnswer] = List(Yes, No)
 
