@@ -16,24 +16,32 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models.licence
 
-import ai.x.play.json.Jsonx
-import ai.x.play.json.SingletonEncoder.simpleName
-import ai.x.play.json.implicits.formatSingleton
 import cats.Eq
-import play.api.libs.json.Format
+import play.api.libs.json._
 
-sealed trait LicenceValidityPeriod extends Product with Serializable
+sealed abstract class LicenceValidityPeriod(val licensePeriod: String) extends Product with Serializable
 
 object LicenceValidityPeriod {
 
-  case object UpToOneYear extends LicenceValidityPeriod
-  case object UpToTwoYears extends LicenceValidityPeriod
-  case object UpToThreeYears extends LicenceValidityPeriod
-  case object UpToFourYears extends LicenceValidityPeriod
-  case object UpToFiveYears extends LicenceValidityPeriod
+  case object UpToOneYear extends LicenceValidityPeriod("UpToOneYear")
+  case object UpToTwoYears extends LicenceValidityPeriod("UpToTwoYears")
+  case object UpToThreeYears extends LicenceValidityPeriod("UpToThreeYears")
+  case object UpToFourYears extends LicenceValidityPeriod("UpToFourYears")
+  case object UpToFiveYears extends LicenceValidityPeriod("UpToFiveYears")
 
   implicit val eq: Eq[LicenceValidityPeriod] = Eq.fromUniversalEquals
 
-  implicit val format: Format[LicenceValidityPeriod] = Jsonx.formatSealed[LicenceValidityPeriod]
+  implicit val format: Format[LicenceValidityPeriod] = new Format[LicenceValidityPeriod] {
+    override def writes(o: LicenceValidityPeriod): JsValue = JsString(o.licensePeriod)
+
+    override def reads(json: JsValue): JsResult[LicenceValidityPeriod] = json match {
+      case JsString("UpToOneYear")    => JsSuccess(UpToOneYear)
+      case JsString("UpToTwoYears")   => JsSuccess(UpToTwoYears)
+      case JsString("UpToThreeYears") => JsSuccess(UpToThreeYears)
+      case JsString("UpToFourYears")  => JsSuccess(UpToFourYears)
+      case JsString("UpToFiveYears")  => JsSuccess(UpToFiveYears)
+      case _                          => JsError(s"Unknown validity period: ${json.toString()}")
+    }
+  }
 
 }
