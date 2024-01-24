@@ -31,11 +31,15 @@ class PasscodeRequestResultSpec extends AnyWordSpec with Matchers {
       }
 
       s"the passcode request result is ${PasscodeRequestResult.EmailAddressAlreadyVerified}" in {
-        Json.toJson[PasscodeRequestResult](PasscodeRequestResult.EmailAddressAlreadyVerified) shouldBe JsString("EmailAddressAlreadyVerified")
+        Json.toJson[PasscodeRequestResult](PasscodeRequestResult.EmailAddressAlreadyVerified) shouldBe JsString(
+          "EmailAddressAlreadyVerified"
+        )
       }
 
       s"the passcode request result is ${PasscodeRequestResult.MaximumNumberOfEmailsExceeded}" in {
-        Json.toJson[PasscodeRequestResult](PasscodeRequestResult.MaximumNumberOfEmailsExceeded) shouldBe JsString("MaximumNumberOfEmailsExceeded")
+        Json.toJson[PasscodeRequestResult](PasscodeRequestResult.MaximumNumberOfEmailsExceeded) shouldBe JsString(
+          "MaximumNumberOfEmailsExceeded"
+        )
       }
 
       s"the passcode request result is ${PasscodeRequestResult.BadEmailAddress}" in {
@@ -50,11 +54,13 @@ class PasscodeRequestResultSpec extends AnyWordSpec with Matchers {
       }
 
       s"the passcode request result is ${PasscodeRequestResult.EmailAddressAlreadyVerified}" in {
-        JsString("EmailAddressAlreadyVerified").as[PasscodeRequestResult] shouldBe PasscodeRequestResult.EmailAddressAlreadyVerified
+        JsString("EmailAddressAlreadyVerified")
+          .as[PasscodeRequestResult] shouldBe PasscodeRequestResult.EmailAddressAlreadyVerified
       }
 
       s"the passcode request result is ${PasscodeRequestResult.MaximumNumberOfEmailsExceeded}" in {
-        JsString("MaximumNumberOfEmailsExceeded").as[PasscodeRequestResult] shouldBe PasscodeRequestResult.MaximumNumberOfEmailsExceeded
+        JsString("MaximumNumberOfEmailsExceeded")
+          .as[PasscodeRequestResult] shouldBe PasscodeRequestResult.MaximumNumberOfEmailsExceeded
       }
 
       s"the passcode request result is ${PasscodeRequestResult.BadEmailAddress}" in {

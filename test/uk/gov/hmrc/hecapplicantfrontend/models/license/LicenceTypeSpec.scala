@@ -28,11 +28,15 @@ class LicenceTypeSpec extends AnyWordSpec with Matchers {
     "write to JSON" when {
 
       s"the licence type is ${LicenceType.DriverOfTaxisAndPrivateHires}" in {
-        Json.toJson[LicenceType](LicenceType.DriverOfTaxisAndPrivateHires) shouldBe JsString("DriverOfTaxisAndPrivateHires")
+        Json.toJson[LicenceType](LicenceType.DriverOfTaxisAndPrivateHires) shouldBe JsString(
+          "DriverOfTaxisAndPrivateHires"
+        )
       }
 
       s"the licence type is ${LicenceType.OperatorOfPrivateHireVehicles}" in {
-        Json.toJson[LicenceType](LicenceType.OperatorOfPrivateHireVehicles) shouldBe JsString("OperatorOfPrivateHireVehicles")
+        Json.toJson[LicenceType](LicenceType.OperatorOfPrivateHireVehicles) shouldBe JsString(
+          "OperatorOfPrivateHireVehicles"
+        )
       }
 
       s"the licence type is ${LicenceType.ScrapMetalMobileCollector}" in {

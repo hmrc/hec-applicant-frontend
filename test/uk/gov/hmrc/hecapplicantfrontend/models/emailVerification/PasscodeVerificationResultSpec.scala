@@ -39,7 +39,9 @@ class PasscodeVerificationResultSpec extends AnyWordSpec with Matchers {
       }
 
       s"the passcode verification result is ${PasscodeVerificationResult.TooManyAttempts}" in {
-        Json.toJson[PasscodeVerificationResult](PasscodeVerificationResult.TooManyAttempts) shouldBe JsString("TooManyAttempts")
+        Json.toJson[PasscodeVerificationResult](PasscodeVerificationResult.TooManyAttempts) shouldBe JsString(
+          "TooManyAttempts"
+        )
       }
     }
 
