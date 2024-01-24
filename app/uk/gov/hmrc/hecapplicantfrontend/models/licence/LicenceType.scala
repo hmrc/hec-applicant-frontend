@@ -42,7 +42,7 @@ object LicenceType {
       case JsString("ScrapMetalMobileCollector")     => JsSuccess(ScrapMetalMobileCollector)
       case JsString("ScrapMetalDealerSite")          => JsSuccess(ScrapMetalDealerSite)
       case JsString("BookingOffice")                 => JsSuccess(BookingOffice)
-      case _                                         => JsError(s"Unknown validity period: ${json.toString()}")
+      case _                                         => JsError(s"Unknown licence type: ${json.toString()}")
     }
 
     override def writes(o: LicenceType): JsValue = JsString(o.toString)

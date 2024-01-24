@@ -38,7 +38,7 @@ object LicenceTimeTrading {
       case JsString("TwoToFourYears")   => JsSuccess(TwoToFourYears)
       case JsString("FourToEightYears") => JsSuccess(FourToEightYears)
       case JsString("EightYearsOrMore") => JsSuccess(EightYearsOrMore)
-      case _                            => JsError(s"Unknown validity period: ${json.toString()}")
+      case _                            => JsError(s"Unknown licence time trading period: ${json.toString()}")
     }
 
     override def writes(o: LicenceTimeTrading): JsValue = JsString(o.toString)
