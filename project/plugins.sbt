@@ -9,7 +9,7 @@ ThisBuild / libraryDependencySchemes ++= Seq(
   "org.scala-lang.modules" %% "scala-xml" % VersionScheme.Always
 )
 
-addSbtPlugin("uk.gov.hmrc"               % "sbt-auto-build"     % "3.17.0")
+addSbtPlugin("uk.gov.hmrc"               % "sbt-auto-build"     % "3.20.0")
 addSbtPlugin("org.scalameta"             % "sbt-scalafmt"       % "2.4.6")
 addSbtPlugin("uk.gov.hmrc"               % "sbt-distributables" % "2.4.0")
 addSbtPlugin("com.typesafe.play"         % "sbt-plugin"         % "2.8.19")
