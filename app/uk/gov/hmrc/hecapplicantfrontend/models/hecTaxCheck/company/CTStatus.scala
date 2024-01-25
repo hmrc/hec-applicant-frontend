@@ -36,7 +36,7 @@ object CTStatus {
       case JsString("ReturnFound")        => JsSuccess(ReturnFound)
       case JsString("NoticeToFileIssued") => JsSuccess(NoticeToFileIssued)
       case JsString("NoReturnFound")      => JsSuccess(NoReturnFound)
-      case _                              => JsError(s"Unknown CT status ${json.toString()}")
+      case _                              => JsError(s"Unknown CT status: ${json.toString()}")
     }
 
     override def writes(o: CTStatus): JsValue = JsString(o.toString)

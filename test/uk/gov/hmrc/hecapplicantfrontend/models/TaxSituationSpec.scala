@@ -18,7 +18,7 @@ package uk.gov.hmrc.hecapplicantfrontend.models
 
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import play.api.libs.json.{JsString, Json}
+import play.api.libs.json.{JsError, JsString, Json}
 
 class TaxSituationSpec extends AnyWordSpec with Matchers {
 
@@ -59,6 +59,16 @@ class TaxSituationSpec extends AnyWordSpec with Matchers {
 
       s"the tax situation type is ${TaxSituation.NotChargeable}" in {
         JsString("NotChargeable").as[TaxSituation] shouldBe TaxSituation.NotChargeable
+      }
+    }
+
+    "fail to read from JSON" when {
+
+      val js = JsString("aaaaaaa")
+
+      s"the email type is not recognised" in {
+        js.validate[TaxSituation] shouldBe JsError(s"Unknown tax situation: ${js.toString()}")
+
       }
     }
   }

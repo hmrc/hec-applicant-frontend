@@ -18,7 +18,7 @@ package uk.gov.hmrc.hecapplicantfrontend.models.license
 
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import play.api.libs.json.{JsString, Json}
+import play.api.libs.json.{JsError, JsString, Json}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
 
 class LicenceTypeSpec extends AnyWordSpec with Matchers {
@@ -72,6 +72,16 @@ class LicenceTypeSpec extends AnyWordSpec with Matchers {
 
       s"the licence type is ${LicenceType.BookingOffice}" in {
         JsString("BookingOffice").as[LicenceType] shouldBe LicenceType.BookingOffice
+      }
+    }
+
+    "fail to read from JSON" when {
+
+      val js = JsString("aaaaaaa")
+
+      s"the email type is not recognised" in {
+        js.validate[LicenceType] shouldBe JsError(s"Unknown licence type: ${js.toString()}")
+
       }
     }
   }

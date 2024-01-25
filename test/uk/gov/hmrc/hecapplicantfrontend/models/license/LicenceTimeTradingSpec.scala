@@ -18,7 +18,7 @@ package uk.gov.hmrc.hecapplicantfrontend.models.license
 
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import play.api.libs.json.{JsString, Json}
+import play.api.libs.json.{JsError, JsString, Json}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceTimeTrading
 
 class LicenceTimeTradingSpec extends AnyWordSpec with Matchers {
@@ -60,6 +60,16 @@ class LicenceTimeTradingSpec extends AnyWordSpec with Matchers {
 
       s"the licence time trading is ${LicenceTimeTrading.EightYearsOrMore}" in {
         JsString("EightYearsOrMore").as[LicenceTimeTrading] shouldBe LicenceTimeTrading.EightYearsOrMore
+      }
+    }
+
+    "fail to read from JSON" when {
+
+      val js = JsString("aaaaaaa")
+
+      s"the email type is not recognised" in {
+        js.validate[LicenceTimeTrading] shouldBe JsError(s"Unknown licence time trading period: ${js.toString()}")
+
       }
     }
   }

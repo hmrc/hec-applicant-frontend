@@ -27,7 +27,7 @@ object HECTaxCheckSource {
   implicit val format: Format[HECTaxCheckSource] = new Format[HECTaxCheckSource] {
     override def reads(json: JsValue): JsResult[HECTaxCheckSource] = json match {
       case JsString("Digital") => JsSuccess(Digital)
-      case _                   => JsError(s"Unknown HEC check source: ${json.toString()}")
+      case _                   => JsError(s"Unknown HEC tax check source: ${json.toString()}")
     }
 
     override def writes(o: HECTaxCheckSource): JsValue = JsString(o.toString)

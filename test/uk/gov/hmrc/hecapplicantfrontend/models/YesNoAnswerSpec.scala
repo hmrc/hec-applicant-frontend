@@ -18,7 +18,7 @@ package uk.gov.hmrc.hecapplicantfrontend.models
 
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import play.api.libs.json.{JsString, Json}
+import play.api.libs.json.{JsError, JsString, Json}
 
 class YesNoAnswerSpec extends AnyWordSpec with Matchers {
 
@@ -43,6 +43,16 @@ class YesNoAnswerSpec extends AnyWordSpec with Matchers {
 
       s"the yes/no type is ${YesNoAnswer.No}" in {
         JsString("No").as[YesNoAnswer] shouldBe YesNoAnswer.No
+      }
+    }
+
+    "fail to read from JSON" when {
+
+      val js = JsString("aaaaaaa")
+
+      s"the email type is not recognised" in {
+        js.validate[YesNoAnswer] shouldBe JsError(s"Unknown yes/no answer: ${js.toString()}")
+
       }
     }
   }

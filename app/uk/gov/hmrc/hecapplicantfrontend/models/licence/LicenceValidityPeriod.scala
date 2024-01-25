@@ -40,7 +40,7 @@ object LicenceValidityPeriod {
       case JsString("UpToThreeYears") => JsSuccess(UpToThreeYears)
       case JsString("UpToFourYears")  => JsSuccess(UpToFourYears)
       case JsString("UpToFiveYears")  => JsSuccess(UpToFiveYears)
-      case _                          => JsError(s"Unknown validity period: ${json.toString()}")
+      case _                          => JsError(s"Unknown licence validity period: ${json.toString()}")
     }
   }
 

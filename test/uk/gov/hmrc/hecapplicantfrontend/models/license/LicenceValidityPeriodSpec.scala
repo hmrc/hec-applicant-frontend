@@ -18,7 +18,7 @@ package uk.gov.hmrc.hecapplicantfrontend.models.license
 
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import play.api.libs.json.{JsString, Json}
+import play.api.libs.json.{JsError, JsString, Json}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceValidityPeriod
 
 class LicenceValidityPeriodSpec extends AnyWordSpec with Matchers {
@@ -68,6 +68,16 @@ class LicenceValidityPeriodSpec extends AnyWordSpec with Matchers {
 
       s"the licence validity period is ${LicenceValidityPeriod.UpToFiveYears}" in {
         JsString("UpToFiveYears").as[LicenceValidityPeriod] shouldBe LicenceValidityPeriod.UpToFiveYears
+      }
+    }
+
+    "fail to read from JSON" when {
+
+      val js = JsString("aaaaaaa")
+
+      s"the email type is not recognised" in {
+        js.validate[LicenceValidityPeriod] shouldBe JsError(s"Unknown licence validity period: ${js.toString()}")
+
       }
     }
   }

@@ -18,7 +18,7 @@ package uk.gov.hmrc.hecapplicantfrontend.models.emailVerification
 
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import play.api.libs.json.{JsString, Json}
+import play.api.libs.json.{JsError, JsString, Json}
 
 class PasscodeRequestResultSpec extends AnyWordSpec with Matchers {
 
@@ -65,6 +65,16 @@ class PasscodeRequestResultSpec extends AnyWordSpec with Matchers {
 
       s"the passcode request result is ${PasscodeRequestResult.BadEmailAddress}" in {
         JsString("BadEmailAddress").as[PasscodeRequestResult] shouldBe PasscodeRequestResult.BadEmailAddress
+      }
+    }
+
+    "fail to read from JSON" when {
+
+      val js = JsString("aaaaaaa")
+
+      s"the email type is not recognised" in {
+        js.validate[PasscodeRequestResult] shouldBe JsError(s"Unknown passcode request result: ${js.toString()}")
+
       }
     }
   }

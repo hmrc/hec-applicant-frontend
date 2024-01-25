@@ -18,7 +18,7 @@ package uk.gov.hmrc.hecapplicantfrontend.models
 
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import play.api.libs.json.{JsString, Json}
+import play.api.libs.json.{JsError, JsString, Json}
 
 class AuthenticationStatusSpec extends AnyWordSpec with Matchers {
 
@@ -45,6 +45,16 @@ class AuthenticationStatusSpec extends AnyWordSpec with Matchers {
         JsString("NotAuthenticated").as[AuthenticationStatus] shouldBe AuthenticationStatus.NotAuthenticated
       }
 
+    }
+
+    "fail to read from JSON" when {
+
+      val js = JsString("aaaaaaa")
+
+      s"the authentication status is not recognised" in {
+        js.validate[AuthenticationStatus] shouldBe JsError(s"Unknown authentication status: ${js.toString()}")
+
+      }
     }
   }
 }

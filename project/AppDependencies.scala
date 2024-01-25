@@ -7,7 +7,7 @@ object AppDependencies {
   val monocleVersion   = "2.1.0"
   val hmrcMongoVersion = "1.3.0"
 
-  val compile = Seq(
+  val compile: Seq[ModuleID] = Seq(
     "uk.gov.hmrc"                %% "bootstrap-frontend-play-28"    % bootStrapVersion,
     "uk.gov.hmrc.mongo"          %% "hmrc-mongo-play-28"            % hmrcMongoVersion,
     "uk.gov.hmrc"                %% "play-frontend-hmrc"            % "7.29.0-play-28",
@@ -20,7 +20,7 @@ object AppDependencies {
     "uk.gov.hmrc"                %% "play-conditional-form-mapping" % "1.13.0-play-28"
   )
 
-  val test = Seq(
+  val test: Seq[ModuleID] = Seq(
     "uk.gov.hmrc"            %% "bootstrap-test-play-28"  % bootStrapVersion    % Test,
     "uk.gov.hmrc.mongo"      %% "hmrc-mongo-test-play-28" % hmrcMongoVersion    % Test,
     "org.scalatest"          %% "scalatest"               % "3.2.15"            % Test,

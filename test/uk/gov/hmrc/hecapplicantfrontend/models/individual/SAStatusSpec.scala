@@ -18,7 +18,7 @@ package uk.gov.hmrc.hecapplicantfrontend.models.individual
 
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import play.api.libs.json.{JsString, Json}
+import play.api.libs.json.{JsError, JsString, Json}
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.individual.SAStatus
 
 class SAStatusSpec extends AnyWordSpec with Matchers {
@@ -52,6 +52,16 @@ class SAStatusSpec extends AnyWordSpec with Matchers {
 
       s"the SA status is ${SAStatus.NoReturnFound}" in {
         JsString("NoReturnFound").as[SAStatus] shouldBe SAStatus.NoReturnFound
+      }
+    }
+
+    "fail to read from JSON" when {
+
+      val js = JsString("aaaaaaa")
+
+      s"the email type is not recognised" in {
+        js.validate[SAStatus] shouldBe JsError(s"Unknown SA status: ${js.toString()}")
+
       }
     }
   }

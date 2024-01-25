@@ -18,7 +18,7 @@ package uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck
 
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import play.api.libs.json.{JsString, Json}
+import play.api.libs.json.{JsError, JsString, Json}
 
 class HecTaxCheckSourceSpec extends AnyWordSpec with Matchers {
 
@@ -35,6 +35,16 @@ class HecTaxCheckSourceSpec extends AnyWordSpec with Matchers {
 
       s"the hec tax check source is ${HECTaxCheckSource.Digital}" in {
         JsString("Digital").as[HECTaxCheckSource] shouldBe HECTaxCheckSource.Digital
+      }
+    }
+
+    "fail to read from JSON" when {
+
+      val js = JsString("aaaaaaa")
+
+      s"the email type is not recognised" in {
+        js.validate[HECTaxCheckSource] shouldBe JsError(s"Unknown HEC tax check source: ${js.toString()}")
+
       }
     }
   }
