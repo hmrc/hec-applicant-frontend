@@ -42,7 +42,7 @@ class HecTaxCheckSourceSpec extends AnyWordSpec with Matchers {
 
       val js = JsString("aaaaaaa")
 
-      s"the email type is not recognised" in {
+      s"the HEC tax check source is not recognised" in {
         js.validate[HECTaxCheckSource] shouldBe JsError(s"Unknown HEC tax check source: ${js.toString()}")
 
       }

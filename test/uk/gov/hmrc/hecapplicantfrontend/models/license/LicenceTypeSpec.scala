@@ -79,7 +79,7 @@ class LicenceTypeSpec extends AnyWordSpec with Matchers {
 
       val js = JsString("aaaaaaa")
 
-      s"the email type is not recognised" in {
+      s"the licence type is not recognised" in {
         js.validate[LicenceType] shouldBe JsError(s"Unknown licence type: ${js.toString()}")
 
       }

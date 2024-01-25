@@ -50,7 +50,7 @@ class YesNoAnswerSpec extends AnyWordSpec with Matchers {
 
       val js = JsString("aaaaaaa")
 
-      s"the email type is not recognised" in {
+      s"the yes/no answer is not recognised" in {
         js.validate[YesNoAnswer] shouldBe JsError(s"Unknown yes/no answer: ${js.toString()}")
 
       }

@@ -68,7 +68,7 @@ class PasscodeVerificationResultSpec extends AnyWordSpec with Matchers {
 
       val js = JsString("aaaaaaa")
 
-      s"the email type is not recognised" in {
+      s"the passcode verification result is not recognised" in {
         js.validate[PasscodeVerificationResult] shouldBe JsError(
           s"Unknown passcode verification result: ${js.toString()}"
         )

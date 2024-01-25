@@ -59,7 +59,7 @@ class SAStatusSpec extends AnyWordSpec with Matchers {
 
       val js = JsString("aaaaaaa")
 
-      s"the email type is not recognised" in {
+      s"the SA status is not recognised" in {
         js.validate[SAStatus] shouldBe JsError(s"Unknown SA status: ${js.toString()}")
 
       }

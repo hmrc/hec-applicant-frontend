@@ -59,7 +59,7 @@ class CTStatusSpec extends AnyWordSpec with Matchers {
 
       val js = JsString("aaaaaaa")
 
-      s"the email type is not recognised" in {
+      s"the CT status is not recognised" in {
         js.validate[CTStatus] shouldBe JsError(s"Unknown CT status: ${js.toString()}")
 
       }

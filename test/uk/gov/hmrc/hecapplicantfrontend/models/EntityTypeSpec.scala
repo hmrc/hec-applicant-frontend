@@ -50,7 +50,7 @@ class EntityTypeSpec extends AnyWordSpec with Matchers {
 
       val js = JsString("aaaaaaa")
 
-      s"the email type is not recognised" in {
+      s"the entity type is not recognised" in {
         js.validate[EntityType] shouldBe JsError(s"Unknown entity type: ${js.toString()}")
 
       }

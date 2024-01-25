@@ -66,7 +66,7 @@ class TaxSituationSpec extends AnyWordSpec with Matchers {
 
       val js = JsString("aaaaaaa")
 
-      s"the email type is not recognised" in {
+      s"the tax situation is not recognised" in {
         js.validate[TaxSituation] shouldBe JsError(s"Unknown tax situation: ${js.toString()}")
 
       }

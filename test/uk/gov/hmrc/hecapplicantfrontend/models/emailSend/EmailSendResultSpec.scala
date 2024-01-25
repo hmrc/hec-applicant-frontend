@@ -49,7 +49,7 @@ class EmailSendResultSpec extends AnyWordSpec with Matchers {
 
         val js = JsString("aaaaaaa")
 
-        s"the email type is not recognised" in {
+        s"the email send result is not recognised" in {
           js.validate[EmailSendResult] shouldBe JsError(s"Unknown email send result: ${js.toString()}")
 
         }

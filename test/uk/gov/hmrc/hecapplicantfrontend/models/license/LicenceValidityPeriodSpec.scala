@@ -75,7 +75,7 @@ class LicenceValidityPeriodSpec extends AnyWordSpec with Matchers {
 
       val js = JsString("aaaaaaa")
 
-      s"the email type is not recognised" in {
+      s"the licence validity period is not recognised" in {
         js.validate[LicenceValidityPeriod] shouldBe JsError(s"Unknown licence validity period: ${js.toString()}")
 
       }

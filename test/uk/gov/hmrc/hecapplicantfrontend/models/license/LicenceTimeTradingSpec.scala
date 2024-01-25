@@ -67,7 +67,7 @@ class LicenceTimeTradingSpec extends AnyWordSpec with Matchers {
 
       val js = JsString("aaaaaaa")
 
-      s"the email type is not recognised" in {
+      s"the licence time trading period is not recognised" in {
         js.validate[LicenceTimeTrading] shouldBe JsError(s"Unknown licence time trading period: ${js.toString()}")
 
       }
