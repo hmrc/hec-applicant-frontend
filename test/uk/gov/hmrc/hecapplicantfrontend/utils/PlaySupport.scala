@@ -66,7 +66,7 @@ trait PlaySupport extends AnyWordSpec with Matchers with BeforeAndAfterAll with 
     super.beforeAll()
   }
 
-  override def afterAll(): Unit = {
+  override def afterAll(): Unit              = {
     Play.stop(fakeApplication)
     super.afterAll()
   }

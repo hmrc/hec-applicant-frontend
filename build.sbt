@@ -1,5 +1,4 @@
 import scoverage.ScoverageKeys
-import uk.gov.hmrc.DefaultBuildSettings.integrationTestSettings
 
 val appName = "hec-applicant-frontend"
 
@@ -14,7 +13,6 @@ lazy val scoverageSettings =
 lazy val microservice = Project(appName, file("."))
   .enablePlugins(
     play.sbt.PlayScala,
-    SbtAutoBuildPlugin,
     SbtGitVersioning,
     SbtDistributablesPlugin
   )
@@ -28,7 +26,6 @@ lazy val microservice = Project(appName, file("."))
     majorVersion := 1,
     scalaVersion := "2.13.12",
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
-    Assets / pipelineStages := Seq(gzip),
     scalacOptions ++= Seq(
       "-Wconf:cat=unused-imports&src=html/.*:s",
       "-Wconf:src=routes/.*:s",
@@ -36,8 +33,6 @@ lazy val microservice = Project(appName, file("."))
     ),
     Compile / doc / sources := Seq.empty
   )
-  .configs(IntegrationTest)
-  .settings(integrationTestSettings(): _*)
   .settings(resolvers += Resolver.jcenterRepo)
   .settings(routesImport := Seq.empty)
   .settings(TwirlKeys.templateImports := Seq.empty)

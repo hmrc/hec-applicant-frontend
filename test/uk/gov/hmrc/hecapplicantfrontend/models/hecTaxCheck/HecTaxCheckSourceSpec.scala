@@ -20,7 +20,6 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.{JsError, JsString, Json}
 
-
 class HecTaxCheckSourceSpec extends AnyWordSpec with Matchers {
 
   "HecTaxCheckSource" should {

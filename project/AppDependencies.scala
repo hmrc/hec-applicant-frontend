@@ -24,6 +24,6 @@ object AppDependencies {
     "uk.gov.hmrc"            %% "bootstrap-test-play-30"  % bootStrapVersion    % Test,
     "uk.gov.hmrc.mongo"      %% "hmrc-mongo-test-play-30" % hmrcMongoVersion    % Test,
     "org.jsoup"               % "jsoup"                   % "1.15.4"            % Test,
-    "org.scalamock"          %% "scalamock"               % "5.2.0"             % Test,
+    "org.scalamock"          %% "scalamock"               % "5.2.0"             % Test
   )
 }
