@@ -16,11 +16,8 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models.licence
 
-import ai.x.play.json.Jsonx
-import ai.x.play.json.SingletonEncoder.simpleName
-import ai.x.play.json.implicits.formatSingleton
 import cats.Eq
-import play.api.libs.json.Format
+import play.api.libs.json._
 
 sealed trait LicenceValidityPeriod extends Product with Serializable
 
@@ -34,6 +31,17 @@ object LicenceValidityPeriod {
 
   implicit val eq: Eq[LicenceValidityPeriod] = Eq.fromUniversalEquals
 
-  implicit val format: Format[LicenceValidityPeriod] = Jsonx.formatSealed[LicenceValidityPeriod]
+  implicit val format: Format[LicenceValidityPeriod] = new Format[LicenceValidityPeriod] {
+    override def reads(json: JsValue): JsResult[LicenceValidityPeriod] = json match {
+      case JsString("UpToOneYear")    => JsSuccess(UpToOneYear)
+      case JsString("UpToTwoYears")   => JsSuccess(UpToTwoYears)
+      case JsString("UpToThreeYears") => JsSuccess(UpToThreeYears)
+      case JsString("UpToFourYears")  => JsSuccess(UpToFourYears)
+      case JsString("UpToFiveYears")  => JsSuccess(UpToFiveYears)
+      case _                          => JsError(s"Unknown licence validity period: ${json.toString()}")
+    }
+
+    override def writes(o: LicenceValidityPeriod): JsValue = JsString(o.toString)
+  }
 
 }

@@ -16,10 +16,7 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck
 
-import ai.x.play.json.Jsonx
-import ai.x.play.json.SingletonEncoder.simpleName
-import ai.x.play.json.implicits.formatSingleton
-import play.api.libs.json.Format
+import play.api.libs.json._
 
 sealed trait HECTaxCheckSource extends Product with Serializable
 
@@ -27,6 +24,13 @@ object HECTaxCheckSource {
 
   case object Digital extends HECTaxCheckSource
 
-  implicit val format: Format[HECTaxCheckSource] = Jsonx.formatSealed[HECTaxCheckSource]
+  implicit val format: Format[HECTaxCheckSource] = new Format[HECTaxCheckSource] {
+    override def reads(json: JsValue): JsResult[HECTaxCheckSource] = json match {
+      case JsString("Digital") => JsSuccess(Digital)
+      case _                   => JsError(s"Unknown HEC tax check source: ${json.toString()}")
+    }
+
+    override def writes(o: HECTaxCheckSource): JsValue = JsString(o.toString)
+  }
 
 }

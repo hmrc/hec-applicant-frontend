@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models
 
-import ai.x.play.json.Jsonx
 import monocle.Lens
 import monocle.macros.Lenses
 import play.api.libs.json._
@@ -28,10 +27,15 @@ object UserAnswersType {
   case object Incomplete extends UserAnswersType
   case object Complete extends UserAnswersType
 
-  import ai.x.play.json.SingletonEncoder.simpleName
-  import ai.x.play.json.implicits.formatSingleton
+  implicit val format: Format[UserAnswersType] = new Format[UserAnswersType] {
+    override def reads(json: JsValue): JsResult[UserAnswersType] = json match {
+      case JsString("Incomplete") => JsSuccess(Incomplete)
+      case JsString("Complete")   => JsSuccess(Complete)
+      case _                      => JsError(s"Unknown user answers type: ${json.toString()}")
+    }
 
-  implicit val format: Format[UserAnswersType] = Jsonx.formatSealed[UserAnswersType]
+    override def writes(o: UserAnswersType): JsValue = JsString(o.toString)
+  }
 }
 
 sealed trait UserAnswers extends Product with Serializable {
@@ -244,8 +248,8 @@ object UserAnswers {
 }
 
 object CompleteUserAnswers {
-  import IndividualUserAnswers._
   import CompanyUserAnswers._
+  import IndividualUserAnswers._
 
   implicit class CompleteUserAnswersOps(private val c: CompleteUserAnswers) extends AnyVal {
     def foldOnEntityType[A](

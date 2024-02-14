@@ -17,10 +17,7 @@
 package uk.gov.hmrc.hecapplicantfrontend.models
 
 import cats.Eq
-import ai.x.play.json.Jsonx
-import ai.x.play.json.SingletonEncoder.simpleName
-import ai.x.play.json.implicits.formatSingleton
-import play.api.libs.json.Format
+import play.api.libs.json._
 
 sealed trait EntityType extends Product with Serializable
 
@@ -32,6 +29,14 @@ object EntityType {
 
   implicit val eq: Eq[EntityType] = Eq.fromUniversalEquals
 
-  implicit val format: Format[EntityType] = Jsonx.formatSealed[EntityType]
+  implicit val format: Format[EntityType] = new Format[EntityType] {
+    override def reads(json: JsValue): JsResult[EntityType] = json match {
+      case JsString("Individual") => JsSuccess(Individual)
+      case JsString("Company")    => JsSuccess(Company)
+      case _                      => JsError(s"Unknown entity type: ${json.toString()}")
+    }
+
+    override def writes(o: EntityType): JsValue = JsString(o.toString)
+  }
 
 }

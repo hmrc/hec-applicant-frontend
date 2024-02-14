@@ -16,11 +16,8 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models
 
-import ai.x.play.json.Jsonx
-import ai.x.play.json.SingletonEncoder.simpleName
-import ai.x.play.json.implicits.formatSingleton
 import cats.Eq
-import play.api.libs.json.{Format, Json, OFormat}
+import play.api.libs.json._
 
 sealed trait EmailType extends Product with Serializable
 
@@ -31,7 +28,15 @@ object EmailType {
 
   implicit val eq: Eq[EmailType] = Eq.fromUniversalEquals
 
-  implicit val format: Format[EmailType] = Jsonx.formatSealed[EmailType]
+  implicit val format: Format[EmailType] = new Format[EmailType] {
+    override def reads(json: JsValue): JsResult[EmailType] = json match {
+      case JsString("GGEmail")        => JsSuccess(GGEmail)
+      case JsString("DifferentEmail") => JsSuccess(DifferentEmail)
+      case _                          => JsError(s"Unknown email type: ${json.toString()}")
+    }
+
+    override def writes(o: EmailType): JsValue = JsString(o.toString)
+  }
 
 }
 

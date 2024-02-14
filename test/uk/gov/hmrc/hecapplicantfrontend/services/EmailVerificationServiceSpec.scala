@@ -92,12 +92,12 @@ class EmailVerificationServiceSpec
   )
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  val authenticatedRequest        = AuthenticatedRequest(new MessagesRequest(FakeRequest(), messagesApi))
-  implicit val requestWithSession = RequestWithSessionData(authenticatedRequest, session, Language.English)
+  val authenticatedRequest: AuthenticatedRequest[AnyContentAsEmpty.type] = AuthenticatedRequest(new MessagesRequest(FakeRequest(), messagesApi))
+  implicit val requestWithSession: RequestWithSessionData[AnyContentAsEmpty.type] = RequestWithSessionData(authenticatedRequest, session, Language.English)
 
   val serviceNameMessageKey = "emailVerification.passcodeEmail.serviceName"
-  val serviceNameEnglish    = messages.messagesApi(serviceNameMessageKey)(Lang("en"))
-  val serviceNameWelsh      = messages.messagesApi(serviceNameMessageKey)(Lang("cy"))
+  val serviceNameEnglish: String = messages.messagesApi(serviceNameMessageKey)(Lang("en"))
+  val serviceNameWelsh: String = messages.messagesApi(serviceNameMessageKey)(Lang("cy"))
 
   "EmailVerificationServiceSpec" when {
     val userSelectedEmail = UserSelectedEmail(EmailType.GGEmail, EmailAddress("user@test.com"))

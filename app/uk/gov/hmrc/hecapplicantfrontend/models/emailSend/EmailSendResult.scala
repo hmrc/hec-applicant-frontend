@@ -16,11 +16,8 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models.emailSend
 
-import ai.x.play.json.Jsonx
 import cats.Eq
-import play.api.libs.json.Format
-import ai.x.play.json.SingletonEncoder.simpleName
-import ai.x.play.json.implicits.formatSingleton
+import play.api.libs.json._
 
 sealed trait EmailSendResult extends Product with Serializable
 
@@ -31,5 +28,13 @@ object EmailSendResult {
 
   implicit val eq: Eq[EmailSendResult] = Eq.fromUniversalEquals
 
-  implicit val format: Format[EmailSendResult] = Jsonx.formatSealed[EmailSendResult]
+  implicit val format: Format[EmailSendResult] = new Format[EmailSendResult] {
+    override def reads(json: JsValue): JsResult[EmailSendResult] = json match {
+      case JsString("EmailSent")        => JsSuccess(EmailSent)
+      case JsString("EmailSentFailure") => JsSuccess(EmailSentFailure)
+      case _                            => JsError(s"Unknown email send result: ${json.toString()}")
+    }
+
+    override def writes(o: EmailSendResult): JsValue = JsString(o.toString)
+  }
 }
