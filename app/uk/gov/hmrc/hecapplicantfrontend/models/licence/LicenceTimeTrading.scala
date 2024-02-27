@@ -16,11 +16,8 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models.licence
 
-import ai.x.play.json.Jsonx
-import ai.x.play.json.SingletonEncoder.simpleName
-import ai.x.play.json.implicits.formatSingleton
 import cats.Eq
-import play.api.libs.json.Format
+import play.api.libs.json._
 
 sealed trait LicenceTimeTrading extends Product with Serializable
 
@@ -35,5 +32,15 @@ object LicenceTimeTrading {
 
   implicit val eq: Eq[LicenceTimeTrading] = Eq.fromUniversalEquals
 
-  implicit val format: Format[LicenceTimeTrading] = Jsonx.formatSealed[LicenceTimeTrading]
+  implicit val format: Format[LicenceTimeTrading] = new Format[LicenceTimeTrading] {
+    override def reads(json: JsValue): JsResult[LicenceTimeTrading] = json match {
+      case JsString("ZeroToTwoYears")   => JsSuccess(ZeroToTwoYears)
+      case JsString("TwoToFourYears")   => JsSuccess(TwoToFourYears)
+      case JsString("FourToEightYears") => JsSuccess(FourToEightYears)
+      case JsString("EightYearsOrMore") => JsSuccess(EightYearsOrMore)
+      case _                            => JsError(s"Unknown licence time trading period: ${json.toString()}")
+    }
+
+    override def writes(o: LicenceTimeTrading): JsValue = JsString(o.toString)
+  }
 }

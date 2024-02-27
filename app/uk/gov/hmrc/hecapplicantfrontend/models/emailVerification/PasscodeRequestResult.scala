@@ -16,11 +16,8 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models.emailVerification
 
-import ai.x.play.json.Jsonx
-import ai.x.play.json.SingletonEncoder.simpleName
-import ai.x.play.json.implicits.formatSingleton
 import cats.Eq
-import play.api.libs.json.Format
+import play.api.libs.json._
 
 sealed trait PasscodeRequestResult extends Product with Serializable
 
@@ -36,6 +33,16 @@ object PasscodeRequestResult {
 
   implicit val eq: Eq[PasscodeRequestResult] = Eq.fromUniversalEquals
 
-  implicit val format: Format[PasscodeRequestResult] = Jsonx.formatSealed[PasscodeRequestResult]
+  implicit val format: Format[PasscodeRequestResult] = new Format[PasscodeRequestResult] {
+    override def reads(json: JsValue): JsResult[PasscodeRequestResult] = json match {
+      case JsString("PasscodeSent")                  => JsSuccess(PasscodeSent)
+      case JsString("EmailAddressAlreadyVerified")   => JsSuccess(EmailAddressAlreadyVerified)
+      case JsString("MaximumNumberOfEmailsExceeded") => JsSuccess(MaximumNumberOfEmailsExceeded)
+      case JsString("BadEmailAddress")               => JsSuccess(BadEmailAddress)
+      case _                                         => JsError(s"Unknown passcode request result: ${json.toString()}")
+    }
+
+    override def writes(o: PasscodeRequestResult): JsValue = JsString(o.toString)
+  }
 
 }

@@ -16,11 +16,8 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.company
 
-import ai.x.play.json.Jsonx
-import ai.x.play.json.SingletonEncoder.simpleName
-import ai.x.play.json.implicits.formatSingleton
 import cats.Eq
-import play.api.libs.json.Format
+import play.api.libs.json._
 
 sealed trait CTStatus extends Product with Serializable
 
@@ -34,6 +31,15 @@ object CTStatus {
 
   implicit val eq: Eq[CTStatus] = Eq.fromUniversalEquals
 
-  implicit val format: Format[CTStatus] = Jsonx.formatSealed[CTStatus]
+  implicit val format: Format[CTStatus] = new Format[CTStatus] {
+    override def reads(json: JsValue): JsResult[CTStatus] = json match {
+      case JsString("ReturnFound")        => JsSuccess(ReturnFound)
+      case JsString("NoticeToFileIssued") => JsSuccess(NoticeToFileIssued)
+      case JsString("NoReturnFound")      => JsSuccess(NoReturnFound)
+      case _                              => JsError(s"Unknown CT status: ${json.toString()}")
+    }
+
+    override def writes(o: CTStatus): JsValue = JsString(o.toString)
+  }
 
 }

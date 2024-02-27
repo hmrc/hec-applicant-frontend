@@ -16,10 +16,7 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models
 
-import ai.x.play.json.Jsonx
-import ai.x.play.json.SingletonEncoder.simpleName
-import ai.x.play.json.implicits.formatSingleton
-import play.api.libs.json.Format
+import play.api.libs.json._
 
 sealed trait AuthenticationStatus extends Product with Serializable
 
@@ -29,6 +26,14 @@ object AuthenticationStatus {
 
   case object NotAuthenticated extends AuthenticationStatus
 
-  implicit val format: Format[AuthenticationStatus] = Jsonx.formatSealed[AuthenticationStatus]
+  implicit val format: Format[AuthenticationStatus] = new Format[AuthenticationStatus] {
+    override def reads(json: JsValue): JsResult[AuthenticationStatus] = json match {
+      case JsString("Authenticated")    => JsSuccess(Authenticated)
+      case JsString("NotAuthenticated") => JsSuccess(NotAuthenticated)
+      case _                            => JsError(s"Unknown authentication status: ${json.toString()}")
+    }
+
+    override def writes(o: AuthenticationStatus): JsValue = JsString(o.toString)
+  }
 
 }

@@ -16,11 +16,8 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models.licence
 
-import ai.x.play.json.Jsonx
-import ai.x.play.json.SingletonEncoder.simpleName
-import ai.x.play.json.implicits.formatSingleton
 import cats.Eq
-import play.api.libs.json.Format
+import play.api.libs.json._
 
 sealed trait LicenceType extends Product with Serializable
 
@@ -38,6 +35,17 @@ object LicenceType {
 
   implicit val eq: Eq[LicenceType] = Eq.fromUniversalEquals
 
-  implicit val format: Format[LicenceType] = Jsonx.formatSealed[LicenceType]
+  implicit val format: Format[LicenceType] = new Format[LicenceType] {
+    override def reads(json: JsValue): JsResult[LicenceType] = json match {
+      case JsString("DriverOfTaxisAndPrivateHires")  => JsSuccess(DriverOfTaxisAndPrivateHires)
+      case JsString("OperatorOfPrivateHireVehicles") => JsSuccess(OperatorOfPrivateHireVehicles)
+      case JsString("ScrapMetalMobileCollector")     => JsSuccess(ScrapMetalMobileCollector)
+      case JsString("ScrapMetalDealerSite")          => JsSuccess(ScrapMetalDealerSite)
+      case JsString("BookingOffice")                 => JsSuccess(BookingOffice)
+      case _                                         => JsError(s"Unknown licence type: ${json.toString()}")
+    }
+
+    override def writes(o: LicenceType): JsValue = JsString(o.toString)
+  }
 
 }

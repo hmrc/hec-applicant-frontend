@@ -16,11 +16,8 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.individual
 
-import ai.x.play.json.Jsonx
-import ai.x.play.json.SingletonEncoder.simpleName
-import ai.x.play.json.implicits.formatSingleton
 import cats.Eq
-import play.api.libs.json.Format
+import play.api.libs.json._
 
 sealed trait SAStatus
 
@@ -34,6 +31,15 @@ object SAStatus {
 
   implicit val eq: Eq[SAStatus] = Eq.fromUniversalEquals
 
-  implicit val format: Format[SAStatus] = Jsonx.formatSealed[SAStatus]
+  implicit val format: Format[SAStatus] = new Format[SAStatus] {
+    override def reads(json: JsValue): JsResult[SAStatus] = json match {
+      case JsString("ReturnFound")        => JsSuccess(ReturnFound)
+      case JsString("NoticeToFileIssued") => JsSuccess(NoticeToFileIssued)
+      case JsString("NoReturnFound")      => JsSuccess(NoReturnFound)
+      case _                              => JsError(s"Unknown SA status: ${json.toString()}")
+    }
+
+    override def writes(o: SAStatus): JsValue = JsString(o.toString)
+  }
 
 }
