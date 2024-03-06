@@ -18,7 +18,6 @@ package uk.gov.hmrc.hecapplicantfrontend.testonly.connectors
 
 import cats.data.EitherT
 import com.google.inject.{ImplementedBy, Inject, Singleton}
-import configs.syntax._
 import play.api.Configuration
 import play.api.libs.ws.{WSClient, WSResponse}
 import uk.gov.hmrc.hecapplicantfrontend.models.Error
@@ -42,7 +41,7 @@ class AuthLoginStubConnectorImpl @Inject() (config: Configuration, ws: WSClient)
 ) extends AuthLoginStubConnector {
 
   private val authLoginStubUrl: String = {
-    val baseUrl = config.underlying.get[String]("auth-login-stub.base-url").value
+    val baseUrl = config.get[String]("auth-login-stub.base-url")
     s"$baseUrl/auth-login-stub/gg-sign-in"
   }
 
