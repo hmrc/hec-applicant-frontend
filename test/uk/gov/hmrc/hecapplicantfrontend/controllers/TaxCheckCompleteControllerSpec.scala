@@ -143,10 +143,14 @@ class TaxCheckCompleteControllerSpec
                 "8 January 2020"
               )
 
-              doc.select(".govuk-body > .govuk-link").parents().first().html shouldBe messageFromMessageKey(
-                "exitSurvey.linkText",
-                routes.SignOutController.exitSurvey.url
-              )
+              val feedbackSection = doc.getElementById("feedback-section")
+
+              feedbackSection.text() should include(messageFromMessageKey("feedback.title"))
+              feedbackSection.text() should include(messageFromMessageKey("feedback.p1"))
+              feedbackSection.text() should include(messageFromMessageKey("feedback.link"))
+              feedbackSection.text() should include(messageFromMessageKey("feedback.p2"))
+
+              feedbackSection.html() should include(routes.SignOutController.exitSurvey.url)
             }
           )
         }
