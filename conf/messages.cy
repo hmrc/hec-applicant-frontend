@@ -176,7 +176,6 @@ taxCheckComplete.list2=<a class="govuk-link" href="{0}">trefnu bod eich cod gwir
 taxCheckComplete.list3=<a class="govuk-link" href="{0}">gweld pob un o’ch codau gwirio treth</a>
 taxCheckComplete.copyText=Copïo’ch cod gwirio treth
 taxCheckComplete.copiedText=Cod gwirio treth wedi’i gopïo
-exitSurvey.linkText=<a class="govuk-link" href="{0}">Beth oedd eich barn am y gwasanaeth hwn?</a> (yn cymryd 30 eiliad)
 sautrNotFound.title=Ni allwch ddefnyddio’r gwasanaeth hwn
 sautrNotFound.intro=Y rheswm dros hyn yw nad oeddem yn gallu dod o hyd i Gyfeirnod Unigryw y Trethdalwr (UTR) ar gyfer Hunanasesiad ar eich cyfer.
 sautrNotFound.changeAnswer.heading=Os gwnaethoch roi gwybod i ni eich bod wedi cofrestru ar gyfer Hunanasesiad ond nad oeddech wedi gwneud hynny
@@ -338,3 +337,7 @@ proceedWithNewRelevantAccountingPeriod.yes=Iawn
 proceedWithNewRelevantAccountingPeriod.no=Na - yn ôl i’r dudalen flaenorol
 proceedWithNewRelevantAccountingPeriod.error.required=Dewiswch ‘Iawn’ i fynd yn eich blaen
 proceedWithNewRelevantAccountingPeriod.error.invalid=Dewiswch ‘Iawn’ i fynd yn eich blaen
+feedback.title=Cyn i chi fynd
+feedback.p1=Mae’ch adborth yn ein helpu i wella ein gwasanaeth.
+feedback.link=Llenwch arolwg byr
+feedback.p2=i rannu’ch adborth ar y gwasanaeth hwn.

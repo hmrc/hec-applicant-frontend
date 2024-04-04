@@ -229,7 +229,6 @@ taxCheckComplete.list2 = <a class="govuk-link" href="{0}">get your tax check cod
 taxCheckComplete.list3 = <a class="govuk-link" href="{0}">see all your tax check codes</a>
 taxCheckComplete.copyText = Copy your tax check code
 taxCheckComplete.copiedText = Tax check code copied
-exitSurvey.linkText=<a class="govuk-link" href="{0}">What did you think of this service?</a> (takes 30 seconds)
 
 # SAUTR Not Found
 sautrNotFound.title = You cannot use this service
@@ -464,3 +463,10 @@ proceedWithNewRelevantAccountingPeriod.error.invalid=Select yes if you want to c
 # Cannot find individual details
 cannotFindIndividualDetails.title = You cannot do a tax check at the moment
 cannotFindIndividualDetails.p1 = You’ll need to <a href="{0}" class="govuk-link">contact HMRC</a> before doing your tax check.
+
+# Feedback
+
+feedback.title = Before you go
+feedback.p1 = Your feedback helps us make our service better.
+feedback.link = Take a short survey
+feedback.p2 = to share your feedback on this service.
