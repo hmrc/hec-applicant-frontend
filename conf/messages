@@ -72,8 +72,8 @@ confirmIndividualDetails.link=These details are not mine, or are incorrect
 # Check Personal Details Exit
 confirmIndividualDetailsExit.title=These details are not mine, or are incorrect
 confirmIndividualDetailsExit.wrongAccount.heading = Make sure you’re using the right account
-confirmIndividualDetailsExit.wrongAccount.p1=You’ll need to check the user ID and password you used to sign in to Government Gateway.
-confirmIndividualDetailsExit.wrongAccount.p2=You may need to <a href="{0}" class="govuk-link">sign out</a> and sign in using the correct Government Gateway user ID and password.
+confirmIndividualDetailsExit.wrongAccount.p1=You’ll need to check the sign in details you used to sign in.
+confirmIndividualDetailsExit.wrongAccount.p2=You may need to <a href="{0}" class="govuk-link">sign out</a> and sign in using the correct details.
 confirmIndividualDetailsExit.incorrectDetails.heading = Make sure your details are correct
 confirmIndividualDetailsExit.incorrectDetails.p1 = You can <a href="{0}" class="govuk-link">update your name online</a>. If you need to correct your date of birth you will need to <a href="{1}" class="govuk-link">phone HMRC’s income tax general enquiries line</a>.
 
@@ -132,8 +132,8 @@ licenceTypeExit.scrapMetalDealer = Scrap metal dealer site (England, Wales and S
 
 licenceTypeExit.link = Find out about tax checks
 licenceTypeExit.wrongAccount = Make sure you’re using the correct account
-licenceTypeExit.p2 = If you could not see your licence type on the previous page, you may be logged in with the wrong Government Gateway account.
-licenceTypeExit.signBackInLink = Sign in to the correct Government Gateway account
+licenceTypeExit.p2 = If you could not see your licence type on the previous page, you may be signed in with the wrong details.
+licenceTypeExit.signBackInLink = Sign in with the correct details
 
 # Licence time trading
 licenceTimeTrading.title = How many years ago did you first get a licence for this activity?
@@ -295,7 +295,7 @@ confirmCompanyName.error.invalid = Select yes if this is the company you want to
 # CTUTR not matched
 ctutrNotMatched.title = We could not match your company details
 ctutrNotMatched.p1 = We could not match the details you entered about your company with the records we hold.
-ctutrNotMatched.p2 = This may be because you signed in with the wrong Government Gateway account. <a href="{0}" class="govuk-link">Sign in with the correct account</a> for this company or <a href="{1}" class="govuk-link">create a new Government Gateway account</a>.
+ctutrNotMatched.p2 = This may be because you signed in with the wrong details. <a href="{0}" class="govuk-link">Sign in with the correct account</a> for this company or <a href="{1}" class="govuk-link">set up a new account for HMRC online services</a>.
 
 # Chargeable for corporation tax
 chargeableForCT.title = Was your company chargeable for Corporation Tax for the accounting period ending {0}?
