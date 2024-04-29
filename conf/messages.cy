@@ -49,8 +49,8 @@ confirmIndividualDetails.dob=Dyddiad geni
 confirmIndividualDetails.link=Nid fy manylion i yw’r rhain, neu mae’r manylion yn anghywir
 confirmIndividualDetailsExit.title=Nid fy manylion i yw’r rhain, neu mae’r manylion yn anghywir
 confirmIndividualDetailsExit.wrongAccount.heading = Gwnewch yn siŵr eich bod yn defnyddio’r cyfrif cywir
-confirmIndividualDetailsExit.wrongAccount.p1=Bydd yn rhaid i chi wirio’r Dynodydd Defnyddiwr (ID) a’r cyfrinair a ddefnyddiwyd gennych i fewngofnodi i Borth y Llywodraeth.
-confirmIndividualDetailsExit.wrongAccount.p2=Efallai y bydd angen i chi <a href="{0}" class="govuk-link">allgofnodi</a> ac yna fewngofnodi gan ddefnyddio’r Dynodydd Defnyddiwr a’r cyfrinair cywir ar gyfer Porth y Llywodraeth.
+confirmIndividualDetailsExit.wrongAccount.p1=Bydd angen i chi wirio’r manylion mewngofnodi a ddefnyddioch i fewngofnodi.
+confirmIndividualDetailsExit.wrongAccount.p2=Efallai y bydd angen i chi <a href="{0}" class="govuk-link">allgofnodi</a> ac yna mewngofnodi gan ddefnyddio’r manylion cywir.
 confirmIndividualDetailsExit.incorrectDetails.heading = Gwnewch yn siŵr bod eich manylion yn gywir
 confirmIndividualDetailsExit.incorrectDetails.p1 = Gallwch <a href="{0}" class="govuk-link">ddiweddaru’ch enw ar-lein</a>. Os oes angen i chi gywiro’ch dyddiad geni, bydd yn rhaid i chi <a href="{1}" class="govuk-link">ffonio Gwasanaeth Cwsmeriaid Cymraeg CThEM</a>.
 
@@ -97,8 +97,8 @@ licenceTypeExit.scrapMetalCollector=Casglwr metel sgrap symudol neu deithiol (Cy
 licenceTypeExit.scrapMetalDealer=Safle deliwr metel sgrap (Cymru, Lloegr a’r Alban yn unig)
 licenceTypeExit.link=Dysgu am wiriadau treth
 licenceTypeExit.wrongAccount=Gwneud yn siŵr eich bod yn defnyddio’r cyfrif cywir
-licenceTypeExit.p2=Os na allech weld eich math o drwydded ar y dudalen flaenorol, efallai eich bod wedi mewngofnodi â’r cyfrif Porth y Llywodraeth anghywir.
-licenceTypeExit.signBackInLink=Mewngofnodi â’ch cyfrif Porth y Llywodraeth cywir
+licenceTypeExit.p2=Os na allech weld eich math o drwydded ar y dudalen flaenorol, efallai eich bod wedi mewngofnodi â’r manylion anghywir.
+licenceTypeExit.signBackInLink=Mewngofnodi â’r manylion cywir
 licenceTimeTrading.title=Sawl blwyddyn yn ôl y cawsoch drwydded ar gyfer y gweithgaredd hwn am y tro cyntaf?
 licenceTimeTrading.hint=Dyma’r math o drwydded rydych yn gwneud gwiriad treth ar ei chyfer. Efallai y bydd angen i chi roi amcangyfrif ar gyfer y cwestiwn hwn.
 licenceTimeTrading.zeroToTwoYears=0 i 2 flynedd
@@ -220,7 +220,7 @@ confirmCompanyName.error.required=Dewiswch ‘Iawn’ os mai dyma’r cwmni rydy
 confirmCompanyName.error.invalid=Dewiswch ‘Iawn’ os mai dyma’r cwmni rydych am wneud y gwiriad treth ar ei gyfer
 ctutrNotMatched.title=Ni allem baru manylion eich cwmni
 ctutrNotMatched.p1=Ni allem baru’r manylion a roddwyd gennych ar gyfer eich cwmni â’r cofnodion sydd gennym.
-ctutrNotMatched.p2=Gall hyn fod oherwydd eich bod wedi mewngofnodi gyda chyfrif Porth y Llywodraeth anghywir. <a href="{0}" class="govuk-link">Mewngofnodwch gyda’r cyfrif cywir</a> ar gyfer y cwmni hwn neu <a href="{1}" class="govuk-link">ewch ati i greu cyfrif Porth y Llywodraeth newydd</a>.
+ctutrNotMatched.p2=Gall hyn fod oherwydd eich bod wedi mewngofnodi â’r manylion anghywir. <a href="{0}" class="govuk-link">Mewngofnodwch â’r cyfrif cywir</a> ar gyfer y cwmni hwn neu <a href="{1}" class="govuk-link">greu cyfrif newydd ar gyfer gwasanaethau ar-lein CThEF</a>.
 chargeableForCT.title=A oedd eich cwmni’n agored i Dreth Gorfforaeth ar gyfer y cyfnod cyfrifyddu a ddaeth i ben {0}?
 chargeableForCT.yes=Iawn
 chargeableForCT.no=Na
