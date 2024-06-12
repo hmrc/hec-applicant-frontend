@@ -25,7 +25,7 @@ iv.failedMatching.li2=rhif Yswiriant Gwladol
 iv.insufficientEvidence.title=Nid oedd modd i ni gadarnhau pwy ydych
 iv.insufficientEvidence.p1=Bydd angen i chi ein ffonio ac fe ofynnwn i chi am ragor o fanylion.
 iv.insufficientEvidence.p2=Byddwch yn gallu cael gwiriad treth dros y ffôn, ar ôl i ni gadarnhau pwy ydych.
-iv.insufficientEvidence.link=Gwybodaeth am sut i gysylltu â CThEM
+iv.insufficientEvidence.link=Gwybodaeth am sut i gysylltu â CThEF
 iv.lockedOut.title=Nid oedd modd i ni gadarnhau pwy ydych
 iv.lockedOut.p1=Rydych wedi ceisio cadarnhau pwy ydych gormod o weithiau.
 iv.lockedOut.p2=Bydd angen i chi aros am 24 awr a rhoi cynnig arall arni.
@@ -52,7 +52,7 @@ confirmIndividualDetailsExit.wrongAccount.heading = Gwnewch yn siŵr eich bod yn
 confirmIndividualDetailsExit.wrongAccount.p1=Bydd angen i chi wirio’r manylion mewngofnodi a ddefnyddioch i fewngofnodi.
 confirmIndividualDetailsExit.wrongAccount.p2=Efallai y bydd angen i chi <a href="{0}" class="govuk-link">allgofnodi</a> ac yna mewngofnodi gan ddefnyddio’r manylion cywir.
 confirmIndividualDetailsExit.incorrectDetails.heading = Gwnewch yn siŵr bod eich manylion yn gywir
-confirmIndividualDetailsExit.incorrectDetails.p1 = Gallwch <a href="{0}" class="govuk-link">ddiweddaru’ch enw ar-lein</a>. Os oes angen i chi gywiro’ch dyddiad geni, bydd yn rhaid i chi <a href="{1}" class="govuk-link">ffonio Gwasanaeth Cwsmeriaid Cymraeg CThEM</a>.
+confirmIndividualDetailsExit.incorrectDetails.p1 = Gallwch <a href="{0}" class="govuk-link">ddiweddaru’ch enw ar-lein</a>. Os oes angen i chi gywiro’ch dyddiad geni, bydd yn rhaid i chi <a href="{1}" class="govuk-link">ffonio Gwasanaeth Cwsmeriaid Cymraeg CThEF</a>.
 
 date.1=Ionawr
 date.2=Chwefror
@@ -185,9 +185,9 @@ sautrNotFound.register.p1=Bydd angen i chi <a href="{0}" class="govuk-link">gofr
 sautrNotFound.newRegistration.heading=Os ydych wedi cofrestru ar gyfer Hunanasesiad yn ystod y 3 wythnos diwethaf
 sautrNotFound.newRegistration.p1=Ni fydd ein systemau wedi’u diweddaru eto. Bydd angen i chi aros nes eich bod wedi cael eich UTR. Yna gallwch wneud gwiriad treth.
 noReturnFound.title=Ni allwch wneud gwiriad treth ar hyn o bryd
-noReturnFound.p1=Bydd angen i chi <a href="{0}" class="govuk-link">gysylltu â CThEM</a> cyn gwneud eich gwiriad treth.
+noReturnFound.p1=Bydd angen i chi <a href="{0}" class="govuk-link">gysylltu â CThEF</a> cyn gwneud eich gwiriad treth.
 cannotDoTaxCheck.title=Ni allwch wneud gwiriad treth ar hyn o bryd
-cannotDoTaxCheck.p1=Bydd angen i chi <a href="{0}" class="govuk-link">gysylltu â CThEM</a> cyn gwneud eich gwiriad treth.
+cannotDoTaxCheck.p1=Bydd angen i chi <a href="{0}" class="govuk-link">gysylltu â CThEF</a> cyn gwneud eich gwiriad treth.
 saIncomeDeclared.title=A wnaethoch gynnwys incwm a enillwyd gennych gan ddefnyddio’r math hwn o drwydded yn eich Ffurflen Dreth?
 saIncomeDeclared.yes=Iawn
 saIncomeDeclared.no=Na
@@ -311,7 +311,7 @@ emailRequestExceeded.p2=<a href="{0}" class="govuk-link">Gweld pob un o’ch cod
 cannotSendVerificationPasscode.title=Methu anfon e-bost
 cannotSendVerificationPasscode.p1=Ni allwn anfon e-bost i’r cyfeiriad a roesoch.
 cannotSendVerificationPasscode.p2=Gallwch <a href="{0}" class="govuk-link">fynd yn ôl a nodi cyfeiriad e-bost newydd</a>, neu gallwch <a href="{1}" class="govuk-link">weld pob un o’ch codau gwirio treth</a>.
-emailVerification.passcodeEmail.serviceName=wasanaeth gwirio treth CThEM
+emailVerification.passcodeEmail.serviceName=wasanaeth gwirio treth CThEF
 agentsNotSupported.title=Ni allwch gael mynediad at y gwasanaeth hwn
 agentsNotSupported.p1=Ni fydd yn bosib i chi wneud gwiriad treth gan eich bod wedi mewngofnodi gan ddefnyddio Dynodydd Defnyddiwr (ID) Porth y Llywodraeth ar gyfer cyfrif gwasanaethau asiant.
 agentsNotSupported.p2=Os oes angen i’ch cleient wneud gwiriad treth, bydd rhaid iddo wneud hynny ei hun gan ddefnyddio ei gyfrif Porth y Llywodraeth ei hun. Os nad oes ganddo Ddynodydd Defnyddiwr (ID) Porth y Llywodraeth, gall greu un pan fydd yn dechrau’r gwiriad.
@@ -322,7 +322,7 @@ newTaxPeriod.notification.company.newAccountingPeriod=Rydych nawr yn cael eich h
 newTaxPeriod.notification.company.noAccountingPeriod=Mae’r dyddiad wedi newid ac nid ydym yn gallu dod o hyd i gyfnod cyfrifyddu perthnasol i’ch cwmni mwyach
 newTaxPeriod.notification.individual=Mae’r flwyddyn dreth berthnasol wedi newid ers i chi ateb y cwestiwn hwn ddiwethaf
 cannotFindIndividualDetails.title=Ni allwch wneud gwiriad treth ar hyn o bryd
-cannotFindIndividualDetails.p1=Bydd angen i chi <a href="{0}" class="govuk-link">gysylltu â CThEM</a> cyn gwneud eich gwiriad treth.
+cannotFindIndividualDetails.p1=Bydd angen i chi <a href="{0}" class="govuk-link">gysylltu â CThEF</a> cyn gwneud eich gwiriad treth.
 proceedWithNewRelevantIncomeTaxYear.title=Newid eich ateb
 proceedWithNewRelevantIncomeTaxYear.p1=Mae’r dyddiad wedi newid ers i chi ateb cwestiynau fel rhan o wiriad treth. Mae hyn yn golygu y gallai fod yn rhaid i ni ofyn cwestiynau i chi am flwyddyn dreth wahanol.
 proceedWithNewRelevantIncomeTaxYear.label=A hoffech fynd yn eich blaen?
