@@ -1,3 +1,5 @@
+$govuk-include-default-font-face: false;
+
 @import "lib/govuk-frontend/govuk/base";
 
 body:not(.js-enabled) .js-visible {
