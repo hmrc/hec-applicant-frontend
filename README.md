@@ -9,11 +9,11 @@ to the relevant licencing bodies (LB's) to allow their licence to be issued.
 ## Running the service
 When running locally, the dependant services can be run using the service manager command
 ```
-sm --start HEC_DEP -r
+sm2 --start HEC_DEP
 ```
 All HEC services can run via
 ```
-sm --start HEC_ALL -r
+sm2 --start HEC_ALL
 ```
 By default, this service runs on port `10106`.
 
@@ -35,7 +35,7 @@ When a journey is selected and submitted here, the login session is set up in th
 test data, thereby bypassing the login step on the UI. To enable the test-only endpoint, start the service with 
 the option
 ```
- sbt run -Dapplication.router=testOnlyDoNotUseInAppConf.Routes
+sbt run -Dplay.http.router=testOnlyDoNotUseInAppConf.Routes
 ```
 
 ### Navigation
