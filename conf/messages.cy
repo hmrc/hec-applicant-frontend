@@ -199,8 +199,8 @@ timedOut.title=Er eich diogelwch, gwnaethom eich allgofnodi
 timedOut.p1=Ni wnaethom gadw’ch atebion.
 timedOut.signIn=Mewngofnodi
 crn.title=Beth yw rhif cofrestru’ch cwmni?
-crn.hint=Anfonodd Tŷ’r Cwmnïau hwn atoch pan wnaethoch sefydlu’ch cwmni. Gelwir hyn hefyd yn rhif cwmni. Er enghraifft, SC898989 neu 12345678.
-crn.link=Chwiliwch am rif cofrestru’r cwmni
+crn.hint=Mae hwn yn 8 o gymeriadau. Er enghraifft, 01234567 neu AC012345.
+crn.link=<a href="{0}" class="govuk-link">Gallwch chwilio am rif cofrestru’ch cwmni ar wefan Tŷ’r Cwmnïau (yn agor tab newydd)</a>.
 crn.error.required=Nodwch eich Rhif Cofrestru’r Cwmni
 crn.error.nonAlphanumericChars=Mae’n rhaid i rif cofrestru’ch cwmni gynnwys llythrennau a rhifau yn unig
 crn.error.crnInvalid=Nodwch rif cofrestru cwmni dilys

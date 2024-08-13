@@ -24,6 +24,7 @@
 @import uk.gov.hmrc.hmrcfrontend.views.viewmodels.newtablink.NewTabLink
 @import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 @import uk.gov.hmrc.hecapplicantfrontend.views.helpers.FormErrorMessage.formErrorMessage
+@import play.twirl.api.Html
 
 @this(layout: Layout, govukInput: GovukInput, govukButton: GovukButton, formWithCSRF: FormWithCSRF, govukErrorSummary : GovukErrorSummary, hmrcNewTabLink: HmrcNewTabLink)
 
@@ -39,6 +40,10 @@
     )), title = Text(messages("generic.errorSummary"))))
   }
 
+  <h1 class="govuk-heading-l">@{messages(s"$key.title")}</h1>
+
+  <p class="govuk-body">@{Html(messages("crn.link", appConfig.companiesHouseSearchUrl))}</p>
+
   @formWithCSRF(action = routes.CRNController.companyRegistrationNumberSubmit) {
     @govukInput(Input(
       id = key,
@@ -46,23 +51,14 @@
       value = form(key).value,
       label = Label(
         isPageHeading = true,
-        classes = "govuk-label--xl",
-        content = Text(title)
+        classes = "govuk-label--xl"
       ),
       classes = "govuk-!-width-one-third",
       hint = Some(Hint(
-        content = Text(messages(s"$key.hint"))
+        content = Text(messages("crn.hint"))
       )),
       errorMessage = formErrorMessage(form, key)
     ))
-
-    <p class="govuk-body">
-      @hmrcNewTabLink(params = NewTabLink(
-        href = Some(appConfig.companiesHouseSearchUrl),
-        text = messages(s"$key.link"),
-        language = Some(messages("lang.code"))
-      ))
-    </p>
 
     @govukButton(Button(
       content = Text(messages("button.continue"))
