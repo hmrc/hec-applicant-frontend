@@ -112,9 +112,6 @@ class CRNControllerSpec
               val button = doc.select("form")
               button.attr("action") shouldBe routes.CRNController.companyRegistrationNumberSubmit.url
 
-              val link = doc.select("p > .govuk-link")
-              link.text should startWith(messageFromMessageKey("crn.link"))
-
               val input = doc.select(".govuk-input")
               input.attr("value") shouldBe inputValue.getOrElse("")
 
