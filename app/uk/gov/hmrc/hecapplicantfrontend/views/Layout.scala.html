@@ -84,7 +84,7 @@
 }
 
 @beforeContentBlock = {
-  <div class="govuk-!-display-none-print">
+  <nav class="govuk-!-display-none-print">
     @hmrcLanguageSelectHelper()
     @{
         backLocation map { back =>
@@ -94,7 +94,7 @@
             govukBackLink(BackLink(href = url, attributes = Map("id" -> "back"), content = Text(messages("button.back"))))
         }
     }
-  </div>
+  </nav>
 }
 
 @content = {
