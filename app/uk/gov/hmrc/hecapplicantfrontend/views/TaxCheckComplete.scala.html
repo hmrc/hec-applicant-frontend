@@ -16,7 +16,7 @@
 
 @import play.api.i18n.Messages
 @import uk.gov.hmrc.hecapplicantfrontend.models.{ HECTaxCheck, licence }
-@import play.api.mvc.Request
+@import play.api.mvc.RequestHeader
 @import play.twirl.api.Html
 @import uk.gov.hmrc.govukfrontend.views.html.components._
 @import uk.gov.hmrc.hecapplicantfrontend.util.TimeUtils
@@ -25,7 +25,7 @@
 
 @this(layout: Layout, govukPanel : GovukPanel, copyButton: components.CopyButton, exitSurveyLink: components.ExitSurveyLink)
 
-@(hecTaxCheck: HECTaxCheck, licenceType: licence.LicenceType)(implicit request: Request[_], messages: Messages)
+@(hecTaxCheck: HECTaxCheck, licenceType: licence.LicenceType)(implicit requestHeader: RequestHeader, messages: Messages)
 @key = @{"taxCheckComplete"}
 @title = @{messages(s"$key.title")}
 

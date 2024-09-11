@@ -15,13 +15,13 @@
  *@
 
 @import play.api.i18n.Messages
-@import play.api.mvc.{Call, Request}
+@import play.api.mvc.{Call, RequestHeader}
 @import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 @import uk.gov.hmrc.hecapplicantfrontend.models
 
 @this(layout: Layout)
 
-@(back: Call, selectedEntityType: models.EntityType)(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
+@(back: Call, selectedEntityType: models.EntityType)(implicit requestHeader: RequestHeader, messages: Messages, appConfig: AppConfig)
 @key = @{"wrongGGAccount"}
 @title = @{messages(s"$key.title")}
 @p1 = @{

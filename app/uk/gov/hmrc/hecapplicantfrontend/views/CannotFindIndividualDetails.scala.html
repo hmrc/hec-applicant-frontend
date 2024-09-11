@@ -15,14 +15,14 @@
  *@
 
 @import play.api.i18n.Messages
-@import play.api.mvc.Request
+@import play.api.mvc.RequestHeader
 @import play.twirl.api.Html
 @import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 @import uk.gov.hmrc.hecapplicantfrontend.views.html.components.ExitSurveyLink
 
 @this(layout: Layout, exitSurveyLink: ExitSurveyLink)
 
-@()(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
+@()(implicit requestHeader: RequestHeader, messages: Messages, appConfig: AppConfig)
 
 @key = @{"cannotFindIndividualDetails"}
 @title = @{messages(s"$key.title")}

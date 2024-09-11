@@ -15,12 +15,12 @@
  *@
 
 @import play.api.i18n.Messages
-@import play.api.mvc.Request
+@import play.api.mvc.RequestHeader
 @import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 
 @this(layout: Layout)
 
-@()(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
+@()(implicit requestHeader: RequestHeader, messages: Messages, appConfig: AppConfig)
 
 @key = @{"agentsNotSupported"}
 @title = @{messages(s"$key.title")}

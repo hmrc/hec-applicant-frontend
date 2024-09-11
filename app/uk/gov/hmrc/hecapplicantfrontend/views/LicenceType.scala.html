@@ -16,7 +16,7 @@
 
 @import play.api.i18n.Messages
 @import play.api.data.Form
-@import play.api.mvc.{Call, Request}
+@import play.api.mvc.{Call, RequestHeader}
 @import uk.gov.hmrc.govukfrontend.views.html.components._
 @import uk.gov.hmrc.hecapplicantfrontend.models.licence
 @import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
@@ -25,7 +25,7 @@
 
 @this(layout: Layout, govukErrorSummary: GovukErrorSummary, govukRadios: GovukRadios, govukButton: GovukButton, formWithCSRF: FormWithCSRF)
 
-@(form: Form[licence.LicenceType], back: Call, options: List[licence.LicenceType])(implicit request: Request[_], messages: Messages)
+@(form: Form[licence.LicenceType], back: Call, options: List[licence.LicenceType])(implicit requestHeader: RequestHeader, messages: Messages)
 
 @key = @{"licenceType"}
 @title = @{messages(s"$key.title")}

@@ -15,14 +15,14 @@
  *@
 
 @import play.api.i18n.Messages
-@import play.api.mvc.{Call, Request}
+@import play.api.mvc.{Call, RequestHeader}
 @import uk.gov.hmrc.govukfrontend.views.html.components._
 @import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 @import uk.gov.hmrc.hecapplicantfrontend.models.EmailAddress
 
 @this(layout: Layout, govukButton: GovukButton, formWithCSRF: FormWithCSRF)
 
-@(userSelectedEmail: EmailAddress, back: Call)(implicit request: Request[_], messages: Messages)
+@(userSelectedEmail: EmailAddress, back: Call)(implicit requestHeader: RequestHeader, messages: Messages)
 @key = @{"emailAddressConfirmed"}
 @title = @{messages(s"$key.title")}
 

@@ -16,7 +16,7 @@
 
 @import play.api.i18n.Messages
 @import play.api.data.Form
-@import play.api.mvc.{Call, Request}
+@import play.api.mvc.{Call, RequestHeader}
 @import uk.gov.hmrc.govukfrontend.views.html.components._
 @import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 @import uk.gov.hmrc.hecapplicantfrontend.models.YesNoAnswer
@@ -25,7 +25,7 @@
 
 @this(layout: Layout, govukErrorSummary: GovukErrorSummary, govukRadios: GovukRadios, govukButton: GovukButton, formWithCSRF: FormWithCSRF)
 
-@(form: Form[YesNoAnswer], back: Call, companyName: String, options: List[YesNoOption])(implicit request: Request[_], messages: Messages)
+@(form: Form[YesNoAnswer], back: Call, companyName: String, options: List[YesNoOption])(implicit requestHeader: RequestHeader, messages: Messages)
 @key = @{"confirmCompanyName"}
 @title = @{messages(s"$key.title")}
 @radioOptions = @{options.zipWithIndex.map{ case (option, index) => RadioItem(

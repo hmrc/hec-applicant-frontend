@@ -15,7 +15,7 @@
  *@
 
 @import play.api.i18n.Messages
-@import play.api.mvc.Request
+@import play.api.mvc.RequestHeader
 @import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 @import uk.gov.hmrc.govukfrontend.views.html.components._
 @import uk.gov.hmrc.hecapplicantfrontend.views.html.components.{ TaxCheckCodeDetails, ExitSurveyLink }
@@ -28,7 +28,7 @@
 @(
         taxChecks: List[TaxCheckListItem]
 )(implicit
-        request: Request[_],
+        requestHeader: RequestHeader,
         messages: Messages,
         dateOrdering: Ordering[ZonedDateTime],
         licenceTypeOrdering: Ordering[LicenceTypeModel]

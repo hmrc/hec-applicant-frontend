@@ -15,13 +15,13 @@
  *@
 
 @import play.api.i18n.Messages
-@import play.api.mvc.{Call, Request}
+@import play.api.mvc.{Call, RequestHeader}
 @import play.twirl.api.Html
 @import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 
 @this(layout: Layout)
 
-@(back: Call)(implicit request: Request[_], messages: Messages)
+@(back: Call)(implicit requestHeader: RequestHeader, messages: Messages)
 @key = @{"problemSendingEmail"}
 @title = @{messages(s"$key.title")}
 

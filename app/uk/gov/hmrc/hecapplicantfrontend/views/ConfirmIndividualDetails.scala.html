@@ -15,7 +15,7 @@
  *@
 
 @import play.api.i18n.Messages
-@import play.api.mvc.{Call, Request}
+@import play.api.mvc.{Call, RequestHeader}
 @import uk.gov.hmrc.govukfrontend.views.html.components._
 @import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 @import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.IndividualLoginData
@@ -23,7 +23,7 @@
 @this(layout: Layout, govukButton: GovukButton, govukSummaryList : GovukSummaryList, formWithCSRF: FormWithCSRF)
 
 
-@(back: Call, details: IndividualLoginData)(implicit request: Request[_], messages: Messages)
+@(back: Call, details: IndividualLoginData)(implicit requestHeader: RequestHeader, messages: Messages)
 @title = @{messages("confirmIndividualDetails.title")}
 @dob = @{details.dateOfBirth.value}
 

@@ -26,7 +26,7 @@
 @import uk.gov.hmrc.hmrcfrontend.views.Aliases.UserResearchBanner
 
 @import play.api.i18n.Messages
-@import play.api.mvc.{Call, Request}
+@import play.api.mvc.{Call, RequestHeader}
 @import play.twirl.api.Html
 
 @this(
@@ -48,9 +48,9 @@
   backLocation: Option[Call] = None,
   hasErrors: Boolean = false,
   showSignOutLink: Boolean = true
-)(contentBlock: Html)(implicit request: Request[_], messages: Messages)
+)(contentBlock: Html)(implicit requestHeader: RequestHeader, messages: Messages)
 
-@showUrBanner = @{ request match {
+@showUrBanner = @{ requestHeader match {
     case r: RequestWithSessionData[_] => r.sessionData.showUserResearchBanner.forall(identity)
     case _ => false
 }

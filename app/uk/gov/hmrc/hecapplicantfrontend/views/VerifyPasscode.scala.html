@@ -16,7 +16,7 @@
 
 @import play.api.i18n.Messages
 @import play.api.data.Form
-@import play.api.mvc.{Call, Request}
+@import play.api.mvc.{Call, RequestHeader}
 @import play.twirl.api.Html
 @import uk.gov.hmrc.govukfrontend.views.html.components._
 @import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
@@ -27,8 +27,7 @@
 @this(layout: Layout, govukErrorSummary: GovukErrorSummary, govukInput: GovukInput, govukButton: GovukButton, formWithCSRF: FormWithCSRF, govukDetails : GovukDetails)
 
 
-@(form: Form[Passcode], back: Call, email: EmailAddress, isGGEmailInSession: Boolean)(implicit request:
-Request[_], messages: Messages)
+@(form: Form[Passcode], back: Call, email: EmailAddress, isGGEmailInSession: Boolean)(implicit requestHeader: RequestHeader, messages: Messages)
 @key = @{"verifyPasscode"}
 @fieldKey = @{"passcode"}
 @title = @{messages(s"$key.title")}

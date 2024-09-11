@@ -16,7 +16,7 @@
 
 @import play.api.i18n.Messages
 @import play.api.data.Form
-@import play.api.mvc.{Call, Request}
+@import play.api.mvc.{Call, RequestHeader}
 @import uk.gov.hmrc.govukfrontend.views.html.components._
 @import uk.gov.hmrc.hecapplicantfrontend.models
 @import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
@@ -45,8 +45,7 @@
         taxPeriodEndDate: String,
         licenceType: models.licence.LicenceType,
         newRelevantIncomeTaxYearConsidered: Boolean
-)(implicit request:
-Request[_], messages: Messages, appConfig: AppConfig)
+)(implicit requestHeader: RequestHeader, messages: Messages, appConfig: AppConfig)
 
 @key = @{"taxSituation"}
 @title = @{messages(s"$key.title", taxPeriodStartDate, taxPeriodEndDate)}

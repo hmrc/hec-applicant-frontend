@@ -15,7 +15,7 @@
  *@
 
 @import play.api.i18n.Messages
-@import play.api.mvc.Request
+@import play.api.mvc.RequestHeader
 @import play.api.data.Form
 @import uk.gov.hmrc.hecapplicantfrontend.testonly.controllers.routes
 @import uk.gov.hmrc.hecapplicantfrontend.testonly.models.Journey
@@ -30,7 +30,7 @@
         govukRadios: GovukRadios
 )
 
-@(form: Form[Journey], options: List[Journey])(implicit request: Request[_], messages: Messages)
+@(form: Form[Journey], options: List[Journey])(implicit requestHeader: RequestHeader, messages: Messages)
 
 @key = @{ "journey" }
 

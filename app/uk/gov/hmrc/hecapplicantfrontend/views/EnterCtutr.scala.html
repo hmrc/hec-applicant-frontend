@@ -16,7 +16,7 @@
 
 @import play.api.data.Form
 @import play.api.i18n.Messages
-@import play.api.mvc.{Call, Request}
+@import play.api.mvc.{Call, RequestHeader}
 @import uk.gov.hmrc.hecapplicantfrontend.models.ids
 @import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 @import uk.gov.hmrc.govukfrontend.views.html.components._
@@ -24,7 +24,7 @@
 
 @this(layout: Layout, govukInput: GovukInput, govukButton: GovukButton, formWithCSRF: FormWithCSRF, govukErrorSummary : GovukErrorSummary)
 
-@(form: Form[ids.CTUTR], back: Call)(implicit request: Request[_], messages: Messages)
+@(form: Form[ids.CTUTR], back: Call)(implicit requestHeader: RequestHeader, messages: Messages)
 @key = @{"enterCtutr"}
 @title = @{messages(s"$key.title")}
 
