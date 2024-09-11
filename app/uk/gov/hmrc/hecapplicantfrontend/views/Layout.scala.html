@@ -84,7 +84,7 @@
 }
 
 @beforeContentBlock = {
-  <nav class="govuk-!-display-none-print">
+  <nav class="govuk-!-display-none-print" aria-label="back link">
     @hmrcLanguageSelectHelper()
     @{
         backLocation map { back =>
@@ -98,12 +98,12 @@
 }
 
 @content = {
-    <div class="govuk-!-margin-bottom-6">
-        @contentBlock
-    </div>
-    <div class="govuk-!-display-none-print">
-      @hmrcReportTechnicalIssueHelper()
-    </div>
+        <div class="govuk-!-margin-bottom-6">
+            @contentBlock
+        </div>
+        <div class="govuk-!-display-none-print">
+            @hmrcReportTechnicalIssueHelper()
+        </div>
 }
 
 @serviceNameAndHeading = @{pageTitle.fold(messages("service.name"))(t => s"""$t - ${messages("service.name")}""")}
