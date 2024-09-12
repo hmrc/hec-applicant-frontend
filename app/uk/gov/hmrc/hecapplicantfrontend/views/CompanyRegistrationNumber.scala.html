@@ -50,8 +50,9 @@
       name = key,
       value = form(key).value,
       label = Label(
-        isPageHeading = true,
-        classes = "govuk-label--xl"
+        content = Text(messages("crn.label")),
+        isPageHeading = false,
+        classes = "govuk-label--m"
       ),
       classes = "govuk-!-width-one-third",
       hint = Some(Hint(
