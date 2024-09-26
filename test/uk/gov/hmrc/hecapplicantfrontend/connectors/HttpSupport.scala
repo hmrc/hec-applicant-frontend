@@ -16,10 +16,12 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.connectors
 
+import izumi.reflect.Tag
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should._
 import play.api.libs.json.Writes
-import uk.gov.hmrc.http.client.HttpClientV2
+import play.api.libs.ws.{BodyWritable, WSRequest}
+import uk.gov.hmrc.http.client.{HttpClientV2, RequestBuilder, StreamHttpReads}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse}
 
 import java.net.URL
@@ -29,15 +31,36 @@ trait HttpSupport { this: MockFactory with Matchers =>
 
   val mockHttp: HttpClientV2 = mock[HttpClientV2]
 
+
   def mockGet[A](
     url: URL
   )(
     response: Option[A]
-  ) =
+  ) = {
+
     (mockHttp
       .get(url: URL)(_: HeaderCarrier))
       .expects(*)
-      .returning(response.fold(Future.failed[A](new Exception("Test exception message")))(Future.successful))
+      .returning(
+
+        //This probably can be done smarter with mockito but I'm not and expert in such tech
+        //This is just an idea how you could progress this, good luck!
+        new RequestBuilder{
+
+          override def transform(transform: WSRequest => WSRequest): RequestBuilder = ???
+
+          override def execute[A: HttpReads](implicit ec: ExecutionContext): Future[A] = response.fold(Future.failed[A](new Exception("Test exception message")))(Future.successful _)
+
+          override def stream[A: StreamHttpReads](implicit ec: ExecutionContext): Future[A] = ???
+
+          override def setHeader(header: (String, String)*): RequestBuilder = ???
+
+          override def withProxy: RequestBuilder = ???
+
+          override def withBody[B: BodyWritable : Tag](body: B)(implicit ec: ExecutionContext): RequestBuilder = ???
+        }
+        )
+  }
 
   def mockPost[A](url: URL, headers: Seq[(String, String)], body: A)(
     result: Option[HttpResponse]
