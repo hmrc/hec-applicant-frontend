@@ -22,7 +22,7 @@ import org.scalatest.matchers.should._
 import org.scalatest.wordspec._
 import play.api.Configuration
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.NINO
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -56,7 +56,7 @@ class CitizenDetailsConnectorImplSpec
 
       val nino = NINO("AB123456C")
 
-      val expectedUrl = s"$protocol://$host:$port/citizen-details/nino/${nino.value}"
+      val expectedUrl = url"$protocol://$host:$port/citizen-details/nino/${nino.value}"
 
       behave like connectorBehaviour(
         mockGet[HttpResponse](expectedUrl)(_),

@@ -22,7 +22,7 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.CRN
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -55,7 +55,7 @@ class CompanyDetailsConnectorSpec
 
       val companyNumber = CRN("1234567")
 
-      val expectedUrl = s"$protocol://$host:$port/companies-house-api-proxy/company/1234567"
+      val expectedUrl = url"$protocol://$host:$port/companies-house-api-proxy/company/1234567"
 
       behave like connectorBehaviour(
         mockGet[HttpResponse](expectedUrl)(_),

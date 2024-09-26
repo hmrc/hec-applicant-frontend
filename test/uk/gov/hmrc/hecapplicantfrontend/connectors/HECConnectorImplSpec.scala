@@ -28,7 +28,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.TaxDetails.Individual
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.{HECTaxCheckData, HECTaxCheckSource, SaveEmailAddressRequest}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids._
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import java.time.{LocalDate, ZoneId, ZonedDateTime}
@@ -85,7 +85,7 @@ class HECConnectorImplSpec extends AnyWordSpec with Matchers with MockFactory wi
           Some(false)
         )
 
-      val expectedUrl = s"$protocol://$host:$port/hec/tax-check"
+      val expectedUrl = url"$protocol://$host:$port/hec/tax-check"
 
       behave like connectorBehaviour(
         mockPost(expectedUrl, Seq.empty, individualTaxCheckData)(_),
@@ -102,7 +102,7 @@ class HECConnectorImplSpec extends AnyWordSpec with Matchers with MockFactory wi
 
       val taxYear = TaxYear(2020)
 
-      val expectedUrl = s"$protocol://$host:$port/hec/sa-status/1234567890/2020"
+      val expectedUrl = url"$protocol://$host:$port/hec/sa-status/1234567890/2020"
 
       behave like connectorBehaviour(
         mockGet(expectedUrl)(_),
@@ -121,7 +121,7 @@ class HECConnectorImplSpec extends AnyWordSpec with Matchers with MockFactory wi
 
       val endDate = LocalDate.of(2021, 6, 20)
 
-      val expectedUrl = s"$protocol://$host:$port/hec/ct-status/1234567890/2020-12-31/2021-06-20"
+      val expectedUrl = url"$protocol://$host:$port/hec/ct-status/1234567890/2020-12-31/2021-06-20"
 
       behave like connectorBehaviour(
         mockGet(expectedUrl)(_),
@@ -136,7 +136,7 @@ class HECConnectorImplSpec extends AnyWordSpec with Matchers with MockFactory wi
 
       val crn = CRN("AA12345")
 
-      val expectedUrl = s"$protocol://$host:$port/hec/ctutr/${crn.value}"
+      val expectedUrl = url"$protocol://$host:$port/hec/ctutr/${crn.value}"
 
       behave like connectorBehaviour(
         mockGet(expectedUrl)(_),
@@ -149,7 +149,7 @@ class HECConnectorImplSpec extends AnyWordSpec with Matchers with MockFactory wi
 
       implicit val hc: HeaderCarrier = HeaderCarrier()
 
-      val expectedUrl = s"$protocol://$host:$port/hec/unexpired-tax-checks"
+      val expectedUrl = url"$protocol://$host:$port/hec/unexpired-tax-checks"
 
       behave like connectorBehaviour(
         mockGet(expectedUrl)(_),
@@ -164,7 +164,7 @@ class HECConnectorImplSpec extends AnyWordSpec with Matchers with MockFactory wi
 
       val saveEmailAddressRequest = SaveEmailAddressRequest(EmailAddress("email"), HECTaxCheckCode("code"))
 
-      val expectedUrl = s"$protocol://$host:$port/hec/email-address"
+      val expectedUrl = url"$protocol://$host:$port/hec/email-address"
 
       behave like connectorBehaviour(
         mockPost(expectedUrl, Seq.empty, saveEmailAddressRequest)(_),

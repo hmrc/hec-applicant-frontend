@@ -45,7 +45,8 @@ trait HttpSupport { this: MockFactory with Matchers =>
     (mockHttp
       .post(url: URL)(_: HeaderCarrier))
       .expects(*)
-      .returning(result.fold[Future[HttpResponse]](Future.failed(new Exception("Test exception message")))(Future.successful)
+      .returning(
+        result.fold[Future[HttpResponse]](Future.failed(new Exception("Test exception message")))(Future.successful)
       )
 
 }

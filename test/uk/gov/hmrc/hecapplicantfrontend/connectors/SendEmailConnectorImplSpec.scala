@@ -23,7 +23,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
 import uk.gov.hmrc.hecapplicantfrontend.models.EmailAddress
 import uk.gov.hmrc.hecapplicantfrontend.models.emailSend.{EmailParameters, EmailSendRequest}
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -54,7 +54,7 @@ class SendEmailConnectorImplSpec
   "SendEmailConnectorImplSpec" when {
 
     "handling request to send email" must {
-      val expectedUrl                = s"$protocol://$host:$port/hmrc/email"
+      val expectedUrl                = url"$protocol://$host:$port/hmrc/email"
       implicit val hc: HeaderCarrier = HeaderCarrier()
       behave like connectorBehaviour(
         mockPost(expectedUrl, Seq.empty, emailSendRequest)(_),

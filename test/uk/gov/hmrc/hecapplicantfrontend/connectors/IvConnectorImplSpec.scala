@@ -21,7 +21,7 @@ import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import java.util.UUID
@@ -56,7 +56,7 @@ class IvConnectorImplSpec extends AnyWordSpec with Matchers with MockFactory wit
       implicit val hc: HeaderCarrier = HeaderCarrier()
       val journeyId                  = UUID.randomUUID()
       val expectedUrl                =
-        s"http://host:123/mdtp/journey/journeyId/${journeyId.toString}"
+        url"http://host:123/mdtp/journey/journeyId/${journeyId.toString}"
 
       behave like connectorBehaviour(
         mockGet[HttpResponse](expectedUrl),

@@ -27,7 +27,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.HECTaxCheckCode
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, GGCredId}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
 import uk.gov.hmrc.hecapplicantfrontend.testonly.models.SaveTaxCheckRequest
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import java.time.{LocalDate, ZonedDateTime}
@@ -67,7 +67,7 @@ class HECConnectorImplSpec extends AnyWordSpec with Matchers with MockFactory wi
         Digital
       )
 
-      val expectedUrl = s"$protocol://$host:$port/hec/test-only/tax-check"
+      val expectedUrl = url"$protocol://$host:$port/hec/test-only/tax-check"
 
       behave like connectorBehaviour(
         mockPost(expectedUrl, Seq.empty, saveTaxCheckRequest)(_),

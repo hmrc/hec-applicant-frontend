@@ -23,7 +23,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
 import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, Language}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{Passcode, PasscodeRequest, PasscodeVerificationRequest}
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -55,7 +55,7 @@ class EmailVerificationConnectorSpec
       val passcodeRequest = PasscodeRequest(EmailAddress("user@test.com"), "hec", Language.English)
 
       implicit val hc: HeaderCarrier = HeaderCarrier()
-      val expectedUrl                = s"$protocol://$host:$port/email-verification/request-passcode"
+      val expectedUrl                = url"$protocol://$host:$port/email-verification/request-passcode"
 
       behave like connectorBehaviour(
         mockPost(expectedUrl, Seq.empty, passcodeRequest)(_),
@@ -69,7 +69,7 @@ class EmailVerificationConnectorSpec
       val passcodeVerificationRequest = PasscodeVerificationRequest(Passcode("AA12345"), EmailAddress("user@test.com"))
 
       implicit val hc: HeaderCarrier = HeaderCarrier()
-      val expectedUrl                = s"$protocol://$host:$port/email-verification/verify-passcode"
+      val expectedUrl                = url"$protocol://$host:$port/email-verification/verify-passcode"
 
       behave like connectorBehaviour(
         mockPost(expectedUrl, Seq.empty, passcodeVerificationRequest)(_),
