@@ -18,11 +18,13 @@ package uk.gov.hmrc.hecapplicantfrontend.connectors
 
 import cats.data.EitherT
 import com.google.inject.{ImplementedBy, Inject, Singleton}
+import play.api.libs.json.Json
 import uk.gov.hmrc.hecapplicantfrontend.models.Error
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{PasscodeRequest, PasscodeVerificationRequest}
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+import uk.gov.hmrc.http.client.HttpClientV2
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -41,7 +43,7 @@ trait EmailVerificationConnector {
 
 @Singleton
 class EmailVerificationConnectorImpl @Inject() (
-  http: HttpClient,
+  http: HttpClientV2,
   servicesConfig: ServicesConfig
 )(implicit
   ec: ExecutionContext
@@ -49,16 +51,18 @@ class EmailVerificationConnectorImpl @Inject() (
 
   val baseUrl: String = servicesConfig.baseUrl("email-verification")
 
-  val requestPasscodeUrl: String = s"$baseUrl/email-verification/request-passcode"
+  private val requestPasscodeUrl: String = s"$baseUrl/email-verification/request-passcode"
 
-  val verifyPasscodeUrl: String = s"$baseUrl/email-verification/verify-passcode"
+  private val verifyPasscodeUrl: String = s"$baseUrl/email-verification/verify-passcode"
 
   override def requestPasscode(passcodeRequest: PasscodeRequest)(implicit
     hc: HeaderCarrier
   ): EitherT[Future, Error, HttpResponse] =
     EitherT[Future, Error, HttpResponse](
       http
-        .POST[PasscodeRequest, HttpResponse](requestPasscodeUrl, passcodeRequest)
+        .post(url"$requestPasscodeUrl")
+        .withBody(Json.toJson(passcodeRequest))
+        .execute[HttpResponse]
         .map(Right(_))
         .recover { case e =>
           Left(Error(e))
@@ -69,7 +73,9 @@ class EmailVerificationConnectorImpl @Inject() (
   ): EitherT[Future, Error, HttpResponse] =
     EitherT[Future, Error, HttpResponse](
       http
-        .POST[PasscodeVerificationRequest, HttpResponse](verifyPasscodeUrl, passcodeVerificationRequest)
+        .post(url"$verifyPasscodeUrl")
+        .withBody(Json.toJson(passcodeVerificationRequest))
+        .execute[HttpResponse]
         .map(Right(_))
         .recover { case e =>
           Left(Error(e))

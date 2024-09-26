@@ -19,59 +19,33 @@ package uk.gov.hmrc.hecapplicantfrontend.connectors
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should._
 import play.api.libs.json.Writes
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, HttpResponse}
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse}
 
+import java.net.URL
 import scala.concurrent.{ExecutionContext, Future}
 
 trait HttpSupport { this: MockFactory with Matchers =>
 
-  val mockHttp: HttpClient = mock[HttpClient]
+  val mockHttp: HttpClientV2 = mock[HttpClientV2]
 
   def mockGet[A](
-    url: String
+    url: URL
   )(
     response: Option[A]
   ) =
     (mockHttp
-      .GET(_: String, _: Seq[(String, String)], _: Seq[(String, String)])(
-        _: HttpReads[A],
-        _: HeaderCarrier,
-        _: ExecutionContext
-      ))
-      .expects(where {
-        (
-          u: String,
-          q: Seq[(String, String)],
-          r: Seq[(String, String)],
-          _: HttpReads[A],
-          h: HeaderCarrier,
-          _: ExecutionContext
-        ) =>
-          // use matchers here to get useful error messages when the following predicates
-          // are not satisfied - otherwise it is difficult to tell in the logs what went wrong
-          u              shouldBe url
-          q              shouldBe Seq.empty
-          r              shouldBe Seq.empty
-          h.extraHeaders shouldBe Seq.empty
-          true
-      })
+      .get(url: URL)(_: HeaderCarrier))
+      .expects(*)
       .returning(response.fold(Future.failed[A](new Exception("Test exception message")))(Future.successful))
 
-  def mockPost[A](url: String, headers: Seq[(String, String)], body: A)(
+  def mockPost[A](url: URL, headers: Seq[(String, String)], body: A)(
     result: Option[HttpResponse]
   ): Unit =
     (mockHttp
-      .POST(_: String, _: A, _: Seq[(String, String)])(
-        _: Writes[A],
-        _: HttpReads[HttpResponse],
-        _: HeaderCarrier,
-        _: ExecutionContext
-      ))
-      .expects(url, body, headers.toSeq, *, *, *, *)
-      .returning(
-        result.fold[Future[HttpResponse]](
-          Future.failed(new Exception("Test exception message"))
-        )(Future.successful)
+      .post(url: URL)(_: HeaderCarrier))
+      .expects(*)
+      .returning(result.fold[Future[HttpResponse]](Future.failed(new Exception("Test exception message")))(Future.successful)
       )
 
 }

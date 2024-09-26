@@ -18,10 +18,11 @@ package uk.gov.hmrc.hecapplicantfrontend.testonly.connectors
 
 import cats.data.EitherT
 import com.google.inject.{ImplementedBy, Inject, Singleton}
+import play.api.libs.json.Json
 import uk.gov.hmrc.hecapplicantfrontend.models.Error
 import uk.gov.hmrc.hecapplicantfrontend.testonly.models.SaveTaxCheckRequest
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse}
-import uk.gov.hmrc.http.HttpReads.Implicits._
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
+import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -35,7 +36,7 @@ trait HECConnector {
 }
 
 @Singleton
-class HECConnectorImpl @Inject() (http: HttpClient, servicesConfig: ServicesConfig)(implicit
+class HECConnectorImpl @Inject() (http: HttpClientV2, servicesConfig: ServicesConfig)(implicit
   ec: ExecutionContext
 ) extends HECConnector {
 
@@ -48,7 +49,9 @@ class HECConnectorImpl @Inject() (http: HttpClient, servicesConfig: ServicesConf
   )(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse] =
     EitherT[Future, Error, HttpResponse](
       http
-        .POST[SaveTaxCheckRequest, HttpResponse](saveTaxCheckUrl, saveTaxCheckRequest, Seq.empty)
+        .post(url"$saveTaxCheckUrl")
+        .withBody(Json.toJson(saveTaxCheckRequest))
+        .execute[HttpResponse]
         .map(Right(_))
         .recover { case NonFatal(e) =>
           Left(Error(e))

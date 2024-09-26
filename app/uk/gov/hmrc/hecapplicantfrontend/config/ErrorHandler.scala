@@ -20,6 +20,7 @@ import javax.inject.{Inject, Singleton}
 import play.api.i18n.MessagesApi
 import play.api.mvc.Results.Redirect
 import play.api.mvc.{RequestHeader, Result}
+import play.twirl.api.Html
 import scala.concurrent.{ExecutionContext, Future}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService.InconsistentSessionState
@@ -35,7 +36,7 @@ class ErrorHandler @Inject() (val messagesApi: MessagesApi, errorTemplate: Error
 
   override def standardErrorTemplate(pageTitle: String, heading: String, message: String)(implicit
     request: RequestHeader
-  ): Future[play.twirl.api.Html] =
+  ): Future[Html] =
     Future.successful(errorTemplate(pageTitle, heading, message))
 
   override def onServerError(request: RequestHeader, exception: Throwable): Future[Result] = exception match {
