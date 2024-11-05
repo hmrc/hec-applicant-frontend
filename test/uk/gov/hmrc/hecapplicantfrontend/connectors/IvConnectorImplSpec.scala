@@ -18,9 +18,10 @@ package uk.gov.hmrc.hecapplicantfrontend.connectors
 
 import com.typesafe.config.ConfigFactory
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.matchers.should._
+import org.scalatest.wordspec._
 import play.api.Configuration
+import uk.gov.hmrc.hecapplicantfrontend.models.ids.NINO
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
@@ -59,7 +60,7 @@ class IvConnectorImplSpec extends AnyWordSpec with Matchers with MockFactory wit
         url"http://host:123/mdtp/journey/journeyId/${journeyId.toString}"
 
       behave like connectorBehaviour(
-        mockGet[HttpResponse](expectedUrl),
+        mockGet(expectedUrl),
         () => connector.getFailedJourneyStatus(journeyId)
       )
     }

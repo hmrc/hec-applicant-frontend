@@ -47,13 +47,11 @@ class HECConnectorImplSpec extends AnyWordSpec with Matchers with MockFactory wi
          |""".stripMargin)
   )
 
-  val connector = new HECConnectorImpl(mockHttp, new ServicesConfig(config))
-
+  val connector                  = new HECConnectorImpl(mockHttp, new ServicesConfig(config))
+  implicit val hc: HeaderCarrier = HeaderCarrier()
   "HECConnectorImpl" when {
 
     "handling requests to save tax checks" must {
-
-      implicit val hc: HeaderCarrier = HeaderCarrier()
 
       val saveTaxCheckRequest = SaveTaxCheckRequest(
         HECTaxCheckCode("code"),
@@ -70,7 +68,7 @@ class HECConnectorImplSpec extends AnyWordSpec with Matchers with MockFactory wi
       val expectedUrl = url"$protocol://$host:$port/hec/test-only/tax-check"
 
       behave like connectorBehaviour(
-        mockPost(expectedUrl, Seq.empty, saveTaxCheckRequest)(_),
+        mockPost(expectedUrl, saveTaxCheckRequest)(_),
         () => connector.saveTaxCheck(saveTaxCheckRequest)
       )
 

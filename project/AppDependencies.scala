@@ -2,9 +2,9 @@ import sbt.*
 
 object AppDependencies {
 
-  val bootStrapVersion = "9.4.0"
+  val bootStrapVersion = "9.5.0"
   val monocleVersion   = "2.1.0"
-  val hmrcMongoVersion = "2.2.0"
+  val hmrcMongoVersion = "2.3.0"
 
   val compile: Seq[ModuleID] = Seq(
     "uk.gov.hmrc"                %% "bootstrap-frontend-play-30"                 % bootStrapVersion,
@@ -15,7 +15,7 @@ object AppDependencies {
     "com.github.julien-truffaut" %% "monocle-core"                               % monocleVersion,
     "com.github.julien-truffaut" %% "monocle-macro"                              % monocleVersion,
     "uk.gov.hmrc"                %% "play-conditional-form-mapping-play-30"      % "3.2.0",
-    "uk.gov.hmrc"                %% "play-frontend-hmrc-play-30"                 % "10.11.0"
+    "uk.gov.hmrc"                %% "play-frontend-hmrc-play-30"                 % "11.2.0"
   )
 
   val test: Seq[ModuleID] = Seq(

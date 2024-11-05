@@ -36,7 +36,7 @@ class EmailVerificationConnectorSpec
     with ConnectorSpec {
   val (protocol, host, port) = ("http", "host", "123")
 
-  val config = Configuration(
+  val config                     = Configuration(
     ConfigFactory.parseString(s"""
                                  | microservice.services.email-verification {
                                  |    protocol = "$protocol"
@@ -45,8 +45,8 @@ class EmailVerificationConnectorSpec
                                  |  }
                                  |""".stripMargin)
   )
-
-  val connector = new EmailVerificationConnectorImpl(mockHttp, new ServicesConfig(config))
+  val connector                  = new EmailVerificationConnectorImpl(mockHttp, new ServicesConfig(config))
+  implicit val hc: HeaderCarrier = HeaderCarrier()
 
   "EmailVerificationConnectorSpec" when {
 
@@ -54,11 +54,10 @@ class EmailVerificationConnectorSpec
 
       val passcodeRequest = PasscodeRequest(EmailAddress("user@test.com"), "hec", Language.English)
 
-      implicit val hc: HeaderCarrier = HeaderCarrier()
-      val expectedUrl                = url"$protocol://$host:$port/email-verification/request-passcode"
+      val expectedUrl = url"$protocol://$host:$port/email-verification/request-passcode"
 
       behave like connectorBehaviour(
-        mockPost(expectedUrl, Seq.empty, passcodeRequest)(_),
+        mockPost(expectedUrl, passcodeRequest)(_),
         () => connector.requestPasscode(passcodeRequest)
       )
 
@@ -68,11 +67,10 @@ class EmailVerificationConnectorSpec
 
       val passcodeVerificationRequest = PasscodeVerificationRequest(Passcode("AA12345"), EmailAddress("user@test.com"))
 
-      implicit val hc: HeaderCarrier = HeaderCarrier()
-      val expectedUrl                = url"$protocol://$host:$port/email-verification/verify-passcode"
+      val expectedUrl = url"$protocol://$host:$port/email-verification/verify-passcode"
 
       behave like connectorBehaviour(
-        mockPost(expectedUrl, Seq.empty, passcodeVerificationRequest)(_),
+        mockPost(expectedUrl, passcodeVerificationRequest)(_),
         () => connector.verifyPasscode(passcodeVerificationRequest)
       )
 

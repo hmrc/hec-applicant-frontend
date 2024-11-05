@@ -46,18 +46,18 @@ class SendEmailConnectorImplSpec
                                  |""".stripMargin)
   )
 
-  val connector        = new SendEmailConnectorImpl(mockHttp, new ServicesConfig(config))
-  val emailParameter   =
+  val connector                  = new SendEmailConnectorImpl(mockHttp, new ServicesConfig(config))
+  val emailParameter             =
     EmailParameters("9 July 2021", "ABC 123 GRD", "Driver of taxis and private hires", "9 October 2021")
-  val emailSendRequest = EmailSendRequest(List(EmailAddress("user@test.com")), "templateId1", emailParameter)
-
+  val emailSendRequest           = EmailSendRequest(List(EmailAddress("user@test.com")), "templateId1", emailParameter)
+  implicit val hc: HeaderCarrier = HeaderCarrier()
   "SendEmailConnectorImplSpec" when {
 
     "handling request to send email" must {
-      val expectedUrl                = url"$protocol://$host:$port/hmrc/email"
-      implicit val hc: HeaderCarrier = HeaderCarrier()
+      val expectedUrl = url"$protocol://$host:$port/hmrc/email"
+
       behave like connectorBehaviour(
-        mockPost(expectedUrl, Seq.empty, emailSendRequest)(_),
+        mockPost(expectedUrl, emailSendRequest)(_),
         () => connector.sendEmail(emailSendRequest)
       )
     }

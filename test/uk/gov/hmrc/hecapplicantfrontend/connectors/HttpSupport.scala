@@ -17,36 +17,52 @@
 package uk.gov.hmrc.hecapplicantfrontend.connectors
 
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.matchers.should._
-import play.api.libs.json.Writes
-import uk.gov.hmrc.http.client.HttpClientV2
+import org.scalatest.matchers.should.Matchers
+import play.api.libs.json._
+import play.api.libs.ws.{BodyWritable, JsonBodyWritables}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse}
+import uk.gov.hmrc.http.client.{HttpClientV2, RequestBuilder}
 
 import java.net.URL
 import scala.concurrent.{ExecutionContext, Future}
 
 trait HttpSupport { this: MockFactory with Matchers =>
 
-  val mockHttp: HttpClientV2 = mock[HttpClientV2]
+  val mockHttp: HttpClientV2 = mock[HttpClientV2]("mockHttp")
 
-  def mockGet[A](
-    url: URL
-  )(
-    response: Option[A]
-  ) =
-    (mockHttp
-      .get(url: URL)(_: HeaderCarrier))
-      .expects(*)
-      .returning(response.fold(Future.failed[A](new Exception("Test exception message")))(Future.successful))
+  val mockRequestBuilder: RequestBuilder = mock[RequestBuilder]("mockRequestBuilder")
 
-  def mockPost[A](url: URL, headers: Seq[(String, String)], body: A)(
-    result: Option[HttpResponse]
-  ): Unit =
+  def mockGet(url: URL)(httpResponse: Option[HttpResponse]) = {
     (mockHttp
-      .post(url: URL)(_: HeaderCarrier))
-      .expects(*)
+      .get(_: URL)(_: HeaderCarrier))
+      .expects(url, *)
+      .returning(mockRequestBuilder)
+    mockExecute(httpResponse)
+  }
+
+  def mockPost[B : Writes](url: URL, requestBody: B)(httpResponse: Option[HttpResponse]) = {
+    (mockHttp
+      .post(_: URL)(_: HeaderCarrier))
+      .expects(url, *)
+      .returning(mockRequestBuilder)
+    mockWithBody(requestBody)
+    mockExecute(httpResponse)
+  }
+  def mockExecute(httpResponse: Option[HttpResponse])                                    =
+    (mockRequestBuilder
+      .execute[HttpResponse](_: HttpReads[HttpResponse], _: ExecutionContext))
+      .expects(*, *)
       .returning(
-        result.fold[Future[HttpResponse]](Future.failed(new Exception("Test exception message")))(Future.successful)
+        httpResponse.fold[Future[HttpResponse]](
+          Future.failed(new Exception("Test exception message"))
+        )(Future.successful)
       )
+  def mockWithBody[B : Writes](requestBody: B)                                           = {
+    val jsonBody: JsValue = Json.toJson(requestBody)
+    (mockRequestBuilder
+      .withBody(_: JsValue)(_: BodyWritable[JsValue], _: izumi.reflect.Tag[JsValue], _: ExecutionContext))
+      .expects(jsonBody, *, *, *)
+      .returning(mockRequestBuilder)
+  }
 
 }
