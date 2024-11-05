@@ -53,7 +53,7 @@ class CompanyDetailsConnectorSpec
 
       val companyNumber = CRN("1234567")
 
-      val expectedUrl = url"$protocol://$host:$port/companies-house-api-proxy/company/${companyNumber.toString}"
+      val expectedUrl = url"$protocol://$host:$port/companies-house-api-proxy/company/${companyNumber.value}"
 
       behave like connectorBehaviour(
         mockGet(expectedUrl)(_),

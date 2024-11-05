@@ -100,7 +100,7 @@ class HECConnectorImpl @Inject() (http: HttpClientV2, servicesConfig: ServicesCo
   def getCtutr(crn: CRN)(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse] =
     EitherT[Future, Error, HttpResponse](
       http
-        .get(url"$baseUrl/hec/ctutr/$crn")
+        .get(url"$baseUrl/hec/ctutr/${crn.value}")
         .execute[HttpResponse]
         .map(Right(_))
         .recover { case e => Left(Error(e)) }

@@ -136,7 +136,7 @@ class HECConnectorImplSpec extends AnyWordSpec with Matchers with MockFactory wi
 
       val crn = CRN("AA12345")
 
-      val expectedUrl = url"$protocol://$host:$port/hec/ctutr/${crn.toString}"
+      val expectedUrl = url"$protocol://$host:$port/hec/ctutr/${crn.value}"
 
       behave like connectorBehaviour(
         mockGet(expectedUrl),

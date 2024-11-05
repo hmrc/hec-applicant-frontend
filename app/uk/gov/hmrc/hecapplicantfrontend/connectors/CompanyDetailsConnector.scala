@@ -43,7 +43,7 @@ class CompanyDetailsConnectorImpl @Inject() (http: HttpClientV2, servicesConfig:
   override def findCompany(companyNumber: CRN)(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse] =
     EitherT[Future, Error, HttpResponse](
       http
-        .get(url"$baseUrl/companies-house-api-proxy/company/$companyNumber")
+        .get(url"$baseUrl/companies-house-api-proxy/company/${companyNumber.value}")
         .execute[HttpResponse]
         .map(Right(_))
         .recover { case e => Left(Error(e)) }

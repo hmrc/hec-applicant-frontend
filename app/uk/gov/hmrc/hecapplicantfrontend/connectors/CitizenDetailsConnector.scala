@@ -42,7 +42,7 @@ class CitizenDetailsConnectorImpl @Inject() (http: HttpClientV2, servicesConfig:
   override def getCitizenDetails(nino: NINO)(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse] =
     EitherT[Future, Error, HttpResponse](
       http
-        .get(url"$baseUrl/citizen-details/nino/$nino")
+        .get(url"$baseUrl/citizen-details/nino/${nino.value}")
         .execute[HttpResponse]
         .map(Right(_))
         .recover { case e => Left(Error(e)) }

@@ -54,7 +54,7 @@ class CitizenDetailsConnectorImplSpec
 
       val nino = NINO("AB123456C")
 
-      val expectedUrl = url"$protocol://$host:$port/citizen-details/nino/${nino.toString}"
+      val expectedUrl = url"$protocol://$host:$port/citizen-details/nino/${nino.value}"
 
       behave like connectorBehaviour(
         mockGet(expectedUrl)(_),
