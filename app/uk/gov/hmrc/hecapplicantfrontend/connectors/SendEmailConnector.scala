@@ -36,14 +36,13 @@ class SendEmailConnectorImpl @Inject() (http: HttpClientV2, servicesConfig: Serv
   ec: ExecutionContext
 ) extends SendEmailConnector {
 
-  private val baseUrl: String      = servicesConfig.baseUrl("email-send")
-  private val sendEmailUrl: String = s"$baseUrl/hmrc/email"
+  private val baseUrl: String = servicesConfig.baseUrl("email-send")
 
   override def sendEmail(emailSendRequest: EmailSendRequest)(implicit
     hc: HeaderCarrier
   ): EitherT[Future, Error, HttpResponse] = EitherT[Future, Error, HttpResponse](
     http
-      .post(url"$sendEmailUrl")
+      .post(url"$baseUrl/hmrc/email")
       .withBody(Json.toJson(emailSendRequest))
       .execute[HttpResponse]
       .map(Right(_))

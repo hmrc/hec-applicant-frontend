@@ -57,20 +57,14 @@ class HECConnectorImpl @Inject() (http: HttpClientV2, servicesConfig: ServicesCo
 
   private val baseUrl: String = servicesConfig.baseUrl("hec")
 
-  private val saveTaxCheckUrl: String = s"$baseUrl/hec/tax-check"
-
   private def toUrlString(d: LocalDate): String = d.format(DateTimeFormatter.ISO_LOCAL_DATE)
-
-  private val getTaxCheckCodesUrl: String = s"$baseUrl/hec/unexpired-tax-checks"
-
-  private val saveEmailAddressUrl: String = s"$baseUrl/hec/email-address"
 
   override def saveTaxCheck(
     taxCheckData: HECTaxCheckData
   )(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse] =
     EitherT[Future, Error, HttpResponse](
       http
-        .post(url"$saveTaxCheckUrl")
+        .post(url"$baseUrl/hec/tax-check")
         .withBody(Json.toJson(taxCheckData))
         .execute[HttpResponse]
         .map(Right(_))
@@ -109,7 +103,7 @@ class HECConnectorImpl @Inject() (http: HttpClientV2, servicesConfig: ServicesCo
   def getUnexpiredTaxCheckCodes()(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse] =
     EitherT[Future, Error, HttpResponse](
       http
-        .get(url"$getTaxCheckCodesUrl")
+        .get(url"$baseUrl/hec/unexpired-tax-checks")
         .execute[HttpResponse]
         .map(Right(_))
         .recover { case e => Left(Error(e)) }
@@ -120,7 +114,7 @@ class HECConnectorImpl @Inject() (http: HttpClientV2, servicesConfig: ServicesCo
   )(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse] =
     EitherT[Future, Error, HttpResponse](
       http
-        .post(url"$saveEmailAddressUrl")
+        .post(url"$baseUrl/hec/email-address")
         .withBody(Json.toJson(saveEmailAddressRequest))
         .execute[HttpResponse]
         .map(Right(_))
