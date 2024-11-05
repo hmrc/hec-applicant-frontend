@@ -51,16 +51,12 @@ class EmailVerificationConnectorImpl @Inject() (
 
   val baseUrl: String = servicesConfig.baseUrl("email-verification")
 
-  private val requestPasscodeUrl: String = s"$baseUrl/email-verification/request-passcode"
-
-  private val verifyPasscodeUrl: String = s"$baseUrl/email-verification/verify-passcode"
-
   override def requestPasscode(passcodeRequest: PasscodeRequest)(implicit
     hc: HeaderCarrier
   ): EitherT[Future, Error, HttpResponse] =
     EitherT[Future, Error, HttpResponse](
       http
-        .post(url"$requestPasscodeUrl")
+        .post(url"$baseUrl/email-verification/request-passcode")
         .withBody(Json.toJson(passcodeRequest))
         .execute[HttpResponse]
         .map(Right(_))
@@ -73,7 +69,7 @@ class EmailVerificationConnectorImpl @Inject() (
   ): EitherT[Future, Error, HttpResponse] =
     EitherT[Future, Error, HttpResponse](
       http
-        .post(url"$verifyPasscodeUrl")
+        .post(url"$baseUrl/email-verification/verify-passcode")
         .withBody(Json.toJson(passcodeVerificationRequest))
         .execute[HttpResponse]
         .map(Right(_))
