@@ -74,7 +74,7 @@ class HECConnectorImpl @Inject() (http: HttpClientV2, servicesConfig: ServicesCo
   def getSAStatus(sautr: SAUTR, taxYear: TaxYear)(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse] =
     EitherT[Future, Error, HttpResponse](
       http
-        .get(url"$baseUrl/hec/sa-status/$sautr/$taxYear")
+        .get(url"$baseUrl/hec/sa-status/${sautr.value}/${taxYear.startYear}")
         .execute[HttpResponse]
         .map(Right(_))
         .recover { case e => Left(Error(e)) }

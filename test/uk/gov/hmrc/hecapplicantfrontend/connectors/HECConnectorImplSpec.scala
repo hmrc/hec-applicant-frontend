@@ -102,7 +102,7 @@ class HECConnectorImplSpec extends AnyWordSpec with Matchers with MockFactory wi
 
       val taxYear = TaxYear(2020)
 
-      val expectedUrl = url"$protocol://$host:$port/hec/sa-status/${sautr.toString}/${taxYear.toString}"
+      val expectedUrl = url"$protocol://$host:$port/hec/sa-status/${sautr.value}/2020"
 
       behave like connectorBehaviour(
         mockGet(expectedUrl)(_),
