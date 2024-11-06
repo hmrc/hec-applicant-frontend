@@ -15,13 +15,13 @@
  *@
 
 @import play.api.i18n.Messages
-@import play.api.mvc.{Call, Request}
+@import play.api.mvc.{Call, RequestHeader}
 @import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 @import play.twirl.api.Html
 @import uk.gov.hmrc.hecapplicantfrontend.views.html.components.ExitSurveyLink
 
 @this(layout: Layout, exitSurveyLink: ExitSurveyLink)
-@(back: Call)(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
+@(back: Call)(implicit requestHeader: RequestHeader, messages: Messages, appConfig: AppConfig)
 @key = @{"dontHaveCtutr"}
 @title = @{messages(s"$key.title")}
 

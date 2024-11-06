@@ -18,11 +18,11 @@ package uk.gov.hmrc.hecapplicantfrontend.connectors
 
 import com.typesafe.config.ConfigFactory
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.matchers.should._
-import org.scalatest.wordspec._
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.NINO
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -33,7 +33,6 @@ class CitizenDetailsConnectorImplSpec
     with MockFactory
     with HttpSupport
     with ConnectorSpec {
-
   val (protocol, host, port) = ("http", "host", "123")
 
   val config = Configuration(
@@ -48,18 +47,17 @@ class CitizenDetailsConnectorImplSpec
 
   val connector = new CitizenDetailsConnectorImpl(mockHttp, new ServicesConfig(config))
 
+  implicit val hc: HeaderCarrier = HeaderCarrier()
   "CitizenDetailsConnectorImpl" when {
 
     "handling requests to get citizen details" must {
 
-      implicit val hc: HeaderCarrier = HeaderCarrier()
-
       val nino = NINO("AB123456C")
 
-      val expectedUrl = s"$protocol://$host:$port/citizen-details/nino/${nino.value}"
+      val expectedUrl = url"$protocol://$host:$port/citizen-details/nino/${nino.value}"
 
       behave like connectorBehaviour(
-        mockGet[HttpResponse](expectedUrl)(_),
+        mockGet(expectedUrl)(_),
         () => connector.getCitizenDetails(nino)
       )
 

@@ -17,13 +17,14 @@
 package uk.gov.hmrc.hecapplicantfrontend.connectors
 
 import java.util.UUID
-
 import cats.data.EitherT
 import com.google.inject.{ImplementedBy, Inject, Singleton}
 import uk.gov.hmrc.hecapplicantfrontend.models.Error
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.http.HttpReads.Implicits._
+import uk.gov.hmrc.http.client.HttpClientV2
+
 import scala.concurrent.{ExecutionContext, Future}
 @ImplementedBy(classOf[IvConnectorImpl])
 trait IvConnector {
@@ -36,7 +37,7 @@ trait IvConnector {
 
 @Singleton
 class IvConnectorImpl @Inject() (
-  http: HttpClient,
+  http: HttpClientV2,
   servicesConfig: ServicesConfig
 )(implicit
   ec: ExecutionContext
@@ -44,15 +45,13 @@ class IvConnectorImpl @Inject() (
 
   val baseUrl: String = servicesConfig.baseUrl("iv")
 
-  def url(journeyId: UUID): String =
-    s"$baseUrl/mdtp/journey/journeyId/${journeyId.toString}"
-
   override def getFailedJourneyStatus(
     journeyId: UUID
   )(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse] =
     EitherT[Future, Error, HttpResponse](
       http
-        .GET[HttpResponse](url(journeyId))
+        .get(url"$baseUrl/mdtp/journey/journeyId/$journeyId")
+        .execute[HttpResponse]
         .map(Right(_))
         .recover { case e =>
           Left(Error(e))

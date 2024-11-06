@@ -21,9 +21,9 @@ import com.google.inject.{ImplementedBy, Singleton}
 import uk.gov.hmrc.hecapplicantfrontend.models.Error
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.CRN
 import uk.gov.hmrc.http.HttpReads.Implicits._
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse}
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -31,23 +31,20 @@ import scala.concurrent.{ExecutionContext, Future}
 trait CompanyDetailsConnector {
 
   def findCompany(companyNumber: CRN)(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse]
-
 }
 
 @Singleton
-class CompanyDetailsConnectorImpl @Inject() (http: HttpClient, servicesConfig: ServicesConfig)(implicit
+class CompanyDetailsConnectorImpl @Inject() (http: HttpClientV2, servicesConfig: ServicesConfig)(implicit
   ec: ExecutionContext
 ) extends CompanyDetailsConnector {
 
   private val baseUrl: String = s"${servicesConfig.baseUrl("companies-house-proxy")}"
 
-  private def getDetailsUrl(companyNumber: CRN): String =
-    s"$baseUrl/companies-house-api-proxy/company/${companyNumber.value}"
-
   override def findCompany(companyNumber: CRN)(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse] =
     EitherT[Future, Error, HttpResponse](
       http
-        .GET[HttpResponse](getDetailsUrl(companyNumber))
+        .get(url"$baseUrl/companies-house-api-proxy/company/${companyNumber.value}")
+        .execute[HttpResponse]
         .map(Right(_))
         .recover { case e => Left(Error(e)) }
     )

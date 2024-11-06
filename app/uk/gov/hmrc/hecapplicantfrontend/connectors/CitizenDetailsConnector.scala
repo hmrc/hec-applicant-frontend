@@ -21,33 +21,30 @@ import com.google.inject.{ImplementedBy, Inject, Singleton}
 import uk.gov.hmrc.hecapplicantfrontend.models.Error
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.NINO
 import uk.gov.hmrc.http.HttpReads.Implicits._
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
+import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-
 import scala.concurrent.{ExecutionContext, Future}
 
 @ImplementedBy(classOf[CitizenDetailsConnectorImpl])
 trait CitizenDetailsConnector {
 
   def getCitizenDetails(nino: NINO)(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse]
-
 }
 
 @Singleton
-class CitizenDetailsConnectorImpl @Inject() (http: HttpClient, servicesConfig: ServicesConfig)(implicit
+class CitizenDetailsConnectorImpl @Inject() (http: HttpClientV2, servicesConfig: ServicesConfig)(implicit
   ec: ExecutionContext
 ) extends CitizenDetailsConnector {
 
   private val baseUrl: String = servicesConfig.baseUrl("citizen-details")
 
-  private def getDetailsUrl(nino: NINO): String = s"$baseUrl/citizen-details/nino/${nino.value}"
-
   override def getCitizenDetails(nino: NINO)(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse] =
     EitherT[Future, Error, HttpResponse](
       http
-        .GET[HttpResponse](getDetailsUrl(nino))
+        .get(url"$baseUrl/citizen-details/nino/${nino.value}")
+        .execute[HttpResponse]
         .map(Right(_))
         .recover { case e => Left(Error(e)) }
     )
-
 }

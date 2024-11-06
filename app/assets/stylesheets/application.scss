@@ -1,4 +1,5 @@
-@import "lib/govuk-frontend/govuk/base";
+$govuk-assets-path: "/agent/assets/lib/govuk-frontend/dist/govuk/assets/";
+@import "lib/govuk-frontend/dist/govuk/base";
 
 body:not(.js-enabled) .js-visible {
   display: none;

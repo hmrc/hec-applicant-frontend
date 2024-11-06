@@ -15,7 +15,7 @@
  *@
 
 @import play.api.i18n.Messages
-@import play.api.mvc.Request
+@import play.api.mvc.RequestHeader
 @import play.twirl.api.Html
 @import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 @import uk.gov.hmrc.hecapplicantfrontend.models.{ EmailAddress, TaxCheckListItem }
@@ -25,8 +25,8 @@
 
 @this(layout: Layout, exitSurveyLink: ExitSurveyLink)
 
-@(email: EmailAddress, taxCheck: TaxCheckListItem)(implicit request:
-Request[_], messages: Messages)
+@(email: EmailAddress, taxCheck: TaxCheckListItem)(implicit requestHeader:
+RequestHeader, messages: Messages)
 @key = @{"emailSent"}
 @title = @{messages(s"$key.title")}
 

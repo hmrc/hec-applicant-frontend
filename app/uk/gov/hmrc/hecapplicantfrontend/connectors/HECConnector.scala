@@ -18,13 +18,14 @@ package uk.gov.hmrc.hecapplicantfrontend.connectors
 
 import cats.data.EitherT
 import com.google.inject.{ImplementedBy, Inject, Singleton}
+import play.api.libs.json.Json
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.{HECTaxCheckData, SaveEmailAddressRequest}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR, SAUTR}
 import uk.gov.hmrc.hecapplicantfrontend.models.{Error, TaxYear}
 import uk.gov.hmrc.http.HttpReads.Implicits._
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-
+import uk.gov.hmrc.http.client.HttpClientV2
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import scala.concurrent.{ExecutionContext, Future}
@@ -47,39 +48,25 @@ trait HECConnector {
   def saveEmailAddress(saveEmailAddressRequest: SaveEmailAddressRequest)(implicit
     hc: HeaderCarrier
   ): EitherT[Future, Error, HttpResponse]
-
 }
 
 @Singleton
-class HECConnectorImpl @Inject() (http: HttpClient, servicesConfig: ServicesConfig)(implicit
+class HECConnectorImpl @Inject() (http: HttpClientV2, servicesConfig: ServicesConfig)(implicit
   ec: ExecutionContext
 ) extends HECConnector {
 
   private val baseUrl: String = servicesConfig.baseUrl("hec")
 
-  private val saveTaxCheckUrl: String = s"$baseUrl/hec/tax-check"
-
-  private def saStatusUrl(sautr: SAUTR, taxYear: TaxYear): String =
-    s"$baseUrl/hec/sa-status/${sautr.value}/${taxYear.startYear}"
-
-  private def ctStatusUrl(ctutr: CTUTR, startDate: LocalDate, endDate: LocalDate): String =
-    s"$baseUrl/hec/ct-status/${ctutr.value}/${toUrlString(startDate)}/${toUrlString(endDate)}"
-
-  private def toUrlString(d: LocalDate): String =
-    d.format(DateTimeFormatter.ISO_LOCAL_DATE)
-
-  private def getCtutrUrl(crn: CRN): String = s"$baseUrl/hec/ctutr/${crn.value}"
-
-  private val getTaxCheckCodesUrl: String = s"$baseUrl/hec/unexpired-tax-checks"
-
-  private val saveEmailAddressUrl: String = s"$baseUrl/hec/email-address"
+  private def toUrlString(d: LocalDate): String = d.format(DateTimeFormatter.ISO_LOCAL_DATE)
 
   override def saveTaxCheck(
     taxCheckData: HECTaxCheckData
   )(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse] =
     EitherT[Future, Error, HttpResponse](
       http
-        .POST[HECTaxCheckData, HttpResponse](saveTaxCheckUrl, taxCheckData)
+        .post(url"$baseUrl/hec/tax-check")
+        .withBody(Json.toJson(taxCheckData))
+        .execute[HttpResponse]
         .map(Right(_))
         .recover { case e => Left(Error(e)) }
     )
@@ -87,7 +74,8 @@ class HECConnectorImpl @Inject() (http: HttpClient, servicesConfig: ServicesConf
   def getSAStatus(sautr: SAUTR, taxYear: TaxYear)(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse] =
     EitherT[Future, Error, HttpResponse](
       http
-        .GET[HttpResponse](saStatusUrl(sautr, taxYear))
+        .get(url"$baseUrl/hec/sa-status/${sautr.value}/${taxYear.startYear}")
+        .execute[HttpResponse]
         .map(Right(_))
         .recover { case e => Left(Error(e)) }
     )
@@ -97,7 +85,8 @@ class HECConnectorImpl @Inject() (http: HttpClient, servicesConfig: ServicesConf
   ): EitherT[Future, Error, HttpResponse] =
     EitherT[Future, Error, HttpResponse](
       http
-        .GET[HttpResponse](ctStatusUrl(ctutr, startDate, endDate))
+        .get(url"$baseUrl/hec/ct-status/${ctutr.value}/${toUrlString(startDate)}/${toUrlString(endDate)}")
+        .execute[HttpResponse]
         .map(Right(_))
         .recover { case e => Left(Error(e)) }
     )
@@ -105,7 +94,8 @@ class HECConnectorImpl @Inject() (http: HttpClient, servicesConfig: ServicesConf
   def getCtutr(crn: CRN)(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse] =
     EitherT[Future, Error, HttpResponse](
       http
-        .GET[HttpResponse](getCtutrUrl(crn))
+        .get(url"$baseUrl/hec/ctutr/${crn.value}")
+        .execute[HttpResponse]
         .map(Right(_))
         .recover { case e => Left(Error(e)) }
     )
@@ -113,7 +103,8 @@ class HECConnectorImpl @Inject() (http: HttpClient, servicesConfig: ServicesConf
   def getUnexpiredTaxCheckCodes()(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse] =
     EitherT[Future, Error, HttpResponse](
       http
-        .GET[HttpResponse](getTaxCheckCodesUrl)
+        .get(url"$baseUrl/hec/unexpired-tax-checks")
+        .execute[HttpResponse]
         .map(Right(_))
         .recover { case e => Left(Error(e)) }
     )
@@ -123,7 +114,9 @@ class HECConnectorImpl @Inject() (http: HttpClient, servicesConfig: ServicesConf
   )(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse] =
     EitherT[Future, Error, HttpResponse](
       http
-        .POST[SaveEmailAddressRequest, HttpResponse](saveEmailAddressUrl, saveEmailAddressRequest)
+        .post(url"$baseUrl/hec/email-address")
+        .withBody(Json.toJson(saveEmailAddressRequest))
+        .execute[HttpResponse]
         .map(Right(_))
         .recover { case e => Left(Error(e)) }
     )

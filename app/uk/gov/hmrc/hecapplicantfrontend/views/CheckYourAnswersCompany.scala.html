@@ -15,7 +15,7 @@
  *@
 
 @import play.api.i18n.Messages
-@import play.api.mvc.{Call, Request}
+@import play.api.mvc.{Call, RequestHeader}
 @import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 @import uk.gov.hmrc.hecapplicantfrontend.models.CompanyUserAnswers.CompleteCompanyUserAnswers
 @import uk.gov.hmrc.govukfrontend.views.html.components._
@@ -29,7 +29,7 @@
         completeAnswers: CompleteCompanyUserAnswers,
         retrievedJourneyData: RetrievedJourneyData,
         loginData: LoginData
-)(implicit request: Request[_], messages: Messages)
+)(implicit requestHeader: RequestHeader, messages: Messages)
 
 @key = @{"checkYourAnswers"}
 @title = @{messages(s"$key.title")}

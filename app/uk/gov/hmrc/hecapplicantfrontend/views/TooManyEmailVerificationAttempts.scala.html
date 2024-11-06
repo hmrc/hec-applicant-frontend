@@ -15,13 +15,13 @@
  *@
 
 @import play.api.i18n.Messages
-@import play.api.mvc.Request
+@import play.api.mvc.RequestHeader
 @import play.twirl.api.Html
 @import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 
 @this(layout: Layout)
 
-@()(implicit request: Request[_], messages: Messages)
+@()(implicit requestHeader: RequestHeader, messages: Messages)
 @key = @{"emailRequestExceeded"}
 @title =  @{messages(s"$key.title")}
 

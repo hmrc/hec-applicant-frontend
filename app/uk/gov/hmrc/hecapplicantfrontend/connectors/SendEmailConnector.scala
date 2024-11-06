@@ -18,12 +18,12 @@ package uk.gov.hmrc.hecapplicantfrontend.connectors
 
 import cats.data.EitherT
 import com.google.inject.{ImplementedBy, Inject, Singleton}
+import play.api.libs.json.Json
 import uk.gov.hmrc.hecapplicantfrontend.models.Error
 import uk.gov.hmrc.hecapplicantfrontend.models.emailSend.EmailSendRequest
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-import uk.gov.hmrc.http.HttpReads.Implicits._
-
+import uk.gov.hmrc.http.client.HttpClientV2
 import scala.concurrent.{ExecutionContext, Future}
 
 @ImplementedBy(classOf[SendEmailConnectorImpl])
@@ -32,18 +32,19 @@ trait SendEmailConnector {
 }
 
 @Singleton
-class SendEmailConnectorImpl @Inject() (http: HttpClient, servicesConfig: ServicesConfig)(implicit
+class SendEmailConnectorImpl @Inject() (http: HttpClientV2, servicesConfig: ServicesConfig)(implicit
   ec: ExecutionContext
 ) extends SendEmailConnector {
 
-  private val baseUrl: String      = servicesConfig.baseUrl("email-send")
-  private val sendEmailUrl: String = s"$baseUrl/hmrc/email"
+  private val baseUrl: String = servicesConfig.baseUrl("email-send")
 
   override def sendEmail(emailSendRequest: EmailSendRequest)(implicit
     hc: HeaderCarrier
   ): EitherT[Future, Error, HttpResponse] = EitherT[Future, Error, HttpResponse](
     http
-      .POST[EmailSendRequest, HttpResponse](sendEmailUrl, emailSendRequest)
+      .post(url"$baseUrl/hmrc/email")
+      .withBody(Json.toJson(emailSendRequest))
+      .execute[HttpResponse]
       .map(Right(_))
       .recover { case e => Left(Error(e)) }
   )

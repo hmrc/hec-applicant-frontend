@@ -15,13 +15,13 @@
  *@
 
 @import play.api.i18n.Messages
-@import play.api.mvc.Request
+@import play.api.mvc.RequestHeader
 @import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 @import uk.gov.hmrc.hecapplicantfrontend.views.html.Layout
 
 @this(layout: Layout)
 
-@()(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
+@()(implicit requestHeader: RequestHeader, messages: Messages, appConfig: AppConfig)
 @title = @{messages("iv.lockedOut.title")}
 
 @layout(pageTitle = Some(title)) {

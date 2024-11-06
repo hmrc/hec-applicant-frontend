@@ -22,7 +22,7 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.CRN
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -33,10 +33,9 @@ class CompanyDetailsConnectorSpec
     with MockFactory
     with HttpSupport
     with ConnectorSpec {
-
   val (protocol, host, port) = ("http", "host", "123")
 
-  val config    = Configuration(
+  val config                     = Configuration(
     ConfigFactory.parseString(s"""
                                  | microservice.services.companies-house-proxy {
                                  |    protocol = "$protocol"
@@ -45,20 +44,19 @@ class CompanyDetailsConnectorSpec
                                  |  }
                                  |""".stripMargin)
   )
-  val connector = new CompanyDetailsConnectorImpl(mockHttp, new ServicesConfig(config))
+  val connector                  = new CompanyDetailsConnectorImpl(mockHttp, new ServicesConfig(config))
+  implicit val hc: HeaderCarrier = HeaderCarrier()
 
   "CompanyDetailsConnectorImpl" when {
 
     "handling requests to get company details" must {
 
-      implicit val hc: HeaderCarrier = HeaderCarrier()
-
       val companyNumber = CRN("1234567")
 
-      val expectedUrl = s"$protocol://$host:$port/companies-house-api-proxy/company/1234567"
+      val expectedUrl = url"$protocol://$host:$port/companies-house-api-proxy/company/${companyNumber.value}"
 
       behave like connectorBehaviour(
-        mockGet[HttpResponse](expectedUrl)(_),
+        mockGet(expectedUrl)(_),
         () => connector.findCompany(companyNumber)
       )
 
