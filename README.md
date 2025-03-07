@@ -116,8 +116,18 @@ To check files have been formatted as expected execute:
 This code is open source software licensed under the [Apache 2.0 License]("http://www.apache.org/licenses/LICENSE-2.0.html").
 
 
+## Monitoring
+
+The following grafana and kibana dashboards are available for this service:
+
+* [Grafana](https://grafana.tools.production.tax.service.gov.uk/d/hec-applicant-frontend/hec-applicant-frontend?orgId=1&from=now-24h&to=now&timezone=browser&var-ecsServiceName=ecs-hec-applicant-frontend-public-Service-Ebnh29NnjLfB&var-ecsServicePrefix=ecs-hec-applicant-frontend-public&refresh=15m)
+* [Kibana](https://kibana.tools.production.tax.service.gov.uk/app/dashboards#/view/hec-stride-frontend?_g=(filters:!(),refreshInterval:(pause:!t,value:60000),time:(from:now-15m,to:now))
+
+
+
+
 ## Other helpful documentation
 
 * [Service Runbook](https://confluence.tools.tax.service.gov.uk/display/ELSY/Hidden+Economy+Conditionality+%28HEC%29+Runbook)
 
-* [Architecture Links](https://confluence.tools.tax.service.gov.uk/pages/viewpage.action?pageId=872972492)
+* [Architecture Links](https://kibana.tools.production.tax.service.gov.uk/app/dashboards#/view/hec-applicant-frontend?_g=(filters:!(),refreshInterval:(pause:!t,value:60000),time:(from:now-15m,to:now)))
