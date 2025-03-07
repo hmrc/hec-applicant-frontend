@@ -49,7 +49,7 @@ Additional test data can be found within the [hec-stub](https://github.com/hmrc/
 Check the README to see different data states.
 
 
-## Running tests via terminal
+## Running tests
 
 You can run tests in Intellij by running:
 
@@ -57,6 +57,12 @@ You can run tests in Intellij by running:
 sbt test
 ```
 
+This service uses sbt-scoverage to provide test coverage reports.
+Use the following command to run the tests with coverage and generate a report:
+
+```
+sbt clean coverage test coverageReport
+```
 
 ## Patterns 
 
