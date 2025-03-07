@@ -29,7 +29,7 @@ sm2 -stop HEC_APPLICANT_FRONTEND
 
 ### Using localhost
 
-To run this frontend microservice locally on the configured port **'9222'**, you can run:
+To run this frontend microservice locally on the configured port **'10106'**, you can run:
 
 ```
 sbt run 
