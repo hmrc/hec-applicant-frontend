@@ -7,6 +7,9 @@ successful, applicants will receive a tax check code at the end of the journey t
 to the relevant licencing bodies (LB's) to allow their licence to be issued.
 
 ## Running the service
+
+### Using service manager
+
 When running locally, the dependant services can be run using the service manager command
 ```
 sm2 --start HEC_DEP
@@ -17,6 +20,49 @@ sm2 --start HEC_ALL
 ```
 By default, this service runs on port `10106`.
 
+To stop the frontend microservice from running on service manager (e.g. to run your own version locally), you can run:
+
+```
+sm2 -stop HEC_APPLICANT_FRONTEND
+```
+
+
+### Using localhost
+
+To run this frontend microservice locally on the configured port **'10106'**, you can run:
+
+```
+sbt run 
+```
+
+**NOTE:** Ensure that you are not running the microservice via service manager before starting your service locally (vice versa)
+or the service will fail to start
+
+## Accessing the service
+
+This service requires authentication stubbing before it can be accessed. Details can be found on the
+[DDCY Live Services Credentials sheet](https://docs.google.com/spreadsheets/d/1ecLTROmzZtv97jxM-5LgoujinGxmDoAuZauu2tFoAVU/edit?gid=1186990023#gid=1186990023)
+for both staging and local url's or check the Tech Overview section in the
+[service summary page](https://confluence.tools.tax.service.gov.uk/display/ELSY/HEC+Service+Summary)
+
+Additional test data can be found within the [hec-stub](https://github.com/hmrc/hec-stubs) repository.
+Check the README to see different data states.
+
+
+## Running tests
+
+You can run tests in Intellij by running:
+
+```
+sbt test
+```
+
+This service uses sbt-scoverage to provide test coverage reports.
+Use the following command to run the tests with coverage and generate a report:
+
+```
+sbt clean coverage test coverageReport
+```
 
 ## Patterns 
 
@@ -48,9 +94,6 @@ given during their journey. This distinction is made to facilitate navigation wi
 `JourneyService` is responsible for uplifting "incomplete" answers to "complete" ones if all questions have been 
 answered. 
 
-### Test data
-Test data to use can be found in the [stub microservice](https://github.com/hmrc/hec-stubs).
-
 ### Scalafmt
 This repository uses [Scalafmt](https://scalameta.org/scalafmt/), a code formatter for Scala. The formatting rules configured for this repository are defined within [.scalafmt.conf](.scalafmt.conf).
 
@@ -71,3 +114,20 @@ To check files have been formatted as expected execute:
 ## License
 
 This code is open source software licensed under the [Apache 2.0 License]("http://www.apache.org/licenses/LICENSE-2.0.html").
+
+
+## Monitoring
+
+The following grafana and kibana dashboards are available for this service:
+
+* [Grafana](https://grafana.tools.production.tax.service.gov.uk/d/hec-applicant-frontend/hec-applicant-frontend?orgId=1&from=now-24h&to=now&timezone=browser&var-ecsServiceName=ecs-hec-applicant-frontend-public-Service-Ebnh29NnjLfB&var-ecsServicePrefix=ecs-hec-applicant-frontend-public&refresh=15m)
+* [Kibana](https://kibana.tools.production.tax.service.gov.uk/app/dashboards#/view/hec-stride-frontend?_g=(filters:!(),refreshInterval:(pause:!t,value:60000),time:(from:now-15m,to:now))
+
+
+
+
+## Other helpful documentation
+
+* [Service Runbook](https://confluence.tools.tax.service.gov.uk/display/ELSY/Hidden+Economy+Conditionality+%28HEC%29+Runbook)
+
+* [Architecture Links](https://kibana.tools.production.tax.service.gov.uk/app/dashboards#/view/hec-applicant-frontend?_g=(filters:!(),refreshInterval:(pause:!t,value:60000),time:(from:now-15m,to:now)))
