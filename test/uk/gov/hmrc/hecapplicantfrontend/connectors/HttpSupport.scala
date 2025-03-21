@@ -19,7 +19,7 @@ package uk.gov.hmrc.hecapplicantfrontend.connectors
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import play.api.libs.json._
-import play.api.libs.ws.{BodyWritable, JsonBodyWritables}
+import play.api.libs.ws.BodyWritable
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse}
 import uk.gov.hmrc.http.client.{HttpClientV2, RequestBuilder}
 
