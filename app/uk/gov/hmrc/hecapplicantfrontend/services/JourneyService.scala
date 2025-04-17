@@ -24,7 +24,6 @@ import cats.syntax.eq._
 import cats.syntax.option._
 import com.google.inject.{ImplementedBy, Inject, Singleton}
 import play.api.mvc.Call
-import uk.gov.hmrc.emailaddress.EmailAddress
 import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 import uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.saTaxSituations
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.RequestWithSessionData
@@ -36,6 +35,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, In
 import uk.gov.hmrc.hecapplicantfrontend.models.IndividualUserAnswers.{CompleteIndividualUserAnswers, IncompleteIndividualUserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.IndividualLoginData
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.{CompanyRetrievedJourneyData, IndividualRetrievedJourneyData}
+import uk.gov.hmrc.hecapplicantfrontend.models.email.{EmailAddress => ModelsEmailAddress}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailSend.EmailSendResult
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeRequestResult._
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeVerificationResult
@@ -559,9 +559,9 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
   def emailVerificationRoute(session: HECSession): Call = {
     val emailOpt = session.fold(_.loginData.emailAddress, _.loginData.emailAddress)
     emailOpt match {
-      case Some(email) if EmailAddress.isValid(email.value) =>
+      case Some(email) if ModelsEmailAddress.isValid(email.value) =>
         routes.ConfirmEmailAddressController.confirmEmailAddress
-      case _                                                => routes.EnterEmailAddressController.enterEmailAddress
+      case _                                                      => routes.EnterEmailAddressController.enterEmailAddress
     }
   }
 

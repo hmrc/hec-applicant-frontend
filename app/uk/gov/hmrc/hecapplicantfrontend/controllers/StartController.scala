@@ -30,13 +30,13 @@ import play.api.mvc.{Action, AnyContent, Call, MessagesControllerComponents, Req
 import uk.gov.hmrc.auth.core.retrieve.Credentials
 import uk.gov.hmrc.auth.core.{AffinityGroup, ConfidenceLevel, Enrolment, Enrolments}
 import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.emailaddress.{EmailAddress => EmailAdd}
 import uk.gov.hmrc.hecapplicantfrontend.config.{AppConfig, EnrolmentConfig}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.AuthWithRetrievalsAction
 import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.ApplicantServiceStartEndPointAccessed
 import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.ApplicantServiceStartEndPointAccessed.AuthenticationDetails
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, IndividualHECSession}
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
+import uk.gov.hmrc.hecapplicantfrontend.models.email.{EmailAddress => ModelsEmailAddress}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CTUTR, GGCredId, NINO, SAUTR}
 import uk.gov.hmrc.hecapplicantfrontend.models.{AuthenticationStatus, CitizenDetails, EmailAddress, EntityType, Error, LoginData, RetrievedGGData, UncertainEntityTypeJourney}
 import uk.gov.hmrc.hecapplicantfrontend.repos.{SessionStore, UncertainEntityTypeJourneyStore}
@@ -403,8 +403,7 @@ class StartController @Inject() (
   }
 
   private def validateEmail(emailOpt: Option[String]): Option[EmailAddress] =
-    emailOpt.filter(EmailAdd.isValid(_)).map(EmailAddress(_))
-
+    emailOpt.filter(ModelsEmailAddress.isValid(_)).map(EmailAddress(_))
   private def withGGCredIdAndAuthenticationDetails(
     credentials: Option[Credentials],
     toAuthenticationDetails: Credentials => AuthenticationDetails
