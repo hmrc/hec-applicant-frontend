@@ -21,11 +21,11 @@ import uk.gov.hmrc.hecapplicantfrontend.services.EmailVerificationService
 import cats.instances.future._
 import com.google.inject.{Inject, Singleton}
 import play.api.data.{Form, Mapping}
-import uk.gov.hmrc.emailaddress.{EmailAddress => EmailAddressValidation}
 import play.api.i18n.I18nSupport
 import play.api.mvc._
 import uk.gov.hmrc.hecapplicantfrontend.controllers.ConfirmEmailAddressController.{emailAddressForm, emailTypeOptions}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
+import uk.gov.hmrc.hecapplicantfrontend.models.email.{EmailAddress => ModelsEmailAddress}
 import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, EmailType, UserEmailAnswers, UserSelectedEmail}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
@@ -144,7 +144,7 @@ object ConfirmEmailAddressController {
     .verifying(
       Constraint[EmailAddress]((email: EmailAddress) =>
         if (email.value.length > 256) Invalid("error.tooManyChar")
-        else if (EmailAddressValidation.isValid(email.value)) Valid
+        else if (ModelsEmailAddress.isValid(email.value)) Valid
         else Invalid("error.invalidFormat")
       )
     )
