@@ -56,10 +56,21 @@ class AppConfig @Inject() (config: Configuration, contactFrontendConfig: Contact
   private val signOutUrlBase: String = config.get[String]("auth.sign-out.url")
 
   def signOutUrl(continueUrl: Option[String]): String =
-    continueUrl.fold(signOutUrlBase)(continue => s"$signOutUrlBase?continue=${continue.urlEncode}")
+    continueUrl.fold(s"$basGatewayBaseUrl/bas-gateway/sign-out-without-state")(continue =>
+      s"$signOutUrlBase?continue=${continue.urlEncode}"
+    )
 
   lazy val signOutAndSignBackInUrl: String =
     signOutUrl(continueUrl = Some(s"$selfBaseUrl${routes.StartController.start.url}"))
+
+  private val basGatewayHost: String    =
+    config.getOptional[String]("microservice.services.bas-gateway.host").getOrElse("localhost")
+  private val basGatewayPort: String    =
+    config.getOptional[String]("microservice.services.bas-gateway.port").getOrElse("9553")
+  private val basGatewayBaseUrl: String = s"http://$basGatewayHost:$basGatewayPort"
+
+  lazy val exitSurveySignOutUrl: String =
+    s"$basGatewayBaseUrl/bas-gateway/sign-out-without-state?continue=${exitSurveyUrl.urlEncode}"
 
   private val registerForNewGGAccountUrl: String = config.get[String]("auth.register-new-account.url")
 
