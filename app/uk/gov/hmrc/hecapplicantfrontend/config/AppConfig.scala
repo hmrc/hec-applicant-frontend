@@ -55,10 +55,13 @@ class AppConfig @Inject() (config: Configuration, contactFrontendConfig: Contact
 
   private val signOutUrlBase: String = config.get[String]("auth.sign-out.url")
 
-  private val basGatewayProtocol: String = config.getOptional[String]("microservice.services.bas-gateway.protocol").getOrElse("http")
-  private val basGatewayHost: String = config.getOptional[String]("microservice.services.bas-gateway.host").getOrElse("localhost")
-  private val basGatewayPort: String = config.getOptional[String]("microservice.services.bas-gateway.port").getOrElse("9553")
-  private val basGatewayBaseUrl: String = s"$basGatewayProtocol://$basGatewayHost:$basGatewayPort"
+  private val basGatewayProtocol: String =
+    config.getOptional[String]("microservice.services.bas-gateway.protocol").getOrElse("http")
+  private val basGatewayHost: String     =
+    config.getOptional[String]("microservice.services.bas-gateway.host").getOrElse("localhost")
+  private val basGatewayPort: String     =
+    config.getOptional[String]("microservice.services.bas-gateway.port").getOrElse("9553")
+  private val basGatewayBaseUrl: String  = s"$basGatewayProtocol://$basGatewayHost:$basGatewayPort"
 
   def signOutUrl(continueUrl: Option[String]): String =
     continueUrl.fold(s"$basGatewayBaseUrl/bas-gateway/sign-out-without-state")(continue =>
