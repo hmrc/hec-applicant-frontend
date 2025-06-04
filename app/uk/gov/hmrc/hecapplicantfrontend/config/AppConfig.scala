@@ -58,9 +58,7 @@ class AppConfig @Inject() (config: Configuration, contactFrontendConfig: Contact
   private val basGatewaySignOutUrl: String = config.get[String]("auth.sign-out.bas-gateway.url")
 
   def signOutUrl(continueUrl: Option[String]): String =
-    continueUrl.fold(basGatewaySignOutUrl)(continue =>
-      s"$signOutUrlBase?continue=${continue.urlEncode}"
-    )
+    continueUrl.fold(basGatewaySignOutUrl)(continue => s"$signOutUrlBase?continue=${continue.urlEncode}")
 
   lazy val signOutAndSignBackInUrl: String =
     signOutUrl(continueUrl = Some(s"$selfBaseUrl${routes.StartController.start.url}"))
