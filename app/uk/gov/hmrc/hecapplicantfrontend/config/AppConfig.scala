@@ -60,7 +60,6 @@ class AppConfig @Inject() (config: Configuration, contactFrontendConfig: Contact
     s"$baseUrl/bas-gateway/sign-out-without-state"
   }
 
-
   def signOutUrl(continueUrl: Option[String]): String =
     continueUrl.fold(basGatewaySignOutUrl)(continue => s"$signOutUrlBase?continue=${continue.urlEncode}")
 
