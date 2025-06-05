@@ -55,7 +55,10 @@ class AppConfig @Inject() (config: Configuration, contactFrontendConfig: Contact
 
   private val signOutUrlBase: String = config.get[String]("auth.sign-out.url")
 
-  private val basGatewaySignOutUrl: String = config.get[String]("auth.sign-out.bas-gateway.url")
+  private val basGatewaySignOutUrl: String = {
+    val baseUrl = platformHost.getOrElse("http://localhost:9553")
+    s"$baseUrl/bas-gateway/sign-out-without-state"
+  }
 
   def signOutUrl(continueUrl: Option[String]): String =
     continueUrl.fold(basGatewaySignOutUrl)(continue => s"$signOutUrlBase?continue=${continue.urlEncode}")
