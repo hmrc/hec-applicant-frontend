@@ -33,7 +33,6 @@ lazy val microservice = Project(appName, file("."))
     ),
     Compile / doc / sources := Seq.empty
   )
-  .settings(resolvers += Resolver.jcenterRepo)
   .settings(routesImport := Seq.empty)
   .settings(TwirlKeys.templateImports := Seq.empty)
   .settings(scoverageSettings: _*)
