@@ -13,7 +13,6 @@ lazy val scoverageSettings =
 lazy val microservice = Project(appName, file("."))
   .enablePlugins(
     play.sbt.PlayScala,
-    SbtGitVersioning,
     SbtDistributablesPlugin
   )
   .disablePlugins(JUnitXmlReportPlugin)
@@ -33,7 +32,6 @@ lazy val microservice = Project(appName, file("."))
     ),
     Compile / doc / sources := Seq.empty
   )
-  .settings(resolvers += Resolver.jcenterRepo)
   .settings(routesImport := Seq.empty)
   .settings(TwirlKeys.templateImports := Seq.empty)
   .settings(scoverageSettings: _*)
