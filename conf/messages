@@ -2,7 +2,6 @@ lang.code = en
 gov.uk = GOV.UK
 service.name = Do a tax check when applying for a licence
 service.text = This is your new service
-service.phase = beta
 phaseBanner.text = This is a new service – your <a class="govuk-link" href="{0}">feedback</a> will help us to improve it.
 
 generic.errorPrefix = Error
@@ -258,10 +257,11 @@ saIncomeDeclared.hint = This is your Self Assessment tax return for tax year 6 A
 
 # HMRC Timeout Dialog
 hmrcTimeoutDialog.title = You’re about to be signed out
-
-# Timed Out
+timedOut.heading = For your security, we will sign you out in
+timedOut.button = Stay signed in
+timedOut.signOut =  Sign out
 timedOut.title = For your security, we signed you out
-timedOut.p1 = We did not save your answers.
+timedOut.p1 = We saved your answers for 30 minutes.
 timedOut.signIn = Sign in
 
 # CRN

@@ -61,7 +61,9 @@
     @if(showSignOutLink) {
         @hmrcTimeoutDialogHelper(
             title = Some(messages("hmrcTimeoutDialog.title")),
-            signOutUrl = appConfig.signOutUrl(continueUrl = None),
+            message =  Some(messages("timedOut.heading")),
+            keepAliveButtonText = Some(messages("timedOut.button")),
+            signOutUrl = appConfig.basGatewayloggedOutUrl,
             timeoutUrl = Some(routes.SignOutController.signOutFromTimeout.url),
             countdown = Some(appConfig.authTimeoutCountdownSeconds),
             timeout = Some(appConfig.authTimeoutSeconds)

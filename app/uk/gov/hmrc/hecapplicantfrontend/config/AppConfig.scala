@@ -36,13 +36,8 @@ class AppConfig @Inject() (config: Configuration, contactFrontendConfig: Contact
 
   val platformHost: Option[String] = config.getOptional[String]("platform.frontend.host")
 
-  val contactFrontendUrl: String =
-    contactFrontendConfig.baseUrl.getOrElse(sys.error("Could not find config for contact frontend url"))
-
   val contactFormServiceIdentifier: String =
     contactFrontendConfig.serviceId.getOrElse(sys.error("Could not find config for contact frontend service id"))
-
-  val betaFeedbackUrl: String = s"$contactFrontendUrl/contact/beta-feedback?service=$contactFormServiceIdentifier"
 
   val selfBaseUrl: String = platformHost.getOrElse(config.get[String]("self.url"))
 
@@ -58,6 +53,11 @@ class AppConfig @Inject() (config: Configuration, contactFrontendConfig: Contact
   private val basGatewaySignOutUrl: String = {
     val baseUrl = platformHost.getOrElse("http://localhost:9553")
     s"$baseUrl/bas-gateway/sign-out-without-state"
+  }
+
+  lazy val basGatewayloggedOutUrl: String = {
+    val baseUrl = platformHost.getOrElse("http://localhost:9553")
+    s"$baseUrl/bas-gateway/loggedout"
   }
 
   def signOutUrl(continueUrl: Option[String]): String =
