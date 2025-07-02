@@ -2,10 +2,12 @@ lang.code=cy
 gov.uk=GOV.UK
 service.name=Gwneud gwiriad treth wrth wneud cais am drwydded
 service.text=Dyma’ch gwasanaeth newydd
-service.phase=beta
 phaseBanner.text=Mae hwn yn wasanaeth newydd – bydd eich <a class="govuk-link" href="{0}">adborth</a> yn ein helpu i’w wella.
+
 generic.errorPrefix=Gwall
 generic.errorSummary=Mae problem wedi codi
+
+# Buttons
 button.sign-in=Mewngofnodi
 button.try-again=Rhowch gynnig arall arni
 button.confirm=Cadarnhau
@@ -15,9 +17,13 @@ button.copied=Wedi’i gopïo
 button.sendEmail=Anfon e-bost
 button.resend=Ailanfon
 button.back=Yn ôl
+
+# Failed IV
 iv.failedIv.title=Nid oedd modd i ni gadarnhau pwy ydych
 iv.failedIv.p1=Ni wnaethoch ateb pob cwestiwn yn gywir.
 iv.failedIv.p2=Mae’n rhaid i’ch atebion gyd-fynd â’r manylion sydd gennym ar eich cyfer eisoes.
+
+# Failed Matching
 iv.failedMatching.title=Nid oedd modd i ni gadarnhau pwy ydych
 iv.failedMatching.p1=Bydd angen i chi wirio eich bod wedi nodi’ch manylion yn gywir, megis eich:
 iv.failedMatching.li1=enw
@@ -194,10 +200,17 @@ saIncomeDeclared.no=Na
 saIncomeDeclared.error.required=Dewiswch ‘Iawn’ os gwnaethoch gynnwys incwm a enillwyd gan ddefnyddio’r math hwn o drwydded yn eich Ffurflen Dreth
 saIncomeDeclared.error.invalid=Dewiswch ‘Iawn’ os gwnaethoch gynnwys incwm a enillwyd gan ddefnyddio’r math hwn o drwydded yn eich Ffurflen Dreth
 saIncomeDeclared.hint=Dyma’ch Ffurflen Dreth Hunanasesiad ar gyfer blwyddyn dreth 6 Ebrill {0} i 5 Ebrill {1}.
+
+# HMRC Timeout Dialog
 hmrcTimeoutDialog.title=Rydych ar fin cael eich allgofnodi
-timedOut.title=Er eich diogelwch, gwnaethom eich allgofnodi
-timedOut.p1=Ni wnaethom gadw’ch atebion.
-timedOut.signIn=Mewngofnodi
+timedOut.heading = Er eich diogelwch, byddwn yn eich allgofnodi ymhen
+timedOut.button = Peidio ag allgofnodi
+timedOut.signOut = Allgofnodi
+timedOut.title= Er eich diogelwch, gwnaethom eich allgofnodi
+timedOut.p1= Gwnaethom gadw’ch atebion am 15 o funudau.
+timedOut.signIn= Mewngofnodi
+
+# CRN
 crn.title=Beth yw rhif cofrestru’ch cwmni?
 crn.hint=Mae hwn yn 8 o gymeriadau. Er enghraifft, 01234567 neu AC012345.
 crn.link=<a href="{0}" class="govuk-link" target="_blank">Gallwch chwilio am rif cofrestru’ch cwmni ar wefan Tŷ’r Cwmnïau (yn agor tab newydd)</a>.
