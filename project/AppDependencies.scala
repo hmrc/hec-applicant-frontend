@@ -14,7 +14,7 @@ object AppDependencies {
     "com.github.julien-truffaut" %% "monocle-core"                               % monocleVersion,
     "com.github.julien-truffaut" %% "monocle-macro"                              % monocleVersion,
     "uk.gov.hmrc"                %% "play-conditional-form-mapping-play-30"      % "3.3.0",
-    "uk.gov.hmrc"                %% "play-frontend-hmrc-play-30"                 % "12.7.0"
+    "uk.gov.hmrc"                %% "play-frontend-hmrc-play-30"                 % "12.8.0"
   )
 
   val test: Seq[ModuleID] = Seq(
