@@ -3,6 +3,11 @@ $govuk-assets-path: "/agent/assets/lib/govuk-frontend/dist/govuk/assets/";
 
 $govuk-new-organisation-colours: true;
 
+.hmrc-header__service-name {
+  margin: auto;
+  padding: 20px;
+}
+
 body:not(.js-enabled) .js-visible {
   display: none;
 }
