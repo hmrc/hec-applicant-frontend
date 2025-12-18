@@ -417,7 +417,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
   private def taxSituationRoute(
     session: HECSession
   )(implicit r: RequestWithSessionData[_], hc: HeaderCarrier, enableAuditing: EnableAuditing): Call =
-    session.mapAsIndividual { individualSession: IndividualHECSession =>
+    session.mapAsIndividual { (individualSession: IndividualHECSession) =>
       individualSession.userAnswers.fold(_.taxSituation, _.taxSituation.some) match {
         case None =>
           throwInconsistentSessionStateError("Could not find tax situation for tax situation route")

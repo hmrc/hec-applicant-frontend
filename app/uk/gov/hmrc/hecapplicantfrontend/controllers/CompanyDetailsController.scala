@@ -119,7 +119,7 @@ class CompanyDetailsController @Inject() (
         companyLoginData: CompanyLoginData,
         crn: CRN
       ): EitherT[Future, Error, Option[CTStatusResponse]] =
-        companyLoginData.ctutr flatTraverse [EitherT[Future, Error, *], CTStatusResponse] { ctutr =>
+        companyLoginData.ctutr.flatTraverse[[A] =>> EitherT[Future, Error, A], CTStatusResponse] { ctutr =>
           desCtutrOpt match {
             case Some(desCtutr) if desCtutr.value === ctutr.value =>
               auditService.sendEvent(

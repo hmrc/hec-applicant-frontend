@@ -190,7 +190,7 @@ object AuditEvent {
 
   object TaxCheckExit {
 
-    implicit def writes[T <: TaxCheckExit]: OWrites[T] = OWrites { t: T =>
+    implicit def writes[T <: TaxCheckExit]: OWrites[T] = OWrites { (t: T) =>
       Json.obj(
         "serviceExitReason"      -> JsString(t.serviceExitReason),
         "serviceExitDescription" -> JsString(t.serviceExitDescription),

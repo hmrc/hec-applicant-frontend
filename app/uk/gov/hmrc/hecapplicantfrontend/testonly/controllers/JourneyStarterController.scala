@@ -76,7 +76,7 @@ class JourneyStarterController @Inject() (
       _       <- if (loginData.existingTaxChecks.nonEmpty)
                    loginData.existingTaxChecks
                      .map(hecService.saveTaxCheck)
-                     .sequence[EitherT[Future, Error, *], Unit]
+                     .sequence[[A] =>> EitherT[Future, Error, A], Unit]
                  else
                    EitherT.pure[Future, Error](List.empty)
       session <- authLoginStubService.login(loginData)

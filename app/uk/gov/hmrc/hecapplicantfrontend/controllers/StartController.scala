@@ -66,31 +66,31 @@ class StartController @Inject() (
 
   val start: Action[AnyContent] = authWithRetrievalsAction.async { implicit request =>
     val result = for {
-      maybeStoredSession                <- sessionStore.get().leftMap(BackendError)
-      details                           <-
+      maybeStoredSession                 <- sessionStore.get().leftMap(BackendError.apply)
+      details                            <-
         maybeStoredSession.fold(
           handleNoSessionData(request.retrievedGGUserData)
             .map[(Option[AuthenticationDetails], LoginData)] { case (authDetails, loginData) =>
               Some(authDetails) -> loginData
             }
         )(storedSession => EitherT.pure(None -> storedSession.fold(_.loginData, _.loginData)))
-      (authenticationDetails, loginData) = details
-      existingTaxChecks                 <- taxCheckService
-                                             .getUnexpiredTaxCheckCodes()
-                                             .leftMap(BackendError(_): StartError)
-      isConfirmedDetails                 = maybeStoredSession.fold(false)(_.fold(_.hasConfirmedDetails, _ => false))
-      newSession                         = loginData match {
-                                             case i: IndividualLoginData =>
-                                               IndividualHECSession
-                                                 .newSession(i)
-                                                 .copy(
-                                                   unexpiredTaxChecks = existingTaxChecks,
-                                                   hasConfirmedDetails = isConfirmedDetails
-                                                 )
-                                             case c: CompanyLoginData    =>
-                                               CompanyHECSession.newSession(c).copy(unexpiredTaxChecks = existingTaxChecks)
-                                           }
-      _                                 <- sessionStore.store(newSession).leftMap(BackendError(_): StartError)
+      (authenticationDetails, loginData) <- details
+      existingTaxChecks                  <- taxCheckService
+                                              .getUnexpiredTaxCheckCodes()
+                                              .leftMap(BackendError(_): StartError)
+      isConfirmedDetails                 <- maybeStoredSession.fold(false)(_.fold(_.hasConfirmedDetails, _ => false))
+      newSession                         <- loginData match {
+                                              case i: IndividualLoginData =>
+                                                IndividualHECSession
+                                                  .newSession(i)
+                                                  .copy(
+                                                    unexpiredTaxChecks = existingTaxChecks,
+                                                    hasConfirmedDetails = isConfirmedDetails
+                                                  )
+                                              case c: CompanyLoginData    =>
+                                                CompanyHECSession.newSession(c).copy(unexpiredTaxChecks = existingTaxChecks)
+                                            }
+      _                                  <- sessionStore.store(newSession).leftMap(BackendError(_): StartError)
     } yield authenticationDetails -> newSession
 
     result.fold(
@@ -328,7 +328,7 @@ class StartController @Inject() (
         case None    =>
           maybeSautr
             .map(SAUTR.fromString(_).toValid("Got invalid SAUTR from GG"))
-            .sequence[Validated[String, *], SAUTR]
+            .sequence[[A] =>> Validated[String, A], SAUTR]
       }
 
       val eitherResult: Either[StartError, LoginData] = sautrValidation
@@ -389,7 +389,7 @@ class StartController @Inject() (
           CTUTR.fromString(id.value).toValid("Got invalid CTUTR from enrolments")
         )
       )
-      .sequence[Validated[String, *], CTUTR]
+      .sequence[[A] =>> Validated[String, A], CTUTR]
 
     val eitherResult = ctutrValidation
       .bimap[StartError, LoginData](

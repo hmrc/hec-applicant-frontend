@@ -29,6 +29,7 @@ import uk.gov.hmrc.http.client.HttpClientV2
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import scala.concurrent.{ExecutionContext, Future}
+import play.api.libs.ws.writeableOf_JsValue
 
 @ImplementedBy(classOf[HECConnectorImpl])
 trait HECConnector {

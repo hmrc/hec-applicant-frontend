@@ -17,7 +17,7 @@
 package uk.gov.hmrc.hecapplicantfrontend.models
 
 import monocle.Lens
-import monocle.macros.Lenses
+import monocle.macros.GenLens
 import play.api.libs.json._
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
@@ -49,7 +49,6 @@ sealed trait CompleteUserAnswers extends UserAnswers
 
 object IndividualUserAnswers {
 
-  @Lenses
   final case class IncompleteIndividualUserAnswers(
     licenceType: Option[LicenceType],
     licenceTimeTrading: Option[LicenceTimeTrading],
@@ -131,7 +130,6 @@ object IndividualUserAnswers {
 
 object CompanyUserAnswers {
 
-  @Lenses
   final case class IncompleteCompanyUserAnswers(
     licenceType: Option[LicenceType],
     licenceTimeTrading: Option[LicenceTimeTrading],
@@ -261,4 +259,34 @@ object CompleteUserAnswers {
     }
 
   }
+}
+
+object UserAnswersLenses {
+
+  val incompleteIndividualEntityType =
+    GenLens[IndividualUserAnswers.IncompleteIndividualUserAnswers](_.entityType)
+
+  val incompleteCompanyEntityType =
+    GenLens[CompanyUserAnswers.IncompleteCompanyUserAnswers](_.entityType)
+}
+
+object CompanyUserAnswersLenses {
+
+  val crnLens =
+    GenLens[CompanyUserAnswers.IncompleteCompanyUserAnswers](_.crn)
+
+  val companyDetailsConfirmedLens =
+    GenLens[CompanyUserAnswers.IncompleteCompanyUserAnswers](_.companyDetailsConfirmed)
+
+  val chargeableForCTLens =
+    GenLens[CompanyUserAnswers.IncompleteCompanyUserAnswers](_.chargeableForCT)
+
+  val ctIncomeDeclaredLens =
+    GenLens[CompanyUserAnswers.IncompleteCompanyUserAnswers](_.ctIncomeDeclared)
+
+  val recentlyStartedTradingLens =
+    GenLens[CompanyUserAnswers.IncompleteCompanyUserAnswers](_.recentlyStartedTrading)
+
+  val ctutrLens =
+    GenLens[CompanyUserAnswers.IncompleteCompanyUserAnswers](_.ctutr)
 }

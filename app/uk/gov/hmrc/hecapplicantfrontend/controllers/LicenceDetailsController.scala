@@ -40,6 +40,8 @@ import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging, TimeProvider}
 import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
+import monocle.Lens
+import monocle.macros.GenLens
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -145,12 +147,18 @@ class LicenceDetailsController @Inject() (
     Ok(licenceTimeTradingPage(form, back, licenceTimeTradingOptions))
   }
 
+  val individualLicenceTimeTradingLens: Lens[IncompleteIndividualUserAnswers, Option[LicenceTimeTrading]] =
+    GenLens[IncompleteIndividualUserAnswers](_.licenceTimeTrading)
+
+  val companyLicenceTimeTradingLens: Lens[IncompleteCompanyUserAnswers, Option[LicenceTimeTrading]] =
+    GenLens[IncompleteCompanyUserAnswers](_.licenceTimeTrading)
+
   val licenceTimeTradingSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     def handleValidLicenceTimeTrading(licenceTimeTrading: LicenceTimeTrading): Future[Result] = {
       val updatedSession = request.sessionData.replaceField(
         request.sessionData,
-        IncompleteIndividualUserAnswers.licenceTimeTrading,
-        IncompleteCompanyUserAnswers.licenceTimeTrading,
+        individualLicenceTimeTradingLens,
+        companyLicenceTimeTradingLens,
         _.copy(licenceTimeTrading = Some(licenceTimeTrading)),
         _.copy(licenceTimeTrading = Some(licenceTimeTrading))
       )

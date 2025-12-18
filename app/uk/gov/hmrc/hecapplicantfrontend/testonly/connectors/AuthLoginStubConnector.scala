@@ -24,6 +24,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.Error
 import uk.gov.hmrc.hecapplicantfrontend.testonly.models.LoginData
 import uk.gov.hmrc.hecapplicantfrontend.util.StringUtils.StringOps
 import uk.gov.hmrc.http.HeaderCarrier
+import play.api.libs.ws.writeableOf_String
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal

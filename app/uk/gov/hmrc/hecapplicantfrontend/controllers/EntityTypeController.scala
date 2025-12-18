@@ -27,6 +27,7 @@ import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, NotRequ
 import uk.gov.hmrc.hecapplicantfrontend.models.CompanyUserAnswers.IncompleteCompanyUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.EntityType
 import uk.gov.hmrc.hecapplicantfrontend.models.IndividualUserAnswers.IncompleteIndividualUserAnswers
+import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswersLenses
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService.InconsistentSessionState
 import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging}
@@ -71,8 +72,8 @@ class EntityTypeController @Inject() (
     def handleValidEntityType(entityType: EntityType): Future[Result] = {
       val updatedSession = request.sessionData.replaceField(
         request.sessionData,
-        IncompleteIndividualUserAnswers.entityType,
-        IncompleteCompanyUserAnswers.entityType,
+        UserAnswersLenses.incompleteIndividualEntityType,
+        UserAnswersLenses.incompleteCompanyEntityType,
         _.copy(entityType = Some(entityType)),
         _.copy(entityType = Some(entityType))
       )
