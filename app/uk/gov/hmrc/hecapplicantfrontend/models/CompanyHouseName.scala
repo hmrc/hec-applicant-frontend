@@ -22,4 +22,5 @@ final case class CompanyHouseName(name: String)
 
 object CompanyHouseName {
   implicit val format: Format[CompanyHouseName] = Json.format[CompanyHouseName]
+
 }

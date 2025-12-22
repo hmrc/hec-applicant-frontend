@@ -104,7 +104,7 @@ class CompanyDetailsServiceImplSpec extends AnyWordSpec with Matchers with MockF
           val companyDetails = CompanyHouseDetails(CompanyHouseName("Test Tech Ltd"))
 
           val json = Json.parse(s"""
-               |{"company_name" : "Test Tech Ltd"}
+               |{"company_name": { "name": "Test Tech Ltd" }}
                |""".stripMargin)
 
           mockFindComapny(CRN("1234567"))(Right(HttpResponse(200, json, responseHeaders)))

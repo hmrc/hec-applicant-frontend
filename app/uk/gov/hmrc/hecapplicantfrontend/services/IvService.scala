@@ -23,13 +23,14 @@ import cats.instances.int.*
 import cats.syntax.either.*
 import cats.syntax.eq.*
 import com.google.inject.{ImplementedBy, Inject, Singleton}
-import play.api.libs.json.{Json, Reads}
 import play.mvc.Http.Status.OK
 import uk.gov.hmrc.hecapplicantfrontend.models.Error
 import uk.gov.hmrc.hecapplicantfrontend.util.HttpResponseOps.*
 import uk.gov.hmrc.hecapplicantfrontend.connectors.IvConnector
 import uk.gov.hmrc.hecapplicantfrontend.models.iv.IvErrorStatus
 import uk.gov.hmrc.http.HeaderCarrier
+import play.api.libs.json.*
+import play.api.libs.json.Reads.*
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -77,6 +78,9 @@ object IvServiceImpl {
 
   final case class IvStatusResponse(result: String) extends AnyVal
 
-  implicit val reads: Reads[IvStatusResponse] = Json.valueReads[IvStatusResponse]
+  given Reads[IvStatusResponse] = new Reads[IvStatusResponse] {
+    override def reads(json: JsValue): JsResult[IvStatusResponse] =
+      (json \ "result").validate[String].map(IvStatusResponse.apply)
+  }
 
 }

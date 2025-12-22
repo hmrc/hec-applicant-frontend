@@ -16,7 +16,8 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.functional.syntax.*
+import play.api.libs.json.{OFormat, __}
 
 final case class EmailRequestedForTaxCheck(
   originUrl: String,
@@ -24,7 +25,8 @@ final case class EmailRequestedForTaxCheck(
 )
 
 object EmailRequestedForTaxCheck {
-
-  implicit val format: OFormat[EmailRequestedForTaxCheck] = Json.format
-
+  implicit val format: OFormat[EmailRequestedForTaxCheck] = (
+    (__ \ "originUrl").format[String] and
+      (__ \ "taxCheck").format[TaxCheckListItem]
+  )(EmailRequestedForTaxCheck.apply, o => Tuple.fromProductTyped(o))
 }

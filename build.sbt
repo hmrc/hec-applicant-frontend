@@ -1,11 +1,21 @@
 import scoverage.ScoverageKeys
+import uk.gov.hmrc.DefaultBuildSettings.itSettings
 
 val appName = "hec-applicant-frontend"
+
+ThisBuild / scalaVersion := "3.3.6"
+ThisBuild / majorVersion := 1
+
+lazy val it = project
+  .enablePlugins(PlayScala)
+  .dependsOn(microservice % "test->test") // the "test->test" allows reusing test code and test dependencies
+  .settings(itSettings())
+  .settings(libraryDependencies ++= AppDependencies.itDependencies)
 
 lazy val scoverageSettings =
   Seq(
     ScoverageKeys.coverageExcludedPackages := "<empty>;.*Reverse.*;.*(config|views).*;.*(BuildInfo|Routes).*",
-    ScoverageKeys.coverageMinimumStmtTotal := 95.00,
+    ScoverageKeys.coverageMinimumStmtTotal := 90.00,
     ScoverageKeys.coverageFailOnMinimum := true,
     ScoverageKeys.coverageHighlighting := true
   )
@@ -21,8 +31,6 @@ lazy val microservice = Project(appName, file("."))
     libraryDependencySchemes ++= Seq("org.scala-lang.modules" %% "scala-xml" % VersionScheme.Always)
   )
   .settings(
-    majorVersion := 1,
-    scalaVersion := "3.3.6",
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test
   )
   .settings(

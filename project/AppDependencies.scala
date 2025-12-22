@@ -14,7 +14,7 @@ object AppDependencies {
     "dev.optics"                 %% "monocle-core"                               % monocleVersion,
     "dev.optics"                 %% "monocle-macro"                              % monocleVersion,
     "uk.gov.hmrc"                %% "play-conditional-form-mapping-play-30"      % "3.4.0",
-    "uk.gov.hmrc"                %% "play-frontend-hmrc-play-30"                 % "12.22.0"
+    "uk.gov.hmrc"                %% "play-frontend-hmrc-play-30"                 % "12.24.0"
   )
 
   val test: Seq[ModuleID] = Seq(
@@ -22,4 +22,9 @@ object AppDependencies {
     "uk.gov.hmrc.mongo" %% "hmrc-mongo-test-play-30" % hmrcMongoVersion % Test,
     "org.scalamock"     %% "scalamock"               % "7.5.0"          % Test
   )
+
+  val itDependencies: Seq[ModuleID] = Seq(
+    "uk.gov.hmrc" %% "bootstrap-test-play-30" % bootStrapVersion % Test
+  )
+
 }

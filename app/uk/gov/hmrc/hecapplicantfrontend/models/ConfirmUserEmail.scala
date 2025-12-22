@@ -16,7 +16,8 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.functional.syntax.*
+import play.api.libs.json.{OFormat, __}
 
 final case class ConfirmUserEmail(
   ggEmail: EmailAddress,
@@ -24,5 +25,8 @@ final case class ConfirmUserEmail(
 )
 
 object ConfirmUserEmail {
-  implicit val formats: OFormat[ConfirmUserEmail] = Json.format[ConfirmUserEmail]
+  implicit val format: OFormat[ConfirmUserEmail] = (
+    (__ \ "ggEmail").format[EmailAddress] and
+      (__ \ "differentEmail").formatNullable[EmailAddress]
+  )(ConfirmUserEmail.apply, o => Tuple.fromProductTyped(o))
 }
