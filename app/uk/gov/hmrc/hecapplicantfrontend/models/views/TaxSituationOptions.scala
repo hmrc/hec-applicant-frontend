@@ -17,7 +17,7 @@
 package uk.gov.hmrc.hecapplicantfrontend.models.views
 
 import uk.gov.hmrc.hecapplicantfrontend.models.TaxSituation
-import uk.gov.hmrc.hecapplicantfrontend.models.TaxSituation._
+import uk.gov.hmrc.hecapplicantfrontend.models.TaxSituation.*
 
 final case class TaxSituationOption(messageKey: String, hintKey: Option[String])
 object TaxSituationOption {

@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.controllers
 
-import cats.instances.future._
+import cats.instances.future.*
 import com.google.inject.{Inject, Singleton}
 import play.api.data.Form
 import play.api.data.Forms.{mapping, of}
@@ -69,7 +69,7 @@ class SAController @Inject() (
 
       def handleValidAnswer(incomeDeclared: YesNoAnswer): Future[Result] = {
         val updatedAnswers =
-          individualSession.userAnswers.unset(_.saIncomeDeclared).copy(saIncomeDeclared = Some(incomeDeclared))
+          individualSession.userAnswers.unset(_.saIncomeDeclaredLens).copy(saIncomeDeclared = Some(incomeDeclared))
 
         journeyService
           .updateAndNext(

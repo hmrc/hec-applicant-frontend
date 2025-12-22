@@ -17,11 +17,11 @@
 package uk.gov.hmrc.hecapplicantfrontend.testonly.services
 
 import cats.data.EitherT
-import cats.instances.future._
+import cats.instances.future.*
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 import uk.gov.hmrc.hecapplicantfrontend.models.{DateOfBirth, Error, HECTaxCheckCode}
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.HECTaxCheckSource.Digital
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.GGCredId

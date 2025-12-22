@@ -17,9 +17,9 @@
 package uk.gov.hmrc.hecapplicantfrontend.util
 
 import cats.Eq
-import cats.instances.int._
-import cats.syntax.either._
-import cats.syntax.eq._
+import cats.instances.int.*
+import cats.syntax.either.*
+import cats.syntax.eq.*
 import play.api.data.FormError
 import play.api.data.format.Formatter
 import play.api.i18n.Messages

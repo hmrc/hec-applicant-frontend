@@ -18,7 +18,7 @@ package uk.gov.hmrc.hecapplicantfrontend.controllers.actions
 
 import com.google.inject.{Inject, Singleton}
 import play.api.mvc.Results.Redirect
-import play.api.mvc._
+import play.api.mvc.*
 import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisationException, AuthorisedFunctions, NoActiveSession}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging

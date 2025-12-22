@@ -19,7 +19,7 @@ package uk.gov.hmrc.hecapplicantfrontend.models
 import cats.Eq
 import cats.implicits.catsSyntaxEq
 import monocle.Lens
-import play.api.libs.json._
+import play.api.libs.json.*
 import uk.gov.hmrc.hecapplicantfrontend.models.CompanyUserAnswers.IncompleteCompanyUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.IndividualUserAnswers.IncompleteIndividualUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}

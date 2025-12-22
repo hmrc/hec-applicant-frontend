@@ -91,7 +91,7 @@ class EmailAddressConfirmedController @Inject() (
       }
     }
 
-  private def getEmailParameters(session: HECSession)(implicit request: RequestWithSessionData[_]) =
+  private def getEmailParameters(session: HECSession)(implicit request: RequestWithSessionData[?]) =
     session.ensureEmailHasBeenRequested { emailRequested =>
       EmailParameters(
         currentDate = s"${TimeUtils.govDisplayFormat(emailRequested.taxCheck.createDate.toLocalDate)}",

@@ -18,10 +18,10 @@ package uk.gov.hmrc.hecapplicantfrontend.services
 
 import cats.Eq
 import cats.data.EitherT
-import cats.instances.future._
-import cats.instances.string._
-import cats.syntax.eq._
-import cats.syntax.option._
+import cats.instances.future.*
+import cats.instances.string.*
+import cats.syntax.eq.*
+import cats.syntax.option.*
 import com.google.inject.{ImplementedBy, Inject, Singleton}
 import play.api.mvc.Call
 import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
@@ -37,7 +37,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.IndividualLoginData
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.{CompanyRetrievedJourneyData, IndividualRetrievedJourneyData}
 import uk.gov.hmrc.hecapplicantfrontend.models.email.{EmailAddress => ModelsEmailAddress}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailSend.EmailSendResult
-import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeRequestResult._
+import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeRequestResult.*
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeVerificationResult
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.company.CTStatus
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.individual.SAStatus.ReturnFound
@@ -46,7 +46,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
 import uk.gov.hmrc.hecapplicantfrontend.models.{EmailRequestedForTaxCheck, EntityType, Error, HECSession, TaxSituation, YesNoAnswer}
 import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService.InconsistentSessionState
-import uk.gov.hmrc.hecapplicantfrontend.services.JourneyServiceImpl._
+import uk.gov.hmrc.hecapplicantfrontend.services.JourneyServiceImpl.*
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.annotation.tailrec
@@ -56,11 +56,11 @@ import scala.concurrent.{ExecutionContext, Future}
 trait JourneyService {
 
   def updateAndNext(current: Call, updatedSession: HECSession)(implicit
-    r: RequestWithSessionData[_],
+    r: RequestWithSessionData[?],
     hc: HeaderCarrier
   ): EitherT[Future, Error, Call]
 
-  def previous(current: Call)(implicit r: RequestWithSessionData[_], hc: HeaderCarrier): Call
+  def previous(current: Call)(implicit r: RequestWithSessionData[?], hc: HeaderCarrier): Call
 
   def firstPage(session: HECSession): Call
 
@@ -86,7 +86,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
   // values are the destination pages which come after the current page. The destination can sometimes depend
   // on state (e.g. the type of user or the answers users have submitted), hence the value type `HECSession => Call`
   private def paths(implicit
-    r: RequestWithSessionData[_],
+    r: RequestWithSessionData[?],
     hc: HeaderCarrier,
     enableAuditing: EnableAuditing = EnableAuditing(false)
   ): Map[Call, HECSession => Call] = Map(
@@ -150,7 +150,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
   }
 
   def updateAndNext(current: Call, updatedSession: HECSession)(implicit
-    r: RequestWithSessionData[_],
+    r: RequestWithSessionData[?],
     hc: HeaderCarrier
   ): EitherT[Future, Error, Call] = {
     val currentPageIsCYA: Boolean = current === routes.CheckYourAnswersController.checkYourAnswers
@@ -176,7 +176,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
   }
 
   private def storeSession(currentSession: HECSession, updatedSession: HECSession, next: Call)(implicit
-    r: RequestWithSessionData[_]
+    r: RequestWithSessionData[?]
   ): EitherT[Future, Error, Call] =
     if (currentSession === updatedSession) EitherT.pure[Future, Error](next)
     else
@@ -186,7 +186,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
     InconsistentSessionState(message).doThrow
 
   override def previous(current: Call)(implicit
-    r: RequestWithSessionData[_],
+    r: RequestWithSessionData[?],
     hc: HeaderCarrier
   ): Call = {
     @tailrec
@@ -235,7 +235,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
   }
 
   private def upliftToCompleteAnswersIfComplete(session: HECSession, current: Call)(implicit
-    r: RequestWithSessionData[_],
+    r: RequestWithSessionData[?],
     hc: HeaderCarrier
   ): Either[Error, HECSession] =
     paths.get(current).map(_(session)) match {
@@ -346,7 +346,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
 
   private def licenceTypeRoute(
     session: HECSession
-  )(implicit r: RequestWithSessionData[_], hc: HeaderCarrier, enableAuditing: EnableAuditing): Call = {
+  )(implicit r: RequestWithSessionData[?], hc: HeaderCarrier, enableAuditing: EnableAuditing): Call = {
     val licenceTypeOpt = session.userAnswers.fold(
       _.fold(_.licenceType, _.licenceType.some),
       _.fold(_.licenceType, _.licenceType.some)
@@ -416,7 +416,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
 
   private def taxSituationRoute(
     session: HECSession
-  )(implicit r: RequestWithSessionData[_], hc: HeaderCarrier, enableAuditing: EnableAuditing): Call =
+  )(implicit r: RequestWithSessionData[?], hc: HeaderCarrier, enableAuditing: EnableAuditing): Call =
     session.mapAsIndividual { (individualSession: IndividualHECSession) =>
       individualSession.userAnswers.fold(_.taxSituation, _.taxSituation.some) match {
         case None =>
@@ -495,7 +495,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
 
   private def chargeableForCTRoute(
     session: HECSession
-  )(implicit enableAuditing: EnableAuditing, r: RequestWithSessionData[_], hc: HeaderCarrier) =
+  )(implicit enableAuditing: EnableAuditing, r: RequestWithSessionData[?], hc: HeaderCarrier) =
     session.mapAsCompany { companySession =>
       companySession.userAnswers.fold(_.chargeableForCT, _.chargeableForCT) map {
         case YesNoAnswer.No  => routes.CheckYourAnswersController.checkYourAnswers
@@ -519,7 +519,7 @@ class JourneyServiceImpl @Inject() (sessionStore: SessionStore, auditService: Au
 
   private def recentlyStartedTradingRoute(
     session: HECSession
-  )(implicit enableAuditing: EnableAuditing, r: RequestWithSessionData[_], hc: HeaderCarrier) =
+  )(implicit enableAuditing: EnableAuditing, r: RequestWithSessionData[?], hc: HeaderCarrier) =
     session.mapAsCompany { companySession =>
       companySession.userAnswers.fold(_.recentlyStartedTrading, _.recentlyStartedTrading) map {
         case YesNoAnswer.Yes => routes.CheckYourAnswersController.checkYourAnswers

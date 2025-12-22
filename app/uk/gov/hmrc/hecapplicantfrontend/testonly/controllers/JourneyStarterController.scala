@@ -17,9 +17,9 @@
 package uk.gov.hmrc.hecapplicantfrontend.testonly.controllers
 
 import cats.data.EitherT
-import cats.instances.future._
-import cats.instances.list._
-import cats.syntax.traverse._
+import cats.instances.future.*
+import cats.instances.list.*
+import cats.syntax.traverse.*
 import com.google.inject.{Inject, Singleton}
 import play.api.data.Form
 import play.api.data.Forms.{mapping, of}
@@ -29,8 +29,8 @@ import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 import uk.gov.hmrc.hecapplicantfrontend.controllers.{routes => nonTestOnlyRoutes}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.toFuture
 import uk.gov.hmrc.hecapplicantfrontend.models.Error
-import uk.gov.hmrc.hecapplicantfrontend.testonly.controllers.JourneyStarterController._
-import uk.gov.hmrc.hecapplicantfrontend.testonly.models.Journey._
+import uk.gov.hmrc.hecapplicantfrontend.testonly.controllers.JourneyStarterController.*
+import uk.gov.hmrc.hecapplicantfrontend.testonly.models.Journey.*
 import uk.gov.hmrc.hecapplicantfrontend.testonly.models.Journey
 import uk.gov.hmrc.hecapplicantfrontend.testonly.services.{AuthLoginStubService, HECService, JourneyToLoginDataTransformer}
 import uk.gov.hmrc.hecapplicantfrontend.testonly.views.html

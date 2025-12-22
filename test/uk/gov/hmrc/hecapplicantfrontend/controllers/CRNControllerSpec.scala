@@ -17,11 +17,11 @@
 package uk.gov.hmrc.hecapplicantfrontend.controllers
 
 import cats.data.EitherT
-import cats.instances.future._
+import cats.instances.future.*
 import play.api.inject.bind
 import play.api.mvc.Result
 import play.api.test.FakeRequest
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.hecapplicantfrontend.models.CompanyUserAnswers.IncompleteCompanyUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.CompanyHECSession

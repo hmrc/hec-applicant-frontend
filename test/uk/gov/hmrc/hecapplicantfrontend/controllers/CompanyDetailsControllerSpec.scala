@@ -17,8 +17,8 @@
 package uk.gov.hmrc.hecapplicantfrontend.controllers
 
 import cats.data.EitherT
-import cats.instances.future._
-import cats.syntax.option._
+import cats.instances.future.*
+import cats.syntax.option.*
 import com.typesafe.config.ConfigFactory
 import play.api.Configuration
 import play.api.inject.bind

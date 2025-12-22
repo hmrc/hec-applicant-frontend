@@ -17,12 +17,12 @@
 package uk.gov.hmrc.hecapplicantfrontend.testonly.services
 
 import cats.data.EitherT
-import cats.instances.future._
+import cats.instances.future.*
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.libs.ws.{DefaultWSCookie, WSCookie, WSResponse}
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 import play.api.mvc.{Cookie, Session, SessionCookieBaker}
 import uk.gov.hmrc.auth.core.AffinityGroup.Individual
 import uk.gov.hmrc.auth.core.ConfidenceLevel.L250

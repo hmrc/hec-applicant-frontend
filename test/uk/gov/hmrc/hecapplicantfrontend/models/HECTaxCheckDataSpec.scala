@@ -27,7 +27,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.company.{CTStatus, CT
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.individual.SAStatus.ReturnFound
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.individual.SAStatusResponse
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.{HECTaxCheckData, HECTaxCheckSource}
-import uk.gov.hmrc.hecapplicantfrontend.models.ids._
+import uk.gov.hmrc.hecapplicantfrontend.models.ids.*
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 
 import java.time.{LocalDate, ZoneId, ZonedDateTime}

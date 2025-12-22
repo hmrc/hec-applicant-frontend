@@ -17,7 +17,7 @@
 package uk.gov.hmrc.hecapplicantfrontend.controllers
 
 import cats.data.EitherT
-import cats.instances.future._
+import cats.instances.future.*
 import play.api.mvc.Call
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.RequestWithSessionData
 import uk.gov.hmrc.hecapplicantfrontend.models.{Error, HECSession}
@@ -38,10 +38,10 @@ trait JourneyServiceSupport { this: ControllerSpec =>
     result: Either[Error, Call]
   ) =
     (mockJourneyService
-      .updateAndNext(_: Call, _: HECSession)(_: RequestWithSessionData[_], _: HeaderCarrier))
+      .updateAndNext(_: Call, _: HECSession)(_: RequestWithSessionData[?], _: HeaderCarrier))
       .expects(
-        where[Call, HECSession, RequestWithSessionData[_], HeaderCarrier] {
-          case (c: Call, s: HECSession, r: RequestWithSessionData[_], _: HeaderCarrier) =>
+        where[Call, HECSession, RequestWithSessionData[?], HeaderCarrier] {
+          case (c: Call, s: HECSession, r: RequestWithSessionData[?], _: HeaderCarrier) =>
             assert(c === currentPage)
             assert(s === updatedSession)
             assert(r.sessionData === currentSession)
@@ -52,10 +52,10 @@ trait JourneyServiceSupport { this: ControllerSpec =>
 
   def mockJourneyServiceGetPrevious(currentPage: Call, currentSession: HECSession)(result: Call) =
     (mockJourneyService
-      .previous(_: Call)(_: RequestWithSessionData[_], _: HeaderCarrier))
+      .previous(_: Call)(_: RequestWithSessionData[?], _: HeaderCarrier))
       .expects(
-        where[Call, RequestWithSessionData[_], HeaderCarrier] {
-          case (c: Call, r: RequestWithSessionData[_], _: HeaderCarrier) =>
+        where[Call, RequestWithSessionData[?], HeaderCarrier] {
+          case (c: Call, r: RequestWithSessionData[?], _: HeaderCarrier) =>
             assert(c === currentPage)
             assert(r.sessionData === currentSession)
             true

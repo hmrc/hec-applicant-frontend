@@ -17,10 +17,10 @@
 package uk.gov.hmrc.hecapplicantfrontend.testonly.services
 
 import cats.data.EitherT
-import cats.syntax.either._
-import cats.syntax.eq._
+import cats.syntax.either.*
+import cats.syntax.eq.*
 import com.google.inject.{ImplementedBy, Inject, Singleton}
-import play.api.http.Status._
+import play.api.http.Status.*
 import play.api.mvc.{Cookie, Session, SessionCookieBaker}
 import uk.gov.hmrc.crypto.Crypted
 import uk.gov.hmrc.hecapplicantfrontend.models.Error

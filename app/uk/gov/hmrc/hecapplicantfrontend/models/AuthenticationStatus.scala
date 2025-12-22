@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models
 
-import play.api.libs.json._
+import play.api.libs.json.*
 
 sealed trait AuthenticationStatus extends Product with Serializable
 

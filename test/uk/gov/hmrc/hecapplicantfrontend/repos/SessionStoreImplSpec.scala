@@ -21,7 +21,7 @@ import org.scalatest.concurrent.Eventually
 import play.api.Configuration
 import play.api.mvc.{AnyContentAsEmpty, MessagesRequest, Request}
 import play.api.test.FakeRequest
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 import uk.gov.hmrc.hecapplicantfrontend.controllers.ControllerSpec
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthenticatedRequest, RequestWithSessionData}
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.CompanyHECSession
@@ -52,7 +52,7 @@ class SessionStoreImplSpec extends PlaySupport with MongoSupportSpec with Eventu
     val fakeRequest: AuthenticatedRequest[AnyContentAsEmpty.type] = AuthenticatedRequest(
       new MessagesRequest(FakeRequest().withSession(("sessionId", sessionId.toString)), messagesApi)
     )
-    implicit val request: Request[_]                              =
+    implicit val request: Request[?]                              =
       RequestWithSessionData(fakeRequest, sessionData, Language.English)
   }
 

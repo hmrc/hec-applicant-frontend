@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.controllers.actions
 
-import cats.instances.future._
-import cats.syntax.either._
+import cats.instances.future.*
+import cats.syntax.either.*
 import com.google.inject.{Inject, Singleton}
 import play.api.mvc.Results.Redirect
 import play.api.mvc.{ActionRefiner, Result, WrappedRequest}

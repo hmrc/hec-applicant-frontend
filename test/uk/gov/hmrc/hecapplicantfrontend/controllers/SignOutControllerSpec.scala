@@ -18,7 +18,7 @@ package uk.gov.hmrc.hecapplicantfrontend.controllers
 
 import play.api.mvc.Session
 import play.api.test.FakeRequest
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 
 class SignOutControllerSpec extends ControllerSpec {
 

@@ -17,12 +17,12 @@
 package uk.gov.hmrc.hecapplicantfrontend.controllers
 
 import cats.data.EitherT
-import cats.implicits._
+import cats.implicits.*
 import com.google.inject.Inject
 import play.api.data.Form
 import play.api.data.Forms.{mapping, nonEmptyText}
 import play.api.i18n.I18nSupport
-import play.api.mvc._
+import play.api.mvc.*
 import uk.gov.hmrc.hecapplicantfrontend.controllers.VerifyEmailPasscodeController.{getNextOrNoMatchResult, verifyGGEmailInSession, verifyPasscodeForm}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, RequestWithSessionData, SessionDataAction}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{Passcode, PasscodeVerificationResult}
@@ -31,7 +31,7 @@ import uk.gov.hmrc.hecapplicantfrontend.repos.SessionStore
 import uk.gov.hmrc.hecapplicantfrontend.services.{EmailVerificationService, JourneyService}
 import uk.gov.hmrc.hecapplicantfrontend.util.ControllerUtils.noXssChars
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
-import uk.gov.hmrc.hecapplicantfrontend.util.StringUtils._
+import uk.gov.hmrc.hecapplicantfrontend.util.StringUtils.*
 import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -158,7 +158,7 @@ object VerifyEmailPasscodeController {
     currentCall: Call
   )(implicit
     ec: ExecutionContext,
-    request: RequestWithSessionData[_],
+    request: RequestWithSessionData[?],
     hc: HeaderCarrier
   ): EitherT[Future, Error, Either[PasscodeVerificationResult, Call]] =
     passcodeVerificationResult match {
@@ -182,7 +182,7 @@ object VerifyEmailPasscodeController {
   )(implicit
     hc: HeaderCarrier,
     ec: ExecutionContext,
-    request: RequestWithSessionData[_]
+    request: RequestWithSessionData[?]
   ): EitherT[Future, Error, Either[PasscodeVerificationResult, Call]] = for {
     passcodeVerificationResult <-
       emailVerificationService.verifyPasscode(passcode, userSelectedEmail)

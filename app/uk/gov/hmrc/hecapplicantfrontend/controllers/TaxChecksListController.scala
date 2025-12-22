@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.controllers
 
-import cats.instances.future._
-import cats.syntax.eq._
+import cats.instances.future.*
+import cats.syntax.eq.*
 import com.google.inject.{Inject, Singleton}
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
@@ -28,7 +28,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService.InconsistentSessionState
 import uk.gov.hmrc.hecapplicantfrontend.services.{AuditService, JourneyService}
 import uk.gov.hmrc.hecapplicantfrontend.util.Logging
-import uk.gov.hmrc.hecapplicantfrontend.util.StringUtils._
+import uk.gov.hmrc.hecapplicantfrontend.util.StringUtils.*
 import uk.gov.hmrc.hecapplicantfrontend.views.html
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 

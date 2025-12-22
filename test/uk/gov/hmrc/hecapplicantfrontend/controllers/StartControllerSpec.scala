@@ -18,18 +18,18 @@ package uk.gov.hmrc.hecapplicantfrontend.controllers
 
 import cats.data.EitherT
 import cats.implicits.catsSyntaxOptionId
-import cats.instances.future._
+import cats.instances.future.*
 import com.typesafe.config.ConfigFactory
 import play.api.Configuration
 import play.api.inject.bind
 import play.api.inject.guice.GuiceableModule
 import play.api.mvc.{Cookie, Request, Result}
 import play.api.test.FakeRequest
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 import uk.gov.hmrc.auth.core.authorise.EmptyPredicate
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, ~}
-import uk.gov.hmrc.auth.core._
+import uk.gov.hmrc.auth.core.*
 import uk.gov.hmrc.hecapplicantfrontend.config.EnrolmentConfig
 import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.ApplicantServiceStartEndPointAccessed
 import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.ApplicantServiceStartEndPointAccessed.AuthenticationDetails
@@ -54,7 +54,7 @@ class StartControllerSpec
     with JourneyServiceSupport
     with AuditServiceSupport {
 
-  import StartControllerSpec._
+  import StartControllerSpec.*
 
   val ivOrigin    = "ivOrigin"
   val ivUrl       = "https://iv:123"
@@ -148,13 +148,13 @@ class StartControllerSpec
 
   def mockGetUncertainEntityTypeJourney(result: Either[Error, Option[UncertainEntityTypeJourney]]) =
     (mockUncertainEntityTypeJourneyStore
-      .get()(_: Request[_]))
+      .get()(_: Request[?]))
       .expects(*)
       .returning(EitherT.fromEither(result))
 
   def mockStoreUncertainEntityTypeJourney(journey: UncertainEntityTypeJourney)(result: Either[Error, Unit]) =
     (mockUncertainEntityTypeJourneyStore
-      .store(_: UncertainEntityTypeJourney)(_: Request[_]))
+      .store(_: UncertainEntityTypeJourney)(_: Request[?]))
       .expects(journey, *)
       .returning(EitherT.fromEither(result))
 

@@ -18,15 +18,15 @@ package uk.gov.hmrc.hecapplicantfrontend.services
 
 import java.util.UUID
 import cats.data.EitherT
-import cats.instances.future._
-import cats.instances.int._
-import cats.syntax.either._
-import cats.syntax.eq._
+import cats.instances.future.*
+import cats.instances.int.*
+import cats.syntax.either.*
+import cats.syntax.eq.*
 import com.google.inject.{ImplementedBy, Inject, Singleton}
 import play.api.libs.json.{Json, Reads}
 import play.mvc.Http.Status.OK
 import uk.gov.hmrc.hecapplicantfrontend.models.Error
-import uk.gov.hmrc.hecapplicantfrontend.util.HttpResponseOps._
+import uk.gov.hmrc.hecapplicantfrontend.util.HttpResponseOps.*
 import uk.gov.hmrc.hecapplicantfrontend.connectors.IvConnector
 import uk.gov.hmrc.hecapplicantfrontend.models.iv.IvErrorStatus
 import uk.gov.hmrc.http.HeaderCarrier
@@ -47,7 +47,7 @@ class IvServiceImpl @Inject() (connector: IvConnector)(implicit
   ec: ExecutionContext
 ) extends IvService {
 
-  import IvServiceImpl._
+  import IvServiceImpl.*
 
   override def getFailedJourneyStatus(
     journeyId: UUID
@@ -77,6 +77,6 @@ object IvServiceImpl {
 
   final case class IvStatusResponse(result: String) extends AnyVal
 
-  implicit val reads: Reads[IvStatusResponse] = Json.reads
+  implicit val reads: Reads[IvStatusResponse] = Json.valueReads[IvStatusResponse]
 
 }

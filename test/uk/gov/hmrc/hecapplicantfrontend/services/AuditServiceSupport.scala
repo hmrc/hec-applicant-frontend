@@ -28,7 +28,7 @@ trait AuditServiceSupport { this: MockFactory =>
 
   def mockSendAuditEvent[A <: AuditEvent](event: A) =
     (mockAuditService
-      .sendEvent(_: A)(_: HeaderCarrier, _: Writes[A], _: Request[_]))
+      .sendEvent(_: A)(_: HeaderCarrier, _: Writes[A], _: Request[?]))
       .expects(event, *, *, *)
       .returning(())
 

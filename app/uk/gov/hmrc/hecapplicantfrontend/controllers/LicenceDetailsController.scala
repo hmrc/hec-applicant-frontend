@@ -17,22 +17,22 @@
 package uk.gov.hmrc.hecapplicantfrontend.controllers
 
 import cats.implicits.catsSyntaxEq
-import cats.instances.future._
-import cats.syntax.option._
+import cats.instances.future.*
+import cats.syntax.option.*
 import com.google.inject.{Inject, Singleton}
 import play.api.data.Form
 import play.api.data.Forms.{mapping, of}
 import play.api.i18n.I18nSupport
-import play.api.mvc._
+import play.api.mvc.*
 import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
-import uk.gov.hmrc.hecapplicantfrontend.controllers.LicenceDetailsController._
+import uk.gov.hmrc.hecapplicantfrontend.controllers.LicenceDetailsController.*
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, RequestWithSessionData, SessionDataAction}
 import uk.gov.hmrc.hecapplicantfrontend.models.CompanyUserAnswers.IncompleteCompanyUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.IndividualUserAnswers.IncompleteIndividualUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
-import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceTimeTrading._
-import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType._
-import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceValidityPeriod._
+import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceTimeTrading.*
+import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType.*
+import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceValidityPeriod.*
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hecapplicantfrontend.models.{CompanyUserAnswers, HECSession, IndividualUserAnswers}
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
@@ -204,8 +204,8 @@ class LicenceDetailsController @Inject() (
     def handleValidLicenceTimePeriod(licenceValidityPeriod: LicenceValidityPeriod): Future[Result] = {
       val updatedSession = request.sessionData.replaceField(
         request.sessionData,
-        IncompleteIndividualUserAnswers.licenceValidityPeriod,
-        IncompleteCompanyUserAnswers.licenceValidityPeriod,
+        IncompleteIndividualUserAnswers.licenceValidityPeriodLens,
+        IncompleteCompanyUserAnswers.licenceValidityPeriodLens,
         _.copy(licenceValidityPeriod = Some(licenceValidityPeriod)),
         _.copy(licenceValidityPeriod = Some(licenceValidityPeriod))
       )
@@ -233,7 +233,7 @@ class LicenceDetailsController @Inject() (
   }
 
   private def updateAndNextJourneyData(current: Call, updatedSession: HECSession)(implicit
-    r: RequestWithSessionData[_],
+    r: RequestWithSessionData[?],
     hc: HeaderCarrier
   ): Future[Result] =
     journeyService

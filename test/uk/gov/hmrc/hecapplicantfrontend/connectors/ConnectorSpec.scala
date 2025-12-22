@@ -17,10 +17,10 @@
 package uk.gov.hmrc.hecapplicantfrontend.connectors
 
 import cats.data.EitherT
-import org.scalatest.matchers.should._
-import org.scalatest.wordspec._
+import org.scalatest.matchers.should.*
+import org.scalatest.wordspec.*
 import play.api.libs.json.JsString
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 import uk.gov.hmrc.http.HttpResponse
 import uk.gov.hmrc.hecapplicantfrontend.models.Error
 

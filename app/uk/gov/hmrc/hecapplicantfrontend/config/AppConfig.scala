@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.config
 
-import cats.instances.char._
-import cats.syntax.eq._
+import cats.instances.char.*
+import cats.syntax.eq.*
 import play.api.Configuration
 import play.api.mvc.{Call, Result}
 import play.api.mvc.Results.Redirect

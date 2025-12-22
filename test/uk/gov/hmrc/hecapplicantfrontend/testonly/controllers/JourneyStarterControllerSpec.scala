@@ -17,13 +17,13 @@
 package uk.gov.hmrc.hecapplicantfrontend.testonly.controllers
 
 import cats.data.EitherT
-import cats.instances.future._
+import cats.instances.future.*
 import com.typesafe.config.ConfigFactory
 import play.api.Configuration
 import play.api.inject.bind
 import play.api.mvc.{Result, Session}
 import play.api.test.FakeRequest
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 import uk.gov.hmrc.auth.core.AffinityGroup.Individual
 import uk.gov.hmrc.auth.core.ConfidenceLevel.L250
 import uk.gov.hmrc.hecapplicantfrontend.controllers.{routes => nonTestOnlyRoutes}
@@ -32,7 +32,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.HECTaxCheckSource.Dig
 import uk.gov.hmrc.hecapplicantfrontend.models.{DateOfBirth, Error, HECTaxCheckCode}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.GGCredId
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
-import uk.gov.hmrc.hecapplicantfrontend.testonly.models.Journey._
+import uk.gov.hmrc.hecapplicantfrontend.testonly.models.Journey.*
 import uk.gov.hmrc.hecapplicantfrontend.testonly.models.{Journey, LoginData, SaveTaxCheckRequest}
 import uk.gov.hmrc.hecapplicantfrontend.testonly.services.{AuthLoginStubService, HECService, JourneyToLoginDataTransformer}
 import uk.gov.hmrc.http.HeaderCarrier

@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck
 
-import play.api.libs.json._
+import play.api.libs.json.*
 
 sealed trait HECTaxCheckSource extends Product with Serializable
 

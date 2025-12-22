@@ -18,13 +18,13 @@ package uk.gov.hmrc.hecapplicantfrontend.controllers
 
 import cats.data.Validated.Valid
 import cats.data.{EitherT, Validated}
-import cats.instances.future._
-import cats.instances.option._
-import cats.instances.string._
-import cats.syntax.either._
-import cats.syntax.eq._
-import cats.syntax.option._
-import cats.syntax.traverse._
+import cats.instances.future.*
+import cats.instances.option.*
+import cats.instances.string.*
+import cats.syntax.either.*
+import cats.syntax.eq.*
+import cats.syntax.option.*
+import cats.syntax.traverse.*
 import com.google.inject.{Inject, Singleton}
 import play.api.mvc.{Action, AnyContent, Call, MessagesControllerComponents, Request, Result}
 import uk.gov.hmrc.auth.core.retrieve.Credentials
@@ -62,35 +62,35 @@ class StartController @Inject() (
     extends FrontendController(mcc)
     with Logging {
 
-  import StartController._
+  import StartController.*
 
   val start: Action[AnyContent] = authWithRetrievalsAction.async { implicit request =>
     val result = for {
-      maybeStoredSession                 <- sessionStore.get().leftMap(BackendError.apply)
-      details                            <-
+      maybeStoredSession                <- sessionStore.get().leftMap(BackendError.apply)
+      details                           <-
         maybeStoredSession.fold(
           handleNoSessionData(request.retrievedGGUserData)
             .map[(Option[AuthenticationDetails], LoginData)] { case (authDetails, loginData) =>
               Some(authDetails) -> loginData
             }
-        )(storedSession => EitherT.pure(None -> storedSession.fold(_.loginData, _.loginData)))
-      (authenticationDetails, loginData) <- details
-      existingTaxChecks                  <- taxCheckService
-                                              .getUnexpiredTaxCheckCodes()
-                                              .leftMap(BackendError(_): StartError)
-      isConfirmedDetails                 <- maybeStoredSession.fold(false)(_.fold(_.hasConfirmedDetails, _ => false))
-      newSession                         <- loginData match {
-                                              case i: IndividualLoginData =>
-                                                IndividualHECSession
-                                                  .newSession(i)
-                                                  .copy(
-                                                    unexpiredTaxChecks = existingTaxChecks,
-                                                    hasConfirmedDetails = isConfirmedDetails
-                                                  )
-                                              case c: CompanyLoginData    =>
-                                                CompanyHECSession.newSession(c).copy(unexpiredTaxChecks = existingTaxChecks)
-                                            }
-      _                                  <- sessionStore.store(newSession).leftMap(BackendError(_): StartError)
+        )(storedSession => EitherT.pure[Future, StartError](None -> storedSession.fold(_.loginData, _.loginData)))
+      (authenticationDetails, loginData) = details
+      existingTaxChecks                 <- taxCheckService
+                                             .getUnexpiredTaxCheckCodes()
+                                             .leftMap(BackendError(_): StartError)
+      isConfirmedDetails                 = maybeStoredSession.fold(false)(_.fold(_.hasConfirmedDetails, _ => false))
+      newSession                         = loginData match {
+                                             case i: IndividualLoginData =>
+                                               IndividualHECSession
+                                                 .newSession(i)
+                                                 .copy(
+                                                   unexpiredTaxChecks = existingTaxChecks,
+                                                   hasConfirmedDetails = isConfirmedDetails
+                                                 )
+                                             case c: CompanyLoginData    =>
+                                               CompanyHECSession.newSession(c).copy(unexpiredTaxChecks = existingTaxChecks)
+                                           }
+      _                                 <- sessionStore.store(newSession).leftMap(BackendError(_): StartError)
     } yield authenticationDetails -> newSession
 
     result.fold(
@@ -132,7 +132,7 @@ class StartController @Inject() (
   }
 
   private def auditLogIn(redirectUrl: Option[String], authenticationDetails: AuthenticationDetails)(implicit
-    r: Request[_],
+    r: Request[?],
     hc: HeaderCarrier
   ): Unit =
     auditService.sendEvent(
@@ -144,7 +144,7 @@ class StartController @Inject() (
     )
 
   private def auditLoginAndRedirect(redirectTo: Call, authenticationDetails: AuthenticationDetails)(implicit
-    r: Request[_],
+    r: Request[?],
     hc: HeaderCarrier
   ): Result = {
     auditLogIn(Some(redirectTo.url), authenticationDetails)
@@ -153,7 +153,7 @@ class StartController @Inject() (
 
   private def handleNoSessionData(
     retrievedGGData: RetrievedGGData
-  )(implicit request: Request[_]): EitherT[Future, StartError, (AuthenticationDetails, LoginData)] = {
+  )(implicit request: Request[?]): EitherT[Future, StartError, (AuthenticationDetails, LoginData)] = {
     val RetrievedGGData(cl, affinityGroup, maybeNino, maybeSautr, maybeEmail, enrolments, creds) =
       retrievedGGData
 
@@ -269,7 +269,7 @@ class StartController @Inject() (
     authenticationDetails: AuthenticationDetails
   )(implicit
     hc: HeaderCarrier,
-    request: Request[_]
+    request: Request[?]
   ): EitherT[Future, StartError, (AuthenticationDetails, LoginData)] =
     uncertainEntityTypeJourneyStore
       .get()
@@ -328,7 +328,7 @@ class StartController @Inject() (
         case None    =>
           maybeSautr
             .map(SAUTR.fromString(_).toValid("Got invalid SAUTR from GG"))
-            .sequence[[A] =>> Validated[String, A], SAUTR]
+            .sequence[[X] =>> Validated[String, X], SAUTR]
       }
 
       val eitherResult: Either[StartError, LoginData] = sautrValidation
@@ -382,14 +382,14 @@ class StartController @Inject() (
     authenticationDetails: AuthenticationDetails,
     didConfirmUncertainEntityType: Option[Boolean]
   ): EitherT[Future, StartError, (AuthenticationDetails, LoginData)] = {
-    val ctutrValidation = enrolments.enrolments
+    val ctutrValidation: Validated[String, Option[CTUTR]] = enrolments.enrolments
       .find(_.key === EnrolmentConfig.CTEnrolment.key)
       .flatMap(
         _.getIdentifier(EnrolmentConfig.CTEnrolment.ctutrIdentifier).map(id =>
           CTUTR.fromString(id.value).toValid("Got invalid CTUTR from enrolments")
         )
       )
-      .sequence[[A] =>> Validated[String, A], CTUTR]
+      .sequence[[X] =>> Validated[String, X], CTUTR]
 
     val eitherResult = ctutrValidation
       .bimap[StartError, LoginData](

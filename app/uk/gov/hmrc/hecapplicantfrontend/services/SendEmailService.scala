@@ -37,7 +37,7 @@ trait SendEmailService {
 
   def sendEmail(userSelectedEmail: UserSelectedEmail, emailParameters: EmailParameters)(implicit
     hc: HeaderCarrier,
-    r: RequestWithSessionData[_]
+    r: RequestWithSessionData[?]
   ): EitherT[Future, Error, EmailSendResult]
 
 }
@@ -58,7 +58,7 @@ class SendEmailServiceImpl @Inject() (
 
   override def sendEmail(userSelectedEmail: UserSelectedEmail, emailParameters: EmailParameters)(implicit
     hc: HeaderCarrier,
-    r: RequestWithSessionData[_]
+    r: RequestWithSessionData[?]
   ): EitherT[Future, Error, EmailSendResult] = {
     val taxCheckCode =
       r.sessionData.emailRequestedForTaxCheck

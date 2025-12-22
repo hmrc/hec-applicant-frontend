@@ -18,24 +18,25 @@ package uk.gov.hmrc.hecapplicantfrontend.controllers
 
 import cats.Eq
 import cats.data.EitherT
-import cats.syntax.eq._
-import cats.syntax.option._
-import cats.syntax.traverse._
+import cats.syntax.eq.*
+import cats.syntax.option.*
+import cats.syntax.traverse.*
 import com.google.inject.Inject
 import play.api.data.Form
 import play.api.data.Forms.{mapping, nonEmptyText, of}
 import play.api.data.validation.{Constraint, Invalid, Valid}
 import play.api.i18n.I18nSupport
-import play.api.mvc._
+import play.api.mvc.*
 import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
-import uk.gov.hmrc.hecapplicantfrontend.controllers.CompanyDetailsController._
+import uk.gov.hmrc.hecapplicantfrontend.controllers.CompanyDetailsController.*
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, RequestWithSessionData, SessionDataAction}
 import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.CompanyMatchFailure.{EnrolmentCTUTRCompanyMatchFailure, EnterCTUTRCompanyMatchFailure}
 import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.CompanyMatchSuccess.{EnrolmentCTUTRCompanyMatchSuccess, EnterCTUTRCompanyMatchSuccess}
 import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.TaxCheckExit
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.CompanyHECSession
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.CompanyLoginData
-import uk.gov.hmrc.hecapplicantfrontend.models._
+import uk.gov.hmrc.hecapplicantfrontend.models.*
+import uk.gov.hmrc.hecapplicantfrontend.models.CompanyUserAnswers.IncompleteCompanyUserAnswers.{chargeableForCTLens, companyDetailsConfirmedLens, crnLens, ctIncomeDeclaredLens, ctutrLens, recentlyStartedTradingLens}
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.company.{CTAccountingPeriod, CTStatusResponse}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR}
 import uk.gov.hmrc.hecapplicantfrontend.models.views.YesNoOption
@@ -78,7 +79,7 @@ class CompanyDetailsController @Inject() (
     with Logging {
 
   private def getConfirmCompanyDetailsPage(form: Form[YesNoAnswer], companyName: CompanyHouseName)(implicit
-    request: RequestWithSessionData[_]
+    request: RequestWithSessionData[?]
   ): Result = {
     val back = journeyService.previous(routes.CompanyDetailsController.confirmCompanyDetails)
     Ok(
@@ -155,7 +156,7 @@ class CompanyDetailsController @Inject() (
           ctStatusOpt         <- fetchCTStatus(desCtutr, session.loginData, crn)
           updatedRetrievedData = session.retrievedJourneyData.copy(desCtutr = desCtutr, ctStatus = ctStatusOpt)
           updatedUserAnswers   = session.userAnswers
-                                   .unset(_.companyDetailsConfirmed)
+                                   .unset(_ => companyDetailsConfirmedLens)
                                    .copy(companyDetailsConfirmed = Some(companyDetailsConfirmed))
           updatedSession       = session.copy(retrievedJourneyData = updatedRetrievedData, userAnswers = updatedUserAnswers)
           call                <- callUpdateAndNext(updatedSession)
@@ -177,8 +178,8 @@ class CompanyDetailsController @Inject() (
           case YesNoAnswer.No =>
             // wipe CRN answer prior to navigating to next page
             val answersWithoutCrn = session.userAnswers
-              .unset(_.crn)
-              .unset(_.companyDetailsConfirmed)
+              .unset(_ => crnLens)
+              .unset(_ => companyDetailsConfirmedLens)
               .copy(companyDetailsConfirmed = Some(companyDetailsConfirmed))
             callUpdateAndNext(session.copy(userAnswers = answersWithoutCrn)).fold(
               _.doThrow("Could not update session and proceed"),
@@ -187,7 +188,7 @@ class CompanyDetailsController @Inject() (
         }
 
       def getFuturePage(companyHouseName: CompanyHouseName)(form: Form[YesNoAnswer])(implicit
-        request: RequestWithSessionData[_]
+        request: RequestWithSessionData[?]
       ) =
         Future.successful(getConfirmCompanyDetailsPage(form, companyHouseName))
 
@@ -230,7 +231,7 @@ class CompanyDetailsController @Inject() (
       request.sessionData mapAsCompany { companySession =>
         def handleValidAnswer(recentlyStartedTrading: YesNoAnswer) = {
           val updatedAnswers = companySession.userAnswers
-            .unset(_.recentlyStartedTrading)
+            .unset(_ => recentlyStartedTradingLens)
             .copy(recentlyStartedTrading = Some(recentlyStartedTrading))
 
           updateAndNextJourneyData(
@@ -292,8 +293,8 @@ class CompanyDetailsController @Inject() (
             if (existingAnswer.contains(chargeableForCT)) companySession.userAnswers
             else
               companySession.userAnswers
-                .unset(_.chargeableForCT)
-                .unset(_.ctIncomeDeclared)
+                .unset(_ => chargeableForCTLens)
+                .unset(_ => ctIncomeDeclaredLens)
                 .copy(chargeableForCT = Some(chargeableForCT))
           }
 
@@ -348,10 +349,10 @@ class CompanyDetailsController @Inject() (
           ensureCompanyDataHasCompanyName(companySession) { companyName =>
             def handleValidAnswer(ctutr: CTUTR) = {
               val updatedAnswers = companySession.userAnswers
-                .unset(_.ctutr)
-                .unset(_.ctIncomeDeclared)
-                .unset(_.recentlyStartedTrading)
-                .unset(_.chargeableForCT)
+                .unset(_ => ctutrLens)
+                .unset(_ => ctIncomeDeclaredLens)
+                .unset(_ => recentlyStartedTradingLens)
+                .unset(_ => chargeableForCTLens)
                 .copy(ctutr = Some(ctutr))
               val (start, end)   = CompanyDetailsController.calculateLookBackPeriod(timeProvider.currentDate)
 
@@ -430,10 +431,10 @@ class CompanyDetailsController @Inject() (
                         )
                       } else {
                         val updatedAnswers = companySession.userAnswers
-                          .unset(_.ctutr)
-                          .unset(_.ctIncomeDeclared)
-                          .unset(_.recentlyStartedTrading)
-                          .unset(_.chargeableForCT)
+                          .unset(_ => ctutrLens)
+                          .unset(_ => ctIncomeDeclaredLens)
+                          .unset(_ => recentlyStartedTradingLens)
+                          .unset(_ => chargeableForCTLens)
                           .copy(ctutr = formWithErrors.value)
                         val updatedSession = companySession
                           .copy(crnBlocked = ctutrAttempts.isBlocked, userAnswers = updatedAnswers)
@@ -526,7 +527,7 @@ class CompanyDetailsController @Inject() (
       ensureCompanyDataHasCTStatusAccountingPeriod(companySession) { latestAccountingPeriod =>
         def handleValidAnswer(incomeDeclared: YesNoAnswer): Future[Result] = {
           val updatedAnswers =
-            companySession.userAnswers.unset(_.ctIncomeDeclared).copy(ctIncomeDeclared = Some(incomeDeclared))
+            companySession.userAnswers.unset(_ => ctIncomeDeclaredLens).copy(ctIncomeDeclared = Some(incomeDeclared))
 
           updateAndNextJourneyData(
             routes.CompanyDetailsController.ctIncomeStatement,
@@ -603,7 +604,7 @@ class CompanyDetailsController @Inject() (
     newLookBackPeriodStart: LocalDate,
     newLookBackPeriodEnd: LocalDate
   )(implicit
-    r: Request[_],
+    r: Request[?],
     hc: HeaderCarrier
   ): EitherT[Future, Error, Option[NewRelevantAccountingPeriodConsidered]] = {
     val newCtStatusResponseF =
@@ -661,9 +662,9 @@ class CompanyDetailsController @Inject() (
                 retrievedJourneyData = companySession.retrievedJourneyData
                   .copy(ctStatus = Some(newRelevantAccountingPeriod.newCtStatusResponse)),
                 userAnswers = companySession.userAnswers
-                  .unset(_.recentlyStartedTrading)
-                  .unset(_.chargeableForCT)
-                  .unset(_.ctIncomeDeclared)
+                  .unset(_ => recentlyStartedTradingLens)
+                  .unset(_ => chargeableForCTLens)
+                  .unset(_ => ctIncomeDeclaredLens)
               )
 
           journeyService
@@ -715,7 +716,7 @@ class CompanyDetailsController @Inject() (
 
   private def checkIfNewRelevantAccountingPeriodConsidered(
     session: CompanyHECSession
-  )(f: Option[NewRelevantAccountingPeriodConsidered] => Future[Result])(implicit r: Request[_]): Future[Result] =
+  )(f: Option[NewRelevantAccountingPeriodConsidered] => Future[Result])(implicit r: Request[?]): Future[Result] =
     session.newRelevantAccountingPeriodConsidered match {
       case None =>
         f(None)
@@ -750,7 +751,7 @@ class CompanyDetailsController @Inject() (
     }
 
   private def updateAndNextJourneyData(current: Call, updatedSession: HECSession)(implicit
-    r: RequestWithSessionData[_],
+    r: RequestWithSessionData[?],
     hc: HeaderCarrier
   ): Future[Result] =
     journeyService

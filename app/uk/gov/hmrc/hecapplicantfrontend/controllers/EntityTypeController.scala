@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.controllers
 
-import cats.instances.future._
+import cats.instances.future.*
 import com.google.inject.{Inject, Singleton}
 import play.api.data.Form
 import play.api.data.Forms.{mapping, of}
@@ -27,7 +27,6 @@ import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, NotRequ
 import uk.gov.hmrc.hecapplicantfrontend.models.CompanyUserAnswers.IncompleteCompanyUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.EntityType
 import uk.gov.hmrc.hecapplicantfrontend.models.IndividualUserAnswers.IncompleteIndividualUserAnswers
-import uk.gov.hmrc.hecapplicantfrontend.models.UserAnswersLenses
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService
 import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService.InconsistentSessionState
 import uk.gov.hmrc.hecapplicantfrontend.util.{FormUtils, Logging}
@@ -52,7 +51,7 @@ class EntityTypeController @Inject() (
     with I18nSupport
     with Logging {
 
-  import EntityTypeController._
+  import EntityTypeController.*
 
   val entityType: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
     val back       = journeyService.previous(routes.EntityTypeController.entityType)
@@ -72,8 +71,8 @@ class EntityTypeController @Inject() (
     def handleValidEntityType(entityType: EntityType): Future[Result] = {
       val updatedSession = request.sessionData.replaceField(
         request.sessionData,
-        UserAnswersLenses.incompleteIndividualEntityType,
-        UserAnswersLenses.incompleteCompanyEntityType,
+        IncompleteIndividualUserAnswers.entityTypeLens,
+        IncompleteCompanyUserAnswers.entityTypeLens,
         _.copy(entityType = Some(entityType)),
         _.copy(entityType = Some(entityType))
       )

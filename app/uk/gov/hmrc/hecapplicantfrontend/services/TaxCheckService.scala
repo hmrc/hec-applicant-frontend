@@ -17,10 +17,10 @@
 package uk.gov.hmrc.hecapplicantfrontend.services
 
 import cats.data.EitherT
-import cats.instances.future._
-import cats.instances.int._
-import cats.syntax.either._
-import cats.syntax.eq._
+import cats.instances.future.*
+import cats.instances.int.*
+import cats.syntax.either.*
+import cats.syntax.eq.*
 import com.google.inject.{ImplementedBy, Inject, Singleton}
 import play.api.http.Status.OK
 import play.api.libs.json.{Json, OFormat}
@@ -38,8 +38,8 @@ import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.{HECTaxCheckData, HEC
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR, SAUTR}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceDetails
 import uk.gov.hmrc.hecapplicantfrontend.models.{CompleteUserAnswers, Error, HECSession, HECTaxCheck, Language, TaxCheckListItem, TaxYear}
-import uk.gov.hmrc.hecapplicantfrontend.services.TaxCheckService._
-import uk.gov.hmrc.hecapplicantfrontend.util.HttpResponseOps._
+import uk.gov.hmrc.hecapplicantfrontend.services.TaxCheckService.*
+import uk.gov.hmrc.hecapplicantfrontend.util.HttpResponseOps.*
 import uk.gov.hmrc.http.HeaderCarrier
 
 import java.time.LocalDate

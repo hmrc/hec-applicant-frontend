@@ -17,8 +17,8 @@
 package uk.gov.hmrc.hecapplicantfrontend.testonly.services
 
 import cats.data.EitherT
-import cats.instances.int._
-import cats.syntax.eq._
+import cats.instances.int.*
+import cats.syntax.eq.*
 import com.google.inject.{ImplementedBy, Inject, Singleton}
 import play.api.http.Status.CREATED
 import uk.gov.hmrc.hecapplicantfrontend.testonly.connectors.HECConnector

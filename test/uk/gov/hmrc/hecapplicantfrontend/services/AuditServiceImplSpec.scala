@@ -26,7 +26,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.TaxCheckCodesDisplayed
 import uk.gov.hmrc.hecapplicantfrontend.models.{HECTaxCheckCode, Language}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.GGCredId
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.audit.AuditExtensions._
+import uk.gov.hmrc.play.audit.AuditExtensions.*
 import uk.gov.hmrc.play.audit.http.connector.{AuditConnector, AuditResult}
 import uk.gov.hmrc.play.audit.model.ExtendedDataEvent
 
@@ -61,7 +61,7 @@ class AuditServiceImplSpec extends Matchers with AnyWordSpecLike with MockFactor
 
         val requestUri = "/uri"
 
-        implicit val request: Request[_] = FakeRequest("GET", requestUri, Headers(), "")
+        implicit val request: Request[?] = FakeRequest("GET", requestUri, Headers(), "")
 
         implicit val hc: HeaderCarrier = HeaderCarrier()
 

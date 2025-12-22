@@ -17,12 +17,12 @@
 package uk.gov.hmrc.hecapplicantfrontend.services
 
 import cats.data.EitherT
-import cats.instances.future._
+import cats.instances.future.*
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.Json
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 import uk.gov.hmrc.hecapplicantfrontend.connectors.CompanyDetailsConnector
 import uk.gov.hmrc.hecapplicantfrontend.models.{CompanyHouseDetails, CompanyHouseName, Error}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.CRN

@@ -17,7 +17,7 @@
 package uk.gov.hmrc.hecapplicantfrontend.controllers
 
 import cats.data.EitherT
-import cats.instances.future._
+import cats.instances.future.*
 import org.scalamock.handlers.CallHandler1
 import org.scalamock.scalatest.MockFactory
 import play.api.mvc.Request
@@ -33,22 +33,22 @@ trait UncertainEntityTypeJourneyStoreSupport { this: MockFactory =>
 
   def mockGetUncertainEntityTypeJourney(
     result: Either[Error, Option[UncertainEntityTypeJourney]]
-  ): CallHandler1[Request[_], EitherT[Future, Error, Option[UncertainEntityTypeJourney]]] =
+  ): CallHandler1[Request[?], EitherT[Future, Error, Option[UncertainEntityTypeJourney]]] =
     (mockUncertainEntityTypeJourneyStore
-      .get()(_: Request[_]))
+      .get()(_: Request[?]))
       .expects(*)
       .returning(EitherT.fromEither(result))
 
   def mockGetUncertainEntityTypeJourney(
     journey: UncertainEntityTypeJourney
-  ): CallHandler1[Request[_], EitherT[Future, Error, Option[UncertainEntityTypeJourney]]] =
+  ): CallHandler1[Request[?], EitherT[Future, Error, Option[UncertainEntityTypeJourney]]] =
     mockGetUncertainEntityTypeJourney(Right(Some(journey)))
 
   def mockUpdateUncertainEntityTypeJourney(journey: UncertainEntityTypeJourney)(
     result: Either[Error, Unit]
   ) =
     (mockUncertainEntityTypeJourneyStore
-      .store(_: UncertainEntityTypeJourney)(_: Request[_]))
+      .store(_: UncertainEntityTypeJourney)(_: Request[?]))
       .expects(journey, *)
       .returning(EitherT.fromEither(result))
 

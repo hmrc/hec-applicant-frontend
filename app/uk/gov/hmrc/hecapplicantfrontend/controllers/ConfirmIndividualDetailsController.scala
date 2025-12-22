@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.controllers
 
-import cats.instances.future._
+import cats.instances.future.*
 import com.google.inject.{Inject, Singleton}
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}

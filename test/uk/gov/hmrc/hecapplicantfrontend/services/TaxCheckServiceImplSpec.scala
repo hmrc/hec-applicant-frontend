@@ -18,12 +18,12 @@ package uk.gov.hmrc.hecapplicantfrontend.services
 
 import cats.data.EitherT
 import cats.implicits.catsSyntaxOptionId
-import cats.instances.future._
+import cats.instances.future.*
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.Json
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 import uk.gov.hmrc.hecapplicantfrontend.connectors.HECConnector
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.ApplicantDetails.IndividualApplicantDetails
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.HECTaxCheckData.IndividualHECTaxCheckData
@@ -34,10 +34,10 @@ import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.company.CTAccountingP
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.{HECTaxCheckData, HECTaxCheckSource}
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.company.{CTStatus, CTStatusResponse}
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.individual.{SAStatus, SAStatusResponse}
-import uk.gov.hmrc.hecapplicantfrontend.models.ids._
+import uk.gov.hmrc.hecapplicantfrontend.models.ids.*
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceDetails, LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 import uk.gov.hmrc.hecapplicantfrontend.models.{DateOfBirth, EmailAddress, Error, HECTaxCheck, HECTaxCheckCode, Language, Name, TaxCheckListItem, TaxSituation, TaxYear, YesNoAnswer}
-import uk.gov.hmrc.hecapplicantfrontend.services.TaxCheckService._
+import uk.gov.hmrc.hecapplicantfrontend.services.TaxCheckService.*
 import uk.gov.hmrc.hecapplicantfrontend.utils.Fixtures
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 

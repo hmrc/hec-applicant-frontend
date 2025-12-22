@@ -22,7 +22,7 @@ import uk.gov.hmrc.govukfrontend.views.Aliases.Text
 import uk.gov.hmrc.govukfrontend.views.viewmodels.errormessage.ErrorMessage
 
 object FormErrorMessage {
-  def formErrorMessage(form: Form[_], key: String)(implicit messages: Messages): Option[ErrorMessage] = form
+  def formErrorMessage(form: Form[?], key: String)(implicit messages: Messages): Option[ErrorMessage] = form
     .error(key)
     .map(e =>
       ErrorMessage(

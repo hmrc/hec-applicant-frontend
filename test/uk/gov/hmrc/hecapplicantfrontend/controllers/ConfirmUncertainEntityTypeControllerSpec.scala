@@ -17,11 +17,11 @@
 package uk.gov.hmrc.hecapplicantfrontend.controllers
 
 import cats.data.EitherT
-import cats.instances.future._
+import cats.instances.future.*
 import play.api.inject.bind
 import play.api.mvc.{Request, Result}
 import play.api.test.FakeRequest
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.GGCredId
 import uk.gov.hmrc.hecapplicantfrontend.models.{EntityType, Error, UncertainEntityTypeJourney}
@@ -50,7 +50,7 @@ class ConfirmUncertainEntityTypeControllerSpec
 
   def mockDeleteSession(result: Either[Error, Unit]) =
     (mockSessionStore
-      .delete()(_: Request[_]))
+      .delete()(_: Request[?]))
       .expects(*)
       .returning(EitherT.fromEither(result))
 

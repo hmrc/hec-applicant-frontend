@@ -24,7 +24,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.{Error, UncertainEntityTypeJourne
 import uk.gov.hmrc.http.SessionKeys
 import uk.gov.hmrc.mongo.{CurrentTimestampSupport, MongoComponent}
 import uk.gov.hmrc.mongo.cache.{DataKey, SessionCacheRepository}
-import uk.gov.hmrc.play.http.logging.Mdc.preservingMdc
+import uk.gov.hmrc.mdc.Mdc.preservingMdc
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration.FiniteDuration
@@ -32,10 +32,10 @@ import scala.concurrent.duration.FiniteDuration
 @ImplementedBy(classOf[UncertainEntityTypeJourneyStoreImpl])
 trait UncertainEntityTypeJourneyStore {
 
-  def get()(implicit request: Request[_]): EitherT[Future, Error, Option[UncertainEntityTypeJourney]]
+  def get()(implicit request: Request[?]): EitherT[Future, Error, Option[UncertainEntityTypeJourney]]
 
   def store(journey: UncertainEntityTypeJourney)(implicit
-    request: Request[_]
+    request: Request[?]
   ): EitherT[Future, Error, Unit]
 
 }
@@ -57,7 +57,7 @@ class UncertainEntityTypeJourneyStoreImpl @Inject() (
 
   val sessionKey: String = "session"
 
-  def get()(implicit request: Request[_]): EitherT[Future, Error, Option[UncertainEntityTypeJourney]] =
+  def get()(implicit request: Request[?]): EitherT[Future, Error, Option[UncertainEntityTypeJourney]] =
     EitherT(
       preservingMdc {
         getFromSession[UncertainEntityTypeJourney](DataKey(sessionKey))
@@ -68,7 +68,7 @@ class UncertainEntityTypeJourneyStoreImpl @Inject() (
 
   def store(
     journey: UncertainEntityTypeJourney
-  )(implicit request: Request[_]): EitherT[Future, Error, Unit] =
+  )(implicit request: Request[?]): EitherT[Future, Error, Unit] =
     EitherT(preservingMdc {
       putSession[UncertainEntityTypeJourney](DataKey(sessionKey), journey)
         .map(_ => Right(()))
