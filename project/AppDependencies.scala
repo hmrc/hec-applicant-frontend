@@ -14,7 +14,7 @@ object AppDependencies {
     "dev.optics"                 %% "monocle-core"                               % monocleVersion,
     "dev.optics"                 %% "monocle-macro"                              % monocleVersion,
     "uk.gov.hmrc"                %% "play-conditional-form-mapping-play-30"      % "3.4.0",
-    "uk.gov.hmrc"                %% "play-frontend-hmrc-play-30"                 % "12.24.0"
+    "uk.gov.hmrc"                %% "play-frontend-hmrc-play-30"                 % "12.25.0"
   )
 
   val test: Seq[ModuleID] = Seq(
