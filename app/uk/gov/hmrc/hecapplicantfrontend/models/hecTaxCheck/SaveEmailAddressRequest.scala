@@ -16,13 +16,15 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.functional.syntax.*
+import play.api.libs.json.{OFormat, __}
 import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, HECTaxCheckCode}
 
 final case class SaveEmailAddressRequest(emailAddress: EmailAddress, taxCheckCode: HECTaxCheckCode)
 
 object SaveEmailAddressRequest {
-
-  implicit val format: OFormat[SaveEmailAddressRequest] = Json.format
-
+  implicit val format: OFormat[SaveEmailAddressRequest] = (
+    (__ \ "emailAddress").format[EmailAddress] and
+      (__ \ "taxCheckCode").format[HECTaxCheckCode]
+  )(SaveEmailAddressRequest.apply, o => Tuple.fromProductTyped(o))
 }

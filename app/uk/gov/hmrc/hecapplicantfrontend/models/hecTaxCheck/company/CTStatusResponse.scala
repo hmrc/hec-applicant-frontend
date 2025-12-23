@@ -16,7 +16,8 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.company
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.functional.syntax.*
+import play.api.libs.json.{OFormat, __}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.CTUTR
 
 import java.time.LocalDate
@@ -29,7 +30,10 @@ final case class CTStatusResponse(
 )
 
 object CTStatusResponse {
-
-  implicit val format: OFormat[CTStatusResponse] = Json.format
-
+  implicit val format: OFormat[CTStatusResponse] = (
+    (__ \ "ctutr").format[CTUTR] and
+      (__ \ "startDate").format[LocalDate] and
+      (__ \ "endDate").format[LocalDate] and
+      (__ \ "latestAccountingPeriod").formatNullable[CTAccountingPeriod]
+  )(CTStatusResponse.apply, o => Tuple.fromProductTyped(o))
 }
