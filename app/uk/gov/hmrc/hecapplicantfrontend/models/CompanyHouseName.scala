@@ -18,9 +18,9 @@ package uk.gov.hmrc.hecapplicantfrontend.models
 
 import play.api.libs.json.{Format, Json}
 
-final case class CompanyHouseName(name: String)
+final case class CompanyHouseName(name: String) extends AnyVal
 
 object CompanyHouseName {
-  implicit val format: Format[CompanyHouseName] = Json.format[CompanyHouseName]
+  implicit val format: Format[CompanyHouseName] = Json.valueFormat[CompanyHouseName]
 
 }

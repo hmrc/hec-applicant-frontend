@@ -135,7 +135,7 @@ class HECTaxCheckDataSpec extends AnyWordSpec with Matchers {
                                      | "applicantDetails":{
                                      |   "ggCredId":"ggCredId",
                                      |   "crn":"12345678",
-                                     |   "companyName":{ "name": "Test Tech Ltd" }
+                                     |   "companyName":"Test Tech Ltd"
                                      | },
                                      | "licenceDetails":{
                                      |   "licenceType":"ScrapMetalMobileCollector",
