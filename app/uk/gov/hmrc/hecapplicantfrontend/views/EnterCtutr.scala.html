@@ -48,7 +48,7 @@
       ),
       classes = "govuk-!-width-one-third",
       hint = Some(Hint(
-        content = Text(messages(s"$key.hint"))
+        content = HtmlContent(s"""${messages(s"$key.hint")}<br><br><a class="govuk-link" href="https://www.gov.uk/find-utr-number" target="_blank" rel="noreferrer noopener">${messages(s"$key.link1")}</a>""")
       )),
       errorMessage = formErrorMessage(form, key)
     ))
