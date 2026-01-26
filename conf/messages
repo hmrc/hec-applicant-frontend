@@ -330,6 +330,7 @@ enterCtutr.error.required = Enter your Corporation Tax Unique Taxpayer Reference
 enterCtutr.error.invalidCharacters = Corporation Tax Unique Taxpayer Reference must only contain the numbers 0 to 9
 enterCtutr.error.ctutrChecksumFailed = Enter a valid Corporation Tax Unique Taxpayer Reference
 enterCtutr.error.ctutrsDoNotMatch = Your Corporation Tax Unique Taxpayer Reference does not match the information we hold for this company
+enterCtutr.error.invalidFormat = Corporation Tax Unique Taxpayer Reference must be 10 or 13 digits
 
 # Don't have CTUTR
 dontHaveCtutr.title=If you do not have a UTR

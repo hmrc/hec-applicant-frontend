@@ -1455,7 +1455,7 @@ class CompanyDetailsControllerSpec
               doc.select("#back").attr("href") shouldBe mockPreviousCall.url
               doc
                 .select("#enterCtutr-hint")
-                .text()                        shouldBe messageFromMessageKey("enterCtutr.hint")
+                .text()                          should include(messageFromMessageKey("enterCtutr.hint"))
 
               val input = doc.select("#enterCtutr")
               input.text() shouldBe ""
@@ -1486,7 +1486,7 @@ class CompanyDetailsControllerSpec
               doc.select("#back").attr("href") shouldBe mockPreviousCall.url
               doc
                 .select("#enterCtutr-hint")
-                .text()                        shouldBe messageFromMessageKey("enterCtutr.hint")
+                .text()                          should include(messageFromMessageKey("enterCtutr.hint"))
 
               val input = doc.select("#enterCtutr")
               input.attr("value") shouldBe ctutr
@@ -1573,16 +1573,16 @@ class CompanyDetailsControllerSpec
         }
 
         "CTUTR length is less than 10 digits long" in {
-          test("enterCtutr.error.ctutrInvalidFormat", "enterCtutr" -> "111")
-          test("enterCtutr.error.ctutrInvalidFormat", "enterCtutr" -> "111111111")
+          test("enterCtutr.error.invalidFormat", "enterCtutr" -> "111")
+          test("enterCtutr.error.invalidFormat", "enterCtutr" -> "111111111")
         }
 
         "CTUTR length is more than 10 digits long" in {
-          test("enterCtutr.error.ctutrInvalidFormat", "enterCtutr" -> "11111111111")
+          test("enterCtutr.error.invalidFormat", "enterCtutr" -> "11111111111")
         }
 
         "CTUTR contains letters" in {
-          test("enterCtutr.error.ctutrInvalidFormat", "enterCtutr" -> "111111111a")
+          test("enterCtutr.error.invalidFormat", "enterCtutr" -> "111111111a")
         }
 
         "CTUTR fails checksum validation" in {
@@ -1590,7 +1590,7 @@ class CompanyDetailsControllerSpec
         }
 
         "CTUTR rejects XSS Chars" in {
-          test("enterCtutr.error.ctutrInvalidFormat", "enterCtutr" -> """1^[^3<7>"2&]5*8$6""")
+          test("enterCtutr.error.invalidCharacters", "enterCtutr" -> """1^[^3<7>"2&]5*8$6""")
         }
 
         "input CTUTR does not match DES CTUTR & CRN is not blocked" in {

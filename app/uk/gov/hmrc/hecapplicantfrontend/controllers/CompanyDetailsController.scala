@@ -795,8 +795,8 @@ object CompanyDetailsController {
           case None             =>
             // if user input was already 10 digits, then checksum validation failed
             if (ctutr.value.matches("""^\d{10}$""")) Invalid("error.ctutrChecksumFailed")
-            // contains non-numeric characters
-            else Invalid("error.invalidCharacters")
+            // wrong length or contains non-numeric characters (but not XSS chars - those are caught earlier)
+            else Invalid("error.invalidFormat")
         }
       }
 
