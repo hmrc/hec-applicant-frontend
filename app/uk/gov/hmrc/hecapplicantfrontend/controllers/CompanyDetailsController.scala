@@ -793,16 +793,17 @@ object CompanyDetailsController {
           case Some(validCtutr) =>
             if (validCtutr.stripped === desCtrutr.value) Valid else Invalid("error.ctutrsDoNotMatch")
           case None             =>
-            // if user input was already 10 digits, then checksum validation failed, otherwise the format was wrong
+            // if user input was already 10 digits, then checksum validation failed
             if (ctutr.value.matches("""^\d{10}$""")) Invalid("error.ctutrChecksumFailed")
-            else Invalid("error.ctutrInvalidFormat")
+            // wrong length or contains non-numeric characters (but not XSS chars - those are caught earlier)
+            else Invalid("error.invalidFormat")
         }
       }
 
     Form(
       mapping(
         enterCtutrFormKey -> nonEmptyText
-          .verifying(noXssChars("error.ctutrInvalidFormat"))
+          .verifying(noXssChars("error.invalidCharacters"))
           .transform[CTUTR](
             s => CTUTR(s.removeWhitespace),
             _.value

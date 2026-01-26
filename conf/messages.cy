@@ -251,13 +251,17 @@ recentlyStartedTrading.yes=Iawn
 recentlyStartedTrading.no=Na
 recentlyStartedTrading.error.required=Dewiswch ‘Iawn’ os gwnaeth eich cwmni ddechrau neu ailddechrau masnachu yn ystod y 12 mis diwethaf
 recentlyStartedTrading.error.invalid=Dewiswch ‘Iawn’ os gwnaeth eich cwmni ddechrau neu ailddechrau masnachu yn ystod y 12 mis diwethaf
-enterCtutr.title=Beth yw’ch Cyfeirnod Unigryw y Trethdalwr ar gyfer Treth Gorfforaeth (UTR)?
-enterCtutr.hint=Mae hwn yn 10 neu’n 13 cymeriad o hyd, a gall ddechrau gyda llythyren. Bydd i’w weld ar Ffurflenni Treth a llythyrau eraill ynghylch Treth Gorfforaeth. Efallai y cyfeirir ato gan ddefnyddio’r geiriau ‘cyfeirnod’, ‘UTR’ neu ‘defnydd swyddogol’.
+enterCtutr.title=Beth yw'ch Cyfeirnod Unigryw y Trethdalwr ar gyfer Treth Gorfforaeth?
+enterCtutr.hint=Gall eich UTR fod yn 10 neu'n 13 digid o hyd. Bydd i'w weld ar Ffurflenni Treth a llythyrau eraill ynghylch Treth Gorfforaeth. Efallai y cyfeirir ato fel 'cyfeirnod', 'UTR' neu 'defnydd swyddogol'.
+enterCtutr.link1=Gofyn am gopi o'ch UTR Treth Gorfforaeth (yn agor tab newydd)
 enterCtutr.link2=Os nad oes gennych UTR
 enterCtutr.error.required=Nodwch eich Cyfeirnod Unigryw y Trethdalwr ar gyfer Treth Gorfforaeth
-enterCtutr.error.ctutrInvalidFormat=Nodwch eich Cyfeirnod Unigryw y Trethdalwr ar gyfer Treth Gorfforaeth yn y fformat cywir
+enterCtutr.error.invalidCharacters=Mae'n rhaid i'r Cyfeirnod Unigryw y Trethdalwr ar gyfer Treth Gorfforaeth gynnwys y rhifau 0 i 9 yn unig
 enterCtutr.error.ctutrChecksumFailed=Nodwch Gyfeirnod Unigryw y Trethdalwr dilys ar gyfer Treth Gorfforaeth
-enterCtutr.error.ctutrsDoNotMatch=Nid yw’ch Cyfeirnod Unigryw y Trethdalwr ar gyfer Treth Gorfforaeth yn cyd-fynd â’r wybodaeth sydd gennym ar gyfer y cwmni hwn
+enterCtutr.error.ctutrsDoNotMatch=Nid yw'ch Cyfeirnod Unigryw y Trethdalwr ar gyfer Treth Gorfforaeth yn cyd-fynd â'r wybodaeth sydd gennym ar gyfer y cwmni hwn
+enterCtutr.error.invalidFormat = Mae'n rhaid i'r Cyfeirnod Unigryw y Trethdalwr ar gyfer Treth Gorfforaeth fod yn 10 neu'n 13 digid
+
+
 dontHaveCtutr.title=Os nad oes gennych UTR
 dontHaveCtutr.p1=Os nad oes gennych eich rhif UTR, gallwch <a href="{0}" class="govuk-link" targed="_blank" rel="noopener noreferrer">ddod o hyd i UTR sydd ar goll (yn agor tab newydd)</a>.
 dontHaveCtutr.p2=Mae’n rhaid i chi <a href="{0}" class="govuk-link">gofrestru ar gyfer Treth Gorfforaeth</a>, cyn y gallwch wneud gwiriad treth.
