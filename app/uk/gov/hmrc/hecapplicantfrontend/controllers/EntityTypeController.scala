@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.controllers
 
-import cats.instances.future._
+import cats.instances.future.*
 import com.google.inject.{Inject, Singleton}
 import play.api.data.Form
 import play.api.data.Forms.{mapping, of}
@@ -51,7 +51,7 @@ class EntityTypeController @Inject() (
     with I18nSupport
     with Logging {
 
-  import EntityTypeController._
+  import EntityTypeController.*
 
   val entityType: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
     val back       = journeyService.previous(routes.EntityTypeController.entityType)
@@ -71,8 +71,8 @@ class EntityTypeController @Inject() (
     def handleValidEntityType(entityType: EntityType): Future[Result] = {
       val updatedSession = request.sessionData.replaceField(
         request.sessionData,
-        IncompleteIndividualUserAnswers.entityType,
-        IncompleteCompanyUserAnswers.entityType,
+        IncompleteIndividualUserAnswers.entityTypeLens,
+        IncompleteCompanyUserAnswers.entityTypeLens,
         _.copy(entityType = Some(entityType)),
         _.copy(entityType = Some(entityType))
       )

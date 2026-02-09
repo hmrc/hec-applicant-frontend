@@ -22,7 +22,7 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.Configuration
 import play.api.libs.ws.{BodyWritable, WSClient, WSRequest, WSResponse}
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 import uk.gov.hmrc.auth.core.{AffinityGroup, ConfidenceLevel, Enrolment, EnrolmentIdentifier}
 import uk.gov.hmrc.hecapplicantfrontend.connectors.ConnectorSpec
 import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, Error}

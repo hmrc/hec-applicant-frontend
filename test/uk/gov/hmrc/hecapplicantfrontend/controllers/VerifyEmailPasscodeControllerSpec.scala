@@ -21,7 +21,7 @@ import cats.implicits.catsSyntaxOptionId
 import play.api.inject.bind
 import play.api.mvc.Result
 import play.api.test.FakeRequest
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.RequestWithSessionData
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeRequestResult.PasscodeSent
@@ -58,7 +58,7 @@ class VerifyEmailPasscodeControllerSpec
     result: Either[Error, PasscodeVerificationResult]
   ) =
     (mockEmailVerificationService
-      .verifyPasscode(_: Passcode, _: UserSelectedEmail)(_: HeaderCarrier, _: RequestWithSessionData[_]))
+      .verifyPasscode(_: Passcode, _: UserSelectedEmail)(_: HeaderCarrier, _: RequestWithSessionData[?]))
       .expects(passcode, userSelectedEmail, *, *)
       .returning(EitherT.fromEither[Future](result))
 

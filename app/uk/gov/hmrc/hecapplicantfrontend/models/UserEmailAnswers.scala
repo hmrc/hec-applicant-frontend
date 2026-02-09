@@ -16,7 +16,8 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.functional.syntax.*
+import play.api.libs.json.{OFormat, __}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailSend.EmailSendResult
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{Passcode, PasscodeRequestResult, PasscodeVerificationResult}
 
@@ -29,5 +30,11 @@ final case class UserEmailAnswers(
 )
 
 object UserEmailAnswers {
-  implicit val formats: OFormat[UserEmailAnswers] = Json.format[UserEmailAnswers]
+  implicit val format: OFormat[UserEmailAnswers] = (
+    (__ \ "userSelectedEmail").format[UserSelectedEmail] and
+      (__ \ "passcodeRequestResult").formatNullable[PasscodeRequestResult] and
+      (__ \ "passcode").formatNullable[Passcode] and
+      (__ \ "passcodeVerificationResult").formatNullable[PasscodeVerificationResult] and
+      (__ \ "emailSendResult").formatNullable[EmailSendResult]
+  )(UserEmailAnswers.apply, o => Tuple.fromProductTyped(o))
 }

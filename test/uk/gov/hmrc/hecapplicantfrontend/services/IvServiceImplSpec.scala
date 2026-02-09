@@ -17,15 +17,15 @@
 package uk.gov.hmrc.hecapplicantfrontend.services
 
 import cats.data.EitherT
-import cats.instances.future._
+import cats.instances.future.*
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.{JsObject, JsString, Json}
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 import uk.gov.hmrc.hecapplicantfrontend.connectors.IvConnector
 import uk.gov.hmrc.hecapplicantfrontend.models.Error
-import uk.gov.hmrc.hecapplicantfrontend.models.iv.IvErrorStatus._
+import uk.gov.hmrc.hecapplicantfrontend.models.iv.IvErrorStatus.*
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 
 import java.util.UUID

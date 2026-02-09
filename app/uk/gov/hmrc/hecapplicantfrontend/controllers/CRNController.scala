@@ -17,17 +17,18 @@
 package uk.gov.hmrc.hecapplicantfrontend.controllers
 
 import cats.data.EitherT
-import cats.instances.future._
-import cats.syntax.option._
+import cats.instances.future.*
+import cats.syntax.option.*
 import com.google.inject.Inject
 import play.api.data.Form
 import play.api.data.Forms.{mapping, nonEmptyText}
 import play.api.data.validation.{Constraint, Invalid, Valid}
 import play.api.i18n.I18nSupport
-import play.api.mvc._
+import play.api.mvc.*
 import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 import uk.gov.hmrc.hecapplicantfrontend.controllers.CRNController.crnForm
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
+import uk.gov.hmrc.hecapplicantfrontend.models.CompanyUserAnswers.IncompleteCompanyUserAnswers.*
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.CRN
 import uk.gov.hmrc.hecapplicantfrontend.models.{Error, HECSession}
 import uk.gov.hmrc.hecapplicantfrontend.services.{CompanyDetailsService, CtutrAttemptsService, JourneyService}
@@ -80,12 +81,12 @@ class CRNController @Inject() (
 
         def updateAnswers(crn: CRN) =
           companySession.userAnswers
-            .unset(_.crn)
-            .unset(_.companyDetailsConfirmed)
-            .unset(_.chargeableForCT)
-            .unset(_.ctIncomeDeclared)
-            .unset(_.recentlyStartedTrading)
-            .unset(_.ctutr)
+            .unset(_ => crnLens)
+            .unset(_ => companyDetailsConfirmedLens)
+            .unset(_ => chargeableForCTLens)
+            .unset(_ => ctIncomeDeclaredLens)
+            .unset(_ => recentlyStartedTradingLens)
+            .unset(_ => ctutrLens)
             .copy(crn = Some(crn))
 
         def fetchCompanyNameAndProceed(crn: CRN): EitherT[Future, Error, Either[Form[CRN], Call]] = for {

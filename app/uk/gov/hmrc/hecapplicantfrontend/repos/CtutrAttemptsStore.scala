@@ -24,9 +24,9 @@ import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, GGCredId}
 import uk.gov.hmrc.hecapplicantfrontend.models.{CtutrAttempts, Error}
 import uk.gov.hmrc.mongo.cache.{CacheIdType, DataKey, MongoCacheRepository}
 import uk.gov.hmrc.mongo.{CurrentTimestampSupport, MongoComponent}
-import uk.gov.hmrc.play.http.logging.Mdc.preservingMdc
+import uk.gov.hmrc.mdc.Mdc.preservingMdc
 
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 import scala.concurrent.{ExecutionContext, Future}
 
 @ImplementedBy(classOf[CtutrAttemptsStoreImpl])
@@ -64,14 +64,14 @@ class CtutrAttemptsStoreImpl @Inject() (
       preservingMdc {
         findById(id(crn, ggCredId))
           .map { maybeCache =>
-            val response: OptionT[Either[Error, *], CtutrAttempts] = for {
-              cache      <- OptionT.fromOption[Either[Error, *]](maybeCache)
+            val response: OptionT[[A] =>> Either[Error, A], CtutrAttempts] = for {
+              cache      <- OptionT.fromOption[([A] =>> Either[Error, A])](maybeCache)
               // even if there is no data found, cache returns with -> {"id" : "code1", data : {}}
               // if the json is empty, return None
               // if not, proceed to validate json
               cacheLength = cache.data.keys.size
-              data       <- OptionT.fromOption[Either[Error, *]](if (cacheLength == 0) None else Some(cache.data))
-              result     <- OptionT.liftF[Either[Error, *], CtutrAttempts](
+              data       <- OptionT.fromOption[([A] =>> Either[Error, A])](if (cacheLength == 0) None else Some(cache.data))
+              result     <- OptionT.liftF[[A] =>> Either[Error, A], CtutrAttempts](
                               (data \ dataKey)
                                 .validate[CtutrAttempts]
                                 .asEither

@@ -22,7 +22,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.HECTaxCheckSource
 import uk.gov.hmrc.hecapplicantfrontend.models.{DateOfBirth, EmailAddress, HECTaxCheckCode}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR, GGCredId, NINO, SAUTR}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
-import uk.gov.hmrc.hecapplicantfrontend.testonly.models.Journey._
+import uk.gov.hmrc.hecapplicantfrontend.testonly.models.Journey.*
 import uk.gov.hmrc.hecapplicantfrontend.testonly.models.{Journey, LoginData, SaveTaxCheckRequest}
 import uk.gov.hmrc.hecapplicantfrontend.testonly.util.UUIDGenerator
 import uk.gov.hmrc.hecapplicantfrontend.util.TimeProvider

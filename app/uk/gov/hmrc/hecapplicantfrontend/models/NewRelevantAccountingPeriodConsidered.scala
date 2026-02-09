@@ -16,7 +16,8 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.functional.syntax.*
+import play.api.libs.json.{OFormat, __}
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.company.CTStatusResponse
 
 final case class NewRelevantAccountingPeriodConsidered(
@@ -25,7 +26,8 @@ final case class NewRelevantAccountingPeriodConsidered(
 )
 
 object NewRelevantAccountingPeriodConsidered {
-
-  implicit val format: OFormat[NewRelevantAccountingPeriodConsidered] = Json.format
-
+  implicit val format: OFormat[NewRelevantAccountingPeriodConsidered] = (
+    (__ \ "previousCtStatusResponse").format[CTStatusResponse] and
+      (__ \ "newCtStatusResponse").format[CTStatusResponse]
+  )(NewRelevantAccountingPeriodConsidered.apply, o => Tuple.fromProductTyped(o))
 }

@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models.views
 
-import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceValidityPeriod._
+import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceValidityPeriod.*
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceValidityPeriod
 
 final case class LicenceValidityPeriodOption(messageKey: String)

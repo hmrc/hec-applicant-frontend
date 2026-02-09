@@ -38,7 +38,7 @@ object Language {
 
   implicit def toPlayLang(l: Language): Lang = Lang(l.code)
 
-  def fromRequest(request: MessagesRequest[_]): Either[String, Language] =
+  def fromRequest(request: MessagesRequest[?]): Either[String, Language] =
     request.messages.lang.code.toLowerCase(Locale.UK) match {
       case English.code => Right(English)
       case Welsh.code   => Right(Welsh)

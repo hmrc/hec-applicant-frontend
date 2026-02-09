@@ -104,23 +104,25 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
         )
 
       "unsets the licence type field" in {
-        incompleteAnswers.unset(_.licenceType) shouldBe incompleteAnswers.copy(licenceType = None)
-        completeAnswers.unset(_.licenceType)   shouldBe incompleteAnswers.copy(licenceType = None)
+        incompleteAnswers.unset(_.licenceTypeLens) shouldBe incompleteAnswers.copy(licenceType = None)
+        completeAnswers.unset(_.licenceTypeLens)   shouldBe incompleteAnswers.copy(licenceType = None)
       }
 
       "unsets the licence time trading field" in {
-        incompleteAnswers.unset(_.licenceTimeTrading) shouldBe incompleteAnswers.copy(licenceTimeTrading = None)
-        completeAnswers.unset(_.licenceTimeTrading)   shouldBe incompleteAnswers.copy(licenceTimeTrading = None)
+        incompleteAnswers.unset(_.licenceTimeTradingLens) shouldBe incompleteAnswers.copy(licenceTimeTrading = None)
+        completeAnswers.unset(_.licenceTimeTradingLens)   shouldBe incompleteAnswers.copy(licenceTimeTrading = None)
       }
 
       "unsets the licence validity period field" in {
-        incompleteAnswers.unset(_.licenceValidityPeriod) shouldBe incompleteAnswers.copy(licenceValidityPeriod = None)
-        completeAnswers.unset(_.licenceValidityPeriod)   shouldBe incompleteAnswers.copy(licenceValidityPeriod = None)
+        incompleteAnswers.unset(_.licenceValidityPeriodLens) shouldBe incompleteAnswers.copy(licenceValidityPeriod =
+          None
+        )
+        completeAnswers.unset(_.licenceValidityPeriodLens)   shouldBe incompleteAnswers.copy(licenceValidityPeriod = None)
       }
 
       "unsets the entity type field" in {
-        incompleteAnswers.unset(_.entityType) shouldBe incompleteAnswers.copy(entityType = None)
-        completeAnswers.unset(_.entityType)   shouldBe incompleteAnswers.copy(entityType = None)
+        incompleteAnswers.unset(_.entityTypeLens) shouldBe incompleteAnswers.copy(entityType = None)
+        completeAnswers.unset(_.entityTypeLens)   shouldBe incompleteAnswers.copy(entityType = None)
       }
 
     }
@@ -253,23 +255,25 @@ class UserAnswersSpec extends AnyWordSpec with Matchers {
         )
 
       "unsets the licence type field" in {
-        incompleteAnswers.unset(_.licenceType) shouldBe incompleteAnswers.copy(licenceType = None)
-        completeAnswers.unset(_.licenceType)   shouldBe incompleteAnswers.copy(licenceType = None)
+        incompleteAnswers.unset(_.licenceTypeLens) shouldBe incompleteAnswers.copy(licenceType = None)
+        completeAnswers.unset(_.licenceTypeLens)   shouldBe incompleteAnswers.copy(licenceType = None)
       }
 
       "unsets the licence time trading field" in {
-        incompleteAnswers.unset(_.licenceTimeTrading) shouldBe incompleteAnswers.copy(licenceTimeTrading = None)
-        completeAnswers.unset(_.licenceTimeTrading)   shouldBe incompleteAnswers.copy(licenceTimeTrading = None)
+        incompleteAnswers.unset(_.licenceTimeTradingLens) shouldBe incompleteAnswers.copy(licenceTimeTrading = None)
+        completeAnswers.unset(_.licenceTimeTradingLens)   shouldBe incompleteAnswers.copy(licenceTimeTrading = None)
       }
 
       "unsets the licence validity period field" in {
-        incompleteAnswers.unset(_.licenceValidityPeriod) shouldBe incompleteAnswers.copy(licenceValidityPeriod = None)
-        completeAnswers.unset(_.licenceValidityPeriod)   shouldBe incompleteAnswers.copy(licenceValidityPeriod = None)
+        incompleteAnswers.unset(_.licenceValidityPeriodLens) shouldBe incompleteAnswers.copy(licenceValidityPeriod =
+          None
+        )
+        completeAnswers.unset(_.licenceValidityPeriodLens)   shouldBe incompleteAnswers.copy(licenceValidityPeriod = None)
       }
 
       "unsets the entity type field" in {
-        incompleteAnswers.unset(_.entityType) shouldBe incompleteAnswers.copy(entityType = None)
-        completeAnswers.unset(_.entityType)   shouldBe incompleteAnswers.copy(entityType = None)
+        incompleteAnswers.unset(_.entityTypeLens) shouldBe incompleteAnswers.copy(entityType = None)
+        completeAnswers.unset(_.entityTypeLens)   shouldBe incompleteAnswers.copy(entityType = None)
       }
 
     }

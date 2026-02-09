@@ -20,14 +20,14 @@ import com.google.inject.{Inject, Singleton}
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import play.api.http.HttpConfiguration
-import play.api.i18n._
+import play.api.i18n.*
 import play.api.mvc.{Call, Result}
-import play.api.test.Helpers._
-import play.api._
+import play.api.test.Helpers.*
+import play.api.*
 import uk.gov.hmrc.hecapplicantfrontend.utils.PlaySupport
 
 import scala.concurrent.Future
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 
 trait ControllerSpec extends PlaySupport {
 

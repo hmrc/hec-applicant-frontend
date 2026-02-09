@@ -17,16 +17,16 @@
 package uk.gov.hmrc.hecapplicantfrontend.services
 
 import cats.data.EitherT
-import cats.instances.future._
-import cats.instances.int._
-import cats.syntax.either._
-import cats.syntax.eq._
+import cats.instances.future.*
+import cats.instances.int.*
+import cats.syntax.either.*
+import cats.syntax.eq.*
 import com.google.inject.{ImplementedBy, Inject}
 import play.api.http.Status.{NOT_FOUND, OK}
 import uk.gov.hmrc.hecapplicantfrontend.connectors.CompanyDetailsConnector
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.CRN
 import uk.gov.hmrc.hecapplicantfrontend.models.{CompanyHouseDetails, Error}
-import uk.gov.hmrc.hecapplicantfrontend.util.HttpResponseOps._
+import uk.gov.hmrc.hecapplicantfrontend.util.HttpResponseOps.*
 import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.Singleton

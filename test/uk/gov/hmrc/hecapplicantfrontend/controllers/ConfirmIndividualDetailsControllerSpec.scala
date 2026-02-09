@@ -19,7 +19,7 @@ package uk.gov.hmrc.hecapplicantfrontend.controllers
 import play.api.inject.bind
 import play.api.mvc.Result
 import play.api.test.FakeRequest
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, IndividualHECSession}
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
@@ -32,7 +32,7 @@ import uk.gov.hmrc.hecapplicantfrontend.services.JourneyService.InconsistentSess
 import java.time.LocalDate
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 
 class ConfirmIndividualDetailsControllerSpec
     extends ControllerSpec

@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models
 
-import play.api.libs.json._
+import play.api.libs.json.*
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.company.CTStatusResponse
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.individual.SAStatusResponse
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.CTUTR

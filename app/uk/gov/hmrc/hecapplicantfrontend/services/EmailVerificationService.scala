@@ -17,20 +17,20 @@
 package uk.gov.hmrc.hecapplicantfrontend.services
 
 import cats.data.EitherT
-import cats.instances.future._
+import cats.instances.future.*
 import com.google.inject.{ImplementedBy, Inject}
-import play.api.http.Status._
+import play.api.http.Status.*
 import play.api.libs.json.{JsValue, Json, OFormat}
 import uk.gov.hmrc.hecapplicantfrontend.connectors.EmailVerificationConnector
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.RequestWithSessionData
 import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.{SubmitEmailAddressVerificationPasscode, SubmitEmailAddressVerificationRequest}
-import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeRequestResult._
-import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeVerificationResult._
+import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeRequestResult.*
+import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeVerificationResult.*
 import uk.gov.hmrc.hecapplicantfrontend.models.{Error, UserSelectedEmail}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{Passcode, PasscodeRequest, PasscodeRequestResult, PasscodeVerificationRequest, PasscodeVerificationResult}
 import uk.gov.hmrc.hecapplicantfrontend.services.EmailVerificationService.ErrorResponse
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
-import uk.gov.hmrc.hecapplicantfrontend.util.HttpResponseOps._
+import uk.gov.hmrc.hecapplicantfrontend.util.HttpResponseOps.*
 
 import javax.inject.Singleton
 import scala.concurrent.{ExecutionContext, Future}
@@ -42,12 +42,12 @@ trait EmailVerificationService {
     userSelectedEmail: UserSelectedEmail
   )(implicit
     hc: HeaderCarrier,
-    r: RequestWithSessionData[_]
+    r: RequestWithSessionData[?]
   ): EitherT[Future, Error, PasscodeRequestResult]
 
   def verifyPasscode(passcode: Passcode, userSelectedEmail: UserSelectedEmail)(implicit
     hc: HeaderCarrier,
-    r: RequestWithSessionData[_]
+    r: RequestWithSessionData[?]
   ): EitherT[Future, Error, PasscodeVerificationResult]
 
 }
@@ -68,7 +68,7 @@ class EmailVerificationServiceImpl @Inject() (
     userSelectedEmail: UserSelectedEmail
   )(implicit
     hc: HeaderCarrier,
-    r: RequestWithSessionData[_]
+    r: RequestWithSessionData[?]
   ): EitherT[Future, Error, PasscodeRequestResult] = {
     def auditEvent(result: Option[PasscodeRequestResult]): SubmitEmailAddressVerificationRequest =
       SubmitEmailAddressVerificationRequest(
@@ -107,7 +107,7 @@ class EmailVerificationServiceImpl @Inject() (
 
   override def verifyPasscode(passcode: Passcode, userSelectedEmail: UserSelectedEmail)(implicit
     hc: HeaderCarrier,
-    r: RequestWithSessionData[_]
+    r: RequestWithSessionData[?]
   ): EitherT[Future, Error, PasscodeVerificationResult] = {
     def auditEvent(result: Option[PasscodeVerificationResult]): SubmitEmailAddressVerificationPasscode =
       SubmitEmailAddressVerificationPasscode(

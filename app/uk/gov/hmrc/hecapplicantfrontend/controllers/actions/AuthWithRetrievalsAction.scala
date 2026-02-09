@@ -16,10 +16,10 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.controllers.actions
 
-import cats.syntax.eq._
+import cats.syntax.eq.*
 import com.google.inject.{Inject, Singleton}
 import play.api.mvc.Results.Redirect
-import play.api.mvc._
+import play.api.mvc.*
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 import uk.gov.hmrc.auth.core.retrieve.~
 import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisationException, AuthorisedFunctions, NoActiveSession}

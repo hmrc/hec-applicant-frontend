@@ -1,4 +1,6 @@
+$govuk-suppressed-warnings: ("libsass");
 $govuk-assets-path: "/agent/assets/lib/govuk-frontend/dist/govuk/assets/";
+
 @import "lib/govuk-frontend/dist/govuk/base";
 
 $govuk-new-organisation-colours: true;

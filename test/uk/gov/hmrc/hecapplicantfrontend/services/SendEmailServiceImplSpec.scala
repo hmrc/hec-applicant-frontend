@@ -27,7 +27,7 @@ import play.api.i18n.MessagesApi
 import play.api.libs.json.Json
 import play.api.mvc.MessagesRequest
 import play.api.test.FakeRequest
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 import uk.gov.hmrc.hecapplicantfrontend.connectors.{HECConnector, SendEmailConnector}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthenticatedRequest, RequestWithSessionData}
 import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.SendTaxCheckCodeNotificationEmail
@@ -130,7 +130,7 @@ class SendEmailServiceImplSpec extends AnyWordSpec with Matchers with MockFactor
         val emailSendRequest =
           EmailSendRequest(List(userSelectedEmail.emailAddress), "template_EN", emailParameter)
 
-        implicit val requestWithSessionData: RequestWithSessionData[_] =
+        implicit val requestWithSessionData: RequestWithSessionData[?] =
           RequestWithSessionData(authenticatedRequest, session, Language.English)
 
         def testError() = {
@@ -163,7 +163,7 @@ class SendEmailServiceImplSpec extends AnyWordSpec with Matchers with MockFactor
           ).foreach { case (lang, templateId) =>
             withClue(s"For lang: $lang and templateId: $templateId") {
               val emailSendRequest                                           = getEmailSendRequest(templateId)
-              implicit val requestWithSessionData: RequestWithSessionData[_] =
+              implicit val requestWithSessionData: RequestWithSessionData[?] =
                 RequestWithSessionData(authenticatedRequest, session, lang)
 
               inSequence {
@@ -208,7 +208,7 @@ class SendEmailServiceImplSpec extends AnyWordSpec with Matchers with MockFactor
           def testIsEmailSendFailure(httpResponse: HttpResponse) = {
             val emailSendRequest                                           =
               EmailSendRequest(List(userSelectedEmail.emailAddress), "template_EN", emailParameter)
-            implicit val requestWithSessionData: RequestWithSessionData[_] =
+            implicit val requestWithSessionData: RequestWithSessionData[?] =
               RequestWithSessionData(authenticatedRequest, session, Language.English)
             val expectedAuditEvent                                         = auditEvent("template_EN", Some(EmailSendResult.EmailSentFailure), Language.English)
 

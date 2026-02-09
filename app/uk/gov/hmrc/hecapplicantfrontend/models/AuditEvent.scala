@@ -16,12 +16,12 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models
 
-import play.api.libs.json._
+import play.api.libs.json.*
 import uk.gov.hmrc.auth.core.{AffinityGroup, ConfidenceLevel}
 import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.ApplicantServiceStartEndPointAccessed.AuthenticationDetails
 import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.CompanyMatch.{CTUTRType, MatchResult}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailSend.EmailSendResult
-import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeRequestResult._
+import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeRequestResult.*
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{Passcode, PasscodeRequestResult, PasscodeVerificationResult}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR, GGCredId}
 
@@ -190,7 +190,7 @@ object AuditEvent {
 
   object TaxCheckExit {
 
-    implicit def writes[T <: TaxCheckExit]: OWrites[T] = OWrites { t: T =>
+    implicit def writes[T <: TaxCheckExit]: OWrites[T] = OWrites { (t: T) =>
       Json.obj(
         "serviceExitReason"      -> JsString(t.serviceExitReason),
         "serviceExitDescription" -> JsString(t.serviceExitDescription),

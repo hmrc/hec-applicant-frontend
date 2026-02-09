@@ -17,14 +17,14 @@
 package uk.gov.hmrc.hecapplicantfrontend.services
 
 import cats.data.EitherT
-import cats.instances.future._
+import cats.instances.future.*
 import com.typesafe.config.ConfigFactory
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.Configuration
-import play.api.test.Helpers._
-import uk.gov.hmrc.hecapplicantfrontend.models.ids._
+import play.api.test.Helpers.*
+import uk.gov.hmrc.hecapplicantfrontend.models.ids.*
 import uk.gov.hmrc.hecapplicantfrontend.models.{CompanyHouseName, CtutrAttempts, Error}
 import uk.gov.hmrc.hecapplicantfrontend.repos.CtutrAttemptsStore
 import uk.gov.hmrc.hecapplicantfrontend.util.TimeProvider

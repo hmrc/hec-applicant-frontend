@@ -17,8 +17,8 @@
 package uk.gov.hmrc.hecapplicantfrontend.models
 
 import monocle.Lens
-import monocle.macros.Lenses
-import play.api.libs.json._
+import monocle.macros.GenLens
+import play.api.libs.json.*
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{CRN, CTUTR}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
 
@@ -49,7 +49,6 @@ sealed trait CompleteUserAnswers extends UserAnswers
 
 object IndividualUserAnswers {
 
-  @Lenses
   final case class IncompleteIndividualUserAnswers(
     licenceType: Option[LicenceType],
     licenceTimeTrading: Option[LicenceTimeTrading],
@@ -75,6 +74,24 @@ object IndividualUserAnswers {
   }
 
   object IncompleteIndividualUserAnswers {
+
+    val licenceTypeLens: Lens[IncompleteIndividualUserAnswers, Option[LicenceType]] =
+      monocle.macros.GenLens[IncompleteIndividualUserAnswers](_.licenceType)
+
+    val licenceTimeTradingLens: Lens[IncompleteIndividualUserAnswers, Option[LicenceTimeTrading]] =
+      monocle.macros.GenLens[IncompleteIndividualUserAnswers](_.licenceTimeTrading)
+
+    val saIncomeDeclaredLens: Lens[IncompleteIndividualUserAnswers, Option[YesNoAnswer]] =
+      monocle.macros.GenLens[IncompleteIndividualUserAnswers](_.saIncomeDeclared)
+
+    val taxSituationLens: Lens[IncompleteIndividualUserAnswers, Option[TaxSituation]] =
+      monocle.macros.GenLens[IncompleteIndividualUserAnswers](_.taxSituation)
+
+    val entityTypeLens: Lens[IncompleteIndividualUserAnswers, Option[EntityType]] =
+      monocle.macros.GenLens[IncompleteIndividualUserAnswers](_.entityType)
+
+    val licenceValidityPeriodLens: Lens[IncompleteIndividualUserAnswers, Option[LicenceValidityPeriod]] =
+      monocle.macros.GenLens[IncompleteIndividualUserAnswers](_.licenceValidityPeriod)
 
     def fromCompleteAnswers(c: CompleteIndividualUserAnswers): IncompleteIndividualUserAnswers =
       IncompleteIndividualUserAnswers(
@@ -103,7 +120,7 @@ object IndividualUserAnswers {
       ]
     ): IncompleteIndividualUserAnswers =
       fieldLens(IncompleteIndividualUserAnswers)
-        .set(None)(fold(identity, IncompleteIndividualUserAnswers.fromCompleteAnswers))
+        .replace(None)(fold(identity, IncompleteIndividualUserAnswers.fromCompleteAnswers))
   }
 
   val empty: IncompleteIndividualUserAnswers =
@@ -131,7 +148,6 @@ object IndividualUserAnswers {
 
 object CompanyUserAnswers {
 
-  @Lenses
   final case class IncompleteCompanyUserAnswers(
     licenceType: Option[LicenceType],
     licenceTimeTrading: Option[LicenceTimeTrading],
@@ -166,6 +182,36 @@ object CompanyUserAnswers {
 
   object IncompleteCompanyUserAnswers {
 
+    val licenceTypeLens: Lens[IncompleteCompanyUserAnswers, Option[LicenceType]] =
+      GenLens[CompanyUserAnswers.IncompleteCompanyUserAnswers](_.licenceType)
+
+    val licenceTimeTradingLens: Lens[IncompleteCompanyUserAnswers, Option[LicenceTimeTrading]] =
+      GenLens[CompanyUserAnswers.IncompleteCompanyUserAnswers](_.licenceTimeTrading)
+
+    val crnLens: Lens[IncompleteCompanyUserAnswers, Option[CRN]] =
+      GenLens[CompanyUserAnswers.IncompleteCompanyUserAnswers](_.crn)
+
+    val companyDetailsConfirmedLens: Lens[IncompleteCompanyUserAnswers, Option[YesNoAnswer]] =
+      GenLens[CompanyUserAnswers.IncompleteCompanyUserAnswers](_.companyDetailsConfirmed)
+
+    val chargeableForCTLens: Lens[IncompleteCompanyUserAnswers, Option[YesNoAnswer]] =
+      GenLens[CompanyUserAnswers.IncompleteCompanyUserAnswers](_.chargeableForCT)
+
+    val ctIncomeDeclaredLens: Lens[IncompleteCompanyUserAnswers, Option[YesNoAnswer]] =
+      GenLens[CompanyUserAnswers.IncompleteCompanyUserAnswers](_.ctIncomeDeclared)
+
+    val recentlyStartedTradingLens: Lens[IncompleteCompanyUserAnswers, Option[YesNoAnswer]] =
+      GenLens[CompanyUserAnswers.IncompleteCompanyUserAnswers](_.recentlyStartedTrading)
+
+    val ctutrLens: Lens[IncompleteCompanyUserAnswers, Option[CTUTR]] =
+      GenLens[CompanyUserAnswers.IncompleteCompanyUserAnswers](_.ctutr)
+
+    val licenceValidityPeriodLens: Lens[IncompleteCompanyUserAnswers, Option[LicenceValidityPeriod]] =
+      GenLens[CompanyUserAnswers.IncompleteCompanyUserAnswers](_.licenceValidityPeriod)
+
+    val entityTypeLens: Lens[IncompleteCompanyUserAnswers, Option[EntityType]] =
+      GenLens[CompanyUserAnswers.IncompleteCompanyUserAnswers](_.entityType)
+
     def fromCompleteAnswers(c: CompleteCompanyUserAnswers): IncompleteCompanyUserAnswers =
       IncompleteCompanyUserAnswers(
         Some(c.licenceType),
@@ -197,7 +243,7 @@ object CompanyUserAnswers {
       ]
     ): IncompleteCompanyUserAnswers =
       fieldLens(IncompleteCompanyUserAnswers)
-        .set(None)(fold(identity, IncompleteCompanyUserAnswers.fromCompleteAnswers))
+        .replace(None)(fold(identity, IncompleteCompanyUserAnswers.fromCompleteAnswers))
 
   }
 
@@ -248,8 +294,8 @@ object UserAnswers {
 }
 
 object CompleteUserAnswers {
-  import CompanyUserAnswers._
-  import IndividualUserAnswers._
+  import CompanyUserAnswers.*
+  import IndividualUserAnswers.*
 
   implicit class CompleteUserAnswersOps(private val c: CompleteUserAnswers) extends AnyVal {
     def foldOnEntityType[A](

@@ -17,7 +17,7 @@
 package uk.gov.hmrc.hecapplicantfrontend.controllers
 
 import com.google.inject.{Inject, Singleton}
-import cats.instances.future._
+import cats.instances.future.*
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, RequestWithSessionData, SessionDataAction}
@@ -83,7 +83,7 @@ class TaxCheckCompleteController @Inject() (
 
   private def ensureCompletedTaxCheckAndLicenceType(
     f: (HECTaxCheck, LicenceType) => Future[Result]
-  )(implicit r: RequestWithSessionData[_]): Future[Result] = {
+  )(implicit r: RequestWithSessionData[?]): Future[Result] = {
     val licenceType = r.sessionData.userAnswers.foldByCompleteness(
       _ => InconsistentSessionState("Could not find complete answers").doThrow,
       {

@@ -20,7 +20,7 @@ import com.google.inject.ImplementedBy
 import javax.naming.Context.{INITIAL_CONTEXT_FACTORY => ICF}
 import javax.inject.Singleton
 import javax.naming.directory.InitialDirContext
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 import scala.util.Try
 
 case class EmailAddress(value: String) extends StringValue {

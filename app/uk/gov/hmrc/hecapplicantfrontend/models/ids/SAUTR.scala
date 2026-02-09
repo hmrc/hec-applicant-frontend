@@ -17,7 +17,7 @@
 package uk.gov.hmrc.hecapplicantfrontend.models.ids
 
 import play.api.libs.json.{Format, Json}
-import uk.gov.hmrc.hecapplicantfrontend.util.StringUtils._
+import uk.gov.hmrc.hecapplicantfrontend.util.StringUtils.*
 import uk.gov.hmrc.referencechecker.SelfAssessmentReferenceChecker
 
 /** Self Assessment (Individual) Unique Taxpayer Reference number

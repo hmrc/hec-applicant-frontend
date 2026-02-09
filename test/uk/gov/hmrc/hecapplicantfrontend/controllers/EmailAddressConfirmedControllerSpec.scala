@@ -22,7 +22,7 @@ import play.api.i18n.Lang
 import play.api.inject.bind
 import play.api.mvc.{Cookie, Result}
 import play.api.test.FakeRequest
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.RequestWithSessionData
 import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, EmailRequestedForTaxCheck, EmailType, Error, HECSession, HECTaxCheckCode, TaxCheckListItem, UserEmailAnswers, UserSelectedEmail}
@@ -106,7 +106,7 @@ class EmailAddressConfirmedControllerSpec
     result: Either[Error, EmailSendResult]
   ) =
     (mockSendEmailService
-      .sendEmail(_: UserSelectedEmail, _: EmailParameters)(_: HeaderCarrier, _: RequestWithSessionData[_]))
+      .sendEmail(_: UserSelectedEmail, _: EmailParameters)(_: HeaderCarrier, _: RequestWithSessionData[?]))
       .expects(userSelectedEmail, emailParameters, *, *)
       .returning(EitherT.fromEither[Future](result))
 

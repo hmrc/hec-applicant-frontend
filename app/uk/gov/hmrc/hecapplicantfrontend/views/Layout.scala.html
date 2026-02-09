@@ -14,14 +14,14 @@
  * limitations under the License.
  *@
 
-@import cats.syntax.eq._
-@import cats.instances.string._
+@import cats.syntax.eq.*
+@import cats.instances.string.*
 @import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.RequestWithSessionData
 @import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 @import uk.gov.hmrc.hecapplicantfrontend.controllers.routes
 @import views.html.helper.CSPNonce
-@import uk.gov.hmrc.govukfrontend.views.html.components._
-@import uk.gov.hmrc.hmrcfrontend.views.html.helpers._
+@import uk.gov.hmrc.govukfrontend.views.html.components.*
+@import uk.gov.hmrc.hmrcfrontend.views.html.helpers.*
 @import uk.gov.hmrc.hecapplicantfrontend.views.html.components.CustomHmrcStandardHeader
 @import uk.gov.hmrc.hmrcfrontend.views.Aliases.UserResearchBanner
 
@@ -51,7 +51,7 @@
 )(contentBlock: Html)(implicit requestHeader: RequestHeader, messages: Messages)
 
 @showUrBanner = @{ requestHeader match {
-    case r: RequestWithSessionData[_] => r.sessionData.showUserResearchBanner.forall(identity)
+    case r: RequestWithSessionData[?] => r.sessionData.showUserResearchBanner.forall(identity)
     case _ => false
 }
 }

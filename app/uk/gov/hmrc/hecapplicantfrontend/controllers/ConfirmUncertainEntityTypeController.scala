@@ -17,9 +17,9 @@
 package uk.gov.hmrc.hecapplicantfrontend.controllers
 
 import cats.data.EitherT
-import cats.instances.future._
-import cats.syntax.option._
-import cats.syntax.eq._
+import cats.instances.future.*
+import cats.syntax.option.*
+import cats.syntax.eq.*
 import com.google.inject.Inject
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, Call, MessagesControllerComponents, Result}
@@ -46,7 +46,7 @@ class ConfirmUncertainEntityTypeController @Inject() (
     with I18nSupport
     with Logging {
 
-  import EntityTypeController._
+  import EntityTypeController.*
 
   private lazy val start: Call = routes.StartController.start
 

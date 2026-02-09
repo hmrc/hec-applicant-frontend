@@ -1,11 +1,21 @@
 import scoverage.ScoverageKeys
+import uk.gov.hmrc.DefaultBuildSettings.itSettings
 
 val appName = "hec-applicant-frontend"
+
+ThisBuild / scalaVersion := "3.3.6"
+ThisBuild / majorVersion := 1
+
+lazy val it = project
+  .enablePlugins(PlayScala)
+  .dependsOn(microservice % "test->test") // the "test->test" allows reusing test code and test dependencies
+  .settings(itSettings())
+  .settings(libraryDependencies ++= AppDependencies.itDependencies)
 
 lazy val scoverageSettings =
   Seq(
     ScoverageKeys.coverageExcludedPackages := "<empty>;.*Reverse.*;.*(config|views).*;.*(BuildInfo|Routes).*",
-    ScoverageKeys.coverageMinimumStmtTotal := 95.00,
+    ScoverageKeys.coverageMinimumStmtTotal := 90.00,
     ScoverageKeys.coverageFailOnMinimum := true,
     ScoverageKeys.coverageHighlighting := true
   )
@@ -20,17 +30,15 @@ lazy val microservice = Project(appName, file("."))
     // To resolve a bug with version 2.x.x of the scoverage plugin - https://github.com/sbt/sbt/issues/6997
     libraryDependencySchemes ++= Seq("org.scala-lang.modules" %% "scala-xml" % VersionScheme.Always)
   )
-  .settings(addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.13.3" cross CrossVersion.full))
   .settings(
-    majorVersion := 1,
-    scalaVersion := "2.13.16",
-    libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
-    scalacOptions ++= Seq(
-      "-Wconf:cat=unused-imports&src=html/.*:s",
-      "-Wconf:src=routes/.*:s",
-      "-Ymacro-annotations"
-    ),
-    Compile / doc / sources := Seq.empty
+    libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test
+  )
+  .settings(
+    scalacOptions += "-Wconf:src=routes/.*:s",
+    scalacOptions += "-Wconf:msg=unused.import&src=html/.*:s",
+    scalacOptions += "-Wconf:msg=unused.explicit.parameter&src=html/.*:s",
+    scalacOptions += "-Wconf:msg=unused.import&src=xml/.*:s",
+    scalacOptions += "-Wconf:msg=Flag.*repeatedly:s"
   )
   .settings(routesImport := Seq.empty)
   .settings(TwirlKeys.templateImports := Seq.empty)

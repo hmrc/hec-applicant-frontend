@@ -17,7 +17,7 @@
 package uk.gov.hmrc.hecapplicantfrontend.models.licence
 
 import cats.Eq
-import play.api.libs.json._
+import play.api.libs.json.*
 
 sealed trait LicenceTimeTrading extends Product with Serializable
 

@@ -18,16 +18,16 @@ package uk.gov.hmrc.hecapplicantfrontend.services
 
 import cats.data.Validated.Valid
 import cats.data.{EitherT, Validated, ValidatedNel}
-import cats.instances.future._
-import cats.syntax.apply._
-import cats.syntax.either._
-import cats.syntax.option._
+import cats.instances.future.*
+import cats.syntax.apply.*
+import cats.syntax.either.*
+import cats.syntax.option.*
 import play.api.http.Status.{NOT_FOUND, OK}
 import play.api.libs.json.{Json, Reads}
 import uk.gov.hmrc.hecapplicantfrontend.connectors.CitizenDetailsConnector
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{NINO, SAUTR}
 import uk.gov.hmrc.hecapplicantfrontend.models.{CitizenDetails, DateOfBirth, Error, Name}
-import uk.gov.hmrc.hecapplicantfrontend.util.HttpResponseOps._
+import uk.gov.hmrc.hecapplicantfrontend.util.HttpResponseOps.*
 import uk.gov.hmrc.http.HeaderCarrier
 
 import com.google.inject.{ImplementedBy, Inject, Singleton}
@@ -49,7 +49,7 @@ class CitizenDetailsServiceImpl @Inject() (
 )(implicit ec: ExecutionContext)
     extends CitizenDetailsService {
 
-  import CitizenDetailServiceImpl._
+  import CitizenDetailServiceImpl.*
 
   override def getCitizenDetails(
     nino: NINO

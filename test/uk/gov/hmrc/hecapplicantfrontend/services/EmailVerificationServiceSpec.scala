@@ -26,14 +26,14 @@ import play.api.i18n.Lang
 import play.api.libs.json.Json
 import play.api.mvc.{AnyContentAsEmpty, MessagesRequest}
 import play.api.test.FakeRequest
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 import uk.gov.hmrc.hecapplicantfrontend.connectors.EmailVerificationConnector
 import uk.gov.hmrc.hecapplicantfrontend.controllers.ControllerSpec
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthenticatedRequest, RequestWithSessionData}
 import uk.gov.hmrc.hecapplicantfrontend.models.AuditEvent.{SubmitEmailAddressVerificationPasscode, SubmitEmailAddressVerificationRequest}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailSend.EmailSendResult.EmailSent
-import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeRequestResult._
-import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeVerificationResult._
+import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeRequestResult.*
+import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeVerificationResult.*
 import uk.gov.hmrc.hecapplicantfrontend.models.{EmailAddress, EmailRequestedForTaxCheck, EmailType, Error, HECSession, HECTaxCheckCode, Language, TaxCheckListItem, UserSelectedEmail}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{Passcode, PasscodeRequest, PasscodeRequestResult, PasscodeVerificationRequest, PasscodeVerificationResult}
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType

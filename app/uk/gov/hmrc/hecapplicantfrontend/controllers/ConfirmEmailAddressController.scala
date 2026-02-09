@@ -18,11 +18,11 @@ package uk.gov.hmrc.hecapplicantfrontend.controllers
 
 import cats.implicits.catsSyntaxOptionId
 import uk.gov.hmrc.hecapplicantfrontend.services.EmailVerificationService
-import cats.instances.future._
+import cats.instances.future.*
 import com.google.inject.{Inject, Singleton}
 import play.api.data.{Form, Mapping}
 import play.api.i18n.I18nSupport
-import play.api.mvc._
+import play.api.mvc.*
 import uk.gov.hmrc.hecapplicantfrontend.controllers.ConfirmEmailAddressController.{emailAddressForm, emailTypeOptions}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
 import uk.gov.hmrc.hecapplicantfrontend.models.email.{EmailAddress => ModelsEmailAddress}

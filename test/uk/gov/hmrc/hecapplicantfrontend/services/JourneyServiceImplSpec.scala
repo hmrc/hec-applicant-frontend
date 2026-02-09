@@ -21,7 +21,7 @@ import com.typesafe.config.ConfigFactory
 import play.api.Configuration
 import play.api.mvc.{Call, MessagesRequest}
 import play.api.test.FakeRequest
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthenticatedRequest, RequestWithSessionData}
 import uk.gov.hmrc.hecapplicantfrontend.controllers.{ControllerSpec, SessionSupport, routes}
@@ -32,7 +32,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, In
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.{CompanyRetrievedJourneyData, IndividualRetrievedJourneyData}
 import uk.gov.hmrc.hecapplicantfrontend.models.TaxSituation.PAYE
-import uk.gov.hmrc.hecapplicantfrontend.models._
+import uk.gov.hmrc.hecapplicantfrontend.models.*
 import uk.gov.hmrc.hecapplicantfrontend.models.emailSend.EmailSendResult
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.{Passcode, PasscodeRequestResult, PasscodeVerificationResult}
 import uk.gov.hmrc.hecapplicantfrontend.models.emailVerification.PasscodeRequestResult.{EmailAddressAlreadyVerified, MaximumNumberOfEmailsExceeded, PasscodeSent}
@@ -40,7 +40,7 @@ import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.company.CTAccountingP
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.company.{CTAccountingPeriod, CTStatus, CTStatusResponse}
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.individual
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.individual.{SAStatus, SAStatusResponse}
-import uk.gov.hmrc.hecapplicantfrontend.models.ids._
+import uk.gov.hmrc.hecapplicantfrontend.models.ids.*
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType.DriverOfTaxisAndPrivateHires
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceValidityPeriod.UpToOneYear
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.{LicenceTimeTrading, LicenceType, LicenceValidityPeriod}
@@ -64,7 +64,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
   val taxCheckStartDateTime = ZonedDateTime.of(2021, 10, 9, 9, 12, 34, 0, ZoneId.of("Europe/London"))
   val fakeRequest           = new MessagesRequest(FakeRequest(), messagesApi)
 
-  def requestWithSessionData(s: HECSession, language: Language = Language.English): RequestWithSessionData[_] =
+  def requestWithSessionData(s: HECSession, language: Language = Language.English): RequestWithSessionData[?] =
     RequestWithSessionData(AuthenticatedRequest(fakeRequest), s, language)
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
@@ -154,7 +154,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
 
         "the next page cannot be determined" in {
           val session                                     = IndividualHECSession.newSession(individualLoginData)
-          implicit val request: RequestWithSessionData[_] =
+          implicit val request: RequestWithSessionData[?] =
             requestWithSessionData(session)
 
           val result = journeyService.updateAndNext(
@@ -168,7 +168,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
         "there is an error updating the session" in {
           val currentSession                              = IndividualHECSession.newSession(individualLoginData)
           val updatedSession                              = IndividualHECSession.newSession(individualLoginData.copy(sautr = Some(SAUTR(""))))
-          implicit val request: RequestWithSessionData[_] =
+          implicit val request: RequestWithSessionData[?] =
             requestWithSessionData(currentSession)
 
           mockStoreSession(updatedSession)(Left(Error(new Exception("Oh no!"))))
@@ -188,7 +188,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
 
           "there are no preexisting tax check codes" in {
             val session                                     = IndividualHECSession.newSession(individualLoginData)
-            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+            implicit val request: RequestWithSessionData[?] = requestWithSessionData(session)
 
             val result = journeyService.updateAndNext(
               routes.ConfirmIndividualDetailsController.confirmIndividualDetails,
@@ -207,7 +207,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               )
             )
             val session                                     = IndividualHECSession.newSession(individualLoginData).copy(unexpiredTaxChecks = taxChecks)
-            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+            implicit val request: RequestWithSessionData[?] = requestWithSessionData(session)
 
             val result = journeyService.updateAndNext(
               routes.ConfirmIndividualDetailsController.confirmIndividualDetails,
@@ -220,7 +220,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
         "the tax check codes page" when {
 
           def test(session: HECSession, expectedNext: Call) = {
-            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+            implicit val request: RequestWithSessionData[?] = requestWithSessionData(session)
 
             val result = journeyService.updateAndNext(
               routes.TaxChecksListController.unexpiredTaxChecks,
@@ -293,7 +293,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                 unexpiredTaxChecks = taxChecks
               )
 
-            implicit val request: RequestWithSessionData[_] =
+            implicit val request: RequestWithSessionData[?] =
               requestWithSessionData(session)
 
             mockStoreSession(updatedSession)(Right(()))
@@ -314,7 +314,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                   CompanyUserAnswers.empty.copy(licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles))
               )
 
-            implicit val request: RequestWithSessionData[_] =
+            implicit val request: RequestWithSessionData[?] =
               requestWithSessionData(session)
 
             mockStoreSession(updatedSession)(Right(()))
@@ -344,7 +344,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                 unexpiredTaxChecks = taxChecks
               )
 
-            implicit val request: RequestWithSessionData[_] =
+            implicit val request: RequestWithSessionData[?] =
               requestWithSessionData(session, Language.Welsh)
 
             inSequence {
@@ -372,7 +372,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                 IndividualUserAnswers.empty.copy(licenceTimeTrading = Some(LicenceTimeTrading.TwoToFourYears))
               )
 
-            implicit val request: RequestWithSessionData[_] =
+            implicit val request: RequestWithSessionData[?] =
               requestWithSessionData(session)
 
             mockStoreSession(updatedSession)(Right(()))
@@ -402,7 +402,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                 Some(taxCheckStartDateTime)
               )
 
-            implicit val request: RequestWithSessionData[_] =
+            implicit val request: RequestWithSessionData[?] =
               requestWithSessionData(session)
 
             mockStoreSession(updatedSession)(Right(()))
@@ -433,7 +433,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                 answers.copy(licenceValidityPeriod = Some(LicenceValidityPeriod.UpToTwoYears))
               )
 
-            implicit val request: RequestWithSessionData[_] =
+            implicit val request: RequestWithSessionData[?] =
               requestWithSessionData(session)
 
             assertThrows[InconsistentSessionState] {
@@ -459,7 +459,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                 answers.copy(licenceValidityPeriod = Some(LicenceValidityPeriod.UpToTwoYears))
               )
 
-            implicit val request: RequestWithSessionData[_] =
+            implicit val request: RequestWithSessionData[?] =
               requestWithSessionData(session)
 
             mockStoreSession(updatedSession)(Right(()))
@@ -520,7 +520,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                         (session, updatedSession)
                     }
 
-                  implicit val request: RequestWithSessionData[_] =
+                  implicit val request: RequestWithSessionData[?] =
                     requestWithSessionData(session)
 
                   mockStoreSession(updatedSession)(Right(()))
@@ -585,7 +585,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                 _.copy(userAnswers = CompanyUserAnswers.empty.copy(entityType = Some(selectedEntityType)))
               )
 
-            implicit val request: RequestWithSessionData[_] =
+            implicit val request: RequestWithSessionData[?] =
               requestWithSessionData(session)
 
             mockStoreSession(updatedSession)(Right(()))
@@ -605,7 +605,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                 IndividualRetrievedJourneyData.empty,
                 answers
               )
-            implicit val request: RequestWithSessionData[_] =
+            implicit val request: RequestWithSessionData[?] =
               requestWithSessionData(session)
 
             assertThrows[InconsistentSessionState] {
@@ -677,7 +677,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                 individualAnswers
               )
 
-            implicit val request: RequestWithSessionData[_] =
+            implicit val request: RequestWithSessionData[?] =
               requestWithSessionData(session)
 
             assertThrows[InconsistentSessionState](
@@ -701,7 +701,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               answersWithTaxSituation(taxSituation)
             )
 
-            implicit val request: RequestWithSessionData[_] =
+            implicit val request: RequestWithSessionData[?] =
               requestWithSessionData(session)
 
             mockStoreSession(updatedSession)(Right(()))
@@ -730,7 +730,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                 answersWithTaxSituation
               )
 
-              implicit val request: RequestWithSessionData[_] =
+              implicit val request: RequestWithSessionData[?] =
                 requestWithSessionData(session)
 
               val result = journeyService.updateAndNext(
@@ -757,7 +757,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                   answersWithTaxSituation
                 )
 
-              implicit val request: RequestWithSessionData[_] =
+              implicit val request: RequestWithSessionData[?] =
                 requestWithSessionData(session, Language.English)
 
               inSequence {
@@ -782,7 +782,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                   companyAnswers
                 )
 
-              implicit val request: RequestWithSessionData[_] =
+              implicit val request: RequestWithSessionData[?] =
                 requestWithSessionData(session)
 
               assertThrows[InconsistentSessionState](
@@ -804,7 +804,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                   answersWithTaxSituation(taxSituation)
                 )
 
-              implicit val request: RequestWithSessionData[_] =
+              implicit val request: RequestWithSessionData[?] =
                 requestWithSessionData(session)
 
               mockStoreSession(updatedSession)(Right(()))
@@ -826,7 +826,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                   answersWithTaxSituation(taxSituation)
                 )
 
-              implicit val request: RequestWithSessionData[_] =
+              implicit val request: RequestWithSessionData[?] =
                 requestWithSessionData(session, Language.Welsh)
 
               inSequence {
@@ -851,7 +851,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                   answersWithTaxSituation(taxSituation)
                 )
 
-              implicit val request: RequestWithSessionData[_] =
+              implicit val request: RequestWithSessionData[?] =
                 requestWithSessionData(session)
 
               mockStoreSession(updatedSession)(Right(()))
@@ -874,7 +874,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
 
         "the SA income statement page" in {
           val session                                     = IndividualHECSession.newSession(individualLoginData)
-          implicit val request: RequestWithSessionData[_] =
+          implicit val request: RequestWithSessionData[?] =
             requestWithSessionData(session)
 
           val result = journeyService.updateAndNext(
@@ -888,7 +888,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
 
           "all user answers are not complete" in {
             val session                                     = IndividualHECSession.newSession(individualLoginData)
-            implicit val request: RequestWithSessionData[_] =
+            implicit val request: RequestWithSessionData[?] =
               requestWithSessionData(session)
 
             assertThrows[InconsistentSessionState](
@@ -919,7 +919,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               None,
               Some(taxCheckStartDateTime)
             )
-            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+            implicit val request: RequestWithSessionData[?] = requestWithSessionData(session)
 
             val result = journeyService.updateAndNext(
               routes.CheckYourAnswersController.checkYourAnswers,
@@ -936,7 +936,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
           "the CRN is blocked" in {
             val sessionWithBlockedCrn = Fixtures.companyHECSession(companyLoginData, crnBlocked = true)
 
-            implicit val request: RequestWithSessionData[_] = requestWithSessionData(sessionWithBlockedCrn)
+            implicit val request: RequestWithSessionData[?] = requestWithSessionData(sessionWithBlockedCrn)
 
             val result = journeyService.updateAndNext(
               routes.CRNController.companyRegistrationNumber,
@@ -954,7 +954,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                 CompanyUserAnswers.empty.copy(crn = Some(CRN("1234567")))
               )
 
-            implicit val request: RequestWithSessionData[_] =
+            implicit val request: RequestWithSessionData[?] =
               requestWithSessionData(session)
 
             mockStoreSession(updatedSession)(Right(()))
@@ -974,7 +974,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                 CompanyRetrievedJourneyData.empty,
                 CompanyUserAnswers.empty.copy(crn = Some(CRN("1234567")))
               )
-            implicit val request: RequestWithSessionData[_] =
+            implicit val request: RequestWithSessionData[?] =
               requestWithSessionData(session)
 
             assertThrows[InconsistentSessionState](
@@ -1012,7 +1012,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                 )
               )
 
-            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+            implicit val request: RequestWithSessionData[?] = requestWithSessionData(session)
             mockStoreSession(updatedSession)(Right(()))
 
             val result = journeyService.updateAndNext(
@@ -1041,7 +1041,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                 )
               )
 
-            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+            implicit val request: RequestWithSessionData[?] = requestWithSessionData(session)
 
             assertThrows[InconsistentSessionState] {
               journeyService.updateAndNext(
@@ -1060,7 +1060,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                 IndividualUserAnswers.empty
               )
 
-            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+            implicit val request: RequestWithSessionData[?] = requestWithSessionData(session)
 
             assertThrows[InconsistentSessionState] {
               journeyService.updateAndNext(
@@ -1121,7 +1121,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                 )
               )
 
-            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+            implicit val request: RequestWithSessionData[?] = requestWithSessionData(session)
             mockStoreSession(updatedSession)(Right(()))
 
             val result = journeyService.updateAndNext(
@@ -1151,7 +1151,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                 )
               )
 
-            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+            implicit val request: RequestWithSessionData[?] = requestWithSessionData(session)
             mockStoreSession(updatedSession)(Right(()))
 
             val result = journeyService.updateAndNext(
@@ -1174,7 +1174,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
 
               val (session, updatedSession) = buildSessions(companyData, journeyData)
 
-              implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+              implicit val request: RequestWithSessionData[?] = requestWithSessionData(session)
               mockStoreSession(updatedSession)(Right(()))
 
               val result = journeyService.updateAndNext(
@@ -1207,7 +1207,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               )
               val (session, updatedSession) = buildSessions(companyData, journeyData)
 
-              implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+              implicit val request: RequestWithSessionData[?] = requestWithSessionData(session)
               mockStoreSession(updatedSession)(Right(()))
 
               val result = journeyService.updateAndNext(
@@ -1238,7 +1238,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                   )
                 )
 
-              implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+              implicit val request: RequestWithSessionData[?] = requestWithSessionData(session)
               mockStoreSession(updatedSession)(Right(()))
 
               val result = journeyService.updateAndNext(
@@ -1262,7 +1262,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
 
             val (session, updatedSession) = buildSessions(companyData, journeyData)
 
-            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+            implicit val request: RequestWithSessionData[?] = requestWithSessionData(session)
             mockStoreSession(updatedSession)(Right(()))
 
             val result = journeyService.updateAndNext(
@@ -1284,7 +1284,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
 
             val (session, updatedSession) = buildSessions(companyData, journeyData)
 
-            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+            implicit val request: RequestWithSessionData[?] = requestWithSessionData(session)
             mockStoreSession(updatedSession)(Right(()))
 
             val result = journeyService.updateAndNext(
@@ -1305,7 +1305,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               val session        = IndividualHECSession.newSession(individualLoginData)
               val updatedSession = session.copy(userAnswers = IndividualUserAnswers.empty)
 
-              implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+              implicit val request: RequestWithSessionData[?] = requestWithSessionData(session)
 
               assertThrows[InconsistentSessionState] {
                 journeyService.updateAndNext(chargeableForCorporationTaxRoute, updatedSession)
@@ -1316,7 +1316,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               val session        = CompanyHECSession.newSession(companyLoginData)
               val updatedSession = session.copy(userAnswers = CompanyUserAnswers.empty.copy(crn = Some(CRN("1234567"))))
 
-              implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+              implicit val request: RequestWithSessionData[?] = requestWithSessionData(session)
 
               assertThrows[InconsistentSessionState] {
                 journeyService.updateAndNext(chargeableForCorporationTaxRoute, updatedSession)
@@ -1334,7 +1334,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                   CompanyUserAnswers.empty.copy(crn = Some(CRN("1234567")), chargeableForCT = Some(YesNoAnswer.Yes))
               )
 
-              implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+              implicit val request: RequestWithSessionData[?] = requestWithSessionData(session)
 
               assertThrows[InconsistentSessionState] {
                 journeyService.updateAndNext(chargeableForCorporationTaxRoute, updatedSession)
@@ -1361,7 +1361,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                     CompanyUserAnswers.empty.copy(crn = Some(CRN("1234567")), chargeableForCT = Some(YesNoAnswer.No))
                 )
 
-                implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+                implicit val request: RequestWithSessionData[?] = requestWithSessionData(session)
                 mockStoreSession(updatedSession)(Right(()))
 
                 val result = journeyService.updateAndNext(chargeableForCorporationTaxRoute, updatedSession)
@@ -1395,7 +1395,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                 Fixtures.companyHECSession(companyLoginData, companyData(status), CompanyUserAnswers.empty)
               val updatedSession = session.copy(userAnswers = yesUserAnswers)
 
-              implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+              implicit val request: RequestWithSessionData[?] = requestWithSessionData(session)
 
               inSequence {
                 auditEvent.foreach(event => mockSendAuditEvent(event(updatedSession)))
@@ -1435,7 +1435,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
 
         "CT income statement page" in {
           val session                                     = CompanyHECSession.newSession(companyLoginData)
-          implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+          implicit val request: RequestWithSessionData[?] = requestWithSessionData(session)
 
           val result = journeyService.updateAndNext(
             routes.CompanyDetailsController.ctIncomeStatement,
@@ -1455,7 +1455,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                 IndividualUserAnswers.empty
               )
 
-            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+            implicit val request: RequestWithSessionData[?] = requestWithSessionData(session)
 
             assertThrows[InconsistentSessionState] {
               journeyService.updateAndNext(
@@ -1485,7 +1485,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               )
             val updatedSession = session.copy(userAnswers = updatedUserAnswer)
 
-            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+            implicit val request: RequestWithSessionData[?] = requestWithSessionData(session)
 
             inSequence {
               auditEvent.foreach(event => mockSendAuditEvent(event(updatedSession)))
@@ -1516,7 +1516,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
           "number of attempts has reached the maximum & no valid CTUTR was found" in {
             val session = Fixtures.companyHECSession(crnBlocked = true)
 
-            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+            implicit val request: RequestWithSessionData[?] = requestWithSessionData(session)
 
             val result = journeyService.updateAndNext(
               routes.CompanyDetailsController.enterCtutr,
@@ -1530,7 +1530,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             "throw error if CTUTR is missing" in {
               val session = Fixtures.companyHECSession()
 
-              implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+              implicit val request: RequestWithSessionData[?] = requestWithSessionData(session)
 
               assertThrows[InconsistentSessionState] {
                 journeyService.updateAndNext(
@@ -1548,7 +1548,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                 )
               )
 
-              implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+              implicit val request: RequestWithSessionData[?] = requestWithSessionData(session)
 
               assertThrows[InconsistentSessionState] {
                 journeyService.updateAndNext(
@@ -1567,7 +1567,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                 userAnswers = Fixtures.incompleteCompanyUserAnswers(ctutr = None)
               )
 
-              implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+              implicit val request: RequestWithSessionData[?] = requestWithSessionData(session)
 
               assertThrows[InconsistentSessionState] {
                 journeyService.updateAndNext(
@@ -1586,7 +1586,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                 userAnswers = Fixtures.incompleteCompanyUserAnswers(ctutr = Some(CTUTR("utr")))
               )
 
-              implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+              implicit val request: RequestWithSessionData[?] = requestWithSessionData(session)
 
               val result = journeyService.updateAndNext(
                 routes.CompanyDetailsController.enterCtutr,
@@ -1604,7 +1604,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                 userAnswers = Fixtures.incompleteCompanyUserAnswers(ctutr = Some(CTUTR("utr")))
               )
 
-              implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+              implicit val request: RequestWithSessionData[?] = requestWithSessionData(session)
 
               val result = journeyService.updateAndNext(
                 routes.CompanyDetailsController.enterCtutr,
@@ -1623,7 +1623,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                 userAnswers = Fixtures.incompleteCompanyUserAnswers(ctutr = Some(CTUTR("utr")))
               )
 
-              implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+              implicit val request: RequestWithSessionData[?] = requestWithSessionData(session)
 
               val result = journeyService.updateAndNext(
                 routes.CompanyDetailsController.enterCtutr,
@@ -1652,7 +1652,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               Some(taxCheckStartDateTime),
               emailRequestedForTaxCheck = Some(Fixtures.emailRequestedForTaxCheck())
             )
-            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+            implicit val request: RequestWithSessionData[?] = requestWithSessionData(session)
 
             val result = journeyService.updateAndNext(
               routes.TaxCheckCompleteController.taxCheckComplete,
@@ -1670,7 +1670,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               taxCheckStartDateTime = Some(taxCheckStartDateTime),
               emailRequestedForTaxCheck = Some(Fixtures.emailRequestedForTaxCheck())
             )
-            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+            implicit val request: RequestWithSessionData[?] = requestWithSessionData(session)
 
             val result = journeyService.updateAndNext(
               routes.TaxCheckCompleteController.taxCheckComplete,
@@ -1740,7 +1740,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               emailRequestedForTaxCheck = Some(Fixtures.emailRequestedForTaxCheck()),
               userEmailAnswers = userEmailAnswers.some
             )
-            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+            implicit val request: RequestWithSessionData[?] = requestWithSessionData(session)
 
             val result = journeyService.updateAndNext(
               routes.ConfirmEmailAddressController.confirmEmailAddress,
@@ -1831,7 +1831,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                 )
                 .some
             )
-            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+            implicit val request: RequestWithSessionData[?] = requestWithSessionData(session)
 
             val result = journeyService.updateAndNext(
               routes.VerifyEmailPasscodeController.verifyEmailPasscode,
@@ -1876,7 +1876,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                 )
                 .some
             )
-            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+            implicit val request: RequestWithSessionData[?] = requestWithSessionData(session)
 
             val result = journeyService.updateAndNext(
               routes.EmailAddressConfirmedController.emailAddressConfirmed,
@@ -1914,7 +1914,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               emailRequestedForTaxCheck = Some(Fixtures.emailRequestedForTaxCheck()),
               userEmailAnswers = userEmailAnswers.some
             )
-            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+            implicit val request: RequestWithSessionData[?] = requestWithSessionData(session)
 
             val result = journeyService.updateAndNext(
               routes.ConfirmEmailAddressController.confirmEmailAddress,
@@ -1965,7 +1965,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               hasResentEmailConfirmation = true,
               userEmailAnswers = userEmailAnswers.some
             )
-            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+            implicit val request: RequestWithSessionData[?] = requestWithSessionData(session)
 
             val result = journeyService.updateAndNext(
               routes.ResendEmailConfirmationController.resendEmail,
@@ -2054,7 +2054,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                 )
                 .some
             )
-            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+            implicit val request: RequestWithSessionData[?] = requestWithSessionData(session)
 
             val result = journeyService.updateAndNext(
               routes.VerifyResentEmailPasscodeController.verifyResentEmailPasscode,
@@ -2111,7 +2111,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
 
             val session = Fixtures.individualHECSession(individualData, journeyData, incompleteAnswers)
 
-            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+            implicit val request: RequestWithSessionData[?] = requestWithSessionData(session)
 
             mockStoreSession(session.copy(userAnswers = completeAnswers))(Right(()))
 
@@ -2154,7 +2154,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                     IndividualRetrievedJourneyData.empty,
                     incompleteAnswers
                   )
-                implicit val request: RequestWithSessionData[_] =
+                implicit val request: RequestWithSessionData[?] =
                   requestWithSessionData(session)
 
                 mockStoreSession(session.copy(userAnswers = completeAnswers))(Right(()))
@@ -2199,7 +2199,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                   incompleteAnswers
                 )
 
-                implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+                implicit val request: RequestWithSessionData[?] = requestWithSessionData(session)
                 mockStoreSession(session.copy(userAnswers = completeAnswers))(Right(()))
 
                 val result = journeyService.updateAndNext(
@@ -2244,7 +2244,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                     userAnswers = incompleteAnswers
                   )
 
-                implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+                implicit val request: RequestWithSessionData[?] = requestWithSessionData(session)
                 mockStoreSession(session.copy(userAnswers = completeAnswers))(Right(()))
 
                 val result = journeyService.updateAndNext(
@@ -2288,7 +2288,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                     incompleteAnswers
                   )
 
-                implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+                implicit val request: RequestWithSessionData[?] = requestWithSessionData(session)
                 mockStoreSession(session.copy(userAnswers = completeAnswers))(Right(()))
 
                 val result = journeyService.updateAndNext(
@@ -2358,7 +2358,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
           }
 
           def nextPageIsCYA(session: CompanyHECSession, completeAnswers: CompanyUserAnswers) = {
-            implicit val request: RequestWithSessionData[_] =
+            implicit val request: RequestWithSessionData[?] =
               requestWithSessionData(session)
 
             mockStoreSession(session.copy(userAnswers = completeAnswers))(Right(()))
@@ -2474,7 +2474,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               IndividualRetrievedJourneyData.empty,
               incompleteAnswers
             )
-          implicit val request: RequestWithSessionData[_] =
+          implicit val request: RequestWithSessionData[?] =
             requestWithSessionData(session)
 
           val result = journeyService.updateAndNext(
@@ -2494,7 +2494,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
 
         "no previous location can be found" in {
           val session                                     = CompanyHECSession.newSession(companyLoginData)
-          implicit val request: RequestWithSessionData[_] =
+          implicit val request: RequestWithSessionData[?] =
             requestWithSessionData(session)
           assertThrows[InconsistentSessionState](
             journeyService.previous(
@@ -2509,7 +2509,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
 
         "the start endpoint" in {
           val session                                     = CompanyHECSession.newSession(companyLoginData)
-          implicit val request: RequestWithSessionData[_] =
+          implicit val request: RequestWithSessionData[?] =
             requestWithSessionData(session)
 
           val result = journeyService.previous(
@@ -2522,7 +2522,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
         "the confirm individual details page" when {
 
           def test(session: HECSession, expectedPrevious: Call) = {
-            implicit val request: RequestWithSessionData[_] =
+            implicit val request: RequestWithSessionData[?] =
               requestWithSessionData(session)
 
             val result = journeyService.previous(
@@ -2549,7 +2549,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
 
         "the confirm individual details exit page" in {
           val session                                     = IndividualHECSession.newSession(individualLoginData)
-          implicit val request: RequestWithSessionData[_] =
+          implicit val request: RequestWithSessionData[?] =
             requestWithSessionData(session)
 
           val result = journeyService.previous(
@@ -2572,7 +2572,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
           "applicant is individual" in {
             val session = IndividualHECSession.newSession(individualLoginData).copy(unexpiredTaxChecks = taxChecks)
 
-            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+            implicit val request: RequestWithSessionData[?] = requestWithSessionData(session)
 
             val result = journeyService.previous(routes.TaxChecksListController.unexpiredTaxChecks)
             result shouldBe routes.ConfirmIndividualDetailsController.confirmIndividualDetails
@@ -2583,7 +2583,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             "the user did not have to confirm their entity type" in {
               val session = CompanyHECSession.newSession(companyLoginData).copy(unexpiredTaxChecks = taxChecks)
 
-              implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+              implicit val request: RequestWithSessionData[?] = requestWithSessionData(session)
 
               val result = journeyService.previous(routes.TaxChecksListController.unexpiredTaxChecks)
               result shouldBe routes.StartController.start
@@ -2594,7 +2594,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                 .newSession(companyLoginData.copy(didConfirmUncertainEntityType = Some(true)))
                 .copy(unexpiredTaxChecks = taxChecks)
 
-              implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+              implicit val request: RequestWithSessionData[?] = requestWithSessionData(session)
 
               val result = journeyService.previous(routes.TaxChecksListController.unexpiredTaxChecks)
               result shouldBe routes.ConfirmUncertainEntityTypeController.entityType
@@ -2624,7 +2624,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                 IndividualUserAnswers.empty,
                 unexpiredTaxChecks = taxChecks
               )
-              implicit val request: RequestWithSessionData[_] =
+              implicit val request: RequestWithSessionData[?] =
                 requestWithSessionData(session)
 
               val result = journeyService.previous(
@@ -2636,7 +2636,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
 
             "there are no preexisting tax check codes" in {
               val session                                     = IndividualHECSession.newSession(individualLoginData)
-              implicit val request: RequestWithSessionData[_] =
+              implicit val request: RequestWithSessionData[?] =
                 requestWithSessionData(session)
 
               val result = journeyService.previous(
@@ -2655,7 +2655,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                 CompanyUserAnswers.empty,
                 unexpiredTaxChecks = taxChecks
               )
-              implicit val request: RequestWithSessionData[_] =
+              implicit val request: RequestWithSessionData[?] =
                 requestWithSessionData(session)
 
               val result = journeyService.previous(
@@ -2667,7 +2667,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
 
             "there are no preexisting tax check codes" in {
               val session                                     = CompanyHECSession.newSession(companyLoginData)
-              implicit val request: RequestWithSessionData[_] =
+              implicit val request: RequestWithSessionData[?] =
                 requestWithSessionData(session)
 
               val result = journeyService.previous(
@@ -2680,7 +2680,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             "the user had to confirm their entity type and there are no preexisting tax check codes" in {
               val session                                     =
                 CompanyHECSession.newSession(companyLoginData.copy(didConfirmUncertainEntityType = Some(true)))
-              implicit val request: RequestWithSessionData[_] =
+              implicit val request: RequestWithSessionData[?] =
                 requestWithSessionData(session)
 
               val result = journeyService.previous(
@@ -2714,7 +2714,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             unexpiredTaxChecks = taxChecks
           )
 
-          implicit val request: RequestWithSessionData[_] =
+          implicit val request: RequestWithSessionData[?] =
             requestWithSessionData(session)
 
           val result = journeyService.previous(
@@ -2726,7 +2726,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
 
         "the licence type exit page" in {
           val session                                     = IndividualHECSession.newSession(individualLoginData)
-          implicit val request: RequestWithSessionData[_] =
+          implicit val request: RequestWithSessionData[?] =
             requestWithSessionData(session)
 
           val result = journeyService.previous(
@@ -2744,7 +2744,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               licenceType = Some(LicenceType.ScrapMetalDealerSite)
             )
           )
-          implicit val request: RequestWithSessionData[_] =
+          implicit val request: RequestWithSessionData[?] =
             requestWithSessionData(session)
 
           val result = journeyService.previous(
@@ -2770,7 +2770,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                     licenceType = Some(licenceType)
                   )
                 )
-                implicit val request: RequestWithSessionData[_] =
+                implicit val request: RequestWithSessionData[?] =
                   requestWithSessionData(session)
 
                 val result = journeyService.previous(
@@ -2793,7 +2793,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               entityType = Some(EntityType.Company)
             )
           )
-          implicit val request: RequestWithSessionData[_] =
+          implicit val request: RequestWithSessionData[?] =
             requestWithSessionData(session)
 
           val result = journeyService.previous(
@@ -2811,7 +2811,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               licenceType = Some(LicenceType.OperatorOfPrivateHireVehicles)
             )
           )
-          implicit val request: RequestWithSessionData[_] =
+          implicit val request: RequestWithSessionData[?] =
             requestWithSessionData(session)
 
           val result = journeyService.previous(
@@ -2832,7 +2832,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                 licenceType = Some(LicenceType.DriverOfTaxisAndPrivateHires)
               )
             )
-            implicit val request: RequestWithSessionData[_] =
+            implicit val request: RequestWithSessionData[?] =
               requestWithSessionData(session)
 
             val result = journeyService.previous(
@@ -2851,7 +2851,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                 entityType = Some(EntityType.Individual)
               )
             )
-            implicit val request: RequestWithSessionData[_] =
+            implicit val request: RequestWithSessionData[?] =
               requestWithSessionData(session)
 
             val result = journeyService.previous(
@@ -2866,7 +2866,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
         "the check your answers page" when {
 
           def testPrevPageIsTaxSituation(session: HECSession) = {
-            implicit val request: RequestWithSessionData[_] =
+            implicit val request: RequestWithSessionData[?] =
               requestWithSessionData(session)
 
             val result = journeyService.previous(
@@ -2947,7 +2947,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
           def test(taxSituation: TaxSituation) = {
             val session = buildIndividualSession(taxSituation, SAStatus.ReturnFound)
 
-            implicit val request: RequestWithSessionData[_] =
+            implicit val request: RequestWithSessionData[?] =
               requestWithSessionData(session)
 
             val result = journeyService.previous(
@@ -2960,7 +2960,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
           def testThrows(taxSituation: TaxSituation) = {
             val session = buildIndividualSession(taxSituation, SAStatus.ReturnFound)
 
-            implicit val request: RequestWithSessionData[_] =
+            implicit val request: RequestWithSessionData[?] =
               requestWithSessionData(session)
 
             assertThrows[InconsistentSessionState] {
@@ -2992,7 +2992,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
           def test(taxSituation: TaxSituation) = {
             val session = buildIndividualSession(taxSituation, SAStatus.NoReturnFound)
 
-            implicit val request: RequestWithSessionData[_] =
+            implicit val request: RequestWithSessionData[?] =
               requestWithSessionData(session)
 
             val result = journeyService.previous(
@@ -3013,7 +3013,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
           def testThrows(taxSituation: TaxSituation) = {
             val session = buildIndividualSession(taxSituation, SAStatus.NoReturnFound)
 
-            implicit val request: RequestWithSessionData[_] =
+            implicit val request: RequestWithSessionData[?] =
               requestWithSessionData(session)
 
             assertThrows[InconsistentSessionState] {
@@ -3042,7 +3042,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               crn = Some(CRN("123456"))
             )
           )
-          implicit val request: RequestWithSessionData[_] =
+          implicit val request: RequestWithSessionData[?] =
             requestWithSessionData(session)
 
           val result = journeyService.previous(
@@ -3062,7 +3062,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               crn = Some(CRN("123456"))
             )
           )
-          implicit val request: RequestWithSessionData[_] =
+          implicit val request: RequestWithSessionData[?] =
             requestWithSessionData(session)
 
           val result = journeyService.previous(
@@ -3104,7 +3104,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               )
             )
 
-          implicit val request: RequestWithSessionData[_] = requestWithSessionData(updatedSession)
+          implicit val request: RequestWithSessionData[?] = requestWithSessionData(updatedSession)
           val result                                      = journeyService.previous(
             routes.CompanyDetailsController.recentlyStartedTrading
           )
@@ -3143,7 +3143,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               )
             )
 
-          implicit val request: RequestWithSessionData[_] = requestWithSessionData(updatedSession)
+          implicit val request: RequestWithSessionData[?] = requestWithSessionData(updatedSession)
           val result                                      = journeyService.previous(
             routes.CompanyDetailsController.enterCtutr
           )
@@ -3153,7 +3153,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
         }
 
         "the 'dont have' CTUTR' page" in {
-          implicit val request: RequestWithSessionData[_] = requestWithSessionData(Fixtures.companyHECSession())
+          implicit val request: RequestWithSessionData[?] = requestWithSessionData(Fixtures.companyHECSession())
           val result                                      = journeyService.previous(
             routes.CompanyDetailsController.dontHaveUtr
           )
@@ -3192,7 +3192,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               crnBlocked = true
             )
 
-          implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+          implicit val request: RequestWithSessionData[?] = requestWithSessionData(session)
           val result                                      = journeyService.previous(
             routes.CompanyDetailsController.tooManyCtutrAttempts
           )
@@ -3218,7 +3218,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                 Fixtures.emailRequestedForTaxCheck().copy(originUrl = emailJourneyOriginUrl).some,
               userEmailAnswers = userEmailAnswers
             )
-            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+            implicit val request: RequestWithSessionData[?] = requestWithSessionData(session)
 
             val result = journeyService.previous(
               routes.ConfirmEmailAddressController.confirmEmailAddress
@@ -3261,7 +3261,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             completedTaxCheck = hecTaxCheck.some,
             userEmailAnswers = userEmailAnswer.some
           )
-          implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+          implicit val request: RequestWithSessionData[?] = requestWithSessionData(session)
 
           val result = journeyService.previous(presentRoute)
           result shouldBe routes.EmailAddressConfirmedController.emailAddressConfirmed
@@ -3301,7 +3301,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               userEmailAnswers = userEmailAnswers,
               hasResentEmailConfirmation = isResendFlag
             )
-            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+            implicit val request: RequestWithSessionData[?] = requestWithSessionData(session)
 
             val result = journeyService.previous(
               routes.EnterEmailAddressController.enterEmailAddress
@@ -3373,7 +3373,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                 .some,
               hasResentEmailConfirmation = hasResendFlag
             )
-            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+            implicit val request: RequestWithSessionData[?] = requestWithSessionData(session)
 
             val result = journeyService.previous(
               routes.ResendEmailConfirmationController.resendEmail
@@ -3426,7 +3426,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             hasResentEmailConfirmation = true,
             userEmailAnswers = Fixtures.userEmailAnswers(passcodeRequestResult = PasscodeSent.some).some
           )
-          implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+          implicit val request: RequestWithSessionData[?] = requestWithSessionData(session)
 
           val result = journeyService.previous(
             routes.VerifyResentEmailPasscodeController.verifyResentEmailPasscode
@@ -3453,7 +3453,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             userEmailAnswers = Fixtures.userEmailAnswers(EmailType.GGEmail, ggEmailId, passcodeRequestResult.some).some
           )
 
-          implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+          implicit val request: RequestWithSessionData[?] = requestWithSessionData(session)
 
           val result = journeyService.previous(existingRoute)
           result shouldBe routes.ConfirmEmailAddressController.confirmEmailAddress
@@ -3488,7 +3488,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
               .some
           )
 
-          implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+          implicit val request: RequestWithSessionData[?] = requestWithSessionData(session)
 
           val result = journeyService.previous(currentCall)
           if (resendFlag)
@@ -3595,7 +3595,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                 .some
             )
 
-            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+            implicit val request: RequestWithSessionData[?] = requestWithSessionData(session)
 
             val result = journeyService.previous(
               routes.TooManyEmailVerificationAttemptController.tooManyEmailVerificationAttempts
@@ -3649,7 +3649,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
                 .some
             )
 
-            implicit val request: RequestWithSessionData[_] = requestWithSessionData(session)
+            implicit val request: RequestWithSessionData[?] = requestWithSessionData(session)
 
             val result = journeyService.previous(
               routes.CannotSendVerificationPasscodeController.cannotSendVerificationPasscode
@@ -3711,7 +3711,7 @@ class JourneyServiceImplSpec extends ControllerSpec with SessionSupport with Aud
             Some(YesNoAnswer.Yes),
             Some(EntityType.Individual)
           )
-          implicit val request: RequestWithSessionData[_] =
+          implicit val request: RequestWithSessionData[?] =
             requestWithSessionData(
               Fixtures.individualHECSession(
                 individualLoginData,

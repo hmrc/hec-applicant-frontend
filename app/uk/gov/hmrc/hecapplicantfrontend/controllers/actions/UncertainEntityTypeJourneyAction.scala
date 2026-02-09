@@ -17,7 +17,7 @@
 package uk.gov.hmrc.hecapplicantfrontend.controllers.actions
 
 import cats.data.EitherT
-import cats.syntax.either._
+import cats.syntax.either.*
 import com.google.inject.Inject
 import play.api.mvc.Results.Redirect
 import play.api.mvc.{ActionRefiner, Call, Result, WrappedRequest}

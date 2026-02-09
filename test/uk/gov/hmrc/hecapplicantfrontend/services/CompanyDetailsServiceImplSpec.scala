@@ -17,12 +17,12 @@
 package uk.gov.hmrc.hecapplicantfrontend.services
 
 import cats.data.EitherT
-import cats.instances.future._
+import cats.instances.future.*
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.Json
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 import uk.gov.hmrc.hecapplicantfrontend.connectors.CompanyDetailsConnector
 import uk.gov.hmrc.hecapplicantfrontend.models.{CompanyHouseDetails, CompanyHouseName, Error}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.CRN
@@ -104,7 +104,7 @@ class CompanyDetailsServiceImplSpec extends AnyWordSpec with Matchers with MockF
           val companyDetails = CompanyHouseDetails(CompanyHouseName("Test Tech Ltd"))
 
           val json = Json.parse(s"""
-               |{"company_name" : "Test Tech Ltd"}
+               |{"company_name": "Test Tech Ltd" }
                |""".stripMargin)
 
           mockFindComapny(CRN("1234567"))(Right(HttpResponse(200, json, responseHeaders)))

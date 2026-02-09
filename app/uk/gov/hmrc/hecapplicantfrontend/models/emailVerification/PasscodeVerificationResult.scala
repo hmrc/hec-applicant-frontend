@@ -17,7 +17,7 @@
 package uk.gov.hmrc.hecapplicantfrontend.models.emailVerification
 
 import cats.Eq
-import play.api.libs.json._
+import play.api.libs.json.*
 
 sealed trait PasscodeVerificationResult extends Product with Serializable
 

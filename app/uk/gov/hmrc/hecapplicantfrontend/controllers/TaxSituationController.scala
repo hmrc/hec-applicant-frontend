@@ -17,19 +17,20 @@
 package uk.gov.hmrc.hecapplicantfrontend.controllers
 
 import cats.data.EitherT
-import cats.implicits._
+import cats.implicits.*
 import com.google.inject.{Inject, Singleton}
 import play.api.data.Form
 import play.api.data.Forms.{mapping, of}
 import play.api.i18n.{I18nSupport, Messages}
-import play.api.mvc._
+import play.api.mvc.*
 import uk.gov.hmrc.hecapplicantfrontend.config.AppConfig
-import uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController._
+import uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.*
 import uk.gov.hmrc.hecapplicantfrontend.controllers.actions.{AuthAction, SessionDataAction}
 import uk.gov.hmrc.hecapplicantfrontend.models
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.IndividualHECSession
+import uk.gov.hmrc.hecapplicantfrontend.models.IndividualUserAnswers.IncompleteIndividualUserAnswers.*
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.IndividualLoginData
-import uk.gov.hmrc.hecapplicantfrontend.models.TaxSituation._
+import uk.gov.hmrc.hecapplicantfrontend.models.TaxSituation.*
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.individual.SAStatusResponse
 import uk.gov.hmrc.hecapplicantfrontend.models.licence.LicenceType
 import uk.gov.hmrc.hecapplicantfrontend.models.views.YesNoOption
@@ -91,7 +92,9 @@ class TaxSituationController @Inject() (
               val (startDate, endDate) = getTaxPeriodStrings(calculatedTaxYear)
               val updatedSession       = individualSession.copy(
                 relevantIncomeTaxYear = Some(calculatedTaxYear),
-                userAnswers = individualSession.userAnswers.unset(_.taxSituation).unset(_.saIncomeDeclared)
+                userAnswers = individualSession.userAnswers
+                  .unset(_ => taxSituationLens)
+                  .unset(_ => saIncomeDeclaredLens)
               )
               sessionStore
                 .store(updatedSession)
@@ -144,8 +147,8 @@ class TaxSituationController @Inject() (
                 val updatedRetrievedData = individualSession.retrievedJourneyData.copy(saStatus = maybeSaStatus)
                 // wipe the SA income declared answer since it is dependent on the tax situation answer
                 val updatedAnswers       = individualSession.userAnswers
-                  .unset(_.taxSituation)
-                  .unset(_.saIncomeDeclared)
+                  .unset(_ => taxSituationLens)
+                  .unset(_ => saIncomeDeclaredLens)
                   .copy(taxSituation = Some(taxSituation))
                 individualSession.copy(
                   userAnswers = updatedAnswers,
@@ -241,8 +244,8 @@ class TaxSituationController @Inject() (
               individualSession.copy(
                 relevantIncomeTaxYear = Some(newRelevantIncomeTaxYear),
                 userAnswers = individualSession.userAnswers
-                  .unset(_.taxSituation)
-                  .unset(_.saIncomeDeclared)
+                  .unset(_ => taxSituationLens)
+                  .unset(_ => saIncomeDeclaredLens)
               )
 
           sessionStore
@@ -275,7 +278,7 @@ class TaxSituationController @Inject() (
 
   private def checkIfNewRelevantIncomeTaxYearConsidered(
     session: IndividualHECSession
-  )(f: Boolean => Future[Result])(implicit r: Request[_]): Future[Result] =
+  )(f: Boolean => Future[Result])(implicit r: Request[?]): Future[Result] =
     session.newRelevantIncomeTaxYear match {
       case None =>
         f(false)

@@ -18,18 +18,19 @@ package uk.gov.hmrc.hecapplicantfrontend.services
 
 import java.util.UUID
 import cats.data.EitherT
-import cats.instances.future._
-import cats.instances.int._
-import cats.syntax.either._
-import cats.syntax.eq._
+import cats.instances.future.*
+import cats.instances.int.*
+import cats.syntax.either.*
+import cats.syntax.eq.*
 import com.google.inject.{ImplementedBy, Inject, Singleton}
-import play.api.libs.json.{Json, Reads}
 import play.mvc.Http.Status.OK
 import uk.gov.hmrc.hecapplicantfrontend.models.Error
-import uk.gov.hmrc.hecapplicantfrontend.util.HttpResponseOps._
+import uk.gov.hmrc.hecapplicantfrontend.util.HttpResponseOps.*
 import uk.gov.hmrc.hecapplicantfrontend.connectors.IvConnector
 import uk.gov.hmrc.hecapplicantfrontend.models.iv.IvErrorStatus
 import uk.gov.hmrc.http.HeaderCarrier
+import play.api.libs.json.*
+import play.api.libs.json.Reads.*
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -47,7 +48,7 @@ class IvServiceImpl @Inject() (connector: IvConnector)(implicit
   ec: ExecutionContext
 ) extends IvService {
 
-  import IvServiceImpl._
+  import IvServiceImpl.*
 
   override def getFailedJourneyStatus(
     journeyId: UUID
@@ -77,6 +78,9 @@ object IvServiceImpl {
 
   final case class IvStatusResponse(result: String) extends AnyVal
 
-  implicit val reads: Reads[IvStatusResponse] = Json.reads
+  given Reads[IvStatusResponse] = new Reads[IvStatusResponse] {
+    override def reads(json: JsValue): JsResult[IvStatusResponse] =
+      (json \ "result").validate[String].map(IvStatusResponse.apply)
+  }
 
 }

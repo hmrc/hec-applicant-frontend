@@ -15,9 +15,9 @@
  *@
 
 @import uk.gov.hmrc.govukfrontend.views.html.components.GovukPhaseBanner
-@import uk.gov.hmrc.hmrcfrontend.views.html.components._
-@import cats.syntax.eq._
-@import cats.instances.string._
+@import uk.gov.hmrc.hmrcfrontend.views.html.components.*
+@import cats.syntax.eq.*
+@import cats.instances.string.*
 @import uk.gov.hmrc.hmrcfrontend.config.TudorCrownConfig
 @import uk.gov.hmrc.hmrcfrontend.views.Aliases.Header
 @import uk.gov.hmrc.govukfrontend.views.html.helpers.GovukLogo
@@ -25,7 +25,7 @@
 @this(hmrcBanner: HmrcBanner, govukPhaseBanner: GovukPhaseBanner, tudorCrownConfig: TudorCrownConfig, govukLogo: GovukLogo)
 
 @(params: Header)
-@import params._
+@import params.*
 <header role="banner">
 
   <div class="govuk-header @toClasses("hmrc-header", params.classes) @if(signOutHref.exists(_.nonEmpty) || languageToggle.exists(_.linkMap.nonEmpty)){ hmrc-header--with-additional-navigation}else{}" data-module="govuk-header"

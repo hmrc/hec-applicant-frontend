@@ -18,18 +18,18 @@ package uk.gov.hmrc.hecapplicantfrontend.controllers
 
 import cats.data.EitherT
 import cats.implicits.catsSyntaxOptionId
-import cats.instances.future._
+import cats.instances.future.*
 import play.api.inject.bind
 import play.api.mvc.{Request, Result}
 import play.api.test.FakeRequest
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.hecapplicantfrontend.controllers.TaxSituationController.getTaxPeriodStrings
 import uk.gov.hmrc.hecapplicantfrontend.models.HECSession.{CompanyHECSession, IndividualHECSession}
 import uk.gov.hmrc.hecapplicantfrontend.models.IndividualUserAnswers.IncompleteIndividualUserAnswers
 import uk.gov.hmrc.hecapplicantfrontend.models.LoginData.{CompanyLoginData, IndividualLoginData}
 import uk.gov.hmrc.hecapplicantfrontend.models.RetrievedJourneyData.IndividualRetrievedJourneyData
-import uk.gov.hmrc.hecapplicantfrontend.models._
+import uk.gov.hmrc.hecapplicantfrontend.models.*
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.individual
 import uk.gov.hmrc.hecapplicantfrontend.models.hecTaxCheck.individual.{SAStatus, SAStatusResponse}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.{GGCredId, NINO, SAUTR}
@@ -75,7 +75,7 @@ class TaxSituationControllerSpec
   def mockTimeProviderToday(d: LocalDate) = (() => mockTimeProvider.currentDate).expects().returning(d)
 
   def mockStoreSession(individualSession: HECSession)(result: Either[Error, Unit]) = (mockSessionStore
-    .store(_: HECSession)(_: Request[_]))
+    .store(_: HECSession)(_: Request[?]))
     .expects(individualSession, *)
     .returning(EitherT.fromEither(result))
 
@@ -593,7 +593,7 @@ class TaxSituationControllerSpec
         TaxSituation.NotChargeable -> "3"
       )
 
-      def testNonSA(taxSituation: TaxSituation) = {
+      def testNonSA[A <: TaxSituation & Singleton & scala.deriving.Mirror.Singleton](taxSituation: A): Unit = {
         val answers        = IndividualUserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
         val individualData = individualLoginData.copy(sautr = Some(SAUTR("utr")))
         val session        = Fixtures.individualHECSession(
@@ -630,7 +630,11 @@ class TaxSituationControllerSpec
         }
       }
 
-      def testSA(taxSituation: TaxSituation, statusResponse: SAStatusResponse) = {
+      // def testSA(taxSituation: TaxSituation, statusResponse: SAStatusResponse) =
+      def testSA[A <: TaxSituation & Singleton & scala.deriving.Mirror.Singleton](
+        taxSituation: A,
+        statusResponse: SAStatusResponse
+      ): Unit = {
         val answers        = IndividualUserAnswers.empty.copy(licenceType = Some(DriverOfTaxisAndPrivateHires))
         val individualData = individualLoginData.copy(sautr = Some(SAUTR("utr")))
         val session        = Fixtures.individualHECSession(

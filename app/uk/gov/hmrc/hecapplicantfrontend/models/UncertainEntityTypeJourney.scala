@@ -16,7 +16,8 @@
 
 package uk.gov.hmrc.hecapplicantfrontend.models
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.functional.syntax.*
+import play.api.libs.json.{OFormat, __}
 import uk.gov.hmrc.hecapplicantfrontend.models.ids.GGCredId
 
 final case class UncertainEntityTypeJourney(
@@ -25,7 +26,8 @@ final case class UncertainEntityTypeJourney(
 )
 
 object UncertainEntityTypeJourney {
-
-  implicit val format: OFormat[UncertainEntityTypeJourney] = Json.format
-
+  implicit val format: OFormat[UncertainEntityTypeJourney] = (
+    (__ \ "ggCredId").format[GGCredId] and
+      (__ \ "userSuppliedEntityType").formatNullable[EntityType]
+  )(UncertainEntityTypeJourney.apply, o => Tuple.fromProductTyped(o))
 }
