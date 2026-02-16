@@ -16,7 +16,8 @@ object AppDependencies {
     "uk.gov.hmrc"                %% "play-conditional-form-mapping-play-30"      % "3.4.0",
     "uk.gov.hmrc"                %% "play-frontend-hmrc-play-30"                 % "12.31.0",
     "org.apache.commons"          % "commons-lang3"                              % "3.18.0",
-    "ch.qos.logback"              % "logback-core"                               % "1.5.21",
+    "ch.qos.logback"              % "logback-core"                               % "1.5.27",
+    "ch.qos.logback"              % "logback-classic"                            % "1.5.27",
     "at.yawk.lz4"                 %  "lz4-java"                                  % "1.10.3"
   )
 
