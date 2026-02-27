@@ -11,6 +11,7 @@ lazy val it = project
   .dependsOn(microservice % "test->test") // the "test->test" allows reusing test code and test dependencies
   .settings(itSettings())
   .settings(libraryDependencies ++= AppDependencies.itDependencies)
+  excludeDependencies += ExclusionRule("org.lz4", "lz4-java")
 
 lazy val scoverageSettings =
   Seq(
