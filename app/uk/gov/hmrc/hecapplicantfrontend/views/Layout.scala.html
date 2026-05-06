@@ -22,8 +22,6 @@
 @import views.html.helper.CSPNonce
 @import uk.gov.hmrc.govukfrontend.views.html.components.*
 @import uk.gov.hmrc.hmrcfrontend.views.html.helpers.*
-@import uk.gov.hmrc.hecapplicantfrontend.views.html.components.CustomHmrcStandardHeader
-@import uk.gov.hmrc.hmrcfrontend.views.Aliases.UserResearchBanner
 
 @import play.api.i18n.Messages
 @import play.api.mvc.{Call, RequestHeader}
@@ -34,10 +32,9 @@
         govukLayout: GovukLayout,
         govukBackLink: GovukBackLink,
         hmrcHead: HmrcHead,
-        hmrcStandardHeader: CustomHmrcStandardHeader,
+        hmrcStandardHeader: HmrcStandardHeader,
         hmrcStandardFooter: HmrcStandardFooter,
         hmrcScripts: HmrcScripts,
-        hmrcLanguageSelectHelper: HmrcLanguageSelectHelper,
         hmrcReportTechnicalIssueHelper: HmrcReportTechnicalIssueHelper,
         hmrcTimeoutDialogHelper: HmrcTimeoutDialogHelper
 )
@@ -87,7 +84,7 @@
 
 @beforeContentBlock = {
   <nav class="govuk-!-display-none-print" aria-label="back link">
-    @hmrcLanguageSelectHelper()
+
     @{
         backLocation map { back =>
             val url =
@@ -115,7 +112,8 @@
 @govukLayout(
     pageTitle = Some(documentTitle),
     headBlock = Some(hmrcHead(headBlock = Some(head))),
-    headerBlock = Some(hmrcStandardHeader(signOutUrl = if(showSignOutLink) Some(appConfig.signOutUrl(continueUrl = None)) else None)),
+    headerBlock = Some(hmrcStandardHeader(signOutUrl = if(showSignOutLink) Some(appConfig.signOutUrl(continueUrl = None)) else None,
+                       isWelshTranslationAvailable = true)),
     scriptsBlock = Some(hmrcScripts(scriptsBlock = Some(scripts))),
     beforeContentBlock = Some(beforeContentBlock),
     footerBlock = Some(hmrcStandardFooter())

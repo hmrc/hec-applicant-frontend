@@ -2,7 +2,7 @@ import sbt.*
 
 object AppDependencies {
 
-  val bootStrapVersion = "10.5.0"
+  val bootStrapVersion = "10.7.0"
   val monocleVersion   = "3.3.0"
   val hmrcMongoVersion = "2.12.0"
 
@@ -13,8 +13,8 @@ object AppDependencies {
     "org.typelevel"              %% "cats-core"                                  % "2.13.0",
     "dev.optics"                 %% "monocle-core"                               % monocleVersion,
     "dev.optics"                 %% "monocle-macro"                              % monocleVersion,
-    "uk.gov.hmrc"                %% "play-conditional-form-mapping-play-30"      % "3.4.0",
-    "uk.gov.hmrc"                %% "play-frontend-hmrc-play-30"                 % "12.31.0",
+    "uk.gov.hmrc"                %% "play-conditional-form-mapping-play-30"      % "3.5.0",
+    "uk.gov.hmrc"                %% "play-frontend-hmrc-play-30"                 % "13.3.0",
     "org.apache.commons"          % "commons-lang3"                              % "3.18.0",
     "ch.qos.logback"              % "logback-core"                               % "1.5.21",
     "at.yawk.lz4"                 %  "lz4-java"                                  % "1.10.3"
