@@ -125,6 +125,10 @@ class AppConfig @Inject() (config: Configuration, contactFrontendConfig: Contact
   val contactHmrcUrl: String               = config.get[String]("external-url.contact-hmrc")
   val changeNameUrl: String                = config.get[String]("external-url.change-name")
   val incomeTaxEnquiriesUrl: String        = config.get[String]("external-url.income-tax-enquiries")
+  val researchBannerUrl: String            = config.get[String]("external-url.researchBanner")
+
+  val researchBannerEnabled: Boolean =
+    config.get[Boolean]("features.researchBannerEnabled")
 
   val maxCtutrAnswerAttempts: Int = config.get[Int]("ctutr-attempts.maximum-attempts")
 
