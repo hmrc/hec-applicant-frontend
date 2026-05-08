@@ -22,13 +22,9 @@
 @import views.html.helper.CSPNonce
 @import uk.gov.hmrc.govukfrontend.views.html.components.*
 @import uk.gov.hmrc.hmrcfrontend.views.html.helpers.*
-<<<<<<< DDCYLS-8414
-@import uk.gov.hmrc.hecapplicantfrontend.views.html.components.CustomHmrcStandardHeader
-@import uk.gov.hmrc.hmrcfrontend.views.Aliases.UserResearchBanner
 @import uk.gov.hmrc.hmrcfrontend.views.viewmodels.language.{Cy, En}
 @import uk.gov.hmrc.hmrcfrontend.views.html.components.HmrcUserResearchBanner
-=======
->>>>>>> main
+@import uk.gov.hmrc.hmrcfrontend.views.Aliases.UserResearchBanner
 
 @import play.api.i18n.Messages
 @import play.api.mvc.{Call, RequestHeader}
@@ -121,10 +117,10 @@
 @govukLayout(
     pageTitle = Some(documentTitle),
     headBlock = Some(hmrcHead(headBlock = Some(head))),
-<<<<<<< DDCYLS-8414
     headerBlock = Some(
         hmrcStandardHeader(
             signOutUrl = if(showSignOutLink) Some(appConfig.signOutUrl(continueUrl = None)) else None,
+            isWelshTranslationAvailable = true,
             additionalBannersBlock =
                 if(showResearchBanner && appConfig.researchBannerEnabled)
                     Some(hmrcUserResearchBanner(UserResearchBanner(
@@ -135,10 +131,6 @@
                 else None
         )
     ),
-=======
-    headerBlock = Some(hmrcStandardHeader(signOutUrl = if(showSignOutLink) Some(appConfig.signOutUrl(continueUrl = None)) else None,
-                       isWelshTranslationAvailable = true)),
->>>>>>> main
     scriptsBlock = Some(hmrcScripts(scriptsBlock = Some(scripts))),
     beforeContentBlock = Some(beforeContentBlock),
     footerBlock = Some(hmrcStandardFooter())
