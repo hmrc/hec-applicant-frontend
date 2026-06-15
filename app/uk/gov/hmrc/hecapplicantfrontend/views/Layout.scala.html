@@ -120,6 +120,7 @@
     headerBlock = Some(
         hmrcStandardHeader(
             signOutUrl = if(showSignOutLink) Some(appConfig.signOutUrl(continueUrl = None)) else None,
+            serviceUrl  = Some(routes.LicenceDetailsController.licenceType.url),
             isWelshTranslationAvailable = true,
             additionalBannersBlock =
                 if(showResearchBanner && appConfig.researchBannerEnabled)
