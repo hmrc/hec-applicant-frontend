@@ -26,6 +26,7 @@ import uk.gov.hmrc.http.HttpReads.Implicits.*
 import uk.gov.hmrc.http.client.HttpClientV2
 
 import scala.concurrent.{ExecutionContext, Future}
+import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 @ImplementedBy(classOf[IvConnectorImpl])
 trait IvConnector {
 
@@ -41,7 +42,8 @@ class IvConnectorImpl @Inject() (
   servicesConfig: ServicesConfig
 )(implicit
   ec: ExecutionContext
-) extends IvConnector {
+) extends IvConnector
+    with Logging {
 
   val baseUrl: String = servicesConfig.baseUrl("iv")
 
@@ -54,6 +56,7 @@ class IvConnectorImpl @Inject() (
         .execute[HttpResponse]
         .map(Right(_))
         .recover { case e =>
+          logger.warn("[IvConnector][getFailedJourneyStatus] GET /mdtp/journey failed", e)
           Left(Error(e))
         }
     )

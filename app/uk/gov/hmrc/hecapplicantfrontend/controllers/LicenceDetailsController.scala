@@ -242,7 +242,7 @@ class LicenceDetailsController @Inject() (
         updatedSession
       )
       .fold(
-        _.doThrow("Could not update session and proceed"),
+        _.doThrow("[LicenceDetailsController][updateAndNextJourneyData] Could not update session"),
         Redirect
       )
 

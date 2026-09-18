@@ -48,7 +48,7 @@ class UrBannerController @Inject() (
       sessionStore
         .store(updatedSession)
         .fold(
-          _.doThrow("Could not update 'showUserResearchBanner'"),
+          _.doThrow("[UrBannerController][dismissBanner] Could not update showUserResearchBanner"),
           _ => Ok
         )
     }

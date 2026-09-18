@@ -59,7 +59,9 @@ class ConfirmIndividualDetailsController @Inject() (
             individualSession.copy(hasConfirmedDetails = true)
           )
           .fold(
-            _.doThrow("Could not update and find next page"),
+            _.doThrow(
+              "[ConfirmIndividualDetailsController][confirmIndividualDetailsSubmit] Could not update and find next page"
+            ),
             Redirect
           )
       }

@@ -114,7 +114,12 @@ class ConfirmUncertainEntityTypeController @Inject() (
                    )
             } yield ()
 
-            result.fold(_.doThrow("Could not perform update"), _ => redirectToStart)
+            result.fold(
+              _.doThrow(
+                "[ConfirmUncertainEntityTypeController][confirmUncertainEntityTypeSubmit] Could not perform update"
+              ),
+              _ => redirectToStart
+            )
         }
 
       entityTypeForm(entityTypeOptions)

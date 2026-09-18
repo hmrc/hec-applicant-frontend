@@ -45,6 +45,7 @@ class ErrorHandler @Inject() (val messagesApi: MessagesApi, errorTemplate: Error
       Future.successful(Redirect(routes.StartController.start))
 
     case other =>
+      logger.warn(s"[ErrorHandler][onServerError] Unhandled error for ${request.method} ${request.uri}", other)
       super.onServerError(request, other)
   }
 

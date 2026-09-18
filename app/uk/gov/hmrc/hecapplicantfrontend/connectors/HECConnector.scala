@@ -30,6 +30,7 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import scala.concurrent.{ExecutionContext, Future}
 import play.api.libs.ws.writeableOf_JsValue
+import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 
 @ImplementedBy(classOf[HECConnectorImpl])
 trait HECConnector {
@@ -54,7 +55,8 @@ trait HECConnector {
 @Singleton
 class HECConnectorImpl @Inject() (http: HttpClientV2, servicesConfig: ServicesConfig)(implicit
   ec: ExecutionContext
-) extends HECConnector {
+) extends HECConnector
+    with Logging {
 
   private val baseUrl: String = servicesConfig.baseUrl("hec")
 
@@ -69,7 +71,7 @@ class HECConnectorImpl @Inject() (http: HttpClientV2, servicesConfig: ServicesCo
         .withBody(Json.toJson(taxCheckData))
         .execute[HttpResponse]
         .map(Right(_))
-        .recover { case e => Left(Error(e)) }
+        .recover { case e => logger.warn("[HECConnector][saveTaxCheck] POST /hec/tax-check failed", e); Left(Error(e)) }
     )
 
   def getSAStatus(sautr: SAUTR, taxYear: TaxYear)(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse] =
@@ -78,7 +80,7 @@ class HECConnectorImpl @Inject() (http: HttpClientV2, servicesConfig: ServicesCo
         .get(url"$baseUrl/hec/sa-status/${sautr.value}/${taxYear.startYear}")
         .execute[HttpResponse]
         .map(Right(_))
-        .recover { case e => Left(Error(e)) }
+        .recover { case e => logger.warn("[HECConnector][getSAStatus] GET /hec/sa-status failed", e); Left(Error(e)) }
     )
 
   def getCTStatus(ctutr: CTUTR, startDate: LocalDate, endDate: LocalDate)(implicit
@@ -89,7 +91,7 @@ class HECConnectorImpl @Inject() (http: HttpClientV2, servicesConfig: ServicesCo
         .get(url"$baseUrl/hec/ct-status/${ctutr.value}/${toUrlString(startDate)}/${toUrlString(endDate)}")
         .execute[HttpResponse]
         .map(Right(_))
-        .recover { case e => Left(Error(e)) }
+        .recover { case e => logger.warn("[HECConnector][getCTStatus] GET /hec/ct-status failed", e); Left(Error(e)) }
     )
 
   def getCtutr(crn: CRN)(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse] =
@@ -98,7 +100,7 @@ class HECConnectorImpl @Inject() (http: HttpClientV2, servicesConfig: ServicesCo
         .get(url"$baseUrl/hec/ctutr/${crn.value}")
         .execute[HttpResponse]
         .map(Right(_))
-        .recover { case e => Left(Error(e)) }
+        .recover { case e => logger.warn("[HECConnector][getCtutr] GET /hec/ctutr failed", e); Left(Error(e)) }
     )
 
   def getUnexpiredTaxCheckCodes()(implicit hc: HeaderCarrier): EitherT[Future, Error, HttpResponse] =
@@ -107,7 +109,10 @@ class HECConnectorImpl @Inject() (http: HttpClientV2, servicesConfig: ServicesCo
         .get(url"$baseUrl/hec/unexpired-tax-checks")
         .execute[HttpResponse]
         .map(Right(_))
-        .recover { case e => Left(Error(e)) }
+        .recover { case e =>
+          logger.warn("[HECConnector][getUnexpiredTaxCheckCodes] GET /hec/unexpired-tax-checks failed", e)
+          Left(Error(e))
+        }
     )
 
   def saveEmailAddress(
@@ -119,6 +124,8 @@ class HECConnectorImpl @Inject() (http: HttpClientV2, servicesConfig: ServicesCo
         .withBody(Json.toJson(saveEmailAddressRequest))
         .execute[HttpResponse]
         .map(Right(_))
-        .recover { case e => Left(Error(e)) }
+        .recover { case e =>
+          logger.warn("[HECConnector][saveEmailAddress] POST /hec/email-address failed", e); Left(Error(e))
+        }
     )
 }

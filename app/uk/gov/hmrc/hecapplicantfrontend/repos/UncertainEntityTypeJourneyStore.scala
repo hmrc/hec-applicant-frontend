@@ -28,6 +28,7 @@ import uk.gov.hmrc.mdc.Mdc.preservingMdc
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration.FiniteDuration
+import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 
 @ImplementedBy(classOf[UncertainEntityTypeJourneyStoreImpl])
 trait UncertainEntityTypeJourneyStore {
@@ -53,7 +54,8 @@ class UncertainEntityTypeJourneyStoreImpl @Inject() (
       timestampSupport = new CurrentTimestampSupport(),
       sessionIdKey = SessionKeys.sessionId
     )
-    with UncertainEntityTypeJourneyStore {
+    with UncertainEntityTypeJourneyStore
+    with Logging {
 
   val sessionKey: String = "session"
 
@@ -62,7 +64,10 @@ class UncertainEntityTypeJourneyStoreImpl @Inject() (
       preservingMdc {
         getFromSession[UncertainEntityTypeJourney](DataKey(sessionKey))
           .map(Right(_))
-          .recover { case e => Left(Error(e)) }
+          .recover { case e =>
+            logger.warn("[UncertainEntityTypeJourneyStore][get] Mongo read of journey failed", e)
+            Left(Error(e))
+          }
       }
     )
 
@@ -72,7 +77,10 @@ class UncertainEntityTypeJourneyStoreImpl @Inject() (
     EitherT(preservingMdc {
       putSession[UncertainEntityTypeJourney](DataKey(sessionKey), journey)
         .map(_ => Right(()))
-        .recover { case e => Left(Error(e)) }
+        .recover { case e =>
+          logger.warn("[UncertainEntityTypeJourneyStore][store] Mongo write of journey failed", e)
+          Left(Error(e))
+        }
     })
 
 }

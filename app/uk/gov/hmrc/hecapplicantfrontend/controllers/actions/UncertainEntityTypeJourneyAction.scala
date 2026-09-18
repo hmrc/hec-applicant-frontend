@@ -83,7 +83,7 @@ trait UncertainEntityTypeJourneyAction
       }
 
     result
-      .leftMap(_.doThrow("Could not perform action"))
+      .leftMap(_.doThrow("[UncertainEntityTypeJourneyAction][refine] Could not perform action"))
       .merge
   }
 }

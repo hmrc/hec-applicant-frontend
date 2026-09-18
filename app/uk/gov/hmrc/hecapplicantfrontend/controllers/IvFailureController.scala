@@ -53,7 +53,7 @@ class IvFailureController @Inject() (
     ivService
       .getFailedJourneyStatus(journeyId)
       .fold(
-        _.doThrow("Could not check IV journey error status"),
+        _.doThrow("[IvFailureController][ivFailure] Could not check IV journey error status"),
         { ivErrorStatus =>
           val redirectTo = ivErrorStatus match {
             case Incomplete           => routes.IvFailureController.technicalIssue

@@ -65,7 +65,7 @@ class ResendEmailConfirmationController @Inject() (
           next                <- journeyService.updateAndNext(routes.ResendEmailConfirmationController.resendEmail, updatedSession)
         } yield next
         result.fold(
-          _.doThrow("Could not update session and proceed"),
+          _.doThrow("[ResendEmailConfirmationController][resendEmail] Could not update session"),
           Redirect
         )
       }

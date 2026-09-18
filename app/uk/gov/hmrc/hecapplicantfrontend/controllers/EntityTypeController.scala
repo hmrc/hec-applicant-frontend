@@ -82,7 +82,7 @@ class EntityTypeController @Inject() (
           updatedSession
         )
         .fold(
-          _.doThrow("Could not update session and proceed"),
+          _.doThrow("[EntityTypeController][entityTypeSubmit] Could not update session"),
           Redirect
         )
     }
@@ -113,7 +113,7 @@ class EntityTypeController @Inject() (
         Ok(wrongGGAccountPage(back, entityType))
 
       case None =>
-        InconsistentSessionState("Could not find entity type").doThrow
+        InconsistentSessionState("[EntityTypeController][entityTypeSubmit] Could not find entity type").doThrow
     }
 
   }

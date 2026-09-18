@@ -163,7 +163,7 @@ class CompanyDetailsController @Inject() (
         } yield call
 
         result.fold(
-          _.doThrow("Could not update session and proceed"),
+          _.doThrow("[CompanyDetailsController][fetchDataAndProceed] Could not update session"),
           Redirect
         )
       }
@@ -182,7 +182,7 @@ class CompanyDetailsController @Inject() (
               .unset(_ => companyDetailsConfirmedLens)
               .copy(companyDetailsConfirmed = Some(companyDetailsConfirmed))
             callUpdateAndNext(session.copy(userAnswers = answersWithoutCrn)).fold(
-              _.doThrow("Could not update session and proceed"),
+              _.doThrow("[CompanyDetailsController][handleValidAnswer] Could not update session for CRN confirm"),
               Redirect
             )
         }
@@ -386,7 +386,7 @@ class CompanyDetailsController @Inject() (
               } yield next
 
               result.fold(
-                _.doThrow("Could not update session and proceed"),
+                _.doThrow("[CompanyDetailsController][enterCtutrSubmit] Could not update session after CTUTR match"),
                 Redirect
               )
             }
@@ -406,7 +406,7 @@ class CompanyDetailsController @Inject() (
                 ctutrAttemptsService
                   .updateAttempts(ctutrAttempts)
                   .foldF(
-                    _.doThrow("Could not create/update ctutr attempts"),
+                    _.doThrow("[CompanyDetailsController][enterCtutrSubmit] Could not store ctutr attempts"),
                     { ctutrAttempts =>
                       val submittedCTUTR = formWithErrors.data.getOrElse(enterCtutrFormKey, "")
 
@@ -441,7 +441,9 @@ class CompanyDetailsController @Inject() (
                         sessionStore
                           .store(updatedSession)
                           .foldF(
-                            _.doThrow("Could not save session"),
+                            _.doThrow(
+                              "[CompanyDetailsController][enterCtutrSubmit] Could not save session after CTUTR block"
+                            ),
                             _ => displayFormError
                           )
                       }
@@ -455,7 +457,9 @@ class CompanyDetailsController @Inject() (
             ctutrAttemptsService
               .getWithDefault(crn, companySession.loginData.ggCredId, companyName)
               .foldF(
-                _.doThrow("Error fetching CTUTR attempts"),
+                _.doThrow(
+                  "[CompanyDetailsController][enterCtutrSubmit] Error fetching CTUTR attempts during form error"
+                ),
                 ctutrAttempts =>
                   if (ctutrAttempts.isBlocked) {
                     updateAndNextJourneyData(
@@ -487,14 +491,16 @@ class CompanyDetailsController @Inject() (
         ctutrAttemptsService
           .get(crn, companySession.loginData.ggCredId)
           .fold(
-            _.doThrow("Error fetching ctutr attempts"),
+            _.doThrow("[CompanyDetailsController][ctutrAttemptsExceeded] Error fetching ctutr attempts"),
             {
               case Some(CtutrAttempts(_, _, companyName, _, Some(blockedUntil))) =>
                 val formattedDate =
                   TimeUtils.govDateTimeDisplayFormat(blockedUntil.withZoneSameInstant(ZoneId.of("Europe/London")))
                 Ok(tooManyCTUTRAttemptsPage(back, crn.value, companyName.name, formattedDate))
               case _                                                             =>
-                InconsistentSessionState("CTUTR attempts is not blocked").doThrow
+                InconsistentSessionState(
+                  "[CompanyDetailsController][ctutrAttemptsExceeded] CTUTR attempts is not blocked"
+                ).doThrow
             }
           )
       }
@@ -581,7 +587,7 @@ class CompanyDetailsController @Inject() (
                 lookBakPeriod._1,
                 lookBakPeriod._2
               ).fold(
-                _.doThrow("Could not update session"),
+                _.doThrow("[CompanyDetailsController][ctIncomeDeclaredSubmit] Could not update session"),
                 { newRelevantAccountingPeriodConsidered =>
                   val redirectTo =
                     if (newRelevantAccountingPeriodConsidered.isDefined)
@@ -593,7 +599,7 @@ class CompanyDetailsController @Inject() (
             }
 
           case None =>
-            InconsistentSessionState("Missing CT status").doThrow
+            InconsistentSessionState("[CompanyDetailsController][ctIncomeDeclaredSubmit] Missing CT status").doThrow
         }
       }
     }
@@ -650,7 +656,9 @@ class CompanyDetailsController @Inject() (
     authAction.andThen(sessionDataAction).async { implicit request =>
       request.sessionData.mapAsCompany { implicit companySession =>
         val newRelevantAccountingPeriod = companySession.newRelevantAccountingPeriodConsidered.getOrElse(
-          InconsistentSessionState("Could not find new relevant accounting period").doThrow
+          InconsistentSessionState(
+            "[CompanyDetailsController][determineIfNewRelevantAccountingPeriodConsidered] Could not find new relevant accounting period"
+          ).doThrow
         )
 
         def handleValidAnswer(proceed: YesNoAnswer): Future[Result] = {
@@ -675,7 +683,9 @@ class CompanyDetailsController @Inject() (
               updatedSession
             )
             .fold(
-              _.doThrow("Could not update session"),
+              _.doThrow(
+                "[CompanyDetailsController][proceedWithNewRelevantAccountingPeriodSubmit] Could not update session"
+              ),
               Redirect
             )
         }
@@ -702,7 +712,9 @@ class CompanyDetailsController @Inject() (
     companySession.retrievedJourneyData.companyName match {
       case Some(companyName) => f(companyName)
       case None              =>
-        InconsistentSessionState("Missing company name").doThrow
+        InconsistentSessionState(
+          "[CompanyDetailsController][ensureCompanyDataHasCompanyName] Missing company name"
+        ).doThrow
     }
 
   private def ensureCompanyDataHasDesCtutr(
@@ -711,7 +723,7 @@ class CompanyDetailsController @Inject() (
     companySession.retrievedJourneyData.desCtutr match {
       case Some(ctutr) => f(ctutr)
       case None        =>
-        InconsistentSessionState("Missing DES-CTUTR").doThrow
+        InconsistentSessionState("[CompanyDetailsController][ensureCompanyDataHasDesCtutr] Missing DES-CTUTR").doThrow
     }
 
   private def checkIfNewRelevantAccountingPeriodConsidered(
@@ -725,7 +737,9 @@ class CompanyDetailsController @Inject() (
         sessionStore
           .store(session.copy(newRelevantAccountingPeriodConsidered = None))
           .foldF(
-            _.doThrow("Could not update session"),
+            _.doThrow(
+              "[CompanyDetailsController][checkIfNewRelevantAccountingPeriodConsidered] Could not update session"
+            ),
             _ => f(Some(newRelevantAccountingPeriodConsidered))
           )
     }
@@ -736,9 +750,13 @@ class CompanyDetailsController @Inject() (
     companySession.retrievedJourneyData.ctStatus match {
       case Some(CTStatusResponse(_, _, _, Some(latestAccountingPeriod))) => f(latestAccountingPeriod)
       case Some(_)                                                       =>
-        InconsistentSessionState("Missing CT status latest accounting period").doThrow
+        InconsistentSessionState(
+          "[CompanyDetailsController][ensureCompanyDataHasCTStatusAccountingPeriod] Missing CT status latest accounting period"
+        ).doThrow
       case None                                                          =>
-        InconsistentSessionState("Missing CT status").doThrow
+        InconsistentSessionState(
+          "[CompanyDetailsController][ensureCompanyDataHasCTStatusAccountingPeriod] Missing CT status"
+        ).doThrow
     }
 
   private def ensureUserAnswersHasCRN(
@@ -747,7 +765,9 @@ class CompanyDetailsController @Inject() (
     session.userAnswers.fold(_.crn, _.crn.some) match {
       case Some(crn) => f(crn)
       case None      =>
-        InconsistentSessionState("CRN is not populated in user answers").doThrow
+        InconsistentSessionState(
+          "[CompanyDetailsController][ensureUserAnswersHasCRN] CRN is not populated in user answers"
+        ).doThrow
     }
 
   private def updateAndNextJourneyData(current: Call, updatedSession: HECSession)(implicit
@@ -760,7 +780,7 @@ class CompanyDetailsController @Inject() (
         updatedSession
       )
       .fold(
-        _.doThrow("Could not update session and proceed"),
+        _.doThrow("[CompanyDetailsController][updateAndNextJourneyData] Could not update session"),
         Redirect
       )
 }

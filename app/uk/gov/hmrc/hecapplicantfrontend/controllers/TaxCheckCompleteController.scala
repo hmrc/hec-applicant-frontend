@@ -75,7 +75,7 @@ class TaxCheckCompleteController @Inject() (
           updatedSession
         )
         .fold(
-          _.doThrow("Could not update session and proceed"),
+          _.doThrow("[TaxCheckCompleteController][taxCheckComplete] Could not update session"),
           Redirect
         )
     }
@@ -85,7 +85,10 @@ class TaxCheckCompleteController @Inject() (
     f: (HECTaxCheck, LicenceType) => Future[Result]
   )(implicit r: RequestWithSessionData[?]): Future[Result] = {
     val licenceType = r.sessionData.userAnswers.foldByCompleteness(
-      _ => InconsistentSessionState("Could not find complete answers").doThrow,
+      _ =>
+        InconsistentSessionState(
+          "[TaxCheckCompleteController][ensureCompletedTaxCheckAndLicenceType] Could not find complete answers"
+        ).doThrow,
       {
         case ci: CompleteIndividualUserAnswers => ci.licenceType
         case cc: CompleteCompanyUserAnswers    => cc.licenceType
@@ -94,7 +97,10 @@ class TaxCheckCompleteController @Inject() (
 
     r.sessionData.completedTaxCheck match {
       case Some(taxCheck) => f(taxCheck, licenceType)
-      case None           => InconsistentSessionState("Completed tax check not found").doThrow
+      case None           =>
+        InconsistentSessionState(
+          "[TaxCheckCompleteController][ensureCompletedTaxCheckAndLicenceType] Completed tax check not found"
+        ).doThrow
     }
   }
 

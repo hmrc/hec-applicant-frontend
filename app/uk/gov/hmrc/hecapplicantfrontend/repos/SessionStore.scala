@@ -28,6 +28,7 @@ import uk.gov.hmrc.mdc.Mdc.preservingMdc
 
 import scala.concurrent.duration.*
 import scala.concurrent.{ExecutionContext, Future}
+import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 
 @ImplementedBy(classOf[SessionStoreImpl])
 trait SessionStore {
@@ -55,7 +56,8 @@ class SessionStoreImpl @Inject() (
       timestampSupport = new CurrentTimestampSupport(),
       sessionIdKey = SessionKeys.sessionId
     )
-    with SessionStore {
+    with SessionStore
+    with Logging {
 
   val sessionKey: DataKey[HECSession] = DataKey("hec-session")
 
@@ -64,7 +66,10 @@ class SessionStoreImpl @Inject() (
       preservingMdc {
         getFromSession[HECSession](sessionKey)
           .map(Right(_))
-          .recover { case e => Left(Error(e)) }
+          .recover { case e =>
+            logger.warn("[SessionStore][get] Mongo read of hec-session failed", e)
+            Left(Error(e))
+          }
       }
     )
 
@@ -74,14 +79,20 @@ class SessionStoreImpl @Inject() (
     EitherT(preservingMdc {
       putSession[HECSession](sessionKey, sessionData)
         .map(_ => Right(()))
-        .recover { case e => Left(Error(e)) }
+        .recover { case e =>
+          logger.warn("[SessionStore][store] Mongo write of hec-session failed", e)
+          Left(Error(e))
+        }
     })
 
   def delete()(implicit request: Request[?]): EitherT[Future, Error, Unit] =
     EitherT(preservingMdc {
       deleteFromSession(sessionKey)
         .map(Right(_))
-        .recover { case e => Left(Error(e)) }
+        .recover { case e =>
+          logger.warn("[SessionStore][delete] Mongo delete of hec-session failed", e)
+          Left(Error(e))
+        }
     })
 
 }

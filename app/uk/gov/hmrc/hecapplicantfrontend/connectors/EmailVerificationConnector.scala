@@ -28,6 +28,7 @@ import uk.gov.hmrc.http.client.HttpClientV2
 import play.api.libs.ws.writeableOf_JsValue
 
 import scala.concurrent.{ExecutionContext, Future}
+import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 
 @ImplementedBy(classOf[EmailVerificationConnectorImpl])
 trait EmailVerificationConnector {
@@ -48,7 +49,8 @@ class EmailVerificationConnectorImpl @Inject() (
   servicesConfig: ServicesConfig
 )(implicit
   ec: ExecutionContext
-) extends EmailVerificationConnector {
+) extends EmailVerificationConnector
+    with Logging {
 
   val baseUrl: String = servicesConfig.baseUrl("email-verification")
 
@@ -62,6 +64,8 @@ class EmailVerificationConnectorImpl @Inject() (
         .execute[HttpResponse]
         .map(Right(_))
         .recover { case e =>
+          logger
+            .warn("[EmailVerificationConnector][requestPasscode] POST /email-verification/request-passcode failed", e)
           Left(Error(e))
         }
     )
@@ -75,6 +79,7 @@ class EmailVerificationConnectorImpl @Inject() (
         .execute[HttpResponse]
         .map(Right(_))
         .recover { case e =>
+          logger.warn("[EmailVerificationConnector][verifyPasscode] POST /email-verification/verify-passcode failed", e)
           Left(Error(e))
         }
     )

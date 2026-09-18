@@ -68,7 +68,7 @@ class VerifyEmailPasscodeController @Inject() (
       sessionStore
         .store(updatedSession)
         .fold(
-          _.doThrow("Could not update session and proceed"),
+          _.doThrow("[VerifyEmailPasscodeController][verifyEmailPasscode] Could not update session"),
           _ => {
             val req                           = request.copy(sessionData = updatedSession)
             val passcodeOpt: Option[Passcode] =
@@ -97,7 +97,7 @@ class VerifyEmailPasscodeController @Inject() (
           emailVerificationService,
           journeyService
         ).fold(
-          _.doThrow("Could not update session and proceed"),
+          _.doThrow("[VerifyEmailPasscodeController][verifyEmailPasscodeSubmit] Could not update session"),
           _.fold(
             _ =>
               Ok(
