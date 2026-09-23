@@ -53,7 +53,11 @@ class SAController @Inject() (
       val back                  = journeyService.previous(routes.SAController.saIncomeStatement)
       val saIncomeDeclared      = individualSession.userAnswers.fold(_.saIncomeDeclared, _.saIncomeDeclared)
       val relevantIncomeTaxYear = individualSession.relevantIncomeTaxYear
-        .getOrElse(InconsistentSessionState("Could not find relevant income tax year").doThrow)
+        .getOrElse(
+          InconsistentSessionState(
+            "[SAController][saIncomeDeclaration] Could not find relevant income tax year"
+          ).doThrow
+        )
       val form                  = {
         val emptyForm = SAController.saIncomeDeclarationForm(YesNoAnswer.values)
         saIncomeDeclared.fold(emptyForm)(emptyForm.fill)
@@ -65,7 +69,11 @@ class SAController @Inject() (
   val saIncomeStatementSubmit: Action[AnyContent] = authAction.andThen(sessionDataAction).async { implicit request =>
     request.sessionData.mapAsIndividual { individualSession =>
       val relevantIncomeTaxYear = individualSession.relevantIncomeTaxYear
-        .getOrElse(InconsistentSessionState("Could not find relevant income tax year").doThrow)
+        .getOrElse(
+          InconsistentSessionState(
+            "[SAController][saIncomeDeclarationSubmit] Could not find relevant income tax year"
+          ).doThrow
+        )
 
       def handleValidAnswer(incomeDeclared: YesNoAnswer): Future[Result] = {
         val updatedAnswers =
@@ -77,7 +85,7 @@ class SAController @Inject() (
             individualSession.copy(userAnswers = updatedAnswers)
           )
           .fold(
-            _.doThrow("Could not update session and proceed"),
+            _.doThrow("[SAController][saIncomeDeclarationSubmit] Could not update session"),
             Redirect
           )
       }

@@ -57,7 +57,7 @@ class EnterEmailAddressController @Inject() (
       sessionStore
         .store(updatedSession)
         .fold(
-          _.doThrow("Could not update session and proceed"),
+          _.doThrow("[EnterEmailAddressController][enterEmailAddress] Could not update session"),
           _ => {
             val req  = request.copy(sessionData = updatedSession)
             // reason for explicitly passing req and hc is same as mentioned in ConfirmEmailAddressController
@@ -86,7 +86,7 @@ class EnterEmailAddressController @Inject() (
         } yield next
 
         result.fold(
-          _.doThrow("Could not update session and proceed"),
+          _.doThrow("[EnterEmailAddressController][enterEmailAddressSubmit] Could not update session"),
           Redirect
         )
 

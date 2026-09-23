@@ -28,6 +28,7 @@ import uk.gov.hmrc.mdc.Mdc.preservingMdc
 
 import scala.concurrent.duration.*
 import scala.concurrent.{ExecutionContext, Future}
+import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 
 @ImplementedBy(classOf[CtutrAttemptsStoreImpl])
 trait CtutrAttemptsStore {
@@ -53,7 +54,8 @@ class CtutrAttemptsStoreImpl @Inject() (
       timestampSupport = new CurrentTimestampSupport(),
       cacheIdType = CacheIdType.SimpleCacheId // Here, CacheId to be represented with `String`
     )
-    with CtutrAttemptsStore {
+    with CtutrAttemptsStore
+    with Logging {
 
   val dataKey: String = "hec-ctutr-attempts"
 
@@ -85,7 +87,10 @@ class CtutrAttemptsStoreImpl @Inject() (
 
             response.value
           }
-          .recover { case e => Left(Error(e)) }
+          .recover { case e =>
+            logger.warn("[CtutrAttemptsStore][get] Mongo read of ctutr attempts failed", e)
+            Left(Error(e))
+          }
       }
     )
 
@@ -95,13 +100,19 @@ class CtutrAttemptsStoreImpl @Inject() (
     EitherT(preservingMdc {
       put[CtutrAttempts](id(ctutrAttempts.crn, ctutrAttempts.ggCredId))(DataKey(dataKey), ctutrAttempts)
         .map(_ => Right(()))
-        .recover { case e => Left(Error(e)) }
+        .recover { case e =>
+          logger.warn("[CtutrAttemptsStore][store] Mongo write of ctutr attempts failed", e)
+          Left(Error(e))
+        }
     })
 
   def delete(crn: CRN, ggCredId: GGCredId): EitherT[Future, Error, Unit] =
     EitherT(preservingMdc {
       deleteEntity(id(crn, ggCredId))
         .map(_ => Right(()))
-        .recover { case e => Left(Error(e)) }
+        .recover { case e =>
+          logger.warn("[CtutrAttemptsStore][delete] Mongo delete of ctutr attempts failed", e)
+          Left(Error(e))
+        }
     })
 }

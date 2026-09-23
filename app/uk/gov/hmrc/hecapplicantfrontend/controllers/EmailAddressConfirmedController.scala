@@ -84,7 +84,7 @@ class EmailAddressConfirmedController @Inject() (
           } yield next
 
           result.fold(
-            _.doThrow("Could not update session and proceed"),
+            _.doThrow("[EmailAddressConfirmedController][emailAddressConfirmed] Could not update session"),
             Redirect
           )
         }

@@ -99,7 +99,7 @@ class TaxSituationController @Inject() (
               sessionStore
                 .store(updatedSession)
                 .fold(
-                  _.doThrow("Could not update session with tax year"),
+                  _.doThrow("[TaxSituationController][taxSituationSubmit] Could not update session with tax year"),
                   _ =>
                     Ok(
                       taxSituationPage(
@@ -124,7 +124,11 @@ class TaxSituationController @Inject() (
       request.sessionData.ensureLicenceTypePresent { licenceType =>
         val taxYear =
           individualSession.relevantIncomeTaxYear
-            .getOrElse(InconsistentSessionState("tax year not present in the session").doThrow)
+            .getOrElse(
+              InconsistentSessionState(
+                "[TaxSituationController][taxSituationSubmit] Tax year not present in session"
+              ).doThrow
+            )
 
         def fetchSAStatus(
           individualLoginData: IndividualLoginData,
@@ -163,7 +167,9 @@ class TaxSituationController @Inject() (
           } yield next
 
           result.fold(
-            _.doThrow("Fetch SA status failed or could not update session and proceed"),
+            _.doThrow(
+              "[TaxSituationController][handleValidTaxSituation] Fetch SA status failed or could not update session"
+            ),
             Redirect
           )
         }
@@ -198,7 +204,9 @@ class TaxSituationController @Inject() (
       request.sessionData.mapAsIndividual { implicit individualSession =>
         val storedTaxYear     =
           individualSession.relevantIncomeTaxYear.getOrElse(
-            InconsistentSessionState("Could not find relevant income tax year in session").doThrow
+            InconsistentSessionState(
+              "[TaxSituationController][handleValidTaxSituation] Could not find relevant income tax year in session"
+            ).doThrow
           )
         val calculatedTaxYear = getRelevantIncomeTaxYear(timeProvider.currentDate)
 
@@ -210,7 +218,9 @@ class TaxSituationController @Inject() (
               individualSession.copy(newRelevantIncomeTaxYear = Some(calculatedTaxYear))
             )
             .fold(
-              _.doThrow("Could not update session"),
+              _.doThrow(
+                "[TaxSituationController][handleValidTaxSituation] Could not update session after new tax year check"
+              ),
               _ => Redirect(routes.TaxSituationController.proceedWithNewRelevantIncomeTaxYear)
             )
         }
@@ -233,7 +243,9 @@ class TaxSituationController @Inject() (
       request.sessionData.mapAsIndividual { implicit individualSession =>
         val newRelevantIncomeTaxYear =
           individualSession.newRelevantIncomeTaxYear.getOrElse(
-            InconsistentSessionState("Could not find new relevant income tax year").doThrow
+            InconsistentSessionState(
+              "[TaxSituationController][proceedWithNewRelevantIncomeTaxYear] Could not find new relevant income tax year"
+            ).doThrow
           )
 
         def handleValidAnswer(proceed: YesNoAnswer): Future[Result] = {
@@ -251,7 +263,7 @@ class TaxSituationController @Inject() (
           sessionStore
             .store(updatedSession)
             .fold(
-              _.doThrow("Could not update session"),
+              _.doThrow("[TaxSituationController][proceedWithNewRelevantIncomeTaxYearSubmit] Could not update session"),
               _ =>
                 proceed match {
                   case YesNoAnswer.Yes => Redirect(routes.TaxSituationController.taxSituation)
@@ -287,7 +299,7 @@ class TaxSituationController @Inject() (
         sessionStore
           .store(session.copy(newRelevantIncomeTaxYear = None))
           .foldF(
-            _.doThrow("Could not update session"),
+            _.doThrow("[TaxSituationController][checkIfNewRelevantIncomeTaxYearConsidered] Could not update session"),
             _ => f(true)
           )
     }

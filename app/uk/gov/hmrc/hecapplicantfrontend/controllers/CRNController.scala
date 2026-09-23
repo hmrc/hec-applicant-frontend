@@ -131,7 +131,7 @@ class CRNController @Inject() (
           } yield eitherResult
 
           result.fold(
-            _.doThrow("Could not update session and proceed"),
+            _.doThrow("[CRNController][crnSubmit] Could not update session after CRN submit"),
             _.fold(ok, Redirect)
           )
         }

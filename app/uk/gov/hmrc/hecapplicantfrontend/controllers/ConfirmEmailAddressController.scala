@@ -63,7 +63,7 @@ class ConfirmEmailAddressController @Inject() (
         sessionStore
           .store(updatedSession)
           .fold(
-            _.doThrow("Could not update session and proceed"),
+            _.doThrow("[ConfirmEmailAddressController][confirmEmailAddress] Could not store session"),
             _ => {
 
               val req                                          = request.copy(sessionData = updatedSession)
@@ -104,7 +104,9 @@ class ConfirmEmailAddressController @Inject() (
           } yield next
 
           result.fold(
-            _.doThrow("Could not update session and proceed"),
+            _.doThrow(
+              "[ConfirmEmailAddressController][confirmEmailAddressSubmit] Could not request passcode or update session"
+            ),
             Redirect
           )
         }

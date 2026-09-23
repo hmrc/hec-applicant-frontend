@@ -48,7 +48,10 @@ class CheckYourAnswersController @Inject() (
 
   val checkYourAnswers: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
     request.sessionData.userAnswers.foldByCompleteness(
-      _ => InconsistentSessionState("Could not find complete answers").doThrow,
+      _ =>
+        InconsistentSessionState(
+          "[CheckYourAnswersController][checkYourAnswers] Could not find complete answers"
+        ).doThrow,
       { complete =>
         val back = journeyService.previous(routes.CheckYourAnswersController.checkYourAnswers)
         complete match {
@@ -60,7 +63,11 @@ class CheckYourAnswersController @Inject() (
                 request.sessionData.loginData,
                 request.sessionData
                   .mapAsIndividual(_.relevantIncomeTaxYear)
-                  .getOrElse(InconsistentSessionState("Could not find relevant income tax year").doThrow)
+                  .getOrElse(
+                    InconsistentSessionState(
+                      "[CheckYourAnswersController][checkYourAnswers] Could not find relevant income tax year"
+                    ).doThrow
+                  )
               )
             )
           case cc: CompleteCompanyUserAnswers    =>
@@ -91,12 +98,14 @@ class CheckYourAnswersController @Inject() (
         } yield next
 
         result.fold(
-          _.doThrow("Could not save tax check"),
+          _.doThrow("[CheckYourAnswersController][checkYourAnswersSubmit] Could not save tax check"),
           Redirect
         )
 
       case _ =>
-        InconsistentSessionState("Could not find complete answers").doThrow
+        InconsistentSessionState(
+          "[CheckYourAnswersController][checkYourAnswersSubmit] Could not find complete answers"
+        ).doThrow
     }
   }
 

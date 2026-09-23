@@ -26,6 +26,7 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
+import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 
 @ImplementedBy(classOf[CompanyDetailsConnectorImpl])
 trait CompanyDetailsConnector {
@@ -36,7 +37,8 @@ trait CompanyDetailsConnector {
 @Singleton
 class CompanyDetailsConnectorImpl @Inject() (http: HttpClientV2, servicesConfig: ServicesConfig)(implicit
   ec: ExecutionContext
-) extends CompanyDetailsConnector {
+) extends CompanyDetailsConnector
+    with Logging {
 
   private val baseUrl: String = s"${servicesConfig.baseUrl("companies-house-proxy")}"
 
@@ -46,6 +48,9 @@ class CompanyDetailsConnectorImpl @Inject() (http: HttpClientV2, servicesConfig:
         .get(url"$baseUrl/companies-house-api-proxy/company/${companyNumber.value}")
         .execute[HttpResponse]
         .map(Right(_))
-        .recover { case e => Left(Error(e)) }
+        .recover { case e =>
+          logger.warn("[CompanyDetailsConnector][findCompany] GET companies-house-api-proxy company lookup failed", e)
+          Left(Error(e))
+        }
     )
 }

@@ -25,6 +25,7 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import scala.concurrent.{ExecutionContext, Future}
+import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 
 @ImplementedBy(classOf[CitizenDetailsConnectorImpl])
 trait CitizenDetailsConnector {
@@ -35,7 +36,8 @@ trait CitizenDetailsConnector {
 @Singleton
 class CitizenDetailsConnectorImpl @Inject() (http: HttpClientV2, servicesConfig: ServicesConfig)(implicit
   ec: ExecutionContext
-) extends CitizenDetailsConnector {
+) extends CitizenDetailsConnector
+    with Logging {
 
   private val baseUrl: String = servicesConfig.baseUrl("citizen-details")
 
@@ -45,6 +47,9 @@ class CitizenDetailsConnectorImpl @Inject() (http: HttpClientV2, servicesConfig:
         .get(url"$baseUrl/citizen-details/nino/${nino.value}")
         .execute[HttpResponse]
         .map(Right(_))
-        .recover { case e => Left(Error(e)) }
+        .recover { case e =>
+          logger.warn("[CitizenDetailsConnector][getCitizenDetails] GET citizen-details by nino failed", e)
+          Left(Error(e))
+        }
     )
 }

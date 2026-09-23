@@ -27,6 +27,7 @@ import uk.gov.hmrc.http.client.HttpClientV2
 import scala.concurrent.{ExecutionContext, Future}
 import play.api.libs.ws.writeableOf_JsValue
 import uk.gov.hmrc.http.HttpReads.Implicits.*
+import uk.gov.hmrc.hecapplicantfrontend.util.Logging
 
 @ImplementedBy(classOf[SendEmailConnectorImpl])
 trait SendEmailConnector {
@@ -36,7 +37,8 @@ trait SendEmailConnector {
 @Singleton
 class SendEmailConnectorImpl @Inject() (http: HttpClientV2, servicesConfig: ServicesConfig)(implicit
   ec: ExecutionContext
-) extends SendEmailConnector {
+) extends SendEmailConnector
+    with Logging {
 
   private val baseUrl: String = servicesConfig.baseUrl("email-send")
 
@@ -48,6 +50,9 @@ class SendEmailConnectorImpl @Inject() (http: HttpClientV2, servicesConfig: Serv
       .withBody(Json.toJson(emailSendRequest))
       .execute[HttpResponse]
       .map(Right(_))
-      .recover { case e => Left(Error(e)) }
+      .recover { case e =>
+        logger.warn("[SendEmailConnector][sendEmail] POST /hmrc/email failed", e)
+        Left(Error(e))
+      }
   )
 }

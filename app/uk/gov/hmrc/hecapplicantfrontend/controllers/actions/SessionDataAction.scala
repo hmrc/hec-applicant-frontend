@@ -47,7 +47,7 @@ class SessionDataAction @Inject() (
     lazy val language = Language.fromRequest(request.request).valueOr(sys.error)
     sessionStore
       .get()(request)
-      .leftMap(_.doThrow("Could not get session data"))
+      .leftMap(_.doThrow("[SessionDataAction][refine] Could not get session data"))
       .subflatMap(
         _.map(RequestWithSessionData(request, _, language))
           .toRight(Redirect(routes.StartController.start))

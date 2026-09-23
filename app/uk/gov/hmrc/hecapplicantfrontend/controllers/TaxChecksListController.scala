@@ -61,7 +61,7 @@ class TaxChecksListController @Inject() (
   val unexpiredTaxChecks: Action[AnyContent] = authAction.andThen(sessionDataAction) { implicit request =>
     request.sessionData.unexpiredTaxChecks match {
       case Nil       =>
-        InconsistentSessionState("No tax check codes found").doThrow
+        InconsistentSessionState("[TaxChecksListController][taxChecksList] No tax check codes found").doThrow
       case taxChecks =>
         auditService.sendEvent(
           TaxCheckCodesDisplayed(
@@ -81,7 +81,7 @@ class TaxChecksListController @Inject() (
         request.sessionData.fold(_.copy(emailRequestedForTaxCheck = None), _.copy(emailRequestedForTaxCheck = None))
       )
       .fold(
-        _.doThrow("Could not save tax check"),
+        _.doThrow("[TaxChecksListController][taxChecksList] Could not save tax check"),
         Redirect
       )
   }
@@ -90,7 +90,7 @@ class TaxChecksListController @Inject() (
     authAction.andThen(sessionDataAction).async { implicit request =>
       request.sessionData.unexpiredTaxChecks match {
         case Nil       =>
-          InconsistentSessionState("No tax check codes found").doThrow
+          InconsistentSessionState("[TaxChecksListController][sendEmail] No tax check codes found").doThrow
         case taxChecks =>
           taxChecks.find(t => normalise(t.taxCheckCode) === normalise(taxCheckCode)) match {
             case None           =>
@@ -113,7 +113,7 @@ class TaxChecksListController @Inject() (
                   updatedSession
                 )
                 .fold(
-                  _.doThrow("Could not update session and calculate next page"),
+                  _.doThrow("[TaxChecksListController][sendEmail] Could not update session and calculate next page"),
                   Redirect
                 )
           }
