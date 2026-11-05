@@ -25,7 +25,7 @@
 @key = @{"noReturnFound"}
 @title = @{messages(s"$key.title")}
 
-@layout(pageTitle = Some(title), backLocation = Some(back)) {
+@layout(pageTitle = Some(title), backLocation = Some(back), showResearchBanner = true) {
     <h1 class="govuk-heading-xl">@title</h1>
     <p class="govuk-body govuk-!-margin-bottom-9">@Html(messages(s"$key.p1", appConfig.contactHmrcSaUrl))</p>
     @exitSurveyLink()

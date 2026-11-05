@@ -44,7 +44,7 @@
             .sortBy(_._1)
 }
 
-@layout(pageTitle = Some(title)) {
+@layout(pageTitle = Some(title), showResearchBanner = true) {
     <h1 class="govuk-heading-xl">@title</h1>
     @taxChecksGrouped.map(taxCheckDetails.apply)
     <p class="govuk-body">@messages(s"$key.p1")</p>
