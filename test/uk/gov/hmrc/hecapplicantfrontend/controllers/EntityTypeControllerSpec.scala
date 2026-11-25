@@ -318,7 +318,7 @@ class EntityTypeControllerSpec
 
       "display the page" when {
 
-        def testPage(selectedEntityType: EntityType, expectedP1: String): Unit = {
+        def testPage(selectedEntityType: EntityType,  expectedH1: String,  expectedP1: String): Unit = {
           val session = Fixtures.individualHECSession(
             individualLoginData,
             IndividualRetrievedJourneyData.empty,
@@ -333,7 +333,7 @@ class EntityTypeControllerSpec
 
           checkPageIsDisplayed(
             performAction(),
-            messageFromMessageKey("wrongGGAccount.title"),
+            messageFromMessageKey(expectedH1),
             { doc =>
               doc.select("#back").attr("href")          shouldBe mockPreviousCall.url
               doc.select("p.govuk-body").first().text() shouldBe expectedP1
@@ -344,10 +344,9 @@ class EntityTypeControllerSpec
         "the selected entity type is individual" in {
           testPage(
             EntityType.Individual,
+            "wrongGGAccount.titleAlt",
             messageFromMessageKey(
-              "wrongGGAccount.p1",
-              messages("wrongGGAccount.company"),
-              messages("wrongGGAccount.individual")
+              "wrongGGAccount.individual.p1"
             )
           )
         }
@@ -355,6 +354,7 @@ class EntityTypeControllerSpec
         "the selected entity type is company" in {
           testPage(
             EntityType.Company,
+            "wrongGGAccount.title",
             messageFromMessageKey(
               "wrongGGAccount.p1",
               messages("wrongGGAccount.individual"),
