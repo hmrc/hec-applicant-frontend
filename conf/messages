@@ -98,15 +98,15 @@ date.afterNoon = pm
 licenceType.title = What type of licence are you applying for?
 
 licenceType.driverOfTaxis = Driver of taxis and private hires
-licenceType.driverOfTaxis.hint = Includes dual licences and hackney carriage licences.
+licenceType.driverOfTaxis.hint = Anywhere in the UK. Includes dual licences and hackney carriage licences
 licenceType.operatorOfPrivateHireVehicles = Operator of private hire vehicles
-licenceType.operatorOfPrivateHireVehicles.hint = (England and Wales only)
+licenceType.operatorOfPrivateHireVehicles.hint = England and Wales only.
 licenceType.bookingOffice = Booking office
-licenceType.bookingOffice.hint = (Scotland only)
+licenceType.bookingOffice.hint = Scotland only.
 licenceType.scrapMetalCollector = Mobile or itinerant scrap metal collector
-licenceType.scrapMetalCollector.hint = (England, Wales and Scotland only)
+licenceType.scrapMetalCollector.hint = England, Wales and Scotland only.
 licenceType.scrapMetalDealer = Scrap metal dealer site
-licenceType.scrapMetalDealer.hint = (England, Wales and Scotland only)
+licenceType.scrapMetalDealer.hint = England, Wales and Scotland only.
 
 licenceType.link = Find out what to do if you cannot see your licence type
 licenceType.error.required = Select the type of licence you are applying for
@@ -193,6 +193,17 @@ wrongGGAccount.p1=This is because you are signed in as {0} and you have chosen t
 wrongGGAccount.link=Sign in with the correct account
 wrongGGAccount.individual=an individual
 wrongGGAccount.company=a company
+
+wrongGGAccount.individual.p1 = You are signed in as an organisation and you have chosen to do a tax check for an individual.
+wrongGGAccount.individual.p2 = If you have a personal tax account (PTA),
+wrongGGAccount.individual.p2.link = sign in with your PTA details and start your tax check again
+wrongGGAccount.individual.h2 = If you do not have a PTA
+wrongGGAccount.individual.p3 = You can create a new account. You need to:
+wrongGGAccount.individual.ol1 = Go to
+wrongGGAccount.individual.ol1.link = Personal tax account: sign in or set up
+wrongGGAccount.individual.ol2 = Select ‘Start now’.
+wrongGGAccount.individual.ol3 = Select ‘Create new sign in details’.
+wrongGGAccount.individual.ol4 = Enter your details and create a new account.
 
 # Wrong entity type
 wrongEntityType.title=You do not need to do a tax check

@@ -27,18 +27,27 @@
 @p1 = @{
     selectedEntityType match {
         case models.EntityType.Individual =>
-            messages(s"$key.p1", messages(s"$key.company"), messages(s"$key.individual"))
+            <p class="govuk-body">{messages(s"$key.individual.p1")}</p>
+            <p class="govuk-body">{messages(s"$key.individual.p2")} <a href="https://tax-check-for-licence/start" class="govuk-link" target="_blank">{messages(s"$key.individual.p2.link")}</a>.</p>
+            <h1 class="govuk-heading-m">{messages(s"$key.individual.h2")}</h1>
+            <p class="govuk-body">{messages(s"$key.individual.p3")}</p>
+            <ol class="govuk-list govuk-list--number">
+                <li>{messages(s"$key.individual.ol1")} <a href="https://www.gov.uk/personal-tax-account" class="govuk-link" target="_blank">{messages(s"$key.individual.ol1.link")}</a>.</li>
+                <li>{messages(s"$key.individual.ol2")}</li>
+                <li>{messages(s"$key.individual.ol3")}</li>
+                <li>{messages(s"$key.individual.ol4")}</li></ol>
         case models.EntityType.Company    =>
-            messages(s"$key.p1", messages(s"$key.individual"), messages(s"$key.company"))
+            <p class="govuk-body">{messages(s"$key.p1", messages(s"$key.individual"), messages(s"$key.company"))}</p>
+            <p class="govuk-body">
+                <a class="govuk-button" role="button" data-module="govuk-button" href="@{appConfig.signOutAndSignBackInUrl}">
+                    {messages(s"$key.link")}
+                </a>
+            </p>
     }
 }
 
 @layout(pageTitle = Some(title), backLocation = Some(back)) {
     <h1 class="govuk-heading-xl">@title</h1>
-    <p class="govuk-body">@p1</p>
-    <p class="govuk-body">
-        <a class="govuk-button" role="button" data-module="govuk-button" href="@{appConfig.signOutAndSignBackInUrl}">
-        @{messages(s"$key.link")}
-        </a>
-    </p>
+    @p1
+
 }
