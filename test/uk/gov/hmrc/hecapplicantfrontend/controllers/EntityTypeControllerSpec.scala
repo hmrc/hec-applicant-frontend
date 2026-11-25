@@ -318,7 +318,7 @@ class EntityTypeControllerSpec
 
       "display the page" when {
 
-        def testPage(selectedEntityType: EntityType,  expectedH1: String,  expectedP1: String): Unit = {
+        def testPage(selectedEntityType: EntityType, expectedH1: String, expectedP1: String): Unit = {
           val session = Fixtures.individualHECSession(
             individualLoginData,
             IndividualRetrievedJourneyData.empty,
